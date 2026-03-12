@@ -1,5 +1,6 @@
-import { DashboardShell } from "@/app/components/dashboard";
+import { Dashboard } from "./pages/Dashboard/Dashboard";
+
 
 export default function Home() {
-  return <DashboardShell />;
+  return <Dashboard />;
 }
