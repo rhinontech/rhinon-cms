@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format, formatDistanceToNow } from "date-fns";
 import {
   Search, Sparkles, Send, Archive, Clock, Inbox as InboxIcon, MoreVertical,
 } from "lucide-react";
-import { dummyLeads, dummyCampaigns } from "@/lib/dummy-data";
+import { Lead, Campaign } from "@/lib/types";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,28 +13,60 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
-const inboxItems = dummyLeads
-  .filter((l) => l.status === "Replied" || l.status === "Interested" || l.status === "Bounced")
-  .map((lead) => ({
-    id: `msg_${lead.id}`,
-    lead,
-    subject: "Re: Scaling operations",
-    preview:
-      lead.status === "Interested"
-        ? "Thanks for reaching out. We are actually evaluating vendors right now. Let's talk Tuesday."
-        : "I'll pass this along to our engineering director. She handles this now.",
-    date: new Date(lead.lastActivityAt || new Date()).toISOString(),
-    read: lead.status === "Interested" ? false : true,
-  }));
-
 export function InboxSplitView() {
-  const [selectedItem, setSelectedItem] = useState(inboxItems[0]);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
   const [isDrafting, setIsDrafting] = useState(false);
   const [draftContent, setDraftContent] = useState("");
 
-  const activeCampaign = dummyCampaigns.find((c) => c.id === selectedItem?.lead.campaignId);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [leadsRes, campaignsRes] = await Promise.all([
+          fetch("/api/leads"),
+          fetch("/api/campaigns"),
+        ]);
+        const [leadsData, campaignsData] = await Promise.all([
+          leadsRes.json(),
+          campaignsRes.json(),
+        ]);
+        setLeads(leadsData);
+        setCampaigns(campaignsData);
+      } catch (error) {
+        console.error("Error fetching inbox data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const inboxItems = leads
+    .filter((l) => l.status === "Replied" || l.status === "Interested" || l.status === "Bounced")
+    .map((lead) => ({
+      id: `msg_${(lead as any)._id || lead.id}`,
+      lead,
+      subject: "Re: Scaling operations",
+      preview:
+        lead.status === "Interested"
+          ? "Thanks for reaching out. We are actually evaluating vendors right now. Let's talk Tuesday."
+          : "I'll pass this along to our engineering director. She handles this now.",
+      date: new Date(lead.lastActivityAt || new Date()).toISOString(),
+      read: lead.status === "Interested" ? false : true,
+    }));
+
+  useEffect(() => {
+    if (!selectedItem && inboxItems.length > 0) {
+      setSelectedItem(inboxItems[0]);
+    }
+  }, [inboxItems, selectedItem]);
+
+  const activeCampaign = campaigns.find((c) => (c as any)._id === selectedItem?.lead.campaignId || c.id === selectedItem?.lead.campaignId);
 
   const handleAiDraft = () => {
+    if (!selectedItem) return;
     setIsDrafting(true);
     setTimeout(() => {
       setDraftContent(
@@ -44,8 +76,28 @@ export function InboxSplitView() {
     }, 1500);
   };
 
+  if (loading) {
+    return (
+      <div className="flex h-[80vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-cyan-500 border-t-transparent" />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex h-[calc(100vh-12rem)] border border-border rounded-xl overflow-hidden bg-card">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Page Header */}
+      <header className="flex items-center gap-5">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-500/10 border border-cyan-500/20 shadow-glow-sm">
+          <InboxIcon size={28} className="text-cyan-500" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Inbox</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Manage replies and ongoing conversations.</p>
+        </div>
+      </header>
+
+      <div className="flex h-[calc(100vh-16rem)] border border-border rounded-xl overflow-hidden bg-card">
 
       {/* ── Pane 1: Conversation List ─────────────── */}
       <div className="w-[320px] shrink-0 flex flex-col border-r border-border bg-secondary/30">
@@ -118,7 +170,7 @@ export function InboxSplitView() {
             <div className="flex items-center gap-3">
               <Avatar className="h-8 w-8 border border-border">
                 <AvatarFallback className="bg-secondary text-muted-foreground text-xs font-bold">
-                  {selectedItem.lead.name.split(" ").map((n) => n[0]).join("")}
+                  {selectedItem.lead.name.split(" ").map((n: string) => n[0]).join("")}
                 </AvatarFallback>
               </Avatar>
               <div>
@@ -220,7 +272,7 @@ export function InboxSplitView() {
             <div className="flex flex-col items-center text-center pb-5 border-b border-border">
               <Avatar className="h-14 w-14 mb-3 border-2 border-border">
                 <AvatarFallback className="bg-secondary text-foreground text-base font-bold">
-                  {selectedItem.lead.name.split(" ").map((n) => n[0]).join("")}
+                  {selectedItem.lead.name.split(" ").map((n: string) => n[0]).join("")}
                 </AvatarFallback>
               </Avatar>
               <h3 className="font-bold text-foreground">{selectedItem.lead.name}</h3>
@@ -267,6 +319,7 @@ export function InboxSplitView() {
           </ScrollArea>
         </div>
       )}
+    </div>
     </div>
   );
 }

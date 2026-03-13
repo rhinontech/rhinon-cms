@@ -12,14 +12,47 @@ import { cn } from "@/lib/utils";
 
 export function TemplateEditor({ template }: { template?: Template | null }) {
   const router = useRouter();
+  const [name, setName] = useState(template?.name || "New Template");
   const [subject, setSubject] = useState(template?.subject || "Scaling {{lead.company}}'s operations");
   const [body, setBody] = useState(template?.body || "Hi {{lead.name}},\n\nI noticed that {{lead.company}} has been expanding rapidly. We help companies like yours automate outbound sales.\n\nWorth a quick chat next week?");
   const [aiInstructions, setAiInstructions] = useState(template?.aiInstructions || "Keep it under 3 sentences. Mention their recent funding round or product launch if applicable.");
+  const [isSaving, setIsSaving] = useState(false);
 
   const variables = ["{{lead.name}}", "{{lead.firstName}}", "{{lead.company}}", "{{lead.title}}", "{{sender.name}}"];
 
   const handleInject = (variable: string) => {
     setBody((prev) => prev + " " + variable);
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const payload = {
+        name,
+        subject,
+        body,
+        aiInstructions,
+        channel: template?.channel || "Email",
+      };
+
+      const id = (template as any)?._id || template?.id;
+      const url = id ? `/api/templates/${id}` : "/api/templates";
+      const method = id ? "PATCH" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        router.push("/templates");
+      }
+    } catch (error) {
+      console.error("Error saving template:", error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Fake preview with replaced variables
@@ -61,11 +94,20 @@ export function TemplateEditor({ template }: { template?: Template | null }) {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline" className="border-border text-foreground hover:bg-secondary">
-              Save as Draft
+            <Button 
+              onClick={handleSave} 
+              disabled={isSaving}
+              variant="outline" 
+              className="border-border text-foreground hover:bg-secondary"
+            >
+              {isSaving ? "Saving..." : "Save Template"}
             </Button>
-            <Button className="bg-cyan-500 hover:bg-cyan-600 text-white font-semibold">
-              <Send size={16} className="mr-2" /> Publish Template
+            <Button 
+              onClick={handleSave}
+              disabled={isSaving}
+              className="bg-cyan-500 hover:bg-cyan-600 text-white font-semibold"
+            >
+              <Send size={16} className="mr-2" /> {template ? "Update Template" : "Publish Template"}
             </Button>
           </div>
         </div>
@@ -74,16 +116,29 @@ export function TemplateEditor({ template }: { template?: Template | null }) {
       <main className="flex flex-1 min-h-[600px]">
         {/* Editor Area */}
         <div className="flex-1 p-8 overflow-y-auto space-y-8 border-r border-border bg-background/50">
-          <div className="space-y-3">
-            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 ml-1">
-              Subject Line
-            </label>
-            <Input
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              className="h-12 bg-secondary/50 border-border text-lg font-medium text-foreground focus:ring-cyan-500/20"
-              placeholder="Enter subject line..."
-            />
+          <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 ml-1">
+                Template Name
+              </label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="h-12 bg-secondary/50 border-border text-lg font-medium text-foreground focus:ring-cyan-500/20"
+                placeholder="Internal name..."
+              />
+            </div>
+            <div className="space-y-3">
+              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 ml-1">
+                Subject Line
+              </label>
+              <Input
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                className="h-12 bg-secondary/50 border-border text-lg font-medium text-foreground focus:ring-cyan-500/20"
+                placeholder="Enter subject line..."
+              />
+            </div>
           </div>
 
           <div className="space-y-3">

@@ -43,16 +43,16 @@ export function middleware(req: NextRequest) {
 
   const pathSegments = pathname.split("/").filter(Boolean);
   const pathRolePart = pathSegments[0];
+  const validRoleSlugs = ["admin", "manager", "sdr"];
 
-  // If the path role prefix doesn't match session role slug, redirect to correct role
-  // This prevents SDR from accessing /admin/dashboard
+  // 4a. If path doesn't start with a role, but we have a session, redirect to /{role}/{path}
+  if (!validRoleSlugs.includes(pathRolePart)) {
+    return NextResponse.redirect(new URL(`/${session.roleSlug}/${pathname.replace(/^\//, "")}`, req.url));
+  }
+
+  // 4b. If the path role prefix doesn't match session role slug, redirect to correct role
   if (pathRolePart !== session.roleSlug) {
-    // If it's a valid role slug prefix but not theirs, redirect to their home
-    const validRoleSlugs = ["admin", "manager", "sdr"];
-    if (validRoleSlugs.includes(pathRolePart)) {
-      return NextResponse.redirect(new URL(`/${session.roleSlug}/dashboard`, req.url));
-    }
-    // If it's some other random path like /invalid, it'll naturally fall through or 404
+    return NextResponse.redirect(new URL(`/${session.roleSlug}/dashboard`, req.url));
   }
 
   // 5. Admin-only sections (Client side too, but middleware can help)

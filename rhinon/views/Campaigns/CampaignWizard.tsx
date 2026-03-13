@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { ArrowRight, ArrowLeft, Send, CheckCircle2, Rocket, Users, Target, FileText, Settings, Sparkles } from "lucide-react";
 import {
@@ -14,12 +14,31 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { dummyTemplates, dummyLeads } from "@/lib/dummy-data";
+import { Template } from "@/lib/types";
 
 export function CampaignWizard() {
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [isDeploying, setIsDeploying] = useState(false);
+  const [templates, setTemplates] = useState<Template[]>([]);
+
+  // Campaign Form State
+  const [name, setName] = useState("");
+  const [channel, setChannel] = useState("Email");
+  const [templateId, setTemplateId] = useState("");
+  const [dailyLimit, setDailyLimit] = useState(50);
+  const [startDate, setStartDate] = useState(format(new Date(), "yyyy-MM-dd"));
+
+  useEffect(() => {
+    if (isOpen) {
+      fetch("/api/templates")
+        .then(res => res.json())
+        .then(data => {
+          setTemplates(data);
+          if (data.length > 0) setTemplateId((data[0] as any)._id || data[0].id);
+        });
+    }
+  }, [isOpen]);
 
   const steps = [
     { id: 1, name: "Setup", icon: Target },
@@ -32,13 +51,33 @@ export function CampaignWizard() {
   const handleNext = () => setStep((s) => Math.min(5, s + 1));
   const handlePrev = () => setStep((s) => Math.max(1, s - 1));
 
-  const handleLaunch = () => {
+  const handleLaunch = async () => {
     setIsDeploying(true);
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/campaigns", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          channel,
+          templateId: templateId || null,
+          stage: "Active",
+          dailyLimit,
+          startDate: new Date(startDate).toISOString(),
+          leadsTotal: 500, // Placeholder for selected leads count
+        }),
+      });
+
+      if (res.ok) {
+        setIsDeploying(false);
+        setIsOpen(false);
+        setTimeout(() => setStep(1), 500);
+        window.location.reload(); // Quick way to refresh the board
+      }
+    } catch (error) {
+      console.error("Error launching campaign:", error);
       setIsDeploying(false);
-      setIsOpen(false);
-      setTimeout(() => setStep(1), 500);
-    }, 2000);
+    }
   };
 
   return (
@@ -86,19 +125,24 @@ export function CampaignWizard() {
               <div className="space-y-4 max-w-lg">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300">Campaign Name</label>
-                  <Input placeholder="e.g. Q3 Enterprise Expansion" className="bg-slate-900 border-slate-800" />
+                  <Input 
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g. Q3 Enterprise Expansion" 
+                    className="bg-slate-900 border-slate-800" 
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300">Primary Channel</label>
-                  <Select defaultValue="email">
+                  <Select value={channel} onValueChange={(val) => setChannel(val || "Email")}>
                     <SelectTrigger className="bg-slate-900 border-slate-800">
                       <SelectValue placeholder="Select channel" />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
-                      <SelectItem value="email">Email</SelectItem>
-                      <SelectItem value="linkedin_dm">LinkedIn DM</SelectItem>
-                      <SelectItem value="linkedin_conn">LinkedIn Connection</SelectItem>
+                      <SelectItem value="Email">Email</SelectItem>
+                      <SelectItem value="LinkedIn DM">LinkedIn DM</SelectItem>
+                      <SelectItem value="LinkedIn Connection">LinkedIn Connection</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -136,7 +180,7 @@ export function CampaignWizard() {
                 <div className="p-3 border-b border-slate-800 text-sm font-medium">Selected Cohort Summary</div>
                 <div className="p-4 flex items-center justify-between text-sm">
                   <span className="text-slate-400">Total Leads Selected:</span>
-                  <span className="text-slate-200 font-semibold">{dummyLeads.length} leads</span>
+                  <span className="text-slate-200 font-semibold">5 Leaded (Demo)</span>
                 </div>
               </div>
             </div>
@@ -152,13 +196,13 @@ export function CampaignWizard() {
               <div className="space-y-4 max-w-lg">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300">Select Base Template</label>
-                  <Select defaultValue="tpl_1">
+                  <Select value={templateId} onValueChange={(val) => setTemplateId(val || "")}>
                     <SelectTrigger className="bg-slate-900 border-slate-800">
                       <SelectValue placeholder="Select a template" />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
-                      {dummyTemplates.map(t => (
-                        <SelectItem key={t.id} value={t.id}>{t.name} ({t.channel})</SelectItem>
+                      {templates.map(t => (
+                        <SelectItem key={(t as any)._id || t.id} value={(t as any)._id || t.id}>{t.name} ({t.channel})</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -166,7 +210,9 @@ export function CampaignWizard() {
 
                 <div className="p-4 rounded-lg bg-slate-900 border border-slate-800">
                   <div className="text-xs text-violet-400 font-medium mb-2 flex items-center gap-1"><Sparkles size={12} /> AI Instructions Review</div>
-                  <p className="text-sm text-slate-300 italic">{dummyTemplates[0].aiInstructions}</p>
+                  <p className="text-sm text-slate-300 italic">
+                    {templates.find(t => ((t as any)._id || t.id) === templateId)?.aiInstructions || "No template selected"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -182,13 +228,23 @@ export function CampaignWizard() {
               <div className="grid grid-cols-2 gap-6 max-w-lg">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300">Daily Send Limit</label>
-                  <Input type="number" defaultValue={50} className="bg-slate-900 border-slate-800" />
+                  <Input 
+                    type="number" 
+                    value={dailyLimit}
+                    onChange={(e) => setDailyLimit(parseInt(e.target.value))}
+                    className="bg-slate-900 border-slate-800" 
+                  />
                   <p className="text-xs text-slate-500">Max leads processed per day to protect domain reputation.</p>
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300">Start Date</label>
-                  <Input type="date" defaultValue={format(new Date(), "yyyy-MM-dd")} className="bg-slate-900 border-slate-800 text-slate-300" />
+                  <Input 
+                    type="date" 
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="bg-slate-900 border-slate-800 text-slate-300" 
+                  />
                 </div>
               </div>
             </div>
@@ -201,13 +257,13 @@ export function CampaignWizard() {
               </div>
               <h3 className="text-2xl font-semibold">Ready for Liftoff</h3>
               <p className="text-slate-400 max-w-md mx-auto">
-                The AI engine will begin processing <span className="text-slate-200 font-medium">{dummyLeads.length} leads</span> at a rate of 50 per day starting immediately.
+                The AI engine will begin processing <span className="text-slate-200 font-medium">selected leads</span> at a rate of {dailyLimit} per day starting immediately.
               </p>
 
               <div className="mt-8 bg-slate-900 border border-slate-800 rounded-xl p-4 max-w-sm mx-auto text-left flex flex-col gap-2 text-sm text-slate-300">
-                <div className="flex justify-between"><span className="text-slate-500">Name</span>Q3 Enterprise Expansion</div>
-                <div className="flex justify-between"><span className="text-slate-500">Template</span>Enterprise Cold Outreach</div>
-                <div className="flex justify-between"><span className="text-slate-500">Channel</span>Email</div>
+                <div className="flex justify-between"><span className="text-slate-500">Name</span>{name}</div>
+                <div className="flex justify-between"><span className="text-slate-500">Template</span>{templates.find(t => ((t as any)._id || t.id) === templateId)?.name}</div>
+                <div className="flex justify-between"><span className="text-slate-500">Channel</span>{channel}</div>
               </div>
             </div>
           )}

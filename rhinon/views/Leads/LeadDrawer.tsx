@@ -64,9 +64,9 @@ export function LeadDrawer({ lead, isOpen, onClose }: LeadDrawerProps) {
           {/* Contact info grid */}
           <div className="grid grid-cols-2 gap-x-12 gap-y-4 mt-8 pb-2">
             {[
-              { icon: Mail,      label: "Direct Email",    val: lead.email,   accent: "group-hover:text-cyan-500"    },
-              { icon: Building2, label: "Organization",    val: lead.company, accent: "group-hover:text-violet-500"  },
-              { icon: Calendar,  label: "Discovery Date",  val: format(new Date(lead.addedAt), "MMMM d, yyyy"), accent: "group-hover:text-emerald-500" },
+              { icon: Mail, label: "Direct Email", val: lead.email, accent: "group-hover:text-cyan-500" },
+              { icon: Building2, label: "Organization", val: lead.company, accent: "group-hover:text-violet-500" },
+              { icon: Calendar, label: "Discovery Date", val: format(new Date(lead.addedAt), "MMMM d, yyyy"), accent: "group-hover:text-emerald-500" },
             ].map(({ icon: Icon, label, val, accent }) => (
               <div key={label} className="flex items-center gap-3 group">
                 <div className={`h-8 w-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground transition-colors ${accent}`}>
@@ -83,7 +83,7 @@ export function LeadDrawer({ lead, isOpen, onClose }: LeadDrawerProps) {
 
         {/* Tabs */}
         <Tabs defaultValue="outreach" className="w-full flex flex-col flex-1 min-h-0">
-          <div className="px-8 pt-5 pb-0 border-b border-border bg-card">
+          <div className="p-5 pt-0 border-b border-border bg-card">
             <TabsList className="inline-flex h-9 items-center gap-1 bg-secondary border border-border p-1 rounded-lg">
               <TabsTrigger
                 value="outreach"

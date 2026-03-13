@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Mail, Linkedin, Plus, Search, MoreVertical } from "lucide-react";
-import { dummyTemplates } from "@/lib/dummy-data";
+import { Mail, Linkedin, Plus, Search, MoreVertical, BookTemplate } from "lucide-react";
+import { Template } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -24,15 +24,50 @@ export function TemplateGrid() {
   const router = useRouter();
   const [filter, setFilter] = useState<Filter>("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredTemplates = dummyTemplates.filter((t) => {
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      try {
+        const res = await fetch("/api/templates");
+        const data = await res.json();
+        setTemplates(data);
+      } catch (error) {
+        console.error("Error fetching templates:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTemplates();
+  }, []);
+
+  const filteredTemplates = templates.filter((t) => {
     const matchesFilter = filter === "All" || t.channel === filter;
     const matchesSearch = t.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
+  if (loading) {
+    return (
+      <div className="flex h-[80vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-cyan-500 border-t-transparent" />
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Page Header */}
+      <header className="flex items-center gap-5">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-500/10 border border-cyan-500/20 shadow-glow-sm">
+          <BookTemplate size={28} className="text-cyan-500" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Messaging Templates</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Design and save reusable outreach content.</p>
+        </div>
+      </header>
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         {/* Filter tabs */}
@@ -75,9 +110,9 @@ export function TemplateGrid() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {filteredTemplates.map((template) => (
           <div
-            key={template.id}
+            key={(template as any)._id || template.id}
             className="group card p-5 flex flex-col cursor-pointer hover:border-cyan-500/40 hover:shadow-glow transition-all"
-            onClick={() => router.push(`/templates/${template.id}/edit`)}
+            onClick={() => router.push(`/templates/${(template as any)._id || template.id}/edit`)}
           >
             {/* Card header */}
             <div className="flex justify-between items-start mb-4">
@@ -105,7 +140,7 @@ export function TemplateGrid() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-card border-border text-foreground">
-                  <DropdownMenuItem onClick={() => router.push(`/templates/${template.id}/edit`)}>Edit</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push(`/templates/${(template as any)._id || template.id}/edit`)}>Edit</DropdownMenuItem>
                   <DropdownMenuItem>Duplicate</DropdownMenuItem>
                   <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
                 </DropdownMenuContent>

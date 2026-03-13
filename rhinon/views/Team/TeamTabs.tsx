@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Mail, Key, Users, CheckCircle2 } from "lucide-react";
+import { Search, Mail, Key, Users, CheckCircle2, Shield } from "lucide-react";
 import { format } from "date-fns";
 import { dummyUsers, dummyRoles } from "@/lib/dummy-data";
 import { InviteUserModal } from "./InviteUserModal";
@@ -28,7 +28,18 @@ export function TeamTabs() {
   );
 
   return (
-    <Tabs defaultValue="users" className="w-full">
+    <Tabs defaultValue="users" className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Page Header */}
+      <header className="flex items-center gap-5">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-500/10 border border-violet-500/20 shadow-glow-sm">
+          <Shield size={28} className="text-violet-500" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Team & Access</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Manage users, roles, and security permissions.</p>
+        </div>
+      </header>
+
       <div className="space-y-6 w-full">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-6">
           <TabsList className="bg-secondary border border-border p-1 h-auto gap-1">
