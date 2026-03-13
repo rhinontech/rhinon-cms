@@ -45,11 +45,10 @@ export interface Campaign {
 export interface AiActivity {
   id: string;
   leadId: string;
-  campaignId: string;
-  generatedContent: string;
-  status: "Pending Review" | "Sent" | "Rejected";
-  generatedAt: string;
-  sentAt?: string;
+  campaignId?: string;
+  type: "Enrichment" | "DraftGenerated" | "OutreachSent" | "Other";
+  content: string;
+  timestamp: string;
 }
 
 export interface Permission {

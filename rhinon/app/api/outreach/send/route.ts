@@ -1,0 +1,46 @@
+import { NextResponse } from "next/server";
+import { sendEmail } from "@/lib/mail";
+import dbConnect from "@/lib/mongodb";
+import Lead from "@/lib/models/Lead";
+import AiActivity from "@/lib/models/AiActivity";
+
+export async function POST(req: Request) {
+  try {
+    const { leadId, subject, body } = await req.json();
+    await dbConnect();
+
+    const lead = await Lead.findById(leadId);
+    if (!lead) {
+      return NextResponse.json({ error: "Lead not found" }, { status: 404 });
+    }
+
+    if (!lead.email) {
+      return NextResponse.json({ error: "Lead email missing" }, { status: 400 });
+    }
+
+    // Send the actual email
+    await sendEmail({
+      to: lead.email,
+      subject: subject || "Scaling your operations",
+      body: body,
+    });
+
+    // Update lead status to Sent
+    lead.status = "Interested"; 
+    await lead.save();
+
+    // Log Activity
+    await AiActivity.create({
+      leadId: lead._id,
+      campaignId: lead.campaignId,
+      type: "OutreachSent",
+      content: `Email outreach sent: "${subject}"`,
+      timestamp: new Date()
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error("Outreach Send Error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

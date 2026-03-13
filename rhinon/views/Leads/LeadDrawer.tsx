@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Lead } from "@/lib/types";
-import { dummyAiActivities } from "@/lib/dummy-data";
 import {
   Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
@@ -11,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Building2, Calendar, FileText, Linkedin, Mail, Send, Sparkles } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface LeadDrawerProps {
   lead: Lead | null;
@@ -19,12 +19,103 @@ interface LeadDrawerProps {
 }
 
 export function LeadDrawer({ lead, isOpen, onClose }: LeadDrawerProps) {
-  const aiActivity = dummyAiActivities.find((a) => a.leadId === lead?.id);
-  const [editedContent, setEditedContent] = useState(aiActivity?.generatedContent || "");
+  const [editedContent, setEditedContent] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isEnriching, setIsEnriching] = useState(false);
+  const [enrichment, setEnrichment] = useState<any>(null);
+  const [isSending, setIsSending] = useState(false);
+  const [activities, setActivities] = useState<any[]>([]);
 
-  if (lead && aiActivity && editedContent === "" && aiActivity.generatedContent) {
-    setEditedContent(aiActivity.generatedContent);
-  }
+  const fetchActivities = async () => {
+    if (!lead) return;
+    try {
+      const res = await fetch(`/api/leads/${(lead as any)._id || lead.id}/activities`);
+      const data = await res.json();
+      setActivities(data);
+    } catch (err) {
+      console.error("Error fetching activities:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && lead) {
+      fetchActivities();
+    }
+  }, [isOpen, lead]);
+
+  const handleRegenerate = async () => {
+    if (!lead) return;
+    setIsGenerating(true);
+    try {
+      const templatesRes = await fetch("/api/templates");
+      const templates = await templatesRes.json();
+      const templateId = templates[0]?._id || templates[0]?.id;
+
+      const res = await fetch("/api/ai/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          leadId: (lead as any)._id || lead.id,
+          templateId
+        }),
+      });
+      const data = await res.json();
+      if (data.draft) {
+        setEditedContent(data.draft);
+        fetchActivities();
+      }
+    } catch (error) {
+      console.error("Error regenerating AI content:", error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleEnrich = async () => {
+    if (!lead) return;
+    setIsEnriching(true);
+    try {
+      const res = await fetch("/api/ai/enrich", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leadId: (lead as any)._id || lead.id }),
+      });
+      const data = await res.json();
+      setEnrichment(data);
+      fetchActivities();
+    } catch (error) {
+      console.error("Error enriching lead:", error);
+    } finally {
+      setIsEnriching(false);
+    }
+  };
+
+  const handleLaunchOutreach = async () => {
+    if (!lead || !editedContent) return;
+    setIsSending(true);
+    try {
+      const res = await fetch("/api/outreach/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          leadId: (lead as any)._id || lead.id,
+          subject: `Scaling ${lead.company}'s operations`,
+          body: editedContent,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert("Outreach sent successfully via Rhinon Engine!");
+        fetchActivities();
+        onClose();
+      }
+    } catch (error) {
+      console.error("Error sending outreach:", error);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   if (!lead) return null;
 
   return (
@@ -33,7 +124,6 @@ export function LeadDrawer({ lead, isOpen, onClose }: LeadDrawerProps) {
         side="right"
         className="!w-[50vw] !max-w-[50vw] sm:!max-w-[50vw] bg-card border-border p-0 flex flex-col h-full overflow-hidden shadow-xl"
       >
-        {/* Header */}
         <SheetHeader className="p-8 border-b border-border bg-secondary/30 backdrop-blur-md">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-5">
@@ -56,12 +146,22 @@ export function LeadDrawer({ lead, isOpen, onClose }: LeadDrawerProps) {
                 </SheetDescription>
               </div>
             </div>
-            <Button variant="outline" size="sm" className="border-border bg-card text-muted-foreground hover:text-foreground font-semibold h-9">
-              <Linkedin size={14} className="mr-2" /> Profile
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleEnrich}
+                disabled={isEnriching}
+                variant="outline"
+                size="sm"
+                className="border-violet-500/20 bg-violet-500/5 text-violet-600 dark:text-violet-400 hover:bg-violet-500/10 font-semibold h-9"
+              >
+                <Sparkles size={14} className="mr-2" /> {isEnriching ? "Enriching..." : "Enrich Lead"}
+              </Button>
+              <Button variant="outline" size="sm" className="border-border bg-card text-muted-foreground hover:text-foreground font-semibold h-9">
+                <Linkedin size={14} className="mr-2" /> Profile
+              </Button>
+            </div>
           </div>
 
-          {/* Contact info grid */}
           <div className="grid grid-cols-2 gap-x-12 gap-y-4 mt-8 pb-2">
             {[
               { icon: Mail, label: "Direct Email", val: lead.email, accent: "group-hover:text-cyan-500" },
@@ -81,7 +181,6 @@ export function LeadDrawer({ lead, isOpen, onClose }: LeadDrawerProps) {
           </div>
         </SheetHeader>
 
-        {/* Tabs */}
         <Tabs defaultValue="outreach" className="w-full flex flex-col flex-1 min-h-0">
           <div className="p-5 pt-0 border-b border-border bg-card">
             <TabsList className="inline-flex h-9 items-center gap-1 bg-secondary border border-border p-1 rounded-lg">
@@ -93,29 +192,33 @@ export function LeadDrawer({ lead, isOpen, onClose }: LeadDrawerProps) {
               </TabsTrigger>
               <TabsTrigger
                 value="activity"
+                onClick={fetchActivities}
                 className="rounded-md px-4 py-1.5 text-xs font-semibold transition-all text-muted-foreground data-[state=active]:bg-card data-[state=active]:text-cyan-600 dark:data-[state=active]:text-cyan-400 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border"
               >
                 Activity Log
               </TabsTrigger>
             </TabsList>
+            {enrichment && (
+              <div className="mt-4 p-4 rounded-xl bg-violet-500/5 border border-violet-500/10 animate-in fade-in zoom-in-95">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400 mb-2 flex items-center gap-1">
+                  <Sparkles size={10} /> AI Intel Found
+                </p>
+                <p className="text-xs text-foreground/80 leading-relaxed italic">
+                  &quot;{enrichment.potentialPainPoint}&quot;
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="flex-1 overflow-auto bg-background p-8 custom-scrollbar">
-            {/* Outreach Tab */}
             <TabsContent value="outreach" className="space-y-6 mt-0 animate-in fade-in slide-in-from-bottom-2">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                   <Sparkles size={14} className="text-violet-500" /> AI Propagation Content
                 </h3>
-                {aiActivity?.status === "Pending Review" && (
-                  <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25 text-[10px] font-bold uppercase">
-                    Needs Review
-                  </Badge>
-                )}
               </div>
 
               <div className="card overflow-hidden">
-                {/* Email meta bar */}
                 <div className="bg-secondary border-b border-border px-6 py-4 flex flex-col gap-2">
                   <div className="flex items-center gap-4">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground w-16 text-right">To</span>
@@ -126,38 +229,50 @@ export function LeadDrawer({ lead, isOpen, onClose }: LeadDrawerProps) {
                     <span className="text-sm font-bold text-foreground italic">Scaling {lead.company}&apos;s operations</span>
                   </div>
                 </div>
-                {/* Body */}
-                <div className="p-6 bg-card">
+                <div className="p-6 bg-card relative">
+                  {isGenerating && (
+                    <div className="absolute inset-0 bg-card/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="h-8 w-8 animate-spin rounded-full border-2 border-cyan-500 border-t-transparent" />
+                        <span className="text-xs font-bold text-cyan-600 animate-pulse">Gemini is thinking...</span>
+                      </div>
+                    </div>
+                  )}
                   <textarea
-                    value={editedContent || (aiActivity?.generatedContent ?? "No intelligent propagation content generated for this target.")}
+                    value={editedContent || "No intelligent propagation content generated for this target."}
                     onChange={(e) => setEditedContent(e.target.value)}
                     className="w-full h-60 bg-transparent border-none outline-none resize-none text-sm leading-relaxed text-foreground font-medium p-0 focus:ring-0"
-                    disabled={aiActivity?.status === "Sent"}
                   />
                 </div>
               </div>
 
-              {aiActivity?.status !== "Sent" && (
-                <div className="flex gap-3 justify-end">
-                  <Button variant="outline" className="border-border bg-card text-muted-foreground hover:text-foreground font-semibold h-10 px-6">
-                    Regenerate AI
-                  </Button>
-                  <Button className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold px-8 h-10">
-                    <Send size={15} className="mr-2" /> Launch Outreach
-                  </Button>
-                </div>
-              )}
+              <div className="flex gap-3 justify-end">
+                <Button
+                  onClick={handleRegenerate}
+                  disabled={isGenerating}
+                  variant="outline"
+                  className="border-border bg-card text-muted-foreground hover:text-foreground font-semibold h-10 px-6"
+                >
+                  {editedContent ? "Regenerate AI" : "Generate AI Draft"}
+                </Button>
+                <Button
+                  onClick={handleLaunchOutreach}
+                  disabled={isSending || !editedContent}
+                  className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold px-8 h-10"
+                >
+                  <Send size={15} className="mr-2" /> {isSending ? "Sending..." : "Launch Outreach"}
+                </Button>
+              </div>
             </TabsContent>
 
-            {/* Activity Tab */}
             <TabsContent value="activity" className="space-y-8 mt-0 animate-in fade-in slide-in-from-bottom-2">
               <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                 <FileText size={14} className="text-cyan-500" /> Discovery & Outreach Timeline
               </h3>
 
               <div className="relative before:absolute before:left-4 before:top-2 before:bottom-2 before:w-px before:bg-border space-y-6">
-                {/* Item 1 */}
-                <div className="relative pl-12 group">
+                {/* Item 1 - Lead Added (Derived) */}
+                {/* <div className="relative pl-12 group">
                   <div className="absolute left-2.5 top-1.5 h-3 w-3 rounded-full bg-card border-2 border-border ring-4 ring-background z-10 group-hover:border-cyan-500 transition-colors" />
                   <div className="card p-5 hover:border-muted transition-colors">
                     <div className="flex justify-between items-start mb-2">
@@ -167,45 +282,43 @@ export function LeadDrawer({ lead, isOpen, onClose }: LeadDrawerProps) {
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      Added via Outbound Engine: <span className="text-foreground font-medium">Q3 Enterprise SaaS Sweep</span> cohort.
+                      Added via Outbound Engine. Ready for propagation.
                     </p>
                   </div>
-                </div>
+                </div> */}
 
-                {/* Item 2 */}
-                {aiActivity && (
-                  <div className="relative pl-12 group">
-                    <div className="absolute left-2.5 top-1.5 h-3 w-3 rounded-full bg-card border-2 border-border ring-4 ring-background z-10 group-hover:border-violet-500 transition-colors" />
+                {/* Dynamic AI Activities */}
+                {activities.map((activity) => (
+                  <div key={activity._id} className="relative pl-12 group">
+                    <div className={cn(
+                      "absolute left-2.5 top-1.5 h-3 w-3 rounded-full bg-card border-2 ring-4 ring-background z-10 transition-colors",
+                      activity.type === "Enrichment" ? "border-violet-500 group-hover:bg-violet-500" :
+                        activity.type === "OutreachSent" ? "border-emerald-500 group-hover:bg-emerald-500" :
+                          "border-cyan-500 group-hover:bg-cyan-500"
+                    )} />
                     <div className="card p-5 hover:border-muted transition-colors">
                       <div className="flex justify-between items-start mb-2">
-                        <p className="text-sm text-foreground font-bold">AI Content Generated</p>
+                        <p className="text-sm text-foreground font-bold">
+                          {activity.type === "Enrichment" ? "Lead Intel Gathered" :
+                            activity.type === "DraftGenerated" ? "AI Outreach Drafted" :
+                              "Outreach Successfully Sent"}
+                        </p>
                         <span className="text-[10px] font-bold text-muted-foreground tabular-nums uppercase">
-                          {format(new Date(aiActivity.generatedAt), "MMM d, yyyy")}
+                          {format(new Date(activity.timestamp), "MMM d, h:mm a")}
                         </span>
                       </div>
                       <p className="text-xs text-muted-foreground leading-relaxed">
-                        Gemini AI analyzed{" "}
-                        <span className="text-cyan-600 dark:text-cyan-400 font-medium">{lead.title}</span> at{" "}
-                        <span className="text-cyan-600 dark:text-cyan-400 font-medium">{lead.company}</span> to create personalized outreach.
+                        {activity.content}
                       </p>
                     </div>
                   </div>
-                )}
+                ))}
 
-                {/* Item 3 */}
-                {aiActivity?.sentAt && (
+                {activities.length === 0 && (
                   <div className="relative pl-12 group">
-                    <div className="absolute left-2.5 top-1.5 h-3 w-3 rounded-full bg-card border-2 border-border ring-4 ring-background z-10 group-hover:border-emerald-500 transition-colors" />
-                    <div className="card p-5 border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500/40 transition-colors">
-                      <div className="flex justify-between items-start mb-2">
-                        <p className="text-sm text-emerald-600 dark:text-emerald-400 font-bold">Propagation Initiated</p>
-                        <span className="text-[10px] font-bold text-muted-foreground tabular-nums uppercase">
-                          {format(new Date(aiActivity.sentAt), "MMM d, yyyy")}
-                        </span>
-                      </div>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
-                        Outreach sequence successfully launched via SMTP pipeline.
-                      </p>
+                    <div className="absolute left-2.5 top-1.5 h-3 w-3 rounded-full bg-card border-2 border-border ring-4 ring-background z-10 transition-colors" />
+                    <div className="card p-5 border-dashed bg-transparent">
+                      <p className="text-xs text-muted-foreground italic">No AI propagation activities recorded for this target yet.</p>
                     </div>
                   </div>
                 )}
@@ -214,7 +327,6 @@ export function LeadDrawer({ lead, isOpen, onClose }: LeadDrawerProps) {
           </div>
         </Tabs>
 
-        {/* Footer */}
         <div className="p-6 border-t border-border bg-secondary/30 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="h-8 w-8 rounded-full bg-secondary border border-border flex items-center justify-center text-[10px] font-bold text-muted-foreground uppercase">
@@ -222,7 +334,7 @@ export function LeadDrawer({ lead, isOpen, onClose }: LeadDrawerProps) {
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Global ID</p>
-              <p className="text-xs font-semibold text-foreground">{lead.id}</p>
+              <p className="text-xs font-semibold text-foreground">{(lead as any)._id || lead.id}</p>
             </div>
           </div>
           <p className="text-[10px] font-bold text-muted-foreground/60 italic">Rhinon Lead Intel Profile</p>

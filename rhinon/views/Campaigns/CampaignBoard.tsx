@@ -183,6 +183,7 @@ export function CampaignBoard(): JSX.Element {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const stages: CampaignStage[] = ["Draft", "Active", "Paused", "Completed"];
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
   const fetchData = async () => {
     try {
@@ -206,6 +207,22 @@ export function CampaignBoard(): JSX.Element {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const handleProcessCampaign = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setProcessingId(id);
+    try {
+      const res = await fetch(`/api/campaigns/${id}/process`, { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        await fetchData();
+      }
+    } catch (error) {
+      console.error("Error processing campaign:", error);
+    } finally {
+      setProcessingId(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -245,6 +262,37 @@ export function CampaignBoard(): JSX.Element {
             <span>{campaign.leadsTotal.toLocaleString()} total</span>
           </div>
           <Progress value={progress} className="h-1 bg-secondary" />
+        </div>
+        
+        <div className="mt-4 flex gap-2">
+          {processingId === ((campaign as any)._id || campaign.id) ? (
+            <Button
+              size="sm"
+              disabled
+              className="flex-1 bg-cyan-500/20 text-cyan-600 border-cyan-500/20 h-8 font-bold text-[10px]"
+            >
+              <Sparkles size={10} className="mr-1.5 animate-pulse" /> Processing...
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              onClick={(e) => handleProcessCampaign((campaign as any)._id || campaign.id, e)}
+              className="flex-1 bg-violet-600 hover:bg-violet-700 text-white h-8 font-bold text-[10px] shadow-glow-sm"
+            >
+              <Sparkles size={10} className="mr-1.5" /> Process AI
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedCampaign(campaign);
+            }}
+            className="border-border bg-card text-muted-foreground hover:text-foreground h-8 font-bold text-[10px]"
+          >
+            Insights
+          </Button>
         </div>
       </div>
     );

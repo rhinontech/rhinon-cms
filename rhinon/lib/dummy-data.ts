@@ -142,6 +142,16 @@ export const dummyLeads: Lead[] = [
     addedAt: "2024-03-11T09:00:00Z",
     lastActivityAt: "2024-03-12T10:05:00Z",
   },
+  {
+    id: "ld_6",
+    name: "Prabhat",
+    company: "Rhinon Tech",
+    title: "Lead Engineer",
+    email: "prabhat@rhinon.tech",
+    status: "New",
+    campaignId: "cmp_1",
+    addedAt: new Date().toISOString(),
+  },
 ];
 
 export const dummyAiActivities: AiActivity[] = [
@@ -149,17 +159,16 @@ export const dummyAiActivities: AiActivity[] = [
     id: "act_1",
     leadId: "ld_1",
     campaignId: "cmp_1",
-    generatedContent: "Hi Elena,\n\nI noticed Acme Corp recently acquired BetaStack. We help companies streamline operations post-M&A.\n\nWorth a quick chat next week?",
-    status: "Pending Review",
-    generatedAt: "2024-03-12T08:30:00Z",
+    type: "DraftGenerated",
+    content: "Hi Elena,\n\nI noticed Acme Corp recently acquired BetaStack. We help companies streamline operations post-M&A.\n\nWorth a quick chat next week?",
+    timestamp: "2024-03-12T08:30:00Z",
   },
   {
     id: "act_2",
     leadId: "ld_2",
     campaignId: "cmp_1",
-    generatedContent: "Hi Marcus,\n\nI noticed TechFlow has been expanding rapidly. We help companies like yours automate outbound sales.\n\nWorth a quick chat next week?",
-    status: "Sent",
-    generatedAt: "2024-03-11T13:00:00Z",
-    sentAt: "2024-03-11T14:00:00Z",
+    type: "OutreachSent",
+    content: "Email outreach sent: 'Scaling TechFlow's operations'",
+    timestamp: "2024-03-11T14:00:00Z",
   },
 ];
