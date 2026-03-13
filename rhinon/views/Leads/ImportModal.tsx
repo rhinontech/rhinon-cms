@@ -37,7 +37,7 @@ export function ImportModal() {
     setTimeout(() => {
       setIsOpen(false);
       // Reset after closing
-      setTimeout(() => setStep("upload"), 500); 
+      setTimeout(() => setStep("upload"), 500);
     }, 2000);
   };
 

@@ -59,10 +59,10 @@ export function CampaignWizard() {
             {steps.map((s, i) => (
               <div key={s.id} className="flex items-center">
                 <div className={`flex items-center justify-center rounded-full h-8 w-8 text-xs font-medium transition-colors ${step === s.id
-                    ? "bg-cyan-500 text-slate-950"
-                    : step > s.id
-                      ? "bg-emerald-500/20 text-emerald-400"
-                      : "bg-slate-800 text-slate-500"
+                  ? "bg-cyan-500 text-slate-950"
+                  : step > s.id
+                    ? "bg-emerald-500/20 text-emerald-400"
+                    : "bg-slate-800 text-slate-500"
                   }`}>
                   {step > s.id ? <CheckCircle2 size={16} /> : s.id}
                 </div>

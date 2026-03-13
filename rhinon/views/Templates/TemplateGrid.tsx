@@ -39,8 +39,8 @@ export function TemplateGrid() {
               key={tab}
               onClick={() => setFilter(tab as any)}
               className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${filter === tab
-                  ? "bg-slate-800 text-cyan-400 shadow-sm"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+                ? "bg-slate-800 text-cyan-400 shadow-sm"
+                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
                 }`}
             >
               {tab}

@@ -1,0 +1,162 @@
+@import "tailwindcss";
+
+@theme {
+  --color-border: oklch(var(--border) / <alpha-value>);
+  --color-input: oklch(var(--input) / <alpha-value>);
+  --color-ring: oklch(var(--ring) / <alpha-value>);
+  --color-background: oklch(var(--background) / <alpha-value>);
+  --color-foreground: oklch(var(--foreground) / <alpha-value>);
+
+  --color-primary: oklch(var(--primary) / <alpha-value>);
+  --color-primary-foreground: oklch(var(--primary-foreground) / <alpha-value>);
+
+  --color-secondary: oklch(var(--secondary) / <alpha-value>);
+  --color-secondary-foreground: oklch(var(--secondary-foreground) / <alpha-value>);
+
+  --color-destructive: oklch(var(--destructive) / <alpha-value>);
+  --color-destructive-foreground: oklch(var(--destructive-foreground) / <alpha-value>);
+
+  --color-muted: oklch(var(--muted) / <alpha-value>);
+  --color-muted-foreground: oklch(var(--muted-foreground) / <alpha-value>);
+
+  --color-accent: oklch(var(--accent) / <alpha-value>);
+  --color-accent-foreground: oklch(var(--accent-foreground) / <alpha-value>);
+
+  --color-popover: oklch(var(--popover) / <alpha-value>);
+  --color-popover-foreground: oklch(var(--popover-foreground) / <alpha-value>);
+
+  --color-card: oklch(var(--card) / <alpha-value>);
+  --color-card-foreground: oklch(var(--card-foreground) / <alpha-value>);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --shadow-glow: 0 0 0 1px rgba(34, 211, 238, 0.24), 0 12px 40px rgba(15, 23, 42, 0.35);
+
+  --color-panel: var(--panel);
+  --color-slate-glass: var(--slate-glass);
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+
+    to {
+      height: 0;
+    }
+  }
+}
+
+/* Base Styles */
+@layer base {
+  :root {
+    --background: 0.98 0.005 240;
+    --foreground: 0.2 0.02 240;
+    --card: 1 0 0;
+    --card-foreground: 0.2 0.02 240;
+    --popover: 1 0 0;
+    --popover-foreground: 0.2 0.02 240;
+    --primary: 0.2 0.02 240;
+    --primary-foreground: 0.98 0 0;
+    --secondary: 0.96 0.01 240;
+    --secondary-foreground: 0.2 0.02 240;
+    --muted: 0.96 0.01 240;
+    --muted-foreground: 0.5 0.02 240;
+    --accent: 0.96 0.01 240;
+    --accent-foreground: 0.2 0.02 240;
+    --destructive: 0.6 0.18 25;
+    --destructive-foreground: 0.98 0 0;
+    --border: 0.92 0.01 240;
+    --input: 0.92 0.01 240;
+    --ring: 0.2 0.02 240;
+    --radius: 0.625rem;
+    --panel: #ffffff;
+    --slate-glass: rgba(255, 255, 255, 0.6);
+  }
+
+  .dark {
+    --background: 0.145 0 0;
+    --foreground: 0.985 0 0;
+    --card: 0.205 0 0;
+    --card-foreground: 0.985 0 0;
+    --popover: 0.205 0 0;
+    --popover-foreground: 0.985 0 0;
+    --primary: 0.922 0 0;
+    --primary-foreground: 0.205 0 0;
+    --secondary: 0.269 0 0;
+    --secondary-foreground: 0.985 0 0;
+    --muted: 0.269 0 0;
+    --muted-foreground: 0.708 0 0;
+    --accent: 0.269 0 0;
+    --accent-foreground: 0.985 0 0;
+    --destructive: 0.704 0.191 22.216;
+    --destructive-foreground: 0.985 0 0;
+    --border: 0.205 0 0;
+    --input: 1 0 0;
+    --ring: 0.556 0 0;
+    --panel: #0f172a;
+    --slate-glass: rgba(15, 23, 42, 0.6);
+  }
+
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    background-image:
+      radial-gradient(circle at 20% 0%, rgba(34, 211, 238, 0.03), transparent 45%),
+      radial-gradient(circle at 100% 20%, rgba(139, 92, 246, 0.05), transparent 40%);
+  }
+
+  .dark body {
+    background-image:
+      radial-gradient(circle at 20% 0%, rgba(34, 211, 238, 0.15), transparent 45%),
+      radial-gradient(circle at 100% 20%, rgba(139, 92, 246, 0.2), transparent 40%);
+  }
+}
+
+/* Custom Utilities */
+@utility card {
+  @apply rounded-2xl border border-border bg-card shadow-sm backdrop-blur-xl;
+
+  .dark & {
+    @apply border-white/10 bg-slate-900/75 shadow-none;
+  }
+}
+
+@utility badge {
+  @apply inline-flex items-center rounded-full border border-border px-2.5 py-1 text-xs font-medium;
+}
+
+@utility custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    @apply bg-muted rounded-full;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    @apply bg-accent-foreground/10;
+  }
+}

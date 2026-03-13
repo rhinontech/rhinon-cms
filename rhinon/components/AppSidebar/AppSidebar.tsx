@@ -23,14 +23,19 @@ const nav = [
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 
+import { ThemeToggle } from "@/components/theme-toggle";
+
 export function AppSidebar() {
   const pathname = usePathname();
 
   return (
     <aside className="card hidden h-full flex-col p-4 lg:flex w-64 mr-6 shrink-0">
-      <div>
-        <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">Rhinon</p>
-        <h1 className="mt-2 text-xl font-semibold">Operations Hub</h1>
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.25em] text-cyan-500 dark:text-cyan-300 transition-colors">Rhinon</p>
+          <h1 className="mt-2 text-xl font-semibold text-foreground">Operations Hub</h1>
+        </div>
+        <ThemeToggle />
       </div>
       <nav className="mt-8 space-y-2">
         {nav.map((item) => {
