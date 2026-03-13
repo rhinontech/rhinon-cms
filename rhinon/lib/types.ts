@@ -73,3 +73,12 @@ export interface User {
   status: "Active" | "Invited" | "Suspended";
   joinedAt: string;
 }
+
+export interface SessionUser {
+  id: string;
+  name: string;
+  email: string;
+  roleId: string;
+  roleName: string;
+  roleSlug: string;
+}
