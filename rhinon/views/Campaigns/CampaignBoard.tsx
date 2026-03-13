@@ -4,8 +4,9 @@ import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import {
   List, LayoutGrid, Rocket, Clock, Play, Pause,
-  MoreVertical, FileText, Settings, Sparkles, Target,
+  MoreVertical, FileText, Settings, Sparkles, Target, Send,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Campaign, CampaignStage, Template } from "@/lib/types";
 import { CampaignWizard } from "./CampaignWizard";
 import { Button } from "@/components/ui/button";
@@ -36,8 +37,23 @@ interface CampaignDetailProps {
 }
 
 export function CampaignDetail({ campaign, templates, onClose, onUpdate }: CampaignDetailProps) {
+  const [activities, setActivities] = useState<any[]>([]);
   const template = templates.find((t) => (t as any)._id === campaign.templateId || t.id === campaign.templateId);
   const progress = (campaign.leadsProcessed / campaign.leadsTotal) * 100;
+
+  useEffect(() => {
+    const fetchActivities = async () => {
+      try {
+        const id = (campaign as any)._id || campaign.id;
+        const res = await fetch(`/api/campaigns/${id}/activities`);
+        const data = await res.json();
+        setActivities(data);
+      } catch (err) {
+        console.error("Error fetching campaign activities:", err);
+      }
+    };
+    fetchActivities();
+  }, [campaign]);
 
   const handleToggleStage = async () => {
     const newStage = campaign.stage === "Active" ? "Paused" : "Active";
@@ -143,19 +159,41 @@ export function CampaignDetail({ campaign, templates, onClose, onUpdate }: Campa
               </h3>
             </div>
             <div className="space-y-4 relative before:absolute before:left-4 before:top-2 before:bottom-2 before:w-px before:bg-border">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="relative pl-10 group">
-                  <div className="absolute left-2.5 top-1.5 h-3 w-3 rounded-full bg-card border-2 border-border ring-4 ring-background z-10 group-hover:border-cyan-500 transition-colors" />
-                  <div className="card p-4 hover:border-muted transition-colors">
-                    <p className="text-sm font-semibold text-foreground">
-                      Lead <span className="text-cyan-600 dark:text-cyan-400">#{i * 152 + 800}</span> sync complete
-                    </p>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      Outreach sequence via {campaign.channel.toLowerCase()}. AI draft verified.
-                    </p>
+              {activities.length > 0 ? (
+                activities.map((activity) => (
+                  <div key={activity._id} className="relative pl-10 group">
+                    <div className={cn(
+                      "absolute left-2.5 top-1.5 h-3 w-3 rounded-full bg-card border-2 ring-4 ring-background z-10 transition-colors",
+                      activity.type === "OutreachSent" ? "border-emerald-500 group-hover:bg-emerald-500" :
+                        activity.type === "Outreach" ? "border-cyan-500 group-hover:bg-cyan-500" :
+                          "border-violet-500 group-hover:bg-violet-500"
+                    )} />
+                    <div className="card p-4 hover:border-muted transition-colors">
+                      <div className="flex justify-between items-start mb-1">
+                        <p className="text-xs text-foreground font-bold">
+                          {activity.type === "OutreachSent" ? "Email Delivered" :
+                            activity.type === "Outreach" ? "Target Enriched & Logged" :
+                              activity.type === "Discovery" ? "Lead Sourced" :
+                                "Engine Activity"}
+                        </p>
+                        <span className="text-[9px] font-bold text-muted-foreground tabular-nums uppercase">
+                          {format(new Date(activity.timestamp), "MMM d, h:mm a")}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">
+                        {activity.content}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="relative pl-10 group">
+                  <div className="absolute left-2.5 top-1.5 h-3 w-3 rounded-full bg-card border-2 border-border ring-4 ring-background z-10" />
+                  <div className="card p-4 border-dashed bg-transparent">
+                    <p className="text-[11px] text-muted-foreground italic">No activities recorded for this campaign engine yet.</p>
                   </div>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>
@@ -176,7 +214,11 @@ export function CampaignDetail({ campaign, templates, onClose, onUpdate }: Campa
   );
 }
 
-export function CampaignBoard(): JSX.Element {
+interface CampaignBoardProps {
+  filterType?: "email" | "social";
+}
+
+export function CampaignBoard({ filterType }: CampaignBoardProps): JSX.Element {
   const [viewMode, setViewMode] = useState<"kanban" | "list">("kanban");
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -184,6 +226,7 @@ export function CampaignBoard(): JSX.Element {
   const [loading, setLoading] = useState(true);
   const stages: CampaignStage[] = ["Draft", "Active", "Paused", "Completed"];
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [sendingId, setSendingId] = useState<string | null>(null);
 
   const fetchData = async () => {
     try {
@@ -195,7 +238,14 @@ export function CampaignBoard(): JSX.Element {
         campaignsRes.json(),
         templatesRes.json(),
       ]);
-      setCampaigns(campaignsData);
+      const socialChannels = ["LinkedIn", "LinkedIn DM", "LinkedIn Connection", "LinkedIn Post", "LinkedIn Video", "LinkedIn Article"];
+      const filteredCampaigns = filterType === "email" 
+        ? campaignsData.filter((c: Campaign) => c.channel === "Email")
+        : filterType === "social"
+          ? campaignsData.filter((c: Campaign) => socialChannels.includes(c.channel))
+          : campaignsData;
+
+      setCampaigns(filteredCampaigns);
       setTemplates(templatesData);
     } catch (error) {
       console.error("Error fetching campaign data:", error);
@@ -221,6 +271,24 @@ export function CampaignBoard(): JSX.Element {
       console.error("Error processing campaign:", error);
     } finally {
       setProcessingId(null);
+    }
+  };
+
+  const handleLaunchCampaign = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSendingId(id);
+    try {
+      const res = await fetch(`/api/campaigns/${id}/send`, { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`Successfully launched campaign! ${data.sent} emails delivered.`);
+        await fetchData();
+      }
+    } catch (error) {
+      console.error("Error launching campaign:", error);
+      toast.error("Failed to launch campaign.");
+    } finally {
+      setSendingId(null);
     }
   };
 
@@ -282,6 +350,28 @@ export function CampaignBoard(): JSX.Element {
               <Sparkles size={10} className="mr-1.5" /> Process AI
             </Button>
           )}
+          
+          {campaign.leadsProcessed > 0 && campaign.stage !== "Completed" && (
+            sendingId === ((campaign as any)._id || campaign.id) ? (
+              <Button
+                size="sm"
+                disabled
+                className="flex-1 bg-emerald-500/20 text-emerald-600 border-emerald-500/20 h-8 font-bold text-[10px]"
+              >
+                <div className="h-3 w-3 animate-spin border-2 border-emerald-500 border-t-transparent rounded-full mr-1.5" />
+                Launching...
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                onClick={(e) => handleLaunchCampaign((campaign as any)._id || campaign.id, e)}
+                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white h-8 font-bold text-[10px] shadow-glow-sm"
+              >
+                <Send size={10} className="mr-1.5" /> Launch
+              </Button>
+            )
+          )}
+
           <Button
             size="sm"
             variant="outline"
@@ -312,11 +402,19 @@ export function CampaignBoard(): JSX.Element {
       {/* Page Header */}
       <header className="flex items-center gap-5">
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-500/10 border border-cyan-500/20 shadow-glow-sm">
-          <Rocket size={28} className="text-cyan-500" />
+          {filterType === "email" ? <Send size={28} className="text-cyan-500" /> : <Rocket size={28} className="text-cyan-500" />}
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Campaigns</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Manage and monitor your outbound sequences.</p>
+          <h1 className="text-2xl font-bold text-foreground">
+            {filterType === "email" ? "Email Campaigns" : filterType === "social" ? "Social Media Engine" : "Campaigns"}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {filterType === "email" 
+              ? "Scale your outbound email sequences and domain reach." 
+              : filterType === "social" 
+                ? "Automate your social presence across LinkedIn and beyond." 
+                : "Manage and monitor your outbound sequences."}
+          </p>
         </div>
       </header>
 
@@ -340,7 +438,7 @@ export function CampaignBoard(): JSX.Element {
             <List size={15} className="mr-1.5" /> List
           </Button>
         </div>
-        <CampaignWizard />
+        <CampaignWizard defaultChannel={filterType === "email" ? "Email" : filterType === "social" ? "LinkedIn Post" : "Email"} />
       </div>
 
       {/* Kanban View */}

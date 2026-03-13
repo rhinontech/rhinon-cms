@@ -9,11 +9,14 @@ export interface Lead {
   linkedinUrl?: string;
   status: LeadStatus;
   campaignId: string | null;
+  aiDraft?: string;
+  source?: string;
+  metadata?: any;
   addedAt: string;
   lastActivityAt?: string;
 }
 
-export type Channel = "Email" | "LinkedIn DM" | "LinkedIn Connection";
+export type Channel = "Email" | "LinkedIn DM" | "LinkedIn Connection" | "LinkedIn Post" | "LinkedIn Video" | "LinkedIn Article";
 
 export interface Template {
   id: string;
@@ -37,6 +40,7 @@ export interface Campaign {
   leadsProcessed: number;
   leadsTotal: number;
   dailyLimit: number;
+  mediaUrl?: string;
   startDate: string;
   createdAt: string;
   updatedAt: string;
@@ -46,8 +50,9 @@ export interface AiActivity {
   id: string;
   leadId: string;
   campaignId?: string;
-  type: "Enrichment" | "DraftGenerated" | "OutreachSent" | "Other";
+  type: "Enrichment" | "DraftGenerated" | "OutreachSent" | "Discovery" | "Outreach" | "Other";
   content: string;
+  generatedContent?: string;
   timestamp: string;
 }
 

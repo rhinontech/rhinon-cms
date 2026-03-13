@@ -19,7 +19,7 @@ interface LeadDrawerProps {
 }
 
 export function LeadDrawer({ lead, isOpen, onClose }: LeadDrawerProps) {
-  const [editedContent, setEditedContent] = useState("");
+  const [editedContent, setEditedContent] = useState(lead?.aiDraft || "");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isEnriching, setIsEnriching] = useState(false);
   const [enrichment, setEnrichment] = useState<any>(null);
@@ -39,6 +39,7 @@ export function LeadDrawer({ lead, isOpen, onClose }: LeadDrawerProps) {
 
   useEffect(() => {
     if (isOpen && lead) {
+      setEditedContent(lead.aiDraft || "");
       fetchActivities();
     }
   }, [isOpen, lead]);
@@ -301,7 +302,9 @@ export function LeadDrawer({ lead, isOpen, onClose }: LeadDrawerProps) {
                         <p className="text-sm text-foreground font-bold">
                           {activity.type === "Enrichment" ? "Lead Intel Gathered" :
                             activity.type === "DraftGenerated" ? "AI Outreach Drafted" :
-                              "Outreach Successfully Sent"}
+                              activity.type === "Outreach" ? "Campaign Draft Ready" :
+                                activity.type === "Discovery" ? "Lead Discovered" :
+                                  "Outreach Successfully Sent"}
                         </p>
                         <span className="text-[10px] font-bold text-muted-foreground tabular-nums uppercase">
                           {format(new Date(activity.timestamp), "MMM d, h:mm a")}

@@ -3,8 +3,9 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface IAiActivity extends Document {
   leadId: mongoose.Types.ObjectId;
   campaignId?: mongoose.Types.ObjectId;
-  type: "Enrichment" | "DraftGenerated" | "OutreachSent" | "Other";
+  type: "Enrichment" | "DraftGenerated" | "OutreachSent" | "Discovery" | "Outreach" | "Other";
   content: string;
+  generatedContent?: string;
   timestamp: Date;
 }
 
@@ -13,11 +14,12 @@ const AiActivitySchema = new Schema<IAiActivity>({
   campaignId: { type: Schema.Types.ObjectId, ref: "Campaign" },
   type: { 
     type: String, 
-    enum: ["Enrichment", "DraftGenerated", "OutreachSent", "Other"],
+    enum: ["Enrichment", "DraftGenerated", "OutreachSent", "Discovery", "Outreach", "Other"],
     required: true,
     default: "Other"
   },
   content: { type: String, required: true },
+  generatedContent: { type: String },
   timestamp: { type: Date, default: Date.now },
 });
 

@@ -31,7 +31,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { columns } from "./columns";
 import { LeadDrawer } from "./LeadDrawer";
+import { DiscoveryTab } from "./DiscoveryTab";
 import { Lead } from "@/lib/types";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 
 export function LeadsTable() {
   const [leads, setLeads] = React.useState<Lead[]>([]);
@@ -98,115 +101,160 @@ export function LeadsTable() {
         </div>
       </header>
 
-      <div className="space-y-4">
-        {/* Toolbar */}
-        <div className="flex items-center justify-between gap-3 pb-4">
-          <div className="relative max-w-sm w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={15} />
-            <Input
-              placeholder="Search leads by name or company..."
-              value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-              onChange={(e) => table.getColumn("name")?.setFilterValue(e.target.value)}
-              className="pl-9 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
-            />
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="border-border bg-card text-foreground ml-auto">
-                Columns <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-card border-border text-foreground">
-              {table
-                .getAllColumns()
-                .filter((col) => col.getCanHide())
-                .map((col) => (
-                  <DropdownMenuCheckboxItem
-                    key={col.id}
-                    className="capitalize text-muted-foreground"
-                    checked={col.getIsVisible()}
-                    onCheckedChange={(val) => col.toggleVisibility(!!val)}
-                  >
-                    {col.id}
-                  </DropdownMenuCheckboxItem>
-                ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+      <Tabs defaultValue="database" className="w-full flex flex-col gap-4 border-none shadow-none bg-transparent">
+        <TabsList className="bg-secondary/50 border border-border p-1 h-12 rounded-xl mb-6">
+          <TabsTrigger
+            value="database"
+            className="rounded-lg px-6 data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950 font-medium transition-all"
+          >
+            Leads Database
+          </TabsTrigger>
+          <TabsTrigger
+            value="discovery"
+            className="rounded-lg px-6 data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950 font-medium transition-all"
+          >
+            Lead Discovery (Apollo.io)
+          </TabsTrigger>
+        </TabsList>
 
-        {/* Table */}
-        <div className="rounded-xl border border-border overflow-hidden">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((hg) => (
-                <TableRow key={hg.id} className="border-border bg-secondary/60 hover:bg-secondary/60">
-                  {hg.headers.map((header) => (
-                    <TableHead key={header.id} className="text-muted-foreground font-semibold text-[11px] uppercase tracking-wider h-11">
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                    className="border-border hover:bg-secondary/40 cursor-pointer transition-colors"
-                    onClick={(e) => {
-                      if ((e.target as HTMLElement).closest('[role="checkbox"]')) return;
-                      handleRowClick(row.original as Lead);
-                    }}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="py-3 text-foreground">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
+        <div>
+          <TabsContent value="database" className="space-y-4 outline-none border-none p-0 mt-0">
+            <div className="flex items-center justify-between gap-3 pb-4">
+              <div className="flex items-center gap-3 relative max-w-xl w-full">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={15} />
+                  <Input
+                    placeholder="Search leads by name or company..."
+                    value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+                    onChange={(e) => table.getColumn("name")?.setFilterValue(e.target.value)}
+                    className="pl-9 bg-secondary border-border text-foreground placeholder:text-muted-foreground h-10"
+                  />
+                </div>
+                <div className="flex items-center gap-1 bg-secondary border border-border p-1 rounded-xl h-10">
+                  {["All", "LinkedIn Lead Gen", "Apollo", "Website"].map((source) => {
+                    const isActive = (table.getColumn("source")?.getFilterValue() as string) === (source === "All" ? undefined : source);
+                    return (
+                      <Button
+                        key={source}
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => table.getColumn("source")?.setFilterValue(source === "All" ? undefined : source)}
+                        className={cn(
+                          "px-3 h-8 text-[10px] font-bold uppercase tracking-wider transition-all",
+                          isActive 
+                            ? "bg-card text-cyan-600 dark:text-cyan-400 shadow-sm border border-border" 
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        {source.split(' ')[0]}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="border-border bg-card text-foreground ml-auto">
+                    Columns <ChevronDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-card border-border text-foreground">
+                  {table
+                    .getAllColumns()
+                    .filter((col) => col.getCanHide())
+                    .map((col) => (
+                      <DropdownMenuCheckboxItem
+                        key={col.id}
+                        className="capitalize text-muted-foreground"
+                        checked={col.getIsVisible()}
+                        onCheckedChange={(val) => col.toggleVisibility(!!val)}
+                      >
+                        {col.id}
+                      </DropdownMenuCheckboxItem>
                     ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                    No leads found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            <div className="rounded-xl border border-border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  {table.getHeaderGroups().map((hg) => (
+                    <TableRow key={hg.id} className="border-border bg-secondary/60 hover:bg-secondary/60">
+                      {hg.headers.map((header) => (
+                        <TableHead key={header.id} className="text-muted-foreground font-semibold text-[11px] uppercase tracking-wider h-11">
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(header.column.columnDef.header, header.getContext())}
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableHeader>
+                <TableBody>
+                  {table.getRowModel().rows?.length ? (
+                    table.getRowModel().rows.map((row) => (
+                      <TableRow
+                        key={row.id}
+                        data-state={row.getIsSelected() && "selected"}
+                        className="border-border hover:bg-secondary/40 cursor-pointer transition-colors"
+                        onClick={(e) => {
+                          if ((e.target as HTMLElement).closest('[role="checkbox"]')) return;
+                          handleRowClick(row.original as Lead);
+                        }}
+                      >
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell key={cell.id} className="py-3 text-foreground">
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+                        No leads found.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-4">
+              <p className="flex-1 text-xs text-muted-foreground">
+                {table.getFilteredSelectedRowModel().rows.length} of {table.getFilteredRowModel().rows.length} selected
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+                className="border-border bg-card text-foreground hover:bg-secondary"
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+                className="border-border bg-card text-foreground hover:bg-secondary"
+              >
+                Next
+              </Button>
+            </div>
+
+            <LeadDrawer lead={selectedLead} isOpen={isDrawerOpen} onClose={() => setDrawerOpen(false)} />
+          </TabsContent>
+
+          <TabsContent value="discovery" className="outline-none border-none p-0 mt-0">
+            <DiscoveryTab />
+          </TabsContent>
+
         </div>
 
-        {/* Pagination */}
-        <div className="flex items-center justify-end gap-2 pt-4">
-          <p className="flex-1 text-xs text-muted-foreground">
-            {table.getFilteredSelectedRowModel().rows.length} of {table.getFilteredRowModel().rows.length} selected
-          </p>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-            className="border-border bg-card text-foreground hover:bg-secondary"
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-            className="border-border bg-card text-foreground hover:bg-secondary"
-          >
-            Next
-          </Button>
-        </div>
-
-        <LeadDrawer lead={selectedLead} isOpen={isDrawerOpen} onClose={() => setDrawerOpen(false)} />
-      </div>
+      </Tabs>
     </div>
   );
 }

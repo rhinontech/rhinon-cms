@@ -13,6 +13,8 @@ import {
   Sparkles,
   LogOut,
   User as UserIcon,
+  Send,
+  Linkedin
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useSession } from "@/components/session-provider";
@@ -20,29 +22,30 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
-interface NavItem {
-  label: string;
-  href: string;
-  icon: any;
-  perm?: string;
-}
-
-const nav: NavItem[] = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Campaigns", href: "/campaigns", icon: Rocket },
-  { label: "Leads", href: "/leads", icon: Users },
-  { label: "Templates", href: "/templates", icon: BookTemplate },
-  { label: "Inbox", href: "/inbox", icon: Inbox },
-  { label: "Team & Roles", href: "/team", icon: Shield, perm: "perm_5" },
-  { label: "Settings", href: "/settings", icon: Settings },
-];
-
 export function AppSidebar({ roleSlug }: { roleSlug?: string }) {
   const pathname = usePathname();
   const { user, logout } = useSession();
 
   // If roleSlug is missing, try to infer it from user session
   const activeRole = roleSlug || user?.roleSlug || "admin";
+
+  const nav = [
+    { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { 
+      label: "Campaigns", 
+      href: "/campaigns", 
+      icon: Rocket,
+      subItems: [
+        { label: "Email Outbound", href: "/campaigns/email", icon: Send },
+        { label: "Social Engine", href: "/campaigns/social", icon: Linkedin },
+      ]
+    },
+    { label: "Leads", href: "/leads", icon: Users },
+    { label: "Templates", href: "/templates", icon: BookTemplate },
+    { label: "Inbox", href: "/inbox", icon: Inbox },
+    { label: "Team & Roles", href: "/team", icon: Shield, perm: "perm_5" },
+    { label: "Settings", href: "/settings", icon: Settings },
+  ];
 
   return (
     <aside className="card hidden h-full w-60 shrink-0 flex-col p-4 lg:flex border-border bg-card">
@@ -61,34 +64,57 @@ export function AppSidebar({ roleSlug }: { roleSlug?: string }) {
 
       {/* Nav */}
       <nav className="flex-1 space-y-0.5">
-        {nav.map((item) => {
-          // Check permissions if item has a required permission
-          // For demo, we just check if it's the team page and requires admin role status
+        {nav.map((item: any) => {
           if (item.perm === "perm_5" && activeRole !== "admin") return null;
 
           const fullHref = `/${activeRole}${item.href}`;
-          const isActive = pathname === fullHref || (item.href !== "/dashboard" && pathname?.startsWith(fullHref));
+          const isAtCampaigns = item.label === "Campaigns" && pathname?.includes("/campaigns");
+          const isActive = pathname === fullHref || (item.href !== "/dashboard" && pathname?.startsWith(fullHref)) || isAtCampaigns;
 
           return (
-            <Link
-              key={item.label}
-              href={fullHref}
-              className={cn(
-                "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150",
-                isActive
-                  ? "bg-cyan-500/12 border border-cyan-500/30 text-cyan-700 dark:text-cyan-300 dark:shadow-sm"
-                  : "border border-transparent text-muted-foreground hover:bg-secondary hover:border-border hover:text-foreground"
-              )}
-            >
-              <item.icon
-                size={15}
+            <div key={item.label} className="space-y-1">
+              <Link
+                href={item.subItems ? `/${activeRole}${item.subItems[0].href}` : fullHref}
                 className={cn(
-                  "shrink-0 transition-colors",
-                  isActive ? "text-cyan-600 dark:text-cyan-400" : "text-muted-foreground/60"
+                  "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150",
+                  isActive
+                    ? "bg-cyan-500/12 border border-cyan-500/30 text-cyan-700 dark:text-cyan-300 dark:shadow-sm"
+                    : "border border-transparent text-muted-foreground hover:bg-secondary hover:border-border hover:text-foreground"
                 )}
-              />
-              <span>{item.label}</span>
-            </Link>
+              >
+                <item.icon
+                  size={15}
+                  className={cn(
+                    "shrink-0 transition-colors",
+                    isActive ? "text-cyan-600 dark:text-cyan-400" : "text-muted-foreground/60"
+                  )}
+                />
+                <span>{item.label}</span>
+              </Link>
+              
+              {item.subItems && isActive && (
+                <div className="ml-9 space-y-1">
+                  {item.subItems.map((sub: any) => {
+                    const subHref = `/${activeRole}${sub.href}`;
+                    const isSubActive = pathname === subHref;
+                    return (
+                      <Link
+                        key={sub.label}
+                        href={subHref}
+                        className={cn(
+                          "flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-all",
+                          isSubActive
+                            ? "text-cyan-500"
+                            : "text-muted-foreground/50 hover:text-foreground"
+                        )}
+                      >
+                        {sub.label}
+                      </Link>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
           );
         })}
       </nav>

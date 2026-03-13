@@ -8,6 +8,9 @@ export interface ILead extends Document {
   linkedinUrl?: string;
   status: "New" | "Emailed" | "Replied" | "Bounced" | "Unsubscribed" | "Interested";
   campaignId: mongoose.Types.ObjectId | null;
+  aiDraft?: string;
+  source?: string;
+  metadata?: any;
   addedAt: Date;
   lastActivityAt?: Date;
 }
@@ -25,6 +28,9 @@ const LeadSchema = new Schema<ILead>({
     default: "New"
   },
   campaignId: { type: Schema.Types.ObjectId, ref: "Campaign", default: null },
+  aiDraft: { type: String },
+  source: { type: String, default: "Manual" },
+  metadata: { type: Schema.Types.Mixed },
   addedAt: { type: Date, default: Date.now },
   lastActivityAt: { type: Date },
 });

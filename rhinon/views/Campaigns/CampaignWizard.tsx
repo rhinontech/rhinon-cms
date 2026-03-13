@@ -16,7 +16,11 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Template } from "@/lib/types";
 
-export function CampaignWizard() {
+interface CampaignWizardProps {
+  defaultChannel?: string;
+}
+
+export function CampaignWizard({ defaultChannel = "Email" }: CampaignWizardProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [isDeploying, setIsDeploying] = useState(false);
@@ -24,10 +28,14 @@ export function CampaignWizard() {
 
   // Campaign Form State
   const [name, setName] = useState("");
-  const [channel, setChannel] = useState("Email");
+  const [channel, setChannel] = useState(defaultChannel);
   const [templateId, setTemplateId] = useState("");
   const [dailyLimit, setDailyLimit] = useState(50);
   const [startDate, setStartDate] = useState(format(new Date(), "yyyy-MM-dd"));
+
+  useEffect(() => {
+    setChannel(defaultChannel);
+  }, [defaultChannel, isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -140,9 +148,11 @@ export function CampaignWizard() {
                       <SelectValue placeholder="Select channel" />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
-                      <SelectItem value="Email">Email</SelectItem>
-                      <SelectItem value="LinkedIn DM">LinkedIn DM</SelectItem>
-                      <SelectItem value="LinkedIn Connection">LinkedIn Connection</SelectItem>
+                      <SelectItem value="Email">Email Business Outbound</SelectItem>
+                      <SelectItem value="LinkedIn Post">LinkedIn Thought Leadership Post</SelectItem>
+                      <SelectItem value="LinkedIn Video">LinkedIn Video Propagation</SelectItem>
+                      <SelectItem value="LinkedIn Article">LinkedIn Knowledge Article</SelectItem>
+                      <SelectItem value="LinkedIn DM">LinkedIn Direct Message</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

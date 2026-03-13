@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Bell, Command, Filter, Search, LayoutDashboard } from "lucide-react";
+import { Bell, Command, Filter, Search, LayoutDashboard, ShieldCheck, Zap, Globe, Linkedin } from "lucide-react";
+import { LinkedInWidget } from "./LinkedInWidget";
+import { cn } from "@/lib/utils";
 
 const chartBars = [52, 64, 58, 80, 73, 92, 84];
 const days = ["M", "T", "W", "T", "F", "S", "S"];
@@ -11,26 +13,39 @@ export function Dashboard() {
   const [metrics, setMetrics] = useState<any[]>([]);
   const [leads, setLeads] = useState<any[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [health, setHealth] = useState<any>(null);
+  const [sourceStats, setSourceStats] = useState<any>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [metricsRes, leadsRes, campaignsRes] = await Promise.all([
+        const [metricsRes, leadsRes, campaignsRes, healthRes] = await Promise.all([
           fetch("/api/metrics"),
           fetch("/api/leads"),
           fetch("/api/campaigns"),
+          fetch("/api/system/health"),
         ]);
 
-        const [metricsData, leadsData, campaignsData] = await Promise.all([
+        const [metricsData, leadsData, campaignsData, healthData] = await Promise.all([
           metricsRes.json(),
           leadsRes.json(),
           campaignsRes.json(),
+          healthRes.json(),
         ]);
 
         setMetrics(metricsData);
-        setLeads(leadsData.slice(0, 5)); // Just the latest 5
-        setCampaigns(campaignsData.slice(0, 3)); // Just the top 3
+        setLeads(leadsData.slice(0, 5));
+        setCampaigns(campaignsData.slice(0, 3));
+        setHealth(healthData);
+
+        // Calculate source stats
+        const stats = leadsData.reduce((acc: any, lead: any) => {
+          const source = lead.source || "Manual";
+          acc[source] = (acc[source] || 0) + 1;
+          return acc;
+        }, {});
+        setSourceStats(stats);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
@@ -71,7 +86,6 @@ export function Dashboard() {
       <div className="space-y-6">
         {/* ── Sub-Header ────────────────────────────── */}
         <div className="card flex flex-wrap items-center justify-between gap-3 p-4">
-          {/* Search bar */}
           <div className="flex items-center gap-2.5 rounded-xl border border-border bg-secondary px-3 py-2 text-sm text-muted-foreground min-w-[260px]">
             <Search size={14} className="shrink-0" />
             <span className="flex-1">Search campaigns, leads, settings...</span>
@@ -80,7 +94,6 @@ export function Dashboard() {
             </kbd>
           </div>
 
-          {/* Actions */}
           <div className="flex items-center gap-2">
             <button className="rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-foreground/70 hover:bg-secondary transition-colors">
               Organization: Core Ops
@@ -151,30 +164,97 @@ export function Dashboard() {
             </div>
           </div>
 
-          {/* Rapid actions */}
           <div className="card p-6">
-            <h2 className="text-sm font-bold text-foreground">Next Suggested Actions</h2>
-            <ul className="mt-5 space-y-3">
+            <h2 className="text-sm font-bold text-foreground">Lead Source Composition</h2>
+            <div className="mt-6 space-y-4">
+              {Object.entries(sourceStats).length > 0 ? (
+                Object.entries(sourceStats).map(([source, count]: [string, any], idx) => (
+                  <div key={source} className="group cursor-default">
+                    <div className="mb-1.5 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider">
+                      <span className="text-muted-foreground group-hover:text-foreground transition-colors">{source}</span>
+                      <span className="text-foreground">{count} leads</span>
+                    </div>
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-secondary border border-border/50">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${(count / 100) * 100}%` }} // Simplified for demo
+                        className={cn(
+                          "h-full rounded-full transition-all duration-1000",
+                          source === "LinkedIn Lead Gen" ? "bg-blue-500" :
+                          source === "Apollo" ? "bg-violet-500" :
+                          source === "Website" ? "bg-emerald-500" :
+                          "bg-slate-400"
+                        )}
+                      />
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-xs text-muted-foreground italic">No leads found to analyze.</p>
+              )}
+            </div>
+            
+            <div className="mt-8 pt-6 border-t border-border">
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4">Suggested Actions</h3>
+              <ul className="space-y-3">
+                {[
+                  "Verify AI draft for Campaign #203",
+                  "Increase daily limit for Series A sweep",
+                  "Review 4 bounced leads from TechFlow",
+                  "Update template 'Outreach V2'"
+                ].map((item) => (
+                  <li
+                    key={item}
+                    className="rounded-lg border border-border bg-secondary/60 px-3 py-2.5 text-xs font-medium text-muted-foreground leading-snug hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
+                  >
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Engines Section ─────────────────── */}
+        <section className="grid gap-6 xl:grid-cols-2">
+          <LinkedInWidget />
+
+          <div className="card p-6 h-full">
+            <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
+              <ShieldCheck size={16} className="text-cyan-500" /> Infrastructure Node Status
+            </h2>
+            <div className="mt-5 space-y-4">
               {[
-                "Verify AI draft for Campaign #203",
-                "Increase daily limit for Series A sweep",
-                "Review 4 bounced leads from TechFlow",
-                "Update template 'Outreach V2'"
+                { label: "Apollo API (Sourcing)", status: health?.apollo?.status, icon: Globe, msg: health?.apollo?.message },
+                { label: "Gemini 2.0 (Intelligence)", status: health?.gemini?.status, icon: Zap, msg: health?.gemini?.message },
+                { label: "SMTP Server (Delivery)", status: health?.smtp?.status, icon: Bell, msg: health?.smtp?.message },
+                { label: "LinkedIn Engine (Social)", status: health?.linkedin?.status, icon: Linkedin, msg: health?.linkedin?.message },
               ].map((item) => (
-                <li
-                  key={item}
-                  className="rounded-lg border border-border bg-secondary/60 px-3 py-2.5 text-xs font-medium text-muted-foreground leading-snug hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
-                >
-                  {item}
-                </li>
+                <div key={item.label} className="flex items-start gap-4">
+                  <div className={`h-10 w-10 shrink-0 rounded-xl flex items-center justify-center border ${
+                    item.status === "healthy" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" : 
+                    item.status === "missing" ? "bg-amber-500/10 border-amber-500/20 text-amber-500" :
+                    "bg-rose-500/10 border-rose-500/20 text-rose-500"
+                  }`}>
+                    <item.icon size={18} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-foreground flex items-center gap-2">
+                      {item.label}
+                      <span className={`h-1.5 w-1.5 rounded-full ${
+                        item.status === "healthy" ? "bg-emerald-500" : "bg-rose-500"
+                      }`} />
+                    </p>
+                    <p className="text-[10px] text-muted-foreground truncate">{item.msg || "Checking connection..."}</p>
+                  </div>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         </section>
 
         {/* ── Leads Table + Right Panel ─────────── */}
         <section className="grid gap-4 xl:grid-cols-[3fr_2fr]">
-          {/* Leads table */}
           <div className="card overflow-hidden">
             <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
               <h2 className="text-sm font-bold text-foreground">Recent Activity</h2>
@@ -216,7 +296,6 @@ export function Dashboard() {
           </div>
 
           <div className="flex flex-col gap-4">
-            {/* Active campaigns mini-list */}
             <div className="card p-5 flex-1">
               <h2 className="text-sm font-bold text-foreground">Top Campaigns</h2>
               <ul className="mt-4 space-y-4">
@@ -226,7 +305,6 @@ export function Dashboard() {
                       <span className="font-semibold text-foreground">{c.name}</span>
                       <span className="text-muted-foreground">{c.stage}</span>
                     </div>
-                    {/* Progress track */}
                     <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary border border-border/50">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-400"
@@ -238,7 +316,6 @@ export function Dashboard() {
               </ul>
             </div>
 
-            {/* Template preview */}
             <div className="card p-5">
               <h2 className="text-sm font-bold text-foreground">Template Preview</h2>
               <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
@@ -247,11 +324,6 @@ export function Dashboard() {
               <p className="mt-1.5 rounded-lg border border-border bg-secondary/50 p-3 text-xs leading-relaxed text-muted-foreground">
                 Keep it under 3 sentences, mention recent funding, and offer discovery call.
               </p>
-              <div className="mt-4 flex flex-wrap gap-1.5">
-                {["{{lead.name}}", "{{lead.company}}"].map((v) => (
-                  <span key={v} className="badge text-[10px]">{v}</span>
-                ))}
-              </div>
             </div>
           </div>
         </section>

@@ -16,6 +16,13 @@ const statusColor: Record<string, string> = {
   Unsubscribed: "bg-rose-500/10  text-rose-600  dark:text-rose-400  border-rose-500/25",
 };
 
+const sourceColor: Record<string, string> = {
+  "LinkedIn Lead Gen": "bg-blue-500/10 text-blue-600 border-blue-500/20",
+  "Apollo":            "bg-violet-500/10 text-violet-600 border-violet-500/20",
+  "Website":           "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  "Manual":            "bg-secondary text-muted-foreground border-border",
+};
+
 export const columns: ColumnDef<Lead>[] = [
   {
     id: "select",
@@ -64,6 +71,19 @@ export const columns: ColumnDef<Lead>[] = [
     cell: ({ row }) => (
       <span className="text-muted-foreground">{row.getValue("email")}</span>
     ),
+  },
+  {
+    accessorKey: "source",
+    header: "Source",
+    cell: ({ row }) => {
+      const source = (row.getValue("source") || "Manual") as string;
+      const color = sourceColor[source] ?? "bg-secondary text-muted-foreground border-border";
+      return (
+        <Badge variant="outline" className={`font-bold text-[9px] uppercase tracking-wider ${color}`}>
+          {source}
+        </Badge>
+      );
+    },
   },
   {
     accessorKey: "status",
