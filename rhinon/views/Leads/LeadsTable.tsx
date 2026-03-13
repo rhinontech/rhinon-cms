@@ -13,7 +13,6 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { ChevronDown, Search } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -30,7 +29,6 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
 import { columns } from "./columns";
 import { dummyLeads } from "@/lib/dummy-data";
 import { LeadDrawer } from "./LeadDrawer";
@@ -41,7 +39,6 @@ export function LeadsTable() {
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
-
   const [selectedLead, setSelectedLead] = React.useState<Lead | null>(null);
   const [isDrawerOpen, setDrawerOpen] = React.useState(false);
 
@@ -56,12 +53,7 @@ export function LeadsTable() {
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-    },
+    state: { sorting, columnFilters, columnVisibility, rowSelection },
   });
 
   const handleRowClick = (lead: Lead) => {
@@ -70,64 +62,55 @@ export function LeadsTable() {
   };
 
   return (
-    <div className="card p-4">
-      <div className="flex items-center justify-between pb-4">
+    <div className="card p-5">
+      {/* Toolbar */}
+      <div className="flex items-center justify-between gap-3 pb-4">
         <div className="relative max-w-sm w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={15} />
           <Input
             placeholder="Search leads by name or company..."
             value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn("name")?.setFilterValue(event.target.value)
-            }
-            className="pl-9 bg-slate-900 border-slate-800"
+            onChange={(e) => table.getColumn("name")?.setFilterValue(e.target.value)}
+            className="pl-9 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
           />
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="border-slate-800 bg-slate-900 text-slate-300 ml-auto">
+            <Button variant="outline" className="border-border bg-card text-foreground ml-auto">
               Columns <ChevronDown className="ml-2 h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-slate-900 border-slate-800 text-slate-300">
+          <DropdownMenuContent align="end" className="bg-card border-border text-foreground">
             {table
               .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                );
-              })}
+              .filter((col) => col.getCanHide())
+              .map((col) => (
+                <DropdownMenuCheckboxItem
+                  key={col.id}
+                  className="capitalize text-muted-foreground"
+                  checked={col.getIsVisible()}
+                  onCheckedChange={(val) => col.toggleVisibility(!!val)}
+                >
+                  {col.id}
+                </DropdownMenuCheckboxItem>
+              ))}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
-      <div className="rounded-md border border-slate-800">
+      {/* Table */}
+      <div className="rounded-xl border border-border overflow-hidden">
         <Table>
-          <TableHeader className="bg-slate-900/50 hover:bg-slate-900/50">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="border-slate-800 hover:bg-slate-900/50">
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id} className="text-slate-400 font-medium h-10">
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                    </TableHead>
-                  );
-                })}
+          <TableHeader>
+            {table.getHeaderGroups().map((hg) => (
+              <TableRow key={hg.id} className="border-border bg-secondary/60 hover:bg-secondary/60">
+                {hg.headers.map((header) => (
+                  <TableHead key={header.id} className="text-muted-foreground font-semibold text-[11px] uppercase tracking-wider h-11">
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
+                ))}
               </TableRow>
             ))}
           </TableHeader>
@@ -137,29 +120,22 @@ export function LeadsTable() {
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="border-slate-800 hover:bg-slate-800/40 cursor-pointer transition-colors"
+                  className="border-border hover:bg-secondary/40 cursor-pointer transition-colors"
                   onClick={(e) => {
-                    // Prevent row click when clicking on the checkbox
                     if ((e.target as HTMLElement).closest('[role="checkbox"]')) return;
                     handleRowClick(row.original as Lead);
                   }}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="py-3">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+                    <TableCell key={cell.id} className="py-3 text-foreground">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center text-slate-500"
-                >
+                <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
                   No leads found.
                 </TableCell>
               </TableRow>
@@ -168,38 +144,32 @@ export function LeadsTable() {
         </Table>
       </div>
 
-      <div className="flex items-center justify-end space-x-2 pt-4">
-        <div className="flex-1 text-xs text-slate-500">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-            className="border-slate-800 bg-slate-900 text-slate-300"
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-            className="border-slate-800 bg-slate-900 text-slate-300"
-          >
-            Next
-          </Button>
-        </div>
+      {/* Pagination */}
+      <div className="flex items-center justify-end gap-2 pt-4">
+        <p className="flex-1 text-xs text-muted-foreground">
+          {table.getFilteredSelectedRowModel().rows.length} of {table.getFilteredRowModel().rows.length} selected
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+          className="border-border bg-card text-foreground hover:bg-secondary"
+        >
+          Previous
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+          className="border-border bg-card text-foreground hover:bg-secondary"
+        >
+          Next
+        </Button>
       </div>
 
-      <LeadDrawer
-        lead={selectedLead}
-        isOpen={isDrawerOpen}
-        onClose={() => setDrawerOpen(false)}
-      />
+      <LeadDrawer lead={selectedLead} isOpen={isDrawerOpen} onClose={() => setDrawerOpen(false)} />
     </div>
   );
 }

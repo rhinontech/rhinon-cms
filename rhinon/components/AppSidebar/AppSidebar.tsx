@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Bell,
   BookTemplate,
   Inbox,
   LayoutDashboard,
@@ -12,6 +11,7 @@ import {
   Shield,
   Users,
 } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const nav = [
   { label: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -23,41 +23,74 @@ const nav = [
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 
-import { ThemeToggle } from "@/components/theme-toggle";
-
 export function AppSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="card hidden h-full flex-col p-4 lg:flex w-64 mr-6 shrink-0">
-      <div className="flex items-start justify-between">
+    <aside className="card hidden h-full w-60 shrink-0 flex-col p-4 lg:flex">
+      {/* Brand */}
+      <div className="flex items-start justify-between mb-7">
         <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-cyan-500 dark:text-cyan-300 transition-colors">Rhinon</p>
-          <h1 className="mt-2 text-xl font-semibold text-foreground">Operations Hub</h1>
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-500">
+            Rhinon
+          </p>
+          <h1 className="mt-1 text-[17px] font-bold leading-tight text-foreground">
+            Operations Hub
+          </h1>
         </div>
         <ThemeToggle />
       </div>
-      <nav className="mt-8 space-y-2">
+
+      {/* Nav */}
+      <nav className="flex-1 space-y-0.5">
         {nav.map((item) => {
-          const isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href));
+          const isActive =
+            pathname === item.href ||
+            (item.href !== "/" && pathname?.startsWith(item.href));
 
           return (
             <Link
               key={item.label}
               href={item.href}
-              className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 transition ${isActive
-                ? "bg-cyan-500/15 text-cyan-100 shadow-glow border border-cyan-500/20"
-                : "text-slate-300 hover:bg-slate-800/70"
-                }`}
+              className={[
+                "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150",
+                isActive
+                  ? [
+                    // Active: strong cyan tint with visible border in both modes
+                    "bg-cyan-500/12 border border-cyan-500/30 text-cyan-700 dark:text-cyan-300",
+                    // Extra depth on dark
+                    "dark:bg-cyan-500/10 dark:shadow-sm",
+                  ].join(" ")
+                  : [
+                    // Inactive: use secondary for hover so it's visible in light too
+                    "border border-transparent text-muted-foreground",
+                    "hover:bg-secondary hover:border-border hover:text-foreground",
+                  ].join(" "),
+              ].join(" ")}
             >
-              <item.icon size={16} />
+              <item.icon
+                size={15}
+                className={[
+                  "shrink-0 transition-colors",
+                  isActive
+                    ? "text-cyan-600 dark:text-cyan-400"
+                    : "text-muted-foreground/60",
+                ].join(" ")}
+              />
               <span>{item.label}</span>
             </Link>
           );
         })}
       </nav>
-      <div className="mt-auto rounded-xl border border-cyan-500/20 bg-cyan-500/10 p-3 text-xs text-cyan-100">
-        AI Queue: 248 leads pending review
+
+      {/* AI Queue */}
+      <div className="mt-4 rounded-xl border border-cyan-500/25 bg-cyan-500/8 p-3.5">
+        <p className="text-[10px] font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
+          AI Queue
+        </p>
+        <p className="mt-0.5 text-sm font-bold text-foreground">
+          248 leads pending
+        </p>
       </div>
     </aside>
   );

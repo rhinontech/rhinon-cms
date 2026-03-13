@@ -2,144 +2,181 @@
 
 import { useState } from "react";
 import { format, formatDistanceToNow } from "date-fns";
-import { Search, Sparkles, Send, CheckCircle2, ChevronRight, MoreVertical, Archive, Clock, Inbox as InboxIcon } from "lucide-react";
-import { Lead } from "@/lib/types";
+import {
+  Search, Sparkles, Send, Archive, Clock, Inbox as InboxIcon, MoreVertical,
+} from "lucide-react";
 import { dummyLeads, dummyCampaigns } from "@/lib/dummy-data";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
-// Fake inbox data that combines a lead and their latest message
-const inboxItems = dummyLeads.filter(l => l.status === "Replied" || l.status === "Interested" || l.status === "Bounced").map(lead => ({
-  id: `msg_${lead.id}`,
-  lead,
-  subject: "Re: Scaling operations",
-  preview: lead.status === "Interested"
-    ? "Thanks for reaching out. We are actually evaluating vendors right now. Let's talk Tuesday."
-    : "I'll pass this along to our engineering director. She handles this now.",
-  date: new Date(lead.lastActivityAt || new Date()).toISOString(),
-  read: lead.status === "Interested" ? false : true,
-}));
+const inboxItems = dummyLeads
+  .filter((l) => l.status === "Replied" || l.status === "Interested" || l.status === "Bounced")
+  .map((lead) => ({
+    id: `msg_${lead.id}`,
+    lead,
+    subject: "Re: Scaling operations",
+    preview:
+      lead.status === "Interested"
+        ? "Thanks for reaching out. We are actually evaluating vendors right now. Let's talk Tuesday."
+        : "I'll pass this along to our engineering director. She handles this now.",
+    date: new Date(lead.lastActivityAt || new Date()).toISOString(),
+    read: lead.status === "Interested" ? false : true,
+  }));
 
 export function InboxSplitView() {
   const [selectedItem, setSelectedItem] = useState(inboxItems[0]);
   const [isDrafting, setIsDrafting] = useState(false);
   const [draftContent, setDraftContent] = useState("");
 
-  const activeCampaign = dummyCampaigns.find(c => c.id === selectedItem?.lead.campaignId);
+  const activeCampaign = dummyCampaigns.find((c) => c.id === selectedItem?.lead.campaignId);
 
   const handleAiDraft = () => {
     setIsDrafting(true);
     setTimeout(() => {
-      setDraftContent(`Hi ${selectedItem.lead.name.split(" ")[0]},\n\nTuesday works perfectly. Does 10:00 AM PST fit your schedule? I'll send over a calendar invite.\n\nBest,\nAlex`);
+      setDraftContent(
+        `Hi ${selectedItem.lead.name.split(" ")[0]},\n\nTuesday works perfectly. Does 10:00 AM PST fit your schedule? I'll send over a calendar invite.\n\nBest,\nAlex`,
+      );
       setIsDrafting(false);
     }, 1500);
   };
 
   return (
-    <div className="flex h-[calc(100vh-12rem)] border border-slate-800 rounded-xl overflow-hidden bg-slate-950">
+    <div className="flex h-[calc(100vh-12rem)] border border-border rounded-xl overflow-hidden bg-card">
 
-      {/* PANE 1: Conversation List */}
-      <div className="w-[350px] flex flex-col border-r border-slate-800 bg-slate-900/30">
-        <div className="p-4 border-b border-slate-800 h-16 flex items-center justify-between">
-          <div className="font-semibold text-slate-200">Inbox</div>
-          <Badge className="bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20">{inboxItems.filter(i => !i.read).length} Unread</Badge>
+      {/* ── Pane 1: Conversation List ─────────────── */}
+      <div className="w-[320px] shrink-0 flex flex-col border-r border-border bg-secondary/30">
+        {/* Header */}
+        <div className="p-4 border-b border-border h-15 flex items-center justify-between">
+          <span className="font-bold text-foreground">Inbox</span>
+          <Badge className="bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/25 hover:bg-cyan-500/15 text-[11px]">
+            {inboxItems.filter((i) => !i.read).length} Unread
+          </Badge>
         </div>
-        <div className="p-3">
+        {/* Search */}
+        <div className="p-3 border-b border-border">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={14} />
-            <Input placeholder="Search messages..." className="pl-9 h-9 bg-slate-900 border-slate-800 rounded-lg text-sm" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
+            <Input
+              placeholder="Search messages..."
+              className="pl-9 h-9 bg-secondary border-border text-foreground placeholder:text-muted-foreground text-sm"
+            />
           </div>
         </div>
+        {/* List */}
         <ScrollArea className="flex-1">
-          <div className="flex flex-col">
-            {inboxItems.map(item => (
-              <div
-                key={item.id}
-                onClick={() => setSelectedItem(item)}
-                className={`p-4 border-b border-slate-800/50 cursor-pointer transition-colors ${selectedItem?.id === item.id ? "bg-slate-800/80" : "hover:bg-slate-900/80"
-                  }`}
-              >
-                <div className="flex justify-between items-start mb-1">
-                  <span className={`text-sm ${!item.read ? "font-bold text-slate-100" : "font-medium text-slate-300"}`}>
-                    {item.lead.name}
-                  </span>
-                  <span className="text-xs text-slate-500">
-                    {formatDistanceToNow(new Date(item.date), { addSuffix: true })}
-                  </span>
-                </div>
-                <div className="text-xs text-slate-400 font-medium mb-1 truncate">{item.subject}</div>
-                <div className="text-xs text-slate-500 line-clamp-2 leading-relaxed">{item.preview}</div>
-                <div className="mt-3 flex gap-2">
-                  <Badge variant="outline" className={`text-[10px] px-1.5 py-0 border-slate-700 ${item.lead.status === "Interested" ? "bg-emerald-500/10 text-emerald-400" : "bg-slate-900 text-slate-400"
-                    }`}>
-                    {item.lead.status}
-                  </Badge>
-                </div>
+          {inboxItems.map((item) => (
+            <div
+              key={item.id}
+              onClick={() => setSelectedItem(item)}
+              className={cn(
+                "p-4 border-b border-border/60 cursor-pointer transition-colors",
+                selectedItem?.id === item.id
+                  ? "bg-secondary/80"
+                  : "hover:bg-secondary/50",
+              )}
+            >
+              <div className="flex justify-between items-start mb-1">
+                <span className={cn(
+                  "text-sm",
+                  !item.read ? "font-bold text-foreground" : "font-medium text-foreground/80",
+                )}>
+                  {item.lead.name}
+                </span>
+                <span className="text-[11px] text-muted-foreground shrink-0 ml-2">
+                  {formatDistanceToNow(new Date(item.date), { addSuffix: true })}
+                </span>
               </div>
-            ))}
-          </div>
+              <div className="text-xs text-foreground/70 font-medium mb-1 truncate">{item.subject}</div>
+              <div className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{item.preview}</div>
+              <div className="mt-2.5">
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "text-[10px] px-1.5 py-0",
+                    item.lead.status === "Interested"
+                      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25"
+                      : "bg-secondary text-muted-foreground border-border",
+                  )}
+                >
+                  {item.lead.status}
+                </Badge>
+              </div>
+            </div>
+          ))}
         </ScrollArea>
       </div>
 
-      {/* PANE 2: Message Thread & Composer */}
+      {/* ── Pane 2: Message Thread & Composer ────── */}
       {selectedItem ? (
         <div className="flex-1 flex flex-col min-w-0">
-          <div className="h-16 border-b border-slate-800 bg-slate-900/50 flex items-center justify-between px-6">
+          {/* Thread header */}
+          <div className="h-14 border-b border-border bg-secondary/20 flex items-center justify-between px-5">
             <div className="flex items-center gap-3">
-              <Avatar className="h-9 w-9 border border-slate-800">
-                <AvatarFallback className="bg-slate-800 text-slate-300 text-xs">
-                  {selectedItem.lead.name.split(" ").map(n => n[0]).join("")}
+              <Avatar className="h-8 w-8 border border-border">
+                <AvatarFallback className="bg-secondary text-muted-foreground text-xs font-bold">
+                  {selectedItem.lead.name.split(" ").map((n) => n[0]).join("")}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <div className="text-sm font-semibold text-slate-200">{selectedItem.lead.name}</div>
-                <div className="text-xs text-slate-500">{selectedItem.lead.email}</div>
+                <div className="text-sm font-semibold text-foreground">{selectedItem.lead.name}</div>
+                <div className="text-xs text-muted-foreground">{selectedItem.lead.email}</div>
               </div>
             </div>
-            <div className="flex gap-2">
-              <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-200 h-8 w-8"><Clock size={16} /></Button>
-              <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-200 h-8 w-8"><Archive size={16} /></Button>
-              <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-200 h-8 w-8"><MoreVertical size={16} /></Button>
+            <div className="flex gap-1">
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground"><Clock size={15} /></Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground"><Archive size={15} /></Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground"><MoreVertical size={15} /></Button>
             </div>
           </div>
 
-          <ScrollArea className="flex-1 bg-slate-950 p-6">
+          {/* Messages */}
+          <ScrollArea className="flex-1 bg-background p-6">
             <div className="space-y-6 max-w-3xl mx-auto">
-              {/* Fake Sent Original Message */}
+              {/* Sent */}
               <div className="pr-12">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="font-medium text-sm text-slate-300">Alex Mercer (You)</span>
-                  <span className="text-xs text-slate-500">{format(new Date(selectedItem.lead.addedAt), "MMM d, h:mm a")}</span>
+                  <span className="font-semibold text-sm text-foreground">Alex Mercer (You)</span>
+                  <span className="text-xs text-muted-foreground">
+                    {format(new Date(selectedItem.lead.addedAt), "MMM d, h:mm a")}
+                  </span>
                 </div>
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl rounded-tl-sm p-4 text-sm text-slate-300">
+                <div className="bg-card border border-border rounded-2xl rounded-tl-sm p-4 text-sm text-foreground">
                   <p>Hi {selectedItem.lead.name.split(" ")[0]},</p>
-                  <p className="mt-2">I noticed {selectedItem.lead.company} is expanding rapidly right now. We help companies like yours automate outbound sales with AI.</p>
+                  <p className="mt-2">
+                    I noticed {selectedItem.lead.company} is expanding rapidly right now. We help companies like yours automate outbound sales with AI.
+                  </p>
                   <p className="mt-2">Worth a quick chat next week?</p>
                 </div>
               </div>
 
-              {/* Inbound Reply */}
+              {/* Inbound reply */}
               <div className="pl-12">
                 <div className="flex items-center justify-end gap-2 mb-2">
-                  <span className="text-xs text-slate-500">{format(new Date(selectedItem.date), "MMM d, h:mm a")}</span>
-                  <span className="font-medium text-sm text-cyan-400">{selectedItem.lead.name}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {format(new Date(selectedItem.date), "MMM d, h:mm a")}
+                  </span>
+                  <span className="font-semibold text-sm text-cyan-600 dark:text-cyan-400">
+                    {selectedItem.lead.name}
+                  </span>
                 </div>
-                <div className="bg-cyan-950/30 border border-cyan-900/50 rounded-2xl rounded-tr-sm p-4 text-sm text-slate-200 shadow-inner">
+                <div className="bg-cyan-500/8 border border-cyan-500/20 rounded-2xl rounded-tr-sm p-4 text-sm text-foreground">
                   {selectedItem.preview}
                 </div>
               </div>
             </div>
           </ScrollArea>
 
-          {/* AI Composer block */}
-          <div className="p-4 border-t border-slate-800 bg-slate-900/30">
-            <div className="max-w-3xl mx-auto bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-sm focus-within:ring-1 focus-within:ring-cyan-500/50 focus-within:border-cyan-500/50 transition-all">
-              <div className="px-4 py-3 border-b border-slate-800/60 bg-slate-900/50 flex justify-between items-center">
-                <span className="text-xs font-medium text-slate-400">Reply to {selectedItem.lead.name.split(" ")[0]}</span>
+          {/* Composer */}
+          <div className="p-4 border-t border-border bg-secondary/20">
+            <div className="max-w-3xl mx-auto bg-card border border-border rounded-xl overflow-hidden focus-within:ring-1 focus-within:ring-cyan-500/40 focus-within:border-cyan-500/40 transition-all">
+              <div className="px-4 py-2.5 border-b border-border bg-secondary/40 flex justify-between items-center">
+                <span className="text-xs font-medium text-muted-foreground">
+                  Reply to {selectedItem.lead.name.split(" ")[0]}
+                </span>
                 {draftContent === "" && (
                   <Button
                     size="sm"
@@ -147,93 +184,89 @@ export function InboxSplitView() {
                     disabled={isDrafting}
                     className="h-7 text-xs bg-violet-600 hover:bg-violet-700 text-white"
                   >
-                    {isDrafting ? "Drafting..." : <><Sparkles size={12} className="mr-1" /> AI Draft Reply</>}
+                    {isDrafting ? "Drafting..." : <><Sparkles size={11} className="mr-1" /> AI Draft</>}
                   </Button>
                 )}
               </div>
               <textarea
                 placeholder="Type your reply or use AI to draft a response..."
-                className="w-full bg-transparent p-4 text-sm text-slate-200 outline-none resize-none min-h-[120px]"
+                className="w-full bg-transparent p-4 text-sm text-foreground outline-none resize-none min-h-[110px] placeholder:text-muted-foreground"
                 value={draftContent}
                 onChange={(e) => setDraftContent(e.target.value)}
               />
-              <div className="px-4 py-3 bg-slate-900/30 flex justify-between items-center border-t border-slate-800/60">
-                <div className="flex gap-2">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400"><PaperclipIcon size={16} /></Button>
-                </div>
-                <Button className="bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-medium h-8">
-                  <Send size={14} className="mr-2" /> Send Reply
+              <div className="px-4 py-2.5 bg-secondary/30 flex justify-end items-center border-t border-border">
+                <Button className="bg-cyan-500 hover:bg-cyan-600 text-white font-semibold h-8">
+                  <Send size={13} className="mr-2" /> Send Reply
                 </Button>
               </div>
             </div>
           </div>
         </div>
       ) : (
-        <div className="flex-1 flex flex-col items-center justify-center text-slate-500 bg-slate-950 border-l border-slate-800">
-          <InboxIcon size={48} className="mb-4 opacity-20" />
-          <p>Select a message to view the thread</p>
+        <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground bg-background">
+          <InboxIcon size={40} className="mb-4 opacity-20" />
+          <p className="text-sm">Select a message to view the thread</p>
         </div>
       )}
 
-      {/* PANE 3: Contextual Lead Sidebar */}
+      {/* ── Pane 3: Lead Context Sidebar ─────────── */}
       {selectedItem && (
-        <div className="w-[300px] border-l border-slate-800 bg-slate-900/30 flex flex-col hidden lg:flex">
-          <div className="p-4 border-b border-slate-800 h-16 flex items-center">
-            <span className="font-semibold text-slate-200">Lead Context</span>
+        <div className="w-[280px] shrink-0 border-l border-border bg-secondary/20 hidden lg:flex flex-col">
+          <div className="p-4 border-b border-border h-14 flex items-center">
+            <span className="font-bold text-foreground text-sm">Lead Context</span>
           </div>
-
-          <ScrollArea className="flex-1 p-6">
-            <div className="flex flex-col items-center text-center pb-6 border-b border-slate-800">
-              <Avatar className="h-16 w-16 mb-4 border-2 border-slate-800 ring-2 ring-slate-950">
-                <AvatarFallback className="bg-slate-800 text-slate-300 text-lg">
-                  {selectedItem.lead.name.split(" ").map(n => n[0]).join("")}
+          <ScrollArea className="flex-1 p-5">
+            {/* Avatar & name */}
+            <div className="flex flex-col items-center text-center pb-5 border-b border-border">
+              <Avatar className="h-14 w-14 mb-3 border-2 border-border">
+                <AvatarFallback className="bg-secondary text-foreground text-base font-bold">
+                  {selectedItem.lead.name.split(" ").map((n) => n[0]).join("")}
                 </AvatarFallback>
               </Avatar>
-              <h3 className="font-semibold text-slate-200 text-lg">{selectedItem.lead.name}</h3>
-              <p className="text-cyan-400 text-sm mt-1 font-medium">{selectedItem.lead.title}</p>
-              <p className="text-slate-500 text-sm mt-0.5">{selectedItem.lead.company}</p>
+              <h3 className="font-bold text-foreground">{selectedItem.lead.name}</h3>
+              <p className="text-cyan-600 dark:text-cyan-400 text-xs mt-1 font-medium">{selectedItem.lead.title}</p>
+              <p className="text-muted-foreground text-xs mt-0.5">{selectedItem.lead.company}</p>
             </div>
 
-            <div className="py-6 border-b border-slate-800 space-y-4">
-              <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Campaign</div>
+            {/* Campaign */}
+            <div className="py-5 border-b border-border">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Campaign</p>
               {activeCampaign ? (
-                <div className="bg-slate-950 border border-slate-800 rounded-lg p-3">
-                  <div className="font-medium text-slate-300 text-sm">{activeCampaign.name}</div>
-                  <Badge variant="outline" className="mt-2 bg-slate-900 text-slate-400 border-slate-700">{activeCampaign.channel}</Badge>
+                <div className="bg-secondary border border-border rounded-lg p-3">
+                  <div className="font-semibold text-foreground text-sm">{activeCampaign.name}</div>
+                  <Badge variant="outline" className="mt-2 bg-card text-muted-foreground border-border text-[11px]">
+                    {activeCampaign.channel}
+                  </Badge>
                 </div>
               ) : (
-                <div className="text-sm text-slate-500">No active campaign</div>
+                <p className="text-sm text-muted-foreground">No active campaign</p>
               )}
             </div>
 
-            <div className="py-6 space-y-4">
-              <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Contact Info</div>
-              <div className="space-y-3">
-                <div>
-                  <div className="text-xs text-slate-500">Email</div>
-                  <div className="text-sm text-slate-300 mt-0.5">{selectedItem.lead.email}</div>
+            {/* Contact info */}
+            <div className="py-5 space-y-4">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Contact Info</p>
+              {[
+                { label: "Email", val: selectedItem.lead.email },
+                { label: "LinkedIn", val: "View Profile", link: true },
+                { label: "Enrolled", val: format(new Date(selectedItem.lead.addedAt), "MMMM d, yyyy") },
+              ].map(({ label, val, link }) => (
+                <div key={label}>
+                  <p className="text-[10px] text-muted-foreground font-medium">{label}</p>
+                  <p className={cn(
+                    "text-sm mt-0.5",
+                    link
+                      ? "text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer"
+                      : "text-foreground",
+                  )}>
+                    {val}
+                  </p>
                 </div>
-                <div>
-                  <div className="text-xs text-slate-500">LinkedIn</div>
-                  <div className="text-sm text-cyan-400 mt-0.5 hover:underline cursor-pointer">View Profile</div>
-                </div>
-                <div>
-                  <div className="text-xs text-slate-500">Enrolled</div>
-                  <div className="text-sm text-slate-300 mt-0.5">{format(new Date(selectedItem.lead.addedAt), "MMMM d, yyyy")}</div>
-                </div>
-              </div>
+              ))}
             </div>
           </ScrollArea>
         </div>
       )}
     </div>
-  );
-}
-
-function PaperclipIcon({ size }: { size: number }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" />
-    </svg>
   );
 }

@@ -4,8 +4,6 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { Mail, Linkedin, Plus, Search, MoreVertical } from "lucide-react";
 import { dummyTemplates } from "@/lib/dummy-data";
-import { Template } from "@/lib/types";
-import { TemplateEditor } from "./TemplateEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -15,13 +13,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
+
+const FILTERS = ["All", "Email", "LinkedIn DM", "LinkedIn Connection"] as const;
+type Filter = (typeof FILTERS)[number];
 
 export function TemplateGrid() {
   const router = useRouter();
-  const [filter, setFilter] = useState<"All" | "Email" | "LinkedIn DM" | "LinkedIn Connection">("All");
+  const [filter, setFilter] = useState<Filter>("All");
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredTemplates = dummyTemplates.filter((t) => {
@@ -32,16 +33,20 @@ export function TemplateGrid() {
 
   return (
     <div className="space-y-6">
+      {/* Toolbar */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 p-1 rounded-xl">
-          {["All", "Email", "LinkedIn DM", "LinkedIn Connection"].map((tab) => (
+        {/* Filter tabs */}
+        <div className="flex items-center gap-1 bg-secondary border border-border p-1 rounded-xl">
+          {FILTERS.map((tab) => (
             <button
               key={tab}
-              onClick={() => setFilter(tab as any)}
-              className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${filter === tab
-                ? "bg-slate-800 text-cyan-400 shadow-sm"
-                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
-                }`}
+              onClick={() => setFilter(tab)}
+              className={cn(
+                "px-3 py-1.5 text-sm font-medium rounded-lg transition-colors",
+                filter === tab
+                  ? "bg-card text-cyan-600 dark:text-cyan-400 shadow-sm border border-border"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/80",
+              )}
             >
               {tab}
             </button>
@@ -50,81 +55,92 @@ export function TemplateGrid() {
 
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={15} />
             <Input
               placeholder="Search templates..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-slate-900 border-slate-800"
+              className="pl-9 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
             />
           </div>
           <Link href="/templates/new">
-            <Button className="bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-medium whitespace-nowrap">
-              <Plus size={16} className="mr-2" /> New Template
+            <Button className="bg-cyan-500 hover:bg-cyan-600 text-white font-semibold whitespace-nowrap">
+              <Plus size={15} className="mr-2" /> New Template
             </Button>
           </Link>
         </div>
       </div>
 
+      {/* Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {filteredTemplates.map((template) => (
           <div
             key={template.id}
-            className="group card p-5 flex flex-col cursor-pointer hover:border-cyan-500/50 hover:shadow-glow transition-all"
+            className="group card p-5 flex flex-col cursor-pointer hover:border-cyan-500/40 hover:shadow-glow transition-all"
             onClick={() => router.push(`/templates/${template.id}/edit`)}
           >
+            {/* Card header */}
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-center gap-2">
-                <div className={`p-2 rounded-lg ${template.channel === "Email" ? "bg-emerald-500/10 text-emerald-400" : "bg-blue-500/10 text-blue-400"
-                  }`}>
-                  {template.channel === "Email" ? <Mail size={16} /> : <Linkedin size={16} />}
+                <div className={cn(
+                  "p-2 rounded-lg",
+                  template.channel === "Email"
+                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                    : "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+                )}>
+                  {template.channel === "Email" ? <Mail size={15} /> : <Linkedin size={15} />}
                 </div>
-                <Badge variant="outline" className="bg-slate-900 border-slate-700">
+                <Badge variant="outline" className="bg-secondary border-border text-muted-foreground text-[11px]">
                   {template.channel}
                 </Badge>
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <MoreVertical size={16} />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <MoreVertical size={15} />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-slate-900 border-slate-800 text-slate-300">
+                <DropdownMenuContent align="end" className="bg-card border-border text-foreground">
                   <DropdownMenuItem onClick={() => router.push(`/templates/${template.id}/edit`)}>Edit</DropdownMenuItem>
                   <DropdownMenuItem>Duplicate</DropdownMenuItem>
-                  <DropdownMenuItem className="text-rose-400">Delete</DropdownMenuItem>
+                  <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
 
-            <h3 className="font-semibold text-slate-200 text-base mb-1 truncate">{template.name}</h3>
+            <h3 className="font-semibold text-foreground text-sm mb-1 truncate">{template.name}</h3>
 
             {template.subject && (
-              <p className="text-xs text-slate-400 mb-3 truncate flex items-center gap-2">
-                <span className="font-semibold text-slate-500">Subj:</span> {template.subject}
+              <p className="text-xs text-muted-foreground mb-3 truncate flex items-center gap-1">
+                <span className="font-bold">Subj:</span> {template.subject}
               </p>
             )}
 
             <div className="relative mt-auto">
-              <p className="text-sm text-slate-500 line-clamp-3 leading-relaxed">
+              <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed">
                 {template.body}
               </p>
-              <div className="absolute bottom-0 left-0 w-full h-8 bg-gradient-to-t from-slate-900/90 to-transparent pointer-events-none" />
+              {/* Fade — adapts to card bg in both modes */}
+              <div className="absolute bottom-0 left-0 w-full h-8 bg-gradient-to-t from-card to-transparent pointer-events-none" />
             </div>
 
-            <div className="mt-4 pt-4 border-t border-slate-800/60 flex items-center justify-between text-xs text-slate-500">
+            <div className="mt-4 pt-4 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
               <span>Updated {format(new Date(template.updatedAt), "MMM d, yyyy")}</span>
             </div>
           </div>
         ))}
 
-        {/* Create New Card */}
+        {/* Create New tile */}
         <Link href="/templates/new" className="block">
-          <div className="border-2 border-dashed border-slate-800 hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer min-h-[200px] h-full">
-            <div className="h-10 w-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center mb-3">
-              <Plus size={20} className="text-slate-400" />
+          <div className="h-full min-h-[180px] border-2 border-dashed border-border hover:border-cyan-500/40 hover:bg-cyan-500/5 transition-all rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer">
+            <div className="h-10 w-10 rounded-full bg-secondary border border-border flex items-center justify-center mb-3">
+              <Plus size={18} className="text-muted-foreground" />
             </div>
-            <h3 className="font-medium text-slate-300">Create Template</h3>
+            <h3 className="font-semibold text-muted-foreground text-sm">Create Template</h3>
           </div>
         </Link>
       </div>
