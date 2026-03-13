@@ -1,5 +1,5 @@
-import { LeadsTable } from "@/app/pages/Leads/LeadsTable";
-import { ImportModal } from "@/app/pages/Leads/ImportModal";
+import { LeadsTable } from "@/views/Leads/LeadsTable";
+import { ImportModal } from "@/views/Leads/ImportModal";
 import { Users } from "lucide-react";
 import { Metadata } from "next";
 

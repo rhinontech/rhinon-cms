@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Search, Mail, Building, Key, Users, Copy, CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
-import { dummyUsers, dummyRoles } from "@/app/lib/dummy-data";
+import { dummyUsers, dummyRoles } from "@/lib/dummy-data";
 import { InviteUserModal } from "./InviteUserModal";
 import { CreateRoleModal } from "./CreateRoleModal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,8 +14,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 export function TeamTabs() {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredUsers = dummyUsers.filter(u => 
-    u.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+  const filteredUsers = dummyUsers.filter(u =>
+    u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     u.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -131,9 +131,9 @@ export function TeamTabs() {
                       <Badge className="bg-rose-500/10 text-rose-400 border border-rose-500/20">System Default</Badge>
                     )}
                   </div>
-                  
+
                   <div className="text-sm text-slate-500 mb-6 flex items-center gap-2">
-                    <Users size={14} /> 
+                    <Users size={14} />
                     {dummyUsers.filter(u => u.roleId === role.id).length} Active Users
                   </div>
 
@@ -143,10 +143,10 @@ export function TeamTabs() {
                       // Lookup a human readable name based on ID
                       const pName = dummyRoles.flatMap(r => r.permissions).find(p => p === permId)?.replace("perm_", "Permission ") || permId;
                       return (
-                         <div key={permId} className="flex items-center text-sm text-slate-300 gap-2">
-                           <CheckCircle2 size={14} className="text-violet-400" />
-                           <span className="truncate">{permId.replace("perm_", "P0").replace("_", " ")} Enabled</span>
-                         </div>
+                        <div key={permId} className="flex items-center text-sm text-slate-300 gap-2">
+                          <CheckCircle2 size={14} className="text-violet-400" />
+                          <span className="truncate">{permId.replace("perm_", "P0").replace("_", " ")} Enabled</span>
+                        </div>
                       );
                     })}
                   </div>

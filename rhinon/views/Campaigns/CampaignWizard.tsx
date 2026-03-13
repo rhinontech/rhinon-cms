@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { dummyTemplates, dummyLeads } from "@/app/lib/dummy-data";
+import { dummyTemplates, dummyLeads } from "@/lib/dummy-data";
 
 export function CampaignWizard() {
   const [isOpen, setIsOpen] = useState(false);
@@ -46,7 +46,7 @@ export function CampaignWizard() {
       <DialogTrigger render={<Button className="bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-medium" />}>
         New Campaign
       </DialogTrigger>
-      
+
       <DialogContent className="sm:max-w-3xl bg-slate-950 border-slate-800 text-slate-200 p-0 overflow-hidden hide-close outline-none">
         {/* Wizard Header / Progress */}
         <div className="bg-slate-900 border-b border-slate-800 p-6 flex items-center justify-between">
@@ -54,17 +54,16 @@ export function CampaignWizard() {
             <Rocket className="text-cyan-500" size={20} />
             <h2 className="font-semibold text-lg">Campaign Orchestrator</h2>
           </div>
-          
+
           <div className="flex items-center gap-1 hidden sm:flex">
             {steps.map((s, i) => (
               <div key={s.id} className="flex items-center">
-                <div className={`flex items-center justify-center rounded-full h-8 w-8 text-xs font-medium transition-colors ${
-                  step === s.id 
-                    ? "bg-cyan-500 text-slate-950" 
-                    : step > s.id 
-                      ? "bg-emerald-500/20 text-emerald-400" 
+                <div className={`flex items-center justify-center rounded-full h-8 w-8 text-xs font-medium transition-colors ${step === s.id
+                    ? "bg-cyan-500 text-slate-950"
+                    : step > s.id
+                      ? "bg-emerald-500/20 text-emerald-400"
                       : "bg-slate-800 text-slate-500"
-                }`}>
+                  }`}>
                   {step > s.id ? <CheckCircle2 size={16} /> : s.id}
                 </div>
                 {i < steps.length - 1 && (
@@ -83,13 +82,13 @@ export function CampaignWizard() {
                 <h3 className="text-xl font-medium mb-1">Campaign Setup</h3>
                 <p className="text-sm text-slate-500">Define the core objective and channel for this campaign.</p>
               </div>
-              
+
               <div className="space-y-4 max-w-lg">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300">Campaign Name</label>
                   <Input placeholder="e.g. Q3 Enterprise Expansion" className="bg-slate-900 border-slate-800" />
                 </div>
-                
+
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300">Primary Channel</label>
                   <Select defaultValue="email">
@@ -113,7 +112,7 @@ export function CampaignWizard() {
                 <h3 className="text-xl font-medium mb-1">Target Audience</h3>
                 <p className="text-sm text-slate-500">Select the leads that will be enrolled in this campaign.</p>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="border border-cyan-500/50 bg-cyan-500/5 rounded-xl p-5 cursor-pointer flex flex-col items-center justify-center text-center gap-3 relative overflow-hidden group">
                   <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-transparent group-hover:opacity-100 opacity-50 transition-opacity" />
@@ -123,7 +122,7 @@ export function CampaignWizard() {
                     <div className="text-xs text-slate-400 mt-1">Filter from CRM</div>
                   </div>
                 </div>
-                
+
                 <div className="border border-slate-800 hover:border-slate-700 bg-slate-900 rounded-xl p-5 cursor-pointer flex flex-col items-center justify-center text-center gap-3 transition-colors">
                   <div className="p-2 bg-slate-800 rounded-full"><Rocket size={20} className="text-slate-400" /></div>
                   <div>
@@ -149,7 +148,7 @@ export function CampaignWizard() {
                 <h3 className="text-xl font-medium mb-1">Messaging Strategy</h3>
                 <p className="text-sm text-slate-500">Attach a template to guide the AI generation process.</p>
               </div>
-              
+
               <div className="space-y-4 max-w-lg">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300">Select Base Template</label>
@@ -164,9 +163,9 @@ export function CampaignWizard() {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="p-4 rounded-lg bg-slate-900 border border-slate-800">
-                  <div className="text-xs text-violet-400 font-medium mb-2 flex items-center gap-1"><Sparkles size={12}/> AI Instructions Review</div>
+                  <div className="text-xs text-violet-400 font-medium mb-2 flex items-center gap-1"><Sparkles size={12} /> AI Instructions Review</div>
                   <p className="text-sm text-slate-300 italic">{dummyTemplates[0].aiInstructions}</p>
                 </div>
               </div>
@@ -179,14 +178,14 @@ export function CampaignWizard() {
                 <h3 className="text-xl font-medium mb-1">Execution Settings</h3>
                 <p className="text-sm text-slate-500">Configure sending limits and schedules.</p>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-6 max-w-lg">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300">Daily Send Limit</label>
                   <Input type="number" defaultValue={50} className="bg-slate-900 border-slate-800" />
                   <p className="text-xs text-slate-500">Max leads processed per day to protect domain reputation.</p>
                 </div>
-                
+
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300">Start Date</label>
                   <Input type="date" defaultValue={format(new Date(), "yyyy-MM-dd")} className="bg-slate-900 border-slate-800 text-slate-300" />
@@ -204,7 +203,7 @@ export function CampaignWizard() {
               <p className="text-slate-400 max-w-md mx-auto">
                 The AI engine will begin processing <span className="text-slate-200 font-medium">{dummyLeads.length} leads</span> at a rate of 50 per day starting immediately.
               </p>
-              
+
               <div className="mt-8 bg-slate-900 border border-slate-800 rounded-xl p-4 max-w-sm mx-auto text-left flex flex-col gap-2 text-sm text-slate-300">
                 <div className="flex justify-between"><span className="text-slate-500">Name</span>Q3 Enterprise Expansion</div>
                 <div className="flex justify-between"><span className="text-slate-500">Template</span>Enterprise Cold Outreach</div>
@@ -216,8 +215,8 @@ export function CampaignWizard() {
 
         {/* Wizard Footer */}
         <div className="bg-slate-900/50 p-4 border-t border-slate-800 flex justify-between rounded-b-lg">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             onClick={step === 1 ? () => setIsOpen(false) : handlePrev}
             className="text-slate-400 hover:text-white"
             disabled={isDeploying}
@@ -230,8 +229,8 @@ export function CampaignWizard() {
               Continue <ArrowRight size={16} className="ml-2" />
             </Button>
           ) : (
-            <Button 
-              onClick={handleLaunch} 
+            <Button
+              onClick={handleLaunch}
               disabled={isDeploying}
               className="bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-medium min-w-[140px]"
             >

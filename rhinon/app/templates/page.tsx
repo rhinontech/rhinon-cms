@@ -1,4 +1,4 @@
-import { TemplateGrid } from "@/app/pages/Templates/TemplateGrid";
+import { TemplateGrid } from "@/views/Templates/TemplateGrid";
 import { BookTemplate } from "lucide-react";
 import { Metadata } from "next";
 

@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { format, formatDistanceToNow } from "date-fns";
 import { Search, Sparkles, Send, CheckCircle2, ChevronRight, MoreVertical, Archive, Clock, Inbox as InboxIcon } from "lucide-react";
-import { Lead } from "@/app/lib/types";
-import { dummyLeads, dummyCampaigns } from "@/app/lib/dummy-data";
+import { Lead } from "@/lib/types";
+import { dummyLeads, dummyCampaigns } from "@/lib/dummy-data";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,8 +17,8 @@ const inboxItems = dummyLeads.filter(l => l.status === "Replied" || l.status ===
   id: `msg_${lead.id}`,
   lead,
   subject: "Re: Scaling operations",
-  preview: lead.status === "Interested" 
-    ? "Thanks for reaching out. We are actually evaluating vendors right now. Let's talk Tuesday." 
+  preview: lead.status === "Interested"
+    ? "Thanks for reaching out. We are actually evaluating vendors right now. Let's talk Tuesday."
     : "I'll pass this along to our engineering director. She handles this now.",
   date: new Date(lead.lastActivityAt || new Date()).toISOString(),
   read: lead.status === "Interested" ? false : true,
@@ -41,7 +41,7 @@ export function InboxSplitView() {
 
   return (
     <div className="flex h-[calc(100vh-12rem)] border border-slate-800 rounded-xl overflow-hidden bg-slate-950">
-      
+
       {/* PANE 1: Conversation List */}
       <div className="w-[350px] flex flex-col border-r border-slate-800 bg-slate-900/30">
         <div className="p-4 border-b border-slate-800 h-16 flex items-center justify-between">
@@ -57,12 +57,11 @@ export function InboxSplitView() {
         <ScrollArea className="flex-1">
           <div className="flex flex-col">
             {inboxItems.map(item => (
-              <div 
+              <div
                 key={item.id}
                 onClick={() => setSelectedItem(item)}
-                className={`p-4 border-b border-slate-800/50 cursor-pointer transition-colors ${
-                  selectedItem?.id === item.id ? "bg-slate-800/80" : "hover:bg-slate-900/80"
-                }`}
+                className={`p-4 border-b border-slate-800/50 cursor-pointer transition-colors ${selectedItem?.id === item.id ? "bg-slate-800/80" : "hover:bg-slate-900/80"
+                  }`}
               >
                 <div className="flex justify-between items-start mb-1">
                   <span className={`text-sm ${!item.read ? "font-bold text-slate-100" : "font-medium text-slate-300"}`}>
@@ -75,9 +74,8 @@ export function InboxSplitView() {
                 <div className="text-xs text-slate-400 font-medium mb-1 truncate">{item.subject}</div>
                 <div className="text-xs text-slate-500 line-clamp-2 leading-relaxed">{item.preview}</div>
                 <div className="mt-3 flex gap-2">
-                  <Badge variant="outline" className={`text-[10px] px-1.5 py-0 border-slate-700 ${
-                    item.lead.status === "Interested" ? "bg-emerald-500/10 text-emerald-400" : "bg-slate-900 text-slate-400"
-                  }`}>
+                  <Badge variant="outline" className={`text-[10px] px-1.5 py-0 border-slate-700 ${item.lead.status === "Interested" ? "bg-emerald-500/10 text-emerald-400" : "bg-slate-900 text-slate-400"
+                    }`}>
                     {item.lead.status}
                   </Badge>
                 </div>
@@ -103,9 +101,9 @@ export function InboxSplitView() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-200 h-8 w-8"><Clock size={16}/></Button>
-              <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-200 h-8 w-8"><Archive size={16}/></Button>
-              <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-200 h-8 w-8"><MoreVertical size={16}/></Button>
+              <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-200 h-8 w-8"><Clock size={16} /></Button>
+              <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-200 h-8 w-8"><Archive size={16} /></Button>
+              <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-200 h-8 w-8"><MoreVertical size={16} /></Button>
             </div>
           </div>
 
@@ -143,8 +141,8 @@ export function InboxSplitView() {
               <div className="px-4 py-3 border-b border-slate-800/60 bg-slate-900/50 flex justify-between items-center">
                 <span className="text-xs font-medium text-slate-400">Reply to {selectedItem.lead.name.split(" ")[0]}</span>
                 {draftContent === "" && (
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     onClick={handleAiDraft}
                     disabled={isDrafting}
                     className="h-7 text-xs bg-violet-600 hover:bg-violet-700 text-white"
@@ -153,7 +151,7 @@ export function InboxSplitView() {
                   </Button>
                 )}
               </div>
-              <textarea 
+              <textarea
                 placeholder="Type your reply or use AI to draft a response..."
                 className="w-full bg-transparent p-4 text-sm text-slate-200 outline-none resize-none min-h-[120px]"
                 value={draftContent}
@@ -183,7 +181,7 @@ export function InboxSplitView() {
           <div className="p-4 border-b border-slate-800 h-16 flex items-center">
             <span className="font-semibold text-slate-200">Lead Context</span>
           </div>
-          
+
           <ScrollArea className="flex-1 p-6">
             <div className="flex flex-col items-center text-center pb-6 border-b border-slate-800">
               <Avatar className="h-16 w-16 mb-4 border-2 border-slate-800 ring-2 ring-slate-950">

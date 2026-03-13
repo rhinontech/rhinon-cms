@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { dummyRoles } from "@/app/lib/dummy-data";
+import { dummyRoles } from "@/lib/dummy-data";
 
 export function InviteUserModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -86,14 +86,14 @@ export function InviteUserModal() {
                 <h3 className="text-lg font-medium text-slate-200">Invite Link Generated</h3>
                 <p className="text-sm text-slate-400 mt-1">Copy the link below and share it securely.</p>
               </div>
-              
+
               <div className="flex items-center space-x-2 bg-slate-900 border border-slate-800 rounded-lg p-1 max-w-sm mx-auto">
                 <div className="bg-slate-950 text-slate-400 p-2 rounded flex-1 truncate text-sm flex items-center gap-2">
                   <Link size={14} className="min-w-[14px]" />
                   <span className="truncate">{inviteLink}</span>
                 </div>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   className={copied ? "bg-emerald-500 hover:bg-emerald-600 text-slate-950" : "bg-slate-800 hover:bg-slate-700 text-slate-200"}
                   onClick={handleCopy}
                 >

@@ -6,7 +6,7 @@ import {
   campaigns,
   leads,
   metrics,
-} from "@/app/lib/data";
+} from "@/lib/data";
 import {
   Bell,
   Command,

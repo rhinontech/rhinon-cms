@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { Lead } from "@/app/lib/types";
+import { Lead } from "@/lib/types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -57,10 +57,10 @@ export const columns: ColumnDef<Lead>[] = [
     header: "Status",
     cell: ({ row }) => {
       const status = row.getValue("status") as string;
-      
+
       let variant: "default" | "secondary" | "destructive" | "outline" = "outline";
       let colorClass = "bg-slate-800 text-slate-300";
-      
+
       if (status === "New") {
         colorClass = "bg-blue-500/10 text-blue-400 border-blue-500/20";
       } else if (status === "Emailed") {

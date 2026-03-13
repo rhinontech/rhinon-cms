@@ -1,4 +1,4 @@
-import { CampaignBoard } from "@/app/pages/Campaigns/CampaignBoard";
+import { CampaignBoard } from "@/views/Campaigns/CampaignBoard";
 import { Rocket } from "lucide-react";
 import { Metadata } from "next";
 

@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { dummyPermissions } from "@/app/lib/dummy-data";
+import { dummyPermissions } from "@/lib/dummy-data";
 
 export function CreateRoleModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -43,11 +43,11 @@ export function CreateRoleModal() {
         <div className="py-4 space-y-6">
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-300">Role Name</label>
-            <Input 
-              placeholder="e.g. Sales Onboarding Specialist" 
+            <Input
+              placeholder="e.g. Sales Onboarding Specialist"
               value={roleName}
               onChange={(e) => setRoleName(e.target.value)}
-              className="bg-slate-900 border-slate-800" 
+              className="bg-slate-900 border-slate-800"
             />
           </div>
 
@@ -58,7 +58,7 @@ export function CreateRoleModal() {
                 <ShieldAlert size={12} /> Root access disabled
               </div>
             </div>
-            
+
             <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
               {dummyPermissions.map((perm) => (
                 <div key={perm.id} className="flex items-start space-x-3 p-3 rounded-lg border border-slate-800 bg-slate-900/50 hover:bg-slate-900 transition-colors">

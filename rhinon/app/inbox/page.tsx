@@ -1,4 +1,4 @@
-import { InboxSplitView } from "@/app/pages/Inbox/InboxSplitView";
+import { InboxSplitView } from "@/views/Inbox/InboxSplitView";
 import { Inbox } from "lucide-react";
 import { Metadata } from "next";
 

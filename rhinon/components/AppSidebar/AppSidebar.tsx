@@ -27,7 +27,7 @@ export function AppSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="card hidden h-[calc(100vh-4rem)] flex-col p-4 lg:flex w-64 mr-6 shrink-0">
+    <aside className="card hidden h-full flex-col p-4 lg:flex w-64 mr-6 shrink-0">
       <div>
         <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">Rhinon</p>
         <h1 className="mt-2 text-xl font-semibold">Operations Hub</h1>
@@ -35,16 +35,15 @@ export function AppSidebar() {
       <nav className="mt-8 space-y-2">
         {nav.map((item) => {
           const isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href));
-          
+
           return (
             <Link
               key={item.label}
               href={item.href}
-              className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 transition ${
-                isActive
-                  ? "bg-cyan-500/15 text-cyan-100 shadow-glow border border-cyan-500/20"
-                  : "text-slate-300 hover:bg-slate-800/70"
-              }`}
+              className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 transition ${isActive
+                ? "bg-cyan-500/15 text-cyan-100 shadow-glow border border-cyan-500/20"
+                : "text-slate-300 hover:bg-slate-800/70"
+                }`}
             >
               <item.icon size={16} />
               <span>{item.label}</span>

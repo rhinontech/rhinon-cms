@@ -1,4 +1,4 @@
-import { TeamTabs } from "@/app/pages/Team/TeamTabs";
+import { TeamTabs } from "@/views/Team/TeamTabs";
 import { UsersRound } from "lucide-react";
 import { Metadata } from "next";
 

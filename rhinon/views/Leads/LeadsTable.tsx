@@ -32,16 +32,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { columns } from "./columns";
-import { dummyLeads } from "@/app/lib/dummy-data";
+import { dummyLeads } from "@/lib/dummy-data";
 import { LeadDrawer } from "./LeadDrawer";
-import { Lead } from "@/app/lib/types";
+import { Lead } from "@/lib/types";
 
 export function LeadsTable() {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
-  
+
   const [selectedLead, setSelectedLead] = React.useState<Lead | null>(null);
   const [isDrawerOpen, setDrawerOpen] = React.useState(false);
 
@@ -110,7 +110,7 @@ export function LeadsTable() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      
+
       <div className="rounded-md border border-slate-800">
         <Table>
           <TableHeader className="bg-slate-900/50 hover:bg-slate-900/50">
@@ -122,9 +122,9 @@ export function LeadsTable() {
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </TableHead>
                   );
                 })}
@@ -167,7 +167,7 @@ export function LeadsTable() {
           </TableBody>
         </Table>
       </div>
-      
+
       <div className="flex items-center justify-end space-x-2 pt-4">
         <div className="flex-1 text-xs text-slate-500">
           {table.getFilteredSelectedRowModel().rows.length} of{" "}
@@ -195,10 +195,10 @@ export function LeadsTable() {
         </div>
       </div>
 
-      <LeadDrawer 
-        lead={selectedLead} 
-        isOpen={isDrawerOpen} 
-        onClose={() => setDrawerOpen(false)} 
+      <LeadDrawer
+        lead={selectedLead}
+        isOpen={isDrawerOpen}
+        onClose={() => setDrawerOpen(false)}
       />
     </div>
   );

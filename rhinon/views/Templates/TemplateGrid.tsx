@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { Mail, Linkedin, Plus, Search, MoreVertical } from "lucide-react";
-import { dummyTemplates } from "@/app/lib/dummy-data";
-import { Template } from "@/app/lib/types";
+import { dummyTemplates } from "@/lib/dummy-data";
+import { Template } from "@/lib/types";
 import { TemplateEditor } from "./TemplateEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,25 +16,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
 export function TemplateGrid() {
+  const router = useRouter();
   const [filter, setFilter] = useState<"All" | "Email" | "LinkedIn DM" | "LinkedIn Connection">("All");
   const [searchQuery, setSearchQuery] = useState("");
-  const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
 
   const filteredTemplates = dummyTemplates.filter((t) => {
     const matchesFilter = filter === "All" || t.channel === filter;
     const matchesSearch = t.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesFilter && matchesSearch;
   });
-
-  if (editingTemplate) {
-    return (
-      <TemplateEditor 
-        template={editingTemplate} 
-        onClose={() => setEditingTemplate(null)} 
-      />
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -44,11 +38,10 @@ export function TemplateGrid() {
             <button
               key={tab}
               onClick={() => setFilter(tab as any)}
-              className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-                filter === tab 
-                  ? "bg-slate-800 text-cyan-400 shadow-sm" 
+              className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${filter === tab
+                  ? "bg-slate-800 text-cyan-400 shadow-sm"
                   : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
-              }`}
+                }`}
             >
               {tab}
             </button>
@@ -65,24 +58,25 @@ export function TemplateGrid() {
               className="pl-9 bg-slate-900 border-slate-800"
             />
           </div>
-          <Button className="bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-medium whitespace-nowrap">
-            <Plus size={16} className="mr-2" /> New Template
-          </Button>
+          <Link href="/templates/new">
+            <Button className="bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-medium whitespace-nowrap">
+              <Plus size={16} className="mr-2" /> New Template
+            </Button>
+          </Link>
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {filteredTemplates.map((template) => (
-          <div 
-            key={template.id} 
+          <div
+            key={template.id}
             className="group card p-5 flex flex-col cursor-pointer hover:border-cyan-500/50 hover:shadow-glow transition-all"
-            onClick={() => setEditingTemplate(template)}
+            onClick={() => router.push(`/templates/${template.id}/edit`)}
           >
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-center gap-2">
-                <div className={`p-2 rounded-lg ${
-                  template.channel === "Email" ? "bg-emerald-500/10 text-emerald-400" : "bg-blue-500/10 text-blue-400"
-                }`}>
+                <div className={`p-2 rounded-lg ${template.channel === "Email" ? "bg-emerald-500/10 text-emerald-400" : "bg-blue-500/10 text-blue-400"
+                  }`}>
                   {template.channel === "Email" ? <Mail size={16} /> : <Linkedin size={16} />}
                 </div>
                 <Badge variant="outline" className="bg-slate-900 border-slate-700">
@@ -96,7 +90,7 @@ export function TemplateGrid() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-slate-900 border-slate-800 text-slate-300">
-                  <DropdownMenuItem onClick={() => setEditingTemplate(template)}>Edit</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push(`/templates/${template.id}/edit`)}>Edit</DropdownMenuItem>
                   <DropdownMenuItem>Duplicate</DropdownMenuItem>
                   <DropdownMenuItem className="text-rose-400">Delete</DropdownMenuItem>
                 </DropdownMenuContent>
@@ -104,7 +98,7 @@ export function TemplateGrid() {
             </div>
 
             <h3 className="font-semibold text-slate-200 text-base mb-1 truncate">{template.name}</h3>
-            
+
             {template.subject && (
               <p className="text-xs text-slate-400 mb-3 truncate flex items-center gap-2">
                 <span className="font-semibold text-slate-500">Subj:</span> {template.subject}
@@ -123,14 +117,16 @@ export function TemplateGrid() {
             </div>
           </div>
         ))}
-        
+
         {/* Create New Card */}
-        <div className="border-2 border-dashed border-slate-800 hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer min-h-[200px]">
-          <div className="h-10 w-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center mb-3">
-            <Plus size={20} className="text-slate-400" />
+        <Link href="/templates/new" className="block">
+          <div className="border-2 border-dashed border-slate-800 hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer min-h-[200px] h-full">
+            <div className="h-10 w-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center mb-3">
+              <Plus size={20} className="text-slate-400" />
+            </div>
+            <h3 className="font-medium text-slate-300">Create Template</h3>
           </div>
-          <h3 className="font-medium text-slate-300">Create Template</h3>
-        </div>
+        </Link>
       </div>
     </div>
   );
