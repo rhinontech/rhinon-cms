@@ -21,13 +21,31 @@ import { useSession } from "@/components/session-provider";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
 
 export function AppSidebar({ roleSlug }: { roleSlug?: string }) {
   const pathname = usePathname();
   const { user, logout } = useSession();
+  const [queueCount, setQueueCount] = useState<number | null>(null);
 
   // If roleSlug is missing, try to infer it from user session
   const activeRole = roleSlug || user?.roleSlug || "admin";
+
+  useEffect(() => {
+    const fetchQueue = async () => {
+      try {
+        const res = await fetch("/api/metrics");
+        const data = await res.json();
+        setQueueCount(data.queueCount);
+      } catch (err) {
+        console.error("Error fetching queue count:", err);
+      }
+    };
+    fetchQueue();
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchQueue, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const nav = [
     { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -127,7 +145,7 @@ export function AppSidebar({ roleSlug }: { roleSlug?: string }) {
             AI Queue
           </p>
           <p className="mt-0.5 text-sm font-bold text-foreground">
-            248 leads pending
+            {queueCount !== null ? `${queueCount} leads pending` : "Calculating..."}
           </p>
         </div>
 

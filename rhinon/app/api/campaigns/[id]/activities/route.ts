@@ -4,11 +4,12 @@ import AiActivity from "@/lib/models/AiActivity";
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
-    const activities = await AiActivity.find({ campaignId: params.id })
+    const { id } = await params;
+    const activities = await AiActivity.find({ campaignId: id })
       .sort({ timestamp: -1 })
       .limit(50);
     return NextResponse.json(activities);

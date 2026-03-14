@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Mail, Linkedin, Plus, Search, MoreVertical, BookTemplate } from "lucide-react";
+import { Mail, Linkedin, Plus, Search, MoreVertical, BookTemplate, FileText, Video, Layout } from "lucide-react";
 import { Template } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,8 +16,9 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
-const FILTERS = ["All", "Email", "LinkedIn DM", "LinkedIn Connection"] as const;
+const FILTERS = ["All", "Cold Email", "LinkedIn Post", "LinkedIn Video", "LinkedIn Article"] as const;
 type Filter = (typeof FILTERS)[number];
 
 export function TemplateGrid() {
@@ -27,20 +28,37 @@ export function TemplateGrid() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchTemplates = async () => {
+    try {
+      const res = await fetch("/api/templates");
+      const data = await res.json();
+      setTemplates(data);
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchTemplates = async () => {
-      try {
-        const res = await fetch("/api/templates");
-        const data = await res.json();
-        setTemplates(data);
-      } catch (error) {
-        console.error("Error fetching templates:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchTemplates();
   }, []);
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this template?")) return;
+    try {
+      const res = await fetch(`/api/templates/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setTemplates((prev) => prev.filter((t) => ((t as any)._id || t.id) !== id));
+        toast.success("Template deleted");
+      } else {
+        throw new Error("Failed to delete");
+      }
+    } catch (error) {
+      console.error("Error deleting template:", error);
+      toast.error("Failed to delete template");
+    }
+  };
 
   const filteredTemplates = templates.filter((t) => {
     const matchesFilter = filter === "All" || t.channel === filter;
@@ -119,11 +137,12 @@ export function TemplateGrid() {
               <div className="flex items-center gap-2">
                 <div className={cn(
                   "p-2 rounded-lg",
-                  template.channel === "Email"
-                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                    : "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+                  template.channel === "Cold Email" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" :
+                  template.channel === "LinkedIn Post" ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" :
+                  template.channel === "LinkedIn Video" ? "bg-rose-500/10 text-rose-600 dark:text-rose-400" :
+                  "bg-amber-500/10 text-amber-600 dark:text-amber-400",
                 )}>
-                  {template.channel === "Email" ? <Mail size={15} /> : <Linkedin size={15} />}
+                  {template.channel === "Cold Email" ? <Mail size={15} /> : <FileText size={15} />}
                 </div>
                 <Badge variant="outline" className="bg-secondary border-border text-muted-foreground text-[11px]">
                   {template.channel}
@@ -142,7 +161,15 @@ export function TemplateGrid() {
                 <DropdownMenuContent align="end" className="bg-card border-border text-foreground">
                   <DropdownMenuItem onClick={() => router.push(`/templates/${(template as any)._id || template.id}/edit`)}>Edit</DropdownMenuItem>
                   <DropdownMenuItem>Duplicate</DropdownMenuItem>
-                  <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="text-destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete((template as any)._id || template.id);
+                    }}
+                  >
+                    Delete
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

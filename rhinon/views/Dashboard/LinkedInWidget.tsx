@@ -79,11 +79,11 @@ export function LinkedInWidget() {
             <div className="grid grid-cols-2 gap-2">
               <div className="p-2 rounded-lg bg-secondary/50 border border-border text-center">
                 <p className="text-[9px] font-bold text-muted-foreground uppercase">Posts Sent</p>
-                <p className="text-xs font-bold text-foreground">12</p>
+                <p className="text-xs font-bold text-foreground">0</p>
               </div>
               <div className="p-2 rounded-lg bg-secondary/50 border border-border text-center">
                 <p className="text-[9px] font-bold text-muted-foreground uppercase">Growth %</p>
-                <p className="text-xs font-bold text-emerald-500">+4.2%</p>
+                <p className="text-xs font-bold text-emerald-500">0.0%</p>
               </div>
             </div>
           </div>

@@ -9,8 +9,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Calendar, FileText, Linkedin, Mail, Send, Sparkles } from "lucide-react";
+import { Building2, Calendar, FileText, Linkedin, Mail, Send, Sparkles, Wand2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import Link from "next/link";
 
 interface LeadDrawerProps {
   lead: Lead | null;
@@ -25,6 +34,7 @@ export function LeadDrawer({ lead, isOpen, onClose }: LeadDrawerProps) {
   const [enrichment, setEnrichment] = useState<any>(null);
   const [isSending, setIsSending] = useState(false);
   const [activities, setActivities] = useState<any[]>([]);
+  const [showNoTemplateModal, setShowNoTemplateModal] = useState(false);
 
   const fetchActivities = async () => {
     if (!lead) return;
@@ -50,6 +60,12 @@ export function LeadDrawer({ lead, isOpen, onClose }: LeadDrawerProps) {
     try {
       const templatesRes = await fetch("/api/templates");
       const templates = await templatesRes.json();
+      
+      if (!templates || templates.length === 0) {
+        setShowNoTemplateModal(true);
+        return;
+      }
+
       const templateId = templates[0]?._id || templates[0]?.id;
 
       const res = await fetch("/api/ai/generate", {
@@ -343,6 +359,38 @@ export function LeadDrawer({ lead, isOpen, onClose }: LeadDrawerProps) {
           <p className="text-[10px] font-bold text-muted-foreground/60 italic">Rhinon Lead Intel Profile</p>
         </div>
       </SheetContent>
+
+      <Dialog open={showNoTemplateModal} onOpenChange={setShowNoTemplateModal}>
+        <DialogContent className="sm:max-w-md bg-card border-border shadow-2xl">
+          <DialogHeader className="flex flex-col items-center text-center pt-4">
+            <div className="h-16 w-16 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mb-4 shadow-glow-sm">
+              <Wand2 size={32} className="text-violet-500 animate-pulse" />
+            </div>
+            <DialogTitle className="text-xl font-bold text-foreground mb-2">
+              Templates Required
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground leading-relaxed px-4">
+              To generate AI drafts, you first need to create a Message Template. This serves as the foundation for the AI's personalized outreach.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex sm:justify-center gap-3 mt-6 pb-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowNoTemplateModal(false)}
+              className="border-border text-muted-foreground hover:text-foreground h-11 px-6 font-bold"
+            >
+              Maybe Later
+            </Button>
+            <Link href="/templates/new">
+              <Button
+                className="bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-black h-11 px-8 rounded-xl shadow-glow-sm"
+              >
+                Create Template
+              </Button>
+            </Link>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Sheet>
   );
 }

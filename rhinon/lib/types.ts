@@ -16,7 +16,7 @@ export interface Lead {
   lastActivityAt?: string;
 }
 
-export type Channel = "Email" | "LinkedIn DM" | "LinkedIn Connection" | "LinkedIn Post" | "LinkedIn Video" | "LinkedIn Article";
+export type Channel = "Cold Email" | "LinkedIn Post" | "LinkedIn Video" | "LinkedIn Article";
 
 export interface Template {
   id: string;

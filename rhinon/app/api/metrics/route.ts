@@ -15,17 +15,25 @@ export async function GET() {
     });
     const totalLeads = await Lead.countDocuments({});
     
-    // For demo/simplicity, we'll return some of these as hardcoded or computed.
-    // In a real app, you'd aggregate these.
-    
+    // Calculate real reply rate
+    const repliedLeads = await Lead.countDocuments({ status: { $in: ["Replied", "Interested"] } });
+    const contactedLeads = await Lead.countDocuments({ status: { $ne: "New" } });
+    const replyRate = contactedLeads > 0 ? (repliedLeads / contactedLeads * 100).toFixed(1) : "0.0";
+
+    // Leads pending AI processing
+    const pendingLeads = await Lead.countDocuments({ aiDraft: { $exists: false }, campaignId: { $ne: null } });
+
     const metrics = [
-      { label: "Active Campaigns", value: activeCampaigns.toString(), delta: "+2 this week" },
-      { label: "Leads Processed Today", value: leadsProcessedToday.toString(), delta: "+14.2%" },
-      { label: "Total Leads", value: totalLeads.toLocaleString(), delta: "+6.4%" },
-      { label: "Reply Rate", value: "22.8%", delta: "+1.7%" },
+      { label: "Active Campaigns", value: activeCampaigns.toString(), delta: "Live Data" },
+      { label: "Leads Processed Today", value: leadsProcessedToday.toString(), delta: "Live Data" },
+      { label: "Total Leads", value: totalLeads.toLocaleString(), delta: "Live Data" },
+      { label: "Reply Rate", value: `${replyRate}%`, delta: "Live Data" },
     ];
 
-    return NextResponse.json(metrics);
+    return NextResponse.json({
+      metrics,
+      queueCount: pendingLeads
+    });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

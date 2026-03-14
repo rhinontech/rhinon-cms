@@ -8,11 +8,11 @@ import { postToLinkedIn } from "@/lib/connectors/linkedin";
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
-    const campaignId = params.id;
+    const { id: campaignId } = await params;
 
     const campaign = await Campaign.findById(campaignId);
     if (!campaign) {

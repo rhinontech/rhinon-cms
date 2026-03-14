@@ -4,32 +4,54 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 export const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
+export const RHINON_KNOWLEDGE = `
+Rhinon is a high-end data automation and business intelligence platform.
+Core Services:
+1. Custom Business Intelligence Dashboards: Centralizing KPIs from sales, marketing, and operations into one view.
+2. Data Automation: Eliminating manual reporting and data entry.
+3. Operational Efficiency: Using internal data to find bottlenecks and improve decision-making.
+4. Custom Tools: Tailored web applications that solve specific internal operational problems.
+Target Market: SaaS companies, high-growth agencies, and data-driven enterprises.
+Value Proposition: "Unlock the power of your data to drive smarter, reactive decisions."
+`;
+
 export async function generateAIEmailDraft(leadData: any, templateData: any) {
   const prompt = `
-    You are an AI sales assistant for Rhinon Labs. 
-    Rhinon Labs specializes in custom web applications, data dashboards, and automation tools.
+    You are an expert sales copywriter for Rhinon. 
 
-    LEAD INFO:
+    RHINON COMPANY KNOWLEDGE:
+    ${RHINON_KNOWLEDGE}
+
+    LEAD CONTEXT:
     Name: ${leadData.name}
     Company: ${leadData.company}
     Title: ${leadData.title}
+    Industry: ${leadData.industry || "Technology/Business"}
     
-    TEMPLATE CONTEXT:
-    Subject Line: ${templateData.subject}
-    Base Body: ${templateData.body}
-    AI Instructions: ${templateData.aiInstructions}
+    RESEARCH GUIDANCE:
+    Template Subject: ${templateData.subject}
+    Template Body to Complete: ${templateData.body}
+    Specific AI Instructions: ${templateData.aiInstructions}
 
     TASK:
-    Generate ONLY the personalized body message. 
-    DO NOT include a "Subject:" line or any headers.
-    Replace all variables like {{lead.name}}, {{lead.company}}, etc.
-    Keep the tone professional, concise, and focused on operational efficiency.
-    Do not use placeholders in your final output.
+    1. Complete the email draft based on the "Template Body to Complete".
+    2. Fill in any placeholders or instructions inside brackets like [AI to fill X].
+    3. Tailor the Benefits (Benefit 1, 2, 3) specifically to the lead's company (${leadData.company}), their industry (${leadData.industry || "industry"}), and their role (${leadData.title}).
+    4. Mention something specific and plausible about the company based on its industry and growth stage.
+    5. Maintain a professional, premium, and consultative tone.
+    6. Replace ALL variables:
+       - {{lead.name}} -> ${leadData.name}
+       - {{lead.company}} -> ${leadData.company}
+       - {{lead.title}} -> ${leadData.title}
+       - {{sender.name}} -> Rhinon Professional
+    
+    OUTPUT:
+    Return ONLY the final personalized message body. DO NOT include "Subject:" or any other headers.
   `;
 
   const result = await model.generateContent(prompt);
   const response = await result.response;
-  return response.text();
+  return response.text().trim();
 }
 
 export async function enrichLeadWithAI(leadName: string, companyName: string) {

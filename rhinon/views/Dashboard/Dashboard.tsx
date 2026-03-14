@@ -15,6 +15,7 @@ export function Dashboard() {
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [health, setHealth] = useState<any>(null);
   const [sourceStats, setSourceStats] = useState<any>({});
+  const [queueCount, setQueueCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -34,7 +35,8 @@ export function Dashboard() {
           healthRes.json(),
         ]);
 
-        setMetrics(metricsData);
+        setMetrics(metricsData.metrics || []);
+        setQueueCount(metricsData.queueCount || 0);
         setLeads(leadsData.slice(0, 5));
         setCampaigns(campaignsData.slice(0, 3));
         setHealth(healthData);

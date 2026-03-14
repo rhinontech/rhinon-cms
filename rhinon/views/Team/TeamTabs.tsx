@@ -28,7 +28,7 @@ export function TeamTabs() {
   );
 
   return (
-    <Tabs defaultValue="users" className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <Tabs defaultValue="users" className="w-full flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Page Header */}
       <header className="flex items-center gap-5">
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-500/10 border border-violet-500/20 shadow-glow-sm">

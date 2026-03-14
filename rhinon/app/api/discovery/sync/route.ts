@@ -8,8 +8,38 @@ import { enrichLeadWithAI } from "@/lib/gemini";
 export async function POST(req: Request) {
   try {
     await dbConnect();
-    const { person, campaignId } = await req.json();
+    let { person, campaignId } = await req.json();
     
+    // If email is missing (common in free search), try to fetch the full profile using the ID
+    if (!person.email || person.email.includes("not_unlocked")) {
+      const { enrichApolloLead, matchApolloLead } = await import("@/lib/connectors/apollo");
+      
+      let revealedPerson = null;
+      if (person.id) {
+        // match with ID is often more reliable than bulk_match for single reveals
+        revealedPerson = await matchApolloLead({
+          id: person.id,
+          first_name: person.first_name,
+          last_name: person.last_name,
+          reveal_personal_emails: true
+        });
+      } else {
+        revealedPerson = await matchApolloLead({
+          first_name: person.first_name,
+          last_name: person.last_name,
+          organization_name: person.organization_name
+        });
+      }
+
+      if (revealedPerson && revealedPerson.email && !revealedPerson.email.includes("not_unlocked")) {
+        person = { ...person, ...revealedPerson };
+      } else {
+        return NextResponse.json({ 
+          error: "Could not reveal contact details for this lead. This contact might be missing an email in Apollo or your credits are exhausted." 
+        }, { status: 400 });
+      }
+    }
+
     // Map Apollo person to our Lead model
     const leadData = {
       ...mapApolloToLead(person),
@@ -24,7 +54,7 @@ export async function POST(req: Request) {
       leadId: lead._id,
       campaignId: campaignId || undefined,
       type: "Discovery",
-      content: `Discovered via Apollo.io: ${person.title} at ${person.organization_name}`,
+      content: `Discovered via Apollo.io: ${lead.title} at ${lead.company}`,
       timestamp: new Date(),
     });
 

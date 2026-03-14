@@ -17,16 +17,23 @@ export async function GET() {
     if (!apolloKey) {
       status.apollo = { status: "missing", message: "API Key not configured in .env" };
     } else {
-      await axios.post("https://api.apollo.io/v1/people/search", {
-        api_key: apolloKey,
-        q_keywords: "rhinon",
-        page: 1,
-        per_page: 1
-      }, { timeout: 5000 });
-      status.apollo = { status: "healthy", message: "Connected to Lead Discovery Engine" };
+      // Use people/match as a health check since search is restricted
+      await axios.post("https://api.apollo.io/v1/people/match", {
+        email: "test@example.com",
+        first_name: "Test",
+        last_name: "User"
+      }, { 
+        headers: {
+          'X-Api-Key': apolloKey,
+          'Content-Type': 'application/json'
+        },
+        timeout: 5000 
+      });
+      status.apollo = { status: "healthy", message: "Match & Enrichment Engine Ready" };
     }
   } catch (error: any) {
-    status.apollo = { status: "error", message: error.response?.data?.error || error.message };
+    const errorMsg = error.response?.data?.error || error.response?.data?.message || error.message;
+    status.apollo = { status: "error", message: errorMsg };
   }
 
   // 2. Check Gemini
