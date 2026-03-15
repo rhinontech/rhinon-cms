@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { decodeSession, SESSION_COOKIE } from "./lib/auth";
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // 1. Skip static assets and API routes (except if we want to protect APIs too)

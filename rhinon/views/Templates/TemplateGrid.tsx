@@ -29,12 +29,13 @@ const SLUG_TO_FILTER: Record<string, Filter> = {
   "linkedin-article": "LinkedIn Article"
 };
 
-const FILTER_TO_SLUG: Record<Filter, string> = {
+const FILTER_TO_SLUG: Record<string, string> = {
   "All": "all",
   "Cold Email": "cold-email",
   "LinkedIn Post": "linkedin-post",
   "LinkedIn Video": "linkedin-video",
-  "LinkedIn Article": "linkedin-article"
+  "LinkedIn Article": "linkedin-article",
+  "Email": "cold-email" // Map "Email" to "cold-email" for safety
 };
 
 export function TemplateGrid() {

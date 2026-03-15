@@ -106,8 +106,10 @@ export function CampaignWizard({ defaultChannel = "Email" }: CampaignWizardProps
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger render={<Button className="bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-medium" />}>
-        New Campaign
+      <DialogTrigger asChild>
+        <Button className="bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-medium">
+          New Campaign
+        </Button>
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-3xl bg-slate-950 border-slate-800 text-slate-200 p-0 overflow-hidden hide-close outline-none">

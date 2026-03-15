@@ -11,7 +11,35 @@ export async function POST(request: Request) {
         await dbConnect();
         const body = await request.json();
 
+        // 1. Save lead to local rhinonlabs DB
         const lead = await Lead.create(body);
+
+        // 2. Sync lead to Rhinon CMS
+        try {
+            // Map rhinonlabs fields to rhinon CMS schema
+            const cmsData = {
+                name: body.name,
+                email: body.email,
+                company: body.company || "N/A",
+                source: "RhinonLabs",
+                metadata: {
+                    whatsapp: body.whatsapp,
+                    service: body.service,
+                    message: body.message,
+                    originalId: lead._id
+                }
+            };
+
+            await fetch("http://localhost:3000/api/leads", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(cmsData),
+            });
+            console.log("Successfully synced lead to Rhinon CMS");
+        } catch (syncError) {
+            console.error("Failed to sync lead to Rhinon CMS:", syncError);
+            // We don't fail the request if sync fails, as the lead is already saved locally
+        }
 
         return NextResponse.json({ success: true, data: lead }, { status: 201 });
     } catch (error) {
