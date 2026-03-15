@@ -19,7 +19,7 @@ const HomePage = () => {
       <Hero />
       <Problem />
       <Services />
-      <LeadMagnet />
+      {/* <LeadMagnet /> */}
       <Results />
       <Process />
       <Integrations />

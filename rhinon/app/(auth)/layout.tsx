@@ -18,15 +18,17 @@ export default function AuthLayout({
 }) {
   return (
     <div className={cn("min-h-screen flex items-center justify-center p-6 bg-background relative overflow-hidden", geist.variable)}>
-      {/* Background gradients managed by global.css body are inherited, but we can add an extra glow here */}
-      <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-50">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-cyan-500/10 blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-violet-500/10 blur-[120px]" />
+      {/* Premium Ambient Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] rounded-full bg-cyan-500/20 blur-[120px] animate-pulse" />
+        <div className="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] rounded-full bg-violet-600/20 blur-[120px] animate-pulse [animation-delay:1s]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] rounded-full bg-blue-500/5 blur-[140px]" />
       </div>
       
       <div className="w-full max-w-md z-10">
         {children}
       </div>
+
     </div>
   );
 }

@@ -45,7 +45,7 @@ export const CustomLinkedInIcon = () => (
 const navLinks = [
     { name: 'Services', href: '/#services' },
     { name: 'Contact', href: '/contact-us' },
-    { name: 'Privacy & Terms', href: '#' },
+    { name: 'Privacy & Terms', href: '/privacy-terms' },
 ];
 
 
