@@ -91,3 +91,31 @@ export async function findLinkedInUrl(leadName: string, companyName: string) {
   const response = await result.response;
   return response.text().trim();
 }
+
+export async function generateAISocialDraft(templateData: any) {
+  const prompt = `
+    You are an expert social media and content manager for Rhinon.
+
+    RHINON COMPANY KNOWLEDGE:
+    ${RHINON_KNOWLEDGE}
+
+    RESEARCH GUIDANCE:
+    Template Source Content: ${templateData.body}
+    Specific AI Instructions: ${templateData.aiInstructions}
+    Channel: ${templateData.channel}
+
+    TASK:
+    1. Generate a high-quality, engaging social media post tailored for ${templateData.channel}.
+    2. Incorporate the core message from the "Template Source Content".
+    3. Strictly adhere to the "Specific AI Instructions".
+    4. Maintain a professional, premium, and authoritative tone suitable for thought leadership.
+    5. Do not include placeholders like [Insert Name] - ensure it is fully ready to be published on the Rhinon corporate account.
+    
+    OUTPUT:
+    Return ONLY the final generated post copy. DO NOT include prefixes, headers, or quotes around the output.
+  `;
+
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  return response.text().trim();
+}

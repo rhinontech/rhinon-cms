@@ -22,17 +22,20 @@ ${RHINON_KNOWLEDGE}
 Your goal is to generate a messaging template for the channel: ${channel}.
 The user wants this template to achieve: "${prompt}"
 
+${channel.includes("LinkedIn") 
+  ? "CRITICAL: The channel is a LinkedIn public broadcast (Post, Video, or Article). Write it as a 1-to-many public social media post for maximum engagement. DO NOT address it to a specific person."
+  : "The channel is 1-to-1 outreach. Address the specific lead directly."}
+
 Available variables to use in the template:
-- {{lead.name}} (Full name)
-- {{lead.company}} (Company name)
-- {{lead.title}} (Job title)
-- {{sender.name}} (Your name)
+${channel === "Cold Email" 
+  ? `- {{lead.name}} (Full name)\n- {{lead.company}} (Company name)\n- {{lead.title}} (Job title)\n- {{sender.name}} (Your name)`
+  : `- {{sender.name}} (Your name)`}
 
 Return the result as a JSON object with:
 - name: A short internal name for this template
-- subject: (Only if channel is Cold Email) A compelling subject line
+- subject: (Only if channel is Cold Email or LinkedIn Article) A compelling subject line or article title.
 - body: The message body with variables. If the user provided a structure, use it as a base. 
-- aiInstructions: Specific instructions for the AI to further personalize this when sending to a specific lead. Remind the AI to research the company and tailored benefits.
+- aiInstructions: Specific instructions for the AI to further personalize this when sending (or when generating variant posts).
 
 Format the response strictly as a JSON object.`;
 

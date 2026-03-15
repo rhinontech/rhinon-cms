@@ -1,5 +1,8 @@
-import { TemplateGrid } from "@/views/Templates/TemplateGrid";
+import { redirect } from "next/navigation";
 
-export default function TemplatesPage() {
-  return <TemplateGrid />;
+export default async function TemplatesPage({ params }: { params: Promise<{ role: string }> }) {
+  const { role } = await params;
+  redirect(`/${role}/templates/all`);
 }
+
+

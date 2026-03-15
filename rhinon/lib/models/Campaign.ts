@@ -9,6 +9,19 @@ export interface ICampaign extends Document {
   leadsTotal: number;
   dailyLimit: number;
   mediaUrl?: string;
+  aiDraft?: string;
+  visibility?: "PUBLIC" | "CONNECTIONS";
+  mediaTitle?: string;
+  mediaDescription?: string;
+  articleUrl?: string;
+  platformPostId?: string;
+  socialStats?: {
+    likes: number;
+    comments: number;
+    shares: number;
+    impressions: number;
+    lastUpdated?: Date;
+  };
   startDate: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -27,6 +40,19 @@ const CampaignSchema = new Schema<ICampaign>({
   leadsTotal: { type: Number, default: 0 },
   dailyLimit: { type: Number, default: 50 },
   mediaUrl: { type: String },
+  aiDraft: { type: String },
+  visibility: { type: String, enum: ["PUBLIC", "CONNECTIONS"], default: "PUBLIC" },
+  mediaTitle: { type: String },
+  mediaDescription: { type: String },
+  articleUrl: { type: String },
+  platformPostId: { type: String },
+  socialStats: {
+    likes: { type: Number, default: 0 },
+    comments: { type: Number, default: 0 },
+    shares: { type: Number, default: 0 },
+    impressions: { type: Number, default: 0 },
+    lastUpdated: { type: Date }
+  },
   startDate: { type: Date, default: Date.now },
 }, { timestamps: true });
 

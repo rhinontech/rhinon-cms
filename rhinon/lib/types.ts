@@ -16,7 +16,7 @@ export interface Lead {
   lastActivityAt?: string;
 }
 
-export type Channel = "Cold Email" | "LinkedIn Post" | "LinkedIn Video" | "LinkedIn Article";
+export type Channel = "Email" | "LinkedIn DM" | "LinkedIn Connection" | "LinkedIn Post" | "LinkedIn Video" | "LinkedIn Article" | "Cold Email";
 
 export interface Template {
   id: string;
@@ -25,6 +25,11 @@ export interface Template {
   subject?: string;
   body: string;
   aiInstructions: string;
+  mediaUrl?: string;
+  visibility?: "PUBLIC" | "CONNECTIONS";
+  mediaTitle?: string;
+  mediaDescription?: string;
+  articleUrl?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -41,6 +46,19 @@ export interface Campaign {
   leadsTotal: number;
   dailyLimit: number;
   mediaUrl?: string;
+  aiDraft?: string;
+  visibility?: "PUBLIC" | "CONNECTIONS";
+  mediaTitle?: string;
+  mediaDescription?: string;
+  articleUrl?: string;
+  platformPostId?: string;
+  socialStats?: {
+    likes?: number;
+    comments?: number;
+    shares?: number;
+    impressions?: number;
+    lastUpdated?: string;
+  };
   startDate: string;
   createdAt: string;
   updatedAt: string;

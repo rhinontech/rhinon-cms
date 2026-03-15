@@ -44,6 +44,22 @@ export function LinkedInWidget() {
     }
   };
 
+  const handleDisconnect = async () => {
+    if (!confirm("Are you sure you want to disconnect LinkedIn?")) return;
+    try {
+      const res = await fetch("/api/linkedin/disconnect", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("LinkedIn disconnected successfully.");
+        fetchStatus();
+      } else {
+        toast.error(data.error || "Failed to disconnect LinkedIn");
+      }
+    } catch (err) {
+      toast.error("Error disconnecting LinkedIn");
+    }
+  };
+
   if (loading) return null;
 
   const isConnected = status?.status === "healthy";
@@ -55,7 +71,7 @@ export function LinkedInWidget() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className={`h-10 w-10 rounded-xl flex items-center justify-center border ${
-              isConnected ? "bg-cyan-500/10 border-cyan-500/20 text-cyan-500" : "bg-secondary border-border text-muted-foreground"
+               isConnected ? "bg-cyan-500/10 border-cyan-500/20 text-cyan-500" : "bg-secondary border-border text-muted-foreground"
             }`}>
               <Linkedin size={20} />
             </div>
@@ -114,9 +130,18 @@ export function LinkedInWidget() {
 
       <div className="mt-6 pt-4 border-t border-border flex items-center justify-between">
         <p className="text-[10px] text-muted-foreground italic">Social Intelligence Node</p>
-        <button className="text-[10px] font-bold text-muted-foreground hover:text-rose-500 transition-colors uppercase tracking-widest">
-          {isConnected ? "Disconnect" : "Manual Post"}
-        </button>
+        {isConnected ? (
+          <button 
+            onClick={handleDisconnect}
+            className="text-[10px] font-bold text-muted-foreground hover:text-rose-500 transition-colors uppercase tracking-widest"
+          >
+            Disconnect
+          </button>
+        ) : (
+          <button className="text-[10px] font-bold text-muted-foreground hover:text-cyan-500 transition-colors uppercase tracking-widest">
+            Manual Post
+          </button>
+        )}
       </div>
     </div>
   );

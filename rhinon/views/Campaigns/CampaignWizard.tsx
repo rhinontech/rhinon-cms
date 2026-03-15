@@ -43,10 +43,26 @@ export function CampaignWizard({ defaultChannel = "Email" }: CampaignWizardProps
         .then(res => res.json())
         .then(data => {
           setTemplates(data);
-          if (data.length > 0) setTemplateId((data[0] as any)._id || data[0].id);
+          // Set initial template based on current channel
+          const validTemplates = data.filter((t: Template) => t.channel === channel || (channel === "Email" && t.channel === "Cold Email"));
+          if (validTemplates.length > 0) {
+            setTemplateId((validTemplates[0] as any)._id || validTemplates[0].id);
+          } else {
+            setTemplateId("");
+          }
         });
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    // When channel changes, ensure we select a valid template if one exists
+    const validTemplates = templates.filter(t => t.channel === channel || (channel === "Email" && t.channel === "Cold Email"));
+    if (validTemplates.length > 0) {
+      setTemplateId((validTemplates[0] as any)._id || validTemplates[0].id);
+    } else {
+      setTemplateId("");
+    }
+  }, [channel, templates]);
 
   const steps = [
     { id: 1, name: "Setup", icon: Target },
@@ -126,8 +142,14 @@ export function CampaignWizard({ defaultChannel = "Email" }: CampaignWizardProps
           {step === 1 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
               <div>
-                <h3 className="text-xl font-medium mb-1">Campaign Setup</h3>
-                <p className="text-sm text-slate-500">Define the core objective and channel for this campaign.</p>
+                <h3 className="text-xl font-medium mb-1">
+                  {channel === "Email" ? "Email Campaign Setup" : "Social Campaign Setup"}
+                </h3>
+                <p className="text-sm text-slate-500">
+                  {channel === "Email" 
+                    ? "Define the core objective and parameters for your outbound email sequence." 
+                    : "Configure your LinkedIn content propagation strategy."}
+                </p>
               </div>
 
               <div className="space-y-4 max-w-lg">
@@ -136,7 +158,7 @@ export function CampaignWizard({ defaultChannel = "Email" }: CampaignWizardProps
                   <Input 
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Q3 Enterprise Expansion" 
+                    placeholder={channel === "Email" ? "e.g. Q3 Enterprise Expansion" : "e.g. Weekly Thought Leadership Series"} 
                     className="bg-slate-900 border-slate-800" 
                   />
                 </div>
@@ -152,10 +174,16 @@ export function CampaignWizard({ defaultChannel = "Email" }: CampaignWizardProps
                       <SelectItem value="LinkedIn Post">LinkedIn Thought Leadership Post</SelectItem>
                       <SelectItem value="LinkedIn Video">LinkedIn Video Propagation</SelectItem>
                       <SelectItem value="LinkedIn Article">LinkedIn Knowledge Article</SelectItem>
-                      <SelectItem value="LinkedIn DM">LinkedIn Direct Message</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+                
+                {channel !== "Email" && (
+                  <div className="p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-lg text-xs text-cyan-400 flex items-start gap-2">
+                    <Sparkles size={14} className="min-w-[14px] mt-0.5" />
+                    <p>Social campaigns currently support broad propagation to your connections and followers based on specialized templates.</p>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -190,7 +218,7 @@ export function CampaignWizard({ defaultChannel = "Email" }: CampaignWizardProps
                 <div className="p-3 border-b border-slate-800 text-sm font-medium">Selected Cohort Summary</div>
                 <div className="p-4 flex items-center justify-between text-sm">
                   <span className="text-slate-400">Total Leads Selected:</span>
-                  <span className="text-slate-200 font-semibold">5 Leaded (Demo)</span>
+                  <span className="text-slate-200 font-semibold">500 Leads (Demo)</span>
                 </div>
               </div>
             </div>
@@ -203,28 +231,48 @@ export function CampaignWizard({ defaultChannel = "Email" }: CampaignWizardProps
                 <p className="text-sm text-slate-500">Attach a template to guide the AI generation process.</p>
               </div>
 
-              <div className="space-y-4 max-w-lg">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Select Base Template</label>
-                  <Select value={templateId} onValueChange={(val) => setTemplateId(val || "")}>
-                    <SelectTrigger className="bg-slate-900 border-slate-800">
-                      <SelectValue placeholder="Select a template" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
-                      {templates.map(t => (
-                        <SelectItem key={(t as any)._id || t.id} value={(t as any)._id || t.id}>{t.name} ({t.channel})</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="p-4 rounded-lg bg-slate-900 border border-slate-800">
-                  <div className="text-xs text-violet-400 font-medium mb-2 flex items-center gap-1"><Sparkles size={12} /> AI Instructions Review</div>
-                  <p className="text-sm text-slate-300 italic">
-                    {templates.find(t => ((t as any)._id || t.id) === templateId)?.aiInstructions || "No template selected"}
+              {templates.filter(t => t.channel === channel || (channel === "Email" && t.channel === "Cold Email")).length === 0 ? (
+                <div className="p-8 border border-slate-800 rounded-xl bg-slate-900/50 text-center flex flex-col items-center justify-center">
+                  <div className="p-3 bg-slate-800 rounded-full mb-4">
+                    <FileText size={24} className="text-slate-400" />
+                  </div>
+                  <h4 className="text-lg font-medium text-slate-200 mb-2">No Templates Found</h4>
+                  <p className="text-sm text-slate-500 max-w-sm mb-6">
+                    You don't have any active templates for the <span className="font-medium text-slate-300">{channel}</span> channel. Create one to proceed.
                   </p>
+                  <Button 
+                    onClick={() => window.location.href = "/app/admin/templates/new"}
+                    className="bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-medium"
+                  >
+                    Create New Template
+                  </Button>
                 </div>
-              </div>
+              ) : (
+                <div className="space-y-4 max-w-lg">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-300">Select Base Template</label>
+                    <Select value={templateId} onValueChange={(val) => setTemplateId(val || "")}>
+                      <SelectTrigger className="bg-slate-900 border-slate-800">
+                        <SelectValue placeholder="Select a template" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
+                        {templates.filter(t => t.channel === channel || (channel === "Email" && t.channel === "Cold Email")).map(t => (
+                          <SelectItem key={(t as any)._id || t.id} value={(t as any)._id || t.id}>{t.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {templateId && (
+                    <div className="p-4 rounded-lg bg-slate-900 border border-slate-800">
+                      <div className="text-xs text-violet-400 font-medium mb-2 flex items-center gap-1"><Sparkles size={12} /> AI Instructions Review</div>
+                      <p className="text-sm text-slate-300 italic line-clamp-4">
+                        {templates.find(t => ((t as any)._id || t.id) === templateId)?.aiInstructions || "No additional instructions provided."}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -291,7 +339,11 @@ export function CampaignWizard({ defaultChannel = "Email" }: CampaignWizardProps
           </Button>
 
           {step < 5 ? (
-            <Button onClick={handleNext} className="bg-slate-800 hover:bg-slate-700 text-slate-200">
+            <Button 
+              onClick={handleNext} 
+              className="bg-slate-800 hover:bg-slate-700 text-slate-200"
+              disabled={step === 3 && !templateId}
+            >
               Continue <ArrowRight size={16} className="ml-2" />
             </Button>
           ) : (

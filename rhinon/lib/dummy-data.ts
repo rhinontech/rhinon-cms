@@ -24,7 +24,7 @@ export const dummyTemplates: Template[] = [
   {
     id: "tpl_1",
     name: "Enterprise Cold Outreach",
-    channel: "Email",
+    channel: "Cold Email",
     subject: "Scaling {{lead.company}}'s operations",
     body: "Hi {{lead.name}},\n\nI noticed that {{lead.company}} has been expanding rapidly. We help companies like yours automate outbound sales.\n\nWorth a quick chat next week?",
     aiInstructions: "Keep it under 3 sentences. Mention their recent funding round or product launch if applicable.",
@@ -34,7 +34,7 @@ export const dummyTemplates: Template[] = [
   {
     id: "tpl_2",
     name: "Founder connection context",
-    channel: "LinkedIn Connection",
+    channel: "LinkedIn Post",
     body: "Hey {{lead.name}}, loved your recent post about Gen-AI. I build tools in a similar space. Would love to connect!",
     aiInstructions: "Reference a recent post or accomplishment from their profile.",
     createdAt: "2024-02-20T11:00:00Z",
@@ -46,7 +46,7 @@ export const dummyCampaigns: Campaign[] = [
   {
     id: "cmp_1",
     name: "Q3 Enterprise SaaS Sweep",
-    channel: "Email",
+    channel: "Cold Email",
     templateId: "tpl_1",
     stage: "Active",
     leadsProcessed: 284,
@@ -59,7 +59,7 @@ export const dummyCampaigns: Campaign[] = [
   {
     id: "cmp_2",
     name: "Series A Founders Connection",
-    channel: "LinkedIn Connection",
+    channel: "LinkedIn Post",
     templateId: "tpl_2",
     stage: "Paused",
     leadsProcessed: 15,
@@ -72,7 +72,7 @@ export const dummyCampaigns: Campaign[] = [
   {
     id: "cmp_3",
     name: "Dormant Leads Reactivation",
-    channel: "Email",
+    channel: "Cold Email",
     templateId: null,
     stage: "Draft",
     leadsProcessed: 0,

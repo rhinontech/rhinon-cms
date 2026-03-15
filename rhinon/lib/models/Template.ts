@@ -6,6 +6,11 @@ export interface ITemplate extends Document {
   subject?: string;
   body: string;
   aiInstructions: string;
+  mediaUrl?: string;
+  visibility?: "PUBLIC" | "CONNECTIONS";
+  mediaTitle?: string;
+  mediaDescription?: string;
+  articleUrl?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -16,6 +21,11 @@ const TemplateSchema = new Schema<ITemplate>({
   subject: { type: String },
   body: { type: String, required: true },
   aiInstructions: { type: String },
+  mediaUrl: { type: String },
+  visibility: { type: String, enum: ["PUBLIC", "CONNECTIONS"], default: "PUBLIC" },
+  mediaTitle: { type: String },
+  mediaDescription: { type: String },
+  articleUrl: { type: String },
 }, { timestamps: true });
 
 // In development, the model might already be registered with an old schema.

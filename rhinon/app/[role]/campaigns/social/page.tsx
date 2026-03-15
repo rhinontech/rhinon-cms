@@ -1,5 +1,5 @@
-import { CampaignBoard } from "@/views/Campaigns/CampaignBoard";
+import { SocialPublishBoard } from "@/views/Campaigns/SocialPublishBoard";
 
 export default function SocialCampaignsPage() {
-  return <CampaignBoard filterType="social" />;
+  return <SocialPublishBoard />;
 }

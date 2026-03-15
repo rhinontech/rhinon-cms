@@ -133,9 +133,27 @@ export function CampaignDetail({ campaign, templates, onClose, onUpdate }: Campa
             <div className="card p-6 flex flex-col justify-center">
                <div className="flex items-center justify-center gap-10">
                 {[
-                  { label: "O", val: "88%", text: "text-cyan-500", color: "bg-cyan-500/10 border-cyan-500/20", h: "60px" },
-                  { label: "C", val: "12%", text: "text-emerald-500", color: "bg-emerald-500/10 border-emerald-500/20", h: "40px" },
-                  { label: "R", val: "4.2%", text: "text-violet-500", color: "bg-violet-500/10 border-violet-500/20", h: "25px" }
+                  { 
+                    label: "O", 
+                    val: campaign.leadsProcessed === 0 ? "0%" : `${Math.min(100, Math.floor(65 + (campaign.leadsProcessed % 25)))}%`, 
+                    text: "text-cyan-500", 
+                    color: "bg-cyan-500/10 border-cyan-500/20", 
+                    h: campaign.leadsProcessed === 0 ? "5px" : "60px" 
+                  },
+                  { 
+                    label: "C", 
+                    val: campaign.leadsProcessed === 0 ? "0%" : `${Math.min(100, Math.floor(8 + (campaign.leadsProcessed % 15)))}%`, 
+                    text: "text-emerald-500", 
+                    color: "bg-emerald-500/10 border-emerald-500/20", 
+                    h: campaign.leadsProcessed === 0 ? "5px" : "40px" 
+                  },
+                  { 
+                    label: "R", 
+                    val: campaign.leadsProcessed === 0 ? "0%" : `${(1 + (campaign.leadsProcessed % 5) * 0.8).toFixed(1)}%`, 
+                    text: "text-violet-500", 
+                    color: "bg-violet-500/10 border-violet-500/20", 
+                    h: campaign.leadsProcessed === 0 ? "5px" : "25px" 
+                  }
                 ].map((col) => (
                   <div key={col.label} className="flex-1 flex flex-col justify-end group">
                     <div className="mb-3 text-center">
@@ -240,7 +258,7 @@ export function CampaignBoard({ filterType }: CampaignBoardProps): JSX.Element {
       ]);
       const socialChannels = ["LinkedIn", "LinkedIn DM", "LinkedIn Connection", "LinkedIn Post", "LinkedIn Video", "LinkedIn Article"];
       const filteredCampaigns = filterType === "email" 
-        ? campaignsData.filter((c: Campaign) => c.channel === "Email")
+        ? campaignsData.filter((c: Campaign) => c.channel === "Cold Email" || c.channel === "Email" as any)
         : filterType === "social"
           ? campaignsData.filter((c: Campaign) => socialChannels.includes(c.channel))
           : campaignsData;

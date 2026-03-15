@@ -14,16 +14,36 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 const FILTERS = ["All", "Cold Email", "LinkedIn Post", "LinkedIn Video", "LinkedIn Article"] as const;
 type Filter = (typeof FILTERS)[number];
 
+const SLUG_TO_FILTER: Record<string, Filter> = {
+  "all": "All",
+  "cold-email": "Cold Email",
+  "linkedin-post": "LinkedIn Post",
+  "linkedin-video": "LinkedIn Video",
+  "linkedin-article": "LinkedIn Article"
+};
+
+const FILTER_TO_SLUG: Record<Filter, string> = {
+  "All": "all",
+  "Cold Email": "cold-email",
+  "LinkedIn Post": "linkedin-post",
+  "LinkedIn Video": "linkedin-video",
+  "LinkedIn Article": "linkedin-article"
+};
+
 export function TemplateGrid() {
   const router = useRouter();
-  const [filter, setFilter] = useState<Filter>("All");
+  const params = useParams();
+  const role = params.role as string;
+  const typeParam = params.type as string;
+  
+  const filter = SLUG_TO_FILTER[typeParam] || "All";
   const [searchQuery, setSearchQuery] = useState("");
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
@@ -93,7 +113,7 @@ export function TemplateGrid() {
           {FILTERS.map((tab) => (
             <button
               key={tab}
-              onClick={() => setFilter(tab)}
+              onClick={() => router.push(`/${role}/templates/${FILTER_TO_SLUG[tab]}`)}
               className={cn(
                 "px-3 py-1.5 text-sm font-medium rounded-lg transition-colors",
                 filter === tab
@@ -116,11 +136,34 @@ export function TemplateGrid() {
               className="pl-9 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
             />
           </div>
-          <Link href="/templates/new">
-            <Button className="bg-cyan-500 hover:bg-cyan-600 text-white font-semibold whitespace-nowrap">
-              <Plus size={15} className="mr-2" /> New Template
-            </Button>
-          </Link>
+          {filter === "All" ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="bg-cyan-500 hover:bg-cyan-600 text-white font-semibold whitespace-nowrap">
+                  <Plus size={16} className="mr-1.5" /> New Template
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 bg-card border-border">
+                {FILTERS.filter(f => f !== "All").map((f) => (
+                  <DropdownMenuItem key={f} className="cursor-pointer group p-0" onSelect={() => router.push(`/${role}/templates/${FILTER_TO_SLUG[f]}/new`)}>
+                    <div className="flex w-full items-center gap-2 text-foreground px-2 py-1.5">
+                      {f === "Cold Email" && <Mail size={14} className="text-cyan-500" />}
+                      {f === "LinkedIn Post" && <Layout size={14} className="text-blue-500" />}
+                      {f === "LinkedIn Video" && <Video size={14} className="text-red-500" />}
+                      {f === "LinkedIn Article" && <FileText size={14} className="text-emerald-500" />}
+                      <span className="font-medium">{f}</span>
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link href={`/${role}/templates/${FILTER_TO_SLUG[filter]}/new`}>
+              <Button className="bg-cyan-500 hover:bg-cyan-600 text-white font-semibold whitespace-nowrap">
+                <Plus size={16} className="mr-1.5" /> New Template
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
 
@@ -130,7 +173,7 @@ export function TemplateGrid() {
           <div
             key={(template as any)._id || template.id}
             className="group card p-5 flex flex-col cursor-pointer hover:border-cyan-500/40 hover:shadow-glow transition-all"
-            onClick={() => router.push(`/templates/${(template as any)._id || template.id}/edit`)}
+            onClick={() => router.push(`/${role}/templates/${FILTER_TO_SLUG[template.channel]}/${(template as any)._id || template.id}/edit`)}
           >
             {/* Card header */}
             <div className="flex justify-between items-start mb-4">
@@ -159,7 +202,7 @@ export function TemplateGrid() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-card border-border text-foreground">
-                  <DropdownMenuItem onClick={() => router.push(`/templates/${(template as any)._id || template.id}/edit`)}>Edit</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push(`/${role}/templates/${FILTER_TO_SLUG[template.channel]}/${(template as any)._id || template.id}/edit`)}>Edit</DropdownMenuItem>
                   <DropdownMenuItem>Duplicate</DropdownMenuItem>
                   <DropdownMenuItem 
                     className="text-destructive"
@@ -197,14 +240,40 @@ export function TemplateGrid() {
         ))}
 
         {/* Create New tile */}
-        <Link href="/templates/new" className="block">
-          <div className="h-full min-h-[180px] border-2 border-dashed border-border hover:border-cyan-500/40 hover:bg-cyan-500/5 transition-all rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer">
-            <div className="h-10 w-10 rounded-full bg-secondary border border-border flex items-center justify-center mb-3">
-              <Plus size={18} className="text-muted-foreground" />
+        {filter === "All" ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div className="h-full min-h-[180px] border-2 border-dashed border-border hover:border-cyan-500/40 hover:bg-cyan-500/5 transition-all rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer">
+                <div className="h-10 w-10 rounded-full bg-secondary border border-border flex items-center justify-center mb-3">
+                  <Plus size={18} className="text-muted-foreground" />
+                </div>
+                <h3 className="font-semibold text-muted-foreground text-sm">Create Template</h3>
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 bg-card border-border">
+              {FILTERS.filter(f => f !== "All").map((f) => (
+                <DropdownMenuItem key={f} className="cursor-pointer group p-0" onSelect={() => router.push(`/${role}/templates/${FILTER_TO_SLUG[f]}/new`)}>
+                  <div className="flex w-full items-center gap-2 text-foreground px-2 py-1.5">
+                    {f === "Cold Email" && <Mail size={14} className="text-cyan-500" />}
+                    {f === "LinkedIn Post" && <Layout size={14} className="text-blue-500" />}
+                    {f === "LinkedIn Video" && <Video size={14} className="text-red-500" />}
+                    {f === "LinkedIn Article" && <FileText size={14} className="text-emerald-500" />}
+                    <span className="font-medium">{f}</span>
+                  </div>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <Link href={`/${role}/templates/${FILTER_TO_SLUG[filter]}/new`} className="block">
+            <div className="h-full min-h-[180px] border-2 border-dashed border-border hover:border-cyan-500/40 hover:bg-cyan-500/5 transition-all rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer">
+              <div className="h-10 w-10 rounded-full bg-secondary border border-border flex items-center justify-center mb-3">
+                <Plus size={18} className="text-muted-foreground" />
+              </div>
+              <h3 className="font-semibold text-muted-foreground text-sm">Create Template</h3>
             </div>
-            <h3 className="font-semibold text-muted-foreground text-sm">Create Template</h3>
-          </div>
-        </Link>
+          </Link>
+        )}
       </div>
     </div>
   );
