@@ -195,9 +195,14 @@ export function Process() {
                                     <h3 className="text-white font-bold text-lg md:text-xl mb-2 tracking-tight">
                                         {steps[active].title}
                                     </h3>
-                                    <p className="text-white/50 text-md md:text-lg leading-relaxed lg:max-w-[400px]">
+                                    <p className="text-white/50 text-md md:text-lg leading-relaxed lg:max-w-[400px] mb-8">
                                         {steps[active].description}
                                     </p>
+                                    <div className="flex justify-center lg:justify-start">
+                                        <a href="#contact" className="px-8 py-3 rounded-full bg-primary text-white font-semibold hover:bg-primary/90 transition-all shadow-[0_0_20px_rgba(28,43,255,0.3)]">
+                                            Book a free discovery call
+                                        </a>
+                                    </div>
                                 </div>
                             </motion.div>
                         </AnimatePresence>

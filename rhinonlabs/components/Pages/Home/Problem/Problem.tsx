@@ -155,6 +155,18 @@ export function Problem() {
                 </div>
 
             </div>
+            {/* CTA Button */}
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.8 }}
+                className="mt-12 z-20"
+            >
+                <a href="#contact" className="px-8 py-3 rounded-full bg-white text-black font-semibold hover:bg-white/90 transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)]">
+                    Let's Solve This
+                </a>
+            </motion.div>
+
             {/* Subtle glow */}
             <div className="absolute top-1/2 left-1/2 w-[600px] h-[600px] -translate-y-1/2 -translate-x-1/2 bg-[radial-gradient(circle,rgba(162,48,237,0.05)_0,transparent_70%)] pointer-events-none" />
         </section>

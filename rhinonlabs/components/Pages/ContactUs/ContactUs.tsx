@@ -36,16 +36,17 @@ const ContactUs = () => {
         setSuccess(false);
 
         try {
-            const res = await fetch("/api/leads", {
+            const res = await fetch("https://cms.rhinon.tech/api/web-leads", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     name: formData.name,
                     email: formData.email,
-                    whatsapp: formData.whatsapp,
-                    company: formData.company,
-                    service: formData.projectType,
-                    message: formData.message,
+                    source: "Website",
+                    metadata: {
+                        whatsapp: formData.whatsapp,
+                        message: formData.message,
+                    }
                 }),
             });
 
@@ -181,14 +182,18 @@ const ContactUs = () => {
                             </div>
 
                             {/* Form */}
-                            <form className="space-y-6 relative z-10 flex-1 flex flex-col justify-between">
+                            <form onSubmit={handleSubmit} className="space-y-6 relative z-10 flex-1 flex flex-col justify-between">
                                 <div className="space-y-6">
                                     <div className="space-y-5">
-                                        <label htmlFor="fullName" className="text-[14px] font-semibold opacity-60 tracking-wide ">Name</label>
+                                        <label htmlFor="name" className="text-[14px] font-semibold opacity-60 tracking-wide ">Name</label>
                                         <input
                                             type="text"
-                                            id="fullName"
-                                            className="w-full mt-1.5 border border-border/7 rounded-[8px] px-4 py-3.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                                            id="name"
+                                            name="name"
+                                            required
+                                            value={formData.name}
+                                            onChange={handleChange}
+                                            className="w-full mt-1.5 border border-border/7 rounded-[8px] px-4 py-3.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors bg-transparent"
                                             placeholder="Enter your full name"
                                         />
                                     </div>
@@ -197,35 +202,52 @@ const ContactUs = () => {
                                         <input
                                             type="email"
                                             id="email"
-                                            className="w-full mt-1.5 border border-border/7 rounded-[8px] px-4 py-3.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
+                                            name="email"
+                                            required
+                                            value={formData.email}
+                                            onChange={handleChange}
+                                            className="w-full mt-1.5 border border-border/7 rounded-[8px] px-4 py-3.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors bg-transparent"
                                             placeholder="Enter your email"
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label htmlFor="subject" className="text-[14px] font-semibold opacity-60 tracking-wide ">Subject</label>
+                                        <label htmlFor="whatsapp" className="text-[14px] font-semibold opacity-60 tracking-wide ">WhatsApp (Optional)</label>
                                         <input
                                             type="text"
-                                            id="subject"
-                                            className="w-full mt-1.5 border border-border/7 rounded-[8px] px-4 py-3.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors"
-                                            placeholder="Enter your subject"
+                                            id="whatsapp"
+                                            name="whatsapp"
+                                            value={formData.whatsapp}
+                                            onChange={handleChange}
+                                            className="w-full mt-1.5 border border-border/7 rounded-[8px] px-4 py-3.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors bg-transparent"
+                                            placeholder="Enter your WhatsApp number"
                                         />
                                     </div>
                                     <div className="space-y-2">
                                         <label htmlFor="message" className="text-[14px] font-semibold opacity-60 tracking-wide ">Message</label>
                                         <textarea
                                             id="message"
+                                            name="message"
+                                            required
                                             rows={3}
-                                            className="w-full mt-1.5 border border-border/7 rounded-[8px] px-4 py-3.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors resize-none"
+                                            value={formData.message}
+                                            onChange={handleChange}
+                                            className="w-full mt-1.5 border border-border/7 rounded-[8px] px-4 py-3.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors resize-none bg-transparent"
                                             placeholder="Enter your message"
                                         />
                                     </div>
                                 </div>
 
-                                <div className=" relative group">
-                                    <Button className="w-full bg-background   border-border/7 text-white font-semibold py-6 rounded-[8px] text-[15px] transition-colors relative z-10 ">
-                                        Send Your Message
+                                {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+                                {success && <p className="text-green-500 text-sm mt-2">Message sent successfully!</p>}
+
+                                <div className=" relative group mt-6">
+                                    <Button 
+                                        type="submit"
+                                        disabled={loading}
+                                        className="w-full bg-background border-border/7 text-white font-semibold py-6 rounded-[8px] text-[15px] transition-colors relative z-10 disabled:opacity-50"
+                                    >
+                                        {loading ? "Sending..." : "Send Your Message"}
                                     </Button>
-                                    {/* <div className="absolute left-1/2 bottom-0 w-[40%] h-4 bg-white/20 blur-[12px] -translate-x-1/2 group-hover:bg-white/30 transition-all rounded-full pointer-events-none" /> */}
                                 </div>
                             </form>
 

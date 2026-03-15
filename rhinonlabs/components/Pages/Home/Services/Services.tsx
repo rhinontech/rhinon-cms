@@ -135,12 +135,20 @@ export function Services() {
                             <h3 className="text-[22px] font-semibold text-white mb-1 tracking-tight">
                                 Workflow Automation
                             </h3>
-                            <h3 className="text-[16px] font-semibold text-white/70 mb-2 tracking-tight">
+                            <h3 className="text-[16px] font-semibold text-white/70 mb-4 tracking-tight">
                                 End-to-end connectivity
                             </h3>
-                            <p className=" leading-relaxed opacity-60 text-[16px]">
+                            <p className=" leading-relaxed opacity-60 text-[16px] mb-6">
                                 We connect your tools and processes so data flows automatically reducing manual entry, follow-ups, and repetitive admin work.
                             </p>
+                            <div className="flex items-center gap-4">
+                                <a href="#contact" className="px-5 py-2.5 rounded-lg bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors">
+                                    Book a Call
+                                </a>
+                                <a href="#contact" className="px-5 py-2.5 rounded-lg border border-white/10 text-white text-sm font-semibold hover:bg-white/5 transition-colors">
+                                    Get Started
+                                </a>
+                            </div>
                         </div>
 
                         {/* Radial Gradient */}
@@ -242,12 +250,20 @@ export function Services() {
                             <h3 className="text-[22px] font-semibold text-white mb-1 tracking-tight">
                                 AI Agents & Smart Systems
                             </h3>
-                            <h3 className="text-[16px] font-semibold text-white/70 mb-2 tracking-tight">
+                            <h3 className="text-[16px] font-semibold text-white/70 mb-4 tracking-tight">
                                 Intelligence built into your workflow
                             </h3>
-                            <p className="leading-relaxed  opacity-60 max-w-[90%] text-[16px]">
+                            <p className="leading-relaxed  opacity-60 max-w-[90%] text-[16px] mb-6">
                                 We create smart AI tools that can draft responses, organize leads, summarize information, and support daily operations quietly working in the background
                             </p>
+                            <div className="flex items-center gap-4">
+                                <a href="#contact" className="px-5 py-2.5 rounded-lg bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors">
+                                    Book a Call
+                                </a>
+                                <a href="#contact" className="px-5 py-2.5 rounded-lg border border-white/10 text-white text-sm font-semibold hover:bg-white/5 transition-colors">
+                                    Get Started
+                                </a>
+                            </div>
                         </div>
 
                         {/* Radial Gradient */}
@@ -396,12 +412,20 @@ export function Services() {
                             <h3 className="text-[22px] font-semibold text-white mb-1 tracking-tight">
                                 Custom Internal Dashboards
                             </h3>
-                            <h3 className="text-[16px] font-semibold text-white/70 mb-2 tracking-tight">
+                            <h3 className="text-[16px] font-semibold text-white/70 mb-4 tracking-tight">
                                 Visibility at a glance
                             </h3>
-                            <p className="leading-relaxed  opacity-60 max-w-[90%] lg:max-w-[70%] text-[16px]">
+                            <p className="leading-relaxed  opacity-60 max-w-[90%] lg:max-w-[70%] text-[16px] mb-6">
                                 We build central hubs for your CRM, project tracking, or client reporting so you can stop asking, “Where are we at?” and see everything clearly in one place.
                             </p>
+                            <div className="flex items-center gap-4">
+                                <a href="#contact" className="px-5 py-2.5 rounded-lg bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors">
+                                    Book a Call
+                                </a>
+                                <a href="#contact" className="px-5 py-2.5 rounded-lg border border-white/10 text-white text-sm font-semibold hover:bg-white/5 transition-colors">
+                                    Get Started
+                                </a>
+                            </div>
                         </div>
                         {/* Radial Gradient */}
                         <div
