@@ -45,7 +45,7 @@ const ProjectsPage = () => {
                             animate={{ opacity: 1, y: 0, }}
                             transition={{ duration: 0.6, ease: "easeOut" }}
                             viewport={{ once: true }} // 👈 only animate on first view
-                        >Rhinon Web delivers mission-critical digital platforms for forward-thinking enterprises. We build scalable, high-performance tools that drive business growth.</motion.p>
+                        >Rhinon Labs delivers mission-critical digital platforms for forward-thinking enterprises. We build scalable, high-performance tools that drive business growth.</motion.p>
                     </div>
                     <motion.div
                         className="grid grid-cols-2 max-md:grid-cols-1 gap-5"

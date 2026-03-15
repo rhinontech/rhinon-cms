@@ -61,7 +61,7 @@ const AboutUs = () => {
                 viewport={{ once: true, amount: 0.4 }} // 👈 only animate on first view
             >
                 <div className="absolute inset-0 -z-10">
-                    <img src="/assets/about/architecture_wide.png" className="w-full h-full opacity-50 object-cover" alt="Rhinon Web Architecture" />
+                    <img src="/assets/about/architecture_wide.png" className="w-full h-full opacity-50 object-cover" alt="Rhinon Labs Architecture" />
                 </div>
 
             </motion.div>

@@ -5,6 +5,7 @@ import { HeroHeader } from "@/components/Common/Header/Header";
 import { Footer } from "@/components/Common/Footer/Footer";
 import FloatingContactButton from "@/components/Common/FloatingContactButton/FloatingContactButton";
 import { Navbar } from "@/components/Common/Header/Navbar";
+import StructuredData from "@/components/Common/SEO/StructuredData";
 
 // const geistSans = Geist({
 //   variable: "--font-geist-sans",
@@ -45,8 +46,8 @@ const instrumentSerif = Instrument_Serif({
 export const metadata: Metadata = {
   metadataBase: new URL("https://rhinonweb.com"),
   title: {
-    default: "Rhinon Web | Ship Your Product 3x Faster Without Hiring a Tech Team",
-    template: "%s | Rhinon Web",
+    default: "Rhinon Labs | Ship Your Product 3x Faster Without Hiring a Tech Team",
+    template: "%s | Rhinon Labs",
   },
   description:
     "We help founders and SMBs design, build and launch websites, apps and AI products and internal tools fast with affordable pricing. AI-powered development for startups.",
@@ -62,28 +63,28 @@ export const metadata: Metadata = {
     "Founder-Friendly Development",
     "SMB Software Development",
   ],
-  authors: [{ name: "Rhinon Tech" }],
-  creator: "Rhinon Tech",
+  authors: [{ name: "Rhinon Labs" }],
+  creator: "Rhinon Labs",
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "https://rhinonweb.com",
-    title: "Rhinon Web | Ship Your Product 3x Faster",
+    title: "Rhinon Labs | Ship Your Product 3x Faster",
     description:
       "We help founders and SMBs design, build and launch websites, apps and AI products fast. AI-powered development with affordable pricing.",
-    siteName: "Rhinon Web",
+    siteName: "Rhinon Labs",
     images: [
       {
         url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "Rhinon Web - AI-powered development for startups",
+        alt: "Rhinon Labs - AI-powered development for startups",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Rhinon Web | Ship Your Product 3x Faster",
+    title: "Rhinon Labs | Ship Your Product 3x Faster",
     description:
       "We help founders and SMBs design, build and launch websites, apps and AI products fast. AI-powered development with affordable pricing.",
     images: ["/og-image.jpg"],
@@ -111,6 +112,7 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${instrumentSerif.variable} relative font-sans antialiased text-foreground bg-background`}
       >
+        <StructuredData />
         <Navbar />
         {children}
         <Footer />

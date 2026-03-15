@@ -31,7 +31,7 @@ const Hero = () => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, ease: "easeOut", }}
                         viewport={{ once: true }} // 👈 only animate on first view
-                    >Rhinon Web is not a traditional agency. We are a specialized product studio dedicated to building high-performance dashboards, internal tools, and mission-critical software.</motion.p>
+                    >Rhinon Labs is not a traditional agency. We are a specialized product studio dedicated to building high-performance dashboards, internal tools, and mission-critical software.</motion.p>
                 </div>
                 <motion.div
                     className="flex items-center max-md:flex-col max-md:gap-5 justify-center gap-10"
@@ -150,8 +150,8 @@ const Hero = () => {
             </div>
             <TextGenerateEffect
                 className="text-3xl font-medium text-center leading-relaxed text-white/50"
-                words={"At Rhinon Web, we're passionate about designing intelligent digital ecosystems that leave a lasting impression. Our mission is to transform your complex workflows into seamless reality with a blend of AI-driven innovation, engineering expertise, and attention to detail. We believe the key to exceptional results lies in deep partnership."}
-                highlight={["Rhinon", "Web", "intelligent", "digital", "ecosystems", "that", "leave", "a", "lasting", "impression", "AIdriven", "innovation", "engineering", "expertise", "and", "attention", "to", "detail", "deep", "partnership"]}
+                words={"At Rhinon Labs, we're passionate about designing intelligent digital ecosystems that leave a lasting impression. Our mission is to transform your complex workflows into seamless reality with a blend of AI-driven innovation, engineering expertise, and attention to detail. We believe the key to exceptional results lies in deep partnership."}
+                highlight={["Rhinon", "Labs", "intelligent", "digital", "ecosystems", "that", "leave", "a", "lasting", "impression", "AIdriven", "innovation", "engineering", "expertise", "and", "attention", "to", "detail", "deep", "partnership"]}
                 highlightClassName="text-white"
                 textColor=""
             />
