@@ -65,7 +65,7 @@ export const HeroHeader = () => {
                 >
                   <Image
                     src="/assets/Logo_Rhinon_Web_Full.png"
-                    alt="Rhinon Tech Logo"
+                    alt="Rhinon Labs Logo"
                     width={110}
                     height={110}
                     className="object-contain h-9 w-auto"
@@ -109,7 +109,7 @@ export const HeroHeader = () => {
               </button>
 
               <div className="hidden lg:block">
-                <Button className="hover:bg-white bg-transparent rounded-none text-white hover:text-black p-5 backdrop-blur-xl bg-white/4 border-[1px] border-white/30" onClick={() => window.open('https://calendly.com/rhinonweb', '_blank')}>
+                <Button className="hover:bg-white bg-transparent rounded-none text-white hover:text-black p-5 backdrop-blur-xl bg-white/4 border-[1px] border-white/30" onClick={() => window.open('https://calendly.com/rhinonlabs', '_blank')}>
                   Book a Free Discovery Call
                 </Button>
               </div>
@@ -136,7 +136,7 @@ export const HeroHeader = () => {
                 ))}
               </ul>
               <div className="flex flex-col gap-3 mt-4">
-                <Button onClick={() => window.open('https://calendly.com/rhinonweb', '_blank')} className="hover:bg-white bg-transparent rounded-none text-white hover:text-black p-5 backdrop-blur-xl bg-white/4 border-[1px] border-white/30">
+                <Button onClick={() => window.open('https://calendly.com/rhinonlabs', '_blank')} className="hover:bg-white bg-transparent rounded-none text-white hover:text-black p-5 backdrop-blur-xl bg-white/4 border-[1px] border-white/30">
                   Book a Free Discovery Call
                 </Button>
               </div>

@@ -7,8 +7,8 @@ export default function StructuredData() {
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "Rhinon Labs",
-    "url": "https://rhinonweb.com",
-    "logo": "https://rhinonweb.com/favicon.ico",
+    "url": "https://rhinonlabs.com",
+    "logo": "https://rhinonlabs.com/favicon.ico",
     "sameAs": [
       "https://linkedin.com/company/rhinon-labs",
       "https://twitter.com/rhinonlabs"

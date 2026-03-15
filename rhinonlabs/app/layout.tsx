@@ -44,7 +44,7 @@ const instrumentSerif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://rhinonweb.com"),
+  metadataBase: new URL("https://rhinonlabs.com"),
   title: {
     default: "Rhinon Labs | Ship Your Product 3x Faster Without Hiring a Tech Team",
     template: "%s | Rhinon Labs",
@@ -68,7 +68,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://rhinonweb.com",
+    url: "https://rhinonlabs.com",
     title: "Rhinon Labs | Ship Your Product 3x Faster",
     description:
       "We help founders and SMBs design, build and launch websites, apps and AI products fast. AI-powered development with affordable pricing.",

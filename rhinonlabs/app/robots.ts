@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
             allow: '/',
             disallow: ['/admin', '/api'],
         },
-        sitemap: 'https://rhinonweb.com/sitemap.xml',
+        sitemap: 'https://rhinonlabs.com/sitemap.xml',
     };
 }
