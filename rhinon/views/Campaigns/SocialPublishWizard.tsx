@@ -87,6 +87,12 @@ export function SocialPublishWizard({ defaultChannel = "LinkedIn Post" }: Social
       return;
     }
 
+    if (channel === "LinkedIn Article" && !articleUrl) {
+      toast.info("No external URL provided. This article will be hosted on rhinonlabs.com automatically.");
+    }
+
+
+
     setIsDeploying(true);
     try {
       const scheduledDate = new Date(`${publishDate}T${publishTime}`).toISOString();

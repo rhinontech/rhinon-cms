@@ -14,7 +14,12 @@ import {
   LogOut,
   User as UserIcon,
   Send,
-  Linkedin
+  Linkedin,
+  LayoutGrid,
+  Layout,
+  Video,
+  FileText,
+  Mail
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useSession } from "@/components/session-provider";
@@ -49,18 +54,27 @@ export function AppSidebar({ roleSlug }: { roleSlug?: string }) {
 
   const nav = [
     { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { 
-      label: "Campaigns", 
-      href: "/campaigns", 
+    {
+      label: "Campaigns",
+      href: "/campaigns",
       icon: Rocket,
       subItems: [
         { label: "Email Outbound", href: "/campaigns/email", icon: Send },
-        { label: "Social Engine", href: "/campaigns/social", icon: Linkedin },
       ]
     },
     { label: "Leads", href: "/leads", icon: Users },
-    { label: "Templates", href: "/templates", icon: BookTemplate },
+    {
+      label: "Library",
+      href: "/library",
+      icon: Sparkles
+    },
+    { 
+      label: "Templates", 
+      href: "/templates", 
+      icon: BookTemplate
+    },
     { label: "Inbox", href: "/inbox", icon: Inbox },
+
     { label: "Team & Roles", href: "/team", icon: Shield, perm: "perm_5" },
     { label: "Settings", href: "/settings", icon: Settings },
   ];
@@ -109,7 +123,7 @@ export function AppSidebar({ roleSlug }: { roleSlug?: string }) {
                 />
                 <span>{item.label}</span>
               </Link>
-              
+
               {item.subItems && isActive && (
                 <div className="ml-9 space-y-1">
                   {item.subItems.map((sub: any) => {
@@ -165,8 +179,8 @@ export function AppSidebar({ roleSlug }: { roleSlug?: string }) {
                 </p>
               </div>
             </div>
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               className="w-full justify-start gap-3 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/5 group"
               onClick={logout}
             >

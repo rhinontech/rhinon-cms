@@ -15,8 +15,8 @@ Target Market: SaaS companies, high-growth agencies, and data-driven enterprises
 Value Proposition: "Unlock the power of your data to drive smarter, reactive decisions."
 `;
 
-export async function generateAIEmailDraft(leadData: any, templateData: any) {
-  const prompt = `
+export async function generateAIEmailDraft(leadData: any, templateData: any = null, customPrompt: string = "") {
+  let prompt = `
     You are an expert sales copywriter for Rhinon. 
 
     RHINON COMPANY KNOWLEDGE:
@@ -28,30 +28,65 @@ export async function generateAIEmailDraft(leadData: any, templateData: any) {
     Title: ${leadData.title}
     Industry: ${leadData.industry || "Technology/Business"}
     
+    TASK:
+    1. Generate a professional sales outreach email targeting this lead.
+  `;
+
+  if (templateData) {
+    prompt += `
     RESEARCH GUIDANCE:
     Template Subject: ${templateData.subject}
     Template Body to Complete: ${templateData.body}
     Specific AI Instructions: ${templateData.aiInstructions}
 
-    TASK:
-    1. Complete the email draft based on the "Template Body to Complete".
-    2. Fill in any placeholders or instructions inside brackets like [AI to fill X].
-    3. Tailor the Benefits (Benefit 1, 2, 3) specifically to the lead's company (${leadData.company}), their industry (${leadData.industry || "industry"}), and their role (${leadData.title}).
-    4. Mention something specific and plausible about the company based on its industry and growth stage.
-    5. Maintain a professional, premium, and consultative tone.
-    6. Replace ALL variables:
+    SUB-TASK:
+    - Complete the email draft based on the "Template Body to Complete".
+    - Fill in any placeholders or instructions inside brackets like [AI to fill X].
+    - Tailor the Benefits (Benefit 1, 2, 3) specifically to the lead's company (${leadData.company}), their industry (${leadData.industry || "industry"}), and their role (${leadData.title}).
+    `;
+  }
+
+  if (customPrompt) {
+    prompt += `
+    CUSTOM USER INSTRUCTIONS:
+    ${customPrompt}
+
+    SUB-TASK:
+    - Incorporate the custom instructions provided above.
+    `;
+  }
+
+  prompt += `
+    GENERAL REQUIREMENTS:
+    - Maintain a professional, premium, and consultative tone.
+    - Replace ALL variables:
        - {{lead.name}} -> ${leadData.name}
        - {{lead.company}} -> ${leadData.company}
        - {{lead.title}} -> ${leadData.title}
        - {{sender.name}} -> Rhinon Professional
     
     OUTPUT:
-    Return ONLY the final personalized message body. DO NOT include "Subject:" or any other headers.
+    Return a JSON object with:
+    - "subject": A compelling subject line.
+    - "body": The final personalized message body.
+    
+    DO NOT include any other headers or surrounding text. Only return the JSON.
   `;
 
   const result = await model.generateContent(prompt);
   const response = await result.response;
-  return response.text().trim();
+  const text = response.text().trim();
+  
+  try {
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]);
+    }
+  } catch (e) {
+    console.error("Failed to parse AI JSON response:", text);
+  }
+  
+  return { body: text, subject: `Scaling ${leadData.company}'s operations` };
 }
 
 export async function enrichLeadWithAI(leadName: string, companyName: string) {

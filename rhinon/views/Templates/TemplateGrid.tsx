@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Mail, Linkedin, Plus, Search, MoreVertical, BookTemplate, FileText, Video, Layout } from "lucide-react";
+import { Mail, Plus, Search, MoreVertical, BookTemplate } from "lucide-react";
 import { Template } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,24 +18,17 @@ import { useRouter, useParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
-const FILTERS = ["All", "Cold Email", "LinkedIn Post", "LinkedIn Video", "LinkedIn Article"] as const;
+const FILTERS = ["All", "Cold Email"] as const;
 type Filter = (typeof FILTERS)[number];
 
 const SLUG_TO_FILTER: Record<string, Filter> = {
   "all": "All",
-  "cold-email": "Cold Email",
-  "linkedin-post": "LinkedIn Post",
-  "linkedin-video": "LinkedIn Video",
-  "linkedin-article": "LinkedIn Article"
+  "cold-email": "Cold Email"
 };
 
 const FILTER_TO_SLUG: Record<string, string> = {
   "All": "all",
-  "Cold Email": "cold-email",
-  "LinkedIn Post": "linkedin-post",
-  "LinkedIn Video": "linkedin-video",
-  "LinkedIn Article": "linkedin-article",
-  "Email": "cold-email" // Map "Email" to "cold-email" for safety
+  "Cold Email": "cold-email"
 };
 
 export function TemplateGrid() {
@@ -53,7 +46,7 @@ export function TemplateGrid() {
     try {
       const res = await fetch("/api/templates");
       const data = await res.json();
-      setTemplates(data);
+      setTemplates(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching templates:", error);
     } finally {
@@ -137,34 +130,11 @@ export function TemplateGrid() {
               className="pl-9 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
             />
           </div>
-          {filter === "All" ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button className="bg-cyan-500 hover:bg-cyan-600 text-white font-semibold whitespace-nowrap">
-                  <Plus size={16} className="mr-1.5" /> New Template
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 bg-card border-border">
-                {FILTERS.filter(f => f !== "All").map((f) => (
-                  <DropdownMenuItem key={f} className="cursor-pointer group p-0" onSelect={() => router.push(`/${role}/templates/${FILTER_TO_SLUG[f]}/new`)}>
-                    <div className="flex w-full items-center gap-2 text-foreground px-2 py-1.5">
-                      {f === "Cold Email" && <Mail size={14} className="text-cyan-500" />}
-                      {f === "LinkedIn Post" && <Layout size={14} className="text-blue-500" />}
-                      {f === "LinkedIn Video" && <Video size={14} className="text-red-500" />}
-                      {f === "LinkedIn Article" && <FileText size={14} className="text-emerald-500" />}
-                      <span className="font-medium">{f}</span>
-                    </div>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <Link href={`/${role}/templates/${FILTER_TO_SLUG[filter]}/new`}>
-              <Button className="bg-cyan-500 hover:bg-cyan-600 text-white font-semibold whitespace-nowrap">
-                <Plus size={16} className="mr-1.5" /> New Template
-              </Button>
-            </Link>
-          )}
+          <Link href={`/${role}/templates/cold-email/new`}>
+            <Button className="bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-black whitespace-nowrap px-6 rounded-xl shadow-glow-sm">
+              <Plus size={16} className="mr-1.5" /> New Template
+            </Button>
+          </Link>
         </div>
       </div>
 
@@ -179,14 +149,8 @@ export function TemplateGrid() {
             {/* Card header */}
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-center gap-2">
-                <div className={cn(
-                  "p-2 rounded-lg",
-                  template.channel === "Cold Email" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" :
-                  template.channel === "LinkedIn Post" ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" :
-                  template.channel === "LinkedIn Video" ? "bg-rose-500/10 text-rose-600 dark:text-rose-400" :
-                  "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-                )}>
-                  {template.channel === "Cold Email" ? <Mail size={15} /> : <FileText size={15} />}
+                <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
+                  <Mail size={15} />
                 </div>
                 <Badge variant="outline" className="bg-secondary border-border text-muted-foreground text-[11px]">
                   {template.channel}
@@ -204,9 +168,8 @@ export function TemplateGrid() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-card border-border text-foreground">
                   <DropdownMenuItem onClick={() => router.push(`/${role}/templates/${FILTER_TO_SLUG[template.channel]}/${(template as any)._id || template.id}/edit`)}>Edit</DropdownMenuItem>
-                  <DropdownMenuItem>Duplicate</DropdownMenuItem>
                   <DropdownMenuItem 
-                    className="text-destructive"
+                    className="text-destructive font-black"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDelete((template as any)._id || template.id);
@@ -221,8 +184,8 @@ export function TemplateGrid() {
             <h3 className="font-semibold text-foreground text-sm mb-1 truncate">{template.name}</h3>
 
             {template.subject && (
-              <p className="text-xs text-muted-foreground mb-3 truncate flex items-center gap-1">
-                <span className="font-bold">Subj:</span> {template.subject}
+              <p className="text-xs text-muted-foreground mb-3 truncate flex items-center gap-1 font-medium">
+                <span className="font-black text-[10px] uppercase text-cyan-600">Subj:</span> {template.subject}
               </p>
             )}
 
@@ -230,51 +193,24 @@ export function TemplateGrid() {
               <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed">
                 {template.body}
               </p>
-              {/* Fade — adapts to card bg in both modes */}
               <div className="absolute bottom-0 left-0 w-full h-8 bg-gradient-to-t from-card to-transparent pointer-events-none" />
             </div>
 
-            <div className="mt-4 pt-4 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
-              <span>Updated {format(new Date(template.updatedAt), "MMM d, yyyy")}</span>
+            <div className="mt-4 pt-4 border-t border-border flex items-center justify-between text-[10px] text-muted-foreground uppercase font-black tracking-widest">
+              <span>Updated {format(new Date(template.updatedAt), "MMM d")}</span>
             </div>
           </div>
         ))}
 
         {/* Create New tile */}
-        {filter === "All" ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <div className="h-full min-h-[180px] border-2 border-dashed border-border hover:border-cyan-500/40 hover:bg-cyan-500/5 transition-all rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer">
-                <div className="h-10 w-10 rounded-full bg-secondary border border-border flex items-center justify-center mb-3">
-                  <Plus size={18} className="text-muted-foreground" />
-                </div>
-                <h3 className="font-semibold text-muted-foreground text-sm">Create Template</h3>
-              </div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 bg-card border-border">
-              {FILTERS.filter(f => f !== "All").map((f) => (
-                <DropdownMenuItem key={f} className="cursor-pointer group p-0" onSelect={() => router.push(`/${role}/templates/${FILTER_TO_SLUG[f]}/new`)}>
-                  <div className="flex w-full items-center gap-2 text-foreground px-2 py-1.5">
-                    {f === "Cold Email" && <Mail size={14} className="text-cyan-500" />}
-                    {f === "LinkedIn Post" && <Layout size={14} className="text-blue-500" />}
-                    {f === "LinkedIn Video" && <Video size={14} className="text-red-500" />}
-                    {f === "LinkedIn Article" && <FileText size={14} className="text-emerald-500" />}
-                    <span className="font-medium">{f}</span>
-                  </div>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : (
-          <Link href={`/${role}/templates/${FILTER_TO_SLUG[filter]}/new`} className="block">
-            <div className="h-full min-h-[180px] border-2 border-dashed border-border hover:border-cyan-500/40 hover:bg-cyan-500/5 transition-all rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer">
-              <div className="h-10 w-10 rounded-full bg-secondary border border-border flex items-center justify-center mb-3">
-                <Plus size={18} className="text-muted-foreground" />
-              </div>
-              <h3 className="font-semibold text-muted-foreground text-sm">Create Template</h3>
+        <Link href={`/${role}/templates/cold-email/new`} className="block">
+          <div className="h-full min-h-[180px] border-2 border-dashed border-border hover:border-cyan-500/40 hover:bg-cyan-500/5 transition-all rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer group">
+            <div className="h-10 w-10 rounded-full bg-secondary border border-border flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <Plus size={18} className="text-muted-foreground group-hover:text-cyan-500 transition-colors" />
             </div>
-          </Link>
-        )}
+            <h3 className="font-semibold text-muted-foreground text-sm group-hover:text-foreground transition-colors">Create Template</h3>
+          </div>
+        </Link>
       </div>
     </div>
   );

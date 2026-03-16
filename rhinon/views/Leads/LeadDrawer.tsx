@@ -2,15 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Lead } from "@/lib/types";
+import { Lead, Template } from "@/lib/types";
 import {
   Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Calendar, FileText, Linkedin, Mail, Send, Sparkles, Wand2 } from "lucide-react";
+import { Building2, Calendar, FileText, Linkedin, Mail, Send, Sparkles, Wand2, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -29,12 +30,17 @@ interface LeadDrawerProps {
 
 export function LeadDrawer({ lead, isOpen, onClose }: LeadDrawerProps) {
   const [editedContent, setEditedContent] = useState(lead?.aiDraft || "");
+  const [editedSubject, setEditedSubject] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isEnriching, setIsEnriching] = useState(false);
   const [enrichment, setEnrichment] = useState<any>(null);
   const [isSending, setIsSending] = useState(false);
   const [activities, setActivities] = useState<any[]>([]);
   const [showNoTemplateModal, setShowNoTemplateModal] = useState(false);
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
+  const [manualPrompt, setManualPrompt] = useState("");
+  const [showAiCustomizer, setShowAiCustomizer] = useState(false);
 
   const fetchActivities = async () => {
     if (!lead) return;
@@ -50,7 +56,18 @@ export function LeadDrawer({ lead, isOpen, onClose }: LeadDrawerProps) {
   useEffect(() => {
     if (isOpen && lead) {
       setEditedContent(lead.aiDraft || "");
+      setEditedSubject(`Scaling ${lead.company}'s operations`);
       fetchActivities();
+      
+      // Load templates in background
+      fetch("/api/templates")
+        .then(res => res.json())
+        .then(data => {
+          setTemplates(data || []);
+          if (data && data.length > 0) {
+            setSelectedTemplateId(data[0]._id || data[0].id);
+          }
+        });
     }
   }, [isOpen, lead]);
 
@@ -58,31 +75,25 @@ export function LeadDrawer({ lead, isOpen, onClose }: LeadDrawerProps) {
     if (!lead) return;
     setIsGenerating(true);
     try {
-      const templatesRes = await fetch("/api/templates");
-      const templates = await templatesRes.json();
-      
-      if (!templates || templates.length === 0) {
-        setShowNoTemplateModal(true);
-        return;
-      }
-
-      const templateId = templates[0]?._id || templates[0]?.id;
-
       const res = await fetch("/api/ai/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           leadId: (lead as any)._id || lead.id,
-          templateId
+          templateId: selectedTemplateId || null,
+          customPrompt: manualPrompt || null
         }),
       });
       const data = await res.json();
       if (data.draft) {
         setEditedContent(data.draft);
+        if (data.subject) setEditedSubject(data.subject);
         fetchActivities();
+        setShowAiCustomizer(false); // Close customizer after success
       }
     } catch (error) {
       console.error("Error regenerating AI content:", error);
+      toast.error("Failed to generate AI content.");
     } finally {
       setIsGenerating(false);
     }
@@ -116,7 +127,7 @@ export function LeadDrawer({ lead, isOpen, onClose }: LeadDrawerProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           leadId: (lead as any)._id || lead.id,
-          subject: `Scaling ${lead.company}'s operations`,
+          subject: editedSubject || `Scaling ${lead.company}'s operations`,
           body: editedContent,
         }),
       });
@@ -233,7 +244,57 @@ export function LeadDrawer({ lead, isOpen, onClose }: LeadDrawerProps) {
                 <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                   <Sparkles size={14} className="text-violet-500" /> AI Propagation Content
                 </h3>
+                <Button 
+                  onClick={() => setShowAiCustomizer(!showAiCustomizer)}
+                  variant="ghost" 
+                  size="sm" 
+                  className={cn("h-8 text-[10px] font-black uppercase tracking-widest", showAiCustomizer ? "text-violet-500" : "text-muted-foreground")}
+                >
+                  <Settings size={12} className="mr-1.5" /> AI Customizer
+                </Button>
               </div>
+
+              {showAiCustomizer && (
+                <div className="p-5 rounded-2xl bg-violet-500/5 border border-violet-500/10 space-y-4 animate-in fade-in slide-in-from-top-2">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Base Template</label>
+                      <select 
+                        value={selectedTemplateId} 
+                        onChange={(e) => setSelectedTemplateId(e.target.value)}
+                        className="w-full bg-background border border-border rounded-lg h-9 text-xs px-2 outline-none focus:ring-1 focus:ring-violet-500/30"
+                      >
+                        <option value="">No Template (Generic AI Mode)</option>
+                        {templates.map(t => (
+                          <option key={(t as any)._id || t.id} value={(t as any)._id || t.id}>{t.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Reference Lead Info</label>
+                      <div className="h-9 px-3 flex items-center bg-background border border-border rounded-lg text-[10px] text-muted-foreground italic truncate">
+                        Using Intel: {lead.company} • {lead.title}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Manual Prompt / Instructions (Optional)</label>
+                    <textarea 
+                      value={manualPrompt}
+                      onChange={(e) => setManualPrompt(e.target.value)}
+                      placeholder="e.g. Focus on ROI and data security. Keep it under 100 words."
+                      className="w-full h-20 bg-background border border-border rounded-xl p-3 text-xs outline-none focus:ring-1 focus:ring-violet-500/30 resize-none"
+                    />
+                  </div>
+                  <Button 
+                    onClick={handleRegenerate}
+                    disabled={isGenerating}
+                    className="w-full bg-violet-500 hover:bg-violet-600 text-white font-bold h-9 text-xs"
+                  >
+                    {isGenerating ? "Generating..." : "Generate Optimized Draft"}
+                  </Button>
+                </div>
+              )}
 
               <div className="card overflow-hidden">
                 <div className="bg-secondary border-b border-border px-6 py-4 flex flex-col gap-2">
@@ -243,7 +304,12 @@ export function LeadDrawer({ lead, isOpen, onClose }: LeadDrawerProps) {
                   </div>
                   <div className="flex items-center gap-4">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground w-16 text-right">Subject</span>
-                    <span className="text-sm font-bold text-foreground italic">Scaling {lead.company}&apos;s operations</span>
+                    <input
+                      value={editedSubject}
+                      onChange={(e) => setEditedSubject(e.target.value)}
+                      className="bg-transparent border-none outline-none text-sm font-bold text-foreground italic flex-1 focus:ring-0"
+                      placeholder="Enter subject..."
+                    />
                   </div>
                 </div>
                 <div className="p-6 bg-card relative">
@@ -265,12 +331,12 @@ export function LeadDrawer({ lead, isOpen, onClose }: LeadDrawerProps) {
 
               <div className="flex gap-3 justify-end">
                 <Button
-                  onClick={handleRegenerate}
+                  onClick={() => setShowAiCustomizer(true)}
                   disabled={isGenerating}
                   variant="outline"
                   className="border-border bg-card text-muted-foreground hover:text-foreground font-semibold h-10 px-6"
                 >
-                  {editedContent ? "Regenerate AI" : "Generate AI Draft"}
+                  {editedContent ? "Customize AI" : "Generate AI Draft"}
                 </Button>
                 <Button
                   onClick={handleLaunchOutreach}

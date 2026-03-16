@@ -308,46 +308,54 @@ export function SocialPublishBoard(): JSX.Element {
 
       {/* Preview Modal */}
       <Dialog open={!!previewPost} onOpenChange={(open) => !open && setPreviewPost(null)}>
-        <DialogContent className="sm:max-w-xl bg-card border-border text-foreground preview-dialog">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col bg-card border-border text-foreground preview-dialog p-0 overflow-hidden">
+          <DialogHeader className="p-6 border-b border-border">
             <DialogTitle className="flex items-center gap-2">
               <Rocket className="text-cyan-500" size={18} /> 
               Preview: {previewPost?.name}
             </DialogTitle>
           </DialogHeader>
-          <div className="mt-4 p-4 border border-border rounded-lg bg-secondary/30 relative overflow-hidden">
-             
-             {!previewPost?.aiDraft && (
-               <div className="text-center py-8 text-muted-foreground italic text-sm">
-                 <Sparkles className="mx-auto mb-2 opacity-50" size={24} />
-                 No content generated yet. Click "Auto-Draft" to generate the post copy.
-               </div>
-             )}
-
-             {previewPost?.aiDraft && (
-               <div className="space-y-4">
-                 <div className="flex items-center gap-3 mb-2">
-                   <div className="w-10 h-10 rounded-full bg-secondary overflow-hidden">
-                     {/* Mock User Avatar */}
-                     <img src="https://ui-avatars.com/api/?name=Rhinon+Admin&background=0284c7&color=fff" alt="User" />
-                   </div>
-                   <div>
-                     <div className="font-bold text-sm text-foreground">Rhinon Admin</div>
-                     <div className="text-xs text-muted-foreground">Just now • 🌍</div>
-                   </div>
+          
+          <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
+            <div className="border border-border rounded-xl bg-secondary/30 relative overflow-hidden p-6 md:p-8">
+               
+               {!previewPost?.aiDraft && (
+                 <div className="text-center py-12 text-muted-foreground italic text-sm">
+                   <Sparkles className="mx-auto mb-3 opacity-50" size={32} />
+                   <p>No content generated yet.</p>
+                   <p className="mt-1">Click "Auto-Draft" to generate the post copy.</p>
                  </div>
-                 
-                 <div className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                   {previewPost.aiDraft}
-                 </div>
+               )}
 
-                 {previewPost.mediaUrl && (
-                   <div className="mt-4 rounded-xl overflow-hidden border border-border bg-black max-h-[300px] flex items-center justify-center">
-                     <img src={previewPost.mediaUrl} alt="Post Media" className="max-w-full max-h-[300px] object-contain" />
+               {previewPost?.aiDraft && (
+                 <div className="space-y-6 max-w-2xl mx-auto">
+                   <div className="flex items-center gap-3 mb-2">
+                     <div className="w-12 h-12 rounded-full bg-secondary overflow-hidden border border-border shadow-sm">
+                       {/* Mock User Avatar */}
+                       <img src="https://ui-avatars.com/api/?name=Rhinon+Admin&background=0284c7&color=fff" alt="User" />
+                     </div>
+                     <div>
+                       <div className="font-bold text-sm text-foreground">Rhinon Admin</div>
+                       <div className="text-xs text-muted-foreground">Just now • 🌍</div>
+                     </div>
                    </div>
-                 )}
-               </div>
-             )}
+                   
+                   <div className="text-base text-foreground whitespace-pre-wrap leading-relaxed">
+                     {previewPost.aiDraft}
+                   </div>
+
+                   {previewPost.mediaUrl && (
+                     <div className="mt-6 rounded-2xl overflow-hidden border border-border bg-black shadow-lg">
+                       <img src={previewPost.mediaUrl} alt="Post Media" className="w-full h-auto object-contain max-h-[500px]" />
+                     </div>
+                   )}
+                 </div>
+               )}
+            </div>
+          </div>
+          
+          <div className="p-4 border-t border-border bg-secondary/20 flex justify-end">
+             <Button variant="outline" onClick={() => setPreviewPost(null)}>Close Preview</Button>
           </div>
         </DialogContent>
       </Dialog>

@@ -3,6 +3,7 @@ import { sendEmail } from "@/lib/mail";
 import dbConnect from "@/lib/mongodb";
 import Lead from "@/lib/models/Lead";
 import AiActivity from "@/lib/models/AiActivity";
+import { generateEmailHtml } from "@/lib/email-templates";
 
 export async function POST(req: Request) {
   try {
@@ -18,11 +19,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Lead email missing" }, { status: 400 });
     }
 
-    // Send the actual email
+    // Send the actual email wrapped in our branded HTML template
     await sendEmail({
       to: lead.email,
       subject: subject || "Scaling your operations",
-      body: body,
+      body: generateEmailHtml(body),
     });
 
     // Update lead status to Sent

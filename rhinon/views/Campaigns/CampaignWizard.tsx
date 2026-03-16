@@ -168,14 +168,11 @@ export function CampaignWizard({ defaultChannel = "Email" }: CampaignWizardProps
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300">Primary Channel</label>
                   <Select value={channel} onValueChange={(val) => setChannel(val || "Email")}>
-                    <SelectTrigger className="bg-slate-900 border-slate-800">
+                    <SelectTrigger className="bg-slate-900 border-slate-800 h-11">
                       <SelectValue placeholder="Select channel" />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
+                    <SelectContent className="bg-slate-950 border-slate-800 text-slate-200">
                       <SelectItem value="Email">Email Business Outbound</SelectItem>
-                      <SelectItem value="LinkedIn Post">LinkedIn Thought Leadership Post</SelectItem>
-                      <SelectItem value="LinkedIn Video">LinkedIn Video Propagation</SelectItem>
-                      <SelectItem value="LinkedIn Article">LinkedIn Knowledge Article</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

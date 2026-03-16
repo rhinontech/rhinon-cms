@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import {
   List, LayoutGrid, Rocket, Clock, Play, Pause,
-  MoreVertical, FileText, Settings, Sparkles, Target, Send,
+  MoreVertical, FileText, Settings, Sparkles, Target, Send, User, ChevronRight,
+  Trash2, AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Campaign, CampaignStage, Template } from "@/lib/types";
@@ -109,6 +110,27 @@ export function CampaignDetail({ campaign, templates, onClose, onUpdate }: Campa
                   <Play size={14} className="mr-2" /> Resume
                 </Button>
               ) : null}
+              <Button 
+                onClick={async () => {
+                  if (confirm("Are you sure you want to delete this campaign? This will also delete all associated leads and logs.")) {
+                    try {
+                      const id = (campaign as any)._id || campaign.id;
+                      await fetch(`/api/campaigns/${id}`, { method: "DELETE" });
+                      onUpdate();
+                      onClose();
+                      toast.success("Campaign deleted successfully");
+                    } catch (error) {
+                      console.error("Error deleting campaign:", error);
+                      toast.error("Failed to delete campaign");
+                    }
+                  }
+                }}
+                variant="outline" 
+                size="sm" 
+                className="border-red-500/40 text-red-500 hover:bg-red-500/10 h-9 font-bold"
+              >
+                <Trash2 size={14} className="mr-2" /> Delete
+              </Button>
             </div>
           </div>
         </SheetHeader>
@@ -233,11 +255,11 @@ export function CampaignDetail({ campaign, templates, onClose, onUpdate }: Campa
 }
 
 interface CampaignBoardProps {
-  filterType?: "email" | "social";
+  // No filterType needed anymore as it only handles email
 }
 
-export function CampaignBoard({ filterType }: CampaignBoardProps): JSX.Element {
-  const [viewMode, setViewMode] = useState<"kanban" | "list">("kanban");
+export function CampaignBoard({ }: CampaignBoardProps): JSX.Element {
+  const [viewMode, setViewMode] = useState<"cards" | "list">("cards");
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -256,12 +278,8 @@ export function CampaignBoard({ filterType }: CampaignBoardProps): JSX.Element {
         campaignsRes.json(),
         templatesRes.json(),
       ]);
-      const socialChannels = ["LinkedIn", "LinkedIn DM", "LinkedIn Connection", "LinkedIn Post", "LinkedIn Video", "LinkedIn Article"];
-      const filteredCampaigns = filterType === "email" 
-        ? campaignsData.filter((c: Campaign) => c.channel === "Cold Email" || c.channel === "Email" as any)
-        : filterType === "social"
-          ? campaignsData.filter((c: Campaign) => socialChannels.includes(c.channel))
-          : campaignsData;
+      
+      const filteredCampaigns = campaignsData.filter((c: Campaign) => c.channel === "Cold Email" || c.channel === "Email" as any);
 
       setCampaigns(filteredCampaigns);
       setTemplates(templatesData);
@@ -310,6 +328,22 @@ export function CampaignBoard({ filterType }: CampaignBoardProps): JSX.Element {
     }
   };
 
+  const handleDeleteCampaign = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm("Are you sure you want to delete this campaign?")) {
+      try {
+        const res = await fetch(`/api/campaigns/${id}`, { method: "DELETE" });
+        if (res.ok) {
+          toast.success("Campaign deleted");
+          await fetchData();
+        }
+      } catch (error) {
+        console.error("Error deleting campaign:", error);
+        toast.error("Failed to delete campaign");
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex h-[80vh] items-center justify-center">
@@ -336,8 +370,12 @@ export function CampaignBoard({ filterType }: CampaignBoardProps): JSX.Element {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="bg-card border-border text-foreground">
-              <DropdownMenuItem>View Analytics</DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setSelectedCampaign(campaign); }}>
+                 <FileText size={14} className="mr-2" /> View Analytics
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => handleDeleteCampaign((campaign as any)._id || campaign.id, e)} className="text-red-500 focus:text-red-500">
+                 <Trash2 size={14} className="mr-2" /> Delete Campaign
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -420,18 +458,14 @@ export function CampaignBoard({ filterType }: CampaignBoardProps): JSX.Element {
       {/* Page Header */}
       <header className="flex items-center gap-5">
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-500/10 border border-cyan-500/20 shadow-glow-sm">
-          {filterType === "email" ? <Send size={28} className="text-cyan-500" /> : <Rocket size={28} className="text-cyan-500" />}
+          <Send size={28} className="text-cyan-500" />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-foreground">
-            {filterType === "email" ? "Email Campaigns" : filterType === "social" ? "Social Media Engine" : "Campaigns"}
+            Email Campaigns
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {filterType === "email" 
-              ? "Scale your outbound email sequences and domain reach." 
-              : filterType === "social" 
-                ? "Automate your social presence across LinkedIn and beyond." 
-                : "Manage and monitor your outbound sequences."}
+            Scale your outbound email sequences and domain reach with automated orchestration.
           </p>
         </div>
       </header>
@@ -442,10 +476,10 @@ export function CampaignBoard({ filterType }: CampaignBoardProps): JSX.Element {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setViewMode("kanban")}
-            className={cn("px-3 py-1.5 rounded-lg h-8 text-sm font-medium transition-colors", viewMode === "kanban" ? "bg-card text-cyan-600 dark:text-cyan-400 shadow-sm border border-border" : "text-muted-foreground hover:text-foreground")}
+            onClick={() => setViewMode("cards")}
+            className={cn("px-3 py-1.5 rounded-lg h-8 text-sm font-medium transition-colors", viewMode === "cards" ? "bg-card text-cyan-600 dark:text-cyan-400 shadow-sm border border-border" : "text-muted-foreground hover:text-foreground")}
           >
-            <LayoutGrid size={15} className="mr-1.5" /> Board
+            <LayoutGrid size={15} className="mr-1.5" /> Cards
           </Button>
           <Button
             variant="ghost"
@@ -456,35 +490,91 @@ export function CampaignBoard({ filterType }: CampaignBoardProps): JSX.Element {
             <List size={15} className="mr-1.5" /> List
           </Button>
         </div>
-        <CampaignWizard defaultChannel={filterType === "email" ? "Email" : filterType === "social" ? "LinkedIn Post" : "Email"} />
+        <CampaignWizard defaultChannel="Email" />
       </div>
 
-      {/* Kanban View */}
-      {viewMode === "kanban" ? (
-        <div className="grid grid-cols-4 gap-5 items-start">
-          {stages.map((stage) => (
-            <div key={stage} className="rounded-2xl border border-border bg-secondary/40 p-4 min-h-[480px]">
-              <div className="flex items-center justify-between mb-4 px-1">
-                <h3 className="font-semibold text-foreground text-sm flex items-center gap-2">
-                  {stage}
-                  <Badge variant="outline" className="px-1.5 py-0 text-[10px] bg-secondary text-muted-foreground border-border">
-                    {campaigns.filter((c) => c.stage === stage).length}
-                  </Badge>
-                </h3>
-              </div>
-              <div className="space-y-3">
-                {campaigns.filter((c) => c.stage === stage).map((campaign) => (
-                  <CampaignCard key={(campaign as any)._id || campaign.id} campaign={campaign} />
-                ))}
-              </div>
-            </div>
+      {/* View Content */}
+      {viewMode === "cards" ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+           {campaigns.map((campaign) => (
+            <CampaignCard key={(campaign as any)._id || campaign.id} campaign={campaign} />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {campaigns.map((campaign) => (
-            <CampaignCard key={(campaign as any)._id || campaign.id} campaign={campaign} />
-          ))}
+        <div className="card overflow-hidden border-border/50">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-secondary/50 border-b border-border">
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Campaign Name</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Author</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Start Date</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Status</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Progress</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {campaigns.map((campaign) => (
+                <tr 
+                  key={(campaign as any)._id || campaign.id} 
+                  onClick={() => setSelectedCampaign(campaign)}
+                  className="group hover:bg-secondary/30 transition-colors cursor-pointer border-b border-border/50 last:border-0"
+                >
+                  <td className="px-6 py-5">
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-lg bg-cyan-500/10 flex items-center justify-center">
+                        <Rocket size={14} className="text-cyan-500" />
+                      </div>
+                      <span className="text-sm font-bold text-foreground group-hover:text-cyan-500 transition-colors">
+                        {campaign.name}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5">
+                    <div className="flex items-center gap-2">
+                       <div className="h-6 w-6 rounded-full bg-violet-500/20 flex items-center justify-center">
+                          <User size={12} className="text-violet-500" />
+                       </div>
+                       <span className="text-xs font-semibold text-muted-foreground">Prabhat Patra</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {format(new Date(campaign.startDate), "MMM d, yyyy")}
+                    </span>
+                  </td>
+                  <td className="px-6 py-5">
+                    <Badge variant="outline" className={cn("px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", stageBadge[campaign.stage])}>
+                      {campaign.stage}
+                    </Badge>
+                  </td>
+                  <td className="px-6 py-5">
+                    <div className="flex items-center gap-3 w-32">
+                      <Progress value={(campaign.leadsProcessed / campaign.leadsTotal) * 100} className="h-1 flex-1" />
+                      <span className="text-[10px] font-bold text-muted-foreground tabular-nums">
+                        {Math.floor((campaign.leadsProcessed / campaign.leadsTotal) * 100)}%
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5 text-right">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-cyan-500">
+                      <ChevronRight size={16} />
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+              {campaigns.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-20 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <Rocket size={32} className="text-muted-foreground/30" />
+                      <p className="text-sm text-muted-foreground font-medium">No outreach campaigns found.</p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

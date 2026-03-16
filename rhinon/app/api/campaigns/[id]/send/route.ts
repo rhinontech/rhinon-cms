@@ -88,13 +88,29 @@ export async function POST(
 
       try {
         const mediaUrls = mediaUrl ? [mediaUrl] : [];
+        
+        // Generate slug if missing (for SEO-friendly auto-hosted URLs)
+        if (!campaign.slug && campaign.channel === "LinkedIn Article") {
+          campaign.slug = campaign.name
+            .toLowerCase()
+            .trim()
+            .replace(/[^\w\s-]/g, '') // Remove all non-word chars (except spaces and hyphens)
+            .replace(/[\s_-]+/g, '-')  // Replace spaces, underscores, and hyphens with a single hyphen
+            .replace(/^-+|-+$/g, '');  // Trim hyphens from ends
+        }
+
+
         const result = await postToLinkedIn(postContent, mediaUrls, {
           visibility: campaign.visibility,
           channel: campaign.channel,
           articleUrl: campaign.articleUrl,
-          mediaTitle: campaign.mediaTitle,
+          mediaTitle: campaign.name || campaign.mediaTitle, // Prioritize the "ARTICLE TITLE" (campaign name)
           mediaDescription: campaign.mediaDescription,
+          campaignId: campaignId,
+          slug: campaign.slug
         });
+
+
         
         const fs = require('fs');
         fs.appendFileSync('/tmp/rhinon-debug.log', `\n--- Social Post Execution ${new Date().toISOString()} ---\n`);

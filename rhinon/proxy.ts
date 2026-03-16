@@ -17,7 +17,7 @@ export function proxy(req: NextRequest) {
   const session = sessionCookie ? decodeSession(sessionCookie.value) : null;
 
   // 2. Auth Page Access (Login/Signup)
-  const isAuthPage = pathname === "/login" || pathname === "/signup";
+  const isAuthPage = pathname === "/login" || pathname === "/signup" || pathname === "/debug/email";
 
   if (isAuthPage) {
     if (session) {

@@ -3,6 +3,38 @@ import dbConnect from "@/lib/mongodb";
 import LinkedInToken from "@/lib/models/LinkedInToken";
 
 /**
+ * Strips Markdown syntax and formats text specifically for LinkedIn plain-text updates.
+ */
+function formatMarkdownForLinkedIn(text: string, senderName: string = "Prabhat Patra"): string {
+  if (!text) return "";
+  
+  return text
+    // Replace placeholders
+    .replace(/\{\{sender\.name\}\}/g, senderName)
+    // Remove "hashtag#" prefix which some AI models/integrations add
+    .replace(/hashtag#/g, '#')
+    // Remove markdown headers (#, ##, etc) and make them look like titles
+    .replace(/^#+\s+(.*)$/gm, (match, title) => title.toUpperCase())
+    // Replace markdown bullets with professional bullet points
+    .replace(/^[\*\-]\s+/gm, '• ')
+    // Remove bold (**) but keep the text
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    // Remove italic (*) but keep the text
+    .replace(/(^|[^\*])\*([^\*]+)\*(?!\*)/g, '$1$2')
+    // Remove underline (__)
+    .replace(/__(.*?)__/g, '$1')
+    // Remove code blocks
+    .replace(/```[\s\S]*?```/g, (match) => match.replace(/```/g, ''))
+    // Remove inline code
+    .replace(/`(.*?)`/g, '$1')
+    // Convert links: [Text](URL) -> Text (URL)
+    .replace(/\[(.*?)\]\((.*?)\)/g, '$1 ($2)')
+    // Clean up excessive whitespace
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+/**
  * Get valid LinkedIn access token (auto-refresh if expired)
  */
 export async function getValidLinkedInToken() {
@@ -147,18 +179,28 @@ export async function postToLinkedIn(content: string, mediaUrls: string[] = [], 
       visibility = "PUBLIC", 
       channel = "LinkedIn Post", 
       articleUrl = "", 
-      mediaTitle = "Shared Content", 
-      mediaDescription = "" 
+      mediaTitle = options.name || "Shared Content", 
+      mediaDescription = "",
+      campaignId = "",
+      slug = ""
     } = options;
 
+    let finalArticleUrl = articleUrl;
+    if (channel === "LinkedIn Article" && !finalArticleUrl && (slug || campaignId)) {
+      finalArticleUrl = `https://rhinonlabs.com/articles/${slug || campaignId}`;
+    }
+
     let shareMediaCategory = 'NONE';
-    if (channel === "LinkedIn Article" || articleUrl) {
+    if (finalArticleUrl) {
       shareMediaCategory = 'ARTICLE';
-    } else if (channel === "LinkedIn Video") {
+    } else if (channel === "LinkedIn Video" && mediaUrls.length > 0) {
       shareMediaCategory = 'VIDEO';
-    } else if (channel === "LinkedIn Post" && mediaUrls.length > 0) {
+    } else if (mediaUrls.length > 0) {
       shareMediaCategory = 'IMAGE';
     }
+
+
+
 
     const postPayload: any = {
       author: authorUrn,
@@ -166,7 +208,7 @@ export async function postToLinkedIn(content: string, mediaUrls: string[] = [], 
       specificContent: {
         'com.linkedin.ugc.ShareContent': {
           shareCommentary: {
-            text: content
+            text: formatMarkdownForLinkedIn(content, options.userName || "Prabhat Patra")
           },
           shareMediaCategory: shareMediaCategory
         }
@@ -186,16 +228,29 @@ export async function postToLinkedIn(content: string, mediaUrls: string[] = [], 
           description: { text: mediaDescription || "" }
         }
       ];
-    } else if (shareMediaCategory === 'ARTICLE' && articleUrl) {
+    } else if (shareMediaCategory === 'ARTICLE' && finalArticleUrl) {
+      let thumbnails: any[] = [];
+      if (mediaUrls.length > 0) {
+        try {
+          const assetUrn = await uploadLinkedInImageAsset(mediaUrls[0]);
+          thumbnails.push({ resolvedAt: assetUrn });
+        } catch (uploadError) {
+          console.error("Failed to upload article thumbnail, falling back to URL-only card:", uploadError);
+        }
+      }
+
       postPayload.specificContent['com.linkedin.ugc.ShareContent'].media = [
         {
           status: 'READY',
-          originalUrl: articleUrl,
+          originalUrl: finalArticleUrl,
           title: { text: mediaTitle || "Article Post" },
-          description: { text: mediaDescription || "" }
+          description: { text: mediaDescription || "" },
+          thumbnails: thumbnails.length > 0 ? thumbnails : undefined
         }
       ];
     }
+
+
 
     const response = await axios.post(
       'https://api.linkedin.com/v2/ugcPosts',
