@@ -162,7 +162,7 @@ export function Problem() {
                 transition={{ delay: 0.5, duration: 0.8 }}
                 className="mt-12 z-20"
             >
-                <a href="#contact" className="px-8 py-3 rounded-full bg-white text-black font-semibold hover:bg-white/90 transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)]">
+                <a href="/contact-us" className="px-8 py-3 rounded-full bg-white text-black font-semibold hover:bg-white/90 transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)]">
                     Let's Solve This
                 </a>
             </motion.div>

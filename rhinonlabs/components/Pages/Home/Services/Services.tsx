@@ -142,10 +142,10 @@ export function Services() {
                                 We connect your tools and processes so data flows automatically reducing manual entry, follow-ups, and repetitive admin work.
                             </p>
                             <div className="flex items-center gap-4">
-                                <a href="#contact" className="px-5 py-2.5 rounded-lg bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors">
+                                <a href="https://calendly.com/rhinonlabs" className="px-5 py-2.5 rounded-lg bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors">
                                     Book a Call
                                 </a>
-                                <a href="#contact" className="px-5 py-2.5 rounded-lg border border-white/10 text-white text-sm font-semibold hover:bg-white/5 transition-colors">
+                                <a href="/contact-us" className="px-5 py-2.5 rounded-lg border border-white/10 text-white text-sm font-semibold hover:bg-white/5 transition-colors">
                                     Get Started
                                 </a>
                             </div>
@@ -257,10 +257,10 @@ export function Services() {
                                 We create smart AI tools that can draft responses, organize leads, summarize information, and support daily operations quietly working in the background
                             </p>
                             <div className="flex items-center gap-4">
-                                <a href="#contact" className="px-5 py-2.5 rounded-lg bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors">
+                                <a href="https://calendly.com/rhinonlabs" className="px-5 py-2.5 rounded-lg bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors">
                                     Book a Call
                                 </a>
-                                <a href="#contact" className="px-5 py-2.5 rounded-lg border border-white/10 text-white text-sm font-semibold hover:bg-white/5 transition-colors">
+                                <a href="/contact-us" className="px-5 py-2.5 rounded-lg border border-white/10 text-white text-sm font-semibold hover:bg-white/5 transition-colors">
                                     Get Started
                                 </a>
                             </div>
@@ -419,10 +419,10 @@ export function Services() {
                                 We build central hubs for your CRM, project tracking, or client reporting so you can stop asking, “Where are we at?” and see everything clearly in one place.
                             </p>
                             <div className="flex items-center gap-4">
-                                <a href="#contact" className="px-5 py-2.5 rounded-lg bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors">
+                                <a href="https://calendly.com/rhinonlabs" className="px-5 py-2.5 rounded-lg bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors">
                                     Book a Call
                                 </a>
-                                <a href="#contact" className="px-5 py-2.5 rounded-lg border border-white/10 text-white text-sm font-semibold hover:bg-white/5 transition-colors">
+                                <a href="/contact-us" className="px-5 py-2.5 rounded-lg border border-white/10 text-white text-sm font-semibold hover:bg-white/5 transition-colors">
                                     Get Started
                                 </a>
                             </div>

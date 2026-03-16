@@ -1,6 +1,5 @@
 'use client'
 import { motion } from "framer-motion";
-import { Hero } from "./Hero/Hero";
 import { Problem } from "./Problem/Problem";
 import { Services } from "./Services/Services";
 import { LeadMagnet } from "./LeadMagnet/LeadMagnet";
@@ -11,12 +10,13 @@ import { Examples } from "./Examples/Examples";
 import { ElevateCTA } from "@/components/Common/CTA/ElevateCTA";
 import { CaseStudies } from "./CaseStudy/CaseStudies";
 import { FAQ } from "@/components/Common/FAQ/FAQ";
+import Hero1 from "./Hero1/Hero";
 
 
 const HomePage = () => {
   return (
     <div className="relative flex flex-col gap-10 selection:bg-[#1c2bff]/50">
-      <Hero />
+      <Hero1 />
       <Problem />
       <Services />
       {/* <LeadMagnet /> */}

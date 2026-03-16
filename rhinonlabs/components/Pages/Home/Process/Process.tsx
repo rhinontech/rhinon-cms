@@ -199,7 +199,7 @@ export function Process() {
                                         {steps[active].description}
                                     </p>
                                     <div className="flex justify-center lg:justify-start">
-                                        <a href="#contact" className="px-8 py-3 rounded-full bg-primary text-white font-semibold hover:bg-primary/90 transition-all shadow-[0_0_20px_rgba(28,43,255,0.3)]">
+                                        <a href="https://calendly.com/rhinonlabs" className="px-8 py-3 rounded-full bg-primary text-white font-semibold hover:bg-primary/90 transition-all shadow-[0_0_20px_rgba(28,43,255,0.3)]">
                                             Book a free discovery call
                                         </a>
                                     </div>
