@@ -4,11 +4,16 @@ import Campaign from "@/lib/models/Campaign";
 import Lead from "@/lib/models/Lead";
 import AiActivity from "@/lib/models/AiActivity";
 import { generateAIEmailDraft, generateAISocialDraft } from "@/lib/gemini";
+import { getRequestUser } from "@/lib/request-auth";
 
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!getRequestUser(req)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     await dbConnect();
     const { id: campaignId } = await params;

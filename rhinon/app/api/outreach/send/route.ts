@@ -4,8 +4,13 @@ import dbConnect from "@/lib/mongodb";
 import Lead from "@/lib/models/Lead";
 import AiActivity from "@/lib/models/AiActivity";
 import { generateEmailHtml } from "@/lib/email-templates";
+import { getRequestUser } from "@/lib/request-auth";
 
 export async function POST(req: Request) {
+  if (!getRequestUser(req)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { leadId, subject, body } = await req.json();
     await dbConnect();

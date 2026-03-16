@@ -6,11 +6,16 @@ import AiActivity from "@/lib/models/AiActivity";
 import { sendEmail } from "@/lib/mail";
 import { postToLinkedIn } from "@/lib/connectors/linkedin";
 import { generateEmailHtml } from "@/lib/email-templates";
+import { getRequestUser } from "@/lib/request-auth";
 
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!getRequestUser(req)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     await dbConnect();
     const { id: campaignId } = await params;

@@ -64,6 +64,33 @@ export interface Campaign {
   updatedAt: string;
 }
 
+export interface SocialPost {
+  id: string;
+  name?: string;
+  title: string;
+  content: string;
+  channel: "LinkedIn Post" | "LinkedIn Video" | "LinkedIn Article";
+  status: "Draft" | "Scheduled" | "Published" | "Failed";
+  scheduledDate?: string;
+  mediaUrl?: string;
+  mediaTitle?: string;
+  mediaDescription?: string;
+  articleUrl?: string;
+  slug?: string;
+  visibility: "PUBLIC" | "CONNECTIONS";
+  aiInstructions?: string;
+  platformPostId?: string;
+  socialStats?: {
+    likes?: number;
+    comments?: number;
+    shares?: number;
+    impressions?: number;
+    lastUpdated?: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AiActivity {
   id: string;
   leadId: string;
@@ -103,4 +130,29 @@ export interface SessionUser {
   roleId: string;
   roleName: string;
   roleSlug: string;
+}
+
+export interface MetricCard {
+  label: string;
+  value: string;
+  delta: string;
+}
+
+export interface MetricsResponse {
+  metrics: MetricCard[];
+  queueCount: number;
+}
+
+export type HealthNodeState = "unknown" | "healthy" | "missing" | "error";
+
+export interface HealthNode {
+  status: HealthNodeState;
+  message: string;
+}
+
+export interface SystemHealthResponse {
+  apollo: HealthNode;
+  gemini: HealthNode;
+  smtp: HealthNode;
+  linkedin: HealthNode;
 }

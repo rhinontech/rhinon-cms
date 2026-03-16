@@ -2,8 +2,13 @@ import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Campaign from "@/lib/models/Campaign";
 import Lead from "@/lib/models/Lead";
+import { getRequestUser } from "@/lib/request-auth";
 
-export async function GET() {
+export async function GET(req: Request) {
+  if (!getRequestUser(req)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     await dbConnect();
 

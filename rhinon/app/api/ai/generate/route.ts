@@ -4,8 +4,13 @@ import dbConnect from "@/lib/mongodb";
 import Lead from "@/lib/models/Lead";
 import Template from "@/lib/models/Template";
 import AiActivity from "@/lib/models/AiActivity";
+import { getRequestUser } from "@/lib/request-auth";
 
 export async function POST(req: Request) {
+  if (!getRequestUser(req)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { leadId, templateId, customPrompt } = await req.json();
     await dbConnect();

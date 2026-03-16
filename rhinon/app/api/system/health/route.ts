@@ -2,8 +2,14 @@ import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 import axios from "axios";
 import { getLinkedInConnectionStatus } from "@/lib/connectors/linkedin";
+import { getRequestUser } from "@/lib/request-auth";
+import { serializeSystemHealth } from "@/lib/serializers";
 
-export async function GET() {
+export async function GET(req: Request) {
+  if (!getRequestUser(req)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const status = {
     apollo: { status: "unknown", message: "" },
     gemini: { status: "unknown", message: "" },
@@ -82,5 +88,5 @@ export async function GET() {
     status.linkedin = { status: "error", message: err.message };
   }
 
-  return NextResponse.json(status);
+  return NextResponse.json(serializeSystemHealth(status));
 }
