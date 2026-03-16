@@ -30,8 +30,8 @@ export function TeamTabs() {
   return (
     <Tabs defaultValue="users" className="w-full flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Page Header */}
-      <header className="flex items-center gap-5">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-500/10 border border-violet-500/20 shadow-glow-sm">
+      <header className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-500/10 border border-violet-500/20 shadow-glow-sm shrink-0">
           <Shield size={28} className="text-violet-500" />
         </div>
         <div>
@@ -73,8 +73,8 @@ export function TeamTabs() {
             <InviteUserModal />
           </div>
 
-          <div className="card overflow-hidden border-border">
-            <table className="w-full text-sm text-left">
+          <div className="card overflow-x-auto border-border custom-scrollbar">
+            <table className="w-full text-sm text-left min-w-[700px]">
               <thead className="border-b border-border bg-secondary/60">
                 <tr>
                   {["User", "Status", "Role", "Joined"].map((h) => (

@@ -156,69 +156,69 @@ export function LibraryEditor({ asset, initialChannel }: { asset?: any | null, i
 
   return (
     <div className="flex flex-col bg-card/40 rounded-3xl border border-border overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <header className="p-8 border-b border-border bg-secondary/40 backdrop-blur-md">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-5">
+      <header className="p-4 sm:p-8 border-b border-border bg-secondary/40 backdrop-blur-md">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex items-center gap-3 sm:gap-5">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => router.back()}
-              className="text-muted-foreground hover:text-foreground hover:bg-secondary"
+              className="text-muted-foreground hover:text-foreground hover:bg-secondary shrink-0"
             >
               <ArrowLeft size={20} />
             </Button>
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-500/10 border border-cyan-500/20 shadow-glow-sm">
+            <div className="hidden sm:flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-500/10 border border-cyan-500/20 shadow-glow-sm shrink-0">
               <BoxSelect size={24} className="text-cyan-600 dark:text-cyan-400" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-foreground">
-                  {asset ? "Edit Library Asset" : "New Library Asset"}
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-bold text-foreground truncate">
+                  {asset ? "Edit Asset" : "New Asset"}
                 </h2>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Badge variant="outline" className="bg-cyan-500/10 border-cyan-500/20 text-cyan-400 cursor-pointer hover:bg-cyan-500/20 transition-all uppercase text-[10px] font-black tracking-widest px-3 py-1">
+                    <Badge variant="outline" className="bg-cyan-500/10 border-cyan-500/20 text-cyan-400 cursor-pointer hover:bg-cyan-500/20 transition-all uppercase text-[9px] font-black tracking-widest px-2 py-0.5">
                       {channel}
                     </Badge>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" className="bg-card border-border">
                     {CHANNELS.map((ch) => (
-                      <DropdownMenuItem key={ch} onClick={() => setChannel(ch)} className="text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground">
+                      <DropdownMenuItem key={ch} onClick={() => setChannel(ch)} className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground">
                         {ch}
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-              <p className="text-sm text-muted-foreground mt-0.5">
+              <p className="text-xs text-muted-foreground mt-0.5 truncate">
                 Draft and optimize your social media assets.
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 ml-auto lg:ml-0">
             <Button 
               onClick={() => handleSave(false)} 
               disabled={isSaving}
               variant="outline" 
-              className="border-border text-foreground hover:bg-secondary h-10 px-6 font-bold"
+              className="border-border text-foreground hover:bg-secondary h-9 sm:h-10 px-3 sm:px-6 font-bold text-xs sm:text-sm"
             >
-              {isSaving ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
+              {isSaving ? <Loader2 className="animate-spin mr-2" size={14} /> : null}
               Save Draft
             </Button>
             <Button 
               onClick={() => handleSave(true)}
               disabled={isSaving}
-              className="bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-black h-10 px-8 rounded-xl shadow-glow-sm"
+              className="bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-black h-9 sm:h-10 px-4 sm:px-8 rounded-xl shadow-glow-sm text-xs sm:text-sm"
             >
-              <Rocket size={16} className="mr-2" /> Publish Now
+              <Rocket size={14} className="mr-2" /> Publish
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="flex flex-1 min-h-[600px]">
+      <main className="flex flex-col lg:flex-row flex-1 min-h-[600px]">
         {/* Editor Area */}
-        <div className="flex-1 p-8 overflow-y-auto space-y-8 border-r border-border bg-background/50">
+        <div className="flex-1 p-4 sm:p-8 overflow-y-auto space-y-8 border-r border-border bg-background/50">
           {/* AI Generation Bar */}
           {!asset && (
             <div className="p-4 rounded-2xl bg-violet-500/5 border border-violet-500/20 flex flex-col gap-3 group">
@@ -321,7 +321,7 @@ export function LibraryEditor({ asset, initialChannel }: { asset?: any | null, i
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div className="space-y-3">
                   <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 ml-1">Visibility</label>
                   <Select value={visibility} onValueChange={(val) => setVisibility(val as any)}>
@@ -377,7 +377,7 @@ export function LibraryEditor({ asset, initialChannel }: { asset?: any | null, i
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-6 h-12">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 lg:h-12">
                 <div className="space-y-3">
                   <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 ml-1">Visibility</label>
                   <Select value={visibility} onValueChange={(val) => setVisibility(val as any)}>
@@ -460,7 +460,7 @@ export function LibraryEditor({ asset, initialChannel }: { asset?: any | null, i
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div className="space-y-3">
                   <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 ml-1">Article Visibility</label>
                   <Select value={visibility} onValueChange={(val) => setVisibility(val as any)}>
@@ -498,9 +498,9 @@ export function LibraryEditor({ asset, initialChannel }: { asset?: any | null, i
         </div>
 
         {/* Sidebar / Preview / AI */}
-        <div className="w-[450px] flex flex-col bg-secondary/10 overflow-y-auto">
+        <div className="w-full lg:w-[450px] flex flex-col bg-secondary/10 overflow-y-auto border-t lg:border-t-0 lg:border-l border-border">
           {/* AI Instructions Panel */}
-          <div className="p-8 border-b border-border bg-violet-500/5">
+          <div className="p-4 sm:p-8 border-b border-border bg-violet-500/5">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400">
                 <Sparkles size={18} />
@@ -519,7 +519,7 @@ export function LibraryEditor({ asset, initialChannel }: { asset?: any | null, i
           </div>
 
           {/* Live Preview Panel */}
-          <div className="p-8 flex-1 flex flex-col bg-background/30 overflow-auto custom-scrollbar">
+          <div className="p-4 sm:p-8 flex-1 flex flex-col bg-background/30 overflow-auto custom-scrollbar">
             <div className="flex items-center justify-between mb-6">
                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80">
                 Live Propagation Preview

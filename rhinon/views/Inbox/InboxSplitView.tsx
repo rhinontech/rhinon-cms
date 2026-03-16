@@ -87,8 +87,8 @@ export function InboxSplitView() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Page Header */}
-      <header className="flex items-center gap-5">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-500/10 border border-cyan-500/20 shadow-glow-sm">
+      <header className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-500/10 border border-cyan-500/20 shadow-glow-sm shrink-0">
           <InboxIcon size={28} className="text-cyan-500" />
         </div>
         <div>
@@ -97,10 +97,13 @@ export function InboxSplitView() {
         </div>
       </header>
 
-      <div className="flex h-[calc(100vh-16rem)] border border-border rounded-xl overflow-hidden bg-card">
+      <div className="flex flex-col lg:flex-row h-[calc(100vh-16rem)] lg:h-[calc(100vh-16rem)] border border-border rounded-xl overflow-hidden bg-card relative">
 
       {/* ── Pane 1: Conversation List ─────────────── */}
-      <div className="w-[320px] shrink-0 flex flex-col border-r border-border bg-secondary/30">
+      <div className={cn(
+        "w-full lg:w-[320px] shrink-0 flex flex-col border-r border-border bg-secondary/30 h-full",
+        selectedItem ? "hidden lg:flex" : "flex"
+      )}>
         {/* Header */}
         <div className="p-4 border-b border-border h-15 flex items-center justify-between">
           <span className="font-bold text-foreground">Inbox</span>
@@ -164,10 +167,18 @@ export function InboxSplitView() {
 
       {/* ── Pane 2: Message Thread & Composer ────── */}
       {selectedItem ? (
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 h-full">
           {/* Thread header */}
-          <div className="h-14 border-b border-border bg-secondary/20 flex items-center justify-between px-5">
-            <div className="flex items-center gap-3">
+          <div className="h-14 border-b border-border bg-secondary/20 flex items-center justify-between px-4 sm:px-5">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="lg:hidden h-8 w-8 -ml-1 text-muted-foreground"
+                onClick={() => setSelectedItem(null)}
+              >
+                <MoreVertical size={18} className="rotate-90" />
+              </Button>
               <Avatar className="h-8 w-8 border border-border">
                 <AvatarFallback className="bg-secondary text-muted-foreground text-xs font-bold">
                   {selectedItem.lead.name.split(" ").map((n: string) => n[0]).join("")}

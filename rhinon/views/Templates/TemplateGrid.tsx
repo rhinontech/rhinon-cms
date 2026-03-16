@@ -91,8 +91,8 @@ export function TemplateGrid() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Page Header */}
-      <header className="flex items-center gap-5">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-500/10 border border-cyan-500/20 shadow-glow-sm">
+      <header className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-500/10 border border-cyan-500/20 shadow-glow-sm shrink-0">
           <BookTemplate size={28} className="text-cyan-500" />
         </div>
         <div>
@@ -139,7 +139,7 @@ export function TemplateGrid() {
       </div>
 
       {/* Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {filteredTemplates.map((template) => (
           <div
             key={(template as any)._id || template.id}

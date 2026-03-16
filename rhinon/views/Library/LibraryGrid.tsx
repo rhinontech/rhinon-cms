@@ -94,8 +94,8 @@ export function LibraryGrid() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Page Header */}
-      <header className="flex items-center gap-5">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-500/10 border border-cyan-500/20 shadow-glow-sm text-white">
+      <header className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-500/10 border border-cyan-500/20 shadow-glow-sm text-white shrink-0">
           <Sparkles size={28} className="text-cyan-500" />
         </div>
         <div>
@@ -106,13 +106,13 @@ export function LibraryGrid() {
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         {/* Filter tabs */}
-        <div className="flex items-center gap-1 bg-secondary border border-border p-1 rounded-xl">
+        <div className="flex items-center gap-1 bg-secondary border border-border p-1 rounded-xl overflow-x-auto custom-scrollbar max-w-full">
           {FILTERS.map((tab) => (
             <button
               key={tab}
               onClick={() => router.push(`/${role}/library/${FILTER_TO_SLUG[tab]}`)}
               className={cn(
-                "px-3 py-1.5 text-sm font-medium rounded-lg transition-colors",
+                "px-3 py-1.5 text-sm font-medium rounded-lg transition-colors whitespace-nowrap",
                 filter === tab
                   ? "bg-card text-cyan-600 dark:text-cyan-400 shadow-sm border border-border"
                   : "text-muted-foreground hover:text-foreground hover:bg-secondary/80",
@@ -164,7 +164,7 @@ export function LibraryGrid() {
       </div>
 
       {/* Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {filteredAssets.map((asset) => (
           <div
             key={asset._id || asset.id}

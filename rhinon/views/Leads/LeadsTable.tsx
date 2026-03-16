@@ -91,8 +91,8 @@ export function LeadsTable() {
   return (
     <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Page Header */}
-      <header className="flex items-center gap-5">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-500/10 border border-violet-500/20 shadow-glow-sm">
+      <header className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-500/10 border border-violet-500/20 shadow-glow-sm shrink-0">
           <Users size={28} className="text-violet-500" />
         </div>
         <div>
@@ -102,16 +102,16 @@ export function LeadsTable() {
       </header>
 
       <Tabs defaultValue="database" className="w-full flex flex-col gap-4 border-none shadow-none bg-transparent">
-        <TabsList className="bg-secondary/50 border border-border p-1 h-12 rounded-xl mb-6">
+        <TabsList className="bg-secondary/50 border border-border p-1 h-auto min-h-12 rounded-xl mb-6 flex-wrap justify-start">
           <TabsTrigger
             value="database"
-            className="rounded-lg px-6 data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950 font-medium transition-all"
+            className="rounded-lg px-6 py-2.5 data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950 font-medium transition-all"
           >
             Leads Database
           </TabsTrigger>
           <TabsTrigger
             value="discovery"
-            className="rounded-lg px-6 data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950 font-medium transition-all"
+            className="rounded-lg px-6 py-2.5 data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950 font-medium transition-all"
           >
             Lead Discovery (Apollo.io)
           </TabsTrigger>
@@ -119,34 +119,35 @@ export function LeadsTable() {
 
         <div>
           <TabsContent value="database" className="space-y-4 outline-none border-none p-0 mt-0">
-            <div className="flex items-center justify-between gap-3 pb-4">
-              <div className="flex items-center gap-3 relative max-w-xl w-full">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 relative max-w-xl w-full">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={15} />
                   <Input
-                    placeholder="Search leads by name or company..."
+                    placeholder="Search leads..."
                     value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
                     onChange={(e) => table.getColumn("name")?.setFilterValue(e.target.value)}
-                    className="pl-9 bg-secondary border-border text-foreground placeholder:text-muted-foreground h-10"
+                    className="pl-9 bg-secondary border-border text-foreground placeholder:text-muted-foreground h-10 w-full"
                   />
                 </div>
-                <div className="flex items-center gap-1 bg-secondary border border-border p-1 rounded-xl h-10">
-                  {["All", "LinkedIn Lead Gen", "Apollo", "Website"].map((source) => {
-                    const isActive = (table.getColumn("source")?.getFilterValue() as string) === (source === "All" ? undefined : source);
+                <div className="flex items-center gap-1 bg-secondary border border-border p-1 rounded-xl h-10 overflow-x-auto custom-scrollbar shrink-0">
+                  {["All", "LinkedIn", "Apollo", "Web"].map((source) => {
+                    const fullSource = source === "LinkedIn" ? "LinkedIn Lead Gen" : source === "Web" ? "Website" : source;
+                    const isActive = (table.getColumn("source")?.getFilterValue() as string) === (source === "All" ? undefined : fullSource);
                     return (
                       <Button
                         key={source}
                         variant="ghost"
                         size="sm"
-                        onClick={() => table.getColumn("source")?.setFilterValue(source === "All" ? undefined : source)}
+                        onClick={() => table.getColumn("source")?.setFilterValue(source === "All" ? undefined : fullSource)}
                         className={cn(
-                          "px-3 h-8 text-[10px] font-bold uppercase tracking-wider transition-all",
+                          "px-3 h-8 text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap",
                           isActive 
                             ? "bg-card text-cyan-600 dark:text-cyan-400 shadow-sm border border-border" 
                             : "text-muted-foreground hover:text-foreground"
                         )}
                       >
-                        {source.split(' ')[0]}
+                        {source}
                       </Button>
                     );
                   })}
@@ -154,7 +155,7 @@ export function LeadsTable() {
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="border-border bg-card text-foreground ml-auto">
+                  <Button variant="outline" className="border-border bg-card text-foreground self-end lg:self-auto">
                     Columns <ChevronDown className="ml-2 h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -176,8 +177,8 @@ export function LeadsTable() {
               </DropdownMenu>
             </div>
 
-            <div className="rounded-xl border border-border overflow-hidden">
-              <Table>
+            <div className="rounded-xl border border-border overflow-x-auto custom-scrollbar">
+              <Table className="min-w-[1000px]">
                 <TableHeader>
                   {table.getHeaderGroups().map((hg) => (
                     <TableRow key={hg.id} className="border-border bg-secondary/60 hover:bg-secondary/60">

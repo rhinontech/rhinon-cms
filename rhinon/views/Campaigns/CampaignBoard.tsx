@@ -75,7 +75,7 @@ export function CampaignDetail({ campaign, templates, onClose, onUpdate }: Campa
     <Sheet open={true} onOpenChange={(open) => !open && onClose()}>
       <SheetContent
         side="right"
-        className="!w-[50vw] !max-w-[50vw] sm:!max-w-[50vw] bg-card border-border p-0 flex flex-col shadow-xl"
+        className="w-full lg:w-[50vw] max-w-full lg:max-w-[50vw] bg-card border-border p-0 flex flex-col shadow-xl"
       >
         <SheetHeader className="p-8 border-b border-border bg-secondary/30 backdrop-blur-md">
           <div className="flex items-center justify-between">
@@ -456,8 +456,8 @@ export function CampaignBoard({ }: CampaignBoardProps): JSX.Element {
       )}
 
       {/* Page Header */}
-      <header className="flex items-center gap-5">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-500/10 border border-cyan-500/20 shadow-glow-sm">
+      <header className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-500/10 border border-cyan-500/20 shadow-glow-sm shrink-0">
           <Send size={28} className="text-cyan-500" />
         </div>
         <div>
@@ -471,8 +471,8 @@ export function CampaignBoard({ }: CampaignBoardProps): JSX.Element {
       </header>
 
       {/* Toolbar */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1 bg-secondary border border-border p-1 rounded-xl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-1 bg-secondary border border-border p-1 rounded-xl self-start">
           <Button
             variant="ghost"
             size="sm"
@@ -501,8 +501,8 @@ export function CampaignBoard({ }: CampaignBoardProps): JSX.Element {
           ))}
         </div>
       ) : (
-        <div className="card overflow-hidden border-border/50">
-          <table className="w-full text-left border-collapse">
+        <div className="card overflow-x-auto border-border/50 custom-scrollbar">
+          <table className="w-full text-left border-collapse min-w-[800px]">
             <thead>
               <tr className="bg-secondary/50 border-b border-border">
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Campaign Name</th>

@@ -80,7 +80,7 @@ export function AppSidebar({ roleSlug }: { roleSlug?: string }) {
   ];
 
   return (
-    <aside className="card hidden h-full w-60 shrink-0 flex-col p-4 lg:flex border-border bg-card">
+    <aside className="card h-full w-60 shrink-0 flex-col p-4 border-border bg-card hidden lg:flex">
       {/* Brand */}
       <div className="flex items-start justify-between mb-7">
         <Link href={`/${activeRole}/dashboard`}>

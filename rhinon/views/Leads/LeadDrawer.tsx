@@ -150,7 +150,7 @@ export function LeadDrawer({ lead, isOpen, onClose }: LeadDrawerProps) {
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent
         side="right"
-        className="!w-[50vw] !max-w-[50vw] sm:!max-w-[50vw] bg-card border-border p-0 flex flex-col h-full overflow-hidden shadow-xl"
+        className="w-full lg:w-[50vw] max-w-full lg:max-w-[50vw] bg-card border-border p-0 flex flex-col h-full overflow-hidden shadow-xl"
       >
         <SheetHeader className="p-8 border-b border-border bg-secondary/30 backdrop-blur-md">
           <div className="flex items-start justify-between">

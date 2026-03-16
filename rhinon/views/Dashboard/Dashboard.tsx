@@ -69,7 +69,7 @@ export function Dashboard() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Page Header */}
-      <header className="flex items-center gap-5">
+      <header className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-500/10 border border-cyan-500/20 shadow-glow-sm">
           <LayoutDashboard size={28} className="text-cyan-500" />
         </div>
