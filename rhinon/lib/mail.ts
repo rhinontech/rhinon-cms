@@ -1,6 +1,13 @@
 import nodemailer from "nodemailer";
 
-export async function sendEmail({ to, subject, body }: { to: string; subject: string; body: string }) {
+type SendEmailOptions = {
+  to: string;
+  subject: string;
+  text: string;
+  html?: string;
+};
+
+export async function sendEmail({ to, subject, text, html }: SendEmailOptions) {
   const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
     port: parseInt(process.env.EMAIL_PORT || "587"),
@@ -15,8 +22,8 @@ export async function sendEmail({ to, subject, body }: { to: string; subject: st
     from: `"Rhinon Labs" <${process.env.EMAIL_USER}>`,
     to,
     subject,
-    text: body,
-    html: body.replace(/\n/g, "<br>"),
+    text,
+    html: html ?? text.replace(/\n/g, "<br />"),
   });
 
   return info;

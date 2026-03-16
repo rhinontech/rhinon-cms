@@ -1,107 +1,171 @@
-export function generateEmailHtml(content: string): string {
-  const bodyHtml = content
-    .replace(/^#+\s+(.*)$/gm, '<h2 style="color: #f8fafc; margin: 15px 0 8px 0; font-weight: 800; font-size: 20px; text-align: left;">$1</h2>')
-    .replace(/\*\*(.*?)\*\*/g, '<strong style="color: #38bdf8; font-weight: 800;">$1</strong>')
-    .replace(/^[\*\-]\s+(.*)$/gm, '<li style="margin-bottom: 6px; color: #94a3b8;">$1</li>')
-    .split('\n\n')
-    .map(p => {
-      if (p.includes('<li') && !p.includes('<ul')) {
-        return `<ul style="padding-left: 20px; margin-bottom: 12px; list-style-type: disc; color: #38bdf8; text-align: left;">${p}</ul>`;
-      }
-      if (p.startsWith('<h2')) return p;
-      return `<p style="margin-bottom: 12px; color: #cbd5e1; line-height: 1.6; font-size: 15px; text-align: left;">${p.replace(/\n/g, '<br>')}</p>`;
-    })
-    .join('');
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
 
-  return `
-<!DOCTYPE html>
-<html lang="en" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml">
+function formatInlineMarkdown(value: string): string {
+  return escapeHtml(value).replace(
+    /\*\*(.+?)\*\*/g,
+    '<strong style="color: #f8fafc; font-weight: 700;">$1</strong>'
+  );
+}
+
+function renderContentBlocks(content: string): string {
+  return content
+    .trim()
+    .replace(/\r\n/g, "\n")
+    .split(/\n{2,}/)
+    .map((block) => {
+      const trimmedBlock = block.trim();
+      if (!trimmedBlock) {
+        return "";
+      }
+
+      if (/^#{1,6}\s+/.test(trimmedBlock)) {
+        const heading = trimmedBlock.replace(/^#{1,6}\s+/, "");
+        return `<h1 style="margin: 0 0 16px 0; color: #f8fafc; font-family: Arial, Helvetica, sans-serif; font-size: 22px; line-height: 1.3; font-weight: 800; letter-spacing: -0.02em; text-align: left;">${formatInlineMarkdown(heading)}</h1>`;
+      }
+
+      const lines = trimmedBlock
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean);
+
+      if (lines.length > 0 && lines.every((line) => /^[*-]\s+/.test(line))) {
+        const items = lines
+          .map((line) => line.replace(/^[*-]\s+/, ""))
+          .map(
+            (line) =>
+              `<li style="margin: 0 0 10px 0; color: #000000;">${formatInlineMarkdown(line)}</li>`
+          )
+          .join("");
+
+        return `<ul style="margin: 0 0 18px 20px; padding: 0; font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.65; color: #000000; text-align: left;">${items}</ul>`;
+      }
+
+      return `<p style="margin: 0 0 14px 0; color: #000000; font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.75; text-align: left;">${lines
+        .map(formatInlineMarkdown)
+        .join("<br />")}</p>`;
+    })
+    .join("");
+}
+
+export function generateEmailHtml(content: string): string {
+  const bodyHtml = renderContentBlocks(content);
+
+  return `<!DOCTYPE html>
+<html lang="en" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
-<title></title>
-<meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Rhinon Labs Outreach</title>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<meta content="width=device-width, initial-scale=1.0" name="viewport" />
 <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; padding: 0; -webkit-text-size-adjust: none; text-size-adjust: none; background-color: #020617; }
-    @media (max-width:520px) {
-        .row-content { width: 100% !important; }
-        .stack .column { width: 100%; display: block; }
+  body {
+    margin: 0;
+    padding: 0;
+    -webkit-text-size-adjust: none;
+    text-size-adjust: none;
+    background-color: #f3f4f6;
+  }
+
+  table,
+  td {
+    border-collapse: collapse;
+  }
+
+  img {
+    border: 0;
+    display: block;
+    line-height: 100%;
+    outline: none;
+    text-decoration: none;
+  }
+
+  p {
+    margin: 0;
+  }
+
+  @media (max-width: 600px) {
+    .email-shell {
+      width: 100% !important;
     }
+
+    .email-canvas {
+      width: 100% !important;
+    }
+
+    .email-body {
+      padding: 24px 20px !important;
+    }
+
+    .email-outer {
+      padding: 20px 12px !important;
+    }
+
+    .email-header {
+      padding: 24px 20px !important;
+    }
+  }
 </style>
 </head>
-<body style="background-color: #020617; margin: 0; padding: 0;">
-<table border="0" cellpadding="0" cellspacing="0" class="nl-container" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #020617;" width="100%">
-<tbody>
-<tr>
-<td>
-    <!-- Logo Header -->
-    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
-    <tbody>
+<body style="margin: 0; padding: 0; background-color: #f3f4f6;">
+  <div style="display: none; max-height: 0; overflow: hidden; opacity: 0; mso-hide: all;">
+    A tailored outreach note from Rhinon Labs.
+  </div>
+  <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%" style="width: 100%; background-color: #f3f4f6;">
     <tr>
-    <td>
-    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row-content stack" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 550px; margin: 0 auto;" width="550">
-    <tbody>
-    <tr>
-    <td class="column column-1" style="padding-top: 30px; padding-bottom: 20px; text-align: center;" width="100%">
-        <img src="https://www.rhinonlabs.com/assets/Logo_Rhinon_Web_Full.png" style="display: inline-block; height: auto; border: 0; width: 100%; max-width: 280px; filter: brightness(0) invert(1);" alt="Rhinon Tech" />
-    </td>
-    </tr>
-    </tbody>
-    </table>
-    </td>
-    </tr>
-    </tbody>
-    </table>
-
-    <!-- Main Message Body -->
-    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-2" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
-    <tbody>
-    <tr>
-    <td>
-    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row-content stack" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-radius: 12px; background-color: #0f172a; color: #cbd5e1; width: 550px; margin: 0 auto; border: 1px solid #1e293b;" width="550">
-    <tbody>
-    <tr>
-    <td class="column column-1" style="padding: 40px 35px; vertical-align: top;" width="100%">
-        <table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation">
-        <tr>
-        <td style="font-family: Arial, Helvetica, sans-serif; font-size: 16px; line-height: 1.6;">
-            ${bodyHtml}
-        </td>
-        </tr>
+      <td align="center" class="email-outer" style="padding: 28px 16px 22px;">
+        <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="800" class="email-shell email-canvas" style="width: 800px; max-width: 800px; margin: 0 auto;">
+          <tr>
+            <td style="background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 18px; overflow: hidden;">
+              <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
+                <tr>
+                  <td class="email-header" align="center" style="padding: 28px 32px; background-color: #172554;">
+                    <img
+                      src="https://www.rhinonlabs.com/assets/Logo_Rhinon_Web_Full.png"
+                      alt="Rhinon Labs"
+                      width="220"
+                      style="width: 220px; max-width: 220px; height: auto; margin: 0 auto; filter: brightness(0) invert(1);"
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="email-body" style="padding: 32px 40px 28px; font-family: Arial, Helvetica, sans-serif;">
+                    ${bodyHtml}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 0 40px 28px;">
+                    <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%" style="border-top: 1px solid #e5e7eb;">
+                      <tr>
+                        <td style="padding-top: 16px;">
+                          <p style="margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 1.6; color: #334155; font-weight: 700;">
+                            Rhinon Labs
+                          </p>
+                          <p style="margin: 4px 0 0; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 1.6; color: #64748b;">
+                            AI systems, internal tools, and outreach infrastructure built to move faster.
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding: 12px 16px 0;">
+              <p style="font-family: Arial, Helvetica, sans-serif; font-size: 11px; line-height: 1.5; letter-spacing: 0.08em; text-transform: uppercase; color: #94a3b8;">
+                Rhinon Labs • Outreach Engine
+              </p>
+            </td>
+          </tr>
         </table>
-    </td>
+      </td>
     </tr>
-    </tbody>
-    </table>
-    </td>
-    </tr>
-    </tbody>
-    </table>
-
-    <!-- Footer -->
-    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-3" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
-    <tbody>
-    <tr>
-    <td>
-    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row-content stack" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 550px; margin: 0 auto;" width="550">
-    <tbody>
-    <tr>
-    <td class="column column-1" style="padding: 30px 10px; text-align: center; color: #475569; font-size: 11px; font-family: Arial, sans-serif; letter-spacing: 1px;" width="100%">
-        <p style="margin: 0; font-weight: 700; text-transform: uppercase;">Rhinon Tech • Intelligence Orchestrated</p>
-        <p style="margin: 8px 0 0 0;">© 2026 Rhinon Tech. <a href="#" style="color: #38bdf8; text-decoration: none;">Unsubscribe</a></p>
-    </td>
-    </tr>
-    </tbody>
-    </table>
-    </td>
-    </tr>
-    </tbody>
-    </table>
-</td>
-</tr>
-</tbody>
-</table>
+  </table>
 </body>
-</html>
-  `;
+</html>`;
 }

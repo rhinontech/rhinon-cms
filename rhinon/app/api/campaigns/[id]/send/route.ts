@@ -5,6 +5,7 @@ import Lead from "@/lib/models/Lead";
 import AiActivity from "@/lib/models/AiActivity";
 import { sendEmail } from "@/lib/mail";
 import { postToLinkedIn } from "@/lib/connectors/linkedin";
+import { generateEmailHtml } from "@/lib/email-templates";
 
 export async function POST(
   req: Request,
@@ -30,10 +31,16 @@ export async function POST(
       let sentCount = 0;
       for (const lead of leads) {
         try {
+          const draftBody = lead.aiDraft?.trim();
+          if (!draftBody) {
+            continue;
+          }
+
           await sendEmail({
             to: lead.email,
             subject: `Scaling ${lead.company}'s operations`,
-            body: lead.aiDraft,
+            text: draftBody,
+            html: generateEmailHtml(draftBody),
           });
           lead.status = "Emailed";
 

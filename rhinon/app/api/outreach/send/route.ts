@@ -23,7 +23,8 @@ export async function POST(req: Request) {
     await sendEmail({
       to: lead.email,
       subject: subject || "Scaling your operations",
-      body: generateEmailHtml(body),
+      text: body,
+      html: generateEmailHtml(body),
     });
 
     // Update lead status to Sent
