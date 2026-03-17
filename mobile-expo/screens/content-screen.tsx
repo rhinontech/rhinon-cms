@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, RefreshControl, Text, View } from "react-native";
 import { Plus } from "lucide-react-native";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,10 +16,21 @@ import { queryKeys, rhinonApi } from "@/lib/queries";
 type Mode = "templates" | "library";
 
 export default function ContentScreen() {
+  const queryClient = useQueryClient();
+  const [refreshing, setRefreshing] = useState(false);
   const templatesQuery = useQuery({ queryKey: queryKeys.templates, queryFn: rhinonApi.templates });
   const postsQuery = useQuery({ queryKey: queryKeys.posts, queryFn: rhinonApi.posts });
   const [mode, setMode] = useState<Mode>("templates");
   const [search, setSearch] = useState("");
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.templates }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.posts }),
+    ]);
+    setRefreshing(false);
+  };
 
   if (templatesQuery.isLoading || postsQuery.isLoading) {
     return <LoadingState label="Loading content systems..." />;
@@ -127,6 +138,9 @@ export default function ContentScreen() {
           </Card>
         }
         contentContainerStyle={{ paddingBottom: 120 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#22D3EE" />
+        }
       />
     </View>
   );

@@ -1,8 +1,10 @@
-import { Tabs, router } from "expo-router";
-import { Pressable, View } from "react-native";
+import { Tabs, useRouter } from "expo-router";
+import { Platform, Pressable, View } from "react-native";
 import { Inbox, LayoutDashboard, Menu, Rocket, Sparkles, Users } from "lucide-react-native";
 
 export default function TabLayout() {
+  const router = useRouter();
+
   return (
     <Tabs
       screenOptions={{
@@ -17,42 +19,35 @@ export default function TabLayout() {
         },
         tabBarStyle: {
           position: "absolute",
-          left: 16,
-          right: 16,
-          bottom: 16,
-          height: 78,
-          paddingTop: 10,
-          paddingBottom: 10,
-          paddingHorizontal: 6,
+          bottom: Platform.OS === "ios" ? 30 : 20,
+          left: 20,
+          right: 20,
+          height: 66,
+          backgroundColor: "#0C1320",
+          borderRadius: 24,
           borderTopWidth: 0,
-          backgroundColor: "transparent",
-          borderRadius: 28,
-          shadowColor: "#020617",
-          shadowOpacity: 0.35,
-          shadowRadius: 20,
-          shadowOffset: { width: 0, height: 14 },
-          elevation: 16,
+          paddingBottom: Platform.OS === "ios" ? 0 : 4,
+          borderWidth: 1,
+          borderColor: "#1D2A3E",
+          shadowColor: "#000",
+          shadowOpacity: 0.4,
+          shadowRadius: 12,
+          shadowOffset: { width: 0, height: 8 },
+          elevation: 12,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: "800",
-          letterSpacing: 0.8,
+          letterSpacing: 0.5,
+          marginBottom: 8,
         },
-        tabBarBackground: () => (
-          <View
-            style={{
-              flex: 1,
-              borderRadius: 28,
-              borderWidth: 1,
-              borderColor: "#182335",
-              backgroundColor: "#0C1320",
-            }}
-          />
-        ),
+        tabBarIconStyle: {
+          marginTop: 8,
+        },
         headerRight: () => (
           <Pressable
             onPress={() => router.push("/more")}
-            style={{
+            style={({ pressed }) => ({
               marginRight: 18,
               height: 40,
               width: 40,
@@ -62,7 +57,8 @@ export default function TabLayout() {
               backgroundColor: "#111A2C",
               borderWidth: 1,
               borderColor: "#1D2A3E",
-            }}
+              opacity: pressed ? 0.7 : 1,
+            })}
           >
             <Menu color="#F5F7FB" size={20} />
           </Pressable>
@@ -72,36 +68,36 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Dashboard",
-          tabBarIcon: ({ color }) => <LayoutDashboard color={color} size={20} />,
+          title: "Hub",
+          tabBarIcon: ({ color }) => <LayoutDashboard color={color} size={22} />,
         }}
       />
       <Tabs.Screen
         name="leads"
         options={{
           title: "Leads",
-          tabBarIcon: ({ color }) => <Users color={color} size={20} />,
+          tabBarIcon: ({ color }) => <Users color={color} size={22} />,
         }}
       />
       <Tabs.Screen
         name="campaigns"
         options={{
-          title: "Campaigns",
-          tabBarIcon: ({ color }) => <Rocket color={color} size={20} />,
+          title: "Launch",
+          tabBarIcon: ({ color }) => <Rocket color={color} size={22} />,
         }}
       />
       <Tabs.Screen
         name="content"
         options={{
-          title: "Content",
-          tabBarIcon: ({ color }) => <Sparkles color={color} size={20} />,
+          title: "Assets",
+          tabBarIcon: ({ color }) => <Sparkles color={color} size={22} />,
         }}
       />
       <Tabs.Screen
         name="inbox"
         options={{
           title: "Inbox",
-          tabBarIcon: ({ color }) => <Inbox color={color} size={20} />,
+          tabBarIcon: ({ color }) => <Inbox color={color} size={22} />,
         }}
       />
     </Tabs>

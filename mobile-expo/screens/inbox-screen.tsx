@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, RefreshControl, Text, View } from "react-native";
 import { Search } from "lucide-react-native";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -13,8 +13,16 @@ import { formatRelativeTime } from "@/lib/format";
 import { queryKeys, rhinonApi } from "@/lib/queries";
 
 export default function InboxScreen() {
+  const queryClient = useQueryClient();
+  const [refreshing, setRefreshing] = useState(false);
   const leadsQuery = useQuery({ queryKey: queryKeys.leads, queryFn: rhinonApi.leads });
   const [search, setSearch] = useState("");
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await queryClient.invalidateQueries({ queryKey: queryKeys.leads });
+    setRefreshing(false);
+  };
 
   const items = useMemo(() => {
     return (leadsQuery.data ?? [])
@@ -44,14 +52,16 @@ export default function InboxScreen() {
               subtitle="A mobile-first conversation list built from replied, interested, and bounced lead threads."
             />
 
-            <Input
-              value={search}
-              onChangeText={setSearch}
-              placeholder="Search conversations"
-              inputClassName="pl-11"
-            />
-            <View className="absolute left-4 top-[106px]">
-              <Search color="#8FA3C7" size={18} />
+            <View className="relative">
+              <Input
+                value={search}
+                onChangeText={setSearch}
+                placeholder="Search conversations"
+                inputClassName="pl-11"
+              />
+              <View className="absolute left-4 top-1/2 -mt-[9px]">
+                <Search color="#8FA3C7" size={18} />
+              </View>
             </View>
           </View>
         }
@@ -91,6 +101,9 @@ export default function InboxScreen() {
           </Card>
         }
         contentContainerStyle={{ paddingBottom: 120 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#22D3EE" />
+        }
       />
     </View>
   );

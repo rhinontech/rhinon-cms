@@ -1,6 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { ScrollView, Text, View } from "react-native";
+import { RefreshControl, ScrollView, Text, View } from "react-native";
 import { Activity, ArrowRight, ShieldCheck } from "lucide-react-native";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,16 +9,27 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { formatDate } from "@/lib/format";
 import { queryKeys, rhinonApi } from "@/lib/queries";
+import { useState } from "react";
 
 export default function DashboardScreen() {
+  const queryClient = useQueryClient();
+  const [refreshing, setRefreshing] = useState(false);
+
   const metricsQuery = useQuery({ queryKey: queryKeys.metrics, queryFn: rhinonApi.metrics });
   const leadsQuery = useQuery({ queryKey: queryKeys.leads, queryFn: rhinonApi.leads });
   const campaignsQuery = useQuery({ queryKey: queryKeys.campaigns, queryFn: rhinonApi.campaigns });
   const healthQuery = useQuery({ queryKey: queryKeys.health, queryFn: rhinonApi.health });
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await queryClient.refetchQueries();
+    setRefreshing(false);
+  };
+
   if (metricsQuery.isLoading || leadsQuery.isLoading || campaignsQuery.isLoading || healthQuery.isLoading) {
     return <LoadingState />;
   }
+// ... [rest of the component stays the same, adding RefreshControl to ScrollView]
 
   const metrics = metricsQuery.data?.metrics ?? [];
   const leads = leadsQuery.data?.slice(0, 4) ?? [];

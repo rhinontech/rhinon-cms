@@ -48,14 +48,16 @@ export default function LeadsScreen() {
               subtitle="Search, qualify, enrich, and trigger outreach from the mobile operator flow."
             />
 
-            <Input
-              value={search}
-              onChangeText={setSearch}
-              placeholder="Search leads, companies, or email"
-              inputClassName="pl-11"
-            />
-            <View className="absolute left-4 top-[106px]">
-              <Search color="#8FA3C7" size={18} />
+            <View className="relative">
+              <Input
+                value={search}
+                onChangeText={setSearch}
+                placeholder="Search leads, companies, or email"
+                inputClassName="pl-11"
+              />
+              <View className="absolute left-4 top-1/2 -mt-[9px]">
+                <Search color="#8FA3C7" size={18} />
+              </View>
             </View>
 
             <View className="flex-row flex-wrap gap-2">

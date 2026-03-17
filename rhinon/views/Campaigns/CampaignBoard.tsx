@@ -75,7 +75,7 @@ export function CampaignDetail({ campaign, templates, onClose, onUpdate }: Campa
     <Sheet open={true} onOpenChange={(open) => !open && onClose()}>
       <SheetContent
         side="right"
-        className="w-full lg:w-[50vw] max-w-full lg:max-w-[50vw] bg-card border-border p-0 flex flex-col shadow-xl"
+        className="w-full lg:w-[65vw] max-w-full lg:max-w-[65vw] bg-card border-border p-0 flex flex-col shadow-xl"
       >
         <SheetHeader className="p-8 border-b border-border bg-secondary/30 backdrop-blur-md">
           <div className="flex items-center justify-between">

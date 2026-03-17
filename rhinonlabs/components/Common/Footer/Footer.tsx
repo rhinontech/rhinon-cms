@@ -59,7 +59,7 @@ export function Footer() {
                     {/* Mockup Logo */}
                     <Link href="/" className="flex items-center gap-2 text-white/90 group">
                         <Image
-                            src="/RhinonLabs_Dark.png"
+                            src="/Logo_Rhinon_Labs_Light.png"
                             alt="Rhinon Labs"
                             width={32}
                             height={32}

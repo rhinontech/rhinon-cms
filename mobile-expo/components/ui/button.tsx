@@ -1,4 +1,5 @@
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import * as Haptics from "expo-haptics";
 import { cn } from "@/lib/cn";
 
 const variantClasses = {
@@ -36,7 +37,10 @@ export function Button({
 }) {
   return (
     <Pressable
-      onPress={onPress}
+      onPress={() => {
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        onPress?.();
+      }}
       disabled={disabled || loading}
       style={
         variant === "primary"

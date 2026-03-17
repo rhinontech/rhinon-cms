@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, RefreshControl, Text, View } from "react-native";
 import { Plus, Search } from "lucide-react-native";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,9 +16,17 @@ import type { CampaignStage } from "@/lib/types";
 const STAGES: Array<"All" | CampaignStage> = ["All", "Draft", "Active", "Paused", "Completed"];
 
 export default function CampaignsScreen() {
+  const queryClient = useQueryClient();
+  const [refreshing, setRefreshing] = useState(false);
   const { data, isLoading } = useQuery({ queryKey: queryKeys.campaigns, queryFn: rhinonApi.campaigns });
   const [search, setSearch] = useState("");
   const [stage, setStage] = useState<Array<"All" | CampaignStage>[number]>("All");
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await queryClient.invalidateQueries({ queryKey: queryKeys.campaigns });
+    setRefreshing(false);
+  };
 
   const campaigns = useMemo(() => {
     return (data ?? []).filter((campaign) => {
@@ -52,14 +60,16 @@ export default function CampaignsScreen() {
               }
             />
 
-            <Input
-              value={search}
-              onChangeText={setSearch}
-              placeholder="Search campaigns"
-              inputClassName="pl-11"
-            />
-            <View className="absolute left-4 top-[106px]">
-              <Search color="#8FA3C7" size={18} />
+            <View className="relative">
+              <Input
+                value={search}
+                onChangeText={setSearch}
+                placeholder="Search campaigns"
+                inputClassName="pl-11"
+              />
+              <View className="absolute left-4 top-1/2 -mt-[9px]">
+                <Search color="#8FA3C7" size={18} />
+              </View>
             </View>
 
             <View className="flex-row flex-wrap gap-2">
@@ -114,6 +124,9 @@ export default function CampaignsScreen() {
           </Card>
         }
         contentContainerStyle={{ paddingBottom: 120 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#22D3EE" />
+        }
       />
     </View>
   );
