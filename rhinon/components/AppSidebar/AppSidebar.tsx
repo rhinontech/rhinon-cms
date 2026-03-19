@@ -74,6 +74,7 @@ export function AppSidebar({ roleSlug }: { roleSlug?: string }) {
       icon: BookTemplate
     },
     { label: "Inbox", href: "/inbox", icon: Inbox },
+    { label: "Blogs", href: "/blogs", icon: FileText },
 
     { label: "Team & Roles", href: "/team", icon: Shield, perm: "perm_5" },
     { label: "Settings", href: "/settings", icon: Settings },

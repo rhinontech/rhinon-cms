@@ -9,15 +9,23 @@ export default function StructuredData() {
     "name": "Rhinon Labs",
     "url": "https://rhinonlabs.com",
     "logo": "https://rhinonlabs.com/favicon.ico",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Bhubaneswar",
+      "addressRegion": "OR",
+      "postalCode": "751001",
+      "addressCountry": "IN"
+    },
     "sameAs": [
       "https://linkedin.com/company/rhinon-labs",
-      "https://twitter.com/rhinonlabs"
+      "https://twitter.com/rhinonlabs",
+      "https://github.com/rhinon-labs"
     ],
     "contactPoint": {
       "@type": "ContactPoint",
       "telephone": "+91 9664430061",
       "contactType": "Sales",
-      "areaServed": "Worldwide",
+      "areaServed": ["Worldwide", "IN"],
       "availableLanguage": "English"
     }
   };

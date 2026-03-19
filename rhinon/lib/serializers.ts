@@ -5,6 +5,7 @@ import type {
   SocialPost,
   SystemHealthResponse,
   Template,
+  Blog,
 } from "./types";
 
 function toId(value: any): string {
@@ -158,5 +159,27 @@ export function serializeSystemHealth(status: any): SystemHealthResponse {
       status: status?.linkedin?.status ?? "unknown",
       message: status?.linkedin?.message ?? "",
     },
+  };
+}
+
+export function serializeBlog(blog: any): Blog {
+  return {
+    id: toId(blog?._id ?? blog?.id),
+    title: blog?.title ?? "",
+    excerpt: blog?.excerpt ?? "",
+    content: blog?.content ?? "",
+    slug: blog?.slug ?? "",
+    author: {
+      name: blog?.author?.name ?? "Prabhat Patra",
+      role: blog?.author?.role ?? "Founder @ Rhinon Labs",
+      avatar: blog?.author?.avatar ?? undefined,
+    },
+    coverImage: blog?.coverImage ?? undefined,
+    tags: blog?.tags ?? [],
+    readTime: blog?.readTime ?? "5 min read",
+    publishedAt: toIso(blog?.publishedAt),
+    status: blog?.status ?? "Published",
+    createdAt: toIso(blog?.createdAt),
+    updatedAt: toIso(blog?.updatedAt),
   };
 }

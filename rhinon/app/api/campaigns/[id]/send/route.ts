@@ -7,6 +7,7 @@ import { sendEmail } from "@/lib/mail";
 import { postToLinkedIn } from "@/lib/connectors/linkedin";
 import { generateEmailHtml } from "@/lib/email-templates";
 import { getRequestUser } from "@/lib/request-auth";
+import { saveEmailToS3 } from "@/lib/s3";
 
 export async function POST(
   req: Request,
@@ -41,12 +42,35 @@ export async function POST(
             continue;
           }
 
-          await sendEmail({
+          const finalHtml = generateEmailHtml(draftBody);
+          const emailSubject = `Scaling ${lead.company}'s operations`;
+          
+          const info = await sendEmail({
             to: lead.email,
-            subject: `Scaling ${lead.company}'s operations`,
+            subject: emailSubject,
             text: draftBody,
-            html: generateEmailHtml(draftBody),
+            html: finalHtml,
           });
+
+          // Archive to S3 for Inbox history
+          const messageId = info.messageId || `campaign-${campaign._id}-${lead._id}`;
+          const rawEml = [
+            `From: "Admin" <admin@rhinonlabs.com>`,
+            `To: ${lead.email}`,
+            `Subject: ${emailSubject}`,
+            `Date: ${new Date().toUTCString()}`,
+            `Message-ID: <${messageId}>`,
+            `MIME-Version: 1.0`,
+            `Content-Type: text/html; charset=utf-8`,
+            ``,
+            finalHtml
+          ].join("\r\n");
+
+          try {
+            await saveEmailToS3("admin@rhinonlabs.com", "outbound", messageId, rawEml);
+          } catch (s3Err) {
+            console.error("Failed to archive campaign email to S3:", s3Err);
+          }
           lead.status = "Emailed";
 
           await lead.save();

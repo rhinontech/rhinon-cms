@@ -61,11 +61,11 @@ export function Footer() {
                         <Image
                             src="/Logo_Rhinon_Labs_Light.png"
                             alt="Rhinon Labs"
-                            width={32}
-                            height={32}
-                            className="w-8 h-8 object-contain transition-transform"
+                            width={70}
+                            height={70}
+                            className="w-38 object-contain transition-transform"
                         />
-                        <span className="text-2xl font-serif italic tracking-wide">Rhinon Labs</span>
+                        {/* <span className="text-2xl font-serif italic tracking-wide">Rhinon Labs</span> */}
                     </Link>
 
                     {/* Social Icons */}

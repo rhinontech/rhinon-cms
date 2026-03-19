@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Bell, Command, Filter, Search, LayoutDashboard, ShieldCheck, Zap, Globe, Linkedin } from "lucide-react";
-import { LinkedInWidget } from "./LinkedInWidget";
 import { cn } from "@/lib/utils";
 
 const chartBars = [52, 64, 58, 80, 73, 92, 84];
@@ -219,7 +218,6 @@ export function Dashboard() {
 
         {/* ── Engines Section ─────────────────── */}
         <section className="grid gap-6 xl:grid-cols-2">
-          <LinkedInWidget />
 
           <div className="card p-6 h-full">
             <h2 className="text-sm font-bold text-foreground flex items-center gap-2">

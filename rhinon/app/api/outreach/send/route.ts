@@ -5,6 +5,7 @@ import Lead from "@/lib/models/Lead";
 import AiActivity from "@/lib/models/AiActivity";
 import { generateEmailHtml } from "@/lib/email-templates";
 import { getRequestUser } from "@/lib/request-auth";
+import { saveEmailToS3 } from "@/lib/s3";
 
 export async function POST(req: Request) {
   if (!getRequestUser(req)) {
@@ -25,12 +26,33 @@ export async function POST(req: Request) {
     }
 
     // Send the actual email wrapped in our branded HTML template
-    await sendEmail({
+    const finalHtml = generateEmailHtml(body);
+    const info = await sendEmail({
       to: lead.email,
       subject: subject || "Scaling your operations",
       text: body,
-      html: generateEmailHtml(body),
+      html: finalHtml,
     });
+
+    // Archive a copy to S3 for Inbox history
+    const messageId = info.messageId || `outreach-${Date.now()}`;
+    const rawEml = [
+      `From: "Admin" <admin@rhinonlabs.com>`,
+      `To: ${lead.email}`,
+      `Subject: ${subject || "Scaling your operations"}`,
+      `Date: ${new Date().toUTCString()}`,
+      `Message-ID: <${messageId}>`,
+      `MIME-Version: 1.0`,
+      `Content-Type: text/html; charset=utf-8`,
+      ``,
+      finalHtml
+    ].join("\r\n");
+
+    try {
+      await saveEmailToS3("admin@rhinonlabs.com", "outbound", messageId, rawEml);
+    } catch (s3Err) {
+      console.error("Failed to archive outreach to S3:", s3Err);
+    }
 
     // Update lead status to Sent
     lead.status = "Interested"; 

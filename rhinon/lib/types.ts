@@ -107,6 +107,14 @@ export interface Permission {
   description: string;
 }
 
+export interface OutreachEmail {
+  id: string;
+  email: string;
+  type: "primary" | "secondary";
+  displayName: string;
+  status: "Active" | "Pending";
+}
+
 export interface Role {
   id: string;
   name: string;
@@ -117,7 +125,11 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  linkedinUrl?: string;
+  linkedinConnected?: boolean;
+  isPrimaryAdmin?: boolean;
   roleId: string;
+  mustChangePassword?: boolean;
   avatarUrl?: string;
   status: "Active" | "Invited" | "Suspended";
   joinedAt: string;
@@ -127,9 +139,13 @@ export interface SessionUser {
   id: string;
   name: string;
   email: string;
+  linkedinUrl?: string;
+  linkedinConnected?: boolean;
+  isPrimaryAdmin?: boolean;
   roleId: string;
   roleName: string;
   roleSlug: string;
+  mustChangePassword?: boolean;
 }
 
 export interface MetricCard {
@@ -155,4 +171,24 @@ export interface SystemHealthResponse {
   gemini: HealthNode;
   smtp: HealthNode;
   linkedin: HealthNode;
+}
+
+export interface Blog {
+  id: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  slug: string;
+  author: {
+    name: string;
+    role: string;
+    avatar?: string;
+  };
+  coverImage?: string;
+  tags: string[];
+  readTime: string;
+  publishedAt: string;
+  status: "Draft" | "Published";
+  createdAt: string;
+  updatedAt: string;
 }

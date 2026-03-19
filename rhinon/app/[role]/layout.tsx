@@ -11,7 +11,7 @@ export default async function RoleLayout({
 }) {
   const resolvedParams = await params;
   return (
-    <div className="flex flex-col lg:flex-row h-full w-full lg:p-8 lg:gap-5">
+    <div className="flex flex-col lg:flex-row h-full w-full lg:p-3 lg:gap-4">
       <AppSidebar roleSlug={resolvedParams.role} />
       <MobileNav roleSlug={resolvedParams.role} />
       <main className="flex-1 h-full min-w-0 p-5 lg:p-0">

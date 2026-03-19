@@ -100,6 +100,15 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  alternates: {
+    canonical: "https://rhinonlabs.com",
+  },
+  other: {
+    "geo.region": "IN-OR",
+    "geo.placename": "Bhubaneswar",
+    "geo.position": "20.2961;85.8245",
+    "ICBM": "20.2961, 85.8245",
+  },
 };
 
 export default function RootLayout({

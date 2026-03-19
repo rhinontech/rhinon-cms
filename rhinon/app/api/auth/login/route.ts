@@ -4,7 +4,7 @@ import { loginUser, encodeSession, SESSION_COOKIE } from "@/lib/auth";
 export async function POST(req: NextRequest) {
   try {
     const { email, password } = await req.json();
-    const user = loginUser(email, password);
+    const user = await loginUser(email, password);
 
     if (!user) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });

@@ -16,23 +16,52 @@ export function getRoleSlug(roleId: string): string {
   }
 }
 
-export function loginUser(email: string, password?: string): SessionUser | null {
-  // Demo mode: password always "password"
-  if (password && password !== "password") return null;
+import User from "./models/User";
+import dbConnect from "./mongodb";
 
-  const user = dummyUsers.find((u) => u.email === email);
-  if (!user) return null;
+export async function loginUser(email: string, password?: string): Promise<SessionUser | null> {
+  // 1. Check Dummy Users first (for demo convenience)
+  const dummy = dummyUsers.find((u) => u.email === email);
+  if (dummy) {
+    if (password && password !== "password") return null;
+    const role = dummyRoles.find((r) => r.id === dummy.roleId);
+    if (!role) return null;
+    return {
+      id: dummy.id,
+      name: dummy.name,
+      email: dummy.email,
+      linkedinUrl: dummy.linkedinUrl,
+      linkedinConnected: dummy.linkedinConnected,
+      roleId: dummy.roleId,
+      roleName: role.name,
+      roleSlug: getRoleSlug(dummy.roleId),
+    };
+  }
 
-  const role = dummyRoles.find((r) => r.id === user.roleId);
-  if (!role) return null;
+  // 2. Check Database for real invited/setup users
+  await dbConnect();
+  const dbUser = await User.findOne({ email });
+  if (!dbUser) return null;
+
+  // In a real app, use bcrypt.compare(password, dbUser.password)
+  // For this implementation, we use simple string check as per requirement
+  if (password && dbUser.password && password !== dbUser.password) {
+    return null;
+  }
+
+  const role = dummyRoles.find((r) => r.id === dbUser.roleId);
+  const roleName = role ? role.name : "Team Member";
 
   return {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    roleId: user.roleId,
-    roleName: role.name,
-    roleSlug: getRoleSlug(user.roleId),
+    id: dbUser._id.toString(),
+    name: dbUser.name,
+    email: dbUser.email,
+    linkedinUrl: dbUser.linkedinUrl,
+    linkedinConnected: dbUser.linkedinConnected,
+    roleId: dbUser.roleId,
+    roleName: roleName,
+    roleSlug: getRoleSlug(dbUser.roleId),
+    mustChangePassword: dbUser.mustChangePassword,
   };
 }
 

@@ -15,6 +15,64 @@ Target Market: SaaS companies, high-growth agencies, and data-driven enterprises
 Value Proposition: "Unlock the power of your data to drive smarter, reactive decisions."
 `;
 
+export const RHINON_LABS_KNOWLEDGE = `
+Rhinon Labs is a venture studio and product development agency.
+Core Value Proposition: "Ship your product 3x faster without hiring a tech team."
+Services:
+1. MVP Development: Building functional, scalable minimum viable products for founders.
+2. AI Product Integration: Implementing generative AI, LLMs, and automation into business products.
+3. High-Performance Websites: Designing and developing premium, high-converting web experiences.
+4. Digital Transformation: Helping SMBs modernize their operations with custom technology.
+Target Market: Early-stage founders, SMBs, and entrepreneurs who want to move fast.
+Branding: Premium, high-tech, agile, and results-driven.
+`;
+
+export async function generateAIBlogPost(title: string = "", customPrompt: string = "") {
+  const prompt = `
+    You are an expert content strategist and technical writer for Rhinon Labs.
+    
+    RHINON LABS KNOWLEDGE:
+    ${RHINON_LABS_KNOWLEDGE}
+
+    TASK:
+    Generate a high-quality, SEO-optimized blog post based on the title and/or prompt below.
+    ${title ? `TITLE: ${title}` : "TITLE: Not provided. Please suggest a compelling, SEO-optimized title."}
+    USER PROMPT/INSTRUCTIONS: ${customPrompt || "Write a comprehensive, insightful blog post that establishes Rhinon Labs as a leader in this space."}
+
+    REQUIREMENTS:
+    1. Hook the reader immediately with a compelling introduction.
+    2. Use Markdown for structure (H1, H2, H3, Bold, Lists, etc.).
+    3. The tone should be authoritative yet accessible, premium, and forward-thinking.
+    4. Incorporate Rhinon Labs' value proposition ("3x faster", "no tech team needed") naturally where relevant.
+    5. Include a strong Call to Action (CTA) at the end, encouraging readers to work with Rhinon Labs.
+    6. Generate a short, punchy excerpt (1-2 sentences) for the blog card.
+    7. Suggest 3-5 relevant tags.
+    8. Suggest a read time (e.g., "5 min read").
+
+    OUTPUT FORMAT:
+    Return a JSON object with:
+    - "title": The blog title (can be refined for SEO).
+    - "excerpt": The short summary.
+    - "content": The full Markdown body.
+    - "tags": Array of strings.
+    - "readTime": String.
+    
+    Only return the JSON. DO NOT include any other text.
+  `;
+
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  const text = response.text().trim();
+  
+  try {
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) return JSON.parse(jsonMatch[0]);
+  } catch (e) {
+    console.error("Failed to parse AI blog JSON response:", text);
+    throw new Error("Failed to generate a valid blog structure");
+  }
+}
+
 export async function generateAIEmailDraft(leadData: any, templateData: any = null, customPrompt: string = "") {
   let prompt = `
     You are an expert sales copywriter for Rhinon. 
@@ -76,7 +134,7 @@ export async function generateAIEmailDraft(leadData: any, templateData: any = nu
   const result = await model.generateContent(prompt);
   const response = await result.response;
   const text = response.text().trim();
-  
+
   try {
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
@@ -85,7 +143,7 @@ export async function generateAIEmailDraft(leadData: any, templateData: any = nu
   } catch (e) {
     console.error("Failed to parse AI JSON response:", text);
   }
-  
+
   return { body: text, subject: `Scaling ${leadData.company}'s operations` };
 }
 
@@ -107,7 +165,7 @@ export async function enrichLeadWithAI(leadName: string, companyName: string) {
   const result = await model.generateContent(prompt);
   const response = await result.response;
   const text = response.text();
-  
+
   try {
     // Basic JSON extraction in case Gemini wraps it in code blocks
     const jsonMatch = text.match(/\{[\s\S]*\}/);

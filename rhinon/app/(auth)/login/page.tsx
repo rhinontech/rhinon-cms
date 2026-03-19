@@ -1,23 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Mail, Lock, ArrowRight, Loader2, Sparkles, Fingerprint, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(searchParams.get("email") || "");
   const [password, setPassword] = useState("");
 
   const handleDemoLogin = () => {
-    setEmail("alex@rhinon.tech");
+    setEmail("alex@rhinonlabs.com");
     setPassword("password");
   };
 
@@ -37,6 +39,13 @@ export default function LoginPage() {
 
       if (!res.ok) {
         throw new Error(data.error || "Invalid credentials. Please try again.");
+      }
+
+      // Handle mandatory password change
+      if (data.mustChangePassword) {
+        toast.info("Please complete your account setup.");
+        router.push("/onboarding"); 
+        return;
       }
 
       // Redirect to role-based dashboard

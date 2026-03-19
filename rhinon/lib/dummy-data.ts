@@ -15,9 +15,17 @@ export const dummyRoles: Role[] = [
 ];
 
 export const dummyUsers: User[] = [
-  { id: "user_1", name: "Alex Mercer", email: "alex@rhinon.tech", roleId: "role_admin", status: "Active", joinedAt: "2023-11-01T10:00:00Z" },
-  { id: "user_2", name: "Sarah Chen", email: "sarah@rhinon.tech", roleId: "role_manager", status: "Active", joinedAt: "2024-01-15T09:30:00Z" },
-  { id: "user_3", name: "James Holden", email: "james@rhinon.tech", roleId: "role_sdr", status: "Invited", joinedAt: "2024-03-10T14:20:00Z" },
+  {
+    id: "user_1",
+    name: "Admin",
+    email: "admin@rhinonlabs.com",
+    linkedinUrl: "https://linkedin.com/in/admin",
+    linkedinConnected: false,
+    isPrimaryAdmin: true,
+    roleId: "role_admin",
+    status: "Active",
+    joinedAt: "2023-11-01T10:00:00Z"
+  },
 ];
 
 export const dummyTemplates: Template[] = [

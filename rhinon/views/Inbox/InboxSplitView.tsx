@@ -11,29 +11,56 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useSession } from "@/components/session-provider";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 export function InboxSplitView() {
+  const { user } = useSession();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [inboundEmails, setInboundEmails] = useState<any[]>([]);
+  const [outreachIdentities, setOutreachIdentities] = useState<any[]>([]);
+  const [selectedEmail, setSelectedEmail] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [isDrafting, setIsDrafting] = useState(false);
   const [draftContent, setDraftContent] = useState("");
 
+  // Initialize selected email from user or param
   useEffect(() => {
+    if (user && !selectedEmail) {
+      setSelectedEmail(user.isPrimaryAdmin ? "admin@rhinonlabs.com" : user.email);
+    }
+  }, [user, selectedEmail]);
+
+  // Fetch admin-only list of all outreach accounts
+  useEffect(() => {
+    if (user?.roleSlug === "admin") {
+      fetch("/api/admin/outreach-identities")
+        .then(res => res.json())
+        .then(data => setOutreachIdentities(data.emails || []));
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!selectedEmail) return;
+
     const fetchData = async () => {
       try {
-        const [leadsRes, campaignsRes] = await Promise.all([
+        const [leadsRes, campaignsRes, inboxRes] = await Promise.all([
           fetch("/api/leads"),
           fetch("/api/campaigns"),
+          fetch(`/api/inbox?email=${selectedEmail}`)
         ]);
-        const [leadsData, campaignsData] = await Promise.all([
+        const [leadsData, campaignsData, inboxData] = await Promise.all([
           leadsRes.json(),
           campaignsRes.json(),
+          inboxRes.json()
         ]);
         setLeads(leadsData);
         setCampaigns(campaignsData);
+        setInboundEmails(inboxData.emails || []);
       } catch (error) {
         console.error("Error fetching inbox data:", error);
       } finally {
@@ -41,7 +68,7 @@ export function InboxSplitView() {
       }
     };
     fetchData();
-  }, []);
+  }, [selectedEmail]);
 
   const inboxItems = leads
     .filter((l) => l.status === "Replied" || l.status === "Interested" || l.status === "Bounced")
@@ -68,9 +95,13 @@ export function InboxSplitView() {
   const handleAiDraft = () => {
     if (!selectedItem) return;
     setIsDrafting(true);
+    
+    // Find the name of the sender for the selected inbox
+    const senderName = outreachIdentities.find(u => u.email === selectedEmail)?.displayName || user?.name || "Rhinon Admin";
+    
     setTimeout(() => {
       setDraftContent(
-        `Hi ${selectedItem.lead.name.split(" ")[0]},\n\nTuesday works perfectly. Does 10:00 AM PST fit your schedule? I'll send over a calendar invite.\n\nBest,\nAlex`,
+        `Hi ${selectedItem.lead.name.split(" ")[0]},\n\nTuesday works perfectly. Does 10:00 AM PST fit your schedule? I'll send over a calendar invite.\n\nBest,\n${senderName.split(" ")[0]}`,
       );
       setIsDrafting(false);
     }, 1500);
@@ -105,9 +136,24 @@ export function InboxSplitView() {
         selectedItem ? "hidden lg:flex" : "flex"
       )}>
         {/* Header */}
-        <div className="p-4 border-b border-border h-15 flex items-center justify-between">
-          <span className="font-bold text-foreground">Inbox</span>
-          <Badge className="bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/25 hover:bg-cyan-500/15 text-[11px]">
+        <div className="p-4 border-b border-border h-15 flex items-center justify-between gap-4">
+          {user?.roleSlug === "admin" && outreachIdentities.length > 0 ? (
+            <Select value={selectedEmail} onValueChange={(val) => val && setSelectedEmail(val)}>
+              <SelectTrigger className="h-8 bg-secondary border-border text-[11px] font-bold">
+                <SelectValue placeholder="Select Inbox" />
+              </SelectTrigger>
+              <SelectContent>
+                {outreachIdentities.map(id => (
+                  <SelectItem key={id.email} value={id.email} className="text-xs">
+                    {id.displayName} ({id.email})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <span className="font-bold text-foreground">Inbox</span>
+          )}
+          <Badge className="bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/25 hover:bg-cyan-500/15 text-[11px] shrink-0">
             {inboxItems.filter((i) => !i.read).length} Unread
           </Badge>
         </div>

@@ -54,21 +54,35 @@ export async function GET(req: Request) {
     status.gemini = { status: "error", message: error.message };
   }
 
-  // 3. Check SMTP
+  // 3. Check SES (Delivery Engine)
   try {
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: parseInt(process.env.EMAIL_PORT || "587"),
-      secure: process.env.EMAIL_PORT === "465",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD,
+    const { SESv2Client, GetEmailIdentityCommand } = await import("@aws-sdk/client-sesv2");
+    const ses = new SESv2Client({
+      region: process.env.AWS_REGION || "ap-south-1",
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
       },
-      connectionTimeout: 5000,
     });
+
+    const user = getRequestUser(req);
+    // Determine the domain to check (default to rhinonlabs.com or user's domain)
+    const domain = user?.email?.split('@')[1] || "rhinonlabs.com";
     
-    await transporter.verify();
-    status.smtp = { status: "healthy", message: "SMTP Delivery Engine Connected" };
+    const command = new GetEmailIdentityCommand({ EmailIdentity: domain });
+    const identity = await ses.send(command);
+    
+    if (identity.VerifiedForSendingStatus) {
+      status.smtp = { 
+        status: "healthy", 
+        message: `SES Identity (${domain}) Verified & Ready` 
+      };
+    } else {
+      status.smtp = { 
+        status: "error", 
+        message: `SES Identity (${domain}) Verification Pending` 
+      };
+    }
   } catch (error: any) {
     status.smtp = { status: "error", message: error.message };
   }
