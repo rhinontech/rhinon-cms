@@ -6,6 +6,7 @@ import type {
   SystemHealthResponse,
   Template,
   Blog,
+  User,
 } from "./types";
 
 function toId(value: any): string {
@@ -181,5 +182,21 @@ export function serializeBlog(blog: any): Blog {
     status: blog?.status ?? "Published",
     createdAt: toIso(blog?.createdAt),
     updatedAt: toIso(blog?.updatedAt),
+  };
+}
+
+export function serializeUser(user: any): User {
+  return {
+    id: toId(user?._id ?? user?.id),
+    name: user?.name ?? "",
+    email: user?.email ?? "",
+    linkedinUrl: user?.linkedinUrl ?? undefined,
+    linkedinConnected: user?.linkedinConnected ?? undefined,
+    isPrimaryAdmin: user?.isPrimaryAdmin ?? false,
+    roleId: user?.roleId ?? "",
+    mustChangePassword: user?.mustChangePassword ?? false,
+    avatarUrl: user?.avatarUrl ?? undefined,
+    status: user?.status ?? "Active",
+    joinedAt: toIso(user?.joinedAt),
   };
 }

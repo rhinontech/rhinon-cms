@@ -43,7 +43,7 @@ export function SettingsView() {
   };
 
   const fetchIdentities = async () => {
-    if (user?.roleSlug !== "admin") return;
+    if (!user?.capabilities.includes("manage_mailboxes")) return;
     setIdLoading(true);
     try {
       const res = await fetch("/api/admin/outreach-identities");
@@ -66,7 +66,7 @@ export function SettingsView() {
 
   useEffect(() => {
     fetchLiStatus();
-    if (user?.roleSlug === "admin") {
+    if (user?.capabilities.includes("manage_mailboxes")) {
       fetchIdentities();
     }
     
@@ -200,6 +200,12 @@ export function SettingsView() {
                     <h3 className="font-bold text-foreground text-lg">{user?.name}</h3>
                     <p className="text-sm text-muted-foreground">{user?.email}</p>
                     <Badge className="mt-2 bg-cyan-500/10 text-cyan-500 border-cyan-500/20">{user?.roleName}</Badge>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Active identity: <span className="font-semibold text-foreground">{user?.activeIdentityEmail}</span>
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Primary identity: <span className="font-semibold text-foreground">{user?.primaryIdentityEmail}</span>
+                    </p>
                   </div>
                 </div>
                 
@@ -292,7 +298,7 @@ export function SettingsView() {
                 <CardHeader>
                   <CardTitle>Outreach Identities</CardTitle>
                   <CardDescription>
-                    {user?.roleSlug === "admin" 
+                    {user?.capabilities.includes("manage_mailboxes")
                       ? "Manage the pool of outreach emails used by the team." 
                       : "The outreach identities available for your campaigns."}
                   </CardDescription>
@@ -308,9 +314,9 @@ export function SettingsView() {
                         <Label className="text-xs font-bold uppercase tracking-widest text-cyan-500 mb-1 block">Your Identity</Label>
                         <Badge className="bg-cyan-500/20 text-cyan-500 border-cyan-500/30 text-[10px]">Assigned</Badge>
                       </div>
-                      <p className="text-lg font-bold text-foreground">{user?.email}</p>
+                      <p className="text-lg font-bold text-foreground">{user?.activeIdentityEmail}</p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {user?.email === "admin@rhinonlabs.com" || user?.email === "alex@rhinonlabs.com" 
+                        {user?.primaryIdentityEmail === "admin@rhinonlabs.com"
                           ? "Main system administrative account." 
                           : "Your assigned work account for outbound communications."}
                       </p>
@@ -318,7 +324,7 @@ export function SettingsView() {
                   </div>
 
                   {/* Secondary Identities List */}
-                  {user?.roleSlug === "admin" && (
+                  {user?.capabilities.includes("manage_mailboxes") && (
                     <div className="space-y-4">
                       <div className="flex items-center justify-between pt-4 border-t border-border">
                         <h3 className="text-sm font-bold text-foreground">Secondary Identities</h3>
@@ -362,7 +368,7 @@ export function SettingsView() {
                     </div>
                   )}
 
-                  {user?.roleSlug !== "admin" && (
+                  {!user?.capabilities.includes("manage_mailboxes") && (
                     <div className="p-8 text-center border-2 border-dashed border-border rounded-2xl">
                       <Mail size={32} className="mx-auto text-muted-foreground/30 mb-3" />
                       <p className="text-sm text-muted-foreground">Only administrators can manage outreach identities.</p>
@@ -371,7 +377,7 @@ export function SettingsView() {
                 </CardContent>
               </Card>
 
-              {user?.roleSlug === "admin" && (
+              {user?.capabilities.includes("manage_mailboxes") && (
                 <Card className="bg-card/50 border-border overflow-hidden ring-1 ring-cyan-500/10">
                   <CardHeader className="bg-cyan-500/5 pb-4">
                     <CardTitle className="text-sm">SES Configuration Status</CardTitle>

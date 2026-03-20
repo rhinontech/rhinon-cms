@@ -1,19 +1,22 @@
 import { NextResponse } from "next/server";
 import { getRequestUser } from "@/lib/request-auth";
 import { fetchUserEmailsFromS3 } from "@/lib/s3";
+import { requireCapability } from "@/lib/authorization";
 
 export async function GET(req: Request) {
   const sessionUser = getRequestUser(req);
-  if (!sessionUser) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = requireCapability(sessionUser, "send_email");
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
+  const currentUser = sessionUser!;
 
   try {
     const { searchParams } = new URL(req.url);
-    const targetEmail = searchParams.get("email") || (sessionUser.isPrimaryAdmin ? "admin@rhinonlabs.com" : sessionUser.email);
+    const targetEmail = searchParams.get("email") || currentUser.activeIdentityEmail;
 
     // Security: Only admins can check multiple outreach inboxes
-    if (targetEmail !== sessionUser.email && sessionUser.roleSlug !== "admin") {
+    if (targetEmail !== currentUser.activeIdentityEmail && !currentUser.capabilities.includes("manage_mailboxes")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

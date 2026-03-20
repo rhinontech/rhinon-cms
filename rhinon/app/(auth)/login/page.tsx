@@ -9,10 +9,12 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from "sonner";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSession } from "@/components/session-provider";
 
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { setSessionUser } = useSession();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [email, setEmail] = useState(searchParams.get("email") || "");
@@ -41,15 +43,19 @@ function LoginContent() {
         throw new Error(data.error || "Invalid credentials. Please try again.");
       }
 
+      if (data.user) {
+        setSessionUser(data.user);
+      }
+
       // Handle mandatory password change
       if (data.mustChangePassword) {
         toast.info("Please complete your account setup.");
-        router.push("/onboarding"); 
+        router.replace("/onboarding");
         return;
       }
 
       // Redirect to role-based dashboard
-      router.push(`/${data.roleSlug}/dashboard`);
+      router.replace(`/${data.roleSlug}/dashboard`);
     } catch (err: any) {
       setError(err.message);
       setLoading(false);
@@ -222,4 +228,3 @@ export default function LoginPage() {
     </Suspense>
   );
 }
-

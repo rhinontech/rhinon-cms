@@ -10,7 +10,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
-    const response = NextResponse.json({ roleSlug: user.roleSlug });
+    const response = NextResponse.json({
+      roleSlug: user.roleSlug,
+      mustChangePassword: Boolean(user.mustChangePassword),
+      user,
+    });
     response.cookies.set(SESSION_COOKIE, encodeSession(user), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -21,6 +25,6 @@ export async function POST(req: NextRequest) {
 
     return response;
   } catch (error) {
-    return NextResponse.json({ error: "Interal Server Error" }, { status: 500 });
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import User from "@/lib/models/User";
+import OutreachEmail from "@/lib/models/OutreachEmail";
 import { getRequestUser } from "@/lib/request-auth";
 import { encodeSession, SESSION_COOKIE, getRoleSlug } from "@/lib/auth";
+import { ROLE_CAPABILITIES, type RoleSlug } from "@/lib/authorization";
 
 export async function POST(req: NextRequest) {
   try {
@@ -34,9 +36,13 @@ export async function POST(req: NextRequest) {
     dbUser.password = newPassword;
     dbUser.isTemporaryPassword = false;
     dbUser.mustChangePassword = false;
+    dbUser.status = "Active";
     await dbUser.save();
 
     // Create a new session object without the mustChangePassword flag
+    const roleSlug = getRoleSlug(dbUser.roleId) as RoleSlug;
+    const primaryIdentity = await OutreachEmail.findOne({ email: dbUser.email, status: "Active" }).lean();
+
     const updatedSessionUser = {
       id: dbUser._id.toString(),
       name: dbUser.name,
@@ -45,13 +51,17 @@ export async function POST(req: NextRequest) {
       linkedinConnected: dbUser.linkedinConnected,
       roleId: dbUser.roleId,
       roleName: sessionUser.roleName,
-      roleSlug: getRoleSlug(dbUser.roleId),
-      mustChangePassword: false, 
+      roleSlug,
+      activeIdentityEmail: primaryIdentity?.email || dbUser.email,
+      primaryIdentityEmail: primaryIdentity?.email || dbUser.email,
+      capabilities: ROLE_CAPABILITIES[roleSlug] || [],
+      mustChangePassword: false,
     };
 
     const response = NextResponse.json({ 
       success: true, 
-      roleSlug: updatedSessionUser.roleSlug 
+      roleSlug: updatedSessionUser.roleSlug,
+      user: updatedSessionUser,
     });
 
     response.cookies.set(SESSION_COOKIE, encodeSession(updatedSessionUser), {

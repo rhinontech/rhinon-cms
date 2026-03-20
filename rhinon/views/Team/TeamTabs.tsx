@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { Search, Mail, Key, Users, CheckCircle2, Shield } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Search, Mail, Key, Users, CheckCircle2, Shield, Pencil, Trash2, Loader2 } from "lucide-react";
 import { format } from "date-fns";
-import { dummyUsers, dummyRoles } from "@/lib/dummy-data";
+import { dummyRoles } from "@/lib/dummy-data";
+import { User } from "@/lib/types";
 import { InviteUserModal } from "./InviteUserModal";
 import { CreateRoleModal } from "./CreateRoleModal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,6 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const userStatusStyle: Record<string, string> = {
   Active: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25",
@@ -20,12 +23,84 @@ const userStatusStyle: Record<string, string> = {
 
 export function TeamTabs() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [busyUserId, setBusyUserId] = useState<string | null>(null);
 
-  const filteredUsers = dummyUsers.filter(
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/users", { cache: "no-store" });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to load users");
+      }
+      setUsers(data.users || []);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to load users");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const filteredUsers = users.filter(
     (u) =>
       u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       u.email.toLowerCase().includes(searchQuery.toLowerCase()),
   );
+
+  const handleEmailChange = async (user: User) => {
+    if (user.isPrimaryAdmin) return;
+    const nextEmail = window.prompt("Enter the new work email", user.email);
+    if (!nextEmail || nextEmail.trim().toLowerCase() === user.email.toLowerCase()) return;
+
+    setBusyUserId(user.id);
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: nextEmail }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to update email");
+      }
+
+      toast.success("User email updated");
+      await fetchUsers();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update email");
+    } finally {
+      setBusyUserId(null);
+    }
+  };
+
+  const handleDelete = async (user: User) => {
+    if (user.isPrimaryAdmin) return;
+    if (!window.confirm(`Delete ${user.name} (${user.email})?`)) return;
+
+    setBusyUserId(user.id);
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to delete user");
+      }
+
+      toast.success("User deleted");
+      await fetchUsers();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to delete user");
+    } finally {
+      setBusyUserId(null);
+    }
+  };
 
   return (
     <Tabs defaultValue="users" className="w-full flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -70,14 +145,14 @@ export function TeamTabs() {
                 className="pl-9 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
               />
             </div>
-            <InviteUserModal />
+            <InviteUserModal onInvited={fetchUsers} />
           </div>
 
           <div className="card overflow-x-auto border-border custom-scrollbar">
             <table className="w-full text-sm text-left min-w-[700px]">
               <thead className="border-b border-border bg-secondary/60">
                 <tr>
-                  {["User", "Status", "Role", "Joined"].map((h) => (
+                  {["User", "Status", "Role", "Joined", "Actions"].map((h) => (
                     <th key={h} className="px-6 py-3.5 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
                       {h}
                     </th>
@@ -85,7 +160,16 @@ export function TeamTabs() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filteredUsers.length > 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
+                      <div className="inline-flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Loading users...
+                      </div>
+                    </td>
+                  </tr>
+                ) : filteredUsers.length > 0 ? (
                   filteredUsers.map((user) => {
                     const role = dummyRoles.find((r) => r.id === user.roleId);
                     return (
@@ -121,12 +205,36 @@ export function TeamTabs() {
                         <td className="px-6 py-4 text-muted-foreground text-xs">
                           {format(new Date(user.joinedAt), "MMM d, yyyy")}
                         </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 border-border"
+                              onClick={() => handleEmailChange(user)}
+                              disabled={user.isPrimaryAdmin || busyUserId === user.id}
+                            >
+                              <Pencil size={13} className="mr-1.5" />
+                              Change Email
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 text-rose-500 hover:text-rose-400 hover:bg-rose-500/10"
+                              onClick={() => handleDelete(user)}
+                              disabled={user.isPrimaryAdmin || busyUserId === user.id}
+                            >
+                              <Trash2 size={13} className="mr-1.5" />
+                              Delete
+                            </Button>
+                          </div>
+                        </td>
                       </tr>
                     );
                   })
                 ) : (
                   <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-muted-foreground">
+                    <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
                       No users found matching &quot;{searchQuery}&quot;
                     </td>
                   </tr>
@@ -165,7 +273,7 @@ export function TeamTabs() {
 
                 <div className="text-sm text-muted-foreground mb-5 flex items-center gap-1.5">
                   <Users size={13} />
-                  {dummyUsers.filter((u) => u.roleId === role.id).length} Active Users
+                  {users.filter((u) => u.roleId === role.id).length} Active Users
                 </div>
 
                 <div className="space-y-2">

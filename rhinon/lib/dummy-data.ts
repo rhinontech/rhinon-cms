@@ -17,7 +17,7 @@ export const dummyRoles: Role[] = [
 export const dummyUsers: User[] = [
   {
     id: "user_1",
-    name: "Admin",
+    name: "Prabhat Patra",
     email: "admin@rhinonlabs.com",
     linkedinUrl: "https://linkedin.com/in/admin",
     linkedinConnected: false,

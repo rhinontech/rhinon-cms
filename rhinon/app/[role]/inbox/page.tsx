@@ -23,53 +23,29 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { EmailHtmlPreview } from "@/components/email-html-preview";
 import { format } from "date-fns";
 import { ComposeModal } from "./ComposeModal";
 import { useSession } from "@/components/session-provider";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
-import { OutreachEmail } from "@/lib/types";
 
 export default function InboxPage() {
   const [emails, setEmails] = useState<any[]>([]);
   const [isComposeOpen, setIsComposeOpen] = useState(false);
-  const [identities, setIdentities] = useState<OutreachEmail[]>([]);
   const [replyData, setReplyData] = useState<any>(null);
 
   const { user, loading: userLoading } = useSession();
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [currentInbox, setCurrentInbox] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'sent' | 'received'>('received');
 
   useEffect(() => {
     if (user) {
-      const defaultEmail = user.isPrimaryAdmin ? "admin@rhinonlabs.com" : user.email;
-      setCurrentInbox(defaultEmail);
-      fetchEmails(defaultEmail || undefined);
-      if (user.roleSlug === "admin") {
-        fetchIdentities();
-      }
+      fetchEmails(user.activeIdentityEmail);
     }
-  }, [user]);
-
-  const fetchIdentities = async () => {
-    try {
-      const res = await fetch("/api/admin/outreach-identities");
-      const data = await res.json();
-      setIdentities(data.emails || []);
-    } catch (err) {
-      console.error("Failed to fetch identities:", err);
-    }
-  };
+  }, [user?.activeIdentityEmail]);
 
   const fetchEmails = async (email?: string) => {
-    const target = email || currentInbox || "";
+    const target = email || user?.activeIdentityEmail || "";
     if (!target) return;
 
     setLoading(true);
@@ -101,7 +77,7 @@ export default function InboxPage() {
       to: replyTo,
       subject: reSubject,
       body: `\n\n--- On ${format(new Date(selectedEmail.receivedAt), "MMM d, yyyy")} ${selectedEmail.from} wrote ---\n> ${selectedEmail.snippet}`,
-      fromEmail: currentInbox
+      fromEmail: user?.activeIdentityEmail
     });
     setIsComposeOpen(true);
   };
@@ -135,30 +111,6 @@ export default function InboxPage() {
               </Button>
             </div>
           </div>
-
-          {user?.roleSlug === "admin" && (
-            <div className="space-y-1.5">
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 px-1">Active Inbox</p>
-              <Select value={currentInbox} onValueChange={(val) => {
-                if (val) {
-                  setCurrentInbox(val);
-                  fetchEmails(val);
-                }
-              }}>
-                <SelectTrigger className="h-9 bg-secondary border-border text-xs font-bold ring-offset-background focus:ring-cyan-500/20 transition-all">
-                  <SelectValue placeholder="Select Identity" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-border">
-                  <SelectItem value="admin@rhinonlabs.com" className="text-xs font-medium">admin@rhinonlabs.com</SelectItem>
-                  {identities.map(id => (
-                    <SelectItem key={id.email} value={id.email} className="text-xs font-medium">
-                      {id.email}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
 
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
@@ -292,9 +244,12 @@ export default function InboxPage() {
               <ScrollArea className="flex-1 h-0 bg-card/5">
 
                 {/* Email Content */}
-                <div className="flex-1 prose prose-sm dark:prose-invert max-w-none text-foreground bg-secondary/20 rounded-2xl p-8 border border-border/50 leading-relaxed shadow-inner">
+                <div className="flex-1 max-w-none text-foreground bg-secondary/20 rounded-2xl p-8 border border-border/50 leading-relaxed shadow-inner">
                   {selectedEmail.htmlBody ? (
-                    <div dangerouslySetInnerHTML={{ __html: selectedEmail.htmlBody }} />
+                    <EmailHtmlPreview
+                      html={selectedEmail.htmlBody}
+                      title={selectedEmail.subject || "Email Preview"}
+                    />
                   ) : (
                     <p className="whitespace-pre-wrap">{selectedEmail.snippet || "No content available."}</p>
                   )}

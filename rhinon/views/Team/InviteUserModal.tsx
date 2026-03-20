@@ -14,7 +14,7 @@ import {
 import { dummyRoles } from "@/lib/dummy-data";
 import { toast } from "sonner";
 
-export function InviteUserModal() {
+export function InviteUserModal({ onInvited }: { onInvited?: () => void }) {
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState<"form" | "loading" | "success">("form");
   const [copied, setCopied] = useState(false);
@@ -47,6 +47,7 @@ export function InviteUserModal() {
       if (res.ok) {
         toast.success("Invitation sent successfully!");
         setInvitationLink(`${window.location.origin}/login?email=${encodeURIComponent(workEmail)}`);
+        onInvited?.();
         setStep("success");
       } else {
         toast.error(data.error || "Failed to send invitation");

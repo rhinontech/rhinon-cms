@@ -18,17 +18,17 @@ export interface IUser extends Document {
 
 const UserSchema = new Schema<IUser>({
   name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  invitationToken: { type: String, sparse: true },
+  email: { type: String, required: true, unique: true, index: true },
+  invitationToken: { type: String, sparse: true, index: true },
   linkedinUrl: { type: String },
   linkedinConnected: { type: Boolean, default: false },
   isPrimaryAdmin: { type: Boolean, default: false },
-  roleId: { type: String, required: true },
+  roleId: { type: String, required: true, index: true },
   password: { type: String },
   isTemporaryPassword: { type: Boolean, default: false },
   mustChangePassword: { type: Boolean, default: false },
   avatarUrl: { type: String },
-  status: { type: String, enum: ["Active", "Invited", "Suspended"], default: "Active" },
+  status: { type: String, enum: ["Active", "Invited", "Suspended"], default: "Active", index: true },
   joinedAt: { type: Date, default: Date.now },
 });
 

@@ -8,18 +8,28 @@ import { postToLinkedIn } from "@/lib/connectors/linkedin";
 import { generateEmailHtml } from "@/lib/email-templates";
 import { getRequestUser } from "@/lib/request-auth";
 import { saveEmailToS3 } from "@/lib/s3";
+import { requireCapability } from "@/lib/authorization";
+import OutreachEmail from "@/lib/models/OutreachEmail";
+import { writeAuditLog } from "@/lib/audit";
 
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!getRequestUser(req)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const sessionUser = getRequestUser(req);
+  const auth = requireCapability(sessionUser, "launch_campaigns");
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
+  const currentUser = sessionUser!;
 
   try {
     await dbConnect();
     const { id: campaignId } = await params;
+    const senderIdentity = await OutreachEmail.findOne({
+      email: currentUser.activeIdentityEmail,
+      status: "Active",
+    }).lean();
 
     const campaign = await Campaign.findById(campaignId);
     if (!campaign) {
@@ -27,6 +37,10 @@ export async function POST(
     }
 
     if (campaign.channel === "Email") {
+      if (!senderIdentity) {
+        return NextResponse.json({ error: "Active sender identity is not available" }, { status: 400 });
+      }
+
       // Find all leads for this campaign that have a draft and haven't been emailed/posted yet
       const leads = await Lead.find({ 
         campaignId, 
@@ -50,12 +64,13 @@ export async function POST(
             subject: emailSubject,
             text: draftBody,
             html: finalHtml,
+            fromEmail: currentUser.activeIdentityEmail,
           });
 
           // Archive to S3 for Inbox history
           const messageId = info.messageId || `campaign-${campaign._id}-${lead._id}`;
           const rawEml = [
-            `From: "Admin" <admin@rhinonlabs.com>`,
+            `From: "${currentUser.name}" <${currentUser.activeIdentityEmail}>`,
             `To: ${lead.email}`,
             `Subject: ${emailSubject}`,
             `Date: ${new Date().toUTCString()}`,
@@ -67,7 +82,7 @@ export async function POST(
           ].join("\r\n");
 
           try {
-            await saveEmailToS3("admin@rhinonlabs.com", "outbound", messageId, rawEml);
+            await saveEmailToS3(currentUser.activeIdentityEmail, "outbound", messageId, rawEml);
           } catch (s3Err) {
             console.error("Failed to archive campaign email to S3:", s3Err);
           }
@@ -81,6 +96,19 @@ export async function POST(
             type: "OutreachSent",
             content: `Campaign outreach email delivered via Rhinon Engine.`,
             timestamp: new Date(),
+          });
+
+          await writeAuditLog({
+            actor: currentUser,
+            action: "campaign.email_sent",
+            targetType: "campaign",
+            targetId: campaign._id.toString(),
+            metadata: {
+              leadId: lead._id.toString(),
+              to: lead.email,
+              fromEmail: currentUser.activeIdentityEmail,
+              subject: emailSubject,
+            },
           });
 
           sentCount++;

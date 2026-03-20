@@ -2,11 +2,17 @@ import { NextResponse } from "next/server";
 import { getRequestUser } from "@/lib/request-auth";
 import { sendEmail } from "@/lib/mail";
 import { saveEmailToS3 } from "@/lib/s3";
+import { requireCapability } from "@/lib/authorization";
+import dbConnect from "@/lib/mongodb";
+import OutreachEmail from "@/lib/models/OutreachEmail";
+import { writeAuditLog } from "@/lib/audit";
 export async function POST(req: Request) {
   const sessionUser = getRequestUser(req);
-  if (!sessionUser) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = requireCapability(sessionUser, "send_email");
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
+  const currentUser = sessionUser!;
 
   try {
     const { to, subject, body, fromEmail } = await req.json();
@@ -15,8 +21,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Default to the user's email if not explicitly provided or if not an admin.
-    const sender = (sessionUser.roleSlug === "admin" && fromEmail) ? fromEmail : sessionUser.email;
+    const requestedSender = fromEmail || currentUser.activeIdentityEmail;
+
+    if (requestedSender !== currentUser.activeIdentityEmail && !currentUser.capabilities.includes("manage_mailboxes")) {
+      return NextResponse.json({ error: "Forbidden sender identity" }, { status: 403 });
+    }
+
+    await dbConnect();
+    const senderIdentity = await OutreachEmail.findOne({ email: requestedSender, status: "Active" }).lean();
+    if (!senderIdentity) {
+      return NextResponse.json({ error: "Sender identity is not active" }, { status: 400 });
+    }
+
+    const sender = requestedSender;
 
     const info = await sendEmail({
       to,
@@ -29,7 +46,7 @@ export async function POST(req: Request) {
     // Save a copy of the sent email as a raw EML to S3 so the Inbox picks it up
     const messageId = info.messageId || `sent-${Date.now()}`;
     const rawEml = [
-      `From: "${sessionUser.name}" <${sender}>`,
+      `From: "${currentUser.name}" <${sender}>`,
       `To: ${to}`,
       `Subject: ${subject}`,
       `Date: ${new Date().toUTCString()}`,
@@ -46,6 +63,14 @@ export async function POST(req: Request) {
       console.error("Failed to save copy to S3:", s3Err);
       // We don't fail the whole request if just the S3 archive fails
     }
+
+    await writeAuditLog({
+      actor: currentUser,
+      action: "email.sent",
+      targetType: "outbound_email",
+      targetId: messageId,
+      metadata: { to, fromEmail: sender, subject },
+    });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

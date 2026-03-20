@@ -1,16 +1,21 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import User from "@/lib/models/User";
+import OutreachEmail from "@/lib/models/OutreachEmail";
 import { getRequestUser } from "@/lib/request-auth";
 import crypto from "crypto";
 import { sendEmail } from "@/lib/mail";
 import { saveEmailToS3 } from "@/lib/s3";
+import { requireCapability } from "@/lib/authorization";
+import { writeAuditLog } from "@/lib/audit";
 
 export async function POST(req: Request) {
   const adminUser = getRequestUser(req);
-  if (!adminUser || adminUser.roleSlug !== "admin") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = requireCapability(adminUser, "invite_users");
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
+  const currentUser = adminUser!;
 
   try {
     const { name, personalEmail, workEmailPrefix, roleId } = await req.json();
@@ -45,6 +50,14 @@ export async function POST(req: Request) {
       joinedAt: new Date(),
     });
 
+    await OutreachEmail.create({
+      email: workEmail,
+      displayName: name,
+      type: "primary",
+      status: "Active",
+      userId: newUser._id.toString(),
+    });
+
     // Send the invitation email to PERSONAL EMAIL
     const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL || "https://app.rhinon.tech"}/login?email=${encodeURIComponent(workEmail)}`;
     
@@ -69,7 +82,7 @@ export async function POST(req: Request) {
 
     const info = await sendEmail({
       to: personalEmail,
-      fromEmail: "admin@rhinonlabs.com",
+      fromEmail: currentUser.activeIdentityEmail,
       subject: "Welcome to your Rhinon Work Account",
       text: `Hi ${name},\n\nYour work account has been created.\n\nWork Email: ${workEmail}\nTemporary Password: ${tempPassword}\n\nLogin here: ${inviteLink}\n\nYou will be required to change your password upon first login.`,
       html: inviteHtml,
@@ -78,7 +91,7 @@ export async function POST(req: Request) {
     // Archive to S3 for Inbox history
     const messageId = info.messageId || `invite-${newUser._id}`;
     const rawEml = [
-      `From: "Admin" <admin@rhinonlabs.com>`,
+      `From: "Admin" <${currentUser.activeIdentityEmail}>`,
       `To: ${personalEmail}`,
       `Subject: Welcome to your Rhinon Work Account`,
       `Date: ${new Date().toUTCString()}`,
@@ -90,10 +103,22 @@ export async function POST(req: Request) {
     ].join("\r\n");
 
     try {
-      await saveEmailToS3("admin@rhinonlabs.com", "outbound", messageId, rawEml);
+      await saveEmailToS3(currentUser.activeIdentityEmail, "outbound", messageId, rawEml);
     } catch (s3Err) {
       console.error("Failed to archive invite to S3:", s3Err);
     }
+
+    await writeAuditLog({
+      actor: currentUser,
+      action: "user.invited",
+      targetType: "user",
+      targetId: newUser._id.toString(),
+      metadata: {
+        workEmail,
+        personalEmail,
+        roleId,
+      },
+    });
 
     return NextResponse.json({ success: true, user: newUser });
   } catch (error: any) {

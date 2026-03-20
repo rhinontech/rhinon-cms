@@ -8,6 +8,7 @@ interface SessionContextType {
   loading: boolean;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
+  setSessionUser: (user: SessionUser | null) => void;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -18,7 +19,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const fetchSession = async () => {
     try {
-      const res = await fetch("/api/auth/me");
+      const res = await fetch("/api/auth/me", { cache: "no-store" });
       if (res.ok) {
         const data = await res.json();
         setUser(data);
@@ -43,7 +44,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <SessionContext.Provider value={{ user, loading, logout, refresh: fetchSession }}>
+    <SessionContext.Provider value={{ user, loading, logout, refresh: fetchSession, setSessionUser: setUser }}>
       {children}
     </SessionContext.Provider>
   );

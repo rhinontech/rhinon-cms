@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { decodeSession, SESSION_COOKIE } from "./lib/auth";
+import { hasCapability } from "./lib/authorization";
 
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -18,18 +19,36 @@ export function proxy(req: NextRequest) {
 
   // 2. Auth Page Access (Login/Signup)
   const isAuthPage = pathname === "/login" || pathname === "/signup" || pathname === "/debug/email";
+  const isOnboardingPage = pathname === "/onboarding";
 
   if (isAuthPage) {
     if (session) {
-      // Already logged in, go to their dashboard
+      if (session.mustChangePassword) {
+        return NextResponse.redirect(new URL("/onboarding", req.url));
+      }
       return NextResponse.redirect(new URL(`/${session.roleSlug}/dashboard`, req.url));
     }
+    return NextResponse.next();
+  }
+
+  if (isOnboardingPage) {
+    if (!session) {
+      return NextResponse.redirect(new URL("/login", req.url));
+    }
+
+    if (!session.mustChangePassword) {
+      return NextResponse.redirect(new URL(`/${session.roleSlug}/dashboard`, req.url));
+    }
+
     return NextResponse.next();
   }
 
   // 3. Root redirect
   if (pathname === "/") {
     if (session) {
+      if (session.mustChangePassword) {
+        return NextResponse.redirect(new URL("/onboarding", req.url));
+      }
       return NextResponse.redirect(new URL(`/${session.roleSlug}/dashboard`, req.url));
     }
     return NextResponse.redirect(new URL("/login", req.url));
@@ -41,9 +60,13 @@ export function proxy(req: NextRequest) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
+  if (session.mustChangePassword) {
+    return NextResponse.redirect(new URL("/onboarding", req.url));
+  }
+
   const pathSegments = pathname.split("/").filter(Boolean);
   const pathRolePart = pathSegments[0];
-  const validRoleSlugs = ["admin", "manager", "sdr"];
+  const validRoleSlugs = ["super_admin", "admin", "manager", "sales", "marketer", "support"];
 
   // 4a. If path doesn't start with a role, but we have a session, redirect to /{role}/{path}
   if (!validRoleSlugs.includes(pathRolePart)) {
@@ -56,7 +79,7 @@ export function proxy(req: NextRequest) {
   }
 
   // 5. Admin-only sections (Client side too, but middleware can help)
-  if (pathname.includes("/team") && session.roleSlug !== "admin") {
+  if (pathname.includes("/team") && !hasCapability(session, "manage_users")) {
     return NextResponse.redirect(new URL(`/${session.roleSlug}/dashboard`, req.url));
   }
 

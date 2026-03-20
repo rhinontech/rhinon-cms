@@ -45,10 +45,10 @@ export function ComposeModal({ isOpen, onOpenChange, onSuccess, initialData }: C
   }, [isOpen, initialData]);
 
   useEffect(() => {
-    if (user?.roleSlug === "admin") {
+    if (user?.capabilities.includes("manage_mailboxes")) {
       fetchIdentities();
-    } else if (user?.email) {
-      setFromEmail(user.email);
+    } else if (user?.activeIdentityEmail) {
+      setFromEmail(user.activeIdentityEmail);
     }
   }, [user]);
 
@@ -59,7 +59,7 @@ export function ComposeModal({ isOpen, onOpenChange, onSuccess, initialData }: C
       if (data.emails) {
         setIdentities(data.emails);
         // Default to the first secondary identity or admin email
-        const defaultEmail = data.emails.find((e: any) => e.type === "primary")?.email || "admin@rhinonlabs.com";
+        const defaultEmail = user?.activeIdentityEmail || data.emails.find((e: any) => e.type === "primary")?.email || "admin@rhinonlabs.com";
         setFromEmail(defaultEmail);
       }
     } catch (err) {
@@ -109,7 +109,7 @@ export function ComposeModal({ isOpen, onOpenChange, onSuccess, initialData }: C
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {user?.roleSlug === "admin" && identities.length > 0 && (
+          {user?.capabilities.includes("manage_mailboxes") && identities.length > 0 && (
             <div className="flex items-center gap-4">
               <Label className="w-16 text-right text-muted-foreground">From</Label>
               <Select value={fromEmail} onValueChange={(val) => setFromEmail(val || "")}>

@@ -1,0 +1,114 @@
+# .codex/config.toml
+
+# Project-scoped Codex configuration for the RABC internal CMS.
+# Keep repo behavior predictable and focused on safe implementation.
+
+model = "gpt-5.4"
+
+[projects."/workspace"]
+trust_level = "trusted"
+
+[profiles.default]
+model = "gpt-5.4"
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+
+[profiles.review]
+model = "gpt-5.4"
+approval_policy = "on-request"
+sandbox_mode = "read-only"
+
+[profiles.full-build]
+model = "gpt-5.4"
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+
+[instructions]
+prelude = """
+You are working on the RABC internal CMS for Rhinon Labs.
+
+Follow repository instructions in AGENTS.md strictly.
+
+Project context:
+- Frontend: Next.js App Router, shadcn/ui, Tailwind CSS v4
+- Backend: Next.js backend code, Sequelize ORM, PostgreSQL
+- Domains: auth, users, email identities, leads, campaigns, templates, social posts, AWS SES
+- This is an internal CMS where auditability, RBAC, and maintainability matter
+
+Behavior expectations:
+- Inspect existing code before editing
+- Prefer minimal safe diffs
+- Treat RBAC and transactional integrity as first-class concerns
+- When changing schema, add migrations instead of relying on model sync
+- Keep backend authorization real; UI-only permission hiding is insufficient
+- Use service-layer logic for orchestration and provider integrations
+- Preserve sent-email identity history and campaign state integrity
+- Surface assumptions explicitly in summaries
+"""
+
+# Optional: encourage consistent command discovery
+[environment]
+inherit = true
+
+[tools]
+web_search = true
+
+# If your Codex setup supports shell command hints or task conventions,
+# this section serves as a stable project note for the model.
+[tasks]
+setup = "pnpm install"
+dev = "pnpm dev"
+lint = "pnpm lint"
+typecheck = "pnpm typecheck"
+test = "pnpm test"
+
+[context]
+include = [
+  "AGENTS.md",
+  "src/app",
+  "src/api",
+  ".codex/skills"
+]
+
+exclude = [
+  "node_modules",
+  ".next",
+  "dist",
+  "coverage"
+]
+
+[skills]
+enabled = true
+paths = [
+  ".codex/skills"
+]
+
+[profiles.default.hints]
+implementation = """
+When building features:
+1. inspect the affected domain
+2. identify data model changes
+3. update API/service logic
+4. update UI screens/components
+5. validate RBAC paths
+6. add migration if schema changed
+7. summarize risk areas
+"""
+
+[profiles.review.hints]
+review = """
+Focus review on:
+- authorization gaps
+- schema drift and migration issues
+- transaction safety
+- SES integration correctness
+- campaign duplication or state bugs
+- primary identity switching bugs
+- hidden coupling across app and api layers
+"""
+
+[profiles.full-build.hints]
+delivery = """
+Prefer end-to-end implementation over placeholder-only work.
+If a feature clearly needs schema + API + UI, do not stop after one layer.
+"""

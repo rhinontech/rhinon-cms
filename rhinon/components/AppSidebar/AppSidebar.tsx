@@ -27,11 +27,13 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export function AppSidebar({ roleSlug }: { roleSlug?: string }) {
   const pathname = usePathname();
-  const { user, logout } = useSession();
+  const { user, logout, refresh } = useSession();
   const [queueCount, setQueueCount] = useState<number | null>(null);
+  const [identities, setIdentities] = useState<Array<{ email: string; type: string }>>([]);
 
   // If roleSlug is missing, try to infer it from user session
   const activeRole = roleSlug || user?.roleSlug || "admin";
@@ -51,6 +53,59 @@ export function AppSidebar({ roleSlug }: { roleSlug?: string }) {
     const interval = setInterval(fetchQueue, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    const fetchIdentities = async () => {
+      if (!user?.capabilities.includes("manage_mailboxes")) return;
+      try {
+        const res = await fetch("/api/admin/outreach-identities");
+        const data = await res.json();
+        const fetched = Array.isArray(data.emails) ? data.emails : [];
+        const merged = new Map<string, { email: string; type: string }>();
+
+        for (const identity of fetched) {
+          if (identity?.email) {
+            merged.set(identity.email, {
+              email: identity.email,
+              type: identity.type || "secondary",
+            });
+          }
+        }
+
+        if (user.primaryIdentityEmail && !merged.has(user.primaryIdentityEmail)) {
+          merged.set(user.primaryIdentityEmail, {
+            email: user.primaryIdentityEmail,
+            type: "primary",
+          });
+        }
+
+        if (user.activeIdentityEmail && !merged.has(user.activeIdentityEmail)) {
+          merged.set(user.activeIdentityEmail, {
+            email: user.activeIdentityEmail,
+            type: user.activeIdentityEmail === user.primaryIdentityEmail ? "primary" : "secondary",
+          });
+        }
+
+        setIdentities(Array.from(merged.values()));
+      } catch (error) {
+        console.error("Failed to fetch identities:", error);
+      }
+    };
+
+    fetchIdentities();
+  }, [user]);
+
+  const switchIdentity = async (email: string) => {
+    const res = await fetch("/api/auth/identity", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+
+    if (res.ok) {
+      await refresh();
+    }
+  };
 
   const nav = [
     { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -76,7 +131,7 @@ export function AppSidebar({ roleSlug }: { roleSlug?: string }) {
     { label: "Inbox", href: "/inbox", icon: Inbox },
     { label: "Blogs", href: "/blogs", icon: FileText },
 
-    { label: "Team & Roles", href: "/team", icon: Shield, perm: "perm_5" },
+    { label: "Team & Roles", href: "/team", icon: Shield, capability: "manage_users" },
     { label: "Settings", href: "/settings", icon: Settings },
   ];
 
@@ -86,11 +141,37 @@ export function AppSidebar({ roleSlug }: { roleSlug?: string }) {
       <div className="flex items-start justify-between mb-7">
         <Link href={`/${activeRole}/dashboard`}>
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-500">
-            Rhinon
+            Rhinon Labs
           </p>
           <h1 className="mt-1 text-[17px] font-bold leading-tight text-foreground">
             Operations Hub
           </h1>
+          {user && (
+            <div className="mt-2 space-y-1">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                {user.roleName}
+              </p>
+              {user.capabilities.includes("manage_mailboxes") && identities.length > 0 ? (
+                <Select value={user.activeIdentityEmail} onValueChange={(value) => value && switchIdentity(value)}>
+                  <SelectTrigger className="h-8 border-border bg-secondary/70 text-xs font-semibold">
+                    <SelectValue placeholder="Select identity" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border-border">
+                    {identities.map((identity) => (
+                      <SelectItem key={identity.email} value={identity.email}>
+                        {identity.email} {identity.type === "primary" ? "(Primary)" : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <p className="text-xs font-semibold text-foreground">{user.activeIdentityEmail}</p>
+              )}
+              <p className="text-[10px] text-muted-foreground">
+                Primary: {user.primaryIdentityEmail}
+              </p>
+            </div>
+          )}
         </Link>
         <ThemeToggle />
       </div>
@@ -98,7 +179,7 @@ export function AppSidebar({ roleSlug }: { roleSlug?: string }) {
       {/* Nav */}
       <nav className="flex-1 space-y-0.5">
         {nav.map((item: any) => {
-          if (item.perm === "perm_5" && activeRole !== "admin") return null;
+          if (item.capability && !user?.capabilities?.includes(item.capability)) return null;
 
           const fullHref = `/${activeRole}${item.href}`;
           const isAtCampaigns = item.label === "Campaigns" && pathname?.includes("/campaigns");

@@ -113,6 +113,7 @@ export interface OutreachEmail {
   type: "primary" | "secondary";
   displayName: string;
   status: "Active" | "Pending";
+  userId?: string;
 }
 
 export interface Role {
@@ -145,6 +146,9 @@ export interface SessionUser {
   roleId: string;
   roleName: string;
   roleSlug: string;
+  activeIdentityEmail: string;
+  primaryIdentityEmail: string;
+  capabilities: string[];
   mustChangePassword?: boolean;
 }
 

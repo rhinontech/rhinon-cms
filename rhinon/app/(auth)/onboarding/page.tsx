@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { useSession } from "@/components/session-provider";
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const { setSessionUser } = useSession();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -41,10 +43,14 @@ export default function OnboardingPage() {
         throw new Error(data.error || "Failed to update password");
       }
 
+      if (data.user) {
+        setSessionUser(data.user);
+      }
+
       toast.success("Password updated successfully! Welcome to Rhinon.");
       
       // Redirect to role-based dashboard
-      router.push(`/${data.roleSlug}/dashboard`);
+      router.replace(`/${data.roleSlug}/dashboard`);
     } catch (err: any) {
       setError(err.message);
       setLoading(false);
