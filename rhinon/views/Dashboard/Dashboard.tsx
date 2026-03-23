@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Bell, Command, Filter, Search, LayoutDashboard, ShieldCheck, Zap, Globe, Linkedin } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CampaignWizard } from "@/views/Campaigns/CampaignWizard";
 
 const chartBars = [52, 64, 58, 80, 73, 92, 84];
 const days = ["M", "T", "W", "T", "F", "S", "S"];
@@ -99,9 +100,11 @@ export function Dashboard() {
             <button className="rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-foreground/70 hover:bg-secondary transition-colors">
               Organization: Core Ops
             </button>
-            <button className="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-600 transition-colors shadow-sm">
-              New Campaign
-            </button>
+            <CampaignWizard
+              defaultChannel="Email"
+              triggerLabel="New Campaign"
+              buttonClassName="rounded-xl px-4 py-2 text-sm font-semibold shadow-sm"
+            />
           </div>
         </div>
 
@@ -308,7 +311,7 @@ export function Dashboard() {
                     <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary border border-border/50">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-400"
-                        style={{ width: `${c.progress}%` }}
+                        style={{ width: `${c.leadsTotal > 0 ? (c.leadsProcessed / c.leadsTotal) * 100 : 0}%` }}
                       />
                     </div>
                   </li>

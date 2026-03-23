@@ -30,13 +30,13 @@ export function InboxSplitView() {
   // Initialize selected email from user or param
   useEffect(() => {
     if (user && !selectedEmail) {
-      setSelectedEmail(user.isPrimaryAdmin ? "admin@rhinonlabs.com" : user.email);
+      setSelectedEmail(user.activeIdentityEmail || user.email);
     }
   }, [user, selectedEmail]);
 
   // Fetch admin-only list of all outreach accounts
   useEffect(() => {
-    if (user?.roleSlug === "admin") {
+    if (user?.capabilities.includes("manage_mailboxes")) {
       fetch("/api/admin/outreach-identities")
         .then(res => res.json())
         .then(data => setOutreachIdentities(data.emails || []));
@@ -137,12 +137,12 @@ export function InboxSplitView() {
       )}>
         {/* Header */}
         <div className="p-4 border-b border-border h-15 flex items-center justify-between gap-4">
-          {user?.roleSlug === "admin" && outreachIdentities.length > 0 ? (
+          {user?.capabilities.includes("manage_mailboxes") && outreachIdentities.length > 0 ? (
             <Select value={selectedEmail} onValueChange={(val) => val && setSelectedEmail(val)}>
-              <SelectTrigger className="h-8 bg-secondary border-border text-[11px] font-bold">
+              <SelectTrigger className="h-8 w-full max-w-[240px] bg-secondary border-border text-[11px] font-bold">
                 <SelectValue placeholder="Select Inbox" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent align="start" className="w-80 max-w-[calc(100vw-2rem)]">
                 {outreachIdentities.map(id => (
                   <SelectItem key={id.email} value={id.email} className="text-xs">
                     {id.displayName} ({id.email})

@@ -9,6 +9,8 @@ import { format } from "date-fns";
 // Status badge color — color accents work in both light + dark
 const statusColor: Record<string, string> = {
   New:          "bg-blue-500/10  text-blue-600  dark:text-blue-400  border-blue-500/25",
+  Enriched:     "bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/25",
+  Enrolled:     "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/25",
   Emailed:      "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25",
   Replied:      "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25",
   Interested:   "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25",

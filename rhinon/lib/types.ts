@@ -1,4 +1,4 @@
-export type LeadStatus = "New" | "Emailed" | "Replied" | "Bounced" | "Unsubscribed" | "Interested";
+export type LeadStatus = "New" | "Enriched" | "Enrolled" | "Emailed" | "Replied" | "Bounced" | "Unsubscribed" | "Interested";
 
 export interface Lead {
   id: string;
@@ -45,6 +45,14 @@ export interface Campaign {
   leadsProcessed: number;
   leadsTotal: number;
   dailyLimit: number;
+  audienceGroupName?: string;
+  objective?: string;
+  notes?: string;
+  targetCompanies?: string[];
+  sourceFilters?: string[];
+  statusFilters?: string[];
+  leadIds?: string[];
+  autoEnrollMatchingLeads?: boolean;
   mediaUrl?: string;
   aiDraft?: string;
   visibility?: "PUBLIC" | "CONNECTIONS";

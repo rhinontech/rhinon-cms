@@ -40,7 +40,7 @@ interface CampaignDetailProps {
 export function CampaignDetail({ campaign, templates, onClose, onUpdate }: CampaignDetailProps) {
   const [activities, setActivities] = useState<any[]>([]);
   const template = templates.find((t) => (t as any)._id === campaign.templateId || t.id === campaign.templateId);
-  const progress = (campaign.leadsProcessed / campaign.leadsTotal) * 100;
+  const progress = campaign.leadsTotal > 0 ? (campaign.leadsProcessed / campaign.leadsTotal) * 100 : 0;
 
   useEffect(() => {
     const fetchActivities = async () => {
@@ -353,7 +353,7 @@ export function CampaignBoard({ }: CampaignBoardProps): JSX.Element {
   }
 
   const CampaignCard = ({ campaign }: { campaign: Campaign }) => {
-    const progress = (campaign.leadsProcessed / campaign.leadsTotal) * 100;
+    const progress = campaign.leadsTotal > 0 ? (campaign.leadsProcessed / campaign.leadsTotal) * 100 : 0;
     return (
       <div
         onClick={() => setSelectedCampaign(campaign)}
@@ -490,7 +490,7 @@ export function CampaignBoard({ }: CampaignBoardProps): JSX.Element {
             <List size={15} className="mr-1.5" /> List
           </Button>
         </div>
-        <CampaignWizard defaultChannel="Email" />
+        <CampaignWizard defaultChannel="Email" onCreated={fetchData} />
       </div>
 
       {/* View Content */}
@@ -550,9 +550,9 @@ export function CampaignBoard({ }: CampaignBoardProps): JSX.Element {
                   </td>
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-3 w-32">
-                      <Progress value={(campaign.leadsProcessed / campaign.leadsTotal) * 100} className="h-1 flex-1" />
+                      <Progress value={campaign.leadsTotal > 0 ? (campaign.leadsProcessed / campaign.leadsTotal) * 100 : 0} className="h-1 flex-1" />
                       <span className="text-[10px] font-bold text-muted-foreground tabular-nums">
-                        {Math.floor((campaign.leadsProcessed / campaign.leadsTotal) * 100)}%
+                        {campaign.leadsTotal > 0 ? Math.floor((campaign.leadsProcessed / campaign.leadsTotal) * 100) : 0}%
                       </span>
                     </div>
                   </td>
