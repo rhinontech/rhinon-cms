@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "../ui/scroll-area";
 
 export function AppSidebar({ roleSlug }: { roleSlug?: string }) {
   const pathname = usePathname();
@@ -177,7 +178,8 @@ export function AppSidebar({ roleSlug }: { roleSlug?: string }) {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 space-y-0.5">
+      <ScrollArea className="flex-1 min-h-0 ">
+      <nav className="flex-1 space-y-1">
         {nav.map((item: any) => {
           if (item.capability && !user?.capabilities?.includes(item.capability)) return null;
 
@@ -232,6 +234,7 @@ export function AppSidebar({ roleSlug }: { roleSlug?: string }) {
           );
         })}
       </nav>
+      </ScrollArea>
 
       {/* Footer Info & Logout */}
       <div className="mt-auto space-y-4">

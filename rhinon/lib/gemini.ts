@@ -212,3 +212,77 @@ export async function generateAISocialDraft(templateData: any) {
   const response = await result.response;
   return response.text().trim();
 }
+
+
+export async function enrichAndEvaluateLeadFromWebsite(name: string, companyName: string, websiteUrl: string) {
+  let websiteText = "";
+  
+  if (websiteUrl) {
+    try {
+      // Ensure URL has protocol
+      const url = websiteUrl.startsWith('http') ? websiteUrl : `https://${websiteUrl}`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      
+      if (res.ok) {
+        const text = await res.text();
+        // Take a max of 20,000 chars to avoid overwhelming the token limit with JS/CSS
+        websiteText = text.slice(0, 20000);
+      }
+    } catch (e: any) {
+      console.log(`[Scraper Info] Could not fetch ${websiteUrl}: ${e.message || "Unknown error"}. Falling back to AI prediction.`);
+    }
+  }
+
+  const prompt = `
+    You are an expert B2B lead researcher and pipeline evaluator for Rhinon Tech (rhinonlabs.com).
+    
+    ABOUT RHINON:
+    ${RHINON_KNOWLEDGE}
+
+    I need you to evaluate a prospect's website and extract/predict the corporate email address for:
+    Name: ${name}
+    Company: ${companyName}
+    Website URL: ${websiteUrl}
+
+    ${websiteText ? `Here is the scraped homepage HTML text:\n\n${websiteText.slice(0, 10000)}\n` : ``}
+
+    TASK:
+    1. Retrieve the explicit email if it exists in the homepage, OR predict it (e.g. first.last@company.com).
+    2. Read the company description from the website text and evaluate if they are a good fit for Rhinon's custom BI dashboards and data automation services.
+    
+    OUTPUT JSON FORMAT:
+    {
+      "email": "extracted_or_predicted_email@company.com",
+      "method": "Extracted from Website or Predicted by AI",
+      "matchScore": "High" | "Medium" | "Low",
+      "matchReason": "1 sentence explaining exactly why they do or do not need data automation or custom BI tools based on their industry."
+    }
+  `;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text().trim();
+    
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]);
+    }
+  } catch (e) {
+    console.error("Failed to predict/extract email via Gemini:", e);
+  }
+
+  // Very basic fallback prediction if Gemini API fails
+  const domain = websiteUrl ? websiteUrl.replace(/^https?:\/\//, '').replace(/\/.*$/, '') : companyName.toLowerCase().replace(/[^a-z0-9]/g, '') + '.com';
+  const firstName = name.split(' ')[0].toLowerCase().replace(/[^a-z]/g, '');
+  return { 
+    email: `${firstName}@${domain}`, 
+    method: "Basic Regex Fallback",
+    matchScore: "Medium",
+    matchReason: "Could not fetch website content to accurately evaluate operations."
+  };
+}

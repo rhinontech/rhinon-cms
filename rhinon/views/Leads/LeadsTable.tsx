@@ -32,6 +32,7 @@ import {
 import { columns } from "./columns";
 import { LeadDrawer } from "./LeadDrawer";
 import { DiscoveryTab } from "./DiscoveryTab";
+import { CsvDiscoveryTab } from "./CsvDiscoveryTab";
 import { Lead } from "@/lib/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
@@ -114,6 +115,12 @@ export function LeadsTable() {
             className="rounded-lg px-6 py-2.5 data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950 font-medium transition-all"
           >
             Lead Discovery (Apollo.io)
+          </TabsTrigger>
+          <TabsTrigger
+            value="csv-discovery"
+            className="rounded-lg px-6 py-2.5 data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-950 font-medium transition-all"
+          >
+            Lead Discovery (CSV file)
           </TabsTrigger>
         </TabsList>
 
@@ -251,6 +258,10 @@ export function LeadsTable() {
 
           <TabsContent value="discovery" className="outline-none border-none p-0 mt-0">
             <DiscoveryTab />
+          </TabsContent>
+
+          <TabsContent value="csv-discovery" className="outline-none border-none p-0 mt-0">
+            <CsvDiscoveryTab />
           </TabsContent>
 
         </div>
