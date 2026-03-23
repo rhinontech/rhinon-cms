@@ -144,6 +144,17 @@ export function LeadDrawer({ lead, isOpen, onClose }: LeadDrawerProps) {
     }
   };
 
+  const handleOpenProfile = () => {
+    const profileUrl = lead?.linkedinUrl;
+    if (!profileUrl) {
+      toast.error("No LinkedIn profile is available for this lead.");
+      return;
+    }
+
+    const href = /^https?:\/\//i.test(profileUrl) ? profileUrl : `https://${profileUrl}`;
+    window.open(href, "_blank", "noopener,noreferrer");
+  };
+
   if (!lead) return null;
 
   return (
@@ -184,7 +195,13 @@ export function LeadDrawer({ lead, isOpen, onClose }: LeadDrawerProps) {
               >
                 <Sparkles size={14} className="mr-2" /> {isEnriching ? "Enriching..." : "Enrich Lead"}
               </Button>
-              <Button variant="outline" size="sm" className="border-border bg-card text-muted-foreground hover:text-foreground font-semibold h-9">
+              <Button
+                onClick={handleOpenProfile}
+                disabled={!lead.linkedinUrl}
+                variant="outline"
+                size="sm"
+                className="border-border bg-card text-muted-foreground hover:text-foreground font-semibold h-9"
+              >
                 <Linkedin size={14} className="mr-2" /> Profile
               </Button>
             </div>

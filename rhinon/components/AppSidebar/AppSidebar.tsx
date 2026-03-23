@@ -12,14 +12,8 @@ import {
   Users,
   Sparkles,
   LogOut,
-  User as UserIcon,
   Send,
-  Linkedin,
-  LayoutGrid,
-  Layout,
-  Video,
-  FileText,
-  Mail
+  FileText
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useSession } from "@/components/session-provider";
@@ -28,12 +22,19 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
+
+type IdentityOption = {
+  email: string;
+  type: string;
+  displayName?: string;
+};
 
 export function AppSidebar({ roleSlug }: { roleSlug?: string }) {
   const pathname = usePathname();
   const { user, logout, refresh } = useSession();
   const [queueCount, setQueueCount] = useState<number | null>(null);
-  const [identities, setIdentities] = useState<Array<{ email: string; type: string }>>([]);
+  const [identities, setIdentities] = useState<IdentityOption[]>([]);
 
   // If roleSlug is missing, try to infer it from user session
   const activeRole = roleSlug || user?.roleSlug || "admin";
@@ -61,13 +62,14 @@ export function AppSidebar({ roleSlug }: { roleSlug?: string }) {
         const res = await fetch("/api/admin/outreach-identities");
         const data = await res.json();
         const fetched = Array.isArray(data.emails) ? data.emails : [];
-        const merged = new Map<string, { email: string; type: string }>();
+        const merged = new Map<string, IdentityOption>();
 
         for (const identity of fetched) {
           if (identity?.email) {
             merged.set(identity.email, {
               email: identity.email,
               type: identity.type || "secondary",
+              displayName: identity.displayName || undefined,
             });
           }
         }
@@ -76,6 +78,7 @@ export function AppSidebar({ roleSlug }: { roleSlug?: string }) {
           merged.set(user.primaryIdentityEmail, {
             email: user.primaryIdentityEmail,
             type: "primary",
+            displayName: user.name,
           });
         }
 
@@ -83,6 +86,7 @@ export function AppSidebar({ roleSlug }: { roleSlug?: string }) {
           merged.set(user.activeIdentityEmail, {
             email: user.activeIdentityEmail,
             type: user.activeIdentityEmail === user.primaryIdentityEmail ? "primary" : "secondary",
+            displayName: user.name,
           });
         }
 
@@ -96,15 +100,35 @@ export function AppSidebar({ roleSlug }: { roleSlug?: string }) {
   }, [user]);
 
   const switchIdentity = async (email: string) => {
-    const res = await fetch("/api/auth/identity", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
+    if (email === user?.activeIdentityEmail) return;
 
-    if (res.ok) {
+    try {
+      const res = await fetch("/api/auth/identity", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || "Failed to switch identity");
+      }
+
       await refresh();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to switch identity");
     }
+  };
+
+  const getIdentityMeta = (identity: IdentityOption) => {
+    const tags = [];
+
+    if (identity.displayName) {
+      tags.push(identity.displayName);
+    }
+
+    tags.push(identity.type === "primary" ? "Primary" : "Secondary");
+    return tags.join(" • ");
   };
 
   const nav = [
@@ -138,41 +162,53 @@ export function AppSidebar({ roleSlug }: { roleSlug?: string }) {
   return (
     <aside className="card h-full w-60 shrink-0 flex-col p-4 border-border bg-card hidden lg:flex">
       {/* Brand */}
-      <div className="flex items-start justify-between mb-7">
-        <Link href={`/${activeRole}/dashboard`}>
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-500">
-            Rhinon Labs
-          </p>
-          <h1 className="mt-1 text-[17px] font-bold leading-tight text-foreground">
-            Operations Hub
-          </h1>
+      <div className="mb-7 flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <Link href={`/${activeRole}/dashboard`} className="block">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-500">
+              Rhinon Labs
+            </p>
+            <h1 className="mt-1 text-[17px] font-bold leading-tight text-foreground">
+              Operations Hub
+            </h1>
+          </Link>
           {user && (
-            <div className="mt-2 space-y-1">
+            <div className="mt-2 min-w-0 space-y-1">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                 {user.roleName}
               </p>
               {user.capabilities.includes("manage_mailboxes") && identities.length > 0 ? (
                 <Select value={user.activeIdentityEmail} onValueChange={(value) => value && switchIdentity(value)}>
-                  <SelectTrigger className="h-8 border-border bg-secondary/70 text-xs font-semibold">
-                    <SelectValue placeholder="Select identity" />
+                  <SelectTrigger
+                    className="h-8 w-full min-w-0 border-border bg-secondary/70 text-xs font-semibold"
+                    title={user.activeIdentityEmail}
+                  >
+                    <SelectValue placeholder="Select identity" className="min-w-0 truncate" />
                   </SelectTrigger>
-                  <SelectContent className="bg-card border-border">
+                  <SelectContent align="start" className="w-80 max-w-[calc(100vw-2rem)] border-border bg-card">
                     {identities.map((identity) => (
-                      <SelectItem key={identity.email} value={identity.email}>
-                        {identity.email} {identity.type === "primary" ? "(Primary)" : ""}
+                      <SelectItem key={identity.email} value={identity.email} className="py-2">
+                        <div className="min-w-0">
+                          <p className="truncate font-medium text-foreground">{identity.email}</p>
+                          <p className="truncate text-[10px] uppercase tracking-wider text-muted-foreground">
+                            {getIdentityMeta(identity)}
+                          </p>
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               ) : (
-                <p className="text-xs font-semibold text-foreground">{user.activeIdentityEmail}</p>
+                <p className="truncate text-xs font-semibold text-foreground" title={user.activeIdentityEmail}>
+                  {user.activeIdentityEmail}
+                </p>
               )}
-              <p className="text-[10px] text-muted-foreground">
+              <p className="truncate text-[10px] text-muted-foreground" title={user.primaryIdentityEmail}>
                 Primary: {user.primaryIdentityEmail}
               </p>
             </div>
           )}
-        </Link>
+        </div>
         <ThemeToggle />
       </div>
 

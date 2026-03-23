@@ -2,12 +2,20 @@ import mongoose, { Schema, Document } from "mongoose";
 
 export interface ICampaign extends Document {
   name: string;
-  channel: "Email" | "LinkedIn DM" | "LinkedIn Connection" | "LinkedIn Post" | "LinkedIn Video" | "LinkedIn Article";
+  channel: "Email" | "Cold Email" | "LinkedIn DM" | "LinkedIn Connection" | "LinkedIn Post" | "LinkedIn Video" | "LinkedIn Article";
   templateId: mongoose.Types.ObjectId | null;
   stage: "Draft" | "Active" | "Paused" | "Completed";
   leadsProcessed: number;
   leadsTotal: number;
   dailyLimit: number;
+  audienceGroupName?: string;
+  objective?: string;
+  notes?: string;
+  targetCompanies?: string[];
+  sourceFilters?: string[];
+  statusFilters?: string[];
+  leadIds?: mongoose.Types.ObjectId[];
+  autoEnrollMatchingLeads?: boolean;
   mediaUrl?: string;
   aiDraft?: string;
   visibility?: "PUBLIC" | "CONNECTIONS";
@@ -33,13 +41,21 @@ const CampaignSchema = new Schema<ICampaign>({
   channel: { 
     type: String, 
     required: true, 
-    enum: ["Email", "LinkedIn DM", "LinkedIn Connection", "LinkedIn Post", "LinkedIn Video", "LinkedIn Article"] 
+    enum: ["Email", "Cold Email", "LinkedIn DM", "LinkedIn Connection", "LinkedIn Post", "LinkedIn Video", "LinkedIn Article"] 
   },
   templateId: { type: Schema.Types.ObjectId, ref: "Template", default: null },
   stage: { type: String, required: true, enum: ["Draft", "Active", "Paused", "Completed"], default: "Draft" },
   leadsProcessed: { type: Number, default: 0 },
   leadsTotal: { type: Number, default: 0 },
   dailyLimit: { type: Number, default: 50 },
+  audienceGroupName: { type: String },
+  objective: { type: String },
+  notes: { type: String },
+  targetCompanies: [{ type: String }],
+  sourceFilters: [{ type: String }],
+  statusFilters: [{ type: String }],
+  leadIds: [{ type: Schema.Types.ObjectId, ref: "Lead" }],
+  autoEnrollMatchingLeads: { type: Boolean, default: false },
   mediaUrl: { type: String },
   aiDraft: { type: String },
   visibility: { type: String, enum: ["PUBLIC", "CONNECTIONS"], default: "PUBLIC" },

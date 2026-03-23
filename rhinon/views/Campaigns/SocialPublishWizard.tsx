@@ -307,7 +307,9 @@ export function SocialPublishWizard({ defaultChannel = "LinkedIn Post" }: Social
                     <>
                       <Select value={templateId} onValueChange={(val) => setTemplateId(val || "")}>
                         <SelectTrigger className="bg-card border-border h-9">
-                          <SelectValue placeholder="Select pre-built template" />
+                          <SelectValue placeholder="Select pre-built template">
+                            {templates.find(t => ((t as any)._id || t.id) === templateId)?.name || "Select pre-built template"}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent className="bg-card border-border text-foreground">
                           {templates.filter(t => t.channel === channel).map(t => (

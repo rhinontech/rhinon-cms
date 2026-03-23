@@ -6,7 +6,7 @@ export interface ILead extends Document {
   title: string;
   email: string;
   linkedinUrl?: string;
-  status: "New" | "Emailed" | "Replied" | "Bounced" | "Unsubscribed" | "Interested";
+  status: "New" | "Enriched" | "Enrolled" | "Emailed" | "Replied" | "Bounced" | "Unsubscribed" | "Interested";
   campaignId: mongoose.Types.ObjectId | null;
   aiDraft?: string;
   source?: string;
@@ -24,7 +24,7 @@ const LeadSchema = new Schema<ILead>({
   status: { 
     type: String, 
     required: true, 
-    enum: ["New", "Emailed", "Replied", "Bounced", "Unsubscribed", "Interested"],
+    enum: ["New", "Enriched", "Enrolled", "Emailed", "Replied", "Bounced", "Unsubscribed", "Interested"],
     default: "New"
   },
   campaignId: { type: Schema.Types.ObjectId, ref: "Campaign", default: null },

@@ -80,8 +80,17 @@ export async function DELETE(
 
     await Campaign.findByIdAndDelete(campaignId);
 
-    // Clean up associated Leads and AI Activities
-    await Lead.deleteMany({ campaignId });
+    // Preserve leads in the CRM and simply detach them from the deleted campaign.
+    await Lead.updateMany(
+      { campaignId, status: "Enrolled" },
+      { $set: { campaignId: null, status: "New" } }
+    );
+    await Lead.updateMany(
+      { campaignId, status: { $ne: "Enrolled" } },
+      { $set: { campaignId: null } }
+    );
+
+    // Clean up associated AI Activities
     await AiActivity.deleteMany({ campaignId });
 
     return NextResponse.json({ success: true, message: "Campaign and associated data deleted." });
