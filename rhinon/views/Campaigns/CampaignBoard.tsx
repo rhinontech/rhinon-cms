@@ -39,8 +39,28 @@ interface CampaignDetailProps {
 
 export function CampaignDetail({ campaign, templates, onClose, onUpdate }: CampaignDetailProps) {
   const [activities, setActivities] = useState<any[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
   const template = templates.find((t) => (t as any)._id === campaign.templateId || t.id === campaign.templateId);
   const progress = campaign.leadsTotal > 0 ? (campaign.leadsProcessed / campaign.leadsTotal) * 100 : 0;
+
+  const handleProcess = async () => {
+    setIsProcessing(true);
+    try {
+      const id = (campaign as any)._id || campaign.id;
+      const res = await fetch(`/api/campaigns/${id}/process`, { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`Processed ${data.processed} leads.`);
+        onUpdate();
+      } else {
+        toast.error(data.error || "Failed to process leads");
+      }
+    } catch (error) {
+      toast.error("Error processing campaign");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   useEffect(() => {
     const fetchActivities = async () => {
@@ -101,6 +121,17 @@ export function CampaignDetail({ campaign, templates, onClose, onUpdate }: Campa
               </div>
             </div>
             <div className="flex items-center gap-3">
+              {campaign.leadsProcessed < campaign.leadsTotal && campaign.stage !== "Completed" && (
+                <Button 
+                  onClick={handleProcess} 
+                  disabled={isProcessing}
+                  size="sm" 
+                  className="bg-violet-600 hover:bg-violet-700 text-white h-9 font-bold"
+                >
+                  <Sparkles size={14} className={cn("mr-2", isProcessing && "animate-pulse")} />
+                  {isProcessing ? "Processing..." : "Process AI"}
+                </Button>
+              )}
               {campaign.stage === "Active" ? (
                 <Button onClick={handleToggleStage} variant="outline" size="sm" className="border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 h-9 font-semibold">
                   <Pause size={14} className="mr-2" /> Pause
@@ -556,10 +587,24 @@ export function CampaignBoard({ }: CampaignBoardProps): JSX.Element {
                       </span>
                     </div>
                   </td>
-                  <td className="px-6 py-5 text-right">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-cyan-500">
-                      <ChevronRight size={16} />
-                    </Button>
+                  <td className="px-6 py-5">
+                    <div className="flex items-center justify-end gap-2">
+                      {campaign.leadsProcessed < campaign.leadsTotal && campaign.stage !== "Completed" && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => handleProcessCampaign((campaign as any)._id || campaign.id, e)}
+                          disabled={processingId === ((campaign as any)._id || campaign.id)}
+                          className="h-8 text-violet-500 hover:bg-violet-500/10 hover:text-violet-600 font-bold px-2"
+                        >
+                          <Sparkles size={14} className={cn("mr-1.5", processingId === ((campaign as any)._id || campaign.id) && "animate-pulse")} />
+                          {processingId === ((campaign as any)._id || campaign.id) ? "..." : "Process"}
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-cyan-500">
+                        <ChevronRight size={16} />
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}

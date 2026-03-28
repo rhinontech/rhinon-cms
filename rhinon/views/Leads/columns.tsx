@@ -5,6 +5,7 @@ import { Lead } from "@/lib/types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { Loader2 } from "lucide-react";
 
 // Status badge color — color accents work in both light + dark
 const statusColor: Record<string, string> = {
@@ -70,9 +71,18 @@ export const columns: ColumnDef<Lead>[] = [
   {
     accessorKey: "email",
     header: "Email",
-    cell: ({ row }) => (
-      <span className="text-muted-foreground">{row.getValue("email")}</span>
-    ),
+    cell: ({ row }) => {
+      const email = row.getValue("email") as string;
+      if (!email || email === "Fetching..." || email === "Processing...") {
+        return (
+          <span className="flex items-center gap-1.5 text-amber-500 font-medium text-xs">
+            <Loader2 className="h-3 w-3 animate-spin" /> 
+            Fetching...
+          </span>
+        );
+      }
+      return <span className="text-muted-foreground">{email}</span>;
+    },
   },
   {
     accessorKey: "source",

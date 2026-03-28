@@ -17,7 +17,9 @@ import {
   Sparkles,
   Target,
   Users,
+  Upload,
 } from "lucide-react";
+import Papa from "papaparse";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -73,6 +75,9 @@ export function CampaignWizard({
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
+  
+  const [audienceSource, setAudienceSource] = useState<"database" | "csv">("database");
+  const [csvLeads, setCsvLeads] = useState<any[]>([]);
 
   const resetForm = () => {
     setName("");
@@ -89,6 +94,8 @@ export function CampaignWizard({
     setSelectedSources([]);
     setSelectedStatuses([]);
     setSelectedLeadIds([]);
+    setAudienceSource("database");
+    setCsvLeads([]);
   };
 
   useEffect(() => {
@@ -183,7 +190,36 @@ export function CampaignWizard({
     return acc;
   }, {});
 
-  const selectedAudienceSize = selectedLeadIds.length;
+  const selectedAudienceSize = audienceSource === "csv" ? csvLeads.length : selectedLeadIds.length;
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        const parsed = results.data.map((row: any) => ({
+          email: row.email || row.Email || row.EMAIL,
+          name: row.name || row.Name || row.NAME || row.first_name || row.firstName || "",
+          company: row.company || row.Company || row.COMPANY || "",
+          title: row.title || row.Title || row.TITLE || "",
+        })).filter(r => r.email);
+        
+        if (parsed.length === 0) {
+          toast.error("No valid emails found in the CSV. Make sure you have an 'email' column.");
+        } else {
+          setCsvLeads(parsed);
+          toast.success(`Successfully loaded ${parsed.length} leads from CSV.`);
+        }
+      },
+      error: (err) => {
+        toast.error("Failed to parse CSV file");
+        console.error(err);
+      }
+    });
+  };
 
   const handleToggleLead = (leadId: string) => {
     setSelectedLeadIds((current) => toggleArrayValue(current, leadId));
@@ -238,7 +274,8 @@ export function CampaignWizard({
           sourceFilters: selectedSources,
           statusFilters: selectedStatuses,
           autoEnrollMatchingLeads: false,
-          selectedLeadIds,
+          selectedLeadIds: audienceSource === "csv" ? [] : selectedLeadIds,
+          csvLeads: audienceSource === "csv" ? csvLeads : [],
         }),
       });
 
@@ -520,21 +557,37 @@ export function CampaignWizard({
 
                 <div className="space-y-6">
                   <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
                       <div>
                         <div className="flex items-center gap-2 text-sm font-bold text-foreground">
                           <Users size={16} className="text-cyan-500" />
-                          Live Lead Pool
+                          Audience Source
                         </div>
                         <p className="mt-1 text-sm text-muted-foreground">
-                          Filter in real time, choose companies, and build the exact cohort for this campaign.
+                          Filter from right databases or upload a targeted CSV list.
                         </p>
                       </div>
-                      <Badge variant="outline" className="border-border bg-secondary text-foreground">
-                        {filteredLeads.length} matching
-                      </Badge>
+                      {audienceSource === "database" && (
+                        <Badge variant="outline" className="border-border bg-secondary text-foreground">
+                          {filteredLeads.length} matching
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    <div className="flex bg-secondary/60 rounded-lg p-1 w-full max-w-sm mb-6">
+                      <button onClick={() => setAudienceSource("database")} className={cn("px-4 py-2 rounded-md text-sm font-semibold transition-all flex-1", audienceSource === "database" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>Live Database</button>
+                      <button onClick={() => setAudienceSource("csv")} className={cn("px-4 py-2 rounded-md text-sm font-semibold transition-all flex-1", audienceSource === "csv" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>Upload CSV</button>
                     </div>
 
+                    {audienceSource === "csv" ? (
+                      <div className="border border-dashed border-border rounded-xl p-10 flex flex-col items-center justify-center text-center bg-secondary/10">
+                        <Upload size={32} className="text-muted-foreground mb-4" />
+                        <h3 className="text-sm font-bold text-foreground">Upload CSV Target List</h3>
+                        <p className="text-xs text-muted-foreground mt-1 mb-6 max-w-xs">Your CSV must include an 'email' column. Optionally include 'name', 'company', and 'title'.</p>
+                        <Input type="file" accept=".csv" onChange={handleFileUpload} className="max-w-xs cursor-pointer" />
+                        {csvLeads.length > 0 && <Badge variant="outline" className="mt-4 border-emerald-500/20 bg-emerald-500/10 text-emerald-500">{csvLeads.length} leads loaded successfully</Badge>}
+                      </div>
+                    ) : (
                     <div className="mt-5 space-y-4">
                       <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={15} />
@@ -702,6 +755,7 @@ export function CampaignWizard({
                         </div>
                       </div>
                     </div>
+                    )}
                   </section>
 
                   <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
@@ -727,7 +781,11 @@ export function CampaignWizard({
                           Companies In Cohort
                         </div>
                         <div className="mt-3 flex flex-wrap gap-2">
-                          {Object.entries(selectedCompanyPreview).length > 0 ? (
+                          {audienceSource === "csv" ? (
+                            <Badge variant="outline" className="border-border bg-card text-foreground">
+                              Various Companies (CSV)
+                            </Badge>
+                          ) : Object.entries(selectedCompanyPreview).length > 0 ? (
                             Object.entries(selectedCompanyPreview).map(([companyName, count]) => (
                               <Badge key={companyName} variant="outline" className="border-border bg-card text-foreground">
                                 {companyName} · {count}
@@ -767,7 +825,23 @@ export function CampaignWizard({
                         Lead Preview
                       </div>
                       <div className="mt-3 space-y-3">
-                        {selectedLeads.length > 0 ? (
+                        {audienceSource === "csv" ? (
+                          csvLeads.length > 0 ? (
+                            csvLeads.slice(0, 6).map((lead, idx) => (
+                              <div key={idx} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-3 py-2.5">
+                                <div className="min-w-0">
+                                  <p className="truncate font-semibold text-foreground">{lead.name || lead.email}</p>
+                                  <p className="truncate text-xs text-muted-foreground">{lead.company || "No Company"} • {lead.email}</p>
+                                </div>
+                                <Badge variant="outline" className="border-border bg-secondary text-foreground">
+                                  CSV Upload
+                                </Badge>
+                              </div>
+                            ))
+                          ) : (
+                            <p className="text-sm text-muted-foreground">Upload a CSV to view lead preview.</p>
+                          )
+                        ) : selectedLeads.length > 0 ? (
                           selectedLeads.slice(0, 6).map((lead) => (
                             <div key={getLeadId(lead)} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-3 py-2.5">
                               <div className="min-w-0">
