@@ -36,6 +36,10 @@ interface CampaignWizardProps {
   triggerLabel?: string;
   buttonClassName?: string;
   onCreated?: (campaign: Campaign) => void;
+  // Controlled modes for editing
+  initialCampaign?: Campaign;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 function getLeadId(lead: Lead) {
@@ -53,6 +57,9 @@ export function CampaignWizard({
   triggerLabel = "New Campaign",
   buttonClassName,
   onCreated,
+  initialCampaign,
+  open,
+  onOpenChange,
 }: CampaignWizardProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -64,11 +71,11 @@ export function CampaignWizard({
   const [channel, setChannel] = useState(defaultChannel);
   const [templateId, setTemplateId] = useState("");
   const [dailyLimit, setDailyLimit] = useState(50);
-  const [startDate, setStartDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [startDate, setStartDate] = useState(format(new Date(), "yyyy-MM-dd'T'HH:mm"));
   const [audienceGroupName, setAudienceGroupName] = useState("");
   const [objective, setObjective] = useState("");
   const [notes, setNotes] = useState("");
-  const [launchMode, setLaunchMode] = useState<"Draft" | "Active">("Draft");
+  const [launchMode, setLaunchMode] = useState<"Publish Now" | "Schedule" | "Draft">("Draft");
 
   const [leadSearch, setLeadSearch] = useState("");
   const [selectedCompanies, setSelectedCompanies] = useState<string[]>([]);
@@ -84,7 +91,7 @@ export function CampaignWizard({
     setChannel(defaultChannel);
     setTemplateId("");
     setDailyLimit(50);
-    setStartDate(format(new Date(), "yyyy-MM-dd"));
+    setStartDate(format(new Date(), "yyyy-MM-dd'T'HH:mm"));
     setAudienceGroupName("");
     setObjective("");
     setNotes("");
@@ -98,17 +105,44 @@ export function CampaignWizard({
     setCsvLeads([]);
   };
 
+  const isControlled = open !== undefined;
+  const actualIsOpen = isControlled ? open : isOpen;
+  const setActualIsOpen = (val: boolean) => {
+    if (!isControlled) setIsOpen(val);
+    if (onOpenChange) onOpenChange(val);
+  };
+
+  // Hydrate form if editing
   useEffect(() => {
-    if (!isOpen) {
+    if (initialCampaign && actualIsOpen) {
+      setName(initialCampaign.name || "");
+      setChannel(initialCampaign.channel || defaultChannel);
+      setTemplateId(initialCampaign.templateId ? String(initialCampaign.templateId) : "");
+      setDailyLimit(initialCampaign.dailyLimit || 50);
+      
+      const incomingDate = new Date(initialCampaign.startDate || Date.now());
+      setStartDate(format(incomingDate, "yyyy-MM-dd'T'HH:mm"));
+      
+      setAudienceGroupName(initialCampaign.audienceGroupName || "");
+      setObjective(initialCampaign.objective || "");
+      setNotes(initialCampaign.notes || "");
+      
+      // Infer launch mode roughly
+      if (initialCampaign.stage === "Draft") {
+        setLaunchMode("Draft");
+      } else {
+        setLaunchMode(incomingDate > new Date() ? "Schedule" : "Publish Now");
+      }
+      
+      setSelectedLeadIds(initialCampaign.leadIds?.map(String) || []);
+    } else if (!actualIsOpen) {
       const timeout = window.setTimeout(resetForm, 150);
       return () => window.clearTimeout(timeout);
     }
-
-    setChannel(defaultChannel);
-  }, [defaultChannel, isOpen]);
+  }, [initialCampaign, actualIsOpen, defaultChannel]);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!actualIsOpen) return;
 
     const fetchBuilderData = async () => {
       setIsLoading(true);
@@ -134,7 +168,7 @@ export function CampaignWizard({
     };
 
     fetchBuilderData();
-  }, [isOpen]);
+  }, [actualIsOpen]);
 
   const compatibleTemplates = templates.filter(
     (template) => template.channel === channel || (channel === "Email" && template.channel === "Cold Email"),
@@ -257,16 +291,16 @@ export function CampaignWizard({
 
     setIsCreating(true);
     try {
-      const res = await fetch("/api/campaigns", {
-        method: "POST",
+      const res = await fetch(initialCampaign ? `/api/campaigns/${(initialCampaign as any)._id || initialCampaign.id}` : "/api/campaigns", {
+        method: initialCampaign ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: normalizedName,
           channel,
           templateId,
-          stage: launchMode,
-          dailyLimit,
-          startDate: new Date(startDate).toISOString(),
+          stage: launchMode === "Draft" ? "Draft" : "Active",
+          dailyLimit: Math.min(Number(dailyLimit), 50),
+          startDate: launchMode === "Publish Now" ? new Date().toISOString() : new Date(startDate).toISOString(),
           audienceGroupName,
           objective,
           notes,
@@ -301,18 +335,20 @@ export function CampaignWizard({
 
   return (
     <>
-      <Button
-        onClick={() => setIsOpen(true)}
-        className={cn(
-          "bg-cyan-500 text-white hover:bg-cyan-600",
-          buttonClassName,
-        )}
-      >
-        <Rocket size={15} className="mr-2" />
-        {triggerLabel}
-      </Button>
+      {!isControlled && (
+        <Button
+          onClick={() => setActualIsOpen(true)}
+          className={cn(
+            "bg-cyan-500 text-white hover:bg-cyan-600",
+            buttonClassName,
+          )}
+        >
+          <Rocket size={15} className="mr-2" />
+          {triggerLabel}
+        </Button>
+      )}
 
-      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <Sheet open={actualIsOpen} onOpenChange={setActualIsOpen}>
         <SheetContent
           side="right"
           className="w-full lg:w-[60vw] max-w-full lg:max-w-[60vw] border-border bg-card p-0 shadow-2xl"
@@ -470,27 +506,33 @@ export function CampaignWizard({
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <label className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-                            Daily Limit
+                            Daily Limit (Max 50)
                           </label>
                           <Input
                             type="number"
                             min={1}
+                            max={50}
                             value={dailyLimit}
-                            onChange={(e) => setDailyLimit(Number(e.target.value) || 0)}
+                            onChange={(e) => {
+                              const v = Number(e.target.value) || 0;
+                              setDailyLimit(v > 50 ? 50 : v);
+                            }}
                             className="h-10 bg-secondary/60"
                           />
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-                            Start Date
-                          </label>
-                          <Input
-                            type="date"
-                            value={startDate}
-                            onChange={(e) => setStartDate(e.target.value)}
-                            className="h-10 bg-secondary/60"
-                          />
-                        </div>
+                        {launchMode === "Schedule" && (
+                          <div className="space-y-2">
+                            <label className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                              Start Date & Time
+                            </label>
+                            <Input
+                              type="datetime-local"
+                              value={startDate}
+                              onChange={(e) => setStartDate(e.target.value)}
+                              className="h-10 bg-secondary/60"
+                            />
+                          </div>
+                        )}
                       </div>
 
                       <div className="rounded-2xl border border-violet-500/15 bg-violet-500/5 p-4">
@@ -511,32 +553,45 @@ export function CampaignWizard({
                       Launch Behavior
                     </div>
                     <div className="mt-5 space-y-4">
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-3 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setLaunchMode("Publish Now")}
+                          className={cn(
+                            "rounded-2xl border px-3 py-4 text-left transition-all",
+                            launchMode === "Publish Now"
+                              ? "border-emerald-500/30 bg-emerald-500/10"
+                              : "border-border bg-secondary/40 hover:bg-secondary/70",
+                          )}
+                        >
+                          <p className="text-sm font-semibold text-foreground">Publish Now</p>
+                          <p className="mt-1 text-[10px] text-muted-foreground leading-tight">Actively begin processing and dispatching now.</p>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setLaunchMode("Schedule")}
+                          className={cn(
+                            "rounded-2xl border px-3 py-4 text-left transition-all",
+                            launchMode === "Schedule"
+                              ? "border-violet-500/30 bg-violet-500/10"
+                              : "border-border bg-secondary/40 hover:bg-secondary/70",
+                          )}
+                        >
+                          <p className="text-sm font-semibold text-foreground">Schedule</p>
+                          <p className="mt-1 text-[10px] text-muted-foreground leading-tight">Set a future time for the engine to activate.</p>
+                        </button>
                         <button
                           type="button"
                           onClick={() => setLaunchMode("Draft")}
                           className={cn(
-                            "rounded-2xl border px-4 py-4 text-left transition-all",
+                            "rounded-2xl border px-3 py-4 text-left transition-all",
                             launchMode === "Draft"
                               ? "border-cyan-500/30 bg-cyan-500/10"
                               : "border-border bg-secondary/40 hover:bg-secondary/70",
                           )}
                         >
-                          <p className="text-sm font-semibold text-foreground">Save as Draft</p>
-                          <p className="mt-1 text-xs text-muted-foreground">Create the campaign and review before activation.</p>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setLaunchMode("Active")}
-                          className={cn(
-                            "rounded-2xl border px-4 py-4 text-left transition-all",
-                            launchMode === "Active"
-                              ? "border-emerald-500/30 bg-emerald-500/10"
-                              : "border-border bg-secondary/40 hover:bg-secondary/70",
-                          )}
-                        >
-                          <p className="text-sm font-semibold text-foreground">Activate Now</p>
-                          <p className="mt-1 text-xs text-muted-foreground">Send selected leads straight into the execution queue.</p>
+                          <p className="text-sm font-semibold text-foreground">Draft</p>
+                          <p className="mt-1 text-[10px] text-muted-foreground leading-tight">Save campaign structure to edit or launch later.</p>
                         </button>
                       </div>
 
