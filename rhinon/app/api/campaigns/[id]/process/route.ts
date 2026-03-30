@@ -30,6 +30,7 @@ export async function POST(
         campaignId, 
         status: { $in: ["New", "Enrolled", "Enriched"] } 
       });
+      console.log(`[DEBUG_PROCESS] Querying for campaignId = ${campaignId}. Found ${leads.length} leads matching status New/Enrolled/Enriched.`);
       
       let processedCount = 0;
       for (const lead of leads) {
@@ -37,7 +38,7 @@ export async function POST(
           const draft = await generateAIEmailDraft(lead, campaign.templateId);
           
           // Update lead with draft and status
-          lead.aiDraft = draft;
+          lead.aiDraft = draft.body;
           lead.status = "Interested"; // Visual feedback for processed
           await lead.save();
 
@@ -47,7 +48,7 @@ export async function POST(
             campaignId: campaign._id,
             type: "Outreach",
             content: "AI personalized outreach draft generated for this campaign.",
-            generatedContent: draft,
+            generatedContent: draft.body,
             timestamp: new Date(),
           });
 

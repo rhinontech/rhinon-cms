@@ -36,8 +36,44 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Campaign name is required" }, { status: 400 });
     }
 
-    const selectedLeads = selectedLeadIds.length > 0
-      ? await Lead.find({ _id: { $in: selectedLeadIds } }).select("_id status")
+    const csvLeadsInput = Array.isArray(body?.csvLeads) ? body.csvLeads : [];
+    let customLeadIds: string[] = [];
+
+    if (csvLeadsInput.length > 0) {
+      const newLeadsData = csvLeadsInput.map((l: any) => ({
+        name: l.name || "Unknown",
+        email: l.email,
+        company: l.company,
+        title: l.title,
+        source: "CSV Upload",
+        status: "New",
+      })).filter((l: any) => l.email);
+
+      if (newLeadsData.length > 0) {
+        const emails = newLeadsData.map((l: any) => l.email);
+        
+        // Find existing leads to avoid duplicates
+        const existingLeads = await Lead.find({ email: { $in: emails } }).select("_id email");
+        const existingEmails = new Set(existingLeads.map(l => l.email));
+        const existingIds = existingLeads.map(l => l._id.toString());
+        
+        // Filter out leads that already exist
+        const leadsToInsert = newLeadsData.filter((l: any) => !existingEmails.has(l.email));
+
+        let newIds: string[] = [];
+        if (leadsToInsert.length > 0) {
+          const createdLeads = await Lead.insertMany(leadsToInsert);
+          newIds = createdLeads.map((l: any) => l._id.toString());
+        }
+        
+        customLeadIds = [...existingIds, ...newIds];
+      }
+    }
+
+    const finalLeadIds = [...selectedLeadIds, ...customLeadIds];
+
+    const selectedLeads = finalLeadIds.length > 0
+      ? await Lead.find({ _id: { $in: finalLeadIds } }).select("_id status")
       : [];
 
     const campaign = await Campaign.create({
@@ -61,12 +97,12 @@ export async function POST(req: Request) {
 
     if (selectedLeads.length > 0) {
       await Lead.updateMany(
-        { _id: { $in: selectedLeadIds }, status: { $in: ["New", "Enriched"] } },
+        { _id: { $in: finalLeadIds }, status: { $in: ["New", "Enriched"] } },
         { $set: { campaignId: campaign._id, status: "Enrolled" } }
       );
 
       await Lead.updateMany(
-        { _id: { $in: selectedLeadIds }, status: { $nin: ["New", "Enriched"] } },
+        { _id: { $in: finalLeadIds }, status: { $nin: ["New", "Enriched"] } },
         { $set: { campaignId: campaign._id } }
       );
     }

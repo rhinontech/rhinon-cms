@@ -29,9 +29,9 @@ export async function POST(req: Request) {
     const availableIdentities = currentUser.capabilities.includes("manage_mailboxes")
       ? await OutreachEmail.find({ status: "Active" }).select("email").lean()
       : await OutreachEmail.find({
-          status: "Active",
-          email: { $in: [currentUser.email, currentUser.primaryIdentityEmail, currentUser.activeIdentityEmail] },
-        }).select("email").lean();
+        status: "Active",
+        email: { $in: [currentUser.email, currentUser.primaryIdentityEmail, currentUser.activeIdentityEmail] },
+      }).select("email").lean();
 
     const canSwitchOtherIdentity = availableIdentities.some((item) => item.email === email);
 

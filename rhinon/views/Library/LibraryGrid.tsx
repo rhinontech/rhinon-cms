@@ -142,8 +142,8 @@ export function LibraryGrid() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 bg-card border-border">
                 {FILTERS.filter(f => f !== "All").map((f) => (
-                  <DropdownMenuItem key={f} className="cursor-pointer group p-0" onSelect={() => router.push(`/${role}/library/${FILTER_TO_SLUG[f]}/new`)}>
-                    <div className="flex w-full items-center gap-2 text-foreground px-2 py-1.5">
+                  <DropdownMenuItem key={f} className="cursor-pointer group p-0" onClick={() => router.push(`/${role}/library/${FILTER_TO_SLUG[f]}/new`)}>
+                    <div className="flex w-full items-center gap-2 text-foreground px-2 py-1.5 focus:bg-accent focus:text-accent-foreground outline-none">
                       {f === "LinkedIn Post" && <Layout size={14} className="text-blue-500" />}
                       {f === "LinkedIn Video" && <Video size={14} className="text-red-500" />}
                       {f === "LinkedIn Article" && <FileText size={14} className="text-emerald-500" />}
@@ -245,8 +245,8 @@ export function LibraryGrid() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 bg-card border-border">
               {FILTERS.filter(f => f !== "All").map((f) => (
-                <DropdownMenuItem key={f} className="cursor-pointer group p-0" onSelect={() => router.push(`/${role}/library/${FILTER_TO_SLUG[f]}/new`)}>
-                  <div className="flex w-full items-center gap-2 text-foreground px-2 py-1.5">
+                <DropdownMenuItem key={f} className="cursor-pointer group p-0" onClick={() => router.push(`/${role}/library/${FILTER_TO_SLUG[f]}/new`)}>
+                  <div className="flex w-full items-center gap-2 text-foreground px-2 py-1.5 focus:bg-accent focus:text-accent-foreground outline-none">
                     {f === "LinkedIn Post" && <Layout size={14} className="text-blue-500" />}
                     {f === "LinkedIn Video" && <Video size={14} className="text-red-500" />}
                     {f === "LinkedIn Article" && <FileText size={14} className="text-emerald-500" />}

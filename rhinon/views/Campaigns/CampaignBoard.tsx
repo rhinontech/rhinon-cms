@@ -39,8 +39,28 @@ interface CampaignDetailProps {
 
 export function CampaignDetail({ campaign, templates, onClose, onUpdate }: CampaignDetailProps) {
   const [activities, setActivities] = useState<any[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
   const template = templates.find((t) => (t as any)._id === campaign.templateId || t.id === campaign.templateId);
   const progress = campaign.leadsTotal > 0 ? (campaign.leadsProcessed / campaign.leadsTotal) * 100 : 0;
+
+  const handleProcess = async () => {
+    setIsProcessing(true);
+    try {
+      const id = (campaign as any)._id || campaign.id;
+      const res = await fetch(`/api/campaigns/${id}/process`, { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`Processed ${data.processed} leads.`);
+        onUpdate();
+      } else {
+        toast.error(data.error || "Failed to process leads");
+      }
+    } catch (error) {
+      toast.error("Error processing campaign");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   useEffect(() => {
     const fetchActivities = async () => {
@@ -101,6 +121,7 @@ export function CampaignDetail({ campaign, templates, onClose, onUpdate }: Campa
               </div>
             </div>
             <div className="flex items-center gap-3">
+
               {campaign.stage === "Active" ? (
                 <Button onClick={handleToggleStage} variant="outline" size="sm" className="border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 h-9 font-semibold">
                   <Pause size={14} className="mr-2" /> Pause
@@ -261,12 +282,11 @@ interface CampaignBoardProps {
 export function CampaignBoard({ }: CampaignBoardProps): JSX.Element {
   const [viewMode, setViewMode] = useState<"cards" | "list">("cards");
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+  const [editingDraftCampaign, setEditingDraftCampaign] = useState<Campaign | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const stages: CampaignStage[] = ["Draft", "Active", "Paused", "Completed"];
-  const [processingId, setProcessingId] = useState<string | null>(null);
-  const [sendingId, setSendingId] = useState<string | null>(null);
 
   const fetchData = async () => {
     try {
@@ -293,40 +313,6 @@ export function CampaignBoard({ }: CampaignBoardProps): JSX.Element {
   useEffect(() => {
     fetchData();
   }, []);
-
-  const handleProcessCampaign = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setProcessingId(id);
-    try {
-      const res = await fetch(`/api/campaigns/${id}/process`, { method: "POST" });
-      const data = await res.json();
-      if (data.success) {
-        await fetchData();
-      }
-    } catch (error) {
-      console.error("Error processing campaign:", error);
-    } finally {
-      setProcessingId(null);
-    }
-  };
-
-  const handleLaunchCampaign = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setSendingId(id);
-    try {
-      const res = await fetch(`/api/campaigns/${id}/send`, { method: "POST" });
-      const data = await res.json();
-      if (data.success) {
-        toast.success(`Successfully launched campaign! ${data.sent} emails delivered.`);
-        await fetchData();
-      }
-    } catch (error) {
-      console.error("Error launching campaign:", error);
-      toast.error("Failed to launch campaign.");
-    } finally {
-      setSendingId(null);
-    }
-  };
 
   const handleDeleteCampaign = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -356,7 +342,13 @@ export function CampaignBoard({ }: CampaignBoardProps): JSX.Element {
     const progress = campaign.leadsTotal > 0 ? (campaign.leadsProcessed / campaign.leadsTotal) * 100 : 0;
     return (
       <div
-        onClick={() => setSelectedCampaign(campaign)}
+        onClick={() => {
+          if (campaign.stage === "Draft") {
+            setEditingDraftCampaign(campaign);
+          } else {
+            setSelectedCampaign(campaign);
+          }
+        }}
         className="card p-4 cursor-pointer hover:border-cyan-500/40 hover:shadow-glow transition-all group"
       >
         <div className="flex justify-between items-start mb-3">
@@ -389,44 +381,6 @@ export function CampaignBoard({ }: CampaignBoardProps): JSX.Element {
         </div>
         
         <div className="mt-4 flex gap-2">
-          {processingId === ((campaign as any)._id || campaign.id) ? (
-            <Button
-              size="sm"
-              disabled
-              className="flex-1 bg-cyan-500/20 text-cyan-600 border-cyan-500/20 h-8 font-bold text-[10px]"
-            >
-              <Sparkles size={10} className="mr-1.5 animate-pulse" /> Processing...
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              onClick={(e) => handleProcessCampaign((campaign as any)._id || campaign.id, e)}
-              className="flex-1 bg-violet-600 hover:bg-violet-700 text-white h-8 font-bold text-[10px] shadow-glow-sm"
-            >
-              <Sparkles size={10} className="mr-1.5" /> Process AI
-            </Button>
-          )}
-          
-          {campaign.leadsProcessed > 0 && campaign.stage !== "Completed" && (
-            sendingId === ((campaign as any)._id || campaign.id) ? (
-              <Button
-                size="sm"
-                disabled
-                className="flex-1 bg-emerald-500/20 text-emerald-600 border-emerald-500/20 h-8 font-bold text-[10px]"
-              >
-                <div className="h-3 w-3 animate-spin border-2 border-emerald-500 border-t-transparent rounded-full mr-1.5" />
-                Launching...
-              </Button>
-            ) : (
-              <Button
-                size="sm"
-                onClick={(e) => handleLaunchCampaign((campaign as any)._id || campaign.id, e)}
-                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white h-8 font-bold text-[10px] shadow-glow-sm"
-              >
-                <Send size={10} className="mr-1.5" /> Launch
-              </Button>
-            )
-          )}
 
           <Button
             size="sm"
@@ -454,6 +408,20 @@ export function CampaignBoard({ }: CampaignBoardProps): JSX.Element {
           onUpdate={fetchData} 
         />
       )}
+      <CampaignWizard
+        initialCampaign={editingDraftCampaign || undefined}
+        open={!!editingDraftCampaign}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingDraftCampaign(null);
+            fetchData();
+          }
+        }}
+        onCreated={() => {
+          setEditingDraftCampaign(null);
+          fetchData();
+        }}
+      />
 
       {/* Page Header */}
       <header className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
@@ -516,11 +484,17 @@ export function CampaignBoard({ }: CampaignBoardProps): JSX.Element {
             <tbody>
               {campaigns.map((campaign) => (
                 <tr 
-                  key={(campaign as any)._id || campaign.id} 
-                  onClick={() => setSelectedCampaign(campaign)}
+                  key={((campaign as any)._id || campaign.id) as string} 
+                  onClick={() => {
+                    if (campaign.stage === "Draft") {
+                      setEditingDraftCampaign(campaign);
+                    } else {
+                      setSelectedCampaign(campaign);
+                    }
+                  }}
                   className="group hover:bg-secondary/30 transition-colors cursor-pointer border-b border-border/50 last:border-0"
                 >
-                  <td className="px-6 py-5">
+                  <td className="px-6 py-5 w-[250px]">
                     <div className="flex items-center gap-3">
                       <div className="h-8 w-8 rounded-lg bg-cyan-500/10 flex items-center justify-center">
                         <Rocket size={14} className="text-cyan-500" />
@@ -556,10 +530,13 @@ export function CampaignBoard({ }: CampaignBoardProps): JSX.Element {
                       </span>
                     </div>
                   </td>
-                  <td className="px-6 py-5 text-right">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-cyan-500">
-                      <ChevronRight size={16} />
-                    </Button>
+                  <td className="px-6 py-5">
+                    <div className="flex items-center justify-end gap-2">
+
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-cyan-500">
+                        <ChevronRight size={16} />
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}

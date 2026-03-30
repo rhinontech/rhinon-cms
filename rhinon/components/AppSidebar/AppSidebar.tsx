@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "../ui/scroll-area";
 import { toast } from "sonner";
 
 type IdentityOption = {
@@ -147,9 +148,9 @@ export function AppSidebar({ roleSlug }: { roleSlug?: string }) {
       href: "/library",
       icon: Sparkles
     },
-    { 
-      label: "Templates", 
-      href: "/templates", 
+    {
+      label: "Templates",
+      href: "/templates",
       icon: BookTemplate
     },
     { label: "Inbox", href: "/inbox", icon: Inbox },
@@ -213,61 +214,63 @@ export function AppSidebar({ roleSlug }: { roleSlug?: string }) {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 space-y-0.5">
-        {nav.map((item: any) => {
-          if (item.capability && !user?.capabilities?.includes(item.capability)) return null;
+      <ScrollArea className="flex-1 min-h-0 ">
+        <nav className="flex-1 space-y-1">
+          {nav.map((item: any) => {
+            if (item.capability && !user?.capabilities?.includes(item.capability)) return null;
 
-          const fullHref = `/${activeRole}${item.href}`;
-          const isAtCampaigns = item.label === "Campaigns" && pathname?.includes("/campaigns");
-          const isActive = pathname === fullHref || (item.href !== "/dashboard" && pathname?.startsWith(fullHref)) || isAtCampaigns;
+            const fullHref = `/${activeRole}${item.href}`;
+            const isAtCampaigns = item.label === "Campaigns" && pathname?.includes("/campaigns");
+            const isActive = pathname === fullHref || (item.href !== "/dashboard" && pathname?.startsWith(fullHref)) || isAtCampaigns;
 
-          return (
-            <div key={item.label} className="space-y-1">
-              <Link
-                href={item.subItems ? `/${activeRole}${item.subItems[0].href}` : fullHref}
-                className={cn(
-                  "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150",
-                  isActive
-                    ? "bg-cyan-500/12 border border-cyan-500/30 text-cyan-700 dark:text-cyan-300 dark:shadow-sm"
-                    : "border border-transparent text-muted-foreground hover:bg-secondary hover:border-border hover:text-foreground"
-                )}
-              >
-                <item.icon
-                  size={15}
+            return (
+              <div key={item.label} className="space-y-1">
+                <Link
+                  href={item.subItems ? `/${activeRole}${item.subItems[0].href}` : fullHref}
                   className={cn(
-                    "shrink-0 transition-colors",
-                    isActive ? "text-cyan-600 dark:text-cyan-400" : "text-muted-foreground/60"
+                    "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150",
+                    isActive
+                      ? "bg-cyan-500/12 border border-cyan-500/30 text-cyan-700 dark:text-cyan-300 dark:shadow-sm"
+                      : "border border-transparent text-muted-foreground hover:bg-secondary hover:border-border hover:text-foreground"
                   )}
-                />
-                <span>{item.label}</span>
-              </Link>
+                >
+                  <item.icon
+                    size={15}
+                    className={cn(
+                      "shrink-0 transition-colors",
+                      isActive ? "text-cyan-600 dark:text-cyan-400" : "text-muted-foreground/60"
+                    )}
+                  />
+                  <span>{item.label}</span>
+                </Link>
 
-              {item.subItems && isActive && (
-                <div className="ml-9 space-y-1">
-                  {item.subItems.map((sub: any) => {
-                    const subHref = `/${activeRole}${sub.href}`;
-                    const isSubActive = pathname === subHref;
-                    return (
-                      <Link
-                        key={sub.label}
-                        href={subHref}
-                        className={cn(
-                          "flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-all",
-                          isSubActive
-                            ? "text-cyan-500"
-                            : "text-muted-foreground/50 hover:text-foreground"
-                        )}
-                      >
-                        {sub.label}
-                      </Link>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </nav>
+                {item.subItems && isActive && (
+                  <div className="ml-9 space-y-1">
+                    {item.subItems.map((sub: any) => {
+                      const subHref = `/${activeRole}${sub.href}`;
+                      const isSubActive = pathname === subHref;
+                      return (
+                        <Link
+                          key={sub.label}
+                          href={subHref}
+                          className={cn(
+                            "flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-all",
+                            isSubActive
+                              ? "text-cyan-500"
+                              : "text-muted-foreground/50 hover:text-foreground"
+                          )}
+                        >
+                          {sub.label}
+                        </Link>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </nav>
+      </ScrollArea>
 
       {/* Footer Info & Logout */}
       <div className="mt-auto space-y-4">
