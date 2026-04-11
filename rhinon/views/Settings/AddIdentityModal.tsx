@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Mail, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -14,10 +15,34 @@ interface AddIdentityModalProps {
   onSuccess: () => void;
 }
 
+type UserOption = {
+  _id: string;
+  name: string;
+  email: string;
+};
+
 export function AddIdentityModal({ isOpen, onOpenChange, onSuccess }: AddIdentityModalProps) {
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [assignedUserId, setAssignedUserId] = useState<string>("");
+  const [users, setUsers] = useState<UserOption[]>([]);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const fetchUsers = async () => {
+      try {
+        const res = await fetch("/api/admin/users");
+        const data = await res.json();
+        if (Array.isArray(data.users)) {
+          setUsers(data.users.map((u: any) => ({ _id: u._id, name: u.name, email: u.email })));
+        }
+      } catch {
+        // non-critical — user assignment is optional
+      }
+    };
+    fetchUsers();
+  }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,13 +56,18 @@ export function AddIdentityModal({ isOpen, onOpenChange, onSuccess }: AddIdentit
       const res = await fetch("/api/admin/outreach-identities", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, displayName }),
+        body: JSON.stringify({
+          email,
+          displayName,
+          ...(assignedUserId ? { userId: assignedUserId } : {}),
+        }),
       });
 
       if (res.ok) {
         toast.success("Outreach identity added successfully");
         setEmail("");
         setDisplayName("");
+        setAssignedUserId("");
         onSuccess();
         onOpenChange(false);
       } else {
@@ -57,7 +87,7 @@ export function AddIdentityModal({ isOpen, onOpenChange, onSuccess }: AddIdentit
         <DialogHeader>
           <DialogTitle>Add Outreach Identity</DialogTitle>
           <DialogDescription>
-            Create a secondary outreach email for the team pool.
+            Create a secondary outreach email. Optionally assign it to a specific user.
           </DialogDescription>
         </DialogHeader>
 
@@ -84,6 +114,25 @@ export function AddIdentityModal({ isOpen, onOpenChange, onSuccess }: AddIdentit
               className="bg-secondary border-border"
             />
           </div>
+
+          {users.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="assignedUser">Assign to User <span className="text-muted-foreground text-xs">(optional)</span></Label>
+              <Select value={assignedUserId} onValueChange={setAssignedUserId}>
+                <SelectTrigger id="assignedUser" className="bg-secondary border-border">
+                  <SelectValue placeholder="No assignment (shared pool)" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border">
+                  <SelectItem value="">No assignment (shared pool)</SelectItem>
+                  {users.map((u) => (
+                    <SelectItem key={u._id} value={u._id}>
+                      {u.name} — {u.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <DialogFooter className="pt-4">
             <Button

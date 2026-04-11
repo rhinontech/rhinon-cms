@@ -58,9 +58,9 @@ export function AppSidebar({ roleSlug }: { roleSlug?: string }) {
 
   useEffect(() => {
     const fetchIdentities = async () => {
-      if (!user?.capabilities.includes("manage_mailboxes")) return;
+      if (!user) return;
       try {
-        const res = await fetch("/api/admin/outreach-identities");
+        const res = await fetch("/api/auth/identities");
         const data = await res.json();
         const fetched = Array.isArray(data.emails) ? data.emails : [];
         const merged = new Map<string, IdentityOption>();
@@ -178,7 +178,7 @@ export function AppSidebar({ roleSlug }: { roleSlug?: string }) {
               <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                 {user.roleName}
               </p>
-              {user.capabilities.includes("manage_mailboxes") && identities.length > 0 ? (
+              {identities.length > 1 ? (
                 <Select value={user.activeIdentityEmail} onValueChange={(value) => value && switchIdentity(value)}>
                   <SelectTrigger
                     className="h-8 w-full min-w-0 border-border bg-secondary/70 text-xs font-semibold"

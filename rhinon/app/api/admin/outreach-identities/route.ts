@@ -42,7 +42,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { email, displayName } = await req.json();
+    const { email, displayName, userId } = await req.json();
     if (!email || !displayName) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
@@ -57,7 +57,8 @@ export async function POST(req: Request) {
       email: normalizedEmail,
       displayName,
       type: "secondary",
-      status: "Active"
+      status: "Active",
+      ...(userId ? { userId } : {}),
     });
 
     await writeAuditLog({

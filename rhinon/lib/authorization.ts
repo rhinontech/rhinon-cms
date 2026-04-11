@@ -31,7 +31,19 @@ export type Capability = (typeof CAPABILITIES)[number];
 
 export const ROLE_CAPABILITIES: Record<RoleSlug, Capability[]> = {
   super_admin: [...CAPABILITIES],
-  admin: [...CAPABILITIES],
+  admin: [
+    "manage_users",
+    "invite_users",
+    "manage_leads",
+    "send_email",
+    "manage_campaigns",
+    "launch_campaigns",
+    "manage_templates",
+    "manage_social_posts",
+    "publish_social_posts",
+    "manage_settings",
+    "view_audit_logs",
+  ],
   manager: [
     "manage_leads",
     "send_email",

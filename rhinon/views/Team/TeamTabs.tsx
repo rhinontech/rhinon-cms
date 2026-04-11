@@ -7,6 +7,7 @@ import { dummyRoles } from "@/lib/dummy-data";
 import { User } from "@/lib/types";
 import { InviteUserModal } from "./InviteUserModal";
 import { CreateRoleModal } from "./CreateRoleModal";
+import { ManageEmailsModal } from "./ManageEmailsModal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +27,7 @@ export function TeamTabs() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyUserId, setBusyUserId] = useState<string | null>(null);
+  const [manageEmailsUser, setManageEmailsUser] = useState<User | null>(null);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -152,7 +154,7 @@ export function TeamTabs() {
             <table className="w-full text-sm text-left min-w-[700px]">
               <thead className="border-b border-border bg-secondary/60">
                 <tr>
-                  {["User", "Status", "Role", "Joined", "Actions"].map((h) => (
+                  {["User", "Status", "Role", "Joined", "Emails", "Actions"].map((h) => (
                     <th key={h} className="px-6 py-3.5 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
                       {h}
                     </th>
@@ -162,7 +164,7 @@ export function TeamTabs() {
               <tbody className="divide-y divide-border">
                 {loading ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
+                    <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
                       <div className="inline-flex items-center gap-2">
                         <Loader2 className="h-4 w-4 animate-spin" />
                         Loading users...
@@ -206,6 +208,17 @@ export function TeamTabs() {
                           {format(new Date(user.joinedAt), "MMM d, yyyy")}
                         </td>
                         <td className="px-6 py-4">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 border-border gap-1.5"
+                            onClick={() => setManageEmailsUser(user)}
+                          >
+                            <Mail size={13} />
+                            Manage
+                          </Button>
+                        </td>
+                        <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
                             <Button
                               size="sm"
@@ -234,7 +247,7 @@ export function TeamTabs() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
+                    <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
                       No users found matching &quot;{searchQuery}&quot;
                     </td>
                   </tr>
@@ -292,6 +305,12 @@ export function TeamTabs() {
           </div>
         </TabsContent>
       </div>
+
+      <ManageEmailsModal
+        user={manageEmailsUser}
+        isOpen={!!manageEmailsUser}
+        onOpenChange={(open) => { if (!open) setManageEmailsUser(null); }}
+      />
     </Tabs>
   );
 }
