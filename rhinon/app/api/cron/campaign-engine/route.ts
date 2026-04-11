@@ -10,7 +10,7 @@ import { saveEmailToS3 } from "@/lib/s3";
 import { generateEmailHtml } from "@/lib/email-templates";
 
 // Configure how many maximum leads to draft and exactly how many maximum to send per execution run to avoid server timeouts.
-const BATCH_SIZE = 10; 
+const BATCH_SIZE = 50; 
 
 export async function GET(req: Request) {
   // 1. Basic security wrapper for Cron Job (Vercel Cron naturally sends an auth header)

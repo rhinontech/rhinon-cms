@@ -13,6 +13,14 @@ function formatInlineMarkdown(value: string): string {
 }
 
 function renderContentBlocks(content: string): string {
+  const trimmed = content.trim();
+  
+  // If the content looks like HTML (from Tiptap), pass it through with minimal processing
+  // to avoid double-escaping or breaking rich-text structures.
+  if (trimmed.startsWith("<") && trimmed.includes(">")) {
+    return trimmed;
+  }
+
   return content
     .trim()
     .replace(/\r\n/g, "\n")
@@ -25,7 +33,7 @@ function renderContentBlocks(content: string): string {
 
       if (/^#{1,6}\s+/.test(trimmedBlock)) {
         const heading = trimmedBlock.replace(/^#{1,6}\s+/, "");
-        return `<h1 style="margin: 0 0 16px 0; color: #f8fafc; font-family: Arial, Helvetica, sans-serif; font-size: 22px; line-height: 1.3; font-weight: 800; letter-spacing: -0.02em; text-align: left;">${formatInlineMarkdown(heading)}</h1>`;
+        return `<h1 style="margin: 0 0 16px 0; color: #1e293b; font-family: Arial, Helvetica, sans-serif; font-size: 22px; line-height: 1.3; font-weight: 800; letter-spacing: -0.02em; text-align: left;">${formatInlineMarkdown(heading)}</h1>`;
       }
 
       const lines = trimmedBlock
@@ -38,14 +46,14 @@ function renderContentBlocks(content: string): string {
           .map((line) => line.replace(/^[*-]\s+/, ""))
           .map(
             (line) =>
-              `<li style="margin: 0 0 10px 0; color: #000000;">${formatInlineMarkdown(line)}</li>`
+              `<li style="margin: 0 0 10px 0; color: #334155;">${formatInlineMarkdown(line)}</li>`
           )
           .join("");
 
-        return `<ul style="margin: 0 0 18px 20px; padding: 0; font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.65; color: #000000; text-align: left;">${items}</ul>`;
+        return `<ul style="margin: 0 0 18px 20px; padding: 0; font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.65; color: #334155; text-align: left;">${items}</ul>`;
       }
 
-      return `<p style="margin: 0 0 14px 0; color: #000000; font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.75; text-align: left;">${lines
+      return `<p style="margin: 0 0 14px 0; color: #334155; font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.75; text-align: left;">${lines
         .map(formatInlineMarkdown)
         .join("<br />")}</p>`;
     })

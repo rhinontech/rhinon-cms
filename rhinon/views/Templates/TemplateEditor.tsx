@@ -10,6 +10,12 @@ import { Badge } from "@/components/ui/badge";
 import { useRouter, useParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import dynamic from "next/dynamic";
+
+const RichTextEditor = dynamic(() => import("@/components/RichTextEditor").then(m => m.RichTextEditor), {
+  ssr: false,
+  loading: () => <div className="w-full h-[450px] bg-secondary/10 animate-pulse rounded-xl border border-border" />
+});
 
 const CHANNELS: Channel[] = ["Cold Email"];
 
@@ -122,10 +128,20 @@ export function TemplateEditor({ template, initialChannel }: { template?: Templa
   const MarkdownRenderer = ({ content }: { content: string }) => {
     if (!content) return null;
 
+    // If it's HTML (from Tiptap), use dangerouslySetInnerHTML for the preview
+    if (content.trim().startsWith("<")) {
+      return (
+        <div 
+          className="text-foreground/90 leading-relaxed text-sm font-medium prose prose-sm dark:prose-invert"
+          dangerouslySetInnerHTML={{ __html: content }}
+        />
+      );
+    }
+
     const processInlines = (text: string) => {
       const parts = text.split(/(\*\*.*?\*\*)/g);
       return parts.map((part, j) => {
-        if (part.startsWith("**") && part.endsWith("**")) {
+        if (part?.startsWith("**") && part?.endsWith("**")) {
           return <strong key={j} className="font-bold text-foreground">{part.slice(2, -2)}</strong>;
         }
         return part;
@@ -291,17 +307,24 @@ export function TemplateEditor({ template, initialChannel }: { template?: Templa
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] font-bold text-muted-foreground uppercase mr-1">Insert:</span>
                   {variables.slice(0, 3).map((v) => (
-                    <button key={v} onClick={() => handleInject(v)} className="text-[10px] bg-secondary border border-border px-2 py-0.5 rounded-md text-cyan-600 dark:text-cyan-400 hover:bg-secondary/80 transition-colors font-mono">
-                      {v.replace(/ lead\./, "")}
+                    <button 
+                      key={v} 
+                      type="button"
+                      onClick={() => {
+                        // This logic will be handled inside RichTextEditor or via a bridge.
+                        // For now, let's ensure we can still inject.
+                        setBody((prev) => prev + " " + v);
+                      }} 
+                      className="text-[10px] bg-secondary border border-border px-2 py-0.5 rounded-md text-cyan-600 dark:text-cyan-400 hover:bg-secondary/80 transition-colors font-mono"
+                    >
+                      {v.replace(/[{}]/g, "").replace("lead.", "")}
                     </button>
                   ))}
                 </div>
               </div>
-              <textarea
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                className="w-full min-h-[350px] bg-secondary/30 border border-border rounded-xl p-6 text-foreground text-sm leading-relaxed outline-none focus:ring-2 focus:ring-cyan-500/10 focus:border-cyan-500/30 resize-none"
-                placeholder="Enter your email message here..."
+              <RichTextEditor 
+                content={body} 
+                onChange={setBody} 
               />
             </div>
           </div>
@@ -395,7 +418,7 @@ export function TemplateEditor({ template, initialChannel }: { template?: Templa
             <div className="mt-8 p-4 rounded-xl border border-dashed border-border flex flex-col gap-3">
               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 text-center">Output Quality Score</p>
               <div className="flex h-1.5 w-full bg-secondary rounded-full overflow-hidden">
-                <div className="h-full w-[85%] bg-gradient-to-r from-cyan-500 to-violet-500" />
+                <div className="h-full w-[85%] bg-linear-to-r from-cyan-500 to-violet-500" />
               </div>
               <div className="flex justify-between text-[9px] font-bold text-muted-foreground/80 tracking-widest uppercase">
                 <span>Authentic</span>
