@@ -194,3 +194,56 @@
     background-color: oklch(var(--muted-foreground) / 0.35);
   }
 }
+
+/* ─────────────────────────────────────────────
+   Tiptap Rich Text Editor Overrides
+   ───────────────────────────────────────────── */
+.ProseMirror {
+  outline: none;
+  min-height: inherit;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: oklch(var(--muted-foreground) / 0.5);
+  pointer-events: none;
+  height: 0;
+  font-style: italic;
+}
+
+.ProseMirror blockquote {
+  border-left: 3px solid oklch(var(--border) / 0.5);
+  padding-left: 1.25rem;
+  margin: 1.5rem 0;
+  color: oklch(var(--muted-foreground));
+}
+
+.ProseMirror ul {
+  list-style-type: disc;
+  margin: 1rem 0 1rem 1.75rem;
+}
+
+.ProseMirror ol {
+  list-style-type: decimal;
+  margin: 1rem 0 1rem 1.75rem;
+}
+
+.ProseMirror h1 { font-size: 1.5rem; font-weight: 800; margin-bottom: 1rem; color: oklch(var(--foreground)); }
+.ProseMirror h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.75rem; color: oklch(var(--foreground)); }
+.ProseMirror h3 { font-size: 1.125rem; font-weight: 700; margin-bottom: 0.5rem; color: oklch(var(--foreground)); }
+
+.ProseMirror a {
+  color: oklch(var(--primary));
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.rhinon-cta-button {
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.rhinon-cta-button:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
