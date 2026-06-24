@@ -1,7 +1,8 @@
-import { Router, Response, Request } from "express";
-import { ClientRequest, Project, User, Lead, Blog, CaseStudy } from "../models";
+import express, { Router, Response, Request } from "express";
+import { ClientRequest, Project, User, Lead, Blog, CaseStudy, PageView } from "../models";
 import { sendEmail } from "../services/mailer";
 import { env } from "../config/env";
+import { classifyChannel, parseHost, isBotUserAgent } from "../services/analytics";
 
 const router = Router();
 
@@ -148,6 +149,79 @@ router.post("/web-leads", async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error("Failed to save web lead:", error);
     res.status(500).json({ message: "Failed to save lead" });
+  }
+});
+
+// POST /public/track — unauthenticated pageview ingest from the marketing site.
+// Accepts JSON (fetch) or text/plain (navigator.sendBeacon) bodies. Fire-and-forget:
+// always returns fast and never lets a tracking failure surface to the visitor.
+router.post("/track", express.text({ type: ["text/plain"] }), async (req: Request, res: Response) => {
+  try {
+    // express.json handled application/json; express.text handled text/plain (a JSON string).
+    let b: any = req.body;
+    if (typeof b === "string") {
+      try { b = JSON.parse(b); } catch { b = {}; }
+    }
+    b = b || {};
+
+    const str = (v: any, max = 512): string | null => {
+      const s = (v ?? "").toString().trim();
+      return s === "" ? null : s.slice(0, max);
+    };
+
+    // Path is required; strip any querystring/hash so grouping by page is clean.
+    let path = str(b.path, 512);
+    if (path) path = path.split("?")[0].split("#")[0];
+    if (!path || !path.startsWith("/")) {
+      res.status(204).end(); // ignore junk silently
+      return;
+    }
+
+    const visitorId = str(b.visitorId, 64);
+    const sessionId = str(b.sessionId, 64);
+    if (!visitorId || !sessionId) {
+      res.status(204).end();
+      return;
+    }
+
+    const referrer = str(b.referrer, 1024);
+    const referrerHost = parseHost(referrer);
+    const userAgent = str(req.headers["user-agent"], 1024);
+    // Treat both the configured site host and the host that sent this beacon as "us",
+    // so internal navigation reads as Direct (not Referral) on localhost and in prod.
+    const originHost = parseHost((req.headers.origin as string) || null);
+    const selfHosts = [parseHost(env.siteUrl), originHost];
+
+    const utmSource = str(b.utmSource, 256);
+    const utmMedium = str(b.utmMedium, 256);
+    const utmCampaign = str(b.utmCampaign, 256);
+    const utmTerm = str(b.utmTerm, 256);
+    const utmContent = str(b.utmContent, 256);
+
+    const channel = classifyChannel({ referrerHost, utmMedium, selfHosts });
+    const isBot = isBotUserAgent(userAgent);
+
+    await PageView.create({
+      visitorId,
+      sessionId,
+      path,
+      title: str(b.title, 512),
+      referrer,
+      referrerHost,
+      channel,
+      utmSource,
+      utmMedium,
+      utmCampaign,
+      utmTerm,
+      utmContent,
+      userAgent,
+      isBot,
+    });
+
+    res.status(204).end();
+  } catch (err) {
+    console.error("Failed to record pageview:", err);
+    res.status(204).end(); // never surface tracking errors to the visitor
   }
 });
 

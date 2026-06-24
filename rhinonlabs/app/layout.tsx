@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Geist, Geist_Mono, Inter, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { HeroHeader } from "@/components/Common/Header/Header";
@@ -6,6 +7,7 @@ import { Footer } from "@/components/Common/Footer/Footer";
 import FloatingContactButton from "@/components/Common/FloatingContactButton/FloatingContactButton";
 import { Navbar } from "@/components/Common/Header/Navbar";
 import StructuredData from "@/components/Common/SEO/StructuredData";
+import { PageviewTracker } from "@/components/Common/Analytics/PageviewTracker";
 
 // const geistSans = Geist({
 //   variable: "--font-geist-sans",
@@ -122,6 +124,9 @@ export default function RootLayout({
         className={`${inter.variable} ${instrumentSerif.variable} relative font-sans antialiased text-foreground bg-background`}
       >
         <StructuredData />
+        <Suspense fallback={null}>
+          <PageviewTracker />
+        </Suspense>
         <Navbar />
         {children}
         <Footer />

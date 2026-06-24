@@ -24,6 +24,7 @@ import documentsRoutes from "./routes/documents";
 import linkedinRoutes from "./routes/linkedin";
 import aiRoutes from "./routes/ai";
 import contentRoutes from "./routes/content";
+import analyticsRoutes from "./routes/analytics";
 
 const app = express();
 
@@ -56,6 +57,7 @@ app.use("/documents", documentsRoutes);
 app.use("/linkedin", linkedinRoutes);
 app.use("/ai", aiRoutes);
 app.use("/content", contentRoutes);
+app.use("/analytics", analyticsRoutes);
 
 // Use text parser for SNS webhooks since AWS SNS sends content-type text/plain
 app.use("/webhooks", express.text({ type: ["application/json", "text/plain"] }), webhooksRoutes);
