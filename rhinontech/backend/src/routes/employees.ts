@@ -5,7 +5,8 @@ import multer from "multer";
 import { User, Role } from "../models";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 import { sendEmail } from "../services/mailer";
-import { welcomeEmail } from "../services/emailTemplates";
+import { welcomeEmail, resetPasswordEmail } from "../services/emailTemplates";
+import { env } from "../config/env";
 import { uploadBuffer, deleteObject, getPresignedReadUrl, getPresignedUploadUrl } from "../services/storage";
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
@@ -244,6 +245,67 @@ router.post("/:id/offboard", authorize("employees:write"), async (req: AuthReque
   }
   await employee.update({ status: "inactive" });
   res.json({ message: "Employee offboarded", id: employee.id });
+});
+
+// Resend onboarding invite — regenerate a fresh temp password + onboarding link and re-email it.
+// Useful when the original welcome email was lost or the 48h token expired.
+router.post("/:id/resend-onboarding", authorize("employees:write"), async (req: AuthRequest, res: Response) => {
+  const employee = await User.findByPk(req.params.id);
+  if (!employee) {
+    res.status(404).json({ message: "Employee not found" });
+    return;
+  }
+
+  const tempPassword = crypto.randomBytes(8).toString("base64url").slice(0, 12);
+  const passwordHash = await bcrypt.hash(tempPassword, 10);
+  const onboardingToken = crypto.randomUUID();
+  const onboardingTokenExpiry = new Date(Date.now() + 48 * 60 * 60 * 1000);
+
+  await employee.update({ passwordHash, onboardingToken, onboardingTokenExpiry, onboarded: false });
+
+  try {
+    const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:4200";
+    const onboardingUrl = `${frontendUrl}/onboard?token=${onboardingToken}`;
+    const { subject, html, text } = welcomeEmail({
+      fullName: employee.fullName,
+      companyEmail: employee.companyEmail,
+      tempPassword,
+      onboardingUrl,
+    });
+    await sendEmail({ to: employee.personalEmail, subject, html, text });
+  } catch (err) {
+    console.error("Failed to resend welcome email:", err);
+    res.status(502).json({ message: "Could not send the invite email. Check email configuration." });
+    return;
+  }
+
+  res.json({ message: "Invite re-sent", id: employee.id, sentTo: employee.personalEmail });
+});
+
+// Admin-triggered password reset — emails a reset link without overwriting the current password.
+// Best for members who have already onboarded but are locked out.
+router.post("/:id/send-reset", authorize("employees:write"), async (req: AuthRequest, res: Response) => {
+  const employee = await User.findByPk(req.params.id);
+  if (!employee) {
+    res.status(404).json({ message: "Employee not found" });
+    return;
+  }
+
+  const resetToken = crypto.randomUUID();
+  const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+  await employee.update({ resetToken, resetTokenExpiry });
+
+  try {
+    const resetUrl = `${env.frontendUrl}/auth/reset-password?token=${resetToken}`;
+    const { subject, html, text } = resetPasswordEmail({ fullName: employee.fullName, resetUrl });
+    await sendEmail({ to: employee.personalEmail, subject, html, text });
+  } catch (err) {
+    console.error("Failed to send reset email:", err);
+    res.status(502).json({ message: "Could not send the reset email. Check email configuration." });
+    return;
+  }
+
+  res.json({ message: "Reset link sent", id: employee.id, sentTo: employee.personalEmail });
 });
 
 export default router;

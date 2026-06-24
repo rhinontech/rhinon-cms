@@ -53,6 +53,9 @@ interface UserAttributes {
   onboardingToken?: string | null;
   onboardingTokenExpiry?: Date | null;
   onboarded?: boolean;
+  // Password reset
+  resetToken?: string | null;
+  resetTokenExpiry?: Date | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -98,6 +101,8 @@ interface UserCreationAttributes
     | "onboardingToken"
     | "onboardingTokenExpiry"
     | "onboarded"
+    | "resetToken"
+    | "resetTokenExpiry"
   > {}
 
 export class User
@@ -148,6 +153,8 @@ export class User
   declare onboardingToken: string | null;
   declare onboardingTokenExpiry: Date | null;
   declare onboarded: boolean;
+  declare resetToken: string | null;
+  declare resetTokenExpiry: Date | null;
   declare createdAt: Date;
   declare updatedAt: Date;
 }
@@ -198,6 +205,8 @@ User.init(
     onboardingToken:       { type: DataTypes.STRING,  allowNull: true, defaultValue: null },
     onboardingTokenExpiry: { type: DataTypes.DATE,    allowNull: true, defaultValue: null },
     onboarded:             { type: DataTypes.BOOLEAN, allowNull: true, defaultValue: false },
+    resetToken:            { type: DataTypes.STRING,  allowNull: true, defaultValue: null },
+    resetTokenExpiry:      { type: DataTypes.DATE,    allowNull: true, defaultValue: null },
   },
   { sequelize, tableName: "users", timestamps: true }
 );

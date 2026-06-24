@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Cookies from "js-cookie";
-import { TbCamera, TbLayoutSidebarFilled, TbLayoutSidebarRightFilled, TbPencil, TbPlus, TbSearch } from "react-icons/tb";
+import { TbCamera, TbLayoutSidebarFilled, TbLayoutSidebarRightFilled, TbPencil, TbPlus, TbSearch, TbMailForward, TbKey } from "react-icons/tb";
 import { cn } from "@/lib/utils";
 import { WorkSchedulePicker } from "@/components/Admin/Common/WorkSchedulePicker";
 
@@ -20,6 +20,7 @@ interface Employee {
   department: string;
   roleId: string;
   status: "active" | "inactive";
+  onboarded?: boolean;
   joiningDate: string;
   dateOfBirth?: string;
   pan?: string;
@@ -285,6 +286,8 @@ export function PeopleDirectory() {
     catch { return []; }
   })();
   const canManage = permissions.includes("employees:read");
+  const canWrite = permissions.includes("employees:write");
+  const [resending, setResending] = useState(false);
 
   const fetchEmployees = async () => {
     setLoading(true);
@@ -359,6 +362,50 @@ export function PeopleDirectory() {
     setForm(employeeToForm(selectedEmployee));
     setMessage("");
     setIsPreviewExpanded(true);
+  };
+
+  const resendInvite = async () => {
+    if (!selectedEmployee) return;
+    if (!confirm(`Resend the setup invite to ${selectedEmployee.fullName}?\n\nThis generates a new temporary password and setup link, emails it to ${selectedEmployee.personalEmail}, and replaces their current password.`)) return;
+    setResending(true);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/employees/${selectedEmployee.id}/resend-onboarding`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data.message || "Could not resend the invite.");
+        return;
+      }
+      alert(`Invite re-sent to ${data.sentTo || selectedEmployee.personalEmail}.`);
+    } catch {
+      alert("Could not resend the invite. Please try again.");
+    } finally {
+      setResending(false);
+    }
+  };
+
+  const sendReset = async () => {
+    if (!selectedEmployee) return;
+    if (!confirm(`Email a password reset link to ${selectedEmployee.fullName}?\n\nThis sends a reset link to ${selectedEmployee.personalEmail} and does NOT change their current password.`)) return;
+    setResending(true);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/employees/${selectedEmployee.id}/send-reset`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data.message || "Could not send the reset link.");
+        return;
+      }
+      alert(`Reset link sent to ${data.sentTo || selectedEmployee.personalEmail}.`);
+    } catch {
+      alert("Could not send the reset link. Please try again.");
+    } finally {
+      setResending(false);
+    }
   };
 
   const updateForm = (field: keyof EmployeeForm, value: string | boolean) => {
@@ -529,6 +576,29 @@ export function PeopleDirectory() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
+                {canWrite && mode === "view" && selectedEmployee && (
+                  selectedEmployee.onboarded ? (
+                    <button
+                      onClick={sendReset}
+                      disabled={resending}
+                      className="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                      title="Email a password reset link (doesn't change their current password)"
+                    >
+                      <TbKey size={15} />
+                      {resending ? "Sending..." : "Send password reset"}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={resendInvite}
+                      disabled={resending}
+                      className="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                      title="Email a fresh temporary password + setup link"
+                    >
+                      <TbMailForward size={15} />
+                      {resending ? "Sending..." : "Resend invite"}
+                    </button>
+                  )
+                )}
                 {canManage && mode === "view" && selectedEmployee && (
                   <button
                     onClick={openEdit}

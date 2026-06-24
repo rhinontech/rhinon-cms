@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import adminImages from "@/constants/admin/images";
 import Cookies from "js-cookie";
 import Image from "next/image";
+import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
@@ -91,7 +92,15 @@ export function Login({
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="password">Password</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                  <Link
+                    href="/auth/forgot-password"
+                    className="text-xs text-muted-foreground underline-offset-4 hover:text-primary hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
                 <Input
                   id="password"
                   type="password"

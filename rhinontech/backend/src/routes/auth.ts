@@ -1,9 +1,12 @@
 import { Router, Request, Response } from "express";
+import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { Op } from "sequelize";
 import { User, Role, Permission } from "../models";
 import { env } from "../config/env";
+import { sendEmail } from "../services/mailer";
+import { resetPasswordEmail } from "../services/emailTemplates";
 import { authenticate, AuthRequest } from "../middleware/authenticate";
 
 const router = Router();
@@ -108,6 +111,70 @@ router.put("/me/password", authenticate, async (req: AuthRequest, res: Response)
   const passwordHash = await bcrypt.hash(newPassword, 10);
   await user.update({ passwordHash });
   res.json({ message: "Password changed successfully" });
+});
+
+// Request a password reset link (public). Always responds 200 to avoid leaking which emails exist.
+router.post("/forgot-password", async (req: Request, res: Response) => {
+  const { email } = req.body;
+  if (!email) {
+    res.status(400).json({ message: "Email is required" });
+    return;
+  }
+
+  const user = await User.findOne({
+    where: { [Op.or]: [{ companyEmail: email }, { personalEmail: email }], status: "active" },
+  });
+
+  if (user) {
+    const resetToken = crypto.randomUUID();
+    const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    await user.update({ resetToken, resetTokenExpiry });
+    try {
+      const resetUrl = `${env.frontendUrl}/auth/reset-password?token=${resetToken}`;
+      const { subject, html, text } = resetPasswordEmail({ fullName: user.fullName, resetUrl });
+      await sendEmail({ to: user.personalEmail, subject, html, text });
+    } catch (err) {
+      console.error("Failed to send reset email:", err);
+    }
+  }
+
+  res.json({ message: "If an account exists for that email, a reset link has been sent." });
+});
+
+// Reset password using a valid reset token (public).
+router.post("/reset-password", async (req: Request, res: Response) => {
+  const { token, newPassword } = req.body;
+  if (!token || !newPassword) {
+    res.status(400).json({ message: "token and newPassword are required" });
+    return;
+  }
+  if (newPassword.length < 8) {
+    res.status(400).json({ message: "Password must be at least 8 characters" });
+    return;
+  }
+  if (!/[A-Z]/.test(newPassword)) {
+    res.status(400).json({ message: "Password must contain at least one uppercase letter" });
+    return;
+  }
+  if (!/[0-9]/.test(newPassword)) {
+    res.status(400).json({ message: "Password must contain at least one number" });
+    return;
+  }
+
+  const user = await User.findOne({
+    where: {
+      resetToken: token,
+      resetTokenExpiry: { [Op.gt]: new Date() },
+    },
+  });
+  if (!user) {
+    res.status(404).json({ message: "This reset link has expired or is invalid." });
+    return;
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+  await user.update({ passwordHash, resetToken: null, resetTokenExpiry: null });
+  res.json({ message: "Password reset successfully" });
 });
 
 // Validate onboarding token — returns name + company email (public, no auth)

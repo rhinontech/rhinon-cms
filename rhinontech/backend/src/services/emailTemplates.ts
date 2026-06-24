@@ -137,6 +137,62 @@ This link expires in 48 hours.`;
   return { subject, html, text };
 }
 
+// ─── Password Reset ──────────────────────────────────────────────────────────
+
+interface ResetPasswordEmailOptions {
+  fullName: string;
+  resetUrl: string;
+  expiresInLabel?: string; // e.g. "1 hour"
+}
+
+export function resetPasswordEmail({ fullName, resetUrl, expiresInLabel = "1 hour" }: ResetPasswordEmailOptions) {
+  const firstName = fullName.split(" ")[0];
+  const subject = `Reset your Rhinon Tech password`;
+
+  const header = `
+    <p style="margin:16px 0 0;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.4px;">
+      Reset your<br/>password
+    </p>`;
+
+  const body = `
+    <p style="margin:0 0 6px;font-size:15px;font-weight:600;color:#1c1917;">Hi ${firstName},</p>
+    <p style="margin:0 0 24px;font-size:14px;color:#78716c;line-height:1.7;">
+      We received a request to reset the password for your Rhinon Tech account. Click below to choose a new one.
+    </p>
+
+    <!-- CTA -->
+    <table cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      <tr>
+        <td style="background-color:#1c1917;border-radius:8px;">
+          <a href="${resetUrl}" style="display:inline-block;padding:13px 28px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:-0.1px;">
+            Reset Password →
+          </a>
+        </td>
+      </tr>
+    </table>
+
+    <p style="margin:0 0 20px;font-size:13px;color:#78716c;line-height:1.7;">
+      <strong style="color:#1c1917;">This link expires in ${expiresInLabel}.</strong> If you didn't request a password reset, you can safely ignore this email — your password won't change.
+    </p>
+
+    <p style="margin:0;font-size:12px;color:#a8a29e;line-height:1.7;">
+      If the button doesn't work, copy this link into your browser:<br/>
+      <a href="${resetUrl}" style="color:#78716c;word-break:break-all;">${resetUrl}</a>
+    </p>`;
+
+  const html = emailWrapper(header, body);
+
+  const text = `Hi ${firstName},
+
+We received a request to reset your Rhinon Tech password.
+
+Reset your password: ${resetUrl}
+
+This link expires in ${expiresInLabel}. If you didn't request this, ignore this email.`;
+
+  return { subject, html, text };
+}
+
 // ─── Payslip Paid ────────────────────────────────────────────────────────────
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
