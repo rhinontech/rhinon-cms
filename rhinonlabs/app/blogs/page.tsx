@@ -1,21 +1,12 @@
 import Link from "next/link";
-import dbConnect from "@/lib/db";
-import Blog from "@/models/Blog";
+import { getBlogs } from "@/lib/api";
 import { format } from "date-fns";
 import { ArrowRight, Calendar, Clock, Sparkles } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export default async function BlogsPage() {
-  await dbConnect();
-  
-  let blogs = await Blog.find({ status: "Published" }).sort({ publishedAt: -1 });
-
-  // Fallback to seed if no blogs exist (convenience for the user)
-  if (blogs.length === 0) {
-     // We can't easily seed here because it's a GET request in a server component
-     // But we can show a placeholder or just wait for the user to hit /api/seed-blog
-  }
+  const blogs = await getBlogs();
 
   return (
     <div className="relative min-h-screen bg-background selection:bg-cyan-500/30">
@@ -43,8 +34,8 @@ export default async function BlogsPage() {
         {/* Blog Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {blogs.map((blog) => (
-            <Link 
-              key={blog._id} 
+            <Link
+              key={blog.id}
               href={`/blogs/${blog.slug}`}
               className="group relative flex flex-col bg-secondary/20 backdrop-blur-md rounded-[32px] border border-white/5 hover:border-cyan-500/30 transition-all duration-500 overflow-hidden"
             >
@@ -93,14 +84,14 @@ export default async function BlogsPage() {
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 p-[1px]">
                       <div className="w-full h-full rounded-full bg-secondary flex items-center justify-center overflow-hidden">
-                        <img 
-                          src={blog.author?.avatar || "https://github.com/prabhatpk.png"} 
-                          alt={blog.author?.name}
+                        <img
+                          src={blog.authorAvatar || "https://github.com/prabhatpk.png"}
+                          alt={blog.authorName}
                           className="w-full h-full object-cover"
                         />
                       </div>
                     </div>
-                    <span className="text-[10px] font-black text-foreground uppercase tracking-widest">{blog.author?.name}</span>
+                    <span className="text-[10px] font-black text-foreground uppercase tracking-widest">{blog.authorName}</span>
                   </div>
                   
                   <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-cyan-500 group-hover:text-black transition-all">
@@ -113,7 +104,7 @@ export default async function BlogsPage() {
 
           {blogs.length === 0 && (
             <div className="col-span-full py-20 text-center">
-              <p className="text-muted-foreground">No blogs found. Please hit <code className="bg-secondary px-2 py-1 rounded">/api/seed-blog</code> to see content.</p>
+              <p className="text-muted-foreground">No posts yet — check back soon.</p>
             </div>
           )}
         </div>

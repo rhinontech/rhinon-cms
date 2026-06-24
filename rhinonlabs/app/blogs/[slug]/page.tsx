@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
-import dbConnect from "@/lib/db";
-import Blog from "@/models/Blog";
+import { getBlog } from "@/lib/api";
 import { format } from "date-fns";
 import { ArrowLeft, Clock, Calendar, Share2, Sparkles, User, ShieldCheck } from "lucide-react";
 import Link from "next/link";
+import { MarkdownRenderer } from "@/components/Common/Markdown/MarkdownRenderer";
 
 export const dynamic = "force-dynamic";
 
@@ -13,11 +13,9 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  await dbConnect();
   const { slug } = await params;
-  
-  const blog = await Blog.findOne({ slug });
-  
+  const blog = await getBlog(slug);
+
   if (!blog) return { title: "Blog Not Found" };
 
   return {
@@ -29,80 +27,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-const MarkdownRenderer = ({ content }: { content: string }) => {
-  if (!content) return null;
-
-  const processInlines = (text: string) => {
-    const parts = text.split(/(\*\*.*?\*\*)/g);
-    return parts.map((part, j) => {
-      if (part.startsWith("**") && part.endsWith("**")) {
-        return <strong key={j} className="font-black text-cyan-400">{part.slice(2, -2)}</strong>;
-      }
-      return part;
-    });
-  };
-
-  const lines = content.split("\n");
-  const renderedElements: React.ReactNode[] = [];
-  let currentList: React.ReactNode[] = [];
-
-  const flushList = () => {
-    if (currentList.length > 0) {
-      renderedElements.push(
-        <ul key={`list-${renderedElements.length}`} className="space-y-4 my-8 ml-6 list-none">
-          {currentList}
-        </ul>
-      );
-      currentList = [];
-    }
-  };
-
-  lines.forEach((line, i) => {
-    const trimmedLine = line.trim();
-
-    if (trimmedLine.startsWith("* ") || trimmedLine.startsWith("- ")) {
-      const content = trimmedLine.replace(/^[\*\-]\s+/, "");
-      currentList.push(
-        <li key={i} className="flex gap-4 text-foreground/80 text-lg leading-relaxed">
-          <span className="text-cyan-500 font-bold shrink-0 mt-2">•</span>
-          <span>{processInlines(content)}</span>
-        </li>
-      );
-      return;
-    }
-
-    flushList();
-
-    if (trimmedLine === "") {
-       renderedElements.push(<div key={i} className="h-6" />);
-       return;
-    }
-
-    if (trimmedLine.startsWith("### ")) {
-      renderedElements.push(<h3 key={i} className="text-2xl font-black text-foreground mt-12 mb-6 tracking-tight">{trimmedLine.replace("### ", "")}</h3>);
-    } else if (trimmedLine.startsWith("## ")) {
-      renderedElements.push(<h2 key={i} className="text-3xl font-black text-foreground mt-16 mb-8 border-b-2 border-cyan-500/20 pb-4 tracking-tighter">{trimmedLine.replace("## ", "")}</h2>);
-    } else if (trimmedLine.startsWith("# ")) {
-      renderedElements.push(<h1 key={i} className="text-4xl md:text-5xl font-black text-foreground mt-20 mb-10 uppercase tracking-tighter leading-none">{trimmedLine.replace("# ", "")}</h1>);
-    } else {
-      renderedElements.push(<p key={i} className="mb-6 text-lg md:text-xl text-foreground/80 leading-relaxed font-medium">{processInlines(line)}</p>);
-    }
-  });
-
-  flushList();
-
-  return (
-    <div className="article-content">
-      {renderedElements}
-    </div>
-  );
-};
-
 export default async function BlogDetailsPage({ params }: PageProps) {
-  await dbConnect();
   const { slug } = await params;
-  
-  const blog = await Blog.findOne({ slug });
+  const blog = await getBlog(slug);
 
   if (!blog) {
     notFound();
@@ -148,12 +75,12 @@ export default async function BlogDetailsPage({ params }: PageProps) {
             <div className="flex items-center gap-4">
               <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 p-[2px] shadow-glow-sm">
                  <div className="h-full w-full rounded-[14px] bg-background flex items-center justify-center overflow-hidden">
-                    <img src={blog.author?.avatar} alt={blog.author?.name} className="w-full h-full object-cover" />
+                    <img src={blog.authorAvatar || "https://github.com/prabhatpk.png"} alt={blog.authorName} className="w-full h-full object-cover" />
                  </div>
               </div>
               <div>
-                <p className="text-xs font-black text-foreground uppercase tracking-widest leading-none mb-1.5">{blog.author?.name}</p>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Founder @ Rhinon Labs</p>
+                <p className="text-xs font-black text-foreground uppercase tracking-widest leading-none mb-1.5">{blog.authorName}</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{blog.authorRole}</p>
               </div>
             </div>
 

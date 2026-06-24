@@ -1,0 +1,43 @@
+{
+  "Version": "2008-10-17",
+  "Id": "__default_policy_ID",
+  "Statement": [
+    {
+      "Sid": "__default_statement_ID",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": [
+        "SNS:GetTopicAttributes",
+        "SNS:SetTopicAttributes",
+        "SNS:AddPermission",
+        "SNS:RemovePermission",
+        "SNS:DeleteTopic",
+        "SNS:Subscribe",
+        "SNS:ListSubscriptionsByTopic",
+        "SNS:Publish"
+      ],
+      "Resource": "arn:aws:sns:ap-south-1:322171059264:SES-Inbound-Webhook",
+      "Condition": {
+        "StringEquals": {
+          "AWS:SourceOwner": "322171059264"
+        }
+      }
+    },
+    {
+      "Sid": "AllowSESPublish",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ses.amazonaws.com"
+      },
+      "Action": "sns:Publish",
+      "Resource": "arn:aws:sns:ap-south-1:322171059264:SES-Inbound-Webhook",
+      "Condition": {
+        "StringEquals": {
+          "aws:Referer": "322171059264"
+        }
+      }
+    }
+  ]
+}

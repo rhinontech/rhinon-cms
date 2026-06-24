@@ -10,13 +10,15 @@ import { FAQ } from "@/components/Common/FAQ/FAQ";
 import { CustomXIcon, Footer } from "@/components/Common/Footer/Footer";
 import { Mail, Phone, Headphones, User, Waves, Twitter, Instagram, Linkedin } from "lucide-react";
 
+// Rhinon Tech backend (admin-panel reads leads from the same API). Override via NEXT_PUBLIC_API_URL.
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://api.rhinontech.in";
+
 const ContactUs = () => {
     const [formData, setFormData] = useState({
         name: "",
         email: "",
         whatsapp: "",
         company: "",
-        projectType: "",
         message: "",
     });
     const [loading, setLoading] = useState(false);
@@ -36,17 +38,15 @@ const ContactUs = () => {
         setSuccess(false);
 
         try {
-            const res = await fetch("https://cms.rhinon.tech/api/web-leads", {
+            const res = await fetch(`${API_BASE}/public/web-leads`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     name: formData.name,
                     email: formData.email,
-                    source: "Website",
-                    metadata: {
-                        whatsapp: formData.whatsapp,
-                        message: formData.message,
-                    }
+                    whatsapp: formData.whatsapp,
+                    company: formData.company,
+                    message: formData.message,
                 }),
             });
 
@@ -57,7 +57,6 @@ const ContactUs = () => {
                     email: "",
                     whatsapp: "",
                     company: "",
-                    projectType: "",
                     message: "",
                 });
             } else {
@@ -220,6 +219,18 @@ const ContactUs = () => {
                                             onChange={handleChange}
                                             className="w-full mt-1.5 border border-border/7 rounded-[8px] px-4 py-3.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors bg-transparent"
                                             placeholder="Enter your WhatsApp number"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label htmlFor="company" className="text-[14px] font-semibold opacity-60 tracking-wide ">Company (Optional)</label>
+                                        <input
+                                            type="text"
+                                            id="company"
+                                            name="company"
+                                            value={formData.company}
+                                            onChange={handleChange}
+                                            className="w-full mt-1.5 border border-border/7 rounded-[8px] px-4 py-3.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors bg-transparent"
+                                            placeholder="Enter your company name"
                                         />
                                     </div>
                                     <div className="space-y-2">

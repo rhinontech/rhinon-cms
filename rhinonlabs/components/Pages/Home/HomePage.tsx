@@ -2,7 +2,6 @@
 import { motion } from "framer-motion";
 import { Problem } from "./Problem/Problem";
 import { Services } from "./Services/Services";
-import { LeadMagnet } from "./LeadMagnet/LeadMagnet";
 import { Results } from "./Results/Results";
 import { Process } from "./Process/Process";
 import { Integrations } from "./Integrations/Integrations";
@@ -19,7 +18,6 @@ const HomePage = () => {
       <Hero1 />
       <Problem />
       <Services />
-      {/* <LeadMagnet /> */}
       <Results />
       <Process />
       <Integrations />
