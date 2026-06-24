@@ -1,17 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   TbTrophy,
   TbPlus,
   TbTrash,
   TbLayoutSidebarFilled,
   TbLayoutSidebarRightFilled,
+  TbUpload,
+  TbLoader,
 } from "react-icons/tb";
 import { cn } from "@/lib/utils";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, apiUpload } from "@/lib/api";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { useSideNav } from "@/context/SideNavContext";
+import { ContentImageInput } from "./ContentImageInput";
 
 type Status = "Draft" | "Published";
 
@@ -143,6 +146,23 @@ export function CaseStudiesManager() {
   const addImage = () => setForm((f) => ({ ...f, images: [...f.images, ""] }));
   const removeImage = (i: number) =>
     setForm((f) => ({ ...f, images: f.images.filter((_, idx) => idx !== i) }));
+
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const [galleryUploading, setGalleryUploading] = useState(false);
+  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setGalleryUploading(true);
+    try {
+      const { url } = await apiUpload<{ url: string }>("/content/upload-image", file);
+      setForm((f) => ({ ...f, images: [...f.images, url] }));
+    } catch (err: any) {
+      alert(err.message || "Upload failed");
+    } finally {
+      setGalleryUploading(false);
+      if (galleryInputRef.current) galleryInputRef.current.value = "";
+    }
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -333,10 +353,7 @@ export function CaseStudiesManager() {
                   />
                 </label>
 
-                <FormInput label="Cover Image URL" value={form.image} onChange={(v) => setForm({ ...form, image: v })} placeholder="https://..." />
-                {form.image && (
-                  <img src={form.image} alt="preview" className="w-full max-h-40 object-cover rounded-lg border border-stone-100" />
-                )}
+                <ContentImageInput label="Cover Image" value={form.image} onChange={(v) => setForm({ ...form, image: v })} />
 
                 {/* Portfolio details (shown on the public case-study page) */}
                 <div className="grid grid-cols-2 gap-3">
@@ -352,10 +369,22 @@ export function CaseStudiesManager() {
                 <div className="rounded-xl border border-stone-200 bg-stone-50/50 p-3 space-y-3">
                   <div className="flex items-center justify-between">
                     <p className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">Gallery Images</p>
-                    <button type="button" onClick={addImage} className="text-xs font-medium text-stone-600 hover:text-stone-900 flex items-center gap-1">
-                      <TbPlus size={13} /> Add
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => galleryInputRef.current?.click()}
+                        disabled={galleryUploading}
+                        className="text-xs font-medium text-stone-600 hover:text-stone-900 flex items-center gap-1 disabled:opacity-50"
+                      >
+                        {galleryUploading ? <TbLoader className="animate-spin" size={13} /> : <TbUpload size={13} />}
+                        {galleryUploading ? "Uploading..." : "Upload"}
+                      </button>
+                      <button type="button" onClick={addImage} className="text-xs font-medium text-stone-600 hover:text-stone-900 flex items-center gap-1">
+                        <TbPlus size={13} /> Add URL
+                      </button>
+                    </div>
                   </div>
+                  <input ref={galleryInputRef} type="file" accept="image/*" onChange={handleGalleryUpload} className="hidden" />
                   {form.images.length === 0 && (
                     <p className="text-xs text-stone-400">No gallery images yet — these show on the case-study detail page.</p>
                   )}

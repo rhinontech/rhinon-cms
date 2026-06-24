@@ -21,3 +21,20 @@ export async function apiFetch<T = unknown>(path: string, init?: RequestInit): P
   }
   return res.json() as Promise<T>;
 }
+
+// Multipart upload — don't set Content-Type so the browser adds the multipart boundary.
+export async function apiUpload<T = unknown>(path: string, file: File, field = "image"): Promise<T> {
+  const token = Cookies.get("authToken");
+  const form = new FormData();
+  form.append(field, file);
+  const res = await fetch(`${API_URL}${path}`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: form,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: "Upload failed" }));
+    throw new Error(err.message || "Upload failed");
+  }
+  return res.json() as Promise<T>;
+}

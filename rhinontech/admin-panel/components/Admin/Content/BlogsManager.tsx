@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { useSideNav } from "@/context/SideNavContext";
+import { ContentImageInput } from "./ContentImageInput";
 
 type BlogStatus = "Draft" | "Published";
 
@@ -289,10 +290,7 @@ export function BlogsManager() {
                     />
                   </label>
 
-                  <FormInput label="Cover Image URL" value={form.coverImage} onChange={(v) => setForm({ ...form, coverImage: v })} placeholder="https://..." />
-                  {form.coverImage && (
-                    <img src={form.coverImage} alt="Cover preview" className="w-full max-h-40 object-cover rounded-lg border border-stone-100" />
-                  )}
+                  <ContentImageInput label="Cover Image" value={form.coverImage} onChange={(v) => setForm({ ...form, coverImage: v })} />
 
                   <div className="grid grid-cols-2 gap-3">
                     <FormInput label="Tags (comma separated)" value={form.tags} onChange={(v) => setForm({ ...form, tags: v })} placeholder="Operations, AI" />

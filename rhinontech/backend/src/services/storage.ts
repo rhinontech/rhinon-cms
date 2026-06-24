@@ -17,6 +17,12 @@ const s3 = new S3Client({
 });
 
 const BUCKET = process.env.AWS_S3_BUCKET!;
+const REGION = process.env.AWS_REGION || "ap-south-1";
+
+// Stable, permanent S3 URL for objects under a publicly-readable prefix (e.g. content/).
+export function publicUrl(key: string): string {
+  return `https://${BUCKET}.s3.${REGION}.amazonaws.com/${key}`;
+}
 
 export async function getPresignedReadUrl(key: string, expiresIn = 3600): Promise<string> {
   return getSignedUrl(s3, new GetObjectCommand({ Bucket: BUCKET, Key: key }), { expiresIn });
@@ -25,7 +31,7 @@ export async function getPresignedReadUrl(key: string, expiresIn = 3600): Promis
 export async function uploadBuffer(
   buffer: Buffer,
   originalName: string,
-  folder: "avatars" | "documents",
+  folder: "avatars" | "documents" | "content",
   mimeType: string
 ): Promise<string> {
   const ext = path.extname(originalName) || "";
