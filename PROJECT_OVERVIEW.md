@@ -254,3 +254,41 @@ The backend registers cron jobs on boot (`server.ts`):
 
 The seeded super-admin is **`prabhat@rhinontech.in`** (Prabhat Patra, Engineering), used as the
 bootstrap account for creating additional roles and users.
+
+## 10. Deployment & Server Access
+
+**Backend → EC2 + pm2.** Front-ends (`admin-panel`, `rhinonlabs`) → **Vercel** (deployed separately).
+
+**SSH into the server:**
+```bash
+ssh -i "/Users/rhinon/Desktop/Rhinon Tech/rhinontech.pem" ubuntu@35.154.151.48
+```
+
+| Env   | Server path                  | Branch | pm2 process                | Port |
+|-------|------------------------------|--------|----------------------------|------|
+| Prod  | `/home/ubuntu/rhinon-cms`      | `main` | `rhinontech-backend`       | 5002 (→ `api.rhinontech.in`) |
+| Beta  | `/home/ubuntu/rhinon-cms-beta` | `beta` | `rhinontech-backend-beta`  | 5003 |
+
+**Deploy the backend** (build before restart so a failed build never takes prod down):
+```bash
+cd /home/ubuntu/rhinon-cms            # or rhinon-cms-beta
+git pull                               # prod=main, beta=beta
+cd rhinontech/backend
+npm install                            # only if deps changed
+npm run build
+pm2 restart rhinontech-backend         # or rhinontech-backend-beta
+pm2 save
+curl -s http://localhost:5002/health   # {"status":"ok"}
+```
+
+- `.env` files are git-ignored and live only on the server (switching branches preserves them).
+- Schema sync on boot is additive (`sync({ alter: { drop: false } })`) — never drops.
+- Git pushes authenticate over SSH as GitHub `rhinontech` (key `~/.ssh/id_ed25519`).
+
+## 11. Website Analytics
+
+First-party, cookieless traffic tracking for the `rhinonlabs` marketing site. Each pageview is
+beaconed to `POST /public/track` (unauthenticated) → `page_views` table; the server derives the
+traffic channel (Organic Search / Direct / Social / Referral) from referrer + UTM params and flags
+bots. The admin **Analytics** module reads aggregates from `GET /analytics/*`
+(overview / timeseries / sources / top-pages), guarded by the `analytics:read` permission.
