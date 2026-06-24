@@ -16,6 +16,8 @@ export const env = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
   frontendUrl,
   frontendUrls: Array.from(new Set([frontendUrl, ...parseCsv(process.env.FRONTEND_URLS)])),
+  // Public marketing site origin — used to treat same-site referrers as Direct in analytics.
+  siteUrl: process.env.SITE_URL || "https://rhinonlabs.com",
   slack: {
     botToken: process.env.SLACK_BOT_TOKEN || "",
   },

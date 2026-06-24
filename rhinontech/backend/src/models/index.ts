@@ -29,6 +29,7 @@ import { TaskComment } from "./TaskComment";
 import { TaskTag } from "./TaskTag";
 import { Blog } from "./Blog";
 import { CaseStudy } from "./CaseStudy";
+import { PageView } from "./PageView";
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/database";
 
@@ -192,6 +193,7 @@ export {
   TaskTag,
   Blog,
   CaseStudy,
+  PageView,
 };
 
 export async function syncDatabase(force = false) {

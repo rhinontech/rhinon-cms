@@ -1,5 +1,5 @@
 import { sequelize } from "./database";
-import { Role, Permission, User, CaseStudy, syncDatabase } from "../models";
+import { Role, Permission, User, syncDatabase } from "../models";
 import bcrypt from "bcryptjs";
 
 const ALL_PERMISSIONS = [
@@ -20,6 +20,7 @@ const ALL_PERMISSIONS = [
   { name: "outreach:write",     resource: "outreach",     action: "write" },
   { name: "content:read",       resource: "content",      action: "read"  },
   { name: "content:write",      resource: "content",      action: "write" },
+  { name: "analytics:read",     resource: "analytics",    action: "read"  },
 ];
 
 async function seed() {
@@ -96,37 +97,6 @@ async function seed() {
     onboarded: true,
   });
   console.log("Superadmin ready: prabhat@rhinontech.in / Admin@123");
-
-  // Real, verified case study (start fresh — no fabricated clients/metrics).
-  await CaseStudy.findOrCreate({
-    where: { slug: "apexispro-architecture-operations" },
-    defaults: {
-      slug: "apexispro-architecture-operations",
-      title: "ApexisPro — Architecture Operations",
-      client: "ApexisPro",
-      industry: "Architecture",
-      category: "Operations Platform",
-      timeline: "Custom build",
-      date: "2024",
-      description:
-        "ApexisPro, an architecture practice, was juggling project tracking, client communication, document management, and approval workflows across fragmented tools. We built a single centralized operational platform that brought projects, documents, and approvals into one place — giving the team real visibility and far less manual coordination.",
-      result: "Delivered a centralized operational platform (₹4,00,000 project).",
-      quote:
-        "One platform replaced fragmented project tracking, document management, and approval workflows — turning scattered operations into a single source of truth.",
-      image: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=800&auto=format&fit=crop",
-      images: [
-        "https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=1200&auto=format&fit=crop",
-      ],
-      stats: [
-        { value: "₹4L", suffix: "", label: "project value delivered" },
-        { value: "4", suffix: "+", label: "workflows unified" },
-      ],
-      displayOrder: 1,
-      status: "Published",
-      createdById: prabhat.id,
-    },
-  });
-  console.log("Seeded case study: ApexisPro");
 
   await sequelize.close();
 }
