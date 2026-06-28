@@ -8,7 +8,7 @@ import { MdDashboard, MdOutlineCloud } from "react-icons/md";
 import { FaUserGroup } from "react-icons/fa6";
 import { RiSettings3Fill } from "react-icons/ri";
 import { HiInbox } from "react-icons/hi2";
-import { TbBriefcase, TbCalendarTime, TbCash, TbSpeakerphone, TbCalendarOff, TbChartBar, TbFiles, TbNews, TbChartArcs } from "react-icons/tb";
+import { TbBriefcase, TbCalendarTime, TbCash, TbSpeakerphone, TbCalendarOff, TbChartBar, TbFiles, TbNews, TbChartArcs, TbBook } from "react-icons/tb";
 import { BsPinAngleFill, BsPinAngle } from "react-icons/bs";
 import { cn } from "@/lib/utils";
 import { useDashboard } from "../../../Common/DashboardProvider/DashboardProvider";
@@ -32,6 +32,7 @@ export function Sidebar() {
       "outreach:read",
       "content:read",
       "analytics:read",
+      "docsAccess:read",
       "leave:read",
       "performance:read",
       "documents:read",
@@ -63,6 +64,7 @@ export function Sidebar() {
     { title: "Outreach",     icon: <TbSpeakerphone size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/outreach`,     permission: "outreach:read" },
     { title: "Content",      icon: <TbNews size={20} className="h-5 w-5 flex-shrink-0" />,         href: `/${roleSlug}/content`,      permission: "content:read" },
     { title: "Analytics",    icon: <TbChartArcs size={20} className="h-5 w-5 flex-shrink-0" />,    href: `/${roleSlug}/analytics`,    permission: "analytics:read" },
+    { title: "Docs Access",  icon: <TbBook size={20} className="h-5 w-5 flex-shrink-0" />,         href: `/${roleSlug}/docs-access`,  permission: "docsAccess:read" },
     { title: "Provisioning", icon: <MdOutlineCloud size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/provisioning`, permission: "provisioning:read" },
     { title: "Settings",     icon: <RiSettings3Fill size={20} className="h-5 w-5 flex-shrink-0" />,href: `/${roleSlug}/settings`,     permission: "settings:read" },
   ].filter((item) => {

@@ -21,6 +21,8 @@ const ALL_PERMISSIONS = [
   { name: "content:read",       resource: "content",      action: "read"  },
   { name: "content:write",      resource: "content",      action: "write" },
   { name: "analytics:read",     resource: "analytics",    action: "read"  },
+  { name: "docsAccess:read",    resource: "docsAccess",   action: "read"  },
+  { name: "docsAccess:write",   resource: "docsAccess",   action: "write" },
 ];
 
 async function seed() {

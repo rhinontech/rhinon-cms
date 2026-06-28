@@ -1,5 +1,5 @@
 import express, { Router, Response, Request } from "express";
-import { ClientRequest, Project, User, Lead, Blog, CaseStudy, PageView } from "../models";
+import { ClientRequest, Project, User, Lead, Blog, CaseStudy, PageView, DocsAccess } from "../models";
 import { sendEmail } from "../services/mailer";
 import { env } from "../config/env";
 import { classifyChannel, parseHost, isBotUserAgent } from "../services/analytics";
@@ -294,6 +294,24 @@ router.get("/case-studies/:slug", async (req: Request, res: Response) => {
   } catch (err) {
     console.error("Failed to fetch public case study:", err);
     res.status(500).json({ message: "Failed to fetch case study" });
+  }
+});
+
+// POST /public/docs-access/check — does this email have developer-docs access?
+// Called (server-side) by the Rhinon Help docs site at login. Returns only a
+// boolean — never any allowlist contents.
+router.post("/docs-access/check", async (req: Request, res: Response) => {
+  try {
+    const email = (req.body?.email ?? "").toString().trim().toLowerCase();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      res.status(400).json({ allowed: false, message: "Invalid email" });
+      return;
+    }
+    const entry = await DocsAccess.findOne({ where: { email } });
+    res.json({ allowed: Boolean(entry) });
+  } catch (err) {
+    console.error("Failed to check docs access:", err);
+    res.status(500).json({ allowed: false });
   }
 });
 
