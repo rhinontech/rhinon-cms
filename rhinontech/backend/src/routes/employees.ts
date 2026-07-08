@@ -324,6 +324,27 @@ router.post("/:id/reactivate", authorize("employees:write"), async (req: AuthReq
   });
 });
 
+// Preview a relieving/experience letter — renders the PDF on the fly, no Documents
+// row, no email. Lets HR check the content before committing to /letters below.
+router.get("/:id/letters/preview", authorize("employees:write"), async (req: AuthRequest, res: Response) => {
+  const type: LetterType = req.query.type === "experience" ? "experience" : "relieving";
+
+  const employee = await User.findByPk(req.params.id);
+  if (!employee) {
+    res.status(404).json({ message: "Employee not found" });
+    return;
+  }
+  if (!employee.exitDate) {
+    res.status(400).json({ message: "This member has no exit on record. Offboard them first." });
+    return;
+  }
+
+  const pdf = await generateLetterPdf(type, employee);
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", "inline");
+  res.send(pdf);
+});
+
 // Generate a relieving/experience letter (PDF) — saved to Documents and emailed
 // to the member's personal email.
 router.post("/:id/letters", authorize("employees:write"), async (req: AuthRequest, res: Response) => {

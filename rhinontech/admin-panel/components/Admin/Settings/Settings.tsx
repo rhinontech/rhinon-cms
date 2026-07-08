@@ -4,6 +4,7 @@ import {
   TbLayoutSidebarFilled,
   TbLayoutSidebarRightFilled,
 } from "react-icons/tb";
+import { CompanySignature } from "./CompanySignature";
 
 const Settings = () => {
   const { isExpanded, toggleSideNav } = useSideNav();
@@ -24,7 +25,7 @@ const Settings = () => {
       </div>
       
       <div className="flex-1 overflow-auto px-5 py-4">
-        <p className="h-[300px]">This is Settings home page</p>
+        <CompanySignature />
       </div>
     </div>
   );

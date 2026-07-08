@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Cookies from "js-cookie";
-import { TbCamera, TbLayoutSidebarFilled, TbLayoutSidebarRightFilled, TbPencil, TbPlus, TbSearch, TbMailForward, TbKey } from "react-icons/tb";
+import { TbCamera, TbLayoutSidebarFilled, TbLayoutSidebarRightFilled, TbPencil, TbPlus, TbSearch, TbMailForward, TbKey, TbX } from "react-icons/tb";
 import { cn } from "@/lib/utils";
 import { WorkSchedulePicker } from "@/components/Admin/Common/WorkSchedulePicker";
 
@@ -330,6 +330,71 @@ function Detail({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
+function LetterPreviewDialog({
+  employeeName,
+  personalEmail,
+  letterLabel,
+  pdfUrl,
+  loading,
+  loadError,
+  sending,
+  onClose,
+  onSend,
+}: {
+  employeeName: string;
+  personalEmail: string;
+  letterLabel: string;
+  pdfUrl: string | null;
+  loading: boolean;
+  loadError: string;
+  sending: boolean;
+  onClose: () => void;
+  onSend: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <div
+        className="flex h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl bg-white shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b px-5 py-4">
+          <div>
+            <h3 className="text-base font-semibold text-gray-900">{letterLabel} — {employeeName}</h3>
+            <p className="text-xs text-gray-500">Preview before sending. Nothing is saved or emailed yet.</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+            <TbX size={18} />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-hidden bg-gray-100">
+          {loading ? (
+            <div className="flex h-full items-center justify-center text-sm text-gray-400">Rendering preview...</div>
+          ) : loadError ? (
+            <div className="flex h-full items-center justify-center px-6 text-center text-sm text-red-600">{loadError}</div>
+          ) : pdfUrl ? (
+            <iframe src={pdfUrl} className="h-full w-full" title="Letter preview" />
+          ) : null}
+        </div>
+
+        <div className="flex items-center justify-end gap-3 border-t px-5 py-4">
+          <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">
+            Cancel
+          </button>
+          <button
+            type="button"
+            disabled={sending || loading || !!loadError}
+            onClick={onSend}
+            className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-60"
+          >
+            {sending ? "Sending..." : `Save & email to ${personalEmail || "member"}`}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="space-y-3 rounded-lg border border-gray-100 p-3">
@@ -400,7 +465,8 @@ export function PeopleDirectory() {
   const [tab, setTab] = useState<"active" | "alumni">("active");
   const [showOffboard, setShowOffboard] = useState(false);
   const [offboardBusy, setOffboardBusy] = useState(false);
-  const [letterBusy, setLetterBusy] = useState<"" | "relieving" | "experience">("");
+  const [letterPreview, setLetterPreview] = useState<{ type: "relieving" | "experience"; url: string | null; loading: boolean; error: string } | null>(null);
+  const [letterSending, setLetterSending] = useState(false);
 
   const fetchEmployees = async () => {
     setLoading(true);
@@ -598,11 +664,37 @@ export function PeopleDirectory() {
     }
   };
 
-  const generateLetter = async (type: "relieving" | "experience") => {
+  const openLetterPreview = async (type: "relieving" | "experience") => {
     if (!selectedEmployee) return;
     const label = type === "relieving" ? "relieving letter" : "experience letter";
-    if (!confirm(`Generate the ${label} for ${selectedEmployee.fullName}?\n\nIt will be saved to Documents and emailed to ${selectedEmployee.personalEmail}.`)) return;
-    setLetterBusy(type);
+    setLetterPreview({ type, url: null, loading: true, error: "" });
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/employees/${selectedEmployee.id}/letters/preview?type=${type}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setLetterPreview({ type, url: null, loading: false, error: data.message || `Could not render the ${label}.` });
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      setLetterPreview({ type, url, loading: false, error: "" });
+    } catch {
+      setLetterPreview({ type, url: null, loading: false, error: `Could not render the ${label}.` });
+    }
+  };
+
+  const closeLetterPreview = () => {
+    if (letterPreview?.url) URL.revokeObjectURL(letterPreview.url);
+    setLetterPreview(null);
+  };
+
+  const sendLetter = async () => {
+    if (!selectedEmployee || !letterPreview) return;
+    const { type } = letterPreview;
+    const label = type === "relieving" ? "relieving letter" : "experience letter";
+    setLetterSending(true);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/employees/${selectedEmployee.id}/letters`, {
         method: "POST",
@@ -611,15 +703,15 @@ export function PeopleDirectory() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        alert(data.message || `Could not generate the ${label}.`);
+        alert(data.message || `Could not send the ${label}.`);
         return;
       }
+      closeLetterPreview();
       alert(data.message);
-      if (data.url) window.open(data.url, "_blank");
     } catch {
-      alert(`Could not generate the ${label}. Please try again.`);
+      alert(`Could not send the ${label}. Please try again.`);
     } finally {
-      setLetterBusy("");
+      setLetterSending(false);
     }
   };
 
@@ -1038,18 +1130,18 @@ export function PeopleDirectory() {
                               {canWrite && (
                                 <div className="flex flex-wrap gap-2">
                                   <button
-                                    onClick={() => generateLetter("relieving")}
-                                    disabled={letterBusy !== ""}
+                                    onClick={() => openLetterPreview("relieving")}
+                                    disabled={!!letterPreview}
                                     className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
                                   >
-                                    {letterBusy === "relieving" ? "Generating..." : "Relieving letter"}
+                                    Preview relieving letter
                                   </button>
                                   <button
-                                    onClick={() => generateLetter("experience")}
-                                    disabled={letterBusy !== ""}
+                                    onClick={() => openLetterPreview("experience")}
+                                    disabled={!!letterPreview}
                                     className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
                                   >
-                                    {letterBusy === "experience" ? "Generating..." : "Experience letter"}
+                                    Preview experience letter
                                   </button>
                                 </div>
                               )}
@@ -1167,6 +1259,20 @@ export function PeopleDirectory() {
           busy={offboardBusy}
           onClose={() => !offboardBusy && setShowOffboard(false)}
           onConfirm={submitOffboard}
+        />
+      )}
+
+      {letterPreview && selectedEmployee && (
+        <LetterPreviewDialog
+          employeeName={selectedEmployee.fullName}
+          personalEmail={selectedEmployee.personalEmail}
+          letterLabel={letterPreview.type === "relieving" ? "Relieving letter" : "Experience letter"}
+          pdfUrl={letterPreview.url}
+          loading={letterPreview.loading}
+          loadError={letterPreview.error}
+          sending={letterSending}
+          onClose={() => !letterSending && closeLetterPreview()}
+          onSend={sendLetter}
         />
       )}
     </div>

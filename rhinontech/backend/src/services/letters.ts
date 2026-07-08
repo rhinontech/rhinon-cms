@@ -1,7 +1,16 @@
 import PDFDocument from "pdfkit";
+import fs from "fs";
+import path from "path";
 import { User } from "../models";
+import { getObjectBuffer, SIGNATURE_KEY } from "./storage";
 
 export type LetterType = "relieving" | "experience";
+
+// Bundled letterhead logo (full logotype, dark-blue on transparent) — copied into
+// dist/assets by `npm run build` (see package.json).
+const LOGO_PATH = path.join(__dirname, "../assets/logo.png");
+const LOGO_ASPECT = 1383 / 380; // width / height of assets/logo.png
+const logoBuffer = fs.existsSync(LOGO_PATH) ? fs.readFileSync(LOGO_PATH) : null;
 
 function fmtDate(value: unknown) {
   if (!value) return "—";
@@ -50,7 +59,11 @@ function letterParagraphs(type: LetterType, user: User): { salutation: string; p
   };
 }
 
-export function generateLetterPdf(type: LetterType, user: User): Promise<Buffer> {
+export async function generateLetterPdf(type: LetterType, user: User): Promise<Buffer> {
+  // Fetched once per letter — cheap, and lets a newly-uploaded signature apply
+  // immediately without redeploying.
+  const signatureBuffer = await getObjectBuffer(SIGNATURE_KEY).catch(() => null);
+
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ size: "A4", margins: { top: 64, bottom: 64, left: 64, right: 64 } });
     const chunks: Buffer[] = [];
@@ -61,8 +74,14 @@ export function generateLetterPdf(type: LetterType, user: User): Promise<Buffer>
     const pageWidth = doc.page.width - 128;
 
     // Letterhead
-    doc.font("Helvetica-Bold").fontSize(20).fillColor("#111111").text("Rhinon Tech", { align: "left" });
-    doc.font("Helvetica").fontSize(9).fillColor("#666666").text("www.rhinontech.in", { align: "left" });
+    if (logoBuffer) {
+      const logoWidth = 170;
+      doc.image(logoBuffer, 64, doc.y, { width: logoWidth, height: logoWidth / LOGO_ASPECT });
+      doc.y += logoWidth / LOGO_ASPECT + 6;
+    } else {
+      doc.font("Helvetica-Bold").fontSize(20).fillColor("#111111").text("Rhinon Tech", { align: "left" });
+    }
+    doc.font("Helvetica").fontSize(9).fillColor("#666666").text("www.rhinon.tech", { align: "left" });
     doc.moveDown(0.5);
     doc.moveTo(64, doc.y).lineTo(64 + pageWidth, doc.y).lineWidth(1).strokeColor("#111111").stroke();
     doc.moveDown(1.5);
@@ -91,9 +110,15 @@ export function generateLetterPdf(type: LetterType, user: User): Promise<Buffer>
 
     // Signature block
     doc.moveDown(2);
-    doc.text("For Rhinon Tech,");
-    doc.moveDown(3);
-    doc.font("Helvetica-Bold").text("Authorized Signatory");
+    doc.font("Helvetica").fontSize(11).fillColor("#222222").text("For Rhinon Tech,");
+    if (signatureBuffer) {
+      const sigWidth = 130;
+      doc.image(signatureBuffer, 64, doc.y + 4, { fit: [sigWidth, 55] });
+      doc.y += 55 + 8;
+    } else {
+      doc.moveDown(3); // blank space reserved for a signature to be added later
+    }
+    doc.font("Helvetica-Bold").fontSize(11).fillColor("#222222").text("Authorized Signatory");
     doc.font("Helvetica").fontSize(9).fillColor("#666666").text("Rhinon Tech");
 
     // Footer
