@@ -41,9 +41,13 @@ function readCookieHint() {
 export function PermissionsProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  // Initialize synchronously from the cookie so the sidebar doesn't flash empty
-  // on first paint; /auth/me (below) then replaces this with the live DB state.
-  const [permissions, setPermissions] = useState<string[]>(readCookieHint);
+  // Start empty on both server and client — document.cookie isn't available
+  // during SSR, so seeding this synchronously from the cookie would make the
+  // very first client render diverge from the server-rendered HTML (a
+  // hydration mismatch). Instead the cookie hint is applied a tick later from
+  // an effect below (client-only, runs after hydration), and /auth/me then
+  // replaces it with the live DB state.
+  const [permissions, setPermissions] = useState<string[]>([]);
   const [roleSlug, setRoleSlug] = useState("");
   const [ready, setReady] = useState(false);
   const [tick, setTick] = useState(0);
@@ -51,6 +55,10 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
 
   const urlRoleSlug = pathname.split("/")[1] || "";
   const isPreviewing = roleSlug === "superadmin" && urlRoleSlug !== "superadmin" && urlRoleSlug !== "";
+
+  useEffect(() => {
+    setPermissions(readCookieHint());
+  }, []);
 
   useEffect(() => {
     let cancelled = false;

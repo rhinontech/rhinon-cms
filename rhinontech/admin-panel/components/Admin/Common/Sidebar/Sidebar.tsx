@@ -17,8 +17,12 @@ import { usePermissions } from "@/context/PermissionsContext";
 export function Sidebar() {
   const pathname = usePathname();
   const { sidebarExpanded, setSidebarExpanded, isHovering, setIsHovering } = useDashboard();
-  const { has, effectiveRoleSlug } = usePermissions();
-  const roleSlug = effectiveRoleSlug;
+  const { has } = usePermissions();
+  // Built from the URL, not the async PermissionsContext state, so the very
+  // first client render (and hydration) matches the server-rendered HTML —
+  // effectiveRoleSlug starts empty until /auth/me resolves, which would
+  // otherwise render every href as "//dashboard" on first paint.
+  const roleSlug = pathname.split("/")[1] || "";
 
   const expanded = sidebarExpanded || isHovering;
 

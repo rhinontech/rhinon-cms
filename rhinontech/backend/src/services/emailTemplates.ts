@@ -62,10 +62,10 @@ interface WelcomeEmailOptions {
   companyEmail: string;
   tempPassword: string;
   onboardingUrl: string;
-  hasAttachments?: boolean;
+  signingUrl?: string;
 }
 
-export function welcomeEmail({ fullName, companyEmail, tempPassword, onboardingUrl, hasAttachments = false }: WelcomeEmailOptions) {
+export function welcomeEmail({ fullName, companyEmail, tempPassword, onboardingUrl, signingUrl }: WelcomeEmailOptions) {
   const firstName = fullName.split(" ")[0];
   const subject = `Welcome to Rhinon Tech — Set up your account`;
 
@@ -78,9 +78,8 @@ export function welcomeEmail({ fullName, companyEmail, tempPassword, onboardingU
     <p style="margin:0 0 6px;font-size:15px;font-weight:600;color:#1c1917;">Hi ${firstName},</p>
     <p style="margin:0 0 28px;font-size:14px;color:#78716c;line-height:1.7;">
       Your account has been created on the Rhinon Tech Admin Panel. Use the credentials below to get started.
-      ${hasAttachments ? `<br/><br/><strong style="color:#1c1917;">Note:</strong> We have attached your official <strong style="color:#1c1917;">Offer Letter</strong> and <strong style="color:#1c1917;">Non-Disclosure Agreement (NDA)</strong> to this email. Please review, sign, and return them before or on your joining date.` : ""}
     </p>
-    
+
     <!-- Credentials card -->
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#fafaf9;border:1px solid #e7e5e4;border-radius:10px;margin-bottom:28px;">
       <tr><td style="padding:20px 24px;">
@@ -108,7 +107,7 @@ export function welcomeEmail({ fullName, companyEmail, tempPassword, onboardingU
     </p>
 
     <!-- CTA -->
-    <table cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+    <table cellpadding="0" cellspacing="0" style="margin-bottom:${signingUrl ? "16px" : "28px"};">
       <tr>
         <td style="background-color:#1c1917;border-radius:8px;">
           <a href="${onboardingUrl}" style="display:inline-block;padding:13px 28px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:-0.1px;">
@@ -121,7 +120,27 @@ export function welcomeEmail({ fullName, companyEmail, tempPassword, onboardingU
     <p style="margin:0;font-size:12px;color:#a8a29e;line-height:1.7;">
       If the button doesn't work, copy this link into your browser:<br/>
       <a href="${onboardingUrl}" style="color:#78716c;word-break:break-all;">${onboardingUrl}</a>
-    </p>`;
+    </p>
+
+    ${signingUrl ? `
+    <!-- Document signing -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;padding-top:24px;border-top:1px solid #e7e5e4;">
+      <tr><td>
+        <p style="margin:0 0 14px;font-size:13px;color:#78716c;line-height:1.7;">
+          Please also review and sign your <strong style="color:#1c1917;">Offer Letter</strong> and <strong style="color:#1c1917;">Non-Disclosure Agreement (NDA)</strong> online — no printing needed.
+          <strong style="color:#1c1917;">This link expires in 48 hours.</strong>
+        </p>
+        <table cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="border:1px solid #1c1917;border-radius:8px;">
+              <a href="${signingUrl}" style="display:inline-block;padding:11px 24px;font-size:13px;font-weight:600;color:#1c1917;text-decoration:none;letter-spacing:-0.1px;">
+                Review &amp; Sign Documents →
+              </a>
+            </td>
+          </tr>
+        </table>
+      </td></tr>
+    </table>` : ""}`;
 
   const html = emailWrapper(header, body);
 
@@ -135,7 +154,79 @@ Temporary Password: ${tempPassword}
 Set up your account: ${onboardingUrl}
 
 This link expires in 48 hours.
-${hasAttachments ? "\nNote: We have attached your official Offer Letter and Non-Disclosure Agreement (NDA) to this email. Please review, sign, and return them before or on your joining date." : ""}`;
+${signingUrl ? `\nPlease also review and sign your Offer Letter and Non-Disclosure Agreement (NDA): ${signingUrl}\nThis link expires in 48 hours.` : ""}`;
+
+  return { subject, html, text };
+}
+
+// ─── Stage 1: Congratulations + sign documents (no credentials yet) ──────────
+// Sent when a member is created with documents to e-sign. The credentials /
+// account-setup email (welcomeEmail, above) is triggered automatically once
+// both documents are signed — see routes/documentSigning.ts.
+
+interface SignDocumentsEmailOptions {
+  fullName: string;
+  roleTitle?: string;
+  signingUrl: string;
+}
+
+export function signDocumentsEmail({ fullName, roleTitle, signingUrl }: SignDocumentsEmailOptions) {
+  const firstName = fullName.split(" ")[0];
+  const roleBit = roleTitle ? ` as ${roleTitle}` : "";
+  const subject = `Congratulations — Welcome to Rhinon Tech`;
+
+  const header = `
+    <p style="margin:16px 0 0;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.4px;">
+      Congratulations &<br/>welcome aboard
+    </p>`;
+
+  const body = `
+    <p style="margin:0 0 6px;font-size:15px;font-weight:600;color:#1c1917;">Hi ${firstName},</p>
+    <p style="margin:0 0 24px;font-size:14px;color:#78716c;line-height:1.7;">
+      Congratulations on joining <strong style="color:#1c1917;">Rhinon Tech</strong>${roleBit}! We're excited to have you on the team.
+    </p>
+
+    <p style="margin:0 0 20px;font-size:13px;color:#78716c;line-height:1.7;">
+      Your first step: review and e-sign your <strong style="color:#1c1917;">Offer Letter</strong> and
+      <strong style="color:#1c1917;">Non-Disclosure Agreement (NDA)</strong> online — no printing needed.<br/>
+      <strong style="color:#1c1917;">This link expires in 48 hours.</strong>
+    </p>
+
+    <!-- CTA -->
+    <table cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      <tr>
+        <td style="background-color:#1c1917;border-radius:8px;">
+          <a href="${signingUrl}" style="display:inline-block;padding:13px 28px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:-0.1px;">
+            Review &amp; Sign Documents →
+          </a>
+        </td>
+      </tr>
+    </table>
+
+    <p style="margin:0 0 20px;font-size:12px;color:#a8a29e;line-height:1.7;">
+      If the button doesn't work, copy this link into your browser:<br/>
+      <a href="${signingUrl}" style="color:#78716c;word-break:break-all;">${signingUrl}</a>
+    </p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#fafaf9;border:1px solid #e7e5e4;border-radius:10px;">
+      <tr><td style="padding:16px 20px;">
+        <p style="margin:0;font-size:13px;color:#78716c;line-height:1.7;">
+          <strong style="color:#1c1917;">What happens next?</strong><br/>
+          As soon as both documents are signed, we'll automatically email you your account credentials and setup link.
+        </p>
+      </td></tr>
+    </table>`;
+
+  const html = emailWrapper(header, body);
+
+  const text = `Congratulations, ${firstName} — welcome to Rhinon Tech${roleBit}!
+
+Your first step: review and e-sign your Offer Letter and Non-Disclosure Agreement (NDA):
+${signingUrl}
+
+This link expires in 48 hours.
+
+What happens next? As soon as both documents are signed, we'll automatically email you your account credentials and setup link.`;
 
   return { subject, html, text };
 }

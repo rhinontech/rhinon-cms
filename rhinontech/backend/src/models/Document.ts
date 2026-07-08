@@ -9,6 +9,8 @@ export type DocumentCategory =
   | "nda"
   | "other";
 
+export type SignatureType = "typed" | "drawn";
+
 interface DocumentAttributes {
   id: string;
   employeeId: string;
@@ -21,6 +23,15 @@ interface DocumentAttributes {
   mimeType: string | null;
   isRequest: boolean;
   requestNote: string | null;
+  // E-signing — signingToken/signingTokenExpiry are shared across every document
+  // in one signing session (e.g. offer_letter + nda created together for a new
+  // hire), same pattern as User.onboardingToken/onboardingTokenExpiry.
+  signingToken: string | null;
+  signingTokenExpiry: Date | null;
+  signedAt: Date | null;
+  signatureType: SignatureType | null;
+  signedName: string | null;
+  signatureImageKey: string | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -28,7 +39,8 @@ interface DocumentAttributes {
 interface DocumentCreationAttributes
   extends Optional<
     DocumentAttributes,
-    "id" | "fileKey" | "fileName" | "fileSize" | "mimeType" | "isRequest" | "requestNote"
+    | "id" | "fileKey" | "fileName" | "fileSize" | "mimeType" | "isRequest" | "requestNote"
+    | "signingToken" | "signingTokenExpiry" | "signedAt" | "signatureType" | "signedName" | "signatureImageKey"
   > {}
 
 export class Document
@@ -46,6 +58,12 @@ export class Document
   declare mimeType: string | null;
   declare isRequest: boolean;
   declare requestNote: string | null;
+  declare signingToken: string | null;
+  declare signingTokenExpiry: Date | null;
+  declare signedAt: Date | null;
+  declare signatureType: SignatureType | null;
+  declare signedName: string | null;
+  declare signatureImageKey: string | null;
   declare createdAt: Date;
   declare updatedAt: Date;
 }
@@ -66,6 +84,12 @@ Document.init(
     mimeType: { type: DataTypes.STRING, allowNull: true },
     isRequest: { type: DataTypes.BOOLEAN, defaultValue: false, allowNull: false },
     requestNote: { type: DataTypes.TEXT, allowNull: true },
+    signingToken: { type: DataTypes.STRING, allowNull: true, defaultValue: null },
+    signingTokenExpiry: { type: DataTypes.DATE, allowNull: true, defaultValue: null },
+    signedAt: { type: DataTypes.DATE, allowNull: true, defaultValue: null },
+    signatureType: { type: DataTypes.ENUM("typed", "drawn"), allowNull: true, defaultValue: null },
+    signedName: { type: DataTypes.STRING, allowNull: true, defaultValue: null },
+    signatureImageKey: { type: DataTypes.STRING, allowNull: true, defaultValue: null },
   },
   {
     sequelize,

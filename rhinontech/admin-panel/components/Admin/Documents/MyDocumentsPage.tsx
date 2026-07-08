@@ -12,6 +12,7 @@ import {
   TbX,
   TbUpload,
   TbDownload,
+  TbEye,
   TbAlertCircle,
 } from "react-icons/tb";
 
@@ -202,10 +203,39 @@ function UploadModal({ onClose, onSuccess, prefillDocId, prefillTitle, prefillCa
   );
 }
 
+// ─── Preview Modal ───────────────────────────────────────────────────────────
+
+function isPreviewable(mimeType: string | null) {
+  return mimeType === "application/pdf" || !!mimeType?.startsWith("image/");
+}
+
+function PreviewModal({ title, url, onClose }: { title: string; url: string; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center glass-overlay p-4" onClick={onClose}>
+      <div
+        className="flex h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl glass-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b px-5 py-3">
+          <p className="text-sm font-semibold text-gray-900 truncate">{title}</p>
+          <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+            <TbX size={18} />
+          </button>
+        </div>
+        <div className="flex-1 overflow-hidden bg-gray-100">
+          <iframe src={url} className="h-full w-full" title={title} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Aside Panel ─────────────────────────────────────────────────────────────
 
 function DocAside({ doc, onClose }: { doc: Doc; onClose: () => void }) {
   const [downloading, setDownloading] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   async function handleDownload() {
     setDownloading(true);
@@ -214,6 +244,16 @@ function DocAside({ doc, onClose }: { doc: Doc; onClose: () => void }) {
       window.open(downloadUrl, "_blank");
     } finally {
       setDownloading(false);
+    }
+  }
+
+  async function handlePreview() {
+    setPreviewing(true);
+    try {
+      const { downloadUrl } = await apiFetch<{ downloadUrl: string }>(`/documents/${doc.id}/download`);
+      setPreviewUrl(downloadUrl);
+    } finally {
+      setPreviewing(false);
     }
   }
 
@@ -256,16 +296,31 @@ function DocAside({ doc, onClose }: { doc: Doc; onClose: () => void }) {
           </div>
         </div>
         {doc.fileKey && (
-          <button
-            onClick={handleDownload}
-            disabled={downloading}
-            className="flex items-center gap-2 justify-center w-full py-2.5 rounded-lg bg-stone-900 text-white text-sm font-medium hover:bg-stone-800 disabled:opacity-50"
-          >
-            <TbDownload size={16} />
-            {downloading ? "Getting link..." : "Download"}
-          </button>
+          <div className="flex flex-col gap-2">
+            {isPreviewable(doc.mimeType) && (
+              <button
+                onClick={handlePreview}
+                disabled={previewing}
+                className="flex items-center gap-2 justify-center w-full py-2.5 rounded-lg border text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
+              >
+                <TbEye size={16} />
+                {previewing ? "Opening..." : "Preview"}
+              </button>
+            )}
+            <button
+              onClick={handleDownload}
+              disabled={downloading}
+              className="flex items-center gap-2 justify-center w-full py-2.5 rounded-lg bg-stone-900 text-white text-sm font-medium hover:bg-stone-800 disabled:opacity-50"
+            >
+              <TbDownload size={16} />
+              {downloading ? "Getting link..." : "Download"}
+            </button>
+          </div>
         )}
       </div>
+      {previewUrl && (
+        <PreviewModal title={doc.title} url={previewUrl} onClose={() => setPreviewUrl(null)} />
+      )}
     </div>
   );
 }
@@ -284,7 +339,9 @@ export function MyDocumentsPage() {
   const fetchDocs = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await apiFetch<Doc[]>("/documents");
+      // "self" keeps this page scoped to the signed-in user's own documents
+      // even for admins (plain /documents returns everyone's for them).
+      const data = await apiFetch<Doc[]>("/documents?employeeId=self");
       setDocs(data);
     } finally {
       setLoading(false);

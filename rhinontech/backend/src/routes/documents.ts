@@ -21,11 +21,13 @@ router.get("/", async (req: AuthRequest, res: Response) => {
     const userId = req.user!.userId;
     const admin = isAdmin(req);
 
+    // "self" scopes to the caller's own documents regardless of role — admins
+    // use it for "My Documents" (without it they'd see everyone's there too).
     const where: Record<string, unknown> = {};
     if (!admin) {
       where.employeeId = userId;
     } else if (req.query.employeeId) {
-      where.employeeId = req.query.employeeId as string;
+      where.employeeId = req.query.employeeId === "self" ? userId : (req.query.employeeId as string);
     }
 
     const docs = await Document.findAll({

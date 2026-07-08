@@ -17,6 +17,7 @@ export function proxy(request: NextRequest) {
 
   const isAuthRoute = pathname.startsWith("/auth/");
   const isOnboardRoute = pathname.startsWith("/onboard");
+  const isSignDocumentsRoute = pathname.startsWith("/sign-documents");
   const isPublicPortal = pathname.startsWith("/p/");
 
   // Public project portal — no auth required
@@ -24,7 +25,7 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (isOnboardRoute) {
+  if (isOnboardRoute || isSignDocumentsRoute) {
     return NextResponse.next();
   }
 

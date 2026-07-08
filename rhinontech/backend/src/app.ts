@@ -27,6 +27,7 @@ import contentRoutes from "./routes/content";
 import analyticsRoutes from "./routes/analytics";
 import docsAccessRoutes from "./routes/docs-access";
 import brandingRoutes from "./routes/branding";
+import documentSigningRoutes from "./routes/documentSigning";
 
 const app = express();
 
@@ -62,6 +63,7 @@ app.use("/content", contentRoutes);
 app.use("/analytics", analyticsRoutes);
 app.use("/docs-access", docsAccessRoutes);
 app.use("/branding", brandingRoutes);
+app.use("/document-signing", documentSigningRoutes);
 
 // Use text parser for SNS webhooks since AWS SNS sends content-type text/plain
 app.use("/webhooks", express.text({ type: ["application/json", "text/plain"] }), webhooksRoutes);

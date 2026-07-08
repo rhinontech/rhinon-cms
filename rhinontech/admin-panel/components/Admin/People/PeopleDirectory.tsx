@@ -5,9 +5,7 @@ import Cookies from "js-cookie";
 import { TbCamera, TbLayoutSidebarFilled, TbLayoutSidebarRightFilled, TbPencil, TbPlus, TbSearch, TbMailForward, TbKey, TbX } from "react-icons/tb";
 import { cn } from "@/lib/utils";
 import { WorkSchedulePicker } from "@/components/Admin/Common/WorkSchedulePicker";
-import adminImages from "@/constants/admin/images";
 import { usePermissions } from "@/context/PermissionsContext";
-import Image from "next/image";
 
 interface Role {
   id: string;
@@ -536,15 +534,20 @@ export function PeopleDirectory() {
 
   useEffect(() => {
     fetchEmployees();
-    if (canManage) {
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/roles`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((r) => r.json())
-        .then((data) => setRoles(Array.isArray(data) ? data : []))
-        .catch(() => setRoles([]));
-    }
   }, []);
+
+  // Keyed on canManage, not run once at mount: permissions load asynchronously
+  // (PermissionsContext starts empty and fills in after /auth/me), so at mount
+  // canManage is still false — this refires once it flips true.
+  useEffect(() => {
+    if (!canManage) return;
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/roles`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((data) => setRoles(Array.isArray(data) ? data : []))
+      .catch(() => setRoles([]));
+  }, [canManage]);
 
   const activeCount = useMemo(() => employees.filter((e) => e.status === "active").length, [employees]);
   const alumniCount = employees.length - activeCount;
@@ -788,6 +791,13 @@ export function PeopleDirectory() {
     }
 
     const savedEmployee = await res.json().catch(() => null);
+
+    // Creation succeeds even when the welcome email doesn't go out — never let
+    // that failure pass silently (strict false: older responses omit the flag).
+    if (mode === "create" && savedEmployee?.welcomeEmailSent === false) {
+      alert(`${savedEmployee.fullName || "The member"} was created, but the welcome email could NOT be sent.\n\nOpen their profile and use "Resend invite" to send the credentials and signing link again.`);
+    }
+
     const nextEmployees = await fetchEmployees();
     setSaving(false);
     setMessage(mode === "create" ? "Employee added." : "Employee updated.");
@@ -988,12 +998,23 @@ export function PeopleDirectory() {
                     Edit
                   </button>
                 )}
-                <button
-                  className="cursor-pointer text-gray-600 hover:text-gray-900"
-                  onClick={() => setIsPreviewExpanded(false)}
-                >
-                  <TbLayoutSidebarRightFilled size={20} />
-                </button>
+                {mode === "create" || mode === "edit" ? (
+                  <button
+                    className="cursor-pointer text-gray-600 hover:text-gray-900 p-1 rounded-lg hover:bg-gray-100"
+                    onClick={() => setMode("view")}
+                    title="Close"
+                  >
+                    <TbX size={20} />
+                  </button>
+                ) : (
+                  <button
+                    className="cursor-pointer text-gray-600 hover:text-gray-900"
+                    onClick={() => setIsPreviewExpanded(false)}
+                    title="Collapse panel"
+                  >
+                    <TbLayoutSidebarRightFilled size={20} />
+                  </button>
+                )}
               </div>
             </div>
 
@@ -1285,7 +1306,7 @@ export function PeopleDirectory() {
                       {mode === "create" && (
                         <label className="col-span-2 flex items-center gap-2 rounded-lg border border-stone-200 bg-stone-50/30 px-3 py-2 text-sm font-medium text-gray-700 mt-2 cursor-pointer">
                           <input type="checkbox" checked={attachDocs} onChange={(e) => setAttachDocs(e.target.checked)} className="rounded" />
-                          Attach generated Offer Letter & NDA to welcome email
+                          Generate Offer Letter & NDA for e-signing (credentials email is sent automatically after both are signed)
                         </label>
                       )}
                     </div>
@@ -1330,12 +1351,8 @@ export function PeopleDirectory() {
                       </button>
                     </div>
 
-                    <div className="flex-1 bg-white border border-stone-200 rounded-xl shadow-sm p-8 overflow-auto font-serif text-[11px] leading-relaxed text-gray-800 w-full relative select-none">
-                      {previewTab === "offer" ? (
-                        <OfferLetterPreview form={form} />
-                      ) : (
-                        <NdaPreview form={form} />
-                      )}
+                    <div className="flex-1 bg-white border border-stone-200 rounded-xl overflow-hidden w-full relative">
+                      <LiveLetterPreview form={form} type={previewTab} token={token} />
                     </div>
                   </div>
                 </form>
@@ -1374,322 +1391,112 @@ export function PeopleDirectory() {
   );
 }
 
-function OfferLetterLogo() {
-  return (
-    <div className="flex flex-col items-center justify-center border-b pb-2 mb-3 select-none">
-      <Image src={adminImages.Logo_Rhinon_Tech_Dark} alt="Rhinon Tech" className="h-7 w-auto object-contain" />
-    </div>
-  );
-}
+// Renders the real, backend-generated PDF (same generator used for the actual
+// offer letter / NDA) from the in-progress form fields, debounced as the admin
+// types. Nothing is persisted — see POST /employees/preview-documents.
+function LiveLetterPreview({ form, type, token }: { form: EmployeeForm; type: "offer" | "nda"; token?: string }) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const urlRef = useRef<string | null>(null);
 
-function getOrdinal(d: number) {
-  if (d > 3 && d < 21) return "th";
-  switch (d % 10) {
-    case 1:  return "st";
-    case 2:  return "nd";
-    case 3:  return "rd";
-    default: return "th";
+  const fullName = form.fullName.trim();
+
+  useEffect(() => {
+    if (!fullName) {
+      setUrl(null);
+      setError("");
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/employees/preview-documents`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        signal: controller.signal,
+        body: JSON.stringify({
+          type,
+          fullName: form.fullName,
+          legalName: form.legalName,
+          roleTitle: form.roleTitle,
+          workLocation: form.workLocation,
+          employmentType: form.employmentType,
+          department: form.department,
+          joiningDate: form.joiningDate,
+          annualCompensation: Number(form.annualCompensation || 0),
+          annualVariablePay: Number(form.annualVariablePay || 0),
+        }),
+      })
+        .then(async (res) => {
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.message || "Could not render the preview.");
+          }
+          return res.blob();
+        })
+        .then((blob) => {
+          const next = URL.createObjectURL(blob);
+          if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+          urlRef.current = next;
+          setUrl(next);
+          setLoading(false);
+        })
+        .catch((err) => {
+          if (err.name === "AbortError") return;
+          setError(err.message || "Could not render the preview.");
+          setLoading(false);
+        });
+    }, 700);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    type,
+    fullName,
+    form.legalName,
+    form.roleTitle,
+    form.workLocation,
+    form.employmentType,
+    form.department,
+    form.joiningDate,
+    form.annualCompensation,
+    form.annualVariablePay,
+    token,
+  ]);
+
+  useEffect(() => () => {
+    if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+  }, []);
+
+  if (!fullName) {
+    return (
+      <div className="flex h-full items-center justify-center p-8 text-center text-sm text-stone-400">
+        Enter the member&apos;s name to preview the {type === "offer" ? "offer letter" : "NDA"}.
+      </div>
+    );
   }
-}
 
-function OfferLetterPreview({ form }: { form: EmployeeForm }) {
-  const currentYear = new Date().getFullYear();
-  const today = new Date();
-  const ordinalDay = getOrdinal(today.getDate());
-  const dateStr = `${today.getDate()}${ordinalDay} ${today.toLocaleDateString("en-US", { month: "long" })}, ${today.getFullYear()}`;
-  
-  const startD = form.joiningDate ? new Date(form.joiningDate) : new Date();
-  const endD = new Date(startD.getFullYear(), startD.getMonth() + 6, startD.getDate());
-  
-  const startOrd = getOrdinal(startD.getDate());
-  const startStr = `${startD.getDate()}${startOrd} ${startD.toLocaleDateString("en-US", { month: "long" })}, ${startD.getFullYear()}`;
-  
-  const endOrd = getOrdinal(endD.getDate());
-  const endStr = `${endD.getDate()}${endOrd} ${endD.toLocaleDateString("en-US", { month: "long" })}, ${endD.getFullYear()}`;
-  
-  const fmtStartShort = startD.toLocaleDateString("en-GB").replace(/\//g, "-");
-  const fmtEndShort = endD.toLocaleDateString("en-GB").replace(/\//g, "-");
-  
-  const stipend = form.annualCompensation ? Math.round(Number(form.annualCompensation) / 12) : 5000;
-  const ctc = form.annualCompensation ? `₹${Number(form.annualCompensation).toLocaleString("en-IN")}` : "As discussed";
-  const variable = form.annualVariablePay ? `₹${Number(form.annualVariablePay).toLocaleString("en-IN")}` : "₹0";
-  const isIntern = form.employmentType?.toLowerCase() === "internship";
+  if (error) {
+    return (
+      <div className="flex h-full items-center justify-center p-8 text-center text-sm text-red-500">{error}</div>
+    );
+  }
 
   return (
-    <div className="space-y-6 overflow-y-auto max-h-[70vh] p-4 bg-stone-100/60 rounded-xl">
-      {/* PAGE 1 */}
-      <div className="bg-white border border-stone-200 shadow-sm p-10 aspect-[1/1.41] w-full text-[9.5px] leading-relaxed relative flex flex-col font-sans text-stone-700 select-none">
-        <OfferLetterLogo />
-        <div className="text-center font-bold text-[#005085] tracking-wider text-[10px] mb-4">
-          PRIVATE & CONFIDENTIAL
+    <div className="relative h-full w-full">
+      {url && <iframe src={url} className="h-full w-full" title={type === "offer" ? "Offer letter preview" : "NDA preview"} />}
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white/70 text-xs text-stone-400">
+          Rendering preview...
         </div>
-        <div className="space-y-0.5 mb-4">
-          <p>{dateStr}</p>
-          <p className="font-bold text-stone-900 text-[10.5px]">{form.legalName || form.fullName || "[Full Name]"}</p>
-          <p>{form.workLocation || "Bengaluru, India"}</p>
-        </div>
-        <p className="mb-3">Dear {form.fullName ? form.fullName.split(" ")[0] : "[First Name]"},</p>
-        
-        <div className="space-y-3 flex-1">
-          <div>
-            <h3 className="font-bold text-[#005085] text-[9.5px] mb-0.5">1. Introduction to Rhinon Tech</h3>
-            <p className="text-justify">
-              We are thrilled to offer you the opportunity to {isIntern ? "intern" : "work"} with <span className="font-bold text-stone-900">Rhinon Tech</span>, a cutting-edge technology company dedicated to pushing the boundaries of innovation and excellence. Since our inception, Rhinon Tech has been at the forefront of developing scalable solutions and empowering industries with the tools to grow in a highly competitive marketplace.
-            </p>
-            <p className="text-justify mt-1">
-              As a company that values creativity, innovation, and a passion for technology, we believe in providing our {isIntern ? "interns" : "employees"} with the best learning experience and preparing them for future roles in the industry. Through this {isIntern ? "internship" : "employment"}, you will be involved in projects that contribute directly to Rhinon Tech's mission.
-            </p>
-          </div>
-
-          <div>
-            <h3 className="font-bold text-[#005085] text-[9.5px] mb-0.5">2. Offer of {isIntern ? "Internship" : "Employment"}</h3>
-            <p className="text-justify">
-              We are pleased to offer you the position of <span className="font-bold text-stone-900">{form.roleTitle || (isIntern ? "NextJs Developer Intern" : "NextJs Developer")}</span> {isIntern ? `for a period of **6 months** starting from **${fmtStartShort}** to **${fmtEndShort}**` : `starting from **${startStr}**`}. This position is an important step toward building your professional experience, and we look forward to seeing your contributions in real-world projects.
-            </p>
-            <p className="text-justify mt-1">
-              This role will help you gain skills in Product Development and AI with talented professionals and get exposure to cutting-edge technologies.
-            </p>
-          </div>
-
-          <div>
-            <h3 className="font-bold text-[#005085] text-[9.5px] mb-0.5">3. {isIntern ? "Internship" : "Employment"} Position Details</h3>
-            <ul className="list-disc pl-4 space-y-0.5">
-              <li><span className="font-bold text-stone-900">Designation:</span> {form.roleTitle || "NextJs Developer"}</li>
-              <li><span className="font-bold text-stone-900">Location:</span> {form.workLocation || "Bengaluru (Remote)"}</li>
-              {isIntern ? (
-                <li><span className="font-bold text-stone-900">Internship Duration:</span> 6 months</li>
-              ) : (
-                <li><span className="font-bold text-stone-900">Employment Type:</span> Full-Time / Permanent</li>
-              )}
-              <li><span className="font-bold text-stone-900">Working Hours:</span> {isIntern ? "48 hours per week" : "40 hours per week"}</li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="font-bold text-[#005085] text-[9.5px] mb-0.5">4. Compensation and Benefits</h3>
-          </div>
-        </div>
-        <div className="absolute bottom-3 left-0 right-0 text-center text-[7.5px] text-stone-400">Page 1 of 5</div>
-      </div>
-
-      {/* PAGE 2 */}
-      <div className="bg-white border border-stone-200 shadow-sm p-10 aspect-[1/1.41] w-full text-[9.5px] leading-relaxed relative flex flex-col font-sans text-stone-700 select-none">
-        <OfferLetterLogo />
-        <div className="space-y-3 flex-1">
-          <p className="text-justify">
-            {isIntern ? (
-              <>During your internship period, this is a paid internship for <span className="font-bold text-stone-900">₹{stipend.toLocaleString("en-IN")}/- per month</span>. After three months, there will be a review meeting to assess your performance, and based on this review, we will decide on future opportunities and compensation.</>
-            ) : (
-              <>Your starting compensation package includes an annual CTC of <span className="font-bold text-stone-900">{ctc}</span> (with variable component of <span className="font-bold text-stone-900">{variable}</span>) paid on a monthly basis. Your compensation will be subject to annual performance reviews.</>
-            )}
-          </p>
-          <p>You will enjoy the following benefits as {isIntern ? "an intern" : "an employee"} at Rhinon Tech:</p>
-          <ul className="list-disc pl-4 space-y-1">
-            <li><span className="font-bold text-stone-900">Mentorship:</span> You will be assigned a mentor who will provide guidance throughout your tenure.</li>
-            <li><span className="font-bold text-stone-900">Workshops and Training:</span> Access to internal training programs and workshops that align with your field of work.</li>
-            <li><span className="font-bold text-stone-900">Networking Opportunities:</span> Participate in company events, meetups, and team-building exercises to build professional connections.</li>
-            <li><span className="font-bold text-stone-900">Team Collaboration:</span> Engage with various teams and departments to understand how cross-functional collaboration leads to the success of a company.</li>
-          </ul>
-
-          <div>
-            <h3 className="font-bold text-[#005085] text-[9.5px] mb-0.5">5. Terms and Conditions</h3>
-            <p className="font-bold text-stone-900 mb-0.5">Working Hours</p>
-            <p className="text-justify">
-              The standard working hours will be <span className="font-bold text-stone-900">11 AM to 8 PM, Monday to Saturday</span>. You may be required to work additional hours depending on project needs, but this will be communicated well in advance.
-            </p>
-            <p className="font-bold text-stone-900 mt-2 mb-0.5">Performance Reviews</p>
-            <p className="text-justify">
-              Throughout your tenure, you will be subject to regular performance reviews. These reviews are designed to assess your progress and provide feedback for improvement. Based on these evaluations, you will be given opportunities to work on more complex projects or explore different areas of interest within the company.
-            </p>
-            <p className="font-bold text-stone-900 mt-2 mb-0.5">Confidentiality Agreement</p>
-            <p className="text-justify">
-              During your association with Rhinon Tech, you may have access to sensitive and proprietary information. It is expected that you maintain confidentiality and not disclose any company-related information to external parties. A separate Non-Disclosure Agreement (NDA) will be provided to you on the first day.
-            </p>
-          </div>
-        </div>
-        <div className="absolute bottom-3 left-0 right-0 text-center text-[7.5px] text-stone-400">Page 2 of 5</div>
-      </div>
-
-      {/* PAGE 3 */}
-      <div className="bg-white border border-stone-200 shadow-sm p-10 aspect-[1/1.41] w-full text-[9.5px] leading-relaxed relative flex flex-col font-sans text-stone-700 select-none">
-        <OfferLetterLogo />
-        <div className="space-y-3 flex-1">
-          <div>
-            <p className="font-bold text-stone-900 mb-0.5">Intellectual Property</p>
-            <p className="text-justify">
-              Any work, project, or intellectual property developed by you during the association remains the sole property of <span className="font-bold text-stone-900">Rhinon Tech</span>. You will be expected to transfer all rights of any code, design, or product developed during your tenure to the company.
-            </p>
-          </div>
-
-          <div>
-            <h3 className="font-bold text-[#005085] text-[9.5px] mb-0.5">6. Termination Clause</h3>
-            <p className="text-justify">
-              While we expect you to successfully complete your tenure, both you and Rhinon Tech have the right to terminate the association under the following conditions:
-            </p>
-            <ul className="list-disc pl-4 space-y-1 mt-1 text-justify">
-              <li><span className="font-bold text-gray-900">Voluntary Termination:</span> Either party may terminate the agreement with <span className="font-bold text-gray-900">1 Month Prior Notice</span>. A written notice is required in case you decide to discontinue.</li>
-              <li><span className="font-bold text-gray-900">Involuntary Termination:</span> The company reserves the right to terminate immediately if any of the following occurs:
-                <ul className="list-alpha pl-4 mt-0.5 space-y-0.5 text-stone-600">
-                  <li>a. Violation of company policies or non-compliance with the agreement.</li>
-                  <li>b. Misconduct, dishonesty, or inappropriate behavior within the workplace.</li>
-                  <li>c. Poor performance reviews with no sign of improvement for 2 consecutive months.</li>
-                  <li>d. Intentionally or negligently disclosing Confidential Information to unauthorized parties.</li>
-                  <li>e. Intentionally or negligently misusing or misappropriating Confidential Information.</li>
-                  <li>f. Failure to comply with security policies regarding Confidential Information.</li>
-                  <li>g. Failure to return all company property and settle pending tasks.</li>
-                </ul>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="font-bold text-[#005085] text-[9.5px] mb-0.5">7. Post-Employment Review and Opportunities</h3>
-          </div>
-        </div>
-        <div className="absolute bottom-3 left-0 right-0 text-center text-[7.5px] text-stone-400">Page 3 of 5</div>
-      </div>
-
-      {/* PAGE 4 */}
-      <div className="bg-white border border-stone-200 shadow-sm p-10 aspect-[1/1.41] w-full text-[9.5px] leading-relaxed relative flex flex-col font-sans text-stone-700 select-none">
-        <OfferLetterLogo />
-        <div className="space-y-3 flex-1">
-          <p className="text-justify">
-            At the conclusion of your tenure, we will conduct a <span className="font-bold text-stone-900">formal review of your performance</span>. This review will evaluate your contributions, professionalism, teamwork, and learning agility.
-          </p>
-          <p className="font-bold text-stone-900">Post-Internship Outcomes:</p>
-          <ol className="list-decimal pl-4 space-y-1">
-            <li><span className="font-bold text-stone-900">Certificate of Completion:</span> Issued if you have met objectives satisfactorily.</li>
-            <li><span className="font-bold text-stone-900">Experience Letter:</span> Provided to highlight your key contributions.</li>
-            <li><span className="font-bold text-stone-900">Full-Time Employment Opportunity:</span> Outstanding interns may be offered a permanent role.</li>
-          </ol>
-          <p className="text-justify">
-            We strongly believe in recognizing talent, and those who demonstrate exceptional performance will be considered for permanent leadership positions with Rhinon Tech.
-          </p>
-
-          <div>
-            <h3 className="font-bold text-[#005085] text-[9.5px] mb-0.5">8. Code of Conduct</h3>
-            <ol className="list-decimal pl-4 space-y-0.5">
-              <li><span className="font-bold text-stone-900">Professionalism:</span> Maintain a professional demeanor at all times.</li>
-              <li><span className="font-bold text-stone-900">Punctuality:</span> Be punctual and accountable for agreed-upon hours.</li>
-              <li><span className="font-bold text-stone-900">Workplace Ethics:</span> Follow all company policies and security guidelines.</li>
-              <li><span className="font-bold text-stone-900">Teamwork:</span> Collaborate effectively and contribute to culture.</li>
-            </ol>
-          </div>
-
-          <div>
-            <h3 className="font-bold text-[#005085] text-[9.5px] mb-0.5">9. Next Steps and Acceptance</h3>
-            <p className="text-justify">
-              To confirm your acceptance of this offer, please sign and return a copy of this offer letter by the acceptance deadline. We look forward to your contributions.
-            </p>
-            <p className="mt-1">HR Department: info@rhinontech.com</p>
-          </div>
-
-          <div className="pt-2">
-            <p>Best regards,</p>
-            <div className="h-6 flex items-center italic text-stone-400 select-none">[Founder Signature]</div>
-            <p className="font-bold text-stone-900">Prabhat Patra (Founder)</p>
-          </div>
-        </div>
-        <div className="absolute bottom-3 left-0 right-0 text-center text-[7.5px] text-stone-400">Page 4 of 5</div>
-      </div>
-
-      {/* PAGE 5 */}
-      <div className="bg-white border border-stone-200 shadow-sm p-10 aspect-[1/1.41] w-full text-[9.5px] leading-relaxed relative flex flex-col font-sans text-stone-700 select-none">
-        <OfferLetterLogo />
-        <div className="text-center font-bold text-[#005085] tracking-wider text-[10px] mb-6">
-          Rhinon Tech Acknowledgment of Offer
-        </div>
-        <p className="text-justify mb-6">
-          I, <span className="font-bold text-stone-900">{form.legalName || form.fullName || "[Full Name]"}</span>, accept the offer of the <span className="font-bold text-stone-900">{form.roleTitle || "[Role Title]"}</span> position at Rhinon Tech under the terms stated in this letter.
-        </p>
-
-        <div className="space-y-4">
-          <p className="font-bold text-stone-900">Signature: _______________________</p>
-          <p className="font-bold text-stone-900">Date: ___{fmtStartShort}____________________</p>
-        </div>
-        <div className="absolute bottom-3 left-0 right-0 text-center text-[7.5px] text-stone-400">Page 5 of 5</div>
-      </div>
+      )}
     </div>
   );
 }
-
-function NdaPreview({ form }: { form: EmployeeForm }) {
-  const dateStr = new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
-  const joinedStr = form.joiningDate
-    ? new Date(form.joiningDate).toLocaleDateString("en-GB").replace(/\//g, "-")
-    : "[Joining Date]";
-
-  return (
-    <div className="space-y-6 overflow-y-auto max-h-[70vh] p-4 bg-stone-100/60 rounded-xl">
-      <div className="bg-white border border-stone-200 shadow-sm p-10 aspect-[1/1.41] w-full text-[9.5px] leading-relaxed relative flex flex-col font-sans text-stone-700 select-none">
-        <OfferLetterLogo />
-        <div className="text-center font-bold text-[#005085] tracking-wider text-[10px] mb-4">
-          NON-DISCLOSURE & CONFIDENTIALITY AGREEMENT
-        </div>
-        
-        <div className="text-right mb-2">Date: {dateStr}</div>
-
-        <div className="space-y-3 flex-1">
-          <p className="text-justify">
-            This Non-Disclosure and Confidentiality Agreement (the "Agreement") is entered into as of {dateStr} by and between:
-          </p>
-          <div className="pl-4 space-y-1">
-            <p><span className="font-bold text-stone-900">1. Rhinon Tech</span> (the "Company"), and</p>
-            <p><span className="font-bold text-stone-900">2. {form.legalName || form.fullName || "[Employee Full Name]"}</span> residing at {form.workLocation || "[Work Location]"} (the "Employee").</p>
-          </div>
-
-          <div>
-            <h3 className="font-bold text-[#005085] text-[9.5px] mb-0.5">1. Purpose</h3>
-            <p className="text-justify text-stone-600">
-              The Company desires to associate with the Employee, during which the Employee will have access to confidential, proprietary, and highly sensitive information of the Company. The Employee agrees to receive and safeguard such information under the terms of this Agreement.
-            </p>
-          </div>
-
-          <div>
-            <h3 className="font-bold text-[#005085] text-[9.5px] mb-0.5">2. Confidential Information</h3>
-            <p className="text-justify text-stone-600">
-              Confidential Information includes all trade secrets, source code, playbooks, databases, client records, research, and financial reports. The Employee agrees to keep all such information strictly confidential and not disclose it to any third party.
-            </p>
-          </div>
-
-          <div>
-            <h3 className="font-bold text-[#005085] text-[9.5px] mb-0.5">3. Intellectual Property</h3>
-            <p className="text-justify text-stone-600">
-              All inventions, systems, software designs, codes, and business methodologies developed by the Employee during their association with the Company remain the exclusive intellectual property of the Company.
-            </p>
-          </div>
-
-          <div>
-            <h3 className="font-bold text-[#005085] text-[9.5px] mb-0.5">4. Remedies & Jurisdiction</h3>
-            <p className="text-justify text-stone-600">
-              Any breach of this agreement shall entitle the Company to seek injunctive relief and damages in accordance with governing laws.
-            </p>
-          </div>
-
-          <p className="pt-1 text-justify">
-            IN WITNESS WHEREOF, the parties have executed this Agreement as of the date first above written.
-          </p>
-
-          <div className="pt-2 grid grid-cols-2 gap-8 text-[9px]">
-            <div className="space-y-3">
-              <p>For <span className="font-bold text-stone-900">Rhinon Tech</span>,</p>
-              <div className="h-6 flex items-center italic text-stone-400 select-none">[Authorized Sign]</div>
-              <p className="font-bold text-stone-900">Authorized Signatory</p>
-            </div>
-            <div className="space-y-3">
-              <p>Accepted & Agreed By:</p>
-              <div className="h-6 border-b border-stone-200"></div>
-              <div>
-                <p className="font-bold text-stone-900">{form.legalName || form.fullName || "[Employee Full Name]"}</p>
-                <p className="text-[7.5px] text-stone-400">Date: {joinedStr}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="absolute bottom-3 left-0 right-0 text-center text-[7.5px] text-stone-400">Page 1 of 1</div>
-      </div>
-    </div>
-  );
-}
-
-

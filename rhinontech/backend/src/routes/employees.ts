@@ -2,13 +2,14 @@ import { Router, Response } from "express";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import multer from "multer";
+import { Op } from "sequelize";
 import { User, Role, Document } from "../models";
 import type { ExitReason } from "../models/User";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 import { finalizeOffboarding, todayIST } from "../services/offboarding";
 import { generateLetterPdf, letterTitle, LetterType, generateOfferLetterPdf, generateNdaPdf } from "../services/letters";
 import { sendEmail } from "../services/mailer";
-import { welcomeEmail, resetPasswordEmail } from "../services/emailTemplates";
+import { welcomeEmail, signDocumentsEmail, resetPasswordEmail } from "../services/emailTemplates";
 import { env } from "../config/env";
 import { uploadBuffer, deleteObject, getPresignedReadUrl, getPresignedUploadUrl } from "../services/storage";
 
@@ -165,9 +166,12 @@ router.post("/", authorize("employees:write"), async (req: AuthRequest, res: Res
     ...employeePayload(req.body),
   });
 
-  // Onboarding documents attachment logic
+  // Onboarding documents — generated as unsigned PDFs, but instead of attaching
+  // them we issue a shared signing-session token (see routes/documentSigning.ts)
+  // so the new hire reviews and e-signs both in one flow, then downloads them.
   const attachDocs = req.body.attachDocs === true || req.body.attachDocs === "true";
-  let attachments: any[] = [];
+  const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:4200";
+  let signingUrl: string | undefined;
 
   if (attachDocs) {
     try {
@@ -180,6 +184,9 @@ router.post("/", authorize("employees:write"), async (req: AuthRequest, res: Res
       const offerKey = await uploadBuffer(offerLetterPdf, offerLetterName, "documents", "application/pdf");
       const ndaKey = await uploadBuffer(ndaPdf, ndaName, "documents", "application/pdf");
 
+      const signingToken = crypto.randomUUID();
+      const signingTokenExpiry = new Date(Date.now() + 48 * 60 * 60 * 1000);
+
       await Document.create({
         employeeId: employee.id,
         uploadedById: req.user!.userId,
@@ -189,6 +196,8 @@ router.post("/", authorize("employees:write"), async (req: AuthRequest, res: Res
         fileName: offerLetterName,
         fileSize: offerLetterPdf.length,
         mimeType: "application/pdf",
+        signingToken,
+        signingTokenExpiry,
       });
 
       await Document.create({
@@ -200,35 +209,37 @@ router.post("/", authorize("employees:write"), async (req: AuthRequest, res: Res
         fileName: ndaName,
         fileSize: ndaPdf.length,
         mimeType: "application/pdf",
+        signingToken,
+        signingTokenExpiry,
       });
 
-      attachments = [
-        { filename: offerLetterName, content: offerLetterPdf, contentType: "application/pdf" },
-        { filename: ndaName, content: ndaPdf, contentType: "application/pdf" },
-      ];
+      signingUrl = `${frontendUrl}/sign-documents?token=${signingToken}`;
     } catch (docErr) {
       console.error("Failed to generate and upload onboarding documents:", docErr);
     }
   }
 
-  // Send welcome email (non-fatal)
+  // Send the first onboarding email — non-fatal (the member is already created
+  // and the admin can use "Resend invite"), but the response says whether it
+  // went out so the failure is never silent.
+  //
+  // Two-stage flow: when there are documents to sign, this first email is a
+  // congratulations + signing link ONLY — the credentials/setup email is
+  // triggered automatically once both documents are signed (documentSigning.ts).
+  // Without documents (attachDocs off, or generation failed), send the full
+  // credentials email immediately so the hire is never left without a way in.
+  let welcomeEmailSent = false;
   try {
-    const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:4200";
-    const onboardingUrl = `${frontendUrl}/onboard?token=${onboardingToken}`;
-    const { subject, html, text } = welcomeEmail({
-      fullName,
-      companyEmail,
-      tempPassword,
-      onboardingUrl,
-      hasAttachments: attachments.length > 0,
-    });
-    await sendEmail({
-      to: personalEmail,
-      subject,
-      html,
-      text,
-      attachments: attachments.length > 0 ? attachments : undefined,
-    });
+    const template = signingUrl
+      ? signDocumentsEmail({ fullName, roleTitle: employee.roleTitle || undefined, signingUrl })
+      : welcomeEmail({
+          fullName,
+          companyEmail,
+          tempPassword,
+          onboardingUrl: `${frontendUrl}/onboard?token=${onboardingToken}`,
+        });
+    await sendEmail({ to: personalEmail, subject: template.subject, html: template.html, text: template.text });
+    welcomeEmailSent = true;
   } catch (err) {
     console.error("Failed to send welcome email:", err);
   }
@@ -237,7 +248,47 @@ router.post("/", authorize("employees:write"), async (req: AuthRequest, res: Res
     ...employee.toJSON(),
     passwordHash: undefined,
     onboardingToken: undefined,
+    welcomeEmailSent,
   });
+});
+
+// Live preview of an offer letter / NDA rendered from in-progress form data —
+// used by the create/edit member form so the preview always matches the real
+// generator. Nothing is persisted: `User.build` makes an in-memory instance
+// only, never written to the database.
+router.post("/preview-documents", authorize("employees:write"), async (req: AuthRequest, res: Response) => {
+  const type = req.body.type === "nda" ? "nda" : "offer";
+  const { fullName, legalName, roleTitle, workLocation, employmentType, joiningDate, department, annualCompensation, annualVariablePay } = req.body;
+
+  if (!fullName) {
+    res.status(400).json({ message: "Full name is required to preview." });
+    return;
+  }
+
+  const draft = User.build({
+    fullName,
+    legalName: legalName || undefined,
+    roleTitle: roleTitle || undefined,
+    workLocation: workLocation || undefined,
+    employmentType: employmentType || undefined,
+    department: department || "",
+    joiningDate: parseOptionalDate(joiningDate) || new Date(),
+    annualCompensation: annualCompensation ? Number(annualCompensation) : undefined,
+    annualVariablePay: annualVariablePay ? Number(annualVariablePay) : undefined,
+    personalEmail: "preview@example.com",
+    passwordHash: "",
+    roleId: "",
+  });
+
+  try {
+    const pdf = type === "nda" ? await generateNdaPdf(draft) : await generateOfferLetterPdf(draft);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", "inline");
+    res.send(pdf);
+  } catch (err) {
+    console.error("Failed to render document preview:", err);
+    res.status(500).json({ message: "Could not render the preview." });
+  }
 });
 
 router.put("/:id", authorize("employees:write"), async (req: AuthRequest, res: Response) => {
@@ -505,14 +556,32 @@ router.post("/:id/resend-onboarding", authorize("employees:write"), async (req: 
 
   await employee.update({ passwordHash, onboardingToken, onboardingTokenExpiry, onboarded: false });
 
+  // Re-include the e-signing link when unsigned onboarding documents exist —
+  // if the original welcome email was lost, this is the hire's only way back
+  // into the signing session. The token is reused (previously shared links stay
+  // valid); only its expiry is refreshed alongside the new invite.
+  const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:4200";
+  let signingUrl: string | undefined;
+  const unsignedDoc = await Document.findOne({
+    where: { employeeId: employee.id, signedAt: null, signingToken: { [Op.ne]: null } },
+    order: [["createdAt", "DESC"]],
+  });
+  if (unsignedDoc?.signingToken) {
+    await Document.update(
+      { signingTokenExpiry: new Date(Date.now() + 48 * 60 * 60 * 1000) },
+      { where: { signingToken: unsignedDoc.signingToken } }
+    );
+    signingUrl = `${frontendUrl}/sign-documents?token=${unsignedDoc.signingToken}`;
+  }
+
   try {
-    const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:4200";
     const onboardingUrl = `${frontendUrl}/onboard?token=${onboardingToken}`;
     const { subject, html, text } = welcomeEmail({
       fullName: employee.fullName,
       companyEmail: employee.companyEmail,
       tempPassword,
       onboardingUrl,
+      signingUrl,
     });
     await sendEmail({ to: employee.personalEmail, subject, html, text });
   } catch (err) {
