@@ -65,7 +65,10 @@ router.get("/me", authenticate, async (req: AuthRequest, res: Response) => {
     attributes: { exclude: ["passwordHash"] },
   });
   if (!user) { res.status(404).json({ message: "User not found" }); return; }
-  res.json(user);
+  // permissions/roleSlug come from the middleware's live DB lookup (not the
+  // frozen JWT claim) — this is what the client polls to stay in sync without
+  // requiring a re-login after a permission or role change.
+  res.json({ ...user.toJSON(), permissions: req.user!.permissions, roleSlug: req.user!.roleSlug });
 });
 
 // Update own profile (editable fields only — companyEmail, role, status not changeable by self)

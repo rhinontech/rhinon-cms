@@ -138,8 +138,8 @@ export function LeadImportModal({ onClose }: { onClose: (didImport: boolean) => 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-lg rounded-2xl bg-white shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center glass-overlay p-4">
+      <div className="w-full max-w-lg rounded-2xl glass-modal">
         <div className="flex h-16 items-center justify-between border-b px-5">
           <div className="flex items-center gap-2">
             <TbFileTypeCsv className="text-blue-600" size={20} />

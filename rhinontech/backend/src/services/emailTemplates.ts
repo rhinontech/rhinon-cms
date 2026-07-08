@@ -62,9 +62,10 @@ interface WelcomeEmailOptions {
   companyEmail: string;
   tempPassword: string;
   onboardingUrl: string;
+  hasAttachments?: boolean;
 }
 
-export function welcomeEmail({ fullName, companyEmail, tempPassword, onboardingUrl }: WelcomeEmailOptions) {
+export function welcomeEmail({ fullName, companyEmail, tempPassword, onboardingUrl, hasAttachments = false }: WelcomeEmailOptions) {
   const firstName = fullName.split(" ")[0];
   const subject = `Welcome to Rhinon Tech — Set up your account`;
 
@@ -77,8 +78,9 @@ export function welcomeEmail({ fullName, companyEmail, tempPassword, onboardingU
     <p style="margin:0 0 6px;font-size:15px;font-weight:600;color:#1c1917;">Hi ${firstName},</p>
     <p style="margin:0 0 28px;font-size:14px;color:#78716c;line-height:1.7;">
       Your account has been created on the Rhinon Tech Admin Panel. Use the credentials below to get started.
+      ${hasAttachments ? `<br/><br/><strong style="color:#1c1917;">Note:</strong> We have attached your official <strong style="color:#1c1917;">Offer Letter</strong> and <strong style="color:#1c1917;">Non-Disclosure Agreement (NDA)</strong> to this email. Please review, sign, and return them before or on your joining date.` : ""}
     </p>
-
+    
     <!-- Credentials card -->
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#fafaf9;border:1px solid #e7e5e4;border-radius:10px;margin-bottom:28px;">
       <tr><td style="padding:20px 24px;">
@@ -132,7 +134,8 @@ Temporary Password: ${tempPassword}
 
 Set up your account: ${onboardingUrl}
 
-This link expires in 48 hours.`;
+This link expires in 48 hours.
+${hasAttachments ? "\nNote: We have attached your official Offer Letter and Non-Disclosure Agreement (NDA) to this email. Please review, sign, and return them before or on your joining date." : ""}`;
 
   return { subject, html, text };
 }

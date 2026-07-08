@@ -76,7 +76,7 @@ export function ApprovalsPage() {
   return (
     <div className="flex h-full min-h-0 overflow-hidden">
       <main className={cn("flex h-full min-h-0 w-full flex-col overflow-hidden bg-white border-r", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
-        <div className="sticky top-0 z-10 flex h-16 items-center justify-between border-b px-5 bg-stone-50">
+        <div className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-black/5 glass-header px-5">
           <div className="flex items-center gap-3">
             <SubNavToggle />
             <span className="text-lg font-semibold tracking-tight">Pending Approvals</span>

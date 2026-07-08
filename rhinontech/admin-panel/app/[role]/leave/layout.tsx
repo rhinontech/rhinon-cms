@@ -5,12 +5,14 @@ import { CollapsibleSubNav } from "@/components/Admin/Common/CollapsibleSubNav/C
 import { SideNavProvider } from "@/context/SideNavContext";
 import { usePathname } from "next/navigation";
 import { TbCalendarOff, TbCalendarEvent, TbCalendarStats, TbCheck, TbTarget } from "react-icons/tb";
+import { usePermissions } from "@/context/PermissionsContext";
 
 function LeaveLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const roleSlug = pathname.split("/")[1];
   const base = `/${roleSlug}/leave`;
-  const isAdmin = roleSlug === "superadmin" || roleSlug === "hr";
+  const { has } = usePermissions();
+  const isAdmin = has("leave:write");
 
   const items = isAdmin
     ? [

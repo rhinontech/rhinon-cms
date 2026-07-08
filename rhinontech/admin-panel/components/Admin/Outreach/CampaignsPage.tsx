@@ -272,7 +272,7 @@ export function CampaignsPage() {
     <div className="flex h-full min-h-0 overflow-hidden">
       <main
         className={cn(
-          "flex h-full min-h-0 w-full flex-col overflow-hidden bg-stone-50",
+          "flex h-full min-h-0 w-full flex-col overflow-hidden glass-panel",
           isSubNavExpanded ? "rounded-r-xl" : "rounded-xl"
         )}
       >
@@ -339,7 +339,7 @@ export function CampaignsPage() {
             </div>
           )}
 
-          <div className="overflow-auto rounded-xl border border-gray-100 bg-white">
+          <div className="overflow-auto rounded-xl glass-card">
             <div className="grid min-w-[800px] w-full grid-cols-[minmax(250px,1.5fr)_minmax(120px,0.8fr)_minmax(150px,1fr)_80px] border-b bg-stone-100 text-xs font-semibold uppercase tracking-wide text-gray-500">
               <span className="px-4 py-3">Campaign</span>
               <span className="px-4 py-3">Stage</span>

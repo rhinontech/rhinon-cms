@@ -4,7 +4,9 @@ import { AdminDashboardShell } from "@/components/Admin/Common/AdminDashboardShe
 export default function DocsAccessPage() {
   return (
     <AdminDashboardShell>
-      <DocsAccessManager />
+      <div className="glass-panel rounded-xl w-full h-full overflow-auto">
+        <DocsAccessManager />
+      </div>
     </AdminDashboardShell>
   );
 }

@@ -231,7 +231,7 @@ export function LeadsPage() {
 
   return (
     <div className="flex h-full min-h-0 overflow-hidden">
-      <main className={cn("flex h-full min-h-0 w-full flex-col overflow-hidden bg-stone-50", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
+      <main className={cn("flex h-full min-h-0 w-full flex-col overflow-hidden glass-panel", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
         <div className="flex h-16 items-center justify-between border-b px-4">
           <div className="flex items-center gap-3">
             <SubNavToggle />
@@ -304,7 +304,7 @@ export function LeadsPage() {
             </div>
           )}
 
-          <div className="mt-4 overflow-auto rounded-xl border border-gray-100 bg-white">
+          <div className="mt-4 overflow-auto rounded-xl glass-card">
             <div className="grid min-w-[800px] w-full grid-cols-[44px_minmax(250px,1.5fr)_minmax(150px,1fr)_minmax(120px,0.8fr)_40px] border-b bg-stone-100 text-xs font-semibold uppercase tracking-wide text-gray-500">
               <span className="flex items-center justify-center px-2 py-3">
                 <input

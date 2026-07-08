@@ -285,7 +285,7 @@ export function TemplatesPage() {
     <div className="flex h-full min-h-0 overflow-hidden">
       <main
         className={cn(
-          "flex h-full min-h-0 w-full flex-col overflow-hidden bg-stone-50",
+          "flex h-full min-h-0 w-full flex-col overflow-hidden glass-panel",
           isSubNavExpanded ? "rounded-r-xl" : "rounded-xl"
         )}
       >

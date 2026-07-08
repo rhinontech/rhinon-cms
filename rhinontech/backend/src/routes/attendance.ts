@@ -1,7 +1,7 @@
 import { Router, Response } from "express";
 import { Op } from "sequelize";
 import { Attendance, AttendancePolicy, AttendanceRequest, Role, User } from "../models";
-import { authenticate, AuthRequest } from "../middleware/authenticate";
+import { authenticate, hasPermission, AuthRequest } from "../middleware/authenticate";
 
 const router = Router();
 router.use(authenticate);
@@ -21,9 +21,11 @@ function durationMinutes(clockIn: Date | null | undefined, clockOut: Date | null
 }
 
 function canViewTeamAttendance(req: AuthRequest) {
-  return req.user?.roleSlug === "superadmin" || req.user?.roleSlug === "hr" || req.user?.permissions.includes("employees:read");
+  return hasPermission(req, "attendance:write", "employees:read");
 }
 
+// Intentionally a slug check, not a permission — this is about the CEO persona
+// (superadmin doesn't clock in/out), not authorization.
 function blockSuperadminClock(req: AuthRequest, res: Response) {
   if (req.user?.roleSlug !== "superadmin") return false;
   res.status(403).json({ message: "Super admins manage team attendance and do not clock in." });

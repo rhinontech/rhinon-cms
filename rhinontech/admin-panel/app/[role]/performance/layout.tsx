@@ -5,12 +5,14 @@ import { CollapsibleSubNav } from "@/components/Admin/Common/CollapsibleSubNav/C
 import { SideNavProvider } from "@/context/SideNavContext";
 import { usePathname } from "next/navigation";
 import { TbChartBar, TbTarget, TbStar, TbUsers, TbRefresh } from "react-icons/tb";
+import { usePermissions } from "@/context/PermissionsContext";
 
 function PerformanceLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const roleSlug = pathname.split("/")[1];
   const base = `/${roleSlug}/performance`;
-  const isAdmin = roleSlug === "superadmin" || roleSlug === "hr";
+  const { has } = usePermissions();
+  const isAdmin = has("performance:write");
 
   const items = [
     { label: "Overview", href: base, icon: <TbChartBar size={18} />, exact: true },

@@ -270,7 +270,7 @@ export function WorkChangesPage() {
 
   return (
     <div className="flex h-full min-h-0 overflow-hidden">
-      <main className={cn("flex h-full min-h-0 w-full flex-col overflow-hidden bg-stone-50", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
+      <main className={cn("flex h-full min-h-0 w-full flex-col overflow-hidden glass-panel", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
         <div className="flex h-16 items-center justify-between border-b px-4">
           <div className="flex items-center gap-3">
             <SubNavToggle />
@@ -356,7 +356,7 @@ export function WorkChangesPage() {
             </div>
           )}
 
-          <div className="mt-8 overflow-auto rounded-xl border border-gray-100 bg-white">
+          <div className="mt-8 overflow-auto rounded-xl glass-card">
             <div className="grid min-w-[1160px] w-full grid-cols-[40px_minmax(300px,1.55fr)_minmax(190px,0.95fr)_minmax(150px,0.75fr)_minmax(130px,0.65fr)_minmax(130px,0.65fr)_minmax(210px,1fr)] border-b bg-stone-100 text-xs font-semibold uppercase tracking-wide text-gray-500">
               <span className="flex items-center justify-center px-4 py-3">
                 <input

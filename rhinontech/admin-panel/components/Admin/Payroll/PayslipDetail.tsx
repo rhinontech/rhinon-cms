@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { TbArrowLeft, TbPrinter } from "react-icons/tb";
 import adminImages from "@/constants/admin/images";
 import Image from "next/image";
+import { usePermissions } from "@/context/PermissionsContext";
 
 interface PayslipData {
   id: string;
@@ -78,8 +79,8 @@ export function PayslipDetail({ id }: { id: string }) {
   const [slip, setSlip] = useState<PayslipData | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const roleSlug = usePathname().split("/")[1];
-  const isAdminView = roleSlug === "superadmin" || roleSlug === "hr";
+  const { has } = usePermissions();
+  const isAdminView = has("payroll:write");
 
   useEffect(() => {
     const token = Cookies.get("authToken");
@@ -126,7 +127,7 @@ export function PayslipDetail({ id }: { id: string }) {
   ];
 
   return (
-    <div className="h-full overflow-auto bg-stone-50">
+    <div className="h-full overflow-auto glass-panel">
       <style>{`
         @page { margin: 0; size: A4; }
         @media print {

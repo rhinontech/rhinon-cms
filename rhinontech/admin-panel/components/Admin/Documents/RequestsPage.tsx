@@ -104,8 +104,8 @@ function RequestModal({ employees, onClose, onSuccess }: RequestModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center glass-overlay">
+      <div className="glass-modal rounded-xl w-full max-w-md mx-4">
         <div className="flex items-center justify-between h-14 px-5 border-b">
           <p className="font-semibold tracking-tight">Request Document</p>
           <button onClick={onClose} className="p-1 rounded hover:bg-gray-100"><TbX size={18} /></button>
@@ -263,9 +263,9 @@ export function RequestsPage() {
   const fulfilled = docs.filter(d => !!d.fileKey);
 
   return (
-    <div className={cn("flex flex-col h-full bg-stone-50 overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
+    <div className={cn("flex flex-col h-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
       {/* Header */}
-      <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b bg-stone-50">
+      <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b border-black/5 glass-header">
         <div className="flex items-center gap-2">
           <SubNavToggle />
           <p className="text-lg font-semibold tracking-tight">Document Requests</p>
@@ -292,13 +292,13 @@ export function RequestsPage() {
                 <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">{pending.length}</span>
               </div>
               {pending.length === 0 ? (
-                <div className="rounded-xl border border-gray-100 bg-white px-4 py-8 text-center text-sm text-gray-400">
+                <div className="rounded-xl glass-card px-4 py-8 text-center text-sm text-gray-400">
                   No pending requests
                 </div>
               ) : (
-                <div className="rounded-xl border border-gray-100 bg-white overflow-hidden">
+                <div className="rounded-xl glass-card overflow-hidden">
                   <table className="w-full text-sm">
-                    <thead className="bg-gray-50 text-xs text-gray-400 uppercase">
+                    <thead className="glass-thead text-xs text-gray-500 uppercase">
                       <tr>
                         <th className="text-left px-4 py-3">Employee</th>
                         <th className="text-left px-4 py-3">Document Requested</th>
@@ -323,13 +323,13 @@ export function RequestsPage() {
                 <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-700">{fulfilled.length}</span>
               </div>
               {fulfilled.length === 0 ? (
-                <div className="rounded-xl border border-gray-100 bg-white px-4 py-8 text-center text-sm text-gray-400">
+                <div className="rounded-xl glass-card px-4 py-8 text-center text-sm text-gray-400">
                   No fulfilled requests yet
                 </div>
               ) : (
-                <div className="rounded-xl border border-gray-100 bg-white overflow-hidden">
+                <div className="rounded-xl glass-card overflow-hidden">
                   <table className="w-full text-sm">
-                    <thead className="bg-gray-50 text-xs text-gray-400 uppercase">
+                    <thead className="glass-thead text-xs text-gray-500 uppercase">
                       <tr>
                         <th className="text-left px-4 py-3">Employee</th>
                         <th className="text-left px-4 py-3">Document</th>

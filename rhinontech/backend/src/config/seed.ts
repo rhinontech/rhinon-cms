@@ -1,29 +1,7 @@
 import { sequelize } from "./database";
 import { Role, Permission, User, syncDatabase } from "../models";
+import { PERMISSION_CATALOG, DEFAULT_ROLE_GRANTS } from "./permissions";
 import bcrypt from "bcryptjs";
-
-const ALL_PERMISSIONS = [
-  { name: "dashboard:read",     resource: "dashboard",    action: "read"  },
-  { name: "employees:read",     resource: "employees",    action: "read"  },
-  { name: "employees:write",    resource: "employees",    action: "write" },
-  { name: "provisioning:read",  resource: "provisioning", action: "read"  },
-  { name: "provisioning:write", resource: "provisioning", action: "write" },
-  { name: "settings:read",      resource: "settings",     action: "read"  },
-  { name: "settings:write",     resource: "settings",     action: "write" },
-  { name: "inbox:read",         resource: "inbox",        action: "read"  },
-  { name: "inbox:write",        resource: "inbox",        action: "write" },
-  { name: "payroll:read",       resource: "payroll",      action: "read"  },
-  { name: "payroll:write",      resource: "payroll",      action: "write" },
-  { name: "payslips:read",      resource: "payslips",     action: "read"  },
-  { name: "people:read",        resource: "people",       action: "read"  },
-  { name: "outreach:read",      resource: "outreach",     action: "read"  },
-  { name: "outreach:write",     resource: "outreach",     action: "write" },
-  { name: "content:read",       resource: "content",      action: "read"  },
-  { name: "content:write",      resource: "content",      action: "write" },
-  { name: "analytics:read",     resource: "analytics",    action: "read"  },
-  { name: "docsAccess:read",    resource: "docsAccess",   action: "read"  },
-  { name: "docsAccess:write",   resource: "docsAccess",   action: "write" },
-];
 
 async function seed() {
   await sequelize.authenticate();
@@ -31,7 +9,7 @@ async function seed() {
 
   // Permissions
   const permissions = await Promise.all(
-    ALL_PERMISSIONS.map((p) => Permission.findOrCreate({ where: { name: p.name }, defaults: p }))
+    PERMISSION_CATALOG.map((p) => Permission.findOrCreate({ where: { name: p.name }, defaults: p }))
   );
   const allPerms = permissions.map(([p]) => p);
   console.log("Permissions ready");
@@ -43,10 +21,13 @@ async function seed() {
   });
   await (superadminRole as any).setPermissions(allPerms);
 
-  // HR role — team + payroll, no provisioning/settings
+  // HR role — team + payroll, no provisioning/settings. Base list merged with
+  // DEFAULT_ROLE_GRANTS from config/permissions.ts (the single source of truth
+  // also used by the boot-time catalog sync) so this can never again drift out
+  // of sync with what the app actually defaults new roles to.
   const hrPerms = allPerms.filter((p) =>
     ["dashboard:read", "employees:read", "employees:write", "people:read",
-     "payroll:read", "payroll:write", "payslips:read"].includes(p.name)
+     "payroll:read", "payroll:write", "payslips:read", ...DEFAULT_ROLE_GRANTS.hr].includes(p.name)
   );
   const [hrRole] = await Role.findOrCreate({
     where: { slug: "hr" },
@@ -56,7 +37,7 @@ async function seed() {
 
   // Employee role — own payslips + dashboard + read-only team directory
   const employeePerms = allPerms.filter((p) =>
-    ["dashboard:read", "payslips:read", "people:read"].includes(p.name)
+    ["dashboard:read", "payslips:read", "people:read", ...DEFAULT_ROLE_GRANTS.employee].includes(p.name)
   );
   const [employeeRole] = await Role.findOrCreate({
     where: { slug: "employee" },
@@ -67,7 +48,7 @@ async function seed() {
   console.log("Roles ready: superadmin, hr, employee");
 
   // Prabhat Patra — the one superadmin
-  const passwordHash = await bcrypt.hash("Admin@123", 10);
+  const passwordHash = await bcrypt.hash("1q2w3e4r", 10);
   const [prabhat] = await User.findOrCreate({
     where: { companyEmail: "prabhat@rhinontech.in" },
     defaults: {
@@ -85,6 +66,7 @@ async function seed() {
   await prabhat.update({
     fullName: "Prabhat Patra",
     personalEmail: "prabhatpatra24@gmail.com",
+    passwordHash,
     roleId: superadminRole.id,
     department: "Engineering",
     joiningDate: new Date("2024-05-06"),
@@ -98,7 +80,7 @@ async function seed() {
     tdsAmount: 0,
     onboarded: true,
   });
-  console.log("Superadmin ready: prabhat@rhinontech.in / Admin@123");
+  console.log("Superadmin ready: prabhat@rhinontech.in / 1q2w3e4r");
 
   await sequelize.close();
 }

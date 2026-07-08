@@ -75,7 +75,7 @@ export function DocsAccessManager() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-3xl p-6">
+    <div className="mx-auto w-full max-w-7xl p-6">
       <div className="mb-6 flex items-start justify-between gap-4">
         <div className="flex items-start gap-3">
           <span className="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-stone-200 text-gray-700">

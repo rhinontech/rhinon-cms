@@ -127,8 +127,8 @@ function UploadForEmployeeModal({ employees, onClose, onSuccess }: UploadForEmpl
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center glass-overlay">
+      <div className="glass-modal rounded-xl w-full max-w-md mx-4">
         <div className="flex items-center justify-between h-14 px-5 border-b">
           <p className="font-semibold tracking-tight">Upload Document for Employee</p>
           <button onClick={onClose} className="p-1 rounded hover:bg-gray-100"><TbX size={18} /></button>
@@ -249,7 +249,7 @@ function DocAside({ doc, onClose, onDeleted }: DocAsideProps) {
             <CategoryBadge category={doc.category} />
           </div>
         </div>
-        <div className="rounded-xl border border-gray-100 bg-white divide-y divide-gray-50">
+        <div className="rounded-xl glass-card divide-y divide-gray-50">
           <div className="px-4 py-3 flex justify-between">
             <span className="text-xs text-gray-400">Employee</span>
             <span className="font-semibold text-gray-900 text-sm">{doc.employee?.fullName || "—"}</span>
@@ -357,9 +357,9 @@ export function AllDocumentsPage() {
 
   return (
     <div className="flex min-h-0 gap-2 h-full overflow-hidden">
-      <main className={cn("flex min-h-0 flex-col h-full w-full bg-stone-50 overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
+      <main className={cn("flex min-h-0 flex-col h-full w-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b bg-stone-50">
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b border-black/5 glass-header">
           <div className="flex items-center gap-2">
             <SubNavToggle />
             <p className="text-lg font-semibold tracking-tight">All Documents</p>
@@ -416,9 +416,9 @@ export function AllDocumentsPage() {
               <p className="text-sm">No documents found</p>
             </div>
           ) : (
-            <div className="rounded-xl border border-gray-100 bg-white overflow-hidden">
+            <div className="rounded-xl glass-card overflow-hidden">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 text-xs text-gray-400 uppercase">
+                <thead className="glass-thead text-xs text-gray-500 uppercase">
                   <tr>
                     <th className="text-left px-4 py-3">Employee</th>
                     <th className="text-left px-4 py-3">Title</th>

@@ -1,13 +1,13 @@
 import { Router, Response } from "express";
 import { Op } from "sequelize";
 import { LeaveType, LeaveBalance, LeaveRequest, User } from "../models";
-import { authenticate, AuthRequest } from "../middleware/authenticate";
+import { authenticate, hasPermission, AuthRequest } from "../middleware/authenticate";
 
 const router = Router();
 router.use(authenticate);
 
 function canManageLeave(req: AuthRequest) {
-  return req.user?.roleSlug === "superadmin" || req.user?.roleSlug === "hr";
+  return hasPermission(req, "leave:write");
 }
 
 function calculateDays(startDate: string, endDate: string): number {

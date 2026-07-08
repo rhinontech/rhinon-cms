@@ -242,8 +242,8 @@ export default function Inbox() {
     selectedEmail?.thread || (selectedEmail ? [selectedEmail] : []);
 
   return (
-    <div className="flex h-full w-full overflow-hidden rounded-xl bg-stone-50">
-      <aside className="flex h-full w-56 shrink-0 flex-col border-r bg-stone-50 p-3">
+    <div className="flex h-full w-full overflow-hidden rounded-xl glass-panel">
+      <aside className="flex h-full w-56 shrink-0 flex-col border-r border-black/5 glass-sidenav p-3">
         <Button
           variant={"outline"}
           className="mb-4 justify-between gap-2 py-6 px-3"

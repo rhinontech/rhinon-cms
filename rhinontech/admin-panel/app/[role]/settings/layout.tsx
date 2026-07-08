@@ -3,40 +3,39 @@
 import { AdminDashboardShell } from "@/components/Admin/Common/AdminDashboardShell/AdminDashboardShell";
 import { CollapsibleSubNav } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { SideNavProvider } from "@/context/SideNavContext";
-import { usePathname } from "next/navigation";
-import { TbFileAlert, TbFiles, TbFolders } from "react-icons/tb";
 import { usePermissions } from "@/context/PermissionsContext";
+import { usePathname } from "next/navigation";
+import { TbSettings, TbShieldLock, TbBooks } from "react-icons/tb";
 
-function DocumentsLayoutContent({ children }: { children: React.ReactNode }) {
+function SettingsLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const roleSlug = pathname.split("/")[1];
-  const base = `/${roleSlug}/documents`;
+  const base = `/${roleSlug}/settings`;
   const { has } = usePermissions();
-  const isAdmin = has("documents:write");
 
   const items = [
-    { label: "My Documents", href: base, icon: <TbFiles size={18} />, exact: true },
-    ...(isAdmin
+    { label: "General", href: base, icon: <TbSettings size={18} />, exact: true },
+    ...(has("settings:write")
       ? [
-          { label: "All Documents", href: `${base}/all`, icon: <TbFolders size={18} /> },
-          { label: "Requests", href: `${base}/requests`, icon: <TbFileAlert size={18} /> },
+          { label: "Roles & Permissions", href: `${base}/roles`, icon: <TbShieldLock size={18} /> },
+          { label: "Governance", href: `${base}/governance`, icon: <TbBooks size={18} /> },
         ]
       : []),
   ];
 
   return (
     <div className="flex w-full h-full">
-      <CollapsibleSubNav title="Documents" items={items} />
+      <CollapsibleSubNav title="Settings" items={items} />
       <main className="w-full h-full overflow-hidden">{children}</main>
     </div>
   );
 }
 
-export default function DocumentsLayout({ children }: { children: React.ReactNode }) {
+export default function SettingsLayout({ children }: { children: React.ReactNode }) {
   return (
     <AdminDashboardShell>
       <SideNavProvider>
-        <DocumentsLayoutContent>{children}</DocumentsLayoutContent>
+        <SettingsLayoutContent>{children}</SettingsLayoutContent>
       </SideNavProvider>
     </AdminDashboardShell>
   );

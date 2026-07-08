@@ -381,7 +381,7 @@ export function CampaignDetailPage({ id }: { id: string }) {
 
   return (
     <div className="flex h-full min-h-0 overflow-hidden">
-      <main className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-xl bg-stone-50 border">
+      <main className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-xl glass-panel">
         <div className="flex h-16 items-center justify-between border-b px-4 bg-white">
           <div className="flex items-center gap-3">
             <button onClick={handleBack} className="p-2 -ml-2 rounded-lg text-gray-500 hover:bg-stone-100 hover:text-gray-900 transition-colors">
@@ -493,7 +493,7 @@ export function CampaignDetailPage({ id }: { id: string }) {
                   </div>
                   <div className="overflow-auto rounded-lg border border-stone-100">
                   <table className="w-full text-left">
-                    <thead className="bg-stone-100/50 border-b border-stone-100">
+                    <thead className="glass-thead border-b border-stone-100">
                       <tr>
                         <th className="px-4 py-3 w-10">
                           <input

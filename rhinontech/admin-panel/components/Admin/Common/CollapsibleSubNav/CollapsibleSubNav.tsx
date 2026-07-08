@@ -27,12 +27,12 @@ export function CollapsibleSubNav({ title, items }: CollapsibleSubNavProps) {
 
   return (
     <aside
-      className={`flex h-full flex-col bg-stone-100 rounded-l-xl transition-all duration-200 ease-in-out overflow-hidden ${showNav ? "w-[15%] min-w-[180px] border-r" : "w-0"
+      className={`flex h-full flex-col glass-sidenav rounded-l-xl transition-all duration-200 ease-in-out overflow-hidden ${showNav ? "w-[15%] min-w-[180px] border-r border-black/5" : "w-0"
         }`}
     >
       {showNav && (
         <div className="flex flex-col w-full flex-1">
-          <div className="flex items-center w-full h-16 px-5 py-4 text-xl font-semibold tracking-tight border-b">
+          <div className="flex items-center w-full h-16 px-5 py-4 text-xl font-semibold tracking-tight border-b border-black/5">
             {title}
           </div>
           <div className="flex flex-col px-3 py-3 space-y-0.5">

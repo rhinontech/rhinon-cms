@@ -5,6 +5,7 @@ import { syncDatabase } from "./models";
 import { Campaign } from "./models/Campaign";
 import { Attendance } from "./models/Attendance";
 import { finalizeDueOffboardings } from "./services/offboarding";
+import { syncPermissionCatalog } from "./config/permissions";
 import { Op } from "sequelize";
 import cron from "node-cron";
 import axios from "axios";
@@ -36,6 +37,14 @@ async function start() {
 
   await syncDatabase();
   console.log("Models synced");
+
+  // Keep the DB permission catalog in sync with the code catalog (additive)
+  try {
+    const { total, created } = await syncPermissionCatalog();
+    console.log(`[Permissions] Catalog synced (${total} permissions, ${created} new)`);
+  } catch (err: any) {
+    console.error("[Permissions] Catalog sync failed:", err.message);
+  }
 
   // Catch up on exits whose last working day passed while the server was down
   try {

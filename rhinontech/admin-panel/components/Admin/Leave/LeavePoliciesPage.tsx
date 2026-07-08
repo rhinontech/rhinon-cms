@@ -106,10 +106,10 @@ export function LeavePoliciesPage() {
   return (
     <div className="flex min-h-0 gap-2 h-full overflow-hidden">
       <main className={cn(
-        "flex min-h-0 flex-col h-full w-full overflow-hidden bg-stone-50",
+        "flex min-h-0 flex-col h-full w-full overflow-hidden glass-panel",
         isSubNavExpanded ? "rounded-r-xl" : "rounded-xl"
       )}>
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b bg-stone-50">
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b border-black/5 glass-header">
           <div className="flex items-center gap-3">
             <SubNavToggle />
             <h1 className="text-lg font-semibold tracking-tight">Leave Policies</h1>
@@ -137,7 +137,7 @@ export function LeavePoliciesPage() {
               </div>
             </div>
           ) : (
-            <div className="rounded-xl border border-gray-100 bg-white overflow-hidden">
+            <div className="rounded-xl glass-card overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b bg-gray-50 text-left">

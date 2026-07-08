@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { useSideNav } from "@/context/SideNavContext";
-import { usePathname } from "next/navigation";
+import { usePermissions } from "@/context/PermissionsContext";
 
 interface Policy {
   id: string;
@@ -31,9 +31,8 @@ interface Policy {
 
 export function GovernancePage() {
   const { isExpanded: isSubNavExpanded } = useSideNav();
-  const pathname = usePathname();
-  const roleSlug = pathname.split("/")[1];
-  const isSuperAdmin = roleSlug === "superadmin";
+  const { has } = usePermissions();
+  const isSuperAdmin = has("attendance:write", "employees:read");
 
   const [policies, setPolicies] = useState<Policy[]>([]);
   const [loading, setLoading] = useState(true);

@@ -72,8 +72,8 @@ export function EmployeeSalaryDetails() {
     : undefined;
 
   return (
-    <div className="flex flex-col h-full bg-stone-50 rounded-r-xl overflow-hidden">
-      <div className="sticky top-0 z-10 flex items-center gap-4 h-16 px-5 border-b bg-stone-50">
+    <div className="flex flex-col h-full glass-panel rounded-r-xl overflow-hidden">
+      <div className="sticky top-0 z-10 flex items-center gap-4 h-16 px-5 border-b border-black/5 glass-header">
         <SubNavToggle />
         <h1 className="text-base font-semibold tracking-tight">Salary Details</h1>
       </div>
@@ -85,7 +85,7 @@ export function EmployeeSalaryDetails() {
           <div className="max-w-3xl flex flex-col gap-5">
 
             {/* Employee info */}
-            <div className="bg-white rounded-xl border border-gray-100 p-6">
+            <div className="glass-card-solid rounded-xl p-6">
               <div className="flex items-center gap-4 mb-5">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-lg shrink-0">
                   {profile?.fullName?.charAt(0) ?? "?"}
@@ -110,14 +110,14 @@ export function EmployeeSalaryDetails() {
 
             {/* Salary breakdown */}
             {!hasSalary ? (
-              <div className="bg-white rounded-xl border border-gray-100 p-10 text-center">
+              <div className="glass-card-solid rounded-xl p-10 text-center">
                 <p className="text-sm font-medium text-gray-500">Salary structure not configured</p>
                 <p className="text-xs text-gray-400 mt-1">Please contact HR to set up your salary.</p>
               </div>
             ) : (
               <>
                 {/* Earnings */}
-                <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+                <div className="glass-card-solid rounded-xl overflow-hidden">
                   <div className="px-5 py-4 border-b">
                     <p className="font-semibold text-gray-900">Earnings (Monthly)</p>
                   </div>
@@ -148,7 +148,7 @@ export function EmployeeSalaryDetails() {
                 </div>
 
                 {/* Deductions */}
-                <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+                <div className="glass-card-solid rounded-xl overflow-hidden">
                   <div className="px-5 py-4 border-b">
                     <p className="font-semibold text-gray-900">Deductions (Monthly)</p>
                   </div>

@@ -211,8 +211,8 @@ export function AdminPayrollEmployees() {
 
   return (
     <div className="flex min-h-0 gap-2 h-full overflow-hidden">
-      <main className={cn("flex min-h-0 flex-col h-full w-full bg-stone-50 overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b bg-stone-50">
+      <main className={cn("flex min-h-0 flex-col h-full w-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b border-black/5 glass-header">
           <div className="flex items-center gap-4">
             <SubNavToggle />
             <h1 className="text-lg font-semibold tracking-tight">Employee Salary Setup</h1>
@@ -238,14 +238,14 @@ export function AdminPayrollEmployees() {
             />
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+          <div className="glass-card-solid rounded-xl overflow-hidden">
             {loading ? (
               <div className="p-8 text-center text-sm text-gray-400">Loading employees...</div>
             ) : filtered.length === 0 ? (
               <div className="p-8 text-center text-sm text-gray-400">No employees found.</div>
             ) : (
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
+                <thead className="glass-thead text-xs text-gray-600 uppercase">
                   <tr>
                     <th className="px-5 py-3 text-left">Employee</th>
                     <th className="px-5 py-3 text-left">Role / Dept</th>

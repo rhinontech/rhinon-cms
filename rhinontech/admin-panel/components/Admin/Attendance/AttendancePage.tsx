@@ -16,7 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useSideNav } from "@/context/SideNavContext";
 import { apiFetch } from "@/lib/api";
-import { usePathname } from "next/navigation";
+import { usePermissions } from "@/context/PermissionsContext";
 
 // ─── Shared helpers ────────────────────────────────────────────────────────────
 
@@ -167,8 +167,8 @@ function TeamAttendancePage() {
   const selected = teamMonth?.employees.find(e => e.userId === selectedEmployee);
 
   return (
-    <div className={cn("flex flex-col h-full bg-stone-50 overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
-      <div className="sticky top-0 z-10 flex h-16 items-center gap-3 border-b px-5 bg-stone-50">
+    <div className={cn("flex flex-col h-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
+      <div className="sticky top-0 z-10 flex h-16 items-center gap-3 border-b border-black/5 glass-header px-5">
         <SubNavToggle />
         <span className="text-lg font-semibold tracking-tight">Team Attendance</span>
       </div>
@@ -185,7 +185,7 @@ function TeamAttendancePage() {
                 { label: "Absent Today", value: teamToday.summary.absent, icon: <TbUserX size={20} />, color: "text-red-600 bg-red-100" },
                 { label: "Currently Active", value: teamToday.summary.active, icon: <TbActivity size={20} />, color: "text-blue-600 bg-blue-100" },
               ].map(card => (
-                <div key={card.label} className="rounded-xl border border-gray-100 bg-white p-5 flex items-center gap-4">
+                <div key={card.label} className="rounded-xl glass-card p-5 flex items-center gap-4">
                   <div className={cn("p-3 rounded-xl", card.color)}>{card.icon}</div>
                   <div>
                     <p className="text-2xl font-bold text-stone-900">{card.value}</p>
@@ -197,7 +197,7 @@ function TeamAttendancePage() {
           )}
 
           {/* Monthly timesheet by employee */}
-          <div className="rounded-xl border border-gray-100 bg-white p-4">
+          <div className="rounded-xl glass-card p-4">
             <div className="flex items-center justify-between px-2 pb-4">
               <div className="flex items-center gap-3">
                 <button onClick={prevMonth} className="p-1 rounded hover:bg-gray-100">
@@ -401,15 +401,15 @@ function PersonalTimesheetPage() {
   const monthLabel = new Date(year, month - 1, 1).toLocaleString("en-GB", { month: "long", year: "numeric" });
 
   return (
-    <div className={cn("flex flex-col h-full bg-stone-50 overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
-      <div className="sticky top-0 z-10 flex h-16 items-center gap-3 border-b px-5 bg-stone-50">
+    <div className={cn("flex flex-col h-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
+      <div className="sticky top-0 z-10 flex h-16 items-center gap-3 border-b border-black/5 glass-header px-5">
         <SubNavToggle />
         <span className="text-lg font-semibold tracking-tight">My Timesheet</span>
       </div>
 
       <div className="flex-1 overflow-auto">
         <div className="mx-auto max-w-[1220px] p-6 space-y-6">
-          <section className="rounded-xl border border-gray-100 bg-white p-5">
+          <section className="rounded-xl glass-card p-5">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-gray-900">
@@ -458,7 +458,7 @@ function PersonalTimesheetPage() {
             </div>
           </section>
 
-          <section className="rounded-xl border border-gray-100 bg-white p-4">
+          <section className="rounded-xl glass-card p-4">
             <div className="flex items-center justify-between px-2 pb-4">
               <div className="flex items-center gap-3">
                 <button onClick={prevMonth} className="p-1 rounded hover:bg-gray-100">
@@ -533,8 +533,8 @@ function PersonalTimesheetPage() {
       </div>
 
       {showRegModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center glass-overlay p-4">
+          <div className="glass-modal rounded-3xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
             <div className="p-6 border-b flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-bold text-stone-900">Request Regularization</h3>
@@ -579,9 +579,8 @@ function PersonalTimesheetPage() {
 // ─── Root export — routes by role ─────────────────────────────────────────────
 
 export function AttendancePage() {
-  const pathname = usePathname();
-  const roleSlug = pathname.split("/")[1];
+  const { has } = usePermissions();
 
-  if (roleSlug === "superadmin") return <TeamAttendancePage />;
+  if (has("attendance:write", "employees:read")) return <TeamAttendancePage />;
   return <PersonalTimesheetPage />;
 }

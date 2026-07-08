@@ -393,7 +393,7 @@ export function TasksPage({ scope, currentUserId }: { scope: TaskScope; currentU
 
   return (
     <div className="flex h-full min-h-0 overflow-hidden">
-      <main className={cn("flex h-full min-h-0 w-full flex-col overflow-hidden bg-stone-50", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
+      <main className={cn("flex h-full min-h-0 w-full flex-col overflow-hidden glass-panel", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
         {/* Header */}
         <div className="flex h-16 items-center justify-between border-b px-4 shrink-0 bg-white">
           <div className="flex items-center gap-2">
@@ -514,7 +514,7 @@ export function TasksPage({ scope, currentUserId }: { scope: TaskScope; currentU
           ) : viewMode === "list" ? (
             <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
               <table className="w-full text-left text-sm text-gray-600">
-                <thead className="border-b border-gray-200 bg-gray-50 text-xs font-medium text-gray-500">
+                <thead className="border-b border-gray-200 glass-thead text-xs font-medium text-gray-600">
                   <tr>
                     <th className="px-4 py-3 w-8"><input type="checkbox" checked={visibleTasks.length > 0 && selectedIds.size === visibleTasks.length} onChange={selectAll} className="rounded border-gray-300" /></th>
                     <th className="px-4 py-3">Task</th>

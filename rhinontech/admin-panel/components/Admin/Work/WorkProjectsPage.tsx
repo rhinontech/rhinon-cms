@@ -126,7 +126,7 @@ export function WorkProjectsPage() {
 
   return (
     <div className="flex h-full min-h-0 overflow-hidden">
-      <main className={cn("flex h-full min-h-0 w-full flex-col overflow-hidden bg-stone-50", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
+      <main className={cn("flex h-full min-h-0 w-full flex-col overflow-hidden glass-panel", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
         <div className="flex h-16 items-center justify-between border-b px-4">
           <div className="flex items-center gap-3">
             <SubNavToggle />
@@ -172,7 +172,7 @@ export function WorkProjectsPage() {
             </select>
           </div>
 
-          <div className="mt-8 overflow-hidden rounded-xl border border-gray-100 bg-white">
+          <div className="mt-8 overflow-hidden rounded-xl glass-card">
             <div className="grid grid-cols-[1.7fr_0.9fr_1fr_0.7fr_0.8fr] border-b bg-stone-100 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
               <span>Name</span>
               <span>Status</span>

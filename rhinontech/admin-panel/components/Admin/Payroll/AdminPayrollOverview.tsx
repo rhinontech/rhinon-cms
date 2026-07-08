@@ -50,7 +50,7 @@ const INR = (value: number) => `₹${Number(value || 0).toLocaleString("en-IN")}
 
 function StatCard({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub?: string }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-5 flex items-start gap-4">
+    <div className="glass-card-solid rounded-xl p-5 flex items-start gap-4">
       <div className="p-2 bg-gray-50 rounded-lg text-gray-600">{icon}</div>
       <div>
         <p className="text-sm text-gray-500">{label}</p>
@@ -113,8 +113,8 @@ export function AdminPayrollOverview() {
   const pendingCount = runs.filter((r) => r.status !== "paid").length;
 
   return (
-    <div className="flex flex-col h-full bg-stone-50 rounded-r-xl overflow-hidden">
-      <div className="sticky top-0 z-10 flex items-center justify-between h-16 px-5 border-b bg-stone-50">
+    <div className="flex flex-col h-full glass-panel rounded-r-xl overflow-hidden">
+      <div className="sticky top-0 z-10 flex items-center justify-between h-16 px-5 border-b border-black/5 glass-header">
         <div className="flex items-center gap-4">
           <SubNavToggle />
           <h1 className="text-base font-semibold tracking-tight">Payroll Dashboard</h1>
@@ -136,7 +136,7 @@ export function AdminPayrollOverview() {
           <StatCard icon={<TbCheck size={20} />} label="Last Paid Run" value={lastPaid ? `${MONTHS[lastPaid.month - 1]} ${lastPaid.year}` : "—"} />
         </div>
 
-        <div className="mb-8 rounded-xl border border-gray-100 bg-white overflow-hidden">
+        <div className="mb-8 rounded-xl glass-card overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b">
             <div className="flex items-center gap-2">
               <TbChartPie size={18} className="text-gray-500" />
@@ -169,7 +169,7 @@ export function AdminPayrollOverview() {
         </div>
 
         {/* Payroll runs table */}
-        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+        <div className="glass-card-solid rounded-xl overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b">
             <p className="font-semibold text-gray-900">Payroll Runs</p>
           </div>
@@ -186,7 +186,7 @@ export function AdminPayrollOverview() {
             </div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
+              <thead className="glass-thead text-gray-600 text-xs uppercase">
                 <tr>
                   <th className="px-5 py-3 text-left">Period</th>
                   <th className="px-5 py-3 text-right">Total Gross</th>

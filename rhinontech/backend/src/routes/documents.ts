@@ -1,5 +1,5 @@
 import { Router, Response } from "express";
-import { authenticate, AuthRequest } from "../middleware/authenticate";
+import { authenticate, hasPermission, AuthRequest } from "../middleware/authenticate";
 import { Document } from "../models/Document";
 import { User } from "../models/User";
 import {
@@ -12,7 +12,7 @@ const router = Router();
 router.use(authenticate);
 
 function isAdmin(req: AuthRequest): boolean {
-  return req.user?.roleSlug === "superadmin" || req.user?.roleSlug === "hr";
+  return hasPermission(req, "documents:write");
 }
 
 // GET /documents

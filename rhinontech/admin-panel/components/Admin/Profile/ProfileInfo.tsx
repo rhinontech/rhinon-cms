@@ -107,9 +107,9 @@ export function ProfileInfo() {
     : "—";
 
   return (
-    <div className="flex flex-col h-full bg-stone-50 rounded-r-xl overflow-hidden">
+    <div className="flex flex-col h-full glass-panel rounded-r-xl overflow-hidden">
       {/* Header */}
-      <div className="sticky top-0 z-10 flex items-center justify-between h-16 px-5 border-b bg-stone-50">
+      <div className="sticky top-0 z-10 flex items-center justify-between h-16 px-5 border-b border-black/5 glass-header">
         <div className="flex items-center gap-4">
           <SubNavToggle />
           <h1 className="text-xl font-bold tracking-tight">Personal Information</h1>

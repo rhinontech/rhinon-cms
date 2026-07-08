@@ -5,15 +5,17 @@ import { CollapsibleSubNav } from "@/components/Admin/Common/CollapsibleSubNav/C
 import { SideNavProvider } from "@/context/SideNavContext";
 import { usePathname } from "next/navigation";
 import { TbCalendarStats, TbLayoutDashboard, TbTarget, TbUsers } from "react-icons/tb";
+import { usePermissions } from "@/context/PermissionsContext";
 
 function AttendanceLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const roleSlug = pathname.split("/")[1];
   const base = `/${roleSlug}/attendance`;
+  const { has } = usePermissions();
 
   const items = [
     { label: "Overview", href: base, icon: <TbLayoutDashboard size={18} />, exact: true },
-    ...(roleSlug === "superadmin"
+    ...(has("attendance:write", "employees:read")
       ? [
           { label: "Logs", href: `${base}/logs`, icon: <TbCalendarStats size={18} /> },
           { label: "Approvals", href: `${base}/approvals`, icon: <TbUsers size={18} /> },

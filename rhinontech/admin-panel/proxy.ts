@@ -61,13 +61,10 @@ export function proxy(request: NextRequest) {
 
   const roleSlug = payload.roleSlug as string;
   const urlRole = pathname.split("/")[1];
-  const allowedPreviewRoles = ["superadmin", "hr", "employee"];
 
-  if (
-    urlRole &&
-    urlRole !== roleSlug &&
-    !(roleSlug === "superadmin" && allowedPreviewRoles.includes(urlRole))
-  ) {
+  // Superadmin (the CEO) may preview any role's URL, including custom roles
+  // created dynamically from Settings — everyone else may only browse their own.
+  if (urlRole && urlRole !== roleSlug && roleSlug !== "superadmin") {
     return NextResponse.redirect(
       new URL(`/${roleSlug}/dashboard`, request.url)
     );

@@ -6,7 +6,7 @@ import { User, Role, Document } from "../models";
 import type { ExitReason } from "../models/User";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 import { finalizeOffboarding, todayIST } from "../services/offboarding";
-import { generateLetterPdf, letterTitle, LetterType } from "../services/letters";
+import { generateLetterPdf, letterTitle, LetterType, generateOfferLetterPdf, generateNdaPdf } from "../services/letters";
 import { sendEmail } from "../services/mailer";
 import { welcomeEmail, resetPasswordEmail } from "../services/emailTemplates";
 import { env } from "../config/env";
@@ -165,12 +165,70 @@ router.post("/", authorize("employees:write"), async (req: AuthRequest, res: Res
     ...employeePayload(req.body),
   });
 
+  // Onboarding documents attachment logic
+  const attachDocs = req.body.attachDocs === true || req.body.attachDocs === "true";
+  let attachments: any[] = [];
+
+  if (attachDocs) {
+    try {
+      const offerLetterPdf = await generateOfferLetterPdf(employee);
+      const ndaPdf = await generateNdaPdf(employee);
+
+      const offerLetterName = `Offer-Letter-${employee.fullName.replace(/[^a-zA-Z0-9]+/g, "-")}.pdf`;
+      const ndaName = `NDA-${employee.fullName.replace(/[^a-zA-Z0-9]+/g, "-")}.pdf`;
+
+      const offerKey = await uploadBuffer(offerLetterPdf, offerLetterName, "documents", "application/pdf");
+      const ndaKey = await uploadBuffer(ndaPdf, ndaName, "documents", "application/pdf");
+
+      await Document.create({
+        employeeId: employee.id,
+        uploadedById: req.user!.userId,
+        title: `Offer Letter — ${employee.fullName}`,
+        category: "offer_letter",
+        fileKey: offerKey,
+        fileName: offerLetterName,
+        fileSize: offerLetterPdf.length,
+        mimeType: "application/pdf",
+      });
+
+      await Document.create({
+        employeeId: employee.id,
+        uploadedById: req.user!.userId,
+        title: `NDA — ${employee.fullName}`,
+        category: "nda",
+        fileKey: ndaKey,
+        fileName: ndaName,
+        fileSize: ndaPdf.length,
+        mimeType: "application/pdf",
+      });
+
+      attachments = [
+        { filename: offerLetterName, content: offerLetterPdf, contentType: "application/pdf" },
+        { filename: ndaName, content: ndaPdf, contentType: "application/pdf" },
+      ];
+    } catch (docErr) {
+      console.error("Failed to generate and upload onboarding documents:", docErr);
+    }
+  }
+
   // Send welcome email (non-fatal)
   try {
     const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:4200";
     const onboardingUrl = `${frontendUrl}/onboard?token=${onboardingToken}`;
-    const { subject, html, text } = welcomeEmail({ fullName, companyEmail, tempPassword, onboardingUrl });
-    await sendEmail({ to: personalEmail, subject, html, text });
+    const { subject, html, text } = welcomeEmail({
+      fullName,
+      companyEmail,
+      tempPassword,
+      onboardingUrl,
+      hasAttachments: attachments.length > 0,
+    });
+    await sendEmail({
+      to: personalEmail,
+      subject,
+      html,
+      text,
+      attachments: attachments.length > 0 ? attachments : undefined,
+    });
   } catch (err) {
     console.error("Failed to send welcome email:", err);
   }

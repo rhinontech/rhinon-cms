@@ -5,7 +5,7 @@ import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/Collap
 import { cn } from "@/lib/utils";
 import { useSideNav } from "@/context/SideNavContext";
 import { apiFetch } from "@/lib/api";
-import { usePathname } from "next/navigation";
+import { usePermissions } from "@/context/PermissionsContext";
 import { TbChartBar, TbTarget, TbStar, TbLoader2 } from "react-icons/tb";
 
 interface ReviewCycle {
@@ -66,9 +66,8 @@ function StatusChip({ status }: { status: string }) {
 
 export function PerformanceOverviewPage() {
   const { isExpanded: isSubNavExpanded } = useSideNav();
-  const pathname = usePathname();
-  const roleSlug = pathname.split("/")[1];
-  const isAdmin = roleSlug === "superadmin" || roleSlug === "hr";
+  const { has } = usePermissions();
+  const isAdmin = has("performance:write");
 
   const [goals, setGoals] = useState<ReviewGoal[]>([]);
   const [selfReviews, setSelfReviews] = useState<ReviewSubmission[]>([]);
@@ -108,8 +107,8 @@ export function PerformanceOverviewPage() {
 
   if (loading) {
     return (
-      <div className={cn("flex flex-col h-full bg-stone-50 overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
-        <header className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b bg-stone-50">
+      <div className={cn("flex flex-col h-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
+        <header className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b border-black/5 glass-header">
           <div className="flex items-center gap-3">
             <SubNavToggle />
             <span className="text-lg font-semibold tracking-tight">Overview</span>
@@ -123,8 +122,8 @@ export function PerformanceOverviewPage() {
   }
 
   return (
-    <div className={cn("flex flex-col h-full bg-stone-50 overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
-      <header className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b bg-stone-50">
+    <div className={cn("flex flex-col h-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
+      <header className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b border-black/5 glass-header">
         <div className="flex items-center gap-3">
           <SubNavToggle />
           <span className="text-lg font-semibold tracking-tight">Overview</span>
@@ -157,7 +156,7 @@ export function PerformanceOverviewPage() {
                   icon: TbStar,
                 },
               ].map((stat) => (
-                <div key={stat.label} className="rounded-xl border border-gray-100 bg-white p-4">
+                <div key={stat.label} className="rounded-xl glass-card p-4">
                   <p className="text-xs text-gray-400">{stat.label}</p>
                   <p className="mt-1 text-2xl font-semibold text-gray-900">{stat.value}</p>
                 </div>
@@ -166,7 +165,7 @@ export function PerformanceOverviewPage() {
 
             {/* Active cycles list */}
             {cycles.filter((c) => c.status === "active").length > 0 && (
-              <div className="rounded-xl border border-gray-100 bg-white">
+              <div className="rounded-xl glass-card">
                 <div className="px-5 py-3 border-b">
                   <p className="font-medium text-sm">Active Review Cycles</p>
                 </div>
@@ -188,11 +187,11 @@ export function PerformanceOverviewPage() {
           <>
             {/* Employee stats */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-xl border border-gray-100 bg-white p-4">
+              <div className="rounded-xl glass-card p-4">
                 <p className="text-xs text-gray-400 flex items-center gap-1"><TbTarget size={14} /> Goals Completed</p>
                 <p className="mt-1 text-2xl font-semibold text-gray-900">{completedGoals} / {goals.length}</p>
               </div>
-              <div className="rounded-xl border border-gray-100 bg-white p-4">
+              <div className="rounded-xl glass-card p-4">
                 <p className="text-xs text-gray-400 flex items-center gap-1"><TbStar size={14} /> Pending Reviews</p>
                 <p className="mt-1 text-2xl font-semibold text-gray-900">{pendingReviews}</p>
               </div>
@@ -210,7 +209,7 @@ export function PerformanceOverviewPage() {
 
             {/* Recent goals */}
             {goals.length > 0 && (
-              <div className="rounded-xl border border-gray-100 bg-white">
+              <div className="rounded-xl glass-card">
                 <div className="px-5 py-3 border-b">
                   <p className="font-medium text-sm">Recent Goals</p>
                 </div>
@@ -230,7 +229,7 @@ export function PerformanceOverviewPage() {
             )}
 
             {goals.length === 0 && (
-              <div className="rounded-xl border border-gray-100 bg-white p-8 text-center">
+              <div className="rounded-xl glass-card p-8 text-center">
                 <TbTarget size={32} className="mx-auto text-gray-300 mb-2" />
                 <p className="text-sm text-gray-500">No goals yet. Add your first goal under My Goals.</p>
               </div>

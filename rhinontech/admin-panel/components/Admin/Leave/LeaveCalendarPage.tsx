@@ -72,8 +72,8 @@ export function LeaveCalendarPage() {
   const todayStr = now.toISOString().split("T")[0];
 
   return (
-    <div className={cn("flex flex-col h-full bg-stone-50 overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
-      <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b bg-stone-50">
+    <div className={cn("flex flex-col h-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
+      <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b border-black/5 glass-header">
         <div className="flex items-center gap-3">
           <SubNavToggle />
           <h1 className="text-lg font-semibold tracking-tight">Team Leave Calendar</h1>
@@ -95,7 +95,7 @@ export function LeaveCalendarPage() {
             <TbLoader size={32} className="animate-spin" />
           </div>
         ) : (
-          <div className="rounded-xl border border-gray-100 bg-white overflow-hidden">
+          <div className="rounded-xl glass-card overflow-hidden">
             {/* Day headers */}
             <div className="grid grid-cols-7 border-b">
               {DAYS_OF_WEEK.map(d => (

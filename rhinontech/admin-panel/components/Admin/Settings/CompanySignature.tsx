@@ -1,16 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Cookies from "js-cookie";
 import { TbUpload, TbTrash } from "react-icons/tb";
+import { apiFetch, apiUpload } from "@/lib/api";
+import { usePermissions } from "@/context/PermissionsContext";
 
 export function CompanySignature() {
-  const token = Cookies.get("authToken");
-  const permissions: string[] = (() => {
-    try { return JSON.parse(Cookies.get("permissions") || "[]"); }
-    catch { return []; }
-  })();
-  const canWrite = permissions.includes("settings:write");
+  const { has } = usePermissions();
+  const canWrite = has("settings:write");
 
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -20,10 +17,7 @@ export function CompanySignature() {
   const load = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/branding/signature`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
+      const data = await apiFetch<{ url: string | null }>("/branding/signature");
       setUrl(data.url ?? null);
     } catch {
       setUrl(null);
@@ -41,19 +35,10 @@ export function CompanySignature() {
     }
     setBusy(true);
     try {
-      const form = new FormData();
-      form.append("signature", file);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/branding/signature`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: form,
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        alert(data.message || "Could not upload the signature.");
-        return;
-      }
+      await apiUpload("/branding/signature", file, "signature");
       await load();
+    } catch (err: any) {
+      alert(err.message || "Could not upload the signature.");
     } finally {
       setBusy(false);
     }
@@ -63,10 +48,7 @@ export function CompanySignature() {
     if (!confirm("Remove the company signature? Relieving and experience letters will go back to leaving blank space for a signature.")) return;
     setBusy(true);
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/branding/signature`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await apiFetch("/branding/signature", { method: "DELETE" });
       setUrl(null);
     } finally {
       setBusy(false);
@@ -74,7 +56,7 @@ export function CompanySignature() {
   };
 
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-5 max-w-xl">
+    <div className="rounded-xl glass-card p-5 max-w-xl">
       <h3 className="text-sm font-semibold text-gray-900">Company signature</h3>
       <p className="mt-1 text-xs text-gray-500">
         Used to sign relieving and experience letters generated from the Team panel.

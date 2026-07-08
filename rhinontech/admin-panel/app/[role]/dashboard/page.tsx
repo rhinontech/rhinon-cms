@@ -140,7 +140,7 @@ function avatar(name: string, idx: number, size = "h-9 w-9") {
 
 function StatCard({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: React.ReactNode; sub?: string }) {
   return (
-    <div className="flex items-center gap-4 rounded-xl border border-gray-100 bg-white px-5 py-4">
+    <div className="flex items-center gap-4 rounded-xl glass-card px-5 py-4">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-stone-100 text-gray-600">
         {icon}
       </div>
@@ -221,7 +221,7 @@ export default function DashboardPage() {
 
   return (
     <AdminDashboardShell>
-      <div className="bg-stone-50 rounded-xl w-full h-full overflow-auto">
+      <div className="glass-panel rounded-xl w-full h-full overflow-auto">
         <div className="mx-auto max-w-[1400px] p-6 space-y-5">
 
           {/* ── Header ── */}
@@ -279,7 +279,7 @@ export default function DashboardPage() {
           <div className="grid grid-cols-12 gap-4">
 
             {/* Today's Attendance */}
-            <div className="col-span-12 rounded-xl border border-gray-100 bg-white overflow-hidden">
+            <div className="col-span-12 rounded-xl glass-card overflow-hidden">
               <SectionTitle icon={<TbClock size={16} />} title={isSuperadmin ? "Team Attendance" : "Today's Attendance"} />
               <div className="p-5">
                 {isSuperadmin ? (
@@ -401,7 +401,7 @@ export default function DashboardPage() {
           <div className="grid grid-cols-12 gap-4">
 
             {/* Birthdays */}
-            <div className="col-span-4 rounded-xl border border-gray-100 bg-white overflow-hidden">
+            <div className="col-span-4 rounded-xl glass-card overflow-hidden">
               <SectionTitle icon={<TbCake size={16} />} title="Birthdays this month" />
               {stats?.birthdays.length ? (
                 <div className="divide-y divide-gray-50">
@@ -425,7 +425,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Anniversaries */}
-            <div className="col-span-4 rounded-xl border border-gray-100 bg-white overflow-hidden">
+            <div className="col-span-4 rounded-xl glass-card overflow-hidden">
               <SectionTitle icon={<TbConfetti size={16} />} title="Work anniversaries" />
               {stats?.anniversaries.length ? (
                 <div className="divide-y divide-gray-50">
@@ -449,7 +449,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Recent Hires */}
-            <div className="col-span-4 rounded-xl border border-gray-100 bg-white overflow-hidden">
+            <div className="col-span-4 rounded-xl glass-card overflow-hidden">
               <SectionTitle icon={<TbCalendarPlus size={16} />} title="Recent hires" />
               {stats?.recentHires.length ? (
                 <div className="divide-y divide-gray-50">
@@ -471,7 +471,7 @@ export default function DashboardPage() {
           </div>
 
           {/* ── Row 4: My Pending Tasks ── */}
-          <div className="rounded-xl border border-gray-100 bg-white overflow-hidden">
+          <div className="rounded-xl glass-card overflow-hidden">
             <SectionTitle icon={<TbCalendar size={16} />} title={`My pending tasks${stats?.pendingTasks ? ` (${stats.pendingTasks})` : ""}`} />
             {stats?.pendingTasksList.length ? (
               <div className="divide-y divide-gray-50">

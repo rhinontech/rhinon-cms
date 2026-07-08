@@ -5,6 +5,9 @@ import Cookies from "js-cookie";
 import { TbCamera, TbLayoutSidebarFilled, TbLayoutSidebarRightFilled, TbPencil, TbPlus, TbSearch, TbMailForward, TbKey, TbX } from "react-icons/tb";
 import { cn } from "@/lib/utils";
 import { WorkSchedulePicker } from "@/components/Admin/Common/WorkSchedulePicker";
+import adminImages from "@/constants/admin/images";
+import { usePermissions } from "@/context/PermissionsContext";
+import Image from "next/image";
 
 interface Role {
   id: string;
@@ -251,8 +254,8 @@ function OffboardDialog({
   const immediate = !!exitDate && exitDate <= localToday();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div className="w-full max-w-md space-y-4 rounded-xl bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center glass-overlay p-4" onClick={onClose}>
+      <div className="w-full max-w-md space-y-4 rounded-xl glass-modal p-5" onClick={(e) => e.stopPropagation()}>
         <div>
           <h3 className="text-base font-semibold text-gray-900">Offboard {employee.fullName}</h3>
           <p className="mt-1 text-xs text-gray-500">{employee.companyEmail}</p>
@@ -352,9 +355,9 @@ function LetterPreviewDialog({
   onSend: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center glass-overlay p-4" onClick={onClose}>
       <div
-        className="flex h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl bg-white shadow-xl"
+        className="flex h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl glass-modal"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b px-5 py-4">
@@ -440,8 +443,46 @@ function Checkbox({ label, checked, onChange }: { label: string; checked: boolea
   );
 }
 
+const EMPLOYMENT_TYPES = ["Full-Time", "Part-Time", "Contract", "Intern"];
+const COMPENSATION_TYPES = ["Salaried", "Hourly", "Contract"];
+const PAYMENT_FREQUENCIES = ["Monthly", "Bi-Weekly", "Weekly"];
+
+function FormSelect({
+  label,
+  value,
+  onChange,
+  options,
+  required,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: string[];
+  required?: boolean;
+}) {
+  return (
+    <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+      {label}
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="rounded-lg border border-gray-200 px-3 py-2 font-normal bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        required={required}
+      >
+        {options.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
 export function PeopleDirectory() {
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [attachDocs, setAttachDocs] = useState(true);
+  const [previewTab, setPreviewTab] = useState<"offer" | "nda">("offer");
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -455,12 +496,9 @@ export function PeopleDirectory() {
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const token = Cookies.get("authToken");
-  const permissions: string[] = (() => {
-    try { return JSON.parse(Cookies.get("permissions") || "[]"); }
-    catch { return []; }
-  })();
-  const canManage = permissions.includes("employees:read");
-  const canWrite = permissions.includes("employees:write");
+  const { has } = usePermissions();
+  const canManage = has("employees:read");
+  const canWrite = has("employees:write");
   const [resending, setResending] = useState(false);
   const [tab, setTab] = useState<"active" | "alumni">("active");
   const [showOffboard, setShowOffboard] = useState(false);
@@ -728,7 +766,10 @@ export function PeopleDirectory() {
       ? `${process.env.NEXT_PUBLIC_API_URL}/employees`
       : `${process.env.NEXT_PUBLIC_API_URL}/employees/${selectedEmployee?.id}`;
 
-    const payload = formPayload(form, mode);
+    const payload = {
+      ...formPayload(form, mode),
+      attachDocs: mode === "create" ? attachDocs : undefined,
+    };
 
     const res = await fetch(endpoint, {
       method: mode === "create" ? "POST" : "PUT",
@@ -782,8 +823,13 @@ export function PeopleDirectory() {
 
   return (
     <div className="flex min-h-0 gap-2 w-full h-full overflow-hidden">
-      <main className="flex min-h-0 flex-col bg-stone-50 rounded-xl w-full h-full overflow-hidden">
-        <div className="sticky top-0 bg-stone-50 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b">
+      <main
+        className={cn(
+          "flex min-h-0 flex-col glass-panel rounded-xl w-full h-full overflow-hidden",
+          (mode === "create" || mode === "edit") && "hidden"
+        )}
+      >
+        <div className="sticky top-0 glass-header z-10 flex items-center justify-between gap-4 h-16 px-5 border-b border-black/5">
           <div>
             <h1 className="text-sm font-semibold tracking-tight">Team</h1>
             <p className="text-xs text-gray-500">
@@ -850,7 +896,7 @@ export function PeopleDirectory() {
           ) : (
             <div className="rounded-xl border border-gray-100 overflow-hidden">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
+                <thead className="glass-thead text-gray-600 text-xs uppercase">
                   <tr>
                     <th className="px-5 py-3 text-left">Employee</th>
                     <th className="px-5 py-3 text-left">Role</th>
@@ -896,16 +942,17 @@ export function PeopleDirectory() {
       </main>
 
       <aside
-        className={`flex min-h-0 h-full flex-col bg-white rounded-xl overflow-hidden transition-all duration-200 ease-in-out ${
-          isPreviewExpanded ? "w-[42%]" : "w-0"
-        }`}
+        className={cn(
+          "flex min-h-0 h-full flex-col bg-white rounded-xl overflow-hidden transition-all duration-200 ease-in-out",
+          isPreviewExpanded ? ((mode === "create" || mode === "edit") ? "w-full" : "w-[42%]") : "w-0"
+        )}
       >
         {isPreviewExpanded && (
           <div className="flex flex-col w-full flex-1 h-full overflow-hidden relative">
             <div className="sticky top-0 w-full flex items-center justify-between h-16 px-5 border-b bg-white z-10">
               <div className="flex items-center gap-4 self-stretch">
                 <p className="flex self-stretch items-center text-md font-medium tracking-tight border-b-2 border-blue-600 text-black -mb-px">
-                  {mode === "create" ? "Add Member" : "Member Details"}
+                  {mode === "create" ? "Add Member" : mode === "edit" ? "Edit Member" : "Member Details"}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -1158,92 +1205,140 @@ export function PeopleDirectory() {
                 )}
               </div>
             ) : canManage ? (
-              <form onSubmit={submitEmployee} className="flex-1 overflow-auto p-5 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
-                    Full name
-                    <input value={form.fullName} onChange={(e) => updateForm("fullName", e.target.value)} className="rounded-lg border border-gray-200 px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-                  </label>
-                  <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
-                    Personal email
-                    <input type="email" value={form.personalEmail} onChange={(e) => updateForm("personalEmail", e.target.value)} className="rounded-lg border border-gray-200 px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-                  </label>
-                  <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
-                    Role
-                    <select value={form.roleId} onChange={(e) => updateForm("roleId", e.target.value)} className="rounded-lg border border-gray-200 px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                      <option value="">Select role</option>
-                      {roles.map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}
-                    </select>
-                  </label>
-                  <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
-                    Department
-                    <input value={form.department} onChange={(e) => updateForm("department", e.target.value)} className="rounded-lg border border-gray-200 px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-                  </label>
-                  <FormInput label="Legal name" value={form.legalName} onChange={(value) => updateForm("legalName", value)} />
-                  <FormInput label="PAN" value={form.pan} onChange={(value) => updateForm("pan", value)} />
-                  <FormInput label="Role title" value={form.roleTitle} onChange={(value) => updateForm("roleTitle", value)} />
-                  <FormInput label="Joining date" type="date" value={form.joiningDate} onChange={(value) => updateForm("joiningDate", value)} required />
-                  <FormInput label="Date of birth" type="date" value={form.dateOfBirth} onChange={(value) => updateForm("dateOfBirth", value)} />
-                  <FormInput label="Work location" value={form.workLocation} onChange={(value) => updateForm("workLocation", value)} />
-                  <FormInput label="Employment type" value={form.employmentType} onChange={(value) => updateForm("employmentType", value)} />
-                  <FormInput label="Compensation type" value={form.compensationType} onChange={(value) => updateForm("compensationType", value)} />
-                  <div className="col-span-2 flex flex-col gap-1.5">
-                    <label className="text-xs font-medium text-gray-500">Work Schedule</label>
-                    <WorkSchedulePicker
-                      value={form.workSchedule || "11 AM – 8 PM (Mon–Sat)"}
-                      onChange={(v) => updateForm("workSchedule", v)}
-                    />
-                  </div>
-                  <FormInput label="Payment frequency" value={form.paymentFrequency} onChange={(value) => updateForm("paymentFrequency", value)} />
-                  <FormInput label="Annual compensation" type="number" value={form.annualCompensation} onChange={(value) => updateForm("annualCompensation", value)} />
-                  <FormInput label="Annual variable pay" type="number" value={form.annualVariablePay} onChange={(value) => updateForm("annualVariablePay", value)} />
-                  <FormInput label="Basic salary" type="number" value={form.basicSalary} onChange={(value) => updateForm("basicSalary", value)} />
-                  <FormInput label="HRA" type="number" value={form.hra} onChange={(value) => updateForm("hra", value)} />
-                  <FormInput label="Transport" type="number" value={form.ta} onChange={(value) => updateForm("ta", value)} />
-                  <FormInput label="Medical" type="number" value={form.medicalAllowance} onChange={(value) => updateForm("medicalAllowance", value)} />
-                  <FormInput label="Other allowances" type="number" value={form.otherAllowances} onChange={(value) => updateForm("otherAllowances", value)} />
-                  <FormInput label="Past payroll FY" value={form.pastPayrollFinancialYear} onChange={(value) => updateForm("pastPayrollFinancialYear", value)} />
-                  <FormInput label="Past taxable salary" type="number" value={form.pastTaxableSalary} onChange={(value) => updateForm("pastTaxableSalary", value)} />
-                  <FormInput label="Past TDS deducted" type="number" value={form.pastTdsDeducted} onChange={(value) => updateForm("pastTdsDeducted", value)} />
-                  <FormInput label="Bank account number" value={form.bankAccountNumber} onChange={(value) => updateForm("bankAccountNumber", value)} />
-                  <FormInput label="IFSC code" value={form.bankIfscCode} onChange={(value) => updateForm("bankIfscCode", value)} />
-                  <FormInput label="Beneficiary name" value={form.bankBeneficiaryName} onChange={(value) => updateForm("bankBeneficiaryName", value)} />
-                  <FormInput label="PF UAN number" value={form.pfUanNumber} onChange={(value) => updateForm("pfUanNumber", value)} />
-                  <FormInput label="ESIC IP number" value={form.esicIpNumber} onChange={(value) => updateForm("esicIpNumber", value)} />
-                  <Checkbox label="Remote position" checked={form.remotePosition} onChange={(value) => updateForm("remotePosition", value)} />
-                  <Checkbox label="Labour Welfare Fund" checked={form.labourWelfareFundEnabled} onChange={(value) => updateForm("labourWelfareFundEnabled", value)} />
-                  <Checkbox label="National Pension System" checked={form.npsEnabled} onChange={(value) => updateForm("npsEnabled", value)} />
-                  <Checkbox label="Professional Tax" checked={form.professionalTaxEnabled} onChange={(value) => updateForm("professionalTaxEnabled", value)} />
-                  {mode === "create" && (
-                    <label className="col-span-2 flex flex-col gap-1 text-sm font-medium text-gray-700">
-                      Company Email
-                      <div className="flex items-center rounded-lg border border-gray-200 overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
-                        <input
-                          type="text"
-                          value={form.emailPrefix}
-                          onChange={(e) => updateForm("emailPrefix", e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, ""))}
-                          placeholder="firstname.lastname"
-                          className="flex-1 px-3 py-2 text-sm font-normal focus:outline-none"
-                          required
+              <form onSubmit={submitEmployee} className="flex-1 flex overflow-hidden min-h-0 divide-x bg-gray-50/50">
+                  {/* Left: Input fields */}
+                  <div className="w-1/2 overflow-auto p-6 bg-white space-y-4 flex flex-col justify-between">
+                    <div className="grid grid-cols-2 gap-4">
+                      <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                        Full name
+                        <input value={form.fullName} onChange={(e) => updateForm("fullName", e.target.value)} className="rounded-lg border border-gray-200 px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                      </label>
+                      <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                        Personal email
+                        <input type="email" value={form.personalEmail} onChange={(e) => updateForm("personalEmail", e.target.value)} className="rounded-lg border border-gray-200 px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                      </label>
+                      <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                        Role
+                        <select value={form.roleId} onChange={(e) => updateForm("roleId", e.target.value)} className="rounded-lg border border-gray-200 px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                          <option value="">Select role</option>
+                          {roles.map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}
+                        </select>
+                      </label>
+                      <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                        Department
+                        <input value={form.department} onChange={(e) => updateForm("department", e.target.value)} className="rounded-lg border border-gray-200 px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                      </label>
+                      <FormInput label="Legal name" value={form.legalName} onChange={(value) => updateForm("legalName", value)} />
+                      <FormInput label="PAN" value={form.pan} onChange={(value) => updateForm("pan", value)} />
+                      <FormInput label="Role title" value={form.roleTitle} onChange={(value) => updateForm("roleTitle", value)} />
+                      <FormInput label="Joining date" type="date" value={form.joiningDate} onChange={(value) => updateForm("joiningDate", value)} required />
+                      <FormInput label="Date of birth" type="date" value={form.dateOfBirth} onChange={(value) => updateForm("dateOfBirth", value)} />
+                      <FormInput label="Work location" value={form.workLocation} onChange={(value) => updateForm("workLocation", value)} />
+                      <FormSelect label="Employment type" value={form.employmentType} onChange={(value) => updateForm("employmentType", value)} options={EMPLOYMENT_TYPES} />
+                      <FormSelect label="Compensation type" value={form.compensationType} onChange={(value) => updateForm("compensationType", value)} options={COMPENSATION_TYPES} />
+                      <div className="col-span-2 flex flex-col gap-1.5">
+                        <label className="text-xs font-medium text-gray-500">Work Schedule</label>
+                        <WorkSchedulePicker
+                          value={form.workSchedule || "11 AM – 8 PM (Mon–Sat)"}
+                          onChange={(v) => updateForm("workSchedule", v)}
                         />
-                        <span className="px-3 py-2 bg-gray-50 text-gray-500 text-sm border-l border-gray-200 select-none whitespace-nowrap">@rhinontech.in</span>
                       </div>
-                      <p className="text-xs text-gray-400 font-normal">A welcome email with login credentials will be sent to their personal email.</p>
-                    </label>
-                  )}
-                </div>
+                      <FormSelect label="Payment frequency" value={form.paymentFrequency} onChange={(value) => updateForm("paymentFrequency", value)} options={PAYMENT_FREQUENCIES} />
+                      <FormInput label="Annual compensation" type="number" value={form.annualCompensation} onChange={(value) => updateForm("annualCompensation", value)} />
+                      <FormInput label="Annual variable pay" type="number" value={form.annualVariablePay} onChange={(value) => updateForm("annualVariablePay", value)} />
+                      <FormInput label="Basic salary" type="number" value={form.basicSalary} onChange={(value) => updateForm("basicSalary", value)} />
+                      <FormInput label="HRA" type="number" value={form.hra} onChange={(value) => updateForm("hra", value)} />
+                      <FormInput label="Transport" type="number" value={form.ta} onChange={(value) => updateForm("ta", value)} />
+                      <FormInput label="Medical" type="number" value={form.medicalAllowance} onChange={(value) => updateForm("medicalAllowance", value)} />
+                      <FormInput label="Other allowances" type="number" value={form.otherAllowances} onChange={(value) => updateForm("otherAllowances", value)} />
+                      <FormInput label="Past payroll FY" value={form.pastPayrollFinancialYear} onChange={(value) => updateForm("pastPayrollFinancialYear", value)} />
+                      <FormInput label="Past taxable salary" type="number" value={form.pastTaxableSalary} onChange={(value) => updateForm("pastTaxableSalary", value)} />
+                      <FormInput label="Past TDS deducted" type="number" value={form.pastTdsDeducted} onChange={(value) => updateForm("pastTdsDeducted", value)} />
+                      <FormInput label="Bank account number" value={form.bankAccountNumber} onChange={(value) => updateForm("bankAccountNumber", value)} />
+                      <FormInput label="IFSC code" value={form.bankIfscCode} onChange={(value) => updateForm("bankIfscCode", value)} />
+                      <FormInput label="Beneficiary name" value={form.bankBeneficiaryName} onChange={(value) => updateForm("bankBeneficiaryName", value)} />
+                      <FormInput label="PF UAN number" value={form.pfUanNumber} onChange={(value) => updateForm("pfUanNumber", value)} />
+                      <FormInput label="ESIC IP number" value={form.esicIpNumber} onChange={(value) => updateForm("esicIpNumber", value)} />
+                      <Checkbox label="Remote position" checked={form.remotePosition} onChange={(value) => updateForm("remotePosition", value)} />
+                      <Checkbox label="Labour Welfare Fund" checked={form.labourWelfareFundEnabled} onChange={(value) => updateForm("labourWelfareFundEnabled", value)} />
+                      <Checkbox label="National Pension System" checked={form.npsEnabled} onChange={(value) => updateForm("npsEnabled", value)} />
+                      <Checkbox label="Professional Tax" checked={form.professionalTaxEnabled} onChange={(value) => updateForm("professionalTaxEnabled", value)} />
+                      
+                      {mode === "create" && (
+                        <label className="col-span-2 flex flex-col gap-1 text-sm font-medium text-gray-700">
+                          Company Email
+                          <div className="flex items-center rounded-lg border border-gray-200 overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
+                            <input
+                              type="text"
+                              value={form.emailPrefix}
+                              onChange={(e) => updateForm("emailPrefix", e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, ""))}
+                              placeholder="firstname.lastname"
+                              className="flex-1 px-3 py-2 text-sm font-normal focus:outline-none"
+                              required
+                            />
+                            <span className="px-3 py-2 bg-gray-50 text-gray-500 text-sm border-l border-gray-200 select-none whitespace-nowrap">@rhinontech.in</span>
+                          </div>
+                          <p className="text-xs text-gray-400 font-normal">A welcome email with login credentials will be sent to their personal email.</p>
+                        </label>
+                      )}
+                      
+                      {mode === "create" && (
+                        <label className="col-span-2 flex items-center gap-2 rounded-lg border border-stone-200 bg-stone-50/30 px-3 py-2 text-sm font-medium text-gray-700 mt-2 cursor-pointer">
+                          <input type="checkbox" checked={attachDocs} onChange={(e) => setAttachDocs(e.target.checked)} className="rounded" />
+                          Attach generated Offer Letter & NDA to welcome email
+                        </label>
+                      )}
+                    </div>
 
-                {message && <p className={cn("text-sm", message.includes("Unable") ? "text-red-600" : "text-green-600")}>{message}</p>}
+                    {message && <p className={cn("text-sm mt-4", message.includes("Unable") ? "text-red-600" : "text-green-600")}>{message}</p>}
 
-                <div className="flex items-center justify-end gap-3 border-t pt-4">
-                  <button type="button" onClick={() => setMode("view")} className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">
-                    Cancel
-                  </button>
-                  <button type="submit" disabled={saving} className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-60">
-                    {saving ? "Saving..." : mode === "create" ? "Add member" : "Save changes"}
-                  </button>
-                </div>
-              </form>
+                    <div className="flex items-center justify-end gap-3 border-t pt-4 mt-6">
+                      <button type="button" onClick={() => setMode("view")} className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">
+                        Cancel
+                      </button>
+                      <button type="submit" disabled={saving} className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-60">
+                        {saving ? "Saving..." : mode === "create" ? "Add member" : "Save changes"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Right: Live Preview */}
+                  <div className="w-1/2 overflow-hidden flex flex-col p-6 bg-stone-100/50">
+                    <p className="text-xs font-semibold text-stone-500 uppercase tracking-widest mb-3">Live Document Preview</p>
+                    
+                    {/* Tabs */}
+                    <div className="flex gap-2 mb-4 border-b border-stone-200">
+                      <button
+                        type="button"
+                        onClick={() => setPreviewTab("offer")}
+                        className={cn(
+                          "px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 -mb-px transition-all",
+                          previewTab === "offer" ? "border-stone-900 text-stone-900" : "border-transparent text-stone-400 hover:text-stone-600"
+                        )}
+                      >
+                        Offer Letter
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewTab("nda")}
+                        className={cn(
+                          "px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 -mb-px transition-all",
+                          previewTab === "nda" ? "border-stone-900 text-stone-900" : "border-transparent text-stone-400 hover:text-stone-600"
+                        )}
+                      >
+                        NDA
+                      </button>
+                    </div>
+
+                    <div className="flex-1 bg-white border border-stone-200 rounded-xl shadow-sm p-8 overflow-auto font-serif text-[11px] leading-relaxed text-gray-800 w-full relative select-none">
+                      {previewTab === "offer" ? (
+                        <OfferLetterPreview form={form} />
+                      ) : (
+                        <NdaPreview form={form} />
+                      )}
+                    </div>
+                  </div>
+                </form>
             ) : (
               <div className="flex items-center justify-center flex-1 text-sm text-gray-400">
                 Select a team member to view their profile.
@@ -1278,3 +1373,323 @@ export function PeopleDirectory() {
     </div>
   );
 }
+
+function OfferLetterLogo() {
+  return (
+    <div className="flex flex-col items-center justify-center border-b pb-2 mb-3 select-none">
+      <Image src={adminImages.Logo_Rhinon_Tech_Dark} alt="Rhinon Tech" className="h-7 w-auto object-contain" />
+    </div>
+  );
+}
+
+function getOrdinal(d: number) {
+  if (d > 3 && d < 21) return "th";
+  switch (d % 10) {
+    case 1:  return "st";
+    case 2:  return "nd";
+    case 3:  return "rd";
+    default: return "th";
+  }
+}
+
+function OfferLetterPreview({ form }: { form: EmployeeForm }) {
+  const currentYear = new Date().getFullYear();
+  const today = new Date();
+  const ordinalDay = getOrdinal(today.getDate());
+  const dateStr = `${today.getDate()}${ordinalDay} ${today.toLocaleDateString("en-US", { month: "long" })}, ${today.getFullYear()}`;
+  
+  const startD = form.joiningDate ? new Date(form.joiningDate) : new Date();
+  const endD = new Date(startD.getFullYear(), startD.getMonth() + 6, startD.getDate());
+  
+  const startOrd = getOrdinal(startD.getDate());
+  const startStr = `${startD.getDate()}${startOrd} ${startD.toLocaleDateString("en-US", { month: "long" })}, ${startD.getFullYear()}`;
+  
+  const endOrd = getOrdinal(endD.getDate());
+  const endStr = `${endD.getDate()}${endOrd} ${endD.toLocaleDateString("en-US", { month: "long" })}, ${endD.getFullYear()}`;
+  
+  const fmtStartShort = startD.toLocaleDateString("en-GB").replace(/\//g, "-");
+  const fmtEndShort = endD.toLocaleDateString("en-GB").replace(/\//g, "-");
+  
+  const stipend = form.annualCompensation ? Math.round(Number(form.annualCompensation) / 12) : 5000;
+  const ctc = form.annualCompensation ? `₹${Number(form.annualCompensation).toLocaleString("en-IN")}` : "As discussed";
+  const variable = form.annualVariablePay ? `₹${Number(form.annualVariablePay).toLocaleString("en-IN")}` : "₹0";
+  const isIntern = form.employmentType?.toLowerCase() === "internship";
+
+  return (
+    <div className="space-y-6 overflow-y-auto max-h-[70vh] p-4 bg-stone-100/60 rounded-xl">
+      {/* PAGE 1 */}
+      <div className="bg-white border border-stone-200 shadow-sm p-10 aspect-[1/1.41] w-full text-[9.5px] leading-relaxed relative flex flex-col font-sans text-stone-700 select-none">
+        <OfferLetterLogo />
+        <div className="text-center font-bold text-[#005085] tracking-wider text-[10px] mb-4">
+          PRIVATE & CONFIDENTIAL
+        </div>
+        <div className="space-y-0.5 mb-4">
+          <p>{dateStr}</p>
+          <p className="font-bold text-stone-900 text-[10.5px]">{form.legalName || form.fullName || "[Full Name]"}</p>
+          <p>{form.workLocation || "Bengaluru, India"}</p>
+        </div>
+        <p className="mb-3">Dear {form.fullName ? form.fullName.split(" ")[0] : "[First Name]"},</p>
+        
+        <div className="space-y-3 flex-1">
+          <div>
+            <h3 className="font-bold text-[#005085] text-[9.5px] mb-0.5">1. Introduction to Rhinon Tech</h3>
+            <p className="text-justify">
+              We are thrilled to offer you the opportunity to {isIntern ? "intern" : "work"} with <span className="font-bold text-stone-900">Rhinon Tech</span>, a cutting-edge technology company dedicated to pushing the boundaries of innovation and excellence. Since our inception, Rhinon Tech has been at the forefront of developing scalable solutions and empowering industries with the tools to grow in a highly competitive marketplace.
+            </p>
+            <p className="text-justify mt-1">
+              As a company that values creativity, innovation, and a passion for technology, we believe in providing our {isIntern ? "interns" : "employees"} with the best learning experience and preparing them for future roles in the industry. Through this {isIntern ? "internship" : "employment"}, you will be involved in projects that contribute directly to Rhinon Tech's mission.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="font-bold text-[#005085] text-[9.5px] mb-0.5">2. Offer of {isIntern ? "Internship" : "Employment"}</h3>
+            <p className="text-justify">
+              We are pleased to offer you the position of <span className="font-bold text-stone-900">{form.roleTitle || (isIntern ? "NextJs Developer Intern" : "NextJs Developer")}</span> {isIntern ? `for a period of **6 months** starting from **${fmtStartShort}** to **${fmtEndShort}**` : `starting from **${startStr}**`}. This position is an important step toward building your professional experience, and we look forward to seeing your contributions in real-world projects.
+            </p>
+            <p className="text-justify mt-1">
+              This role will help you gain skills in Product Development and AI with talented professionals and get exposure to cutting-edge technologies.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="font-bold text-[#005085] text-[9.5px] mb-0.5">3. {isIntern ? "Internship" : "Employment"} Position Details</h3>
+            <ul className="list-disc pl-4 space-y-0.5">
+              <li><span className="font-bold text-stone-900">Designation:</span> {form.roleTitle || "NextJs Developer"}</li>
+              <li><span className="font-bold text-stone-900">Location:</span> {form.workLocation || "Bengaluru (Remote)"}</li>
+              {isIntern ? (
+                <li><span className="font-bold text-stone-900">Internship Duration:</span> 6 months</li>
+              ) : (
+                <li><span className="font-bold text-stone-900">Employment Type:</span> Full-Time / Permanent</li>
+              )}
+              <li><span className="font-bold text-stone-900">Working Hours:</span> {isIntern ? "48 hours per week" : "40 hours per week"}</li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-bold text-[#005085] text-[9.5px] mb-0.5">4. Compensation and Benefits</h3>
+          </div>
+        </div>
+        <div className="absolute bottom-3 left-0 right-0 text-center text-[7.5px] text-stone-400">Page 1 of 5</div>
+      </div>
+
+      {/* PAGE 2 */}
+      <div className="bg-white border border-stone-200 shadow-sm p-10 aspect-[1/1.41] w-full text-[9.5px] leading-relaxed relative flex flex-col font-sans text-stone-700 select-none">
+        <OfferLetterLogo />
+        <div className="space-y-3 flex-1">
+          <p className="text-justify">
+            {isIntern ? (
+              <>During your internship period, this is a paid internship for <span className="font-bold text-stone-900">₹{stipend.toLocaleString("en-IN")}/- per month</span>. After three months, there will be a review meeting to assess your performance, and based on this review, we will decide on future opportunities and compensation.</>
+            ) : (
+              <>Your starting compensation package includes an annual CTC of <span className="font-bold text-stone-900">{ctc}</span> (with variable component of <span className="font-bold text-stone-900">{variable}</span>) paid on a monthly basis. Your compensation will be subject to annual performance reviews.</>
+            )}
+          </p>
+          <p>You will enjoy the following benefits as {isIntern ? "an intern" : "an employee"} at Rhinon Tech:</p>
+          <ul className="list-disc pl-4 space-y-1">
+            <li><span className="font-bold text-stone-900">Mentorship:</span> You will be assigned a mentor who will provide guidance throughout your tenure.</li>
+            <li><span className="font-bold text-stone-900">Workshops and Training:</span> Access to internal training programs and workshops that align with your field of work.</li>
+            <li><span className="font-bold text-stone-900">Networking Opportunities:</span> Participate in company events, meetups, and team-building exercises to build professional connections.</li>
+            <li><span className="font-bold text-stone-900">Team Collaboration:</span> Engage with various teams and departments to understand how cross-functional collaboration leads to the success of a company.</li>
+          </ul>
+
+          <div>
+            <h3 className="font-bold text-[#005085] text-[9.5px] mb-0.5">5. Terms and Conditions</h3>
+            <p className="font-bold text-stone-900 mb-0.5">Working Hours</p>
+            <p className="text-justify">
+              The standard working hours will be <span className="font-bold text-stone-900">11 AM to 8 PM, Monday to Saturday</span>. You may be required to work additional hours depending on project needs, but this will be communicated well in advance.
+            </p>
+            <p className="font-bold text-stone-900 mt-2 mb-0.5">Performance Reviews</p>
+            <p className="text-justify">
+              Throughout your tenure, you will be subject to regular performance reviews. These reviews are designed to assess your progress and provide feedback for improvement. Based on these evaluations, you will be given opportunities to work on more complex projects or explore different areas of interest within the company.
+            </p>
+            <p className="font-bold text-stone-900 mt-2 mb-0.5">Confidentiality Agreement</p>
+            <p className="text-justify">
+              During your association with Rhinon Tech, you may have access to sensitive and proprietary information. It is expected that you maintain confidentiality and not disclose any company-related information to external parties. A separate Non-Disclosure Agreement (NDA) will be provided to you on the first day.
+            </p>
+          </div>
+        </div>
+        <div className="absolute bottom-3 left-0 right-0 text-center text-[7.5px] text-stone-400">Page 2 of 5</div>
+      </div>
+
+      {/* PAGE 3 */}
+      <div className="bg-white border border-stone-200 shadow-sm p-10 aspect-[1/1.41] w-full text-[9.5px] leading-relaxed relative flex flex-col font-sans text-stone-700 select-none">
+        <OfferLetterLogo />
+        <div className="space-y-3 flex-1">
+          <div>
+            <p className="font-bold text-stone-900 mb-0.5">Intellectual Property</p>
+            <p className="text-justify">
+              Any work, project, or intellectual property developed by you during the association remains the sole property of <span className="font-bold text-stone-900">Rhinon Tech</span>. You will be expected to transfer all rights of any code, design, or product developed during your tenure to the company.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="font-bold text-[#005085] text-[9.5px] mb-0.5">6. Termination Clause</h3>
+            <p className="text-justify">
+              While we expect you to successfully complete your tenure, both you and Rhinon Tech have the right to terminate the association under the following conditions:
+            </p>
+            <ul className="list-disc pl-4 space-y-1 mt-1 text-justify">
+              <li><span className="font-bold text-gray-900">Voluntary Termination:</span> Either party may terminate the agreement with <span className="font-bold text-gray-900">1 Month Prior Notice</span>. A written notice is required in case you decide to discontinue.</li>
+              <li><span className="font-bold text-gray-900">Involuntary Termination:</span> The company reserves the right to terminate immediately if any of the following occurs:
+                <ul className="list-alpha pl-4 mt-0.5 space-y-0.5 text-stone-600">
+                  <li>a. Violation of company policies or non-compliance with the agreement.</li>
+                  <li>b. Misconduct, dishonesty, or inappropriate behavior within the workplace.</li>
+                  <li>c. Poor performance reviews with no sign of improvement for 2 consecutive months.</li>
+                  <li>d. Intentionally or negligently disclosing Confidential Information to unauthorized parties.</li>
+                  <li>e. Intentionally or negligently misusing or misappropriating Confidential Information.</li>
+                  <li>f. Failure to comply with security policies regarding Confidential Information.</li>
+                  <li>g. Failure to return all company property and settle pending tasks.</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-bold text-[#005085] text-[9.5px] mb-0.5">7. Post-Employment Review and Opportunities</h3>
+          </div>
+        </div>
+        <div className="absolute bottom-3 left-0 right-0 text-center text-[7.5px] text-stone-400">Page 3 of 5</div>
+      </div>
+
+      {/* PAGE 4 */}
+      <div className="bg-white border border-stone-200 shadow-sm p-10 aspect-[1/1.41] w-full text-[9.5px] leading-relaxed relative flex flex-col font-sans text-stone-700 select-none">
+        <OfferLetterLogo />
+        <div className="space-y-3 flex-1">
+          <p className="text-justify">
+            At the conclusion of your tenure, we will conduct a <span className="font-bold text-stone-900">formal review of your performance</span>. This review will evaluate your contributions, professionalism, teamwork, and learning agility.
+          </p>
+          <p className="font-bold text-stone-900">Post-Internship Outcomes:</p>
+          <ol className="list-decimal pl-4 space-y-1">
+            <li><span className="font-bold text-stone-900">Certificate of Completion:</span> Issued if you have met objectives satisfactorily.</li>
+            <li><span className="font-bold text-stone-900">Experience Letter:</span> Provided to highlight your key contributions.</li>
+            <li><span className="font-bold text-stone-900">Full-Time Employment Opportunity:</span> Outstanding interns may be offered a permanent role.</li>
+          </ol>
+          <p className="text-justify">
+            We strongly believe in recognizing talent, and those who demonstrate exceptional performance will be considered for permanent leadership positions with Rhinon Tech.
+          </p>
+
+          <div>
+            <h3 className="font-bold text-[#005085] text-[9.5px] mb-0.5">8. Code of Conduct</h3>
+            <ol className="list-decimal pl-4 space-y-0.5">
+              <li><span className="font-bold text-stone-900">Professionalism:</span> Maintain a professional demeanor at all times.</li>
+              <li><span className="font-bold text-stone-900">Punctuality:</span> Be punctual and accountable for agreed-upon hours.</li>
+              <li><span className="font-bold text-stone-900">Workplace Ethics:</span> Follow all company policies and security guidelines.</li>
+              <li><span className="font-bold text-stone-900">Teamwork:</span> Collaborate effectively and contribute to culture.</li>
+            </ol>
+          </div>
+
+          <div>
+            <h3 className="font-bold text-[#005085] text-[9.5px] mb-0.5">9. Next Steps and Acceptance</h3>
+            <p className="text-justify">
+              To confirm your acceptance of this offer, please sign and return a copy of this offer letter by the acceptance deadline. We look forward to your contributions.
+            </p>
+            <p className="mt-1">HR Department: info@rhinontech.com</p>
+          </div>
+
+          <div className="pt-2">
+            <p>Best regards,</p>
+            <div className="h-6 flex items-center italic text-stone-400 select-none">[Founder Signature]</div>
+            <p className="font-bold text-stone-900">Prabhat Patra (Founder)</p>
+          </div>
+        </div>
+        <div className="absolute bottom-3 left-0 right-0 text-center text-[7.5px] text-stone-400">Page 4 of 5</div>
+      </div>
+
+      {/* PAGE 5 */}
+      <div className="bg-white border border-stone-200 shadow-sm p-10 aspect-[1/1.41] w-full text-[9.5px] leading-relaxed relative flex flex-col font-sans text-stone-700 select-none">
+        <OfferLetterLogo />
+        <div className="text-center font-bold text-[#005085] tracking-wider text-[10px] mb-6">
+          Rhinon Tech Acknowledgment of Offer
+        </div>
+        <p className="text-justify mb-6">
+          I, <span className="font-bold text-stone-900">{form.legalName || form.fullName || "[Full Name]"}</span>, accept the offer of the <span className="font-bold text-stone-900">{form.roleTitle || "[Role Title]"}</span> position at Rhinon Tech under the terms stated in this letter.
+        </p>
+
+        <div className="space-y-4">
+          <p className="font-bold text-stone-900">Signature: _______________________</p>
+          <p className="font-bold text-stone-900">Date: ___{fmtStartShort}____________________</p>
+        </div>
+        <div className="absolute bottom-3 left-0 right-0 text-center text-[7.5px] text-stone-400">Page 5 of 5</div>
+      </div>
+    </div>
+  );
+}
+
+function NdaPreview({ form }: { form: EmployeeForm }) {
+  const dateStr = new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+  const joinedStr = form.joiningDate
+    ? new Date(form.joiningDate).toLocaleDateString("en-GB").replace(/\//g, "-")
+    : "[Joining Date]";
+
+  return (
+    <div className="space-y-6 overflow-y-auto max-h-[70vh] p-4 bg-stone-100/60 rounded-xl">
+      <div className="bg-white border border-stone-200 shadow-sm p-10 aspect-[1/1.41] w-full text-[9.5px] leading-relaxed relative flex flex-col font-sans text-stone-700 select-none">
+        <OfferLetterLogo />
+        <div className="text-center font-bold text-[#005085] tracking-wider text-[10px] mb-4">
+          NON-DISCLOSURE & CONFIDENTIALITY AGREEMENT
+        </div>
+        
+        <div className="text-right mb-2">Date: {dateStr}</div>
+
+        <div className="space-y-3 flex-1">
+          <p className="text-justify">
+            This Non-Disclosure and Confidentiality Agreement (the "Agreement") is entered into as of {dateStr} by and between:
+          </p>
+          <div className="pl-4 space-y-1">
+            <p><span className="font-bold text-stone-900">1. Rhinon Tech</span> (the "Company"), and</p>
+            <p><span className="font-bold text-stone-900">2. {form.legalName || form.fullName || "[Employee Full Name]"}</span> residing at {form.workLocation || "[Work Location]"} (the "Employee").</p>
+          </div>
+
+          <div>
+            <h3 className="font-bold text-[#005085] text-[9.5px] mb-0.5">1. Purpose</h3>
+            <p className="text-justify text-stone-600">
+              The Company desires to associate with the Employee, during which the Employee will have access to confidential, proprietary, and highly sensitive information of the Company. The Employee agrees to receive and safeguard such information under the terms of this Agreement.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="font-bold text-[#005085] text-[9.5px] mb-0.5">2. Confidential Information</h3>
+            <p className="text-justify text-stone-600">
+              Confidential Information includes all trade secrets, source code, playbooks, databases, client records, research, and financial reports. The Employee agrees to keep all such information strictly confidential and not disclose it to any third party.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="font-bold text-[#005085] text-[9.5px] mb-0.5">3. Intellectual Property</h3>
+            <p className="text-justify text-stone-600">
+              All inventions, systems, software designs, codes, and business methodologies developed by the Employee during their association with the Company remain the exclusive intellectual property of the Company.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="font-bold text-[#005085] text-[9.5px] mb-0.5">4. Remedies & Jurisdiction</h3>
+            <p className="text-justify text-stone-600">
+              Any breach of this agreement shall entitle the Company to seek injunctive relief and damages in accordance with governing laws.
+            </p>
+          </div>
+
+          <p className="pt-1 text-justify">
+            IN WITNESS WHEREOF, the parties have executed this Agreement as of the date first above written.
+          </p>
+
+          <div className="pt-2 grid grid-cols-2 gap-8 text-[9px]">
+            <div className="space-y-3">
+              <p>For <span className="font-bold text-stone-900">Rhinon Tech</span>,</p>
+              <div className="h-6 flex items-center italic text-stone-400 select-none">[Authorized Sign]</div>
+              <p className="font-bold text-stone-900">Authorized Signatory</p>
+            </div>
+            <div className="space-y-3">
+              <p>Accepted & Agreed By:</p>
+              <div className="h-6 border-b border-stone-200"></div>
+              <div>
+                <p className="font-bold text-stone-900">{form.legalName || form.fullName || "[Employee Full Name]"}</p>
+                <p className="text-[7.5px] text-stone-400">Date: {joinedStr}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="absolute bottom-3 left-0 right-0 text-center text-[7.5px] text-stone-400">Page 1 of 1</div>
+      </div>
+    </div>
+  );
+}
+
+
