@@ -21,6 +21,10 @@ interface Employee {
   roleId: string;
   status: "active" | "inactive";
   onboarded?: boolean;
+  exitDate?: string | null;
+  exitReason?: string | null;
+  exitNotes?: string | null;
+  exitChecklist?: Record<string, boolean> | null;
   joiningDate: string;
   dateOfBirth?: string;
   pan?: string;
@@ -63,7 +67,6 @@ type EmployeeForm = {
   department: string;
   joiningDate: string;
   dateOfBirth: string;
-  status: "active" | "inactive";
   emailPrefix: string;
   pan: string;
   employmentType: string;
@@ -101,7 +104,6 @@ const emptyForm: EmployeeForm = {
   department: "",
   joiningDate: "",
   dateOfBirth: "",
-  status: "active",
   emailPrefix: "",
   pan: "",
   employmentType: "Full-Time",
@@ -156,7 +158,6 @@ function employeeToForm(employee: Employee): EmployeeForm {
     department: employee.department,
     joiningDate: inputDate(employee.joiningDate),
     dateOfBirth: inputDate(employee.dateOfBirth ?? ""),
-    status: employee.status,
     emailPrefix: "",
     pan: employee.pan ?? "",
     employmentType: employee.employmentType ?? "Full-Time",
@@ -204,11 +205,119 @@ function formPayload(form: EmployeeForm, mode: PanelMode) {
   };
 }
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status, exitDate }: { status: string; exitDate?: string | null }) {
+  if (status === "active" && exitDate) {
+    return (
+      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700" title={`Last working day: ${formatDate(exitDate)}`}>
+        exiting
+      </span>
+    );
+  }
   return (
     <span className={cn("px-2 py-0.5 rounded-full text-xs font-medium", status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500")}>
-      {status}
+      {status === "active" ? "active" : "relieved"}
     </span>
+  );
+}
+
+const EXIT_REASONS = ["Resignation", "Termination", "Contract ended", "Absconded", "Other"];
+
+const EXIT_CHECKLIST_ITEMS: { key: string; label: string }[] = [
+  { key: "emailDisabled",   label: "Company email account disabled" },
+  { key: "assetsReturned",  label: "Company assets returned" },
+  { key: "accessRevoked",   label: "Third-party tool access revoked" },
+  { key: "settlementPaid",  label: "Final settlement paid" },
+  { key: "lettersIssued",   label: "Relieving / experience letters issued" },
+];
+
+function localToday() {
+  return new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD in local time
+}
+
+function OffboardDialog({
+  employee,
+  busy,
+  onClose,
+  onConfirm,
+}: {
+  employee: Employee;
+  busy: boolean;
+  onClose: () => void;
+  onConfirm: (payload: { exitDate: string; exitReason: string; exitNotes: string }) => void;
+}) {
+  const [exitDate, setExitDate] = useState(localToday());
+  const [exitReason, setExitReason] = useState("Resignation");
+  const [exitNotes, setExitNotes] = useState("");
+  const immediate = !!exitDate && exitDate <= localToday();
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <div className="w-full max-w-md space-y-4 rounded-xl bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div>
+          <h3 className="text-base font-semibold text-gray-900">Offboard {employee.fullName}</h3>
+          <p className="mt-1 text-xs text-gray-500">{employee.companyEmail}</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+            Last working day
+            <input
+              type="date"
+              value={exitDate}
+              onChange={(e) => setExitDate(e.target.value)}
+              className="rounded-lg border border-gray-200 px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+            Reason
+            <select
+              value={exitReason}
+              onChange={(e) => setExitReason(e.target.value)}
+              className="rounded-lg border border-gray-200 px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {EXIT_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
+            </select>
+          </label>
+          <label className="col-span-2 flex flex-col gap-1 text-sm font-medium text-gray-700">
+            Notes <span className="font-normal text-gray-400">(optional)</span>
+            <textarea
+              value={exitNotes}
+              onChange={(e) => setExitNotes(e.target.value)}
+              rows={3}
+              placeholder="Handover details, exit interview notes..."
+              className="rounded-lg border border-gray-200 px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </label>
+        </div>
+
+        <div className="space-y-1 rounded-lg bg-red-50 p-3 text-xs text-red-700">
+          <p className="font-semibold">
+            {immediate
+              ? "Access is revoked immediately — any active session stops working."
+              : `They keep access until the end of ${formatDate(exitDate)}, then it is revoked automatically.`}
+          </p>
+          <p>
+            Pending leave requests are cancelled, open tasks return to the unassigned pool,
+            docs access is revoked, and they are excluded from future payroll runs.
+          </p>
+        </div>
+
+        <div className="flex items-center justify-end gap-3 border-t pt-4">
+          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">
+            Cancel
+          </button>
+          <button
+            type="button"
+            disabled={busy || !exitDate}
+            onClick={() => onConfirm({ exitDate, exitReason, exitNotes })}
+            className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60"
+          >
+            {busy ? "Offboarding..." : immediate ? "Offboard now" : "Schedule exit"}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -288,11 +397,15 @@ export function PeopleDirectory() {
   const canManage = permissions.includes("employees:read");
   const canWrite = permissions.includes("employees:write");
   const [resending, setResending] = useState(false);
+  const [tab, setTab] = useState<"active" | "alumni">("active");
+  const [showOffboard, setShowOffboard] = useState(false);
+  const [offboardBusy, setOffboardBusy] = useState(false);
+  const [letterBusy, setLetterBusy] = useState<"" | "relieving" | "experience">("");
 
   const fetchEmployees = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/people`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/people?include=all`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -329,15 +442,27 @@ export function PeopleDirectory() {
     }
   }, []);
 
+  const activeCount = useMemo(() => employees.filter((e) => e.status === "active").length, [employees]);
+  const alumniCount = employees.length - activeCount;
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return employees.filter((e) => (
-      e.fullName.toLowerCase().includes(q) ||
-      e.department.toLowerCase().includes(q) ||
-      e.role?.name.toLowerCase().includes(q) ||
-      e.companyEmail.toLowerCase().includes(q)
-    ));
-  }, [employees, search]);
+    return employees
+      .filter((e) => (tab === "active" ? e.status === "active" : e.status === "inactive"))
+      .filter((e) => (
+        e.fullName.toLowerCase().includes(q) ||
+        e.department.toLowerCase().includes(q) ||
+        e.role?.name.toLowerCase().includes(q) ||
+        e.companyEmail.toLowerCase().includes(q)
+      ));
+  }, [employees, search, tab]);
+
+  const switchTab = (next: "active" | "alumni") => {
+    setTab(next);
+    setMode("view");
+    const pool = employees.filter((e) => (next === "active" ? e.status === "active" : e.status === "inactive"));
+    setSelectedEmployee(pool[0] ?? null);
+  };
 
   const openCreate = () => {
     setMode("create");
@@ -405,6 +530,96 @@ export function PeopleDirectory() {
       alert("Could not send the reset link. Please try again.");
     } finally {
       setResending(false);
+    }
+  };
+
+  const submitOffboard = async (payload: { exitDate: string; exitReason: string; exitNotes: string }) => {
+    if (!selectedEmployee) return;
+    setOffboardBusy(true);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/employees/${selectedEmployee.id}/offboard`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data.message || "Could not offboard this member.");
+        return;
+      }
+      setShowOffboard(false);
+      await fetchEmployees();
+    } catch {
+      alert("Could not offboard this member. Please try again.");
+    } finally {
+      setOffboardBusy(false);
+    }
+  };
+
+  const reactivate = async () => {
+    if (!selectedEmployee) return;
+    const scheduled = selectedEmployee.status === "active" && selectedEmployee.exitDate;
+    const prompt = scheduled
+      ? `Cancel the scheduled exit for ${selectedEmployee.fullName}? They will stay active.`
+      : `Reactivate ${selectedEmployee.fullName}? They will be able to log in and will appear in payroll runs again.`;
+    if (!confirm(prompt)) return;
+    setOffboardBusy(true);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/employees/${selectedEmployee.id}/reactivate`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data.message || "Could not reactivate this member.");
+        return;
+      }
+      await fetchEmployees();
+    } catch {
+      alert("Could not reactivate. Please try again.");
+    } finally {
+      setOffboardBusy(false);
+    }
+  };
+
+  const toggleChecklist = async (key: string, value: boolean) => {
+    if (!selectedEmployee) return;
+    const updated = { ...(selectedEmployee.exitChecklist ?? {}), [key]: value };
+    setSelectedEmployee((prev) => (prev ? { ...prev, exitChecklist: updated } : prev));
+    setEmployees((prev) => prev.map((e) => (e.id === selectedEmployee.id ? { ...e, exitChecklist: updated } : e)));
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/employees/${selectedEmployee.id}/exit-checklist`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ checklist: { [key]: value } }),
+      });
+    } catch {
+      // optimistic update stays; the next refresh corrects any drift
+    }
+  };
+
+  const generateLetter = async (type: "relieving" | "experience") => {
+    if (!selectedEmployee) return;
+    const label = type === "relieving" ? "relieving letter" : "experience letter";
+    if (!confirm(`Generate the ${label} for ${selectedEmployee.fullName}?\n\nIt will be saved to Documents and emailed to ${selectedEmployee.personalEmail}.`)) return;
+    setLetterBusy(type);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/employees/${selectedEmployee.id}/letters`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ type }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data.message || `Could not generate the ${label}.`);
+        return;
+      }
+      alert(data.message);
+      if (data.url) window.open(data.url, "_blank");
+    } catch {
+      alert(`Could not generate the ${label}. Please try again.`);
+    } finally {
+      setLetterBusy("");
     }
   };
 
@@ -479,9 +694,31 @@ export function PeopleDirectory() {
         <div className="sticky top-0 bg-stone-50 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b">
           <div>
             <h1 className="text-sm font-semibold tracking-tight">Team</h1>
-            <p className="text-xs text-gray-500">{employees.length} members</p>
+            <p className="text-xs text-gray-500">
+              {activeCount} active{alumniCount > 0 ? ` · ${alumniCount} alumni` : ""}
+            </p>
           </div>
           <div className="flex items-center gap-3">
+            <div className="flex items-center rounded-lg border border-gray-200 bg-white p-0.5">
+              <button
+                onClick={() => switchTab("active")}
+                className={cn(
+                  "rounded-md px-3 py-1 text-xs font-medium transition-colors",
+                  tab === "active" ? "bg-stone-900 text-white" : "text-gray-500 hover:text-gray-900"
+                )}
+              >
+                Active
+              </button>
+              <button
+                onClick={() => switchTab("alumni")}
+                className={cn(
+                  "rounded-md px-3 py-1 text-xs font-medium transition-colors",
+                  tab === "alumni" ? "bg-stone-900 text-white" : "text-gray-500 hover:text-gray-900"
+                )}
+              >
+                Alumni{alumniCount > 0 ? ` (${alumniCount})` : ""}
+              </button>
+            </div>
             <div className="relative">
               <TbSearch size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
@@ -515,7 +752,9 @@ export function PeopleDirectory() {
           {loading ? (
             <div className="flex items-center justify-center h-full text-gray-400 text-sm">Loading...</div>
           ) : filtered.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-gray-400 text-sm">No employees found.</div>
+            <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+              {tab === "alumni" ? "No alumni yet." : "No employees found."}
+            </div>
           ) : (
             <div className="rounded-xl border border-gray-100 overflow-hidden">
               <table className="w-full text-sm">
@@ -525,7 +764,7 @@ export function PeopleDirectory() {
                     <th className="px-5 py-3 text-left">Role</th>
                     <th className="px-5 py-3 text-left">Department</th>
                     <th className="px-5 py-3 text-left">Status</th>
-                  <th className="px-5 py-3 text-left">Joined</th>
+                  <th className="px-5 py-3 text-left">{tab === "alumni" ? "Left" : "Joined"}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 bg-white">
@@ -551,8 +790,10 @@ export function PeopleDirectory() {
                       </td>
                       <td className="px-5 py-3 text-sm text-gray-600">{emp.role?.name}</td>
                       <td className="px-5 py-3 text-sm text-gray-600">{emp.department}</td>
-                      <td className="px-5 py-3"><StatusBadge status={emp.status} /></td>
-                      <td className="px-5 py-3 text-sm text-gray-400">{formatDate(emp.joiningDate)}</td>
+                      <td className="px-5 py-3"><StatusBadge status={emp.status} exitDate={emp.exitDate} /></td>
+                      <td className="px-5 py-3 text-sm text-gray-400">
+                        {formatDate(tab === "alumni" && emp.exitDate ? emp.exitDate : emp.joiningDate)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -576,7 +817,7 @@ export function PeopleDirectory() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                {canWrite && mode === "view" && selectedEmployee && (
+                {canWrite && mode === "view" && selectedEmployee && selectedEmployee.status === "active" && (
                   selectedEmployee.onboarded ? (
                     <button
                       onClick={sendReset}
@@ -657,7 +898,7 @@ export function PeopleDirectory() {
 
                     {/* Public info — visible to all */}
                     <div className="grid grid-cols-2 gap-4 text-sm">
-                      <Detail label="Status" value={<StatusBadge status={selectedEmployee.status} />} />
+                      <Detail label="Status" value={<StatusBadge status={selectedEmployee.status} exitDate={selectedEmployee.exitDate} />} />
                       <Detail label="Role title" value={selectedEmployee.roleTitle || selectedEmployee.role?.name || "-"} />
                       <Detail label="Department" value={selectedEmployee.department} />
                       <Detail label="Work location" value={selectedEmployee.workLocation || "-"} />
@@ -706,6 +947,115 @@ export function PeopleDirectory() {
                           <Detail label="National Pension System" value={selectedEmployee.npsEnabled ? "Enabled" : "Disabled"} />
                           <Detail label="Professional Tax" value={selectedEmployee.professionalTaxEnabled === false ? "Disabled" : "Enabled"} />
                         </Section>
+
+                        <section
+                          className={cn(
+                            "space-y-3 rounded-lg border p-3",
+                            selectedEmployee.status === "inactive"
+                              ? "border-gray-200 bg-gray-50"
+                              : selectedEmployee.exitDate
+                                ? "border-amber-200 bg-amber-50"
+                                : "border-red-100"
+                          )}
+                        >
+                          {selectedEmployee.status === "active" && !selectedEmployee.exitDate ? (
+                            <>
+                              <h3 className="text-sm font-semibold text-gray-900">Offboarding</h3>
+                              <p className="text-xs text-gray-500">
+                                Relieve this member — records their last working day, revokes access,
+                                and removes them from future payroll runs.
+                              </p>
+                              {selectedEmployee.role?.slug === "superadmin" ? (
+                                <p className="text-xs text-gray-400">The superadmin account cannot be offboarded.</p>
+                              ) : canWrite ? (
+                                <button
+                                  onClick={() => setShowOffboard(true)}
+                                  className="rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50"
+                                >
+                                  Offboard member
+                                </button>
+                              ) : null}
+                            </>
+                          ) : selectedEmployee.status === "active" ? (
+                            <>
+                              <h3 className="text-sm font-semibold text-amber-800">Exit scheduled</h3>
+                              <p className="text-xs text-amber-700">
+                                Last working day <span className="font-semibold">{formatDate(selectedEmployee.exitDate!)}</span>
+                                {" · "}{selectedEmployee.exitReason || "—"}. Access is revoked automatically after that day ends.
+                              </p>
+                              {selectedEmployee.exitNotes && <p className="text-xs text-amber-700/80">{selectedEmployee.exitNotes}</p>}
+                              {canWrite && (
+                                <button
+                                  onClick={reactivate}
+                                  disabled={offboardBusy}
+                                  className="rounded-lg border border-amber-300 px-3 py-1.5 text-sm font-medium text-amber-800 hover:bg-amber-100 disabled:opacity-50"
+                                >
+                                  {offboardBusy ? "Working..." : "Cancel scheduled exit"}
+                                </button>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <h3 className="text-sm font-semibold text-gray-900">Relieved</h3>
+                              <p className="text-xs text-gray-500">
+                                Last working day{" "}
+                                <span className="font-semibold">
+                                  {selectedEmployee.exitDate ? formatDate(selectedEmployee.exitDate) : "not recorded"}
+                                </span>
+                                {" · "}{selectedEmployee.exitReason || "reason not recorded"}
+                              </p>
+                              {selectedEmployee.exitNotes && <p className="text-xs text-gray-500">{selectedEmployee.exitNotes}</p>}
+                              {canWrite && (
+                                <button
+                                  onClick={reactivate}
+                                  disabled={offboardBusy}
+                                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                                >
+                                  {offboardBusy ? "Working..." : "Reactivate member"}
+                                </button>
+                              )}
+                            </>
+                          )}
+
+                          {selectedEmployee.exitDate && (
+                            <div className="space-y-3 border-t border-black/5 pt-3">
+                              <div>
+                                <p className="mb-2 text-xs font-semibold text-gray-700">Exit checklist</p>
+                                <div className="grid grid-cols-1 gap-1.5">
+                                  {EXIT_CHECKLIST_ITEMS.map((item) => (
+                                    <label key={item.key} className="flex items-center gap-2 text-xs text-gray-600">
+                                      <input
+                                        type="checkbox"
+                                        disabled={!canWrite}
+                                        checked={!!selectedEmployee.exitChecklist?.[item.key]}
+                                        onChange={(e) => toggleChecklist(item.key, e.target.checked)}
+                                      />
+                                      {item.label}
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                              {canWrite && (
+                                <div className="flex flex-wrap gap-2">
+                                  <button
+                                    onClick={() => generateLetter("relieving")}
+                                    disabled={letterBusy !== ""}
+                                    className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                                  >
+                                    {letterBusy === "relieving" ? "Generating..." : "Relieving letter"}
+                                  </button>
+                                  <button
+                                    onClick={() => generateLetter("experience")}
+                                    disabled={letterBusy !== ""}
+                                    className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                                  >
+                                    {letterBusy === "experience" ? "Generating..." : "Experience letter"}
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </section>
                       </>
                     )}
 
@@ -768,13 +1118,6 @@ export function PeopleDirectory() {
                   <FormInput label="Beneficiary name" value={form.bankBeneficiaryName} onChange={(value) => updateForm("bankBeneficiaryName", value)} />
                   <FormInput label="PF UAN number" value={form.pfUanNumber} onChange={(value) => updateForm("pfUanNumber", value)} />
                   <FormInput label="ESIC IP number" value={form.esicIpNumber} onChange={(value) => updateForm("esicIpNumber", value)} />
-                  <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
-                    Status
-                    <select value={form.status} onChange={(e) => updateForm("status", e.target.value as EmployeeForm["status"])} className="rounded-lg border border-gray-200 px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500">
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
-                    </select>
-                  </label>
                   <Checkbox label="Remote position" checked={form.remotePosition} onChange={(value) => updateForm("remotePosition", value)} />
                   <Checkbox label="Labour Welfare Fund" checked={form.labourWelfareFundEnabled} onChange={(value) => updateForm("labourWelfareFundEnabled", value)} />
                   <Checkbox label="National Pension System" checked={form.npsEnabled} onChange={(value) => updateForm("npsEnabled", value)} />
@@ -817,6 +1160,15 @@ export function PeopleDirectory() {
           </div>
         )}
       </aside>
+
+      {showOffboard && selectedEmployee && (
+        <OffboardDialog
+          employee={selectedEmployee}
+          busy={offboardBusy}
+          onClose={() => !offboardBusy && setShowOffboard(false)}
+          onConfirm={submitOffboard}
+        />
+      )}
     </div>
   );
 }

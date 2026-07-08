@@ -8,6 +8,8 @@ type SendEmailPayload = {
   subject: string;
   html?: string;
   text?: string;
+  // Attachments only go out over SMTP (SES "Simple" content doesn't support them)
+  attachments?: { filename: string; content: Buffer; contentType?: string }[];
 };
 
 const sesRegion = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION;
@@ -42,12 +44,29 @@ export async function sendEmail({
   subject,
   html,
   text,
+  attachments,
 }: SendEmailPayload) {
   const toAddresses = toArray(to);
   const fromAddress = from || sesFromEmail;
 
   if (!fromAddress) {
     throw new Error("No sender email configured");
+  }
+
+  if (attachments?.length) {
+    if (!smtpTransporter) {
+      throw new Error("Attachments require an SMTP transport (Gmail). Configure GMAIL_USER/GMAIL_APP_PASSWORD.");
+    }
+    await smtpTransporter.sendMail({
+      from: `"${fromName}" <${fromAddress}>`,
+      to: toAddresses.join(", "),
+      cc: cc.length ? cc.join(", ") : undefined,
+      subject,
+      html,
+      text,
+      attachments,
+    });
+    return;
   }
 
   if (sesClient) {

@@ -12,6 +12,7 @@ interface Employee {
   id: string;
   fullName: string;
   department: string;
+  exitDate?: string | null;
   basicSalary?: number;
   hra?: number;
   ta?: number;
@@ -65,8 +66,13 @@ export function AdminPayrollRun() {
       .finally(() => setLoadingPreview(false));
   }, []);
 
-  const eligible = employees.filter((e) => e.basicSalary && Number(e.basicSalary) > 0);
-  const notConfigured = employees.filter((e) => !e.basicSalary || Number(e.basicSalary) === 0);
+  // Members whose last working day falls in (or before) the selected month are paid
+  // through Final Settlements, so the run skips them — mirror that in the preview.
+  const endOfMonth = `${year}-${String(month).padStart(2, "0")}-${String(new Date(year, month, 0).getDate()).padStart(2, "0")}`;
+  const isExiting = (e: Employee) => !!e.exitDate && e.exitDate <= endOfMonth;
+  const exiting = employees.filter(isExiting);
+  const eligible = employees.filter((e) => e.basicSalary && Number(e.basicSalary) > 0 && !isExiting(e));
+  const notConfigured = employees.filter((e) => (!e.basicSalary || Number(e.basicSalary) === 0) && !isExiting(e));
 
   const run = async () => {
     setRunning(true);
@@ -228,6 +234,22 @@ export function AdminPayrollRun() {
               </table>
             )}
           </div>
+
+          {/* Exiting members — settled separately */}
+          {exiting.length > 0 && (
+            <div className="flex items-start gap-3 bg-purple-50 border border-purple-200 rounded-xl px-5 py-4 mb-5 text-sm text-purple-800">
+              <TbAlertCircle size={18} className="shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium">{exiting.length} exiting member{exiting.length !== 1 ? "s" : ""} excluded from this run</p>
+                <p className="text-xs mt-0.5 text-purple-700">
+                  Last working day falls within this period for: {exiting.map((e) => e.fullName).join(", ")}
+                </p>
+                <Link href={`/${roleSlug}/payroll/settlements`} className="text-xs text-purple-900 underline mt-1 block">
+                  Pay them via Final Settlements →
+                </Link>
+              </div>
+            </div>
+          )}
 
           {/* Not configured warning */}
           {notConfigured.length > 0 && (

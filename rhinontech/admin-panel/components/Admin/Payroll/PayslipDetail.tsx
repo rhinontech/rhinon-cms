@@ -9,16 +9,19 @@ import Image from "next/image";
 
 interface PayslipData {
   id: string;
+  type?: "regular" | "fnf";
   basicSalary: number;
   hra: number;
   ta: number;
   medicalAllowance: number;
   otherAllowances: number;
+  leaveEncashment?: number;
   grossPay: number;
   pfEmployee: number;
   pfEmployer: number;
   tds: number;
   professionalTax: number;
+  noticeRecovery?: number;
   otherDeductions: number;
   totalDeductions: number;
   netPay: number;
@@ -100,6 +103,7 @@ export function PayslipDetail({ id }: { id: string }) {
   const displayName = (emp.legalName || emp.fullName).toUpperCase();
   const jobTitle = emp.roleTitle || emp.role?.name || emp.department;
   const periodLabel = `${MONTHS[slip.payroll.month - 1]} ${slip.payroll.year}`;
+  const isFnf = slip.type === "fnf";
 
   // Annual figures (× 12)
   const annualBasic    = Number(slip.basicSalary)       * 12;
@@ -173,11 +177,18 @@ export function PayslipDetail({ id }: { id: string }) {
             </div>
           </div>
           <div className="text-right">
-            <p className="text-gray-400 text-xs uppercase tracking-wider">Payslip</p>
+            <p className="text-gray-400 text-xs uppercase tracking-wider">{isFnf ? "Full & Final Settlement" : "Payslip"}</p>
             <p className="text-white font-semibold text-lg mt-0.5">{periodLabel}</p>
-            <span className={`mt-1.5 inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ${slip.status === "paid" ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"}`}>
-              {slip.status}
-            </span>
+            <div className="mt-1.5 flex items-center justify-end gap-1.5">
+              {isFnf && (
+                <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-500/20 text-purple-300">
+                  F&F
+                </span>
+              )}
+              <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ${slip.status === "paid" ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"}`}>
+                {slip.status}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -230,6 +241,7 @@ export function PayslipDetail({ id }: { id: string }) {
               <TableRow label="Transport Allowance"  amount={Number(slip.ta)} />
               <TableRow label="Medical Allowance"    amount={Number(slip.medicalAllowance)} />
               {Number(slip.otherAllowances) > 0 && <TableRow label="Other Allowances" amount={Number(slip.otherAllowances)} />}
+              {Number(slip.leaveEncashment ?? 0) > 0 && <TableRow label="Leave Encashment" amount={Number(slip.leaveEncashment)} />}
             </tbody>
             <tfoot className="border-t-2 border-gray-200">
               <TableRow label="Gross Pay" amount={Number(slip.grossPay)} bold />
@@ -253,6 +265,7 @@ export function PayslipDetail({ id }: { id: string }) {
               <TableRow label="Provident Fund (Employee 12%)" amount={Number(slip.pfEmployee)} />
               <TableRow label="Professional Tax"              amount={Number(slip.professionalTax)} />
               <TableRow label="Tax Deducted at Source (TDS)"  amount={Number(slip.tds)} />
+              {Number(slip.noticeRecovery ?? 0) > 0 && <TableRow label="Notice Period Recovery" amount={Number(slip.noticeRecovery)} />}
               {Number(slip.otherDeductions) > 0 && <TableRow label="Other Deductions" amount={Number(slip.otherDeductions)} />}
             </tbody>
             <tfoot className="border-t-2 border-gray-200">
@@ -261,6 +274,16 @@ export function PayslipDetail({ id }: { id: string }) {
           </table>
         </div>
 
+        {/* Yearly projections don't apply to a pro-rated final-settlement month */}
+        {isFnf ? (
+          <div className="px-8 pt-2 pb-6">
+            <div className="rounded-xl border border-purple-100 bg-purple-50 px-4 py-3 text-xs text-purple-800">
+              This is a full &amp; final settlement for the employee&apos;s exit month — amounts are
+              pro-rated to the last working day, so annual projections are not shown.
+            </div>
+          </div>
+        ) : (
+        <>
         {/* Yearly Taxable Income */}
         <div className="px-8 pt-2 pb-4">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
@@ -304,6 +327,8 @@ export function PayslipDetail({ id }: { id: string }) {
             </div>
           </div>
         </div>
+        </>
+        )}
 
         {/* Footer */}
         <div className="bg-gray-50 border-t border-gray-100 px-8 py-4 flex items-center justify-between text-xs text-gray-400">

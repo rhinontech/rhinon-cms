@@ -4,6 +4,7 @@ import { sequelize } from "./config/database";
 import { syncDatabase } from "./models";
 import { Campaign } from "./models/Campaign";
 import { Attendance } from "./models/Attendance";
+import { finalizeDueOffboardings } from "./services/offboarding";
 import { Op } from "sequelize";
 import cron from "node-cron";
 import axios from "axios";
@@ -36,6 +37,13 @@ async function start() {
   await syncDatabase();
   console.log("Models synced");
 
+  // Catch up on exits whose last working day passed while the server was down
+  try {
+    await finalizeDueOffboardings();
+  } catch (err: any) {
+    console.error("[Offboarding] Boot-time finalize failed:", err.message);
+  }
+
   app.listen(env.port, () => {
     console.log(`Server running on http://localhost:${env.port}`);
 
@@ -48,6 +56,16 @@ async function start() {
         console.error("[Cron] Auto clock-out failed:", err.message);
       }
     });
+
+    // Scheduled offboardings: shortly after midnight IST, deactivate anyone whose
+    // last working day has ended
+    cron.schedule("5 0 * * *", async () => {
+      try {
+        await finalizeDueOffboardings();
+      } catch (err: any) {
+        console.error("[Cron] Offboarding finalize failed:", err.message);
+      }
+    }, { timezone: "Asia/Kolkata" });
 
     // Outreach campaign engine: check every minute, fire for campaigns whose runTime matches now
     cron.schedule("* * * * *", async () => {

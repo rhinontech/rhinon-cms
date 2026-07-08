@@ -2,8 +2,11 @@ import { Router, Response } from "express";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import multer from "multer";
-import { User, Role } from "../models";
+import { User, Role, Document } from "../models";
+import type { ExitReason } from "../models/User";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
+import { finalizeOffboarding, todayIST } from "../services/offboarding";
+import { generateLetterPdf, letterTitle, LetterType } from "../services/letters";
 import { sendEmail } from "../services/mailer";
 import { welcomeEmail, resetPasswordEmail } from "../services/emailTemplates";
 import { env } from "../config/env";
@@ -49,7 +52,8 @@ const employeeEditableFields = [
   "personalEmail",
   "roleId",
   "department",
-  "status",
+  // "status" is deliberately not editable here — use /:id/offboard and /:id/reactivate
+  // so exit metadata and cleanup stay consistent.
   "dateOfBirth",
   "pan",
   "employmentType",
@@ -236,15 +240,174 @@ router.post("/:id/documents/presign", authorize("employees:write"), async (req: 
   res.json({ uploadUrl, key, url: readUrl });
 });
 
-// Offboard — mark inactive
+const EXIT_REASONS: ExitReason[] = ["Resignation", "Termination", "Contract ended", "Absconded", "Other"];
+
+// Offboard — record last working day + reason. If the last working day is today or
+// earlier the employee is deactivated immediately (with cleanup); a future date keeps
+// them active until the daily cron finalizes it after that day ends.
 router.post("/:id/offboard", authorize("employees:write"), async (req: AuthRequest, res: Response) => {
+  const employee = await User.findByPk(req.params.id, { include: [{ model: Role, as: "role" }] });
+  if (!employee) {
+    res.status(404).json({ message: "Employee not found" });
+    return;
+  }
+  if (employee.status === "inactive") {
+    res.status(400).json({ message: "This employee is already offboarded." });
+    return;
+  }
+  if (employee.id === req.user!.userId) {
+    res.status(400).json({ message: "You cannot offboard your own account." });
+    return;
+  }
+  if ((employee as any).role?.slug === "superadmin") {
+    res.status(400).json({ message: "The superadmin account cannot be offboarded." });
+    return;
+  }
+
+  const today = todayIST();
+  let exitDateStr = today;
+  if (req.body.exitDate !== undefined && req.body.exitDate !== null && req.body.exitDate !== "") {
+    const parsed = parseOptionalDate(req.body.exitDate);
+    if (!parsed) {
+      res.status(400).json({ message: "exitDate must be a valid date" });
+      return;
+    }
+    exitDateStr = parsed.toISOString().split("T")[0];
+  }
+
+  const exitReason: ExitReason = EXIT_REASONS.includes(req.body.exitReason)
+    ? req.body.exitReason
+    : "Other";
+  const exitNotes = typeof req.body.exitNotes === "string"
+    ? req.body.exitNotes.trim().slice(0, 2000) || null
+    : null;
+
+  await employee.update({ exitDate: exitDateStr as any, exitReason, exitNotes });
+
+  if (exitDateStr <= today) {
+    const cleanup = await finalizeOffboarding(employee);
+    res.json({
+      message: "Employee offboarded",
+      id: employee.id,
+      effective: "immediate",
+      exitDate: exitDateStr,
+      cleanup,
+    });
+    return;
+  }
+
+  res.json({
+    message: `Exit scheduled — access will be revoked after ${exitDateStr}`,
+    id: employee.id,
+    effective: "scheduled",
+    exitDate: exitDateStr,
+  });
+});
+
+// Reactivate — cancel a scheduled exit, or restore an offboarded employee.
+router.post("/:id/reactivate", authorize("employees:write"), async (req: AuthRequest, res: Response) => {
   const employee = await User.findByPk(req.params.id);
   if (!employee) {
     res.status(404).json({ message: "Employee not found" });
     return;
   }
-  await employee.update({ status: "inactive" });
-  res.json({ message: "Employee offboarded", id: employee.id });
+  if (employee.status === "active" && !employee.exitDate) {
+    res.status(400).json({ message: "This employee is already active." });
+    return;
+  }
+
+  const wasInactive = employee.status === "inactive";
+  await employee.update({ status: "active", exitDate: null, exitReason: null, exitNotes: null });
+  res.json({
+    message: wasInactive ? "Employee reactivated" : "Scheduled exit cancelled",
+    id: employee.id,
+  });
+});
+
+// Generate a relieving/experience letter (PDF) — saved to Documents and emailed
+// to the member's personal email.
+router.post("/:id/letters", authorize("employees:write"), async (req: AuthRequest, res: Response) => {
+  const type: LetterType = req.body.type === "experience" ? "experience" : "relieving";
+
+  const employee = await User.findByPk(req.params.id);
+  if (!employee) {
+    res.status(404).json({ message: "Employee not found" });
+    return;
+  }
+  if (!employee.exitDate) {
+    res.status(400).json({ message: "This member has no exit on record. Offboard them first." });
+    return;
+  }
+
+  const title = letterTitle(type);
+  const pdf = await generateLetterPdf(type, employee);
+  const fileName = `${title.replace(/ /g, "-")}-${employee.fullName.replace(/[^a-zA-Z0-9]+/g, "-")}.pdf`;
+
+  const fileKey = await uploadBuffer(pdf, fileName, "documents", "application/pdf");
+  const document = await Document.create({
+    employeeId: employee.id,
+    uploadedById: req.user!.userId,
+    title: `${title} — ${employee.fullName}`,
+    category: "other",
+    fileKey,
+    fileName,
+    fileSize: pdf.length,
+    mimeType: "application/pdf",
+  });
+
+  let emailedTo: string | null = null;
+  const emailTarget = employee.personalEmail || employee.companyEmail;
+  if (emailTarget) {
+    try {
+      await sendEmail({
+        to: emailTarget,
+        subject: `${title} — Rhinon Tech`,
+        html: `<p>Dear ${employee.fullName},</p><p>Please find your ${title.toLowerCase()} from Rhinon Tech attached with this email.</p><p>We wish you the very best.</p><p>— Rhinon Tech</p>`,
+        text: `Dear ${employee.fullName},\n\nPlease find your ${title.toLowerCase()} from Rhinon Tech attached with this email.\n\nWe wish you the very best.\n\n— Rhinon Tech`,
+        attachments: [{ filename: fileName, content: pdf, contentType: "application/pdf" }],
+      });
+      emailedTo = emailTarget;
+    } catch (err: any) {
+      console.error("Failed to email letter:", err.message);
+    }
+  }
+
+  const url = await getPresignedReadUrl(fileKey);
+  res.status(201).json({
+    message: emailedTo ? `${title} generated and emailed to ${emailedTo}` : `${title} generated (email could not be sent)`,
+    documentId: document.id,
+    url,
+    emailedTo,
+  });
+});
+
+const EXIT_CHECKLIST_KEYS = [
+  "emailDisabled",
+  "assetsReturned",
+  "accessRevoked",
+  "settlementPaid",
+  "lettersIssued",
+] as const;
+
+// Update the exit checklist (manual offboarding steps HR tracks per leaver)
+router.put("/:id/exit-checklist", authorize("employees:write"), async (req: AuthRequest, res: Response) => {
+  const employee = await User.findByPk(req.params.id);
+  if (!employee) {
+    res.status(404).json({ message: "Employee not found" });
+    return;
+  }
+  if (!employee.exitDate) {
+    res.status(400).json({ message: "This member has no exit on record." });
+    return;
+  }
+
+  const next: Record<string, boolean> = { ...(employee.exitChecklist ?? {}) };
+  for (const key of EXIT_CHECKLIST_KEYS) {
+    const value = req.body?.checklist?.[key];
+    if (typeof value === "boolean") next[key] = value;
+  }
+  await employee.update({ exitChecklist: next });
+  res.json({ exitChecklist: next });
 });
 
 // Resend onboarding invite — regenerate a fresh temp password + onboarding link and re-email it.

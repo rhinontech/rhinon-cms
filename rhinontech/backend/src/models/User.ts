@@ -3,6 +3,13 @@ import { sequelize } from "../config/database";
 
 export type UserStatus = "active" | "inactive";
 
+export type ExitReason =
+  | "Resignation"
+  | "Termination"
+  | "Contract ended"
+  | "Absconded"
+  | "Other";
+
 interface UserAttributes {
   id: string;
   fullName: string;
@@ -14,6 +21,11 @@ interface UserAttributes {
   status: UserStatus;
   joiningDate: Date;
   dateOfBirth?: Date;
+  // Offboarding — exitDate is the last working day; status flips to inactive once it passes
+  exitDate?: Date | null;
+  exitReason?: ExitReason | null;
+  exitNotes?: string | null;
+  exitChecklist?: Record<string, boolean> | null;
   // HR / employment info
   pan?: string;
   employmentType?: string;
@@ -67,6 +79,10 @@ interface UserCreationAttributes
     | "companyEmail"
     | "status"
     | "dateOfBirth"
+    | "exitDate"
+    | "exitReason"
+    | "exitNotes"
+    | "exitChecklist"
     | "pan"
     | "employmentType"
     | "compensationType"
@@ -119,6 +135,10 @@ export class User
   declare status: UserStatus;
   declare joiningDate: Date;
   declare dateOfBirth: Date;
+  declare exitDate: Date | null;
+  declare exitReason: ExitReason | null;
+  declare exitNotes: string | null;
+  declare exitChecklist: Record<string, boolean> | null;
   declare pan: string;
   declare employmentType: string;
   declare compensationType: string;
@@ -171,6 +191,10 @@ User.init(
     status: { type: DataTypes.ENUM("active", "inactive"), defaultValue: "active" },
     joiningDate: { type: DataTypes.DATEONLY, allowNull: false },
     dateOfBirth: { type: DataTypes.DATEONLY, allowNull: true },
+    exitDate: { type: DataTypes.DATEONLY, allowNull: true, defaultValue: null },
+    exitReason: { type: DataTypes.STRING, allowNull: true, defaultValue: null },
+    exitNotes: { type: DataTypes.TEXT, allowNull: true, defaultValue: null },
+    exitChecklist: { type: DataTypes.JSONB, allowNull: true, defaultValue: null },
     pan: { type: DataTypes.STRING(10), allowNull: true },
     employmentType: { type: DataTypes.STRING, allowNull: true, defaultValue: "Full-Time" },
     compensationType: { type: DataTypes.STRING, allowNull: true, defaultValue: "Salaried" },

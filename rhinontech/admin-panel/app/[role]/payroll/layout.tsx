@@ -15,6 +15,7 @@ import {
   TbGift,
   TbId,
   TbFilePlus,
+  TbUserMinus,
 } from "react-icons/tb";
 
 function PayrollLayoutContent({ children }: { children: React.ReactNode }) {
@@ -28,6 +29,7 @@ function PayrollLayoutContent({ children }: { children: React.ReactNode }) {
     { label: "Employees",     href: `${base}/employees`, icon: <MdOutlinePeopleAlt size={18} /> },
     { label: "Run Payroll",   href: `${base}/run`,       icon: <MdOutlinePlayCircle size={18} /> },
     { label: "Payslip Entry", href: `${base}/entry`,     icon: <TbFilePlus size={18} /> },
+    { label: "Settlements",   href: `${base}/settlements`, icon: <TbUserMinus size={18} /> },
     { label: "All Payslips",  href: `${base}/payslips`,  icon: <TbFileInvoice size={18} /> },
   ];
 
