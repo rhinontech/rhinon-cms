@@ -18,6 +18,13 @@ interface InboxEmailAttributes {
   isRead: boolean;
   isStarred: boolean;
   hasAttachment: boolean;
+  // {key,name,size,mimeType} objects; S3 keys under inbox/, presigned per-request
+  attachments?: { key: string; name: string; size: number; mimeType: string }[];
+  // Team-only note pinned to the thread — never emailed, hidden from folder lists
+  isInternal?: boolean;
+  // RFC 5322 ids for reply threading (inbound replies join the original thread)
+  messageId?: string | null;
+  inReplyTo?: string | null;
   sentAt: Date;
   createdAt?: Date;
   updatedAt?: Date;
@@ -26,7 +33,7 @@ interface InboxEmailAttributes {
 interface InboxEmailCreationAttributes
   extends Optional<
     InboxEmailAttributes,
-    "id" | "folder" | "ccEmails" | "isRead" | "isStarred" | "hasAttachment"
+    "id" | "folder" | "ccEmails" | "isRead" | "isStarred" | "hasAttachment" | "attachments" | "isInternal" | "messageId" | "inReplyTo"
   > {}
 
 export class InboxEmail
@@ -47,6 +54,10 @@ export class InboxEmail
   declare isRead: boolean;
   declare isStarred: boolean;
   declare hasAttachment: boolean;
+  declare attachments: { key: string; name: string; size: number; mimeType: string }[];
+  declare isInternal: boolean;
+  declare messageId: string | null;
+  declare inReplyTo: string | null;
   declare sentAt: Date;
   declare createdAt: Date;
   declare updatedAt: Date;
@@ -117,6 +128,22 @@ InboxEmail.init(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,
+    },
+    attachments: {
+      type: DataTypes.JSONB,
+      allowNull: false,
+      defaultValue: [],
+    },
+    isInternal: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    messageId: {
+      type: DataTypes.STRING,
+    },
+    inReplyTo: {
+      type: DataTypes.STRING,
     },
     sentAt: {
       type: DataTypes.DATE,

@@ -164,7 +164,7 @@ router.post("/:token/documents/:documentId/sign", async (req: Request, res: Resp
         tempPassword,
         onboardingUrl: `${frontendUrl}/onboard?token=${onboardingToken}`,
       });
-      await sendEmail({ to: user.personalEmail, subject, html, text });
+      await sendEmail({ to: user.personalEmail, via: "gmail", subject, html, text });
       setupEmailSent = true;
     } catch (err) {
       // Signing itself succeeded — never fail the request over the email. The

@@ -1,528 +1,416 @@
 "use client";
 
-import Cookies from "js-cookie";
-import type { ElementType } from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
+import { apiFetch } from "@/lib/api";
 import {
-  Archive,
-  Clock3,
-  Inbox as InboxIcon,
-  Mail,
-  MailOpen,
-  Paperclip,
-  PenLine,
-  Plus,
-  RefreshCcw,
-  Search,
-  Send,
-  Star,
-  Trash2,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+  TbSearch, TbRefresh, TbPlus, TbX, TbPaperclip, TbSend2, TbFile, TbDownload,
+  TbInfoCircle, TbMail, TbArchive, TbTrash, TbSend,
+} from "react-icons/tb";
 
-type MailFolder = "inbox" | "sent" | "drafts" | "archive" | "trash";
+type Folder = "inbox" | "sent" | "archive" | "trash";
 
-interface EmailItem {
-  id: string;
-  threadKey: string;
-  folder: MailFolder;
-  fromName: string;
-  fromEmail: string;
-  toEmails: string[];
-  ccEmails: string[];
-  subject: string;
-  body: string;
-  snippet: string;
-  isRead: boolean;
-  isStarred: boolean;
-  hasAttachment: boolean;
-  sentAt: string;
-  thread?: EmailItem[];
+interface Att { key: string; name: string; size: number; mimeType: string; url?: string }
+
+interface Email {
+  id: string; threadKey: string; folder: string;
+  fromName: string; fromEmail: string; toEmails: string[]; ccEmails: string[];
+  subject: string; body: string; snippet: string; ownerEmail: string;
+  isRead: boolean; hasAttachment: boolean; sentAt: string;
+  isInternal?: boolean; attachments?: Att[]; senderAvatarUrl?: string | null;
+  thread?: Email[];
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const FOLDERS: Array<{ value: Folder; label: string; icon: React.ReactNode }> = [
+  { value: "inbox", label: "Inbox", icon: <TbMail size={15} /> },
+  { value: "sent", label: "Sent", icon: <TbSend size={15} /> },
+  { value: "archive", label: "Archive", icon: <TbArchive size={15} /> },
+  { value: "trash", label: "Trash", icon: <TbTrash size={15} /> },
+];
 
-const folders: Array<{ value: MailFolder; label: string; icon: ElementType }> =
-  [
-    { value: "inbox", label: "Inbox", icon: InboxIcon },
-    { value: "sent", label: "Sent", icon: Send },
-    { value: "drafts", label: "Drafts", icon: PenLine },
-    { value: "archive", label: "Archive", icon: Archive },
-    { value: "trash", label: "Trash", icon: Trash2 },
-  ];
+const initials = (n: string) => n.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
+const relTime = (v: string) => {
+  const m = Math.floor((Date.now() - new Date(v).getTime()) / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  if (m < 1440) return `${Math.floor(m / 60)}h ago`;
+  return `${Math.floor(m / 1440)}d ago`;
+};
+const fmtTime = (v: string) => new Date(v).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+const fmtDay = (v: string) => new Date(v).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+const fmtFull = (v: string) => new Date(v).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+const sizeLabel = (b: number) => b < 1024 ? `${b} B` : b < 1048576 ? `${(b / 1024).toFixed(1)} KB` : `${(b / 1048576).toFixed(1)} MB`;
 
-function formatTime(value: string) {
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(new Date(value));
+async function uploadAttachment(file: File): Promise<Att> {
+  const mimeType = file.type || "application/octet-stream";
+  const { uploadUrl, key } = await apiFetch<{ uploadUrl: string; key: string }>("/inbox/attachments/presign", {
+    method: "POST", body: JSON.stringify({ filename: file.name, mimeType }),
+  });
+  const put = await fetch(uploadUrl, { method: "PUT", body: file, headers: { "Content-Type": mimeType } });
+  if (!put.ok) throw new Error(`Upload failed for ${file.name}`);
+  return { key, name: file.name, size: file.size, mimeType };
 }
 
-function initials(name: string) {
-  return name
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+function AttachmentView({ att }: { att: Att }) {
+  if (!att.url) return null;
+  if (att.mimeType.startsWith("image/")) {
+    return (
+      <div className="mt-2 max-w-[280px] overflow-hidden rounded-lg border border-black/10 bg-white">
+        <a href={att.url} target="_blank" rel="noopener noreferrer"><img src={att.url} alt={att.name} className="max-h-48 w-full object-cover" /></a>
+        <a href={att.url} target="_blank" rel="noopener noreferrer" download={att.name} className="flex items-center justify-center gap-1.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50">
+          <TbDownload size={13} /> Download
+        </a>
+      </div>
+    );
+  }
+  if (att.mimeType.startsWith("audio/")) return <div className="mt-2"><audio controls src={att.url} className="h-10 max-w-[280px]" /><p className="mt-0.5 text-[10px] text-gray-400">{att.name}</p></div>;
+  if (att.mimeType.startsWith("video/")) return <div className="mt-2 max-w-[320px] overflow-hidden rounded-lg border border-black/10 bg-black"><video controls src={att.url} className="max-h-56 w-full" /></div>;
+  return (
+    <a href={att.url} target="_blank" rel="noopener noreferrer" className="mt-2 flex w-fit items-center gap-2 rounded-lg border border-black/10 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50">
+      <TbFile size={15} className="shrink-0 text-gray-400" /><span className="max-w-[180px] truncate">{att.name}</span>
+      <span className="text-gray-400">{sizeLabel(att.size)}</span><TbDownload size={13} className="text-gray-400" />
+    </a>
+  );
+}
+
+function ComposeModal({ onClose, onSent }: { onClose: () => void; onSent: () => void }) {
+  const [to, setTo] = useState(""); const [subject, setSubject] = useState(""); const [body, setBody] = useState("");
+  const [files, setFiles] = useState<File[]>([]); const [busy, setBusy] = useState(false); const [error, setError] = useState("");
+  const [contacts, setContacts] = useState<Array<{ fullName: string; companyEmail: string }>>([]);
+  const [toFocused, setToFocused] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    apiFetch<Array<{ fullName: string; companyEmail: string }>>("/inbox/contacts").then(setContacts).catch(() => {});
+  }, []);
+
+  // Suggestions match the fragment after the last comma; already-added
+  // addresses are excluded so the list shrinks as recipients are picked.
+  const fragment = to.split(",").pop()?.trim().toLowerCase() ?? "";
+  const chosen = to.toLowerCase();
+  const suggestions = toFocused
+    ? contacts.filter((c) =>
+        !chosen.includes(c.companyEmail.toLowerCase()) &&
+        (!fragment || c.companyEmail.toLowerCase().includes(fragment) || c.fullName.toLowerCase().includes(fragment))
+      ).slice(0, 6)
+    : [];
+
+  const pickContact = (email: string) => {
+    const parts = to.split(",").map((t) => t.trim()).filter(Boolean);
+    parts.pop(); // drop the fragment being typed
+    setTo([...parts.filter((p) => p.toLowerCase() !== email.toLowerCase()), email].join(", ") + ", ");
+  };
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault(); setBusy(true); setError("");
+    try {
+      const attachments: Att[] = [];
+      for (const f of files) attachments.push(await uploadAttachment(f));
+      await apiFetch("/inbox", {
+        method: "POST",
+        body: JSON.stringify({ toEmails: to.split(",").map((t) => t.trim()).filter(Boolean), subject, body, attachments }),
+      });
+      onSent(); onClose();
+    } catch (err: any) { setError(err.message || "Could not send."); } finally { setBusy(false); }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center glass-overlay p-4" onClick={onClose}>
+      <div className="w-full max-w-lg rounded-xl glass-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="flex h-14 items-center justify-between border-b px-5">
+          <p className="font-semibold tracking-tight">New Email</p>
+          <button onClick={onClose} className="rounded p-1 hover:bg-gray-100"><TbX size={18} /></button>
+        </div>
+        <form onSubmit={submit} className="flex flex-col gap-3 p-5">
+          <div className="relative">
+            <input
+              className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="To (comma-separated)"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              onFocus={() => setToFocused(true)}
+              onBlur={() => setTimeout(() => setToFocused(false), 150)}
+              required
+            />
+            {suggestions.length > 0 && (
+              <div className="absolute z-20 mt-1 max-h-52 w-full overflow-y-auto rounded-lg border bg-white p-1 shadow-lg">
+                {suggestions.map((c) => (
+                  <button
+                    key={c.companyEmail}
+                    type="button"
+                    onMouseDown={(e) => { e.preventDefault(); pickContact(c.companyEmail); }}
+                    className="flex w-full items-center gap-2.5 rounded px-2.5 py-2 text-left hover:bg-gray-50"
+                  >
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-50 text-[10px] font-semibold text-teal-700">{initials(c.fullName)}</span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-medium text-gray-900">{c.fullName}</span>
+                      <span className="block truncate text-xs text-gray-400">{c.companyEmail}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <input className="rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} required />
+          <textarea className="min-h-32 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Write your message..." value={body} onChange={(e) => setBody(e.target.value)} required />
+          <div className="flex flex-wrap items-center gap-2">
+            <button type="button" onClick={() => fileRef.current?.click()} className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50">
+              <TbPaperclip size={14} /> Attach files
+            </button>
+            <input ref={fileRef} type="file" multiple className="hidden" onChange={(e) => setFiles([...files, ...Array.from(e.target.files ?? [])])} />
+            {files.map((f, i) => (
+              <span key={i} className="flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-600">
+                {f.name}<button type="button" onClick={() => setFiles(files.filter((_, j) => j !== i))}><TbX size={12} /></button>
+              </span>
+            ))}
+          </div>
+          {error && <p className="text-xs text-red-500">{error}</p>}
+          <div className="flex justify-end gap-2 border-t pt-4">
+            <button type="button" onClick={onClose} className="rounded-lg border px-4 py-2 text-sm hover:bg-gray-50">Cancel</button>
+            <button type="submit" disabled={busy} className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50">{busy ? "Sending..." : "Send"}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 }
 
 export default function Inbox() {
-  const [folder, setFolder] = useState<MailFolder>("inbox");
+  const [folder, setFolder] = useState<Folder>("inbox");
   const [search, setSearch] = useState("");
-  const [emails, setEmails] = useState<EmailItem[]>([]);
-  const [selectedEmail, setSelectedEmail] = useState<EmailItem | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [reply, setReply] = useState("");
-  const [showCompose, setShowCompose] = useState(false);
-  const [compose, setCompose] = useState({ to: "", subject: "", body: "" });
+  const [emails, setEmails] = useState<Email[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detail, setDetail] = useState<Email | null>(null);
+  const [showInfo, setShowInfo] = useState(true);
+  const [showCompose, setShowCompose] = useState(false);
 
-  const authHeaders = useMemo(() => {
-    const token = Cookies.get("authToken");
-    return {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    };
-  }, []);
+  const [mode, setMode] = useState<"reply" | "note">("reply");
+  const [draft, setDraft] = useState("");
+  const [pending, setPending] = useState<Att[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [sending, setSending] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const endRef = useRef<HTMLDivElement>(null);
 
   const fetchEmails = useCallback(async () => {
     setLoading(true);
-    setError("");
-    const params = new URLSearchParams({ folder });
-    if (search.trim()) params.set("search", search.trim());
-
     try {
-      const response = await fetch(`${API_URL}/inbox?${params.toString()}`, {
-        headers: authHeaders,
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Could not load mail");
-
+      const params = new URLSearchParams({ folder });
+      if (search.trim()) params.set("search", search.trim());
+      const data = await apiFetch<Email[]>(`/inbox?${params.toString()}`);
       setEmails(data);
-      setSelectedId((current) =>
-        data.some((email: EmailItem) => email.id === current)
-          ? current
-          : data[0]?.id || null,
-      );
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not load mail");
-    } finally {
-      setLoading(false);
-    }
-  }, [authHeaders, folder, search]);
-
-  const fetchEmail = useCallback(
-    async (id: string) => {
-      try {
-        const response = await fetch(`${API_URL}/inbox/${id}`, {
-          headers: authHeaders,
-        });
-        const data = await response.json();
-        if (!response.ok)
-          throw new Error(data.message || "Could not load email");
-        setSelectedEmail(data);
-        setEmails((items) =>
-          items.map((item) =>
-            item.id === id ? { ...item, isRead: true } : item,
-          ),
-        );
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Could not load email");
-      }
-    },
-    [authHeaders],
-  );
+      setSelectedId((cur) => (cur && data.some((e) => e.id === cur) ? cur : data[0]?.id ?? null));
+    } finally { setLoading(false); }
+  }, [folder, search]);
 
   useEffect(() => {
+    const t = setTimeout(fetchEmails, search ? 350 : 0);
+    return () => clearTimeout(t);
+  }, [fetchEmails, search]);
+
+  const fetchDetail = useCallback(async (id: string) => {
+    const data = await apiFetch<Email>(`/inbox/${id}`);
+    setDetail(data);
+    setEmails((items) => items.map((i) => (i.id === id ? { ...i, isRead: true } : i)));
+  }, []);
+
+  useEffect(() => {
+    if (selectedId) fetchDetail(selectedId); else setDetail(null);
+  }, [selectedId, fetchDetail]);
+
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [detail?.thread?.length]);
+
+  const attachFiles = async (files: FileList | null) => {
+    if (!files?.length) return;
+    setUploading(true);
+    try { for (const f of Array.from(files)) { const a = await uploadAttachment(f); setPending((p) => [...p, a]); } }
+    catch (err: any) { alert(err.message || "Upload failed."); }
+    finally { setUploading(false); }
+  };
+
+  const send = async () => {
+    if (!detail || sending || uploading || (!draft.trim() && pending.length === 0)) return;
+    setSending(true);
+    try {
+      await apiFetch(`/inbox/${detail.id}/${mode === "note" ? "note" : "reply"}`, {
+        method: "POST", body: JSON.stringify({ body: draft.trim(), attachments: pending }),
+      });
+      setDraft(""); setPending([]);
+      await fetchDetail(detail.id);
+    } catch (err: any) { alert(err.message || "Could not send."); }
+    finally { setSending(false); }
+  };
+
+  const moveTo = async (target: Folder) => {
+    if (!detail) return;
+    await apiFetch(`/inbox/${detail.id}`, { method: "PATCH", body: JSON.stringify({ folder: target }) });
     fetchEmails();
-  }, [fetchEmails]);
-
-  useEffect(() => {
-    if (selectedId) fetchEmail(selectedId);
-    else setSelectedEmail(null);
-  }, [fetchEmail, selectedId]);
-
-  const patchEmail = async (id: string, payload: Record<string, unknown>) => {
-    setSaving(true);
-    try {
-      const response = await fetch(`${API_URL}/inbox/${id}`, {
-        method: "PATCH",
-        headers: authHeaders,
-        body: JSON.stringify(payload),
-      });
-      const data = await response.json();
-      if (!response.ok)
-        throw new Error(data.message || "Could not update email");
-
-      if (payload.folder && payload.folder !== folder) {
-        setEmails((items) => items.filter((item) => item.id !== id));
-        setSelectedId(null);
-        setSelectedEmail(null);
-      } else {
-        setEmails((items) =>
-          items.map((item) => (item.id === id ? data : item)),
-        );
-        setSelectedEmail((current) =>
-          current?.id === id ? { ...current, ...data } : current,
-        );
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not update email");
-    } finally {
-      setSaving(false);
-    }
   };
 
-  const sendReply = async () => {
-    if (!selectedEmail || !reply.trim()) return;
-    setSaving(true);
-    try {
-      const response = await fetch(
-        `${API_URL}/inbox/${selectedEmail.id}/reply`,
-        {
-          method: "POST",
-          headers: authHeaders,
-          body: JSON.stringify({ body: reply }),
-        },
-      );
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Could not send reply");
-      setReply("");
-      setSelectedEmail((current) =>
-        current
-          ? { ...current, thread: [...(current.thread || []), data] }
-          : current,
-      );
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not send reply");
-    } finally {
-      setSaving(false);
+  const thread = detail?.thread ?? (detail ? [detail] : []);
+  const isMine = (m: Email) => m.isInternal || m.fromEmail.toLowerCase() === (detail?.ownerEmail ?? "").toLowerCase();
+  const daySeparated = useMemo(() => {
+    const out: Array<{ day: string | null; msg: Email }> = [];
+    let last = "";
+    for (const m of thread) {
+      const d = new Date(m.sentAt).toDateString();
+      out.push({ day: d !== last ? fmtDay(m.sentAt) : null, msg: m });
+      last = d;
     }
-  };
-
-  const sendEmail = async (asDraft = false) => {
-    const toEmails = compose.to
-      .split(",")
-      .map((email) => email.trim())
-      .filter(Boolean);
-    if (!toEmails.length || !compose.subject.trim() || !compose.body.trim())
-      return;
-
-    setSaving(true);
-    try {
-      const response = await fetch(`${API_URL}/inbox`, {
-        method: "POST",
-        headers: authHeaders,
-        body: JSON.stringify({
-          toEmails,
-          subject: compose.subject,
-          body: compose.body,
-          folder: asDraft ? "drafts" : "sent",
-        }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Could not send email");
-      setCompose({ to: "", subject: "", body: "" });
-      setShowCompose(false);
-      if (data.folder === folder) await fetchEmails();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not send email");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const selectedThread =
-    selectedEmail?.thread || (selectedEmail ? [selectedEmail] : []);
+    return out;
+  }, [thread]);
+  const firstInbound = thread.find((m) => !isMine(m)) ?? detail;
 
   return (
-    <div className="flex h-full w-full overflow-hidden rounded-xl glass-panel">
-      <aside className="flex h-full w-56 shrink-0 flex-col border-r border-black/5 glass-sidenav p-3">
-        <Button
-          variant={"outline"}
-          className="mb-4 justify-between gap-2 py-6 px-3"
-          onClick={() => setShowCompose(true)}
-        >
-          <div className="flex items-center gap-2a">
-            <PenLine className="h-4 w-4" />
-            Compose
+    <div className="flex min-h-0 h-full gap-2 overflow-hidden">
+      {/* Left: list */}
+      <main className="flex min-h-0 h-full w-[340px] shrink-0 flex-col glass-panel rounded-xl overflow-hidden">
+        <div className="flex h-16 items-center justify-between border-b border-black/5 px-4 glass-header">
+          <div className="flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600"><TbMail size={17} /></span>
+            <p className="text-lg font-semibold tracking-tight">Inbox</p>
           </div>
-          <Plus className="h-4 w-4 justify-end" />
-        </Button>
-        <nav className="space-y-1">
-          {folders.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.value}
-                onClick={() => {
-                  setFolder(item.value);
-                  setSelectedId(null);
-                }}
-                className={`flex h-9 w-full items-center gap-3 rounded-md px-3 text-sm ${
-                  folder === item.value
-                    ? "bg-stone-900 font-medium text-white"
-                    : "text-stone-700 hover:bg-stone-200"
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                {item.label}
-              </button>
-            );
-          })}
-        </nav>
-      </aside>
-
-      <section className="flex h-full w-[420px] shrink-0 flex-col border-r">
-        <div className="flex h-16 items-center gap-3 border-b px-4">
-          <Mail className="h-5 w-5 text-stone-700" />
-          <h1 className="text-base font-semibold">Mail</h1>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="ml-auto"
-            onClick={fetchEmails}
-          >
-            <RefreshCcw className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <button onClick={fetchEmails} title="Refresh" className="rounded-lg p-2 text-gray-500 hover:bg-stone-100"><TbRefresh size={16} /></button>
+            <button onClick={() => setShowCompose(true)} title="New email" className="rounded-lg bg-stone-900 p-2 text-white hover:bg-stone-800"><TbPlus size={16} /></button>
+          </div>
         </div>
-        <div className="border-b p-3">
+        <div className="flex flex-col gap-2 border-b border-black/5 p-3">
           <div className="relative">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-stone-400" />
-            <Input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search mail"
-              className="h-9 pl-9"
-            />
+            <TbSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search subject, name or email" className="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div className="flex gap-1">
+            {FOLDERS.map((f) => (
+              <button key={f.value} onClick={() => setFolder(f.value)} className={cn("flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium", folder === f.value ? "bg-stone-900 text-white" : "border text-gray-500 hover:bg-gray-50")}>
+                {f.icon} {f.label}
+              </button>
+            ))}
           </div>
         </div>
-        {error && (
-          <div className="border-b bg-red-50 px-4 py-2 text-sm text-red-700">
-            {error}
-          </div>
-        )}
-        <div className="flex-1 overflow-auto">
-          {loading && (
-            <p className="p-4 text-sm text-stone-500">Loading mail...</p>
-          )}
-          {!loading && emails.length === 0 && (
-            <p className="p-4 text-sm text-stone-500">
-              No emails in this folder.
-            </p>
-          )}
-          {emails.map((email) => (
-            <div
-              key={email.id}
-              role="button"
-              onClick={() => setSelectedId(email.id)}
-              className={`w-full border-b p-4 text-left hover:bg-stone-50 cursor-pointer transition-colors ${
-                selectedId === email.id ? "bg-blue-50" : "bg-white"
-              }`}
-            >
-              <div className="mb-1 flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    patchEmail(email.id, { isStarred: !email.isStarred });
-                  }}
-                  className="rounded p-1 hover:bg-stone-200"
-                >
-                  <Star
-                    className={`h-4 w-4 ${email.isStarred ? "fill-yellow-400 text-yellow-500" : "text-stone-400"}`}
-                  />
-                </button>
-                <p
-                  className={`min-w-0 flex-1 truncate text-sm ${email.isRead ? "font-medium" : "font-bold"}`}
-                >
-                  {folder === "sent"
-                    ? email.toEmails.join(", ")
-                    : `${email.fromName} <${email.fromEmail}>`}
-                </p>
-                {email.hasAttachment && (
-                  <Paperclip className="h-4 w-4 text-stone-400" />
-                )}
-              </div>
-              <p
-                className={`truncate text-sm ${email.isRead ? "font-medium" : "font-bold"}`}
-              >
-                {email.subject}
-              </p>
-              <p className="mt-1 line-clamp-2 text-xs leading-5 text-stone-500">
-                {email.snippet}
-              </p>
-              <div className="mt-2 flex items-center justify-between text-xs text-stone-500">
-                <span>{email.isRead ? "Read" : "Unread"}</span>
-                <span>{formatTime(email.sentAt)}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <main className="flex h-full min-w-0 flex-1 flex-col">
-        {!selectedEmail ? (
-          <div className="flex h-full items-center justify-center text-sm text-stone-500">
-            Select an email to read it.
-          </div>
-        ) : (
-          <>
-            <header className="flex min-h-16 items-center gap-2 border-b px-5">
-              <div className="min-w-0 flex-1">
-                <h2 className="truncate text-sm font-semibold">
-                  {selectedEmail.subject}
-                </h2>
-                <p className="text-xs text-stone-500">
-                  {selectedEmail.fromName} · {formatTime(selectedEmail.sentAt)}
-                </p>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() =>
-                  patchEmail(selectedEmail.id, {
-                    isRead: !selectedEmail.isRead,
-                  })
-                }
-                disabled={saving}
-              >
-                {selectedEmail.isRead ? (
-                  <Mail className="h-4 w-4" />
-                ) : (
-                  <MailOpen className="h-4 w-4" />
-                )}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() =>
-                  patchEmail(selectedEmail.id, { folder: "archive" })
-                }
-                disabled={saving || folder === "archive"}
-              >
-                <Archive className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() =>
-                  patchEmail(selectedEmail.id, { folder: "trash" })
-                }
-                disabled={saving || folder === "trash"}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </header>
-
-            <div className="flex-1 overflow-auto bg-stone-50 p-5">
-              {selectedThread.map((message) => (
-                <article
-                  key={message.id}
-                  className="mb-4 rounded-lg border bg-white p-4"
-                >
-                  <div className="mb-4 flex items-start gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-stone-900 text-sm font-semibold text-white">
-                      {initials(message.fromName)}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-semibold">{message.fromName}</p>
-                      <p className="truncate text-xs text-stone-500">
-                        {message.fromEmail} to {message.toEmails.join(", ")}
-                      </p>
-                    </div>
-                    <span className="text-xs text-stone-500">
-                      {formatTime(message.sentAt)}
-                    </span>
+        <div className="flex-1 overflow-y-auto">
+          {loading ? <div className="flex h-32 items-center justify-center text-sm text-gray-400">Loading...</div>
+            : emails.length === 0 ? <div className="flex h-32 items-center justify-center text-sm text-gray-400">No emails</div>
+            : emails.map((e) => (
+              <button key={e.id} onClick={() => setSelectedId(e.id)} className={cn("flex w-full items-start gap-2.5 border-b border-black/5 px-4 py-3 text-left transition-colors", selectedId === e.id ? "bg-blue-50/60" : "hover:bg-gray-50")}>
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-50 text-xs font-semibold text-teal-700">{initials(e.fromName)}</div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className={cn("truncate text-sm", e.isRead ? "font-medium text-gray-700" : "font-bold text-gray-900")}>{e.fromName}</p>
+                    <span className="shrink-0 text-[10px] text-gray-400">{relTime(e.sentAt)}</span>
                   </div>
-                  <div 
-                    className="text-sm leading-6 text-stone-800 [&>div]:!bg-transparent [&_p]:mb-2 [&_a]:text-blue-600 hover:[&_a]:underline"
-                    dangerouslySetInnerHTML={{ __html: message.body }}
-                  />
-                </article>
-              ))}
-            </div>
-
-            <footer className="border-t p-4">
-              <textarea
-                value={reply}
-                onChange={(event) => setReply(event.target.value)}
-                placeholder={`Reply to ${selectedEmail.fromName}`}
-                className="min-h-24 w-full resize-none rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-stone-300"
-              />
-              <div className="mt-2 flex justify-end">
-                <Button onClick={sendReply} disabled={!reply.trim() || saving}>
-                  <Send className="mr-2 h-4 w-4" />
-                  Reply
-                </Button>
-              </div>
-            </footer>
-          </>
-        )}
+                  <p className="truncate text-xs font-medium text-gray-700">{e.subject}</p>
+                  <p className="truncate text-[11px] text-gray-400">{e.hasAttachment && <TbPaperclip size={10} className="mr-0.5 inline" />}{e.snippet}</p>
+                </div>
+              </button>
+            ))}
+        </div>
       </main>
 
-      {showCompose && (
-        <div className="absolute bottom-6 right-6 z-20 flex w-[520px] flex-col overflow-hidden rounded-lg border bg-white">
-          <div className="flex h-11 items-center justify-between bg-stone-900 px-4 text-sm font-medium text-white">
-            New Message
-            <button
-              onClick={() => setShowCompose(false)}
-              className="rounded px-2 py-1 hover:bg-white/10"
-            >
-              Close
-            </button>
+      {/* Middle: thread */}
+      <section className="flex min-h-0 h-full flex-1 flex-col glass-panel rounded-xl overflow-hidden">
+        {!detail ? (
+          <div className="flex flex-1 items-center justify-center text-sm text-gray-400">Select an email to view the conversation.</div>
+        ) : (
+          <>
+            <div className="flex h-16 items-center justify-between gap-3 border-b border-black/5 px-5 glass-header">
+              <p className="min-w-0 truncate text-sm font-semibold text-gray-900">{detail.subject}</p>
+              <div className="flex items-center gap-1">
+                {folder !== "archive" && <button onClick={() => moveTo("archive")} title="Archive" className="rounded-lg p-2 text-gray-500 hover:bg-stone-100"><TbArchive size={16} /></button>}
+                {folder !== "trash" && <button onClick={() => moveTo("trash")} title="Delete" className="rounded-lg p-2 text-gray-500 hover:bg-stone-100"><TbTrash size={16} /></button>}
+                <button onClick={() => setShowInfo((s) => !s)} className={cn("rounded-lg p-2", showInfo ? "bg-stone-100 text-gray-900" : "text-gray-500 hover:bg-stone-100")}><TbInfoCircle size={17} /></button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto bg-stone-50/40 px-5 py-4">
+              {daySeparated.map(({ day, msg }) => (
+                <div key={msg.id}>
+                  {day && <div className="my-3 flex justify-center"><span className="rounded-full bg-white px-3 py-1 text-[10px] font-medium text-gray-400 shadow-sm">{day}</span></div>}
+                  {!isMine(msg) ? (
+                    <div className="mb-3 flex items-start gap-2.5">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-teal-50 text-[10px] font-semibold text-teal-700">
+                        {msg.senderAvatarUrl ? <img src={msg.senderAvatarUrl} alt="" className="h-full w-full object-cover" /> : initials(msg.fromName)}
+                      </div>
+                      <div className="max-w-[70%] rounded-xl rounded-tl-sm border border-black/5 bg-white px-4 py-3 shadow-sm">
+                        <p className="mb-1 text-[11px] text-gray-400">{msg.fromName} · {fmtTime(msg.sentAt)}</p>
+                        <div className="prose prose-sm max-w-none text-sm text-gray-800 [&_*]:!my-0.5" dangerouslySetInnerHTML={{ __html: msg.body }} />
+                        {(msg.attachments ?? []).map((a) => <AttachmentView key={a.key} att={a} />)}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mb-3 flex items-start justify-end gap-2.5">
+                      <div className={cn("max-w-[70%] rounded-xl rounded-tr-sm px-4 py-3 shadow-sm", msg.isInternal ? "border border-amber-200 bg-amber-50" : "bg-blue-600")}>
+                        <p className={cn("mb-1 text-[11px]", msg.isInternal ? "text-amber-600" : "text-blue-200")}>{msg.fromName} · {fmtTime(msg.sentAt)}{msg.isInternal ? " · Internal note" : ""}</p>
+                        {msg.body && <p className={cn("whitespace-pre-wrap text-sm", msg.isInternal ? "text-amber-900" : "text-white")}>{msg.body.replace(/<[^>]*>/g, "")}</p>}
+                        {(msg.attachments ?? []).map((a) => <AttachmentView key={a.key} att={a} />)}
+                      </div>
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-600 text-[10px] font-semibold text-white">
+                        {msg.senderAvatarUrl ? <img src={msg.senderAvatarUrl} alt="" className="h-full w-full object-cover" /> : initials(msg.fromName)}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+              <div ref={endRef} />
+            </div>
+
+            {/* Composer */}
+            <div className="border-t border-black/5 bg-white p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <div className="flex gap-2">
+                  <button onClick={() => setMode("reply")} className={cn("rounded-full px-3.5 py-1.5 text-xs font-semibold", mode === "reply" ? "bg-blue-600 text-white" : "border text-gray-500 hover:bg-gray-50")}>Reply</button>
+                  <button onClick={() => setMode("note")} className={cn("rounded-full px-3.5 py-1.5 text-xs font-semibold", mode === "note" ? "bg-amber-500 text-white" : "border text-gray-500 hover:bg-gray-50")}>Internal note</button>
+                </div>
+                <span className="text-[11px] text-gray-400">{mode === "note" ? "Visible to the team only — never emailed." : `Emailed to ${detail.fromEmail}`}</span>
+              </div>
+              {pending.length > 0 && (
+                <div className="mb-2 flex flex-wrap gap-1.5">
+                  {pending.map((a, i) => (
+                    <span key={a.key} className="flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-600">
+                      <TbPaperclip size={11} /> {a.name}
+                      <button onClick={() => setPending(pending.filter((_, j) => j !== i))}><TbX size={12} /></button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div className="flex items-end gap-2">
+                <button onClick={() => fileRef.current?.click()} disabled={uploading} title="Attach images, audio, video or files" className="rounded-lg border p-2.5 text-gray-500 hover:bg-gray-50 disabled:opacity-50"><TbPaperclip size={17} /></button>
+                <input ref={fileRef} type="file" multiple className="hidden" onChange={(e) => { attachFiles(e.target.files); e.target.value = ""; }} />
+                <textarea
+                  value={draft} onChange={(e) => setDraft(e.target.value)} rows={1}
+                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+                  placeholder={uploading ? "Uploading attachment..." : `${mode === "note" ? "Add an internal note" : "Reply"}...  (Enter to send, Shift+Enter for new line)`}
+                  className="max-h-32 min-h-[42px] flex-1 resize-y rounded-lg border px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button onClick={send} disabled={sending || uploading || (!draft.trim() && pending.length === 0)} className={cn("rounded-lg p-2.5 text-white disabled:opacity-40", mode === "note" ? "bg-amber-500 hover:bg-amber-600" : "bg-blue-600 hover:bg-blue-700")}><TbSend2 size={17} /></button>
+              </div>
+            </div>
+          </>
+        )}
+      </section>
+
+      {/* Right: info */}
+      {detail && showInfo && (
+        <aside className="flex min-h-0 h-full w-[280px] shrink-0 flex-col overflow-y-auto rounded-xl bg-white p-5">
+          <p className="mb-4 text-base font-semibold text-gray-900">{detail.subject}</p>
+          <div className="flex flex-col gap-3 text-sm">
+            <div><p className="text-xs text-gray-400">Name</p><p className="font-medium text-gray-900">{firstInbound?.fromName ?? detail.fromName}</p></div>
+            <div><p className="text-xs text-gray-400">Email</p><p className="break-all font-medium text-gray-900">{firstInbound?.fromEmail ?? detail.fromEmail}</p></div>
+            <div><p className="text-xs text-gray-400">To</p><p className="break-all font-medium text-gray-900">{detail.toEmails.join(", ")}</p></div>
           </div>
-          <Input
-            value={compose.to}
-            onChange={(event) =>
-              setCompose((current) => ({ ...current, to: event.target.value }))
-            }
-            placeholder="To"
-            className="rounded-none border-x-0 border-t-0"
-          />
-          <Input
-            value={compose.subject}
-            onChange={(event) =>
-              setCompose((current) => ({
-                ...current,
-                subject: event.target.value,
-              }))
-            }
-            placeholder="Subject"
-            className="rounded-none border-x-0 border-t-0"
-          />
-          <textarea
-            value={compose.body}
-            onChange={(event) =>
-              setCompose((current) => ({
-                ...current,
-                body: event.target.value,
-              }))
-            }
-            placeholder="Write your email..."
-            className="min-h-56 resize-none p-3 text-sm outline-none"
-          />
-          <div className="flex justify-between border-t p-3">
-            <Button
-              variant="outline"
-              onClick={() => sendEmail(true)}
-              disabled={saving}
-            >
-              Save draft
-            </Button>
-            <Button onClick={() => sendEmail(false)} disabled={saving}>
-              <Send className="mr-2 h-4 w-4" />
-              Send
-            </Button>
+          <div className="mt-6 border-t pt-4">
+            <p className="mb-2 text-sm font-semibold text-gray-900">Timeline</p>
+            <div className="flex flex-col gap-1.5 text-xs text-gray-500">
+              <p>First message: {thread[0] ? fmtFull(thread[0].sentAt) : "—"}</p>
+              <p>Latest: {thread.length ? fmtFull(thread[thread.length - 1].sentAt) : "—"}</p>
+              <p>Messages: {thread.filter((m) => !m.isInternal).length} · Notes: {thread.filter((m) => m.isInternal).length}</p>
+            </div>
           </div>
-        </div>
+        </aside>
       )}
+
+      {showCompose && <ComposeModal onClose={() => setShowCompose(false)} onSent={fetchEmails} />}
     </div>
   );
 }

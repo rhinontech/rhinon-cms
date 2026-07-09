@@ -1,7 +1,9 @@
 import { Router, Request, Response } from "express";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { simpleParser } from "mailparser";
+import { Op } from "sequelize";
 import { InboxEmail } from "../models";
+import { uploadBuffer } from "../services/storage";
 import { env } from "../config/env";
 
 const router = Router();
@@ -78,7 +80,7 @@ router.post("/ses-inbound", async (req: Request, res: Response) => {
         // Map parsed data to InboxEmail
         const messageId = parsed.messageId || objectKey;
         const fromEmail = (parsed.from as any)?.value?.[0]?.address || mail.source;
-        const fromName = parsed.from?.text?.replace(/<[^>]*>?/gm, '').trim() || fromEmail;
+        const fromName = parsed.from?.text?.replace(/<[^>]*>?/gm, '').replace(/["']/g, '').trim() || fromEmail;
         const toEmails = Array.isArray(parsed.to) 
           ? parsed.to.flatMap(t => (t as any).value.map((v: any) => v.address)) 
           : (parsed.to as any)?.value?.map((v: any) => v.address) || mail.destination;
@@ -91,12 +93,51 @@ router.post("/ses-inbound", async (req: Request, res: Response) => {
         const htmlBody = parsed.html || parsed.textAsHtml || parsed.text || "";
         const snippet = parsed.text ? parsed.text.substring(0, 160) : "";
 
+        // Store attachments to S3 once; every recipient copy shares the keys.
+        const attachments: { key: string; name: string; size: number; mimeType: string }[] = [];
+        for (const att of parsed.attachments ?? []) {
+          try {
+            const name = att.filename || "attachment";
+            const key = await uploadBuffer(att.content, name, "inbox", att.contentType || "application/octet-stream");
+            attachments.push({ key, name, size: att.content.length, mimeType: att.contentType || "application/octet-stream" });
+          } catch (err) {
+            console.error("Failed to store inbound attachment:", err);
+          }
+        }
+
+        // Thread replies into the original conversation: an inbound reply's
+        // In-Reply-To/References point at messageIds we've already stored.
+        const inReplyTo = parsed.inReplyTo || null;
+        const refIds = [
+          ...(inReplyTo ? [inReplyTo] : []),
+          ...(Array.isArray(parsed.references) ? parsed.references : parsed.references ? [parsed.references] : []),
+        ];
+        let threadKey = messageId;
+        if (refIds.length) {
+          const parent = await InboxEmail.findOne({
+            where: { [Op.or]: [{ messageId: { [Op.in]: refIds } }, { threadKey: { [Op.in]: refIds } }] },
+          });
+          if (parent) threadKey = parent.threadKey;
+        }
+        // Fallback: replies to OUR outbound mail carry the transport's own
+        // Message-ID (which we never see with SES Simple), so also match by
+        // normalized subject against the sender's conversation.
+        if (threadKey === messageId && subject) {
+          const bare = subject.replace(/^((re|fwd?)\s*:\s*)+/i, "").trim();
+          if (bare) {
+            const parent = await InboxEmail.findOne({
+              where: { subject: { [Op.iLike]: `%${bare}%` } },
+              order: [["sentAt", "DESC"]],
+            });
+            if (parent) threadKey = parent.threadKey;
+          }
+        }
+
         // SES can send emails to multiple recipients in our domain.
         // We should create a copy in the inbox for each valid internal recipient.
         for (const recipient of toEmails) {
-          // You might want to filter this to only your domain, e.g. if (recipient.endsWith('@rhinontech.in'))
           await InboxEmail.create({
-            threadKey: messageId, // Might want to parse In-Reply-To for better threading
+            threadKey,
             folder: "inbox",
             ownerEmail: recipient.toLowerCase(),
             fromName: fromName,
@@ -108,7 +149,10 @@ router.post("/ses-inbound", async (req: Request, res: Response) => {
             snippet: snippet,
             isRead: false,
             isStarred: false,
-            hasAttachment: parsed.attachments.length > 0,
+            hasAttachment: attachments.length > 0,
+            attachments,
+            messageId,
+            inReplyTo,
             sentAt: parsed.date || new Date(),
           });
         }

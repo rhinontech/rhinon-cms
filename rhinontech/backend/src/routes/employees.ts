@@ -238,7 +238,7 @@ router.post("/", authorize("employees:write"), async (req: AuthRequest, res: Res
           tempPassword,
           onboardingUrl: `${frontendUrl}/onboard?token=${onboardingToken}`,
         });
-    await sendEmail({ to: personalEmail, subject: template.subject, html: template.html, text: template.text });
+    await sendEmail({ to: personalEmail, via: "gmail", subject: template.subject, html: template.html, text: template.text });
     welcomeEmailSent = true;
   } catch (err) {
     console.error("Failed to send welcome email:", err);
@@ -585,7 +585,7 @@ router.post("/:id/resend-onboarding", authorize("employees:write"), async (req: 
       onboardingUrl,
       signingUrl,
     });
-    await sendEmail({ to: employee.personalEmail, subject, html, text });
+    await sendEmail({ to: employee.personalEmail, via: "gmail", subject, html, text });
   } catch (err) {
     console.error("Failed to resend welcome email:", err);
     res.status(502).json({ message: "Could not send the invite email. Check email configuration." });
@@ -611,7 +611,7 @@ router.post("/:id/send-reset", authorize("employees:write"), async (req: AuthReq
   try {
     const resetUrl = `${env.frontendUrl}/auth/reset-password?token=${resetToken}`;
     const { subject, html, text } = resetPasswordEmail({ fullName: employee.fullName, resetUrl });
-    await sendEmail({ to: employee.personalEmail, subject, html, text });
+    await sendEmail({ to: employee.personalEmail, via: "gmail", subject, html, text });
   } catch (err) {
     console.error("Failed to send reset email:", err);
     res.status(502).json({ message: "Could not send the reset email. Check email configuration." });
