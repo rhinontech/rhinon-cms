@@ -258,7 +258,7 @@ router.post("/", authorize("employees:write"), async (req: AuthRequest, res: Res
 // only, never written to the database.
 router.post("/preview-documents", authorize("employees:write"), async (req: AuthRequest, res: Response) => {
   const type = req.body.type === "nda" ? "nda" : "offer";
-  const { fullName, legalName, roleTitle, workLocation, employmentType, joiningDate, department, annualCompensation, annualVariablePay } = req.body;
+  const { fullName, legalName, roleTitle, workLocation, employmentType, workSchedule, joiningDate, department, annualCompensation, annualVariablePay } = req.body;
 
   if (!fullName) {
     res.status(400).json({ message: "Full name is required to preview." });
@@ -271,6 +271,7 @@ router.post("/preview-documents", authorize("employees:write"), async (req: Auth
     roleTitle: roleTitle || undefined,
     workLocation: workLocation || undefined,
     employmentType: employmentType || undefined,
+    workSchedule: workSchedule || undefined,
     department: department || "",
     joiningDate: parseOptionalDate(joiningDate) || new Date(),
     annualCompensation: annualCompensation ? Number(annualCompensation) : undefined,

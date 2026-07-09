@@ -371,7 +371,7 @@ export async function generateOfferLetterPdf(user: User, signature?: LetterSigna
       const empType = user.employmentType || "Full-Time";
       drawListItem(doc, "•", `**Employment Type:** ${empType === "Full-Time" ? "Full-Time / Permanent" : empType}`);
     }
-    drawListItem(doc, "•", `**Working Hours:** ${isIntern ? "48 hours per week" : "40 hours per week"}`);
+    drawListItem(doc, "•", `**Work Schedule:** ${user.workSchedule || (isIntern ? "48 hours per week" : "40 hours per week")}`);
     doc.moveDown(0.45);
 
     // Section 4
@@ -399,7 +399,7 @@ export async function generateOfferLetterPdf(user: User, signature?: LetterSigna
     drawSectionHeading(doc, "5", "Terms and Conditions");
 
     drawSubHeading(doc, "Working Hours");
-    drawFormattedText(doc, `The standard working hours for the ${isIntern ? "internship" : "role"} will be **11 AM to 8 PM, Monday to Saturday** (with appropriate breaks). You may be required to work additional hours depending on project needs, but this will be communicated well in advance.`, { width: pageWidth, moveDown: 0.4 });
+    drawFormattedText(doc, `The standard working hours for the ${isIntern ? "internship" : "role"} will be **${user.workSchedule || "11 AM – 8 PM (Mon–Sat)"}**, with appropriate breaks. You may be required to work additional hours depending on project needs, but this will be communicated well in advance.`, { width: pageWidth, moveDown: 0.4 });
 
     drawSubHeading(doc, "Performance Reviews");
     drawFormattedText(doc, `Throughout your ${isIntern ? "internship" : "employment"}, you will be subject to regular performance reviews. These reviews are designed to assess your progress and provide feedback for improvement. Based on these evaluations, you will be given opportunities to work on more complex projects or explore different areas of interest within the company.`, { width: pageWidth, moveDown: 0.4 });
