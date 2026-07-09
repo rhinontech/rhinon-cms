@@ -364,7 +364,7 @@ export async function generateOfferLetterPdf(user: User, signature?: LetterSigna
     drawSectionHeading(doc, "3", isIntern ? "Internship Position Details" : "Employment Position Details");
 
     drawListItem(doc, "•", `**Designation:** ${user.roleTitle || "NextJs Developer"}`);
-    drawListItem(doc, "•", `**Location:** ${user.workLocation || "Bengaluru (Remote)"}`);
+    drawListItem(doc, "•", `**Location:** ${user.workLocation || "Bengaluru"}${user.remotePosition ? " (Remote)" : ""}`);
     if (isIntern) {
       drawListItem(doc, "•", "**Internship Duration:** 6 months");
     } else {
