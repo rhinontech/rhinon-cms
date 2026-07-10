@@ -222,7 +222,7 @@ export default function DashboardPage() {
   return (
     <AdminDashboardShell>
       <div className="glass-panel rounded-xl w-full h-full overflow-auto">
-        <div className="mx-auto max-w-[1400px] p-6 space-y-5">
+        <div className="mx-auto max-w-[1400px] p-4 sm:p-6 space-y-4 sm:space-y-5">
 
           {/* ── Header ── */}
           <div className="flex items-center gap-3">
@@ -236,7 +236,7 @@ export default function DashboardPage() {
           </div>
 
           {/* ── Stats strip ── */}
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
             <StatCard
               icon={<TbUsers size={20} />}
               label="Total employees"
@@ -283,7 +283,7 @@ export default function DashboardPage() {
               <SectionTitle icon={<TbClock size={16} />} title={isSuperadmin ? "Team Attendance" : "Today's Attendance"} />
               <div className="p-5">
                 {isSuperadmin ? (
-                  <div className="flex items-center justify-between gap-4">
+                  <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <p className="text-sm text-gray-500">Super admins manage team attendance instead of clocking in.</p>
                       <p className="mt-2 text-xs text-gray-400">Use Attendance to review who is present, absent, or active today.</p>
@@ -297,7 +297,7 @@ export default function DashboardPage() {
                   </div>
                 ) : (
                 <>
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                   <div className="space-y-4">
                     {clocked ? (
                       <>
@@ -305,7 +305,7 @@ export default function DashboardPage() {
                           <p className="text-xs text-gray-400 uppercase tracking-wide">Clocked in</p>
                           <p className="mt-1 text-3xl font-bold text-gray-900">{formatTime(att?.clockIn)}</p>
                         </div>
-                        <div className="flex items-center gap-6 text-sm">
+                        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
                           <div>
                             <p className="text-xs text-gray-400">Duration</p>
                             <p className="mt-0.5 font-semibold text-gray-800">{formatDuration(att?.durationMinutes ?? 0)}</p>
@@ -337,7 +337,7 @@ export default function DashboardPage() {
                   </div>
 
                   {/* Clock visualization */}
-                  <div className="shrink-0 flex flex-col items-end gap-3">
+                  <div className="shrink-0 flex flex-col items-start gap-3 sm:items-end">
                     {!clocked && (
                       <button
                         onClick={handleClockIn}
@@ -401,7 +401,7 @@ export default function DashboardPage() {
           <div className="grid grid-cols-12 gap-4">
 
             {/* Birthdays */}
-            <div className="col-span-4 rounded-xl glass-card overflow-hidden">
+            <div className="col-span-12 md:col-span-4 rounded-xl glass-card overflow-hidden">
               <SectionTitle icon={<TbCake size={16} />} title="Birthdays this month" />
               {stats?.birthdays.length ? (
                 <div className="divide-y divide-gray-50">
@@ -425,7 +425,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Anniversaries */}
-            <div className="col-span-4 rounded-xl glass-card overflow-hidden">
+            <div className="col-span-12 md:col-span-4 rounded-xl glass-card overflow-hidden">
               <SectionTitle icon={<TbConfetti size={16} />} title="Work anniversaries" />
               {stats?.anniversaries.length ? (
                 <div className="divide-y divide-gray-50">
@@ -449,7 +449,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Recent Hires */}
-            <div className="col-span-4 rounded-xl glass-card overflow-hidden">
+            <div className="col-span-12 md:col-span-4 rounded-xl glass-card overflow-hidden">
               <SectionTitle icon={<TbCalendarPlus size={16} />} title="Recent hires" />
               {stats?.recentHires.length ? (
                 <div className="divide-y divide-gray-50">

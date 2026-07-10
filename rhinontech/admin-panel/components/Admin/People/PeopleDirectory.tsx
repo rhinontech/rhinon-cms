@@ -488,6 +488,9 @@ export function PeopleDirectory() {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [mode, setMode] = useState<PanelMode>("view");
   const [isPreviewExpanded, setIsPreviewExpanded] = useState(true);
+  // Phone-only: the aside becomes a full-screen overlay, opened by tapping a
+  // row / Add member / Edit — never by the desktop auto-selection.
+  const [mobileDetail, setMobileDetail] = useState(false);
   const [form, setForm] = useState<EmployeeForm>(emptyForm);
   const [message, setMessage] = useState("");
   const [avatarUploading, setAvatarUploading] = useState(false);
@@ -576,6 +579,7 @@ export function PeopleDirectory() {
     setForm(emptyForm);
     setMessage("");
     setIsPreviewExpanded(true);
+    setMobileDetail(true);
   };
 
   const selectEmployee = (employee: Employee) => {
@@ -583,6 +587,7 @@ export function PeopleDirectory() {
     setMode("view");
     setMessage("");
     setIsPreviewExpanded(true);
+    setMobileDetail(true);
   };
 
   const openEdit = () => {
@@ -873,7 +878,7 @@ export function PeopleDirectory() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search employees..."
-                className="pl-9 pr-4 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
+                className="pl-9 pr-4 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-36 sm:w-64"
               />
             </div>
             {canManage && (
@@ -904,8 +909,8 @@ export function PeopleDirectory() {
               {tab === "alumni" ? "No alumni yet." : "No employees found."}
             </div>
           ) : (
-            <div className="rounded-xl border border-gray-100 overflow-hidden">
-              <table className="w-full text-sm">
+            <div className="rounded-xl border border-gray-100 overflow-x-auto">
+              <table className="w-full min-w-[640px] text-sm">
                 <thead className="glass-thead text-gray-600 text-xs uppercase">
                   <tr>
                     <th className="px-5 py-3 text-left">Employee</th>
@@ -953,8 +958,10 @@ export function PeopleDirectory() {
 
       <aside
         className={cn(
-          "flex min-h-0 h-full flex-col bg-white rounded-xl overflow-hidden transition-all duration-200 ease-in-out",
-          isPreviewExpanded ? ((mode === "create" || mode === "edit") ? "w-full" : "w-[42%]") : "w-0"
+          "min-h-0 flex-col bg-white overflow-hidden transition-all duration-200 ease-in-out",
+          mobileDetail ? "fixed inset-0 z-50 flex" : "hidden",
+          "lg:static lg:z-auto lg:flex lg:h-full lg:rounded-xl",
+          isPreviewExpanded ? ((mode === "create" || mode === "edit") ? "lg:w-full" : "lg:w-[42%]") : "lg:w-0"
         )}
       >
         {isPreviewExpanded && (
@@ -1001,7 +1008,7 @@ export function PeopleDirectory() {
                 {mode === "create" || mode === "edit" ? (
                   <button
                     className="cursor-pointer text-gray-600 hover:text-gray-900 p-1 rounded-lg hover:bg-gray-100"
-                    onClick={() => setMode("view")}
+                    onClick={() => { setMode("view"); setMobileDetail(false); }}
                     title="Close"
                   >
                     <TbX size={20} />
@@ -1009,7 +1016,7 @@ export function PeopleDirectory() {
                 ) : (
                   <button
                     className="cursor-pointer text-gray-600 hover:text-gray-900"
-                    onClick={() => setIsPreviewExpanded(false)}
+                    onClick={() => { setIsPreviewExpanded(false); setMobileDetail(false); }}
                     title="Collapse panel"
                   >
                     <TbLayoutSidebarRightFilled size={20} />
@@ -1057,7 +1064,7 @@ export function PeopleDirectory() {
                     </div>
 
                     {/* Public info — visible to all */}
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                       <Detail label="Status" value={<StatusBadge status={selectedEmployee.status} exitDate={selectedEmployee.exitDate} />} />
                       <Detail label="Role title" value={selectedEmployee.roleTitle || selectedEmployee.role?.name || "-"} />
                       <Detail label="Department" value={selectedEmployee.department} />
@@ -1226,10 +1233,10 @@ export function PeopleDirectory() {
                 )}
               </div>
             ) : canManage ? (
-              <form onSubmit={submitEmployee} className="flex-1 flex overflow-hidden min-h-0 divide-x bg-gray-50/50">
+              <form onSubmit={submitEmployee} className="flex-1 flex overflow-y-auto lg:overflow-hidden min-h-0 lg:divide-x bg-gray-50/50">
                   {/* Left: Input fields */}
-                  <div className="w-1/2 overflow-auto p-6 bg-white space-y-4 flex flex-col justify-between">
-                    <div className="grid grid-cols-2 gap-4">
+                  <div className="w-full lg:w-1/2 overflow-visible lg:overflow-auto p-4 sm:p-6 bg-white space-y-4 flex flex-col justify-between">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
                         Full name
                         <input value={form.fullName} onChange={(e) => updateForm("fullName", e.target.value)} className="rounded-lg border border-gray-200 px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required />
@@ -1314,7 +1321,7 @@ export function PeopleDirectory() {
                     {message && <p className={cn("text-sm mt-4", message.includes("Unable") ? "text-red-600" : "text-green-600")}>{message}</p>}
 
                     <div className="flex items-center justify-end gap-3 border-t pt-4 mt-6">
-                      <button type="button" onClick={() => setMode("view")} className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">
+                      <button type="button" onClick={() => { setMode("view"); setMobileDetail(false); }} className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">
                         Cancel
                       </button>
                       <button type="submit" disabled={saving} className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-60">
@@ -1324,7 +1331,7 @@ export function PeopleDirectory() {
                   </div>
 
                   {/* Right: Live Preview */}
-                  <div className="w-1/2 overflow-hidden flex flex-col p-6 bg-stone-100/50">
+                  <div className="hidden lg:flex w-1/2 overflow-hidden flex-col p-6 bg-stone-100/50">
                     <p className="text-xs font-semibold text-stone-500 uppercase tracking-widest mb-3">Live Document Preview</p>
                     
                     {/* Tabs */}

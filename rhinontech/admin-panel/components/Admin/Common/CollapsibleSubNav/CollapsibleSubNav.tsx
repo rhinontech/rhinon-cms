@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { useSideNav } from "@/context/SideNavContext";
+import { TbX } from "react-icons/tb";
 import { SidebarItem } from "@/components/Admin/Common/SidebarItem/SidebarItem";
 import { TbLayoutSidebarFilled, TbLayoutSidebarRightFilled } from "react-icons/tb";
 
@@ -20,20 +22,39 @@ interface CollapsibleSubNavProps {
 }
 
 export function CollapsibleSubNav({ title, items }: CollapsibleSubNavProps) {
-  const { isExpanded } = useSideNav();
+  const { isExpanded, toggleSideNav } = useSideNav();
   const pathname = usePathname();
   const isCampaignDetailPage = pathname.includes("/outreach/campaigns/") && pathname.split("/").pop() !== "campaigns";
   const showNav = isExpanded && !isCampaignDetailPage;
 
+  // Phone: picking a sub-nav item closes the overlay (desktop keeps it pinned).
+  const prevPath = useRef(pathname);
+  useEffect(() => {
+    if (prevPath.current !== pathname) {
+      prevPath.current = pathname;
+      if (isExpanded && window.matchMedia("(max-width: 1023px)").matches) toggleSideNav();
+    }
+  }, [pathname, isExpanded, toggleSideNav]);
+
   return (
+    <>
+      {/* Phone backdrop */}
+      {showNav && (
+        <div className="fixed inset-0 z-40 bg-black/30 lg:hidden" onClick={toggleSideNav} />
+      )}
     <aside
-      className={`flex h-full flex-col glass-sidenav rounded-l-xl transition-all duration-200 ease-in-out overflow-hidden ${showNav ? "w-[15%] min-w-[180px] border-r border-black/5" : "w-0"
-        }`}
+      className={`flex-col glass-sidenav transition-all duration-200 ease-in-out overflow-hidden
+        ${showNav
+          ? "fixed inset-y-0 left-0 z-50 flex w-64 bg-white shadow-xl lg:static lg:z-auto lg:h-full lg:w-[15%] lg:min-w-[180px] lg:rounded-l-xl lg:bg-transparent lg:shadow-none lg:border-r lg:border-black/5"
+          : "hidden lg:flex lg:h-full lg:w-0"}`}
     >
       {showNav && (
         <div className="flex flex-col w-full flex-1">
-          <div className="flex items-center w-full h-16 px-5 py-4 text-xl font-semibold tracking-tight border-b border-black/5">
+          <div className="flex items-center justify-between w-full h-16 px-5 py-4 text-xl font-semibold tracking-tight border-b border-black/5">
             {title}
+            <button onClick={toggleSideNav} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 lg:hidden" aria-label="Close menu">
+              <TbX size={18} />
+            </button>
           </div>
           <div className="flex flex-col px-3 py-3 space-y-0.5">
             {items.map((item, index) => (
@@ -60,6 +81,7 @@ export function CollapsibleSubNav({ title, items }: CollapsibleSubNavProps) {
         </div>
       )}
     </aside>
+    </>
   );
 }
 

@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import {
   TbSearch, TbRefresh, TbPlus, TbX, TbPaperclip, TbSend2, TbFile, TbDownload,
-  TbInfoCircle, TbMail, TbArchive, TbTrash, TbSend,
+  TbInfoCircle, TbMail, TbArchive, TbTrash, TbSend, TbArrowLeft,
 } from "react-icons/tb";
 
 type Folder = "inbox" | "sent" | "archive" | "trash";
@@ -182,7 +182,8 @@ export default function Inbox() {
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<Email | null>(null);
-  const [showInfo, setShowInfo] = useState(true);
+  const [showInfo, setShowInfo] = useState(true);       // desktop info column
+  const [mobileInfo, setMobileInfo] = useState(false);  // phone slide-over
   const [showCompose, setShowCompose] = useState(false);
 
   const [mode, setMode] = useState<"reply" | "note">("reply");
@@ -200,7 +201,13 @@ export default function Inbox() {
       if (search.trim()) params.set("search", search.trim());
       const data = await apiFetch<Email[]>(`/inbox?${params.toString()}`);
       setEmails(data);
-      setSelectedId((cur) => (cur && data.some((e) => e.id === cur) ? cur : data[0]?.id ?? null));
+      setSelectedId((cur) => {
+        if (cur && data.some((e) => e.id === cur)) return cur;
+        // Auto-open the first email only on desktop — on phones the list is
+        // the landing view and auto-selecting would hide it behind the thread.
+        const desktop = typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches;
+        return desktop ? data[0]?.id ?? null : null;
+      });
     } finally { setLoading(false); }
   }, [folder, search]);
 
@@ -265,7 +272,10 @@ export default function Inbox() {
   return (
     <div className="flex min-h-0 h-full gap-2 overflow-hidden">
       {/* Left: list */}
-      <main className="flex min-h-0 h-full w-[340px] shrink-0 flex-col glass-panel rounded-xl overflow-hidden">
+      <main className={cn(
+        "min-h-0 min-w-0 h-full w-full flex-col glass-panel rounded-xl overflow-hidden lg:flex lg:w-[340px] lg:shrink-0",
+        selectedId ? "hidden" : "flex"
+      )}>
         <div className="flex h-16 items-center justify-between border-b border-black/5 px-4 glass-header">
           <div className="flex items-center gap-2">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600"><TbMail size={17} /></span>
@@ -309,21 +319,34 @@ export default function Inbox() {
       </main>
 
       {/* Middle: thread */}
-      <section className="flex min-h-0 h-full flex-1 flex-col glass-panel rounded-xl overflow-hidden">
+      <section className={cn(
+        "min-h-0 min-w-0 h-full flex-1 flex-col glass-panel rounded-xl overflow-hidden lg:flex",
+        selectedId ? "flex" : "hidden"
+      )}>
         {!detail ? (
           <div className="flex flex-1 items-center justify-center text-sm text-gray-400">Select an email to view the conversation.</div>
         ) : (
           <>
-            <div className="flex h-16 items-center justify-between gap-3 border-b border-black/5 px-5 glass-header">
-              <p className="min-w-0 truncate text-sm font-semibold text-gray-900">{detail.subject}</p>
+            <div className="flex h-16 items-center justify-between gap-2 border-b border-black/5 px-3 sm:px-5 glass-header">
+              <div className="flex min-w-0 items-center gap-1.5">
+                <button onClick={() => setSelectedId(null)} className="rounded-lg p-2 text-gray-500 hover:bg-stone-100 lg:hidden" aria-label="Back to list">
+                  <TbArrowLeft size={18} />
+                </button>
+                <p className="min-w-0 truncate text-sm font-semibold text-gray-900">{detail.subject}</p>
+              </div>
               <div className="flex items-center gap-1">
                 {folder !== "archive" && <button onClick={() => moveTo("archive")} title="Archive" className="rounded-lg p-2 text-gray-500 hover:bg-stone-100"><TbArchive size={16} /></button>}
                 {folder !== "trash" && <button onClick={() => moveTo("trash")} title="Delete" className="rounded-lg p-2 text-gray-500 hover:bg-stone-100"><TbTrash size={16} /></button>}
-                <button onClick={() => setShowInfo((s) => !s)} className={cn("rounded-lg p-2", showInfo ? "bg-stone-100 text-gray-900" : "text-gray-500 hover:bg-stone-100")}><TbInfoCircle size={17} /></button>
+                <button
+                  onClick={() => { setShowInfo((s) => !s); setMobileInfo(true); }}
+                  className={cn("rounded-lg p-2", showInfo ? "bg-stone-100 text-gray-900" : "text-gray-500 hover:bg-stone-100")}
+                >
+                  <TbInfoCircle size={17} />
+                </button>
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto bg-stone-50/40 px-5 py-4">
+            <div className="flex-1 overflow-y-auto bg-stone-50/40 px-3 sm:px-5 py-4">
               {daySeparated.map(({ day, msg }) => (
                 <div key={msg.id}>
                   {day && <div className="my-3 flex justify-center"><span className="rounded-full bg-white px-3 py-1 text-[10px] font-medium text-gray-400 shadow-sm">{day}</span></div>}
@@ -332,15 +355,15 @@ export default function Inbox() {
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-teal-50 text-[10px] font-semibold text-teal-700">
                         {msg.senderAvatarUrl ? <img src={msg.senderAvatarUrl} alt="" className="h-full w-full object-cover" /> : initials(msg.fromName)}
                       </div>
-                      <div className="max-w-[70%] rounded-xl rounded-tl-sm border border-black/5 bg-white px-4 py-3 shadow-sm">
+                      <div className="min-w-0 max-w-[85%] sm:max-w-[70%] rounded-xl rounded-tl-sm border border-black/5 bg-white px-4 py-3 shadow-sm">
                         <p className="mb-1 text-[11px] text-gray-400">{msg.fromName} · {fmtTime(msg.sentAt)}</p>
-                        <div className="prose prose-sm max-w-none text-sm text-gray-800 [&_*]:!my-0.5" dangerouslySetInnerHTML={{ __html: msg.body }} />
+                        <div className="max-w-full overflow-x-auto"><div className="prose prose-sm max-w-none break-words text-sm text-gray-800 [&_*]:!my-0.5 [&_img]:h-auto [&_img]:max-w-full [&_table]:max-w-full" dangerouslySetInnerHTML={{ __html: msg.body }} /></div>
                         {(msg.attachments ?? []).map((a) => <AttachmentView key={a.key} att={a} />)}
                       </div>
                     </div>
                   ) : (
                     <div className="mb-3 flex items-start justify-end gap-2.5">
-                      <div className={cn("max-w-[70%] rounded-xl rounded-tr-sm px-4 py-3 shadow-sm", msg.isInternal ? "border border-amber-200 bg-amber-50" : "bg-blue-600")}>
+                      <div className={cn("min-w-0 max-w-[85%] sm:max-w-[70%] rounded-xl rounded-tr-sm px-4 py-3 shadow-sm", msg.isInternal ? "border border-amber-200 bg-amber-50" : "bg-blue-600")}>
                         <p className={cn("mb-1 text-[11px]", msg.isInternal ? "text-amber-600" : "text-blue-200")}>{msg.fromName} · {fmtTime(msg.sentAt)}{msg.isInternal ? " · Internal note" : ""}</p>
                         {msg.body && <p className={cn("whitespace-pre-wrap text-sm", msg.isInternal ? "text-amber-900" : "text-white")}>{msg.body.replace(/<[^>]*>/g, "")}</p>}
                         {(msg.attachments ?? []).map((a) => <AttachmentView key={a.key} att={a} />)}
@@ -362,7 +385,7 @@ export default function Inbox() {
                   <button onClick={() => setMode("reply")} className={cn("rounded-full px-3.5 py-1.5 text-xs font-semibold", mode === "reply" ? "bg-blue-600 text-white" : "border text-gray-500 hover:bg-gray-50")}>Reply</button>
                   <button onClick={() => setMode("note")} className={cn("rounded-full px-3.5 py-1.5 text-xs font-semibold", mode === "note" ? "bg-amber-500 text-white" : "border text-gray-500 hover:bg-gray-50")}>Internal note</button>
                 </div>
-                <span className="text-[11px] text-gray-400">{mode === "note" ? "Visible to the team only — never emailed." : `Emailed to ${detail.fromEmail}`}</span>
+                <span className="hidden text-[11px] text-gray-400 sm:inline">{mode === "note" ? "Visible to the team only — never emailed." : `Emailed to ${detail.fromEmail}`}</span>
               </div>
               {pending.length > 0 && (
                 <div className="mb-2 flex flex-wrap gap-1.5">
@@ -391,8 +414,19 @@ export default function Inbox() {
       </section>
 
       {/* Right: info */}
-      {detail && showInfo && (
-        <aside className="flex min-h-0 h-full w-[280px] shrink-0 flex-col overflow-y-auto rounded-xl bg-white p-5">
+      {detail && mobileInfo && (
+        <div className="fixed inset-0 z-40 bg-black/30 lg:hidden" onClick={() => setMobileInfo(false)} />
+      )}
+      {detail && (showInfo || mobileInfo) && (
+        <aside className={cn(
+          "min-h-0 flex-col overflow-y-auto bg-white p-5",
+          // phone: right slide-over; desktop: static column controlled by showInfo
+          mobileInfo ? "fixed inset-y-0 right-0 z-50 flex w-[85vw] max-w-[320px] shadow-xl" : "hidden",
+          showInfo ? "lg:static lg:z-auto lg:flex lg:h-full lg:w-[280px] lg:max-w-none lg:shrink-0 lg:rounded-xl lg:shadow-none" : "lg:hidden"
+        )}>
+          <button onClick={() => setMobileInfo(false)} className="mb-2 self-end rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 lg:hidden" aria-label="Close details">
+            <TbX size={18} />
+          </button>
           <p className="mb-4 text-base font-semibold text-gray-900">{detail.subject}</p>
           <div className="flex flex-col gap-3 text-sm">
             <div><p className="text-xs text-gray-400">Name</p><p className="font-medium text-gray-900">{firstInbound?.fromName ?? detail.fromName}</p></div>

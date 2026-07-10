@@ -5,7 +5,8 @@ import Link from "next/link";
 import Cookies from "js-cookie";
 import { useEffect, useState } from "react";
 import { LogOut } from "lucide-react";
-import { TbUser, TbChevronDown, TbBell, TbEye } from "react-icons/tb";
+import { TbUser, TbChevronDown, TbBell, TbEye, TbMenu2 } from "react-icons/tb";
+import { useDashboard } from "@/components/Common/DashboardProvider/DashboardProvider";
 import {
   Popover,
   PopoverTrigger,
@@ -33,6 +34,7 @@ interface RoleOption { slug: string; name: string }
 export function SiteHeader() {
   const pathname = usePathname();
   const router   = useRouter();
+  const { setMobileNavOpen } = useDashboard();
   const roleSlug = pathname.split("/")[1] || "";
   const [currentUser, setCurrentUser] = useState<{ fullName?: string; companyEmail?: string; roleSlug?: string }>({
     fullName: "User",
@@ -73,13 +75,21 @@ export function SiteHeader() {
   };
 
   return (
-    <div className="flex items-center justify-end rounded-lg glass-card px-4 h-[50px] shrink-0 gap-3">
+    <div className="flex items-center justify-end rounded-lg glass-card px-3 sm:px-4 h-[50px] shrink-0 gap-2 sm:gap-3">
+      {/* Hamburger — opens the sidebar drawer on mobile */}
+      <button
+        onClick={() => setMobileNavOpen(true)}
+        className="mr-auto rounded-lg p-2 text-gray-600 hover:bg-stone-100 lg:hidden"
+        aria-label="Open navigation"
+      >
+        <TbMenu2 size={20} />
+      </button>
       {canPreviewRoles && (
         <Popover>
           <PopoverTrigger asChild>
-            <button className="inline-flex items-center gap-2 rounded-lg border border-stone-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-stone-50">
+            <button className="inline-flex items-center gap-2 rounded-lg border border-stone-200 px-2.5 sm:px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-stone-50">
               <TbEye size={16} className="text-gray-400" />
-              Viewing as {currentRoleView}
+              <span className="hidden sm:inline">Viewing as {currentRoleView}</span>
               <TbChevronDown size={13} className="text-gray-400" />
             </button>
           </PopoverTrigger>

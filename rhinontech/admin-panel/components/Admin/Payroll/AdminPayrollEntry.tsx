@@ -183,7 +183,7 @@ export function AdminPayrollEntry() {
               <div className="glass-card-solid rounded-xl p-5 space-y-4">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Period & Employee</p>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
                     Month
                     <div className="relative">
@@ -240,7 +240,7 @@ export function AdminPayrollEntry() {
               {/* Earnings */}
               <div className="glass-card-solid rounded-xl p-5 space-y-4">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Earnings for this period</p>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {([
                     { label: "Basic Salary *", value: basicSalary, set: setBasicSalary },
                     { label: "HRA",             value: hra,         set: setHra         },
@@ -283,7 +283,7 @@ export function AdminPayrollEntry() {
                   </div>
                 </label>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
                     Professional Tax (₹)
                     <div className="relative">

@@ -107,7 +107,7 @@ export function AdminPayrollRun() {
             </div>
             <h2 className="text-sm font-semibold text-gray-900 mb-1">Payroll Run Complete</h2>
             <p className="text-sm text-gray-500 mb-6">{result.message}</p>
-            <div className="grid grid-cols-3 gap-4 mb-6 text-left">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 text-left">
               <div className="bg-gray-50 rounded-lg p-3">
                 <p className="text-xs text-gray-400">Period</p>
                 <p className="font-semibold text-gray-900 text-sm">{MONTHS[result.payroll.month - 1]} {result.payroll.year}</p>
@@ -196,7 +196,7 @@ export function AdminPayrollRun() {
                 </Link>
               </div>
             ) : (
-              <table className="w-full text-sm">
+              <table className="w-full min-w-[640px] text-sm">
                 <thead className="glass-thead text-xs text-gray-600 uppercase">
                   <tr>
                     <th className="px-5 py-3 text-left">Employee</th>

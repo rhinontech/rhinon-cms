@@ -59,7 +59,7 @@ export function Benefits() {
             <p className="text-xs text-gray-400 mb-3">{MONTHS[latest.payroll.month - 1]} {latest.payroll.year}</p>
             {hasAllowances ? (
               <>
-                <div className="grid grid-cols-2 gap-4 mb-8 xl:grid-cols-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 xl:grid-cols-4">
                   {items.map((item) => (
                     <div key={item.label} className="glass-card-solid rounded-xl p-5">
                       <div className={`w-9 h-9 rounded-lg flex items-center justify-center mb-3 ${item.color}`}>
@@ -72,7 +72,7 @@ export function Benefits() {
                 </div>
                 <div className="glass-card-solid rounded-xl overflow-hidden">
                   <div className="px-5 py-4 border-b"><p className="font-medium text-gray-900">Allowance History</p></div>
-                  <table className="w-full text-sm">
+                  <table className="w-full min-w-[640px] text-sm">
                     <thead className="glass-thead text-gray-600 text-xs uppercase">
                       <tr>
                         <th className="px-4 py-3 text-left">Period</th>

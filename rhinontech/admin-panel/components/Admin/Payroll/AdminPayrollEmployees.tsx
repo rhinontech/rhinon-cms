@@ -244,7 +244,7 @@ export function AdminPayrollEmployees() {
             ) : filtered.length === 0 ? (
               <div className="p-8 text-center text-sm text-gray-400">No employees found.</div>
             ) : (
-              <table className="w-full text-sm">
+              <table className="w-full min-w-[640px] text-sm">
                 <thead className="glass-thead text-xs text-gray-600 uppercase">
                   <tr>
                     <th className="px-5 py-3 text-left">Employee</th>
@@ -349,7 +349,7 @@ export function AdminPayrollEmployees() {
                       <p className="text-xs text-gray-400 mt-1">{selectedEmployee.role?.name ?? "-"} / {selectedEmployee.department}</p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                       <div className="rounded-lg border border-gray-100 p-3">
                         <p className="text-xs text-gray-400">Legal name</p>
                         <p className="mt-1 font-semibold text-gray-900">{selectedEmployee.legalName || selectedEmployee.fullName}</p>
@@ -400,7 +400,7 @@ export function AdminPayrollEmployees() {
 
                     <div className="rounded-lg border border-gray-100 p-4 text-sm space-y-3">
                       <p className="font-semibold text-gray-900">Payment Information</p>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <PayrollDetail label="Account number" value={selectedEmployee.bankAccountNumber || "-"} />
                         <PayrollDetail label="IFSC code" value={selectedEmployee.bankIfscCode || "-"} />
                         <PayrollDetail label="Beneficiary" value={selectedEmployee.bankBeneficiaryName || "-"} />
@@ -410,7 +410,7 @@ export function AdminPayrollEmployees() {
 
                     <div className="rounded-lg border border-gray-100 p-4 text-sm space-y-3">
                       <p className="font-semibold text-gray-900">Past Payroll & Statutory</p>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <PayrollDetail label="Financial year" value={selectedEmployee.pastPayrollFinancialYear || "FY 2026 - 2027"} />
                         <PayrollDetail label="Past taxable salary" value={INR(Number(selectedEmployee.pastTaxableSalary || 0))} />
                         <PayrollDetail label="Past TDS deducted" value={INR(Number(selectedEmployee.pastTdsDeducted || 0))} />
@@ -449,7 +449,7 @@ export function AdminPayrollEmployees() {
               </div>
             ) : (
               <div className="flex-1 overflow-auto p-5 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {([
                     { key: "basicSalary",      label: "Basic Salary *" },
                     { key: "hra",              label: "HRA" },
@@ -489,7 +489,7 @@ export function AdminPayrollEmployees() {
                       <div className={cn("w-4 h-4 bg-white rounded-full shadow-sm transition-transform", form.pfEnabled ? "translate-x-4" : "translate-x-0")} />
                     </div>
                   </label>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
                       Professional Tax (₹/mo)
                       <div className="relative">

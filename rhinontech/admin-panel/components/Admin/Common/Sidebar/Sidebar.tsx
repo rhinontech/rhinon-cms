@@ -16,7 +16,7 @@ import { usePermissions } from "@/context/PermissionsContext";
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { sidebarExpanded, setSidebarExpanded, isHovering, setIsHovering } = useDashboard();
+  const { sidebarExpanded, setSidebarExpanded, isHovering, setIsHovering, mobileNavOpen, setMobileNavOpen } = useDashboard();
   const { has } = usePermissions();
   // Built from the URL, not the async PermissionsContext state, so the very
   // first client render (and hydration) matches the server-rendered HTML —
@@ -24,7 +24,8 @@ export function Sidebar() {
   // otherwise render every href as "//dashboard" on first paint.
   const roleSlug = pathname.split("/")[1] || "";
 
-  const expanded = sidebarExpanded || isHovering;
+  // The mobile drawer always shows labels; desktop keeps pin/hover behavior.
+  const expanded = sidebarExpanded || isHovering || mobileNavOpen;
 
   const navItems = [
     { title: "Dashboard",   icon: <MdDashboard size={20} className="h-5 w-5 flex-shrink-0" />,   href: `/${roleSlug}/dashboard`,    permission: "dashboard:read" },
@@ -45,10 +46,18 @@ export function Sidebar() {
   ].filter((item) => has(item.permission));
 
   return (
+    <>
+      {/* Mobile backdrop */}
+      {mobileNavOpen && (
+        <div className="fixed inset-0 z-40 bg-black/30 lg:hidden" onClick={() => setMobileNavOpen(false)} />
+      )}
     <aside
       className={cn(
         "flex h-full flex-col glass-sidenav transition-all duration-300 ease-in-out",
-        expanded ? "w-56" : "w-14"
+        // Mobile: fixed overlay drawer slid in from the left; desktop: static column.
+        "fixed inset-y-0 left-0 z-50 w-64 shadow-xl lg:static lg:z-auto lg:shadow-none",
+        mobileNavOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+        expanded ? "lg:w-56" : "lg:w-14"
       )}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
@@ -95,5 +104,6 @@ export function Sidebar() {
         </div>
       </nav>
     </aside>
+    </>
   );
 }

@@ -210,7 +210,7 @@ export function FinalSettlements() {
                 No exits recorded yet. Offboard a member from the Team panel first.
               </div>
             ) : (
-              <table className="w-full text-sm">
+              <table className="w-full min-w-[640px] text-sm">
                 <thead className="glass-thead text-xs text-gray-600 uppercase">
                   <tr>
                     <th className="px-5 py-3 text-left">Employee</th>
@@ -286,7 +286,7 @@ export function FinalSettlements() {
                 <div className="p-6 text-sm text-gray-400">Computing pro-rated amounts…</div>
               ) : form && preview ? (
                 <div className="p-5 space-y-5">
-                  <div className="grid grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-2">
                     <div className="space-y-3">
                       <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Earnings</p>
                       {AMOUNT_FIELDS.filter((f) => f.group === "earning").map((f) => (

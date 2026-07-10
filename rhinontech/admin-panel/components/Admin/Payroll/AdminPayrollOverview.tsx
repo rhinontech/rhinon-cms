@@ -185,7 +185,7 @@ export function AdminPayrollOverview() {
               </Link>
             </div>
           ) : (
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[640px] text-sm">
               <thead className="glass-thead text-gray-600 text-xs uppercase">
                 <tr>
                   <th className="px-5 py-3 text-left">Period</th>

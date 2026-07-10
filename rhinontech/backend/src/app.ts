@@ -36,7 +36,10 @@ const allowedOrigins = [
   "http://localhost:4200",
   "http://localhost:3000",
 ].filter(Boolean);
-app.use(cors({ origin: (origin, cb) => cb(null, !origin || allowedOrigins.includes(origin)), credentials: true }));
+// Private-LAN origins are allowed for dev (testing from phones on the same
+// network); production origins still come from env.frontendUrls.
+const isLanDevOrigin = (origin: string) => /^http:\/\/(192\.168|10\.|172\.(1[6-9]|2\d|3[01]))[\d.]*:4200$/.test(origin);
+app.use(cors({ origin: (origin, cb) => cb(null, !origin || allowedOrigins.includes(origin) || isLanDevOrigin(origin)), credentials: true }));
 app.use(express.json({ limit: "20mb" }));
 
 app.use("/auth", authRoutes);
