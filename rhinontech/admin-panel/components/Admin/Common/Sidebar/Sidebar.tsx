@@ -55,7 +55,7 @@ export function Sidebar() {
       className={cn(
         "flex h-full flex-col glass-sidenav transition-all duration-300 ease-in-out",
         // Mobile: fixed overlay drawer slid in from the left; desktop: static column.
-        "fixed inset-y-0 left-0 z-50 w-64 shadow-xl lg:static lg:z-auto lg:shadow-none",
+        "fixed inset-y-0 left-0 z-50 w-64 max-lg:bg-white! shadow-xl lg:static lg:z-auto lg:shadow-none",
         mobileNavOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
         expanded ? "lg:w-56" : "lg:w-14"
       )}

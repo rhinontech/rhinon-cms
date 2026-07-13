@@ -91,6 +91,8 @@ export function AdminPayrollEmployees() {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [mode, setMode] = useState<PanelMode>("view");
   const [isPreviewExpanded, setIsPreviewExpanded] = useState(true);
+  // Phone-only: salary details open as a full-screen overlay from the list.
+  const [mobileDetail, setMobileDetail] = useState(false);
   const [form, setForm] = useState<SalaryForm>({ basicSalary: "", hra: "", ta: "", medicalAllowance: "", otherAllowances: "", pfEnabled: true, ptAmount: "200", tdsAmount: "0" });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -132,6 +134,7 @@ export function AdminPayrollEmployees() {
     setMode("view");
     setError("");
     setIsPreviewExpanded(true);
+    setMobileDetail(true);
   };
 
   const startEdit = () => {
@@ -310,8 +313,10 @@ export function AdminPayrollEmployees() {
       </main>
 
       <aside
-        className={`flex min-h-0 h-full flex-col bg-white rounded-xl overflow-hidden transition-all duration-200 ease-in-out ${
-          isPreviewExpanded ? "w-[42%]" : "w-0"
+        className={`min-h-0 flex-col bg-white overflow-hidden transition-all duration-200 ease-in-out ${
+          mobileDetail ? "fixed inset-0 z-50 flex" : "hidden"
+        } lg:static lg:z-auto lg:flex lg:h-full lg:rounded-xl ${
+          isPreviewExpanded ? "lg:w-[42%]" : "lg:w-0"
         }`}
       >
         {isPreviewExpanded && (
@@ -332,7 +337,7 @@ export function AdminPayrollEmployees() {
                 )}
                 <button
                   className="cursor-pointer text-gray-600 hover:text-gray-900"
-                  onClick={() => setIsPreviewExpanded(false)}
+                  onClick={() => { setIsPreviewExpanded(false); setMobileDetail(false); }}
                 >
                   <TbLayoutSidebarRightFilled size={20} />
                 </button>

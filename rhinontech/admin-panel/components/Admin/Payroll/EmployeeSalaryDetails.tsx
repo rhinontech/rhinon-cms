@@ -121,7 +121,7 @@ export function EmployeeSalaryDetails() {
                   <div className="px-5 py-4 border-b">
                     <p className="font-semibold text-gray-900">Earnings (Monthly)</p>
                   </div>
-                  <table className="w-full min-w-[640px] text-sm">
+                  <table className="w-full text-sm">
                     <tbody className="divide-y divide-gray-50">
                       {[
                         { label: "Basic Salary",       value: basic   },
@@ -152,7 +152,7 @@ export function EmployeeSalaryDetails() {
                   <div className="px-5 py-4 border-b">
                     <p className="font-semibold text-gray-900">Deductions (Monthly)</p>
                   </div>
-                  <table className="w-full min-w-[640px] text-sm">
+                  <table className="w-full text-sm">
                     <tbody className="divide-y divide-gray-50">
                       {[
                         { label: pf > 0 ? "PF (Employee 12% of Basic)" : "PF (Not applicable)", value: pf  },

@@ -45,7 +45,7 @@ export function CollapsibleSubNav({ title, items }: CollapsibleSubNavProps) {
     <aside
       className={`flex-col glass-sidenav transition-all duration-200 ease-in-out overflow-hidden
         ${showNav
-          ? "fixed inset-y-0 left-0 z-50 flex w-64 bg-white shadow-xl lg:static lg:z-auto lg:h-full lg:w-[15%] lg:min-w-[180px] lg:rounded-l-xl lg:bg-transparent lg:shadow-none lg:border-r lg:border-black/5"
+          ? "fixed inset-y-0 left-0 z-50 flex w-64 max-lg:bg-white! shadow-xl lg:static lg:z-auto lg:h-full lg:w-[15%] lg:min-w-[180px] lg:rounded-l-xl lg:bg-transparent lg:shadow-none lg:border-r lg:border-black/5"
           : "hidden lg:flex lg:h-full lg:w-0"}`}
     >
       {showNav && (

@@ -126,6 +126,8 @@ export function TasksPage({ scope, currentUserId }: { scope: TaskScope; currentU
   const [search, setSearch] = useState("");
   const [selectedTask, setSelectedTask] = useState<ApiTask | null>(null);
   const [isPreviewExpanded, setIsPreviewExpanded] = useState(true);
+  // Phone-only: the detail aside opens as a full-screen overlay.
+  const [mobileDetail, setMobileDetail] = useState(false);
   const [mode, setMode] = useState<PanelMode>("view");
   const [form, setForm] = useState(emptyForm());
   const [saving, setSaving] = useState(false);
@@ -213,8 +215,8 @@ export function TasksPage({ scope, currentUserId }: { scope: TaskScope; currentU
     });
   }, [search, statusFilter, assigneeFilter, tasks]);
 
-  const selectTask = (task: ApiTask) => { setSelectedTask(task); setMode("view"); setIsPreviewExpanded(true); setDetailTab("details"); };
-  const startCreate = () => { setForm(emptyForm()); setMode("create"); setIsPreviewExpanded(true); };
+  const selectTask = (task: ApiTask) => { setSelectedTask(task); setMode("view"); (setIsPreviewExpanded(true), setMobileDetail(true)); setDetailTab("details"); };
+  const startCreate = () => { setForm(emptyForm()); setMode("create"); (setIsPreviewExpanded(true), setMobileDetail(true)); };
   const startEdit = () => {
     if (!selectedTask) return;
     setForm({ title: selectedTask.title, description: selectedTask.description ?? "", team: selectedTask.team ?? "", dueDate: selectedTask.dueDate ?? "", status: selectedTask.status, priority: selectedTask.priority, projectId: selectedTask.project?.id ?? "", assigneeId: selectedTask.assigneeId ?? "", estimatedHours: selectedTask.estimatedHours?.toString() ?? "", recurrence: selectedTask.recurrence ?? "", blockedById: selectedTask.blockedById ?? "" });
@@ -237,7 +239,7 @@ export function TasksPage({ scope, currentUserId }: { scope: TaskScope; currentU
     try {
       await apiFetch(`/tasks/${taskId}`, { method: "DELETE" });
       setTasks(t => t.filter(x => x.id !== taskId));
-      if (selectedTask?.id === taskId) { setSelectedTask(null); setIsPreviewExpanded(false); }
+      if (selectedTask?.id === taskId) { setSelectedTask(null); (setIsPreviewExpanded(false), setMobileDetail(false)); }
     } catch {}
   };
 
@@ -413,7 +415,7 @@ export function TasksPage({ scope, currentUserId }: { scope: TaskScope; currentU
               Add a task <TbPlus size={14} />
             </button>
             {(!isPreviewExpanded || (visibleTasks.length === 0 && mode !== "create")) && (
-              <button onClick={() => setIsPreviewExpanded(true)} className="rounded-lg p-2 text-gray-600 hover:bg-stone-100 transition-colors">
+              <button onClick={() => (setIsPreviewExpanded(true), setMobileDetail(true))} className="rounded-lg p-2 text-gray-600 hover:bg-stone-100 transition-colors">
                 <TbLayoutSidebarFilled size={20} />
               </button>
             )}
@@ -513,7 +515,7 @@ export function TasksPage({ scope, currentUserId }: { scope: TaskScope; currentU
             <div className="mt-4 rounded-xl border border-gray-200 bg-white p-12 text-center text-sm text-gray-400">No tasks found.</div>
           ) : viewMode === "list" ? (
             <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-              <table className="w-full text-left text-sm text-gray-600">
+              <table className="w-full min-w-[640px] text-left text-sm text-gray-600">
                 <thead className="border-b border-gray-200 glass-thead text-xs font-medium text-gray-600">
                   <tr>
                     <th className="px-4 py-3 w-8"><input type="checkbox" checked={visibleTasks.length > 0 && selectedIds.size === visibleTasks.length} onChange={selectAll} className="rounded border-gray-300" /></th>
@@ -649,7 +651,7 @@ export function TasksPage({ scope, currentUserId }: { scope: TaskScope; currentU
       </main>
 
       {/* Detail aside */}
-      <aside className={cn("flex min-h-0 h-full flex-col bg-white rounded-xl overflow-hidden transition-all duration-200 ease-in-out", isPreviewExpanded && (visibleTasks.length > 0 || mode === "create") ? "w-[42%] ml-2" : "w-0")}>
+      <aside className={cn("min-h-0 flex-col bg-white overflow-hidden transition-all duration-200 ease-in-out", mobileDetail ? "fixed inset-0 z-50 flex" : "hidden", "lg:static lg:z-auto lg:flex lg:h-full lg:rounded-xl", isPreviewExpanded && (visibleTasks.length > 0 || mode === "create") ? "lg:w-[42%] lg:ml-2" : "lg:w-0")}>
         {isPreviewExpanded && (visibleTasks.length > 0 || mode === "create") && (
           <div className="flex h-full flex-col overflow-hidden">
             <div className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-white px-4 shrink-0">
@@ -660,7 +662,7 @@ export function TasksPage({ scope, currentUserId }: { scope: TaskScope; currentU
                 {mode === "view" && selectedTask && canEditTask(selectedTask) && (
                   <button onClick={startEdit} className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors">Edit</button>
                 )}
-                <button onClick={() => setIsPreviewExpanded(false)} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 transition-colors">
+                <button onClick={() => (setIsPreviewExpanded(false), setMobileDetail(false))} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 transition-colors">
                   <TbLayoutSidebarRightFilled size={18} />
                 </button>
               </div>
@@ -732,7 +734,7 @@ export function TasksPage({ scope, currentUserId }: { scope: TaskScope; currentU
                         </div>
 
                         <div className="h-px bg-gray-100" />
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 text-sm">
                           <Detail label="Assignee" value={selectedTask.assignee?.fullName ?? "Unassigned"} />
                           <Detail label="Team" value={selectedTask.team ?? "—"} />
                           <Detail label="Project" value={selectedTask.project?.name ?? "—"} />
@@ -834,7 +836,7 @@ export function TasksPage({ scope, currentUserId }: { scope: TaskScope; currentU
                     Description
                     <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="min-h-20 rounded-xl border border-gray-200 px-3 py-2 text-sm font-normal text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 resize-none" placeholder="Details..." />
                   </label>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <label className="flex flex-col gap-1.5 text-sm font-semibold text-gray-700">
                       Priority
                       <select value={form.priority} onChange={e => setForm(f => ({ ...f, priority: e.target.value as TaskPriority }))} className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-normal outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
