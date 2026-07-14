@@ -39,7 +39,17 @@ const allowedOrigins = [
 // Private-LAN origins are allowed for dev (testing from phones on the same
 // network); production origins still come from env.frontendUrls.
 const isLanDevOrigin = (origin: string) => /^http:\/\/(192\.168|10\.|172\.(1[6-9]|2\d|3[01]))[\d.]*:4200$/.test(origin);
-app.use(cors({ origin: (origin, cb) => cb(null, !origin || allowedOrigins.includes(origin) || isLanDevOrigin(origin)), credentials: true }));
+// /public/* is an open, credential-less API (lead capture, pageview tracking, published
+// content) that external platforms post to from any origin; everything else stays
+// restricted to the known frontends.
+const openCors = cors({ origin: true });
+const restrictedCors = cors({
+  origin: (origin, cb) => cb(null, !origin || allowedOrigins.includes(origin) || isLanDevOrigin(origin)),
+  credentials: true,
+});
+app.use((req, res, next) =>
+  req.path.startsWith("/public") ? openCors(req, res, next) : restrictedCors(req, res, next)
+);
 app.use(express.json({ limit: "20mb" }));
 
 app.use("/auth", authRoutes);
