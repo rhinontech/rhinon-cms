@@ -16,7 +16,7 @@ export function MarkdownRenderer({ content }: { content: string }) {
         if (!part) return;
         if (part.startsWith("**") && part.endsWith("**")) {
           out.push(
-            <strong key={`${keyBase}-b-${bi}-${j}`} className="font-black text-cyan-400">
+            <strong key={`${keyBase}-b-${bi}-${j}`} className="font-black text-white">
               {part.slice(2, -2)}
             </strong>
           );
@@ -83,7 +83,7 @@ export function MarkdownRenderer({ content }: { content: string }) {
       const itemText = bullet ? bullet[1] : ordered![1];
       list.push(
         <li key={i} className="flex gap-4 text-foreground/80 text-lg leading-relaxed">
-          <span className="text-cyan-500 font-bold shrink-0 mt-2">•</span>
+          <span className="text-white/60 font-bold shrink-0 mt-2">•</span>
           <span>{renderInline(itemText, i)}</span>
         </li>
       );
@@ -100,7 +100,7 @@ export function MarkdownRenderer({ content }: { content: string }) {
     // Blockquote
     if (trimmed.startsWith(">")) {
       elements.push(
-        <blockquote key={i} className="my-6 border-l-2 border-cyan-500/40 pl-5 italic text-foreground/70 text-lg leading-relaxed">
+        <blockquote key={i} className="my-6 border-l-2 border-white/20 pl-5 italic text-foreground/70 text-lg leading-relaxed">
           {renderInline(trimmed.replace(/^>\s?/, ""), i)}
         </blockquote>
       );
@@ -118,7 +118,7 @@ export function MarkdownRenderer({ content }: { content: string }) {
         <h2
           key={i}
           id={slugifyHeading(trimmed.slice(3))}
-          className="text-3xl font-black text-foreground mt-16 mb-8 border-b-2 border-cyan-500/20 pb-4 tracking-tighter scroll-mt-32"
+          className="text-3xl font-black text-foreground mt-16 mb-8 border-b-2 border-white/10 pb-4 tracking-tighter scroll-mt-32"
         >
           {renderInline(trimmed.slice(3), i)}
         </h2>

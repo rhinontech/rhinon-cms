@@ -77,7 +77,7 @@ export function BlogSideRail({ url }: { title?: string; url: string }) {
       </div>
 
       {/* Summarize with AI */}
-      <div>
+      {/* <div>
         <p className="mb-4 text-lg font-black tracking-tight text-foreground">Summarize with AI</p>
         <div className="flex gap-2.5">
           {AI_TOOLS.map((tool) => (
@@ -94,7 +94,7 @@ export function BlogSideRail({ url }: { title?: string; url: string }) {
             </a>
           ))}
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }
