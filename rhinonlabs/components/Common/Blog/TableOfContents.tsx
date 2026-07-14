@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { List } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import type { TocItem } from "./blocks";
 
 export function TableOfContents({
@@ -36,20 +36,21 @@ export function TableOfContents({
 
   const nav = (
     <nav aria-label="Table of contents">
-      <ul className="space-y-1">
+      <ul className="space-y-4">
         {items.map((item) => (
           <li key={item.id}>
             <a
               href={`#${item.id}`}
-              className={`group flex items-start gap-3 rounded-lg px-3 py-2 text-[13px] font-semibold leading-snug transition-colors ${
+              className={`group flex items-start gap-2.5 text-sm leading-snug transition-colors ${
                 activeId === item.id
-                  ? "text-cyan-400"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "font-bold text-foreground"
+                  : "font-medium text-muted-foreground hover:text-foreground"
               }`}
             >
-              <span
-                className={`mt-1 h-4 w-0.5 shrink-0 rounded-full transition-colors ${
-                  activeId === item.id ? "bg-cyan-400" : "bg-white/10 group-hover:bg-white/25"
+              <ChevronRight
+                size={14}
+                className={`mt-0.5 shrink-0 transition-colors ${
+                  activeId === item.id ? "text-foreground" : "text-muted-foreground/60 group-hover:text-foreground"
                 }`}
               />
               {item.text}
@@ -63,21 +64,19 @@ export function TableOfContents({
   if (variant === "mobile") {
     // Compact disclosure rendered above the article on small screens.
     return (
-      <details className="mb-12 rounded-2xl border border-white/5 bg-secondary/20 p-4 backdrop-blur-md lg:hidden">
-        <summary className="flex cursor-pointer list-none items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
-          <List size={14} className="text-cyan-400" /> On this page
+      <details className="mb-12 rounded-2xl border border-white/10 bg-white/[0.03] p-5 lg:hidden">
+        <summary className="cursor-pointer list-none text-lg font-black tracking-tight text-foreground">
+          Table of contents
         </summary>
-        <div className="mt-3">{nav}</div>
+        <div className="mt-4">{nav}</div>
       </details>
     );
   }
 
-  // Sticky rail beside the article on desktop.
+  // Desktop rail — stickiness is applied by the page-level wrapper.
   return (
-    <div className="sticky top-32 hidden lg:block">
-      <p className="mb-4 flex items-center gap-2 px-3 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
-        <List size={14} className="text-cyan-400" /> On this page
-      </p>
+    <div>
+      <p className="mb-6 text-xl font-black tracking-tight text-foreground">Table of contents</p>
       {nav}
     </div>
   );

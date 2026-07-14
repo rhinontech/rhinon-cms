@@ -10,22 +10,19 @@ export function BlogFaq({ faqs }: { faqs: BlogFaqItem[] }) {
   if (!faqs.length) return null;
 
   return (
-    <section className="mt-24">
-      <div className="mb-10 space-y-3">
-        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-400">FAQ</span>
-        <h2 className="text-3xl md:text-4xl font-black tracking-tight text-foreground">
-          Frequently asked questions
-        </h2>
-      </div>
+    <section className="mt-20">
+      <h2 className="mb-8 text-2xl md:text-3xl font-black tracking-tight text-foreground">
+        Frequently asked questions
+      </h2>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {faqs.map((faq, index) => {
           const isOpen = openIndex === index;
           return (
             <div
               key={index}
-              className={`rounded-2xl border backdrop-blur-md transition-colors ${
-                isOpen ? "border-cyan-500/30 bg-secondary/30" : "border-white/5 bg-secondary/20 hover:border-white/10"
+              className={`rounded-2xl border transition-colors ${
+                isOpen ? "border-white/25 bg-white/[0.05]" : "border-white/10 bg-white/[0.02] hover:border-white/20"
               }`}
             >
               <button
@@ -37,9 +34,7 @@ export function BlogFaq({ faqs }: { faqs: BlogFaqItem[] }) {
                 <span className="text-base md:text-lg font-bold text-foreground">{faq.question}</span>
                 <span
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition-all ${
-                    isOpen
-                      ? "border-cyan-500/40 bg-cyan-500/10 text-cyan-400"
-                      : "border-white/10 text-muted-foreground"
+                    isOpen ? "border-white/40 bg-white text-slate-950" : "border-white/15 text-muted-foreground"
                   }`}
                 >
                   {isOpen ? <Minus size={16} /> : <Plus size={16} />}

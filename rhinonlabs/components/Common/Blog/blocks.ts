@@ -70,6 +70,19 @@ export function withHeadingIds(html: string, seen: Map<string, number>): string 
   });
 }
 
+/** TOC for legacy markdown blogs — mirrors the ids MarkdownRenderer puts on its `## ` headings. */
+export function extractTocFromMarkdown(markdown: string): TocItem[] {
+  return (markdown || "")
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l.startsWith("## "))
+    .map((l) => {
+      const text = l.slice(3).trim();
+      return { id: slugifyHeading(text), text };
+    })
+    .filter((item) => item.text);
+}
+
 export function extractYouTubeId(url: string): string | null {
   const m = (url || "").match(
     /(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/
