@@ -88,13 +88,13 @@ export default async function BlogDetailsPage({ params }: PageProps) {
       : null;
 
   return (
-    <div className="relative min-h-screen bg-background selection:bg-white/20 overflow-x-hidden">
+    <div className="relative min-h-screen bg-background selection:bg-white/20 overflow-x-clip">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostingSchema) }} />
       {faqSchema && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       )}
 
-      <div className="max-w-[1400px] mx-auto px-6 pt-28 pb-24 relative">
+      <div className="max-w-[1400px] mx-auto px-16 pt-28 pb-24 relative">
         {/* Breadcrumb */}
         <nav aria-label="Breadcrumb" className="mb-12 flex items-center gap-2 text-sm">
           <Link href="/blogs" className="font-bold text-foreground transition-opacity hover:opacity-70">
@@ -111,26 +111,25 @@ export default async function BlogDetailsPage({ params }: PageProps) {
         </nav>
 
         {/* 3-column layout: sticky TOC | scrollable article | sticky side rail */}
-        <div className="lg:grid lg:grid-cols-[240px_minmax(0,1fr)_320px] lg:gap-12 xl:grid-cols-[260px_minmax(0,1fr)_340px] xl:gap-16">
+        <div className="lg:grid lg:grid-cols-[240px_minmax(0,1fr)_320px] lg:gap-10 xl:grid-cols-[240px_minmax(0,1fr)_256px] xl:gap-12 relative">
           {/* Left — Table of contents (sticky) */}
-          <aside className="hidden lg:block">
-            <div className="sticky top-28 max-h-[calc(100vh-9rem)] overflow-y-auto pr-1">
-              <TableOfContents items={toc} />
-            </div>
+          <aside className="hidden lg:block self-start sticky top-28 max-h-[calc(100vh-9rem)] overflow-y-auto pr-1">
+            <TableOfContents items={toc} />
           </aside>
 
           {/* Middle — scrollable article */}
           <article className="min-w-0">
             {/* Title + excerpt */}
-            <h1 className="text-4xl md:text-[3.4rem] font-black text-foreground leading-[1.08] tracking-tight mb-7">
+            <h1 className="text-2xl md:text-[2.4rem] font-black text-foreground leading-[1.08] tracking-tight mb-7">
               {blog.title}
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-10">
+            <p className="text-md md:text-lg text-muted-foreground leading-relaxed mb-10">
               {blog.excerpt}
             </p>
 
             {/* Byline */}
-            <div className="mb-10 flex flex-wrap items-center gap-x-12 gap-y-5">
+            <div className="mb-10 flex flex-wrap justify-between items-center gap-x-12 gap-y-5">
+              
               <div className="flex items-center gap-3.5">
                 <div className="h-12 w-12 overflow-hidden rounded-full border border-white/15">
                   <img
@@ -142,10 +141,28 @@ export default async function BlogDetailsPage({ params }: PageProps) {
                 <div>
                   <p className="text-sm text-foreground">
                     By <span className="font-bold">{blog.authorName}</span>
-                    <span className="text-muted-foreground"> · {blog.authorRole}</span>
+                    {/* <span className="text-muted-foreground"> · {blog.authorRole}</span> */}
                   </p>
                   <p className="mt-0.5 text-sm text-muted-foreground">
-                    Updated on {format(new Date(blog.publishedAt), "MMM d, yyyy")} · {blog.readTime}
+                    Updated on {format(new Date(blog.publishedAt), "MMM d, yyyy")}.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3.5">
+                <div className="h-12 w-12 overflow-hidden rounded-full border border-white/15">
+                  <img
+                    src={blog.authorAvatar || "https://github.com/prabhatpk.png"}
+                    alt={blog.authorName}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div>
+                  <p className="text-sm text-foreground">
+                    Reviewed By <span className="font-bold"> Prabhat Patra</span>
+                    {/* <span className="text-muted-foreground"> · {blog.authorRole}</span> */}
+                  </p>
+                  <p className="mt-0.5 text-sm text-muted-foreground">
+                   Founder
                   </p>
                 </div>
               </div>
@@ -218,10 +235,8 @@ export default async function BlogDetailsPage({ params }: PageProps) {
           </article>
 
           {/* Right — assessment card + Summarize with AI (sticky) */}
-          <aside className="hidden lg:block">
-            <div className="sticky top-28 max-h-[calc(100vh-9rem)] overflow-y-auto pr-1">
-              <BlogSideRail url={pageUrl} />
-            </div>
+          <aside className="hidden lg:block self-start sticky top-28 max-h-[calc(100vh-9rem)] overflow-y-auto pr-1">
+            <BlogSideRail url={pageUrl} />
           </aside>
         </div>
       </div>

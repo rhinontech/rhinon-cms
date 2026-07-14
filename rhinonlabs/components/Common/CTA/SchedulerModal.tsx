@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Calendar, Clock, Globe, ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
 import { format, addMonths, subMonths, isBefore, startOfMonth, getDay, getDaysInMonth, isToday } from "date-fns";
+import { createPlatformLead } from "@/lib/api";
 
 interface SchedulerModalProps {
   isOpen: boolean;
@@ -56,6 +57,8 @@ export default function SchedulerModal({ isOpen, onClose }: SchedulerModalProps)
   const [is24h, setIs24h] = useState(false);
   const [timezone, setTimezone] = useState("Asia/Kolkata");
   const [countryCode, setCountryCode] = useState("+91");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Form State matching Cal.com image layout
   const [formData, setFormData] = useState({
@@ -77,6 +80,8 @@ export default function SchedulerModal({ isOpen, onClose }: SchedulerModalProps)
       setSelectedSlotIndex(null);
       setCurrentDate(new Date());
       setCountryCode("+91");
+      setSubmitting(false);
+      setSubmitError(null);
       setFormData({
         name: "",
         email: "",
@@ -143,23 +148,39 @@ export default function SchedulerModal({ isOpen, onClose }: SchedulerModalProps)
     });
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("=== SCHEDULED CALL DETAILS ===");
-    console.log("Date:", selectedDate ? format(selectedDate, "eeee, MMMM d, yyyy") : "");
-    console.log(
-      "Time Slot:",
-      selectedSlotIndex !== null
-        ? `${TIME_SLOTS_12H[selectedSlotIndex]} - ${getEndTime12h(selectedSlotIndex)}`
-        : ""
-    );
-    console.log("Client Details:", {
-      ...formData,
-      phone: `${countryCode} ${formData.phone}`
-    });
-    console.log("Timezone:", timezone);
-    console.log("===============================");
-    setStep(3); // Success Screen
+    setSubmitting(true);
+    setSubmitError(null);
+
+    const timeSlotStr = selectedSlotIndex !== null
+      ? `${TIME_SLOTS_12H[selectedSlotIndex]} - ${getEndTime12h(selectedSlotIndex)}`
+      : "";
+    const dateStr = selectedDate ? format(selectedDate, "eeee, MMMM d, yyyy") : "";
+    const message = `Scheduled call: ${dateStr} from ${timeSlotStr} (Timezone: ${timezone})`;
+
+    const payload = {
+      name: formData.name,
+      email: formData.email,
+      phone: `${countryCode} ${formData.phone}`.trim(),
+      website: formData.website,
+      institutionType: formData.institutionType,
+      annualLeadVolume: formData.annualLeadVolume,
+      teamSize: formData.teamSize,
+      message,
+      source: "Scheduler",
+    };
+
+    try {
+      await createPlatformLead(payload);
+
+      setStep(3); // Success Screen
+    } catch (err: any) {
+      console.error("Failed to submit scheduled call:", err);
+      setSubmitError(err.message || "Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const isPastDate = (day: number) => {
@@ -437,6 +458,11 @@ export default function SchedulerModal({ isOpen, onClose }: SchedulerModalProps)
                 className="w-full max-w-lg mx-auto"
               >
                 <form onSubmit={handleFormSubmit} className="space-y-2">
+                  {submitError && (
+                    <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl select-none">
+                      {submitError}
+                    </div>
+                  )}
                   {/* Your name * */}
                   <div className="space-y-2">
                     <label htmlFor="name" className="text-[13px] font-medium text-white select-none">
@@ -606,15 +632,24 @@ export default function SchedulerModal({ isOpen, onClose }: SchedulerModalProps)
                       <button
                         type="button"
                         onClick={() => setStep(1)}
-                        className="text-white/60 hover:text-white font-semibold text-sm transition-all"
+                        disabled={submitting}
+                        className="text-white/60 hover:text-white font-semibold text-sm transition-all disabled:opacity-50"
                       >
                         Back
                       </button>
                       <button
                         type="submit"
-                        className="px-6 py-2 rounded-full bg-white text-black font-semibold text-sm hover:bg-white/90 active:scale-95 transition-all shadow-glow-sm"
+                        disabled={submitting}
+                        className="px-6 py-2 rounded-full bg-white text-black font-semibold text-sm hover:bg-white/90 active:scale-95 transition-all shadow-glow-sm disabled:opacity-50 flex items-center justify-center gap-2"
                       >
-                        Confirm
+                        {submitting ? (
+                          <>
+                            <span className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin"></span>
+                            Confirming...
+                          </>
+                        ) : (
+                          "Confirm"
+                        )}
                       </button>
                     </div>
                   </div>

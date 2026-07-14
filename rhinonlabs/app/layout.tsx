@@ -131,9 +131,9 @@ export default function RootLayout({
         {children}
         <Footer />
 
-        <div
+        {/* <div
           className="fixed bottom-0 left-0 right-0 mx-auto w-full max-w-[1200px] h-[70px] z-10 pointer-events-none backdrop-blur-[7px] mask-[linear-gradient(to_bottom,transparent_0%,black_60%)]"
-        />
+        /> */}
 
       </body>
     </html>

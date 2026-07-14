@@ -200,7 +200,7 @@ body {
   margin-bottom: 1.5rem;
 }
 .article-html a {
-  color: var(--foreground);
+  color: var(--foreground) !important;
   text-decoration: underline;
   text-decoration-color: rgba(255, 255, 255, 0.35);
   text-underline-offset: 4px;
@@ -211,7 +211,7 @@ body {
 }
 .article-html strong {
   font-weight: 800;
-  color: var(--foreground);
+  color: var(--foreground) !important;
 }
 .article-html ul,
 .article-html ol {

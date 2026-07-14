@@ -84,3 +84,31 @@ export async function getCaseStudies(): Promise<CaseStudy[]> {
 export async function getCaseStudy(slug: string): Promise<CaseStudy | null> {
   return getJSON<CaseStudy>(`/public/case-studies/${encodeURIComponent(slug)}`);
 }
+
+export interface PlatformLeadPayload {
+  name: string;
+  email: string;
+  phone: string;
+  website: string;
+  institutionType: string;
+  annualLeadVolume: string;
+  teamSize?: string;
+  message?: string;
+  source?: string;
+}
+
+export async function createPlatformLead(payload: PlatformLeadPayload): Promise<void> {
+  const res = await fetch(`${API_BASE}/public/platform-leads`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.message || "Failed to submit lead");
+  }
+}
+
