@@ -48,9 +48,14 @@ export default async function BlogsPage() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-60" />
                 
-                {/* Floating Tags */}
+                {/* Category + Floating Tags */}
                 <div className="absolute top-4 left-4 flex gap-2">
-                  {blog.tags?.slice(0, 2).map((tag: string) => (
+                  {blog.category && (
+                    <span className="px-2.5 py-1 rounded-lg bg-cyan-500/20 backdrop-blur-md border border-cyan-400/30 text-[9px] font-black uppercase tracking-widest text-cyan-300">
+                      {blog.category}
+                    </span>
+                  )}
+                  {blog.tags?.slice(0, blog.category ? 1 : 2).map((tag: string) => (
                     <span key={tag} className="px-2.5 py-1 rounded-lg bg-black/40 backdrop-blur-md border border-white/10 text-[9px] font-black uppercase tracking-widest text-white/90">
                       {tag}
                     </span>

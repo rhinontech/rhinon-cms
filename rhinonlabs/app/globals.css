@@ -169,3 +169,92 @@ body {
 .animate-scroll-slow:hover {
   animation-play-state: paused;
 }
+/* ---------- Blog article body (TipTap-authored HTML blocks) ---------- */
+.article-html h2 {
+  font-size: 1.875rem;
+  line-height: 1.2;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+  border-bottom: 2px solid rgba(6, 182, 212, 0.2);
+  padding-bottom: 1rem;
+  margin: 4rem 0 2rem;
+  scroll-margin-top: 8rem;
+}
+.article-html h2:first-child {
+  margin-top: 0;
+}
+.article-html h3 {
+  font-size: 1.375rem;
+  line-height: 1.3;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--foreground);
+  margin: 2.5rem 0 1.25rem;
+  scroll-margin-top: 8rem;
+}
+.article-html p {
+  font-size: 1.125rem;
+  line-height: 1.85;
+  color: color-mix(in oklab, var(--foreground) 80%, transparent);
+  margin-bottom: 1.5rem;
+}
+.article-html a {
+  color: #22d3ee;
+  text-decoration: underline;
+  text-decoration-color: rgba(34, 211, 238, 0.4);
+  text-underline-offset: 4px;
+  transition: text-decoration-color 0.2s;
+}
+.article-html a:hover {
+  text-decoration-color: #22d3ee;
+}
+.article-html strong {
+  font-weight: 900;
+  color: #22d3ee;
+}
+.article-html ul,
+.article-html ol {
+  margin: 0 0 1.5rem;
+  padding-left: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.article-html ul {
+  list-style: disc;
+}
+.article-html ol {
+  list-style: decimal;
+}
+.article-html li {
+  font-size: 1.125rem;
+  line-height: 1.7;
+  color: color-mix(in oklab, var(--foreground) 80%, transparent);
+}
+.article-html li::marker {
+  color: #22d3ee;
+}
+.article-html blockquote {
+  border-left: 3px solid rgba(34, 211, 238, 0.5);
+  padding: 0.25rem 0 0.25rem 1.5rem;
+  margin: 2rem 0;
+  font-style: italic;
+  color: color-mix(in oklab, var(--foreground) 65%, transparent);
+}
+.article-html blockquote p {
+  margin-bottom: 0.5rem;
+}
+.article-html pre {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  overflow-x: auto;
+  margin: 0 0 1.5rem;
+}
+.article-html pre code {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: color-mix(in oklab, var(--foreground) 85%, transparent);
+}

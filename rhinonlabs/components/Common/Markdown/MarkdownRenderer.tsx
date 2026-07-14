@@ -1,4 +1,5 @@
 import React from "react";
+import { slugifyHeading } from "@/components/Common/Blog/blocks";
 
 // Lightweight markdown renderer shared by blogs and case studies.
 // Supports #/##/### headings, - / * / 1. lists, **bold**, > blockquotes,
@@ -114,7 +115,11 @@ export function MarkdownRenderer({ content }: { content: string }) {
       );
     } else if (trimmed.startsWith("## ")) {
       elements.push(
-        <h2 key={i} className="text-3xl font-black text-foreground mt-16 mb-8 border-b-2 border-cyan-500/20 pb-4 tracking-tighter">
+        <h2
+          key={i}
+          id={slugifyHeading(trimmed.slice(3))}
+          className="text-3xl font-black text-foreground mt-16 mb-8 border-b-2 border-cyan-500/20 pb-4 tracking-tighter scroll-mt-32"
+        >
           {renderInline(trimmed.slice(3), i)}
         </h2>
       );

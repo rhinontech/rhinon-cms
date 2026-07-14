@@ -7,10 +7,16 @@ import { classifyChannel, parseHost, isBotUserAgent } from "../services/analytic
 const router = Router();
 
 // Fields exposed to the public marketing site (never leak Draft content or internal columns).
-const PUBLIC_BLOG_FIELDS = [
-  "id", "title", "excerpt", "content", "slug",
+// The list stays light (no blocks/faqs); the detail adds the full body + SEO fields.
+const PUBLIC_BLOG_LIST_FIELDS = [
+  "id", "title", "excerpt", "slug",
   "authorName", "authorRole", "authorAvatar",
-  "coverImage", "tags", "readTime", "publishedAt",
+  "coverImage", "tags", "category", "readTime", "publishedAt",
+] as const;
+
+const PUBLIC_BLOG_DETAIL_FIELDS = [
+  ...PUBLIC_BLOG_LIST_FIELDS,
+  "content", "contentBlocks", "faqs", "metaTitle", "metaDescription",
 ] as const;
 
 // Fire-and-forget heads-up to the team when a new website lead lands. Never throws.
@@ -230,7 +236,7 @@ router.get("/blogs", async (_req: Request, res: Response) => {
   try {
     const blogs = await Blog.findAll({
       where: { status: "Published" },
-      attributes: PUBLIC_BLOG_FIELDS as unknown as string[],
+      attributes: PUBLIC_BLOG_LIST_FIELDS as unknown as string[],
       order: [["publishedAt", "DESC"]],
     });
     res.json(blogs);
@@ -245,7 +251,7 @@ router.get("/blogs/:slug", async (req: Request, res: Response) => {
   try {
     const blog = await Blog.findOne({
       where: { slug: req.params.slug, status: "Published" },
-      attributes: PUBLIC_BLOG_FIELDS as unknown as string[],
+      attributes: PUBLIC_BLOG_DETAIL_FIELDS as unknown as string[],
     });
     if (!blog) {
       res.status(404).json({ message: "Blog not found" });

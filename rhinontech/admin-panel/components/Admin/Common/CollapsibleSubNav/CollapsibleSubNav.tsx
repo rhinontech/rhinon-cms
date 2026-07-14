@@ -24,8 +24,12 @@ interface CollapsibleSubNavProps {
 export function CollapsibleSubNav({ title, items }: CollapsibleSubNavProps) {
   const { isExpanded, toggleSideNav } = useSideNav();
   const pathname = usePathname();
-  const isCampaignDetailPage = pathname.includes("/outreach/campaigns/") && pathname.split("/").pop() !== "campaigns";
-  const showNav = isExpanded && !isCampaignDetailPage;
+  // Full-screen detail pages take over the whole module area — the sub-nav hides itself there.
+  const lastSegment = pathname.split("/").pop();
+  const isFullScreenDetail =
+    (pathname.includes("/outreach/campaigns/") && lastSegment !== "campaigns") ||
+    (pathname.includes("/content/blogs/") && lastSegment !== "blogs");
+  const showNav = isExpanded && !isFullScreenDetail;
 
   // Phone: picking a sub-nav item closes the overlay (desktop keeps it pinned).
   const prevPath = useRef(pathname);

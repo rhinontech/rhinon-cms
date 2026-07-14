@@ -2,11 +2,27 @@
 // Content (blogs, case studies) and lead capture all flow through here.
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://api.rhinontech.in";
 
+export type BlogBlock =
+  | { id: string; type: "paragraph"; html: string }
+  | { id: string; type: "image"; url: string; alt?: string; credit?: string }
+  | { id: string; type: "video"; url: string; caption?: string }
+  | { id: string; type: "youtube"; url: string; caption?: string };
+
+export interface BlogFaq {
+  question: string;
+  answer: string;
+}
+
 export interface Blog {
   id: string;
   title: string;
   excerpt: string;
   content: string;
+  contentBlocks?: BlogBlock[];
+  faqs?: BlogFaq[];
+  category?: string | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
   slug: string;
   authorName: string;
   authorRole: string;

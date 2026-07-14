@@ -193,3 +193,97 @@
   border: 1px solid var(--glass-border);
   box-shadow: 0 24px 64px oklch(0.3 0.04 260 / 0.18), var(--glass-highlight);
 }
+
+/* ---------- Blog editor (TipTap paragraph blocks) ---------- */
+.blog-tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: oklch(0.75 0.01 250);
+}
+.blog-tiptap h2 {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 1.25rem 0 0.5rem;
+}
+.blog-tiptap h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 1rem 0 0.4rem;
+}
+.blog-tiptap p {
+  margin: 0.4rem 0;
+}
+.blog-tiptap a {
+  color: oklch(0.55 0.15 250);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.blog-tiptap ul,
+.blog-tiptap ol {
+  padding-left: 1.4rem;
+  margin: 0.5rem 0;
+}
+.blog-tiptap ul { list-style: disc; }
+.blog-tiptap ol { list-style: decimal; }
+.blog-tiptap li { margin: 0.2rem 0; }
+.blog-tiptap blockquote {
+  border-left: 3px solid oklch(0.85 0.02 250);
+  padding-left: 1rem;
+  font-style: italic;
+  color: oklch(0.45 0.01 250);
+  margin: 0.75rem 0;
+}
+.blog-tiptap strong { font-weight: 700; }
+
+/* ---------- Blog preview dialog (dark canvas) ---------- */
+.preview-html h2 {
+  font-size: 1.6rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  margin: 2rem 0 0.75rem;
+}
+.preview-html h3 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin: 1.5rem 0 0.5rem;
+}
+.preview-html p {
+  margin: 0.75rem 0;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.75;
+}
+.preview-html a {
+  color: #22d3ee;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.preview-html ul,
+.preview-html ol {
+  padding-left: 1.4rem;
+  margin: 0.75rem 0;
+  color: rgba(255, 255, 255, 0.75);
+}
+.preview-html ul { list-style: disc; }
+.preview-html ol { list-style: decimal; }
+.preview-html blockquote {
+  border-left: 3px solid rgba(34, 211, 238, 0.5);
+  padding-left: 1rem;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 1rem 0;
+}
+.preview-html strong { font-weight: 800; color: #22d3ee; }
+.preview-html pre {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  margin: 1rem 0;
+}
