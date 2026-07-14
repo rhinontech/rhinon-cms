@@ -19,30 +19,36 @@ const PUBLIC_BLOG_DETAIL_FIELDS = [
   "content", "contentBlocks", "faqs", "metaTitle", "metaDescription",
 ] as const;
 
-// Fire-and-forget heads-up to the team when a new website lead lands. Never throws.
-async function notifyNewLead(lead: {
-  name: string;
-  email: string;
-  whatsapp: string | null;
-  message: string | null;
-  company: string | null;
-}) {
+// Fire-and-forget heads-up to the team when a new lead lands. Never throws.
+async function notifyNewLead(
+  lead: {
+    name: string;
+    email: string;
+    whatsapp: string | null;
+    message: string | null;
+    company: string | null;
+  },
+  opts?: { originLabel?: string; extra?: Array<[string, string | null]> }
+) {
   if (!env.leadsNotifyEmail) return; // notifications disabled
+  const originLabel = opts?.originLabel || "website";
   try {
-    const rows = [
+    const allRows: Array<[string, string | null]> = [
       ["Name", lead.name],
       ["Email", lead.email],
-      ["WhatsApp", lead.whatsapp || "—"],
-      ["Company", lead.company || "—"],
-      ["Message", lead.message || "—"],
-    ]
-      .map(([k, v]) => `<tr><td style="padding:4px 12px 4px 0;font-weight:600">${k}</td><td>${v}</td></tr>`)
+      ["WhatsApp / Phone", lead.whatsapp],
+      ["Company", lead.company],
+      ["Message", lead.message],
+      ...(opts?.extra || []),
+    ];
+    const rows = allRows
+      .map(([k, v]) => `<tr><td style="padding:4px 12px 4px 0;font-weight:600">${k}</td><td>${v || "—"}</td></tr>`)
       .join("");
     await sendEmail({
       to: env.leadsNotifyEmail,
-      subject: `New website lead: ${lead.name}`,
-      html: `<p>A new lead came in from the Rhinon Labs website.</p><table>${rows}</table>`,
-      text: `New website lead\nName: ${lead.name}\nEmail: ${lead.email}\nWhatsApp: ${lead.whatsapp || "—"}\nCompany: ${lead.company || "—"}\nMessage: ${lead.message || "—"}`,
+      subject: `New ${originLabel} lead: ${lead.name}`,
+      html: `<p>A new lead came in from the Rhinon Labs ${originLabel}.</p><table>${rows}</table>`,
+      text: `New ${originLabel} lead\n${allRows.map(([k, v]) => `${k}: ${v || "—"}`).join("\n")}`,
     });
   } catch (err) {
     console.error("Failed to send new-lead notification:", err);
@@ -154,6 +160,108 @@ router.post("/web-leads", async (req: Request, res: Response) => {
     void notifyNewLead({ name, email, whatsapp, message, company });
   } catch (error: any) {
     console.error("Failed to save web lead:", error);
+    res.status(500).json({ message: "Failed to save lead" });
+  }
+});
+
+// POST /public/platform-leads — unauthenticated lead capture from external Rhinon platforms
+// (e.g. the scheduler product). Saves into the same Lead table the Outreach module reads;
+// platform-specific fields (institution type, team size, lead volume) land in `raw` and show
+// up in the admin lead detail's Raw Data section.
+router.post("/platform-leads", async (req: Request, res: Response) => {
+  try {
+    const b = req.body || {};
+    const str = (v: any, max = 500): string | null => {
+      const s = (v ?? "").toString().trim();
+      return s === "" ? null : s.slice(0, max);
+    };
+
+    const name = str(b.name, 200);
+    const emailRaw = str(b.email, 320);
+    const email = emailRaw ? emailRaw.toLowerCase() : null;
+    if (!name || !email) {
+      res.status(400).json({ message: "Name and email are required" });
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      res.status(400).json({ message: "Please provide a valid email address" });
+      return;
+    }
+
+    const phone = str(b.phone, 40);
+    const website = str(b.website, 300);
+    const institutionType = str(b.institutionType, 200);
+    const annualLeadVolume = str(b.annualLeadVolume, 100);
+    const teamSize = str(b.teamSize, 100);
+    const message = str(b.message, 5000);
+    const source = str(b.source, 100) || "Platform";
+
+    // Company fallback: explicit value → website domain → generic label.
+    let company = str(b.company, 200);
+    if (!company && website) {
+      try {
+        company = new URL(website.startsWith("http") ? website : `https://${website}`).hostname.replace(/^www\./, "");
+      } catch { /* unparseable website — keep fallback */ }
+    }
+    company = company || "Platform Lead";
+
+    const summary = [
+      institutionType && `Institution: ${institutionType}`,
+      teamSize && `Team size: ${teamSize}`,
+      annualLeadVolume && `Annual lead volume: ${annualLeadVolume}`,
+      message && `Message: ${message}`,
+    ].filter(Boolean).join(" · ");
+
+    const raw = { institutionType, annualLeadVolume, teamSize, message, submittedAt: new Date().toISOString() };
+
+    // Same dedupe behaviour as web-leads: repeat enquiries append to notes instead of failing
+    // on the unique email constraint.
+    const existing = await Lead.findOne({ where: { email } });
+    if (existing) {
+      const stamp = new Date().toISOString().slice(0, 16).replace("T", " ");
+      const appended = [existing.notes, `[${stamp}] ${source} enquiry: ${summary || "(no details)"}`]
+        .filter(Boolean)
+        .join("\n");
+      // Only merge fields the new submission actually provided — never null out earlier data.
+      const rawProvided = Object.fromEntries(Object.entries(raw).filter(([, v]) => v != null));
+      await existing.update({
+        notes: appended,
+        phone: existing.phone || phone || undefined,
+        website: existing.website || website || undefined,
+        raw: { ...(existing.raw || {}), ...rawProvided },
+      });
+      res.status(200).json({ ok: true, deduped: true });
+    } else {
+      await Lead.create({
+        name,
+        email,
+        company,
+        phone,
+        website,
+        industry: institutionType,
+        notes: summary || null,
+        source,
+        status: "New",
+        raw,
+      } as any);
+      res.status(201).json({ ok: true });
+    }
+
+    // Best-effort, after the response — never blocks or fails the request.
+    void notifyNewLead(
+      { name, email, whatsapp: phone, message, company },
+      {
+        originLabel: source.toLowerCase() === "platform" ? "platform" : `${source} platform`,
+        extra: [
+          ["Website", website],
+          ["Institution Type", institutionType],
+          ["Team Size", teamSize],
+          ["Annual Lead Volume", annualLeadVolume],
+        ],
+      }
+    );
+  } catch (error: any) {
+    console.error("Failed to save platform lead:", error);
     res.status(500).json({ message: "Failed to save lead" });
   }
 });
