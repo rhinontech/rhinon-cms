@@ -7,32 +7,31 @@ import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { ContentImageInput } from "../ContentImageInput";
-import { BlockEditor } from "./BlockEditor";
+import { ParagraphBlock } from "./ParagraphBlock";
 import { FaqEditor } from "./FaqEditor";
 import { BlogPreview } from "./BlogPreview";
 import { legacyMarkdownToHtml } from "./legacyMarkdown";
 import {
   type Blog,
-  type BlogBlock,
   type BlogFaq,
   type BlogStatus,
-  computeReadTime,
-  extractYouTubeId,
+  flattenBlocksToHtml,
   newBlockId,
   slugifyTitle,
 } from "./types";
 
 const META_TITLE_LIMIT = 60;
 const META_DESC_LIMIT = 160;
+const WORDS_PER_MINUTE = 200;
 
-function isEmptyParagraphHtml(html: string): boolean {
-  return !html || !html.replace(/<[^>]*>/g, "").trim();
+function isEmptyHtml(html: string): boolean {
+  return !html || !html.replace(/<[^>]*>/g, " ").trim();
 }
 
-function isEmptyBlock(block: BlogBlock): boolean {
-  if (block.type === "paragraph") return isEmptyParagraphHtml(block.html);
-  if (block.type === "youtube") return !extractYouTubeId(block.url);
-  return !block.url;
+/** "N min read" at ~200 wpm, counted across the whole doc (tags stripped). */
+function computeReadTimeFromHtml(html: string): string {
+  const words = html.replace(/<[^>]*>/g, " ").split(/\s+/).filter(Boolean).length;
+  return `${Math.max(1, Math.round(words / WORDS_PER_MINUTE))} min read`;
 }
 
 export function BlogEditorPage({ id }: { id?: string }) {
@@ -54,7 +53,9 @@ export function BlogEditorPage({ id }: { id?: string }) {
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
   const [excerpt, setExcerpt] = useState("");
-  const [blocks, setBlocks] = useState<BlogBlock[]>([]);
+  // One continuous document — images/video embed inline via the toolbar, so
+  // there's no block list to manage anymore.
+  const [content, setContent] = useState("");
   const [faqs, setFaqs] = useState<BlogFaq[]>([]);
   const [coverImage, setCoverImage] = useState("");
   const [category, setCategory] = useState("");
@@ -113,9 +114,14 @@ export function BlogEditorPage({ id }: { id?: string }) {
         setAuthorAvatar(blog.authorAvatar || "");
         setFaqs(blog.faqs || []);
         if (blog.contentBlocks?.length) {
-          setBlocks(blog.contentBlocks);
+          // A single paragraph block loads straight in; anything else (legacy
+          // multi-block posts with separate image/video/youtube blocks) gets
+          // flattened into one continuous document, inline images/video and all.
+          const isSingleParagraph = blog.contentBlocks.length === 1 && blog.contentBlocks[0].type === "paragraph";
+          setContent(isSingleParagraph ? (blog.contentBlocks[0] as any).html : flattenBlocksToHtml(blog.contentBlocks));
+          if (!isSingleParagraph) setLegacyConverted(true);
         } else if (blog.content) {
-          setBlocks([{ id: newBlockId(), type: "paragraph", html: legacyMarkdownToHtml(blog.content) }]);
+          setContent(legacyMarkdownToHtml(blog.content));
           setLegacyConverted(true);
         }
       } catch (err: any) {
@@ -134,8 +140,8 @@ export function BlogEditorPage({ id }: { id?: string }) {
   }, [title, id, slugTouched]);
 
   useEffect(() => {
-    if (!readTimeTouched) setReadTime(computeReadTime(blocks));
-  }, [blocks, readTimeTouched]);
+    if (!readTimeTouched) setReadTime(computeReadTimeFromHtml(content));
+  }, [content, readTimeTouched]);
 
   const cleanFaqs = useMemo(
     () => faqs.filter((f) => f.question.trim() && f.answer.trim()),
@@ -145,11 +151,13 @@ export function BlogEditorPage({ id }: { id?: string }) {
   const handleSave = useCallback(
     async (status: BlogStatus) => {
       setError("");
-      const cleanBlocks = blocks.filter((b) => !isEmptyBlock(b));
+      const cleanBlocks = isEmptyHtml(content)
+        ? []
+        : [{ id: newBlockId(), type: "paragraph" as const, html: content }];
       if (!title.trim()) { setError("Title is required."); return; }
       if (!excerpt.trim()) { setError("Excerpt is required."); return; }
       if (cleanBlocks.length === 0 && !original?.content) {
-        setError("Add at least one content block before saving.");
+        setError("Write something before saving.");
         return;
       }
 
@@ -181,7 +189,6 @@ export function BlogEditorPage({ id }: { id?: string }) {
           });
           setOriginal(updated);
           setSlug(updated.slug);
-          setBlocks(cleanBlocks);
           setLegacyConverted(false);
         } else {
           const created = await apiFetch<Blog>("/content/blogs", {
@@ -197,7 +204,7 @@ export function BlogEditorPage({ id }: { id?: string }) {
       }
     },
     [
-      id, title, slug, excerpt, blocks, cleanFaqs, coverImage, category, tags, readTime,
+      id, title, slug, excerpt, content, cleanFaqs, coverImage, category, tags, readTime,
       publishedAt, metaTitle, metaDescription, authorName, authorRole, authorAvatar,
       original, router, listPath,
     ]
@@ -280,7 +287,7 @@ export function BlogEditorPage({ id }: { id?: string }) {
 
       {/* Body */}
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 p-4 sm:p-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 p-4 sm:p-6 xl:grid-cols-[minmax(0,1fr)_340px]">
           {/* Left — content */}
           <div className="min-w-0 space-y-5">
             <div className="space-y-4 rounded-xl border border-stone-200 bg-white p-4 sm:p-5">
@@ -325,7 +332,7 @@ export function BlogEditorPage({ id }: { id?: string }) {
               </label>
             </div>
 
-            <BlockEditor blocks={blocks} onChange={setBlocks} />
+            <ParagraphBlock html={content} onChange={setContent} />
 
             <div className="rounded-xl border border-stone-200 bg-white p-4 sm:p-5">
               <FaqEditor faqs={faqs} onChange={setFaqs} />
@@ -350,7 +357,7 @@ export function BlogEditorPage({ id }: { id?: string }) {
                   {readTimeTouched && (
                     <button
                       type="button"
-                      onClick={() => { setReadTimeTouched(false); setReadTime(computeReadTime(blocks)); }}
+                      onClick={() => { setReadTimeTouched(false); setReadTime(computeReadTimeFromHtml(content)); }}
                       className="inline-flex items-center gap-1 rounded-full border border-stone-200 px-2 py-0.5 text-[10px] font-semibold text-stone-500 hover:bg-stone-100"
                       title="Recalculate from content"
                     >
@@ -466,7 +473,7 @@ export function BlogEditorPage({ id }: { id?: string }) {
         authorRole={authorRole}
         readTime={readTime}
         category={category}
-        blocks={blocks.filter((b) => !isEmptyBlock(b))}
+        blocks={isEmptyHtml(content) ? [] : [{ id: "preview", type: "paragraph", html: content }]}
         faqs={faqs}
         slug={original?.slug || ""}
         isPublished={status === "Published"}

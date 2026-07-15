@@ -58,6 +58,34 @@ export function computeReadTime(blocks: BlogBlock[]): string {
   return `${Math.max(1, Math.round(words / 200))} min read`;
 }
 
+/**
+ * Flattens a legacy multi-block post (separate paragraph/image/video/youtube
+ * blocks, from before images/video embedded inline) into one HTML string for
+ * the single continuous editor. Mirrors the same inline markup the editor's
+ * image/video toolbar buttons produce, so the flattened content is editable
+ * exactly like anything authored inline.
+ */
+export function flattenBlocksToHtml(blocks: BlogBlock[]): string {
+  return blocks
+    .map((b) => {
+      if (b.type === "paragraph") return b.html;
+      if (b.type === "image") {
+        const caption = b.credit ? `<p><em>${b.credit}</em></p>` : "";
+        return `<img src="${b.url}" alt="${b.alt || ""}" />${caption}`;
+      }
+      if (b.type === "video") {
+        const caption = b.caption ? `<p><em>${b.caption}</em></p>` : "";
+        return `<div data-video-embed data-src="${b.url}" data-kind="file" data-width="100%"></div>${caption}`;
+      }
+      // youtube
+      const videoId = extractYouTubeId(b.url);
+      if (!videoId) return "";
+      const caption = b.caption ? `<p><em>${b.caption}</em></p>` : "";
+      return `<div data-video-embed data-src="${b.url}" data-kind="youtube" data-video-id="${videoId}" data-width="100%"></div>${caption}`;
+    })
+    .join("");
+}
+
 export function slugifyTitle(input: string): string {
   return (input || "")
     .toLowerCase()

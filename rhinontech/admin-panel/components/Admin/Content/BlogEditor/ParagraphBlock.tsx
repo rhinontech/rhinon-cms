@@ -11,6 +11,8 @@ import Superscript from "@tiptap/extension-superscript";
 import TextAlign from "@tiptap/extension-text-align";
 import { TableKit } from "@tiptap/extension-table";
 import Image from "@tiptap/extension-image";
+import { VideoEmbed } from "./videoNode";
+import { extractYouTubeId } from "./types";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -56,6 +58,8 @@ import {
   TbUpload,
   TbLoader,
   TbX,
+  TbVideo,
+  TbBrandYoutube,
 } from "react-icons/tb";
 import { cn } from "@/lib/utils";
 import { apiUpload } from "@/lib/api";
@@ -240,6 +244,109 @@ function InsertImageButton({ editor }: { editor: Editor }) {
   );
 }
 
+const MAX_VIDEO_MB = 100;
+
+function InsertVideoButton({ editor }: { editor: Editor }) {
+  const [open, setOpen] = useState(false);
+  const [url, setUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > MAX_VIDEO_MB * 1024 * 1024) {
+      setError(`Video exceeds the ${MAX_VIDEO_MB} MB limit`);
+      if (fileRef.current) fileRef.current.value = "";
+      return;
+    }
+    setUploading(true);
+    setError("");
+    try {
+      const { url: uploadedUrl } = await apiUpload<{ url: string }>("/content/upload-video", file, "video");
+      editor.chain().focus().setVideoEmbed({ src: uploadedUrl, kind: "file" }).run();
+      setOpen(false);
+    } catch (err: any) {
+      setError(err.message || "Upload failed");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
+  const handleUrlSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = url.trim();
+    if (!trimmed) return;
+    const youtubeId = extractYouTubeId(trimmed);
+    editor.chain().focus().setVideoEmbed({ src: trimmed, kind: youtubeId ? "youtube" : "file" }).run();
+    setUrl("");
+    setOpen(false);
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          title="Insert Video"
+          onMouseDown={(e) => e.preventDefault()}
+          className={cn(
+            "p-1.5 rounded-md transition-colors text-stone-500 hover:bg-stone-100 hover:text-stone-900",
+            open && "bg-stone-100 text-stone-900"
+          )}
+        >
+          <TbVideo size={16} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-80 p-3 bg-white border border-stone-200 shadow-md rounded-lg z-[110]">
+        <div className="space-y-3">
+          <h4 className="text-xs font-semibold text-stone-700">Insert Video</h4>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+              className="inline-flex items-center justify-center gap-1.5 w-full rounded-lg border border-stone-300 bg-white py-2 text-sm font-medium hover:bg-stone-50 disabled:opacity-50 text-stone-700 cursor-pointer"
+            >
+              {uploading ? <TbLoader size={15} className="animate-spin text-stone-500" /> : <TbUpload size={15} />}
+              {uploading ? "Uploading..." : "Upload from Computer"}
+            </button>
+            <input ref={fileRef} type="file" accept="video/mp4,video/webm,video/quicktime" onChange={handleFile} className="hidden" />
+            <p className="text-[10px] text-stone-400">MP4, WebM or MOV — up to {MAX_VIDEO_MB} MB.</p>
+            {error && <p className="text-[10px] text-red-500">{error}</p>}
+
+            <div className="relative flex items-center py-1">
+              <span className="absolute inset-x-0 h-px bg-stone-200" />
+              <span className="relative mx-auto bg-white px-2 text-[10px] text-stone-400 font-medium">OR</span>
+            </div>
+
+            <form onSubmit={handleUrlSubmit} className="flex gap-1.5">
+              <input
+                type="text"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                placeholder="Paste a YouTube or video URL..."
+                className="flex-1 h-8 px-2.5 rounded-md border border-stone-200 text-xs outline-none focus:ring-1 focus:ring-stone-900 bg-white text-stone-900"
+              />
+              <button
+                type="submit"
+                disabled={!url.trim()}
+                className="h-8 px-3 rounded-md bg-stone-900 text-white text-xs font-medium hover:bg-stone-800 disabled:opacity-50 cursor-pointer"
+              >
+                Insert
+              </button>
+            </form>
+            <p className="flex items-center gap-1 text-[10px] text-stone-400">
+              <TbBrandYoutube size={13} /> YouTube links embed automatically.
+            </p>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export function ParagraphBlock({
   html,
   onChange,
@@ -264,12 +371,13 @@ export function ParagraphBlock({
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       TableKit.configure({ table: { resizable: false } }),
       CustomImage,
+      VideoEmbed,
     ],
     content: html || "",
     editorProps: {
       attributes: {
         class:
-          "blog-tiptap min-h-[120px] px-4 py-3 text-[15px] leading-relaxed text-stone-800 outline-none",
+          "blog-tiptap min-h-[65vh] px-4 py-3 text-[15px] leading-relaxed text-stone-800 outline-none",
       },
     },
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
@@ -492,6 +600,7 @@ export function ParagraphBlock({
         )}
 
         <InsertImageButton editor={editor} />
+        <InsertVideoButton editor={editor} />
 
         <ToolbarButton
           title="Insert table"
@@ -622,6 +731,45 @@ export function ParagraphBlock({
             onClick={() => editor.chain().focus().deleteSelection().run()}
             className="p-1 rounded text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors cursor-pointer"
             title="Delete Image"
+          >
+            <TbTrash size={15} />
+          </button>
+        </div>
+      )}
+
+      {/* Contextual video controls */}
+      {editor.isActive("videoEmbed") && (
+        <div className="flex flex-wrap items-center gap-1.5 border-b border-stone-100 bg-stone-50/60 px-3 py-1.5 text-xs text-stone-500">
+          <span className="mr-1 text-[10px] font-bold uppercase tracking-widest text-stone-400">
+            {editor.getAttributes("videoEmbed").kind === "youtube" ? "YouTube" : "Video"}
+          </span>
+
+          <Divider />
+
+          <span className="text-[11px] font-medium text-stone-400 font-sans">Width:</span>
+          {(["50%", "75%", "100%"] as const).map((size) => (
+            <button
+              key={size}
+              type="button"
+              onClick={() => editor.chain().focus().updateAttributes("videoEmbed", { width: size }).run()}
+              className={cn(
+                "px-2 py-0.5 rounded text-[11px] font-semibold border transition-all cursor-pointer",
+                editor.getAttributes("videoEmbed").width === size
+                  ? "bg-stone-900 border-stone-900 text-white"
+                  : "bg-white border-stone-200 hover:bg-stone-100 text-stone-600"
+              )}
+            >
+              {size}
+            </button>
+          ))}
+
+          <Divider />
+
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().deleteSelection().run()}
+            className="p-1 rounded text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors cursor-pointer"
+            title="Delete Video"
           >
             <TbTrash size={15} />
           </button>
