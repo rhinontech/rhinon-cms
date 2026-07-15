@@ -31,6 +31,8 @@ import { Blog } from "./Blog";
 import { CaseStudy } from "./CaseStudy";
 import { PageView } from "./PageView";
 import { DocsAccess } from "./DocsAccess";
+import { Page } from "./Page";
+import { PageShare } from "./PageShare";
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/database";
 
@@ -166,6 +168,16 @@ User.hasMany(Blog, { foreignKey: "createdById", as: "blogs" });
 CaseStudy.belongsTo(User, { foreignKey: "createdById", as: "author" });
 User.hasMany(CaseStudy, { foreignKey: "createdById", as: "caseStudies" });
 
+// Pages (Notion-like docs) Associations
+Page.belongsTo(User, { foreignKey: "ownerId", as: "owner" });
+User.hasMany(Page, { foreignKey: "ownerId", as: "ownedPages" });
+Page.belongsTo(Page, { foreignKey: "parentId", as: "parent" });
+Page.hasMany(Page, { foreignKey: "parentId", as: "children" });
+Page.hasMany(PageShare, { foreignKey: "pageId", as: "shares", onDelete: "CASCADE" });
+PageShare.belongsTo(Page, { foreignKey: "pageId", as: "page" });
+PageShare.belongsTo(User, { foreignKey: "userId", as: "user" });
+User.hasMany(PageShare, { foreignKey: "userId", as: "pageShares" });
+
 export {
   Role, Permission, RolePermission,
   User,
@@ -196,6 +208,8 @@ export {
   CaseStudy,
   PageView,
   DocsAccess,
+  Page,
+  PageShare,
 };
 
 export async function syncDatabase(force = false) {

@@ -33,6 +33,10 @@ export const PERMISSION_CATALOG = [
   { name: "attendance:write",   resource: "attendance",   action: "write" },
   { name: "work:read",          resource: "work",         action: "read"  },
   { name: "work:write",         resource: "work",         action: "write" },
+  { name: "crm:read",           resource: "crm",          action: "read"  },
+  { name: "crm:write",          resource: "crm",          action: "write" },
+  { name: "pages:read",         resource: "pages",        action: "read"  },
+  { name: "pages:write",        resource: "pages",        action: "write" },
 ];
 
 // Grants applied only when a permission is FIRST created, preserving today's

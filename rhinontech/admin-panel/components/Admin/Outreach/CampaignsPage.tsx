@@ -65,7 +65,11 @@ interface Lead {
   company: string;
   email: string;
   status: string;
+  source: string;
 }
+
+const LEAD_STATUSES = ["New", "Enriched", "Enrolled", "Emailed", "Interested", "Replied", "Bounced", "Unsubscribed"];
+const LEAD_PAGE_SIZE = 50;
 
 const STAGE_COLORS: Record<string, string> = {
   Draft: "bg-stone-100 text-stone-600 border-stone-200",
@@ -91,10 +95,64 @@ export function CampaignsPage() {
   const [enrolling, setEnrolling] = useState(false);
   const [createdCampaignId, setCreatedCampaignId] = useState<string | null>(null);
 
-  // Lead enrollment state
-  const [allLeads, setAllLeads] = useState<Lead[]>([]);
+  // Lead enrollment state — filtered/paginated picker sourced from the CRM lead pool.
+  const [pickerLeads, setPickerLeads] = useState<Lead[]>([]);
+  const [pickerCount, setPickerCount] = useState(0);
+  const [pickerLoading, setPickerLoading] = useState(false);
+  const [leadSearchInput, setLeadSearchInput] = useState("");
   const [leadSearch, setLeadSearch] = useState("");
+  const [leadStatusFilter, setLeadStatusFilter] = useState("New");
+  const [leadSourceFilter, setLeadSourceFilter] = useState("All");
+  const [leadSources, setLeadSources] = useState<string[]>([]);
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
+  const [selectingAll, setSelectingAll] = useState(false);
+
+  // Debounce the search box before it hits the API.
+  useEffect(() => {
+    const t = setTimeout(() => setLeadSearch(leadSearchInput), 300);
+    return () => clearTimeout(t);
+  }, [leadSearchInput]);
+
+  const fetchPickerLeads = useCallback(async (offset = 0) => {
+    setPickerLoading(true);
+    try {
+      const query = new URLSearchParams({ limit: String(LEAD_PAGE_SIZE), offset: String(offset) });
+      if (leadStatusFilter !== "All") query.set("status", leadStatusFilter);
+      if (leadSourceFilter !== "All") query.set("source", leadSourceFilter);
+      if (leadSearch) query.set("search", leadSearch);
+      const data = await apiFetch<{ rows: Lead[]; count: number }>(`/leads?${query.toString()}`);
+      setPickerLeads((prev) => (offset === 0 ? data.rows : [...prev, ...data.rows]));
+      setPickerCount(data.count);
+    } catch {
+      /* picker only */
+    } finally {
+      setPickerLoading(false);
+    }
+  }, [leadStatusFilter, leadSourceFilter, leadSearch]);
+
+  useEffect(() => {
+    if (createStep === "leads") fetchPickerLeads(0);
+  }, [createStep, leadStatusFilter, leadSourceFilter, leadSearch, fetchPickerLeads]);
+
+  useEffect(() => {
+    apiFetch<string[]>("/leads/sources").then(setLeadSources).catch(() => {});
+  }, []);
+
+  const selectAllFiltered = async () => {
+    setSelectingAll(true);
+    try {
+      const query = new URLSearchParams({ idsOnly: "1" });
+      if (leadStatusFilter !== "All") query.set("status", leadStatusFilter);
+      if (leadSourceFilter !== "All") query.set("source", leadSourceFilter);
+      if (leadSearch) query.set("search", leadSearch);
+      const data = await apiFetch<{ ids: string[] }>(`/leads?${query.toString()}`);
+      setSelectedLeadIds(new Set(data.ids));
+    } catch {
+      alert("Failed to select all filtered leads");
+    } finally {
+      setSelectingAll(false);
+    }
+  };
 
   const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -143,7 +201,12 @@ export function CampaignsPage() {
     setSelectedCampaign(null);
     setIsPreviewExpanded(true);
     setSelectedLeadIds(new Set());
+    setLeadSearchInput("");
     setLeadSearch("");
+    setLeadStatusFilter("New");
+    setLeadSourceFilter("All");
+    setPickerLeads([]);
+    setPickerCount(0);
     setCreatedCampaignId(null);
     setForm({
       name: "",
@@ -173,9 +236,6 @@ export function CampaignsPage() {
         setCreatedCampaignId(null);
         fetchCampaigns();
       } else {
-        // Load leads for enrollment step
-        const leads = await apiFetch<Lead[]>("/leads");
-        setAllLeads(leads);
         setCreateStep("leads");
       }
     } catch (err: any) {
@@ -261,12 +321,6 @@ export function CampaignsPage() {
       alert("Failed to disconnect: " + err.message);
     }
   };
-
-  const filteredLeads = allLeads.filter(
-    (l) =>
-      l.name.toLowerCase().includes(leadSearch.toLowerCase()) ||
-      l.company.toLowerCase().includes(leadSearch.toLowerCase())
-  );
 
   return (
     <div className="flex h-full min-h-0 overflow-hidden">
@@ -613,9 +667,9 @@ export function CampaignsPage() {
                     </div>
                   </form>
                 ) : (
-                  <div className="flex flex-col h-full p-5 gap-4">
+                  <div className="flex flex-col h-full p-5 gap-3">
                     <p className="text-xs text-stone-500">
-                      Select leads to enroll in this campaign. You can also enroll leads later from the campaign detail page.
+                      Select leads from the CRM to enroll in this campaign. You can also enroll leads later from the campaign detail page.
                     </p>
 
                     <div className="relative">
@@ -623,38 +677,81 @@ export function CampaignsPage() {
                       <input
                         type="text"
                         placeholder="Search leads..."
-                        value={leadSearch}
-                        onChange={(e) => setLeadSearch(e.target.value)}
+                        value={leadSearchInput}
+                        onChange={(e) => setLeadSearchInput(e.target.value)}
                         className="w-full pl-9 pr-4 py-2 text-sm rounded-lg border border-stone-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                       />
                     </div>
 
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={leadStatusFilter}
+                        onChange={(e) => setLeadStatusFilter(e.target.value)}
+                        className="flex-1 rounded-lg border border-stone-200 bg-white px-2.5 py-2 text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="All">All Statuses</option>
+                        {LEAD_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                      <select
+                        value={leadSourceFilter}
+                        onChange={(e) => setLeadSourceFilter(e.target.value)}
+                        className="flex-1 rounded-lg border border-stone-200 bg-white px-2.5 py-2 text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="All">All Sources</option>
+                        {leadSources.map((s) => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs text-stone-500">
+                      <span>{pickerCount} matching · {selectedLeadIds.size} selected</span>
+                      <button
+                        type="button"
+                        onClick={selectAllFiltered}
+                        disabled={selectingAll || pickerCount === 0}
+                        className="font-semibold text-blue-600 hover:underline disabled:opacity-50"
+                      >
+                        {selectingAll ? "Selecting…" : `Select all ${pickerCount} filtered`}
+                      </button>
+                    </div>
+
                     <div className="flex-1 overflow-auto rounded-lg border border-stone-100 divide-y divide-stone-50">
-                      {filteredLeads.length === 0 ? (
+                      {pickerLeads.length === 0 && !pickerLoading ? (
                         <div className="py-8 text-center text-sm text-stone-400">No leads found</div>
                       ) : (
-                        filteredLeads.map((lead) => (
-                          <label
-                            key={lead.id}
-                            className="flex items-center gap-3 px-4 py-3 hover:bg-stone-50 cursor-pointer"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={selectedLeadIds.has(lead.id)}
-                              onChange={() => toggleLead(lead.id)}
-                              className="rounded border-stone-300 text-blue-600 focus:ring-blue-500"
-                            />
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium text-stone-900 truncate">{lead.name}</p>
-                              <p className="text-xs text-stone-400 truncate">
-                                {lead.company} · {lead.email}
-                              </p>
-                            </div>
-                            <span className="ml-auto shrink-0 text-[10px] font-bold text-stone-400 uppercase">
-                              {lead.status}
-                            </span>
-                          </label>
-                        ))
+                        <>
+                          {pickerLeads.map((lead) => (
+                            <label
+                              key={lead.id}
+                              className="flex items-center gap-3 px-4 py-3 hover:bg-stone-50 cursor-pointer"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedLeadIds.has(lead.id)}
+                                onChange={() => toggleLead(lead.id)}
+                                className="rounded border-stone-300 text-blue-600 focus:ring-blue-500"
+                              />
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium text-stone-900 truncate">{lead.name}</p>
+                                <p className="text-xs text-stone-400 truncate">
+                                  {lead.company} · {lead.email} · {lead.source}
+                                </p>
+                              </div>
+                              <span className="ml-auto shrink-0 text-[10px] font-bold text-stone-400 uppercase">
+                                {lead.status}
+                              </span>
+                            </label>
+                          ))}
+                          {pickerLeads.length < pickerCount && (
+                            <button
+                              type="button"
+                              onClick={() => fetchPickerLeads(pickerLeads.length)}
+                              disabled={pickerLoading}
+                              className="w-full py-3 text-xs font-semibold text-blue-600 hover:bg-stone-50 disabled:opacity-50"
+                            >
+                              {pickerLoading ? "Loading…" : `Load more (${pickerCount - pickerLeads.length} remaining)`}
+                            </button>
+                          )}
+                        </>
                       )}
                     </div>
 

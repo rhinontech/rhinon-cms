@@ -4,7 +4,7 @@ import { AdminDashboardShell } from "@/components/Admin/Common/AdminDashboardShe
 import { TeamSubNav } from "@/components/Admin/Common/TeamSubNav/TeamSubNav";
 import { SideNavProvider } from "@/context/SideNavContext";
 
-export default function LeaveLayout({ children }: { children: React.ReactNode }) {
+export default function EmployeesLayout({ children }: { children: React.ReactNode }) {
   return (
     <AdminDashboardShell>
       <SideNavProvider>

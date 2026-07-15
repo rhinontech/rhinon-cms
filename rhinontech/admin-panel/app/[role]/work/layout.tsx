@@ -13,7 +13,7 @@ function WorkLayoutContent({ children }: { children: React.ReactNode }) {
 
   const items = [
     { label: "Overview", href: base, icon: <TbLayoutDashboard size={18} />, exact: true },
-    { label: "Clients / Projects", href: `${base}/clients`, icon: <TbFolders size={18} /> },
+    { label: "Projects", href: `${base}/clients`, icon: <TbFolders size={18} /> },
     { label: "My tasks", href: `${base}/my`, icon: <TbCheckbox size={18} /> },
     { label: "Team tasks", href: `${base}/team`, icon: <TbUsers size={18} /> },
     { label: "All tasks", href: `${base}/all`, icon: <TbWorld size={18} /> },

@@ -88,3 +88,25 @@ export function authorize(...requiredPermissions: string[]) {
     next();
   };
 }
+
+// Like authorize(), but grants access if the user has ANY of the listed permissions
+// instead of all of them — for routes shared by two modules (e.g. leads, readable
+// from both CRM and Outreach) during a transition period.
+export function authorizeAny(...anyOfPermissions: string[]) {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (req.user?.roleSlug === "superadmin") {
+      next();
+      return;
+    }
+
+    const userPermissions = req.user?.permissions || [];
+    const hasAny = anyOfPermissions.some((p) => userPermissions.includes(p));
+
+    if (!hasAny) {
+      res.status(403).json({ message: "Insufficient permissions" });
+      return;
+    }
+
+    next();
+  };
+}

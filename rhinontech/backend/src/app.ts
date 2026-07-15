@@ -28,6 +28,7 @@ import analyticsRoutes from "./routes/analytics";
 import docsAccessRoutes from "./routes/docs-access";
 import brandingRoutes from "./routes/branding";
 import documentSigningRoutes from "./routes/documentSigning";
+import pagesRoutes from "./routes/pages";
 
 const app = express();
 
@@ -75,6 +76,7 @@ app.use("/ai", aiRoutes);
 app.use("/content", contentRoutes);
 app.use("/analytics", analyticsRoutes);
 app.use("/docs-access", docsAccessRoutes);
+app.use("/pages", pagesRoutes);
 app.use("/branding", brandingRoutes);
 app.use("/document-signing", documentSigningRoutes);
 

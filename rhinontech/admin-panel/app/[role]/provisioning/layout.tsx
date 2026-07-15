@@ -1,15 +1,15 @@
 "use client";
 
 import { AdminDashboardShell } from "@/components/Admin/Common/AdminDashboardShell/AdminDashboardShell";
-import { TeamSubNav } from "@/components/Admin/Common/TeamSubNav/TeamSubNav";
+import { SettingsSubNav } from "@/components/Admin/Common/SettingsSubNav/SettingsSubNav";
 import { SideNavProvider } from "@/context/SideNavContext";
 
-export default function LeaveLayout({ children }: { children: React.ReactNode }) {
+export default function ProvisioningLayout({ children }: { children: React.ReactNode }) {
   return (
     <AdminDashboardShell>
       <SideNavProvider>
         <div className="flex w-full h-full">
-          <TeamSubNav />
+          <SettingsSubNav />
           <main className="w-full h-full overflow-hidden">{children}</main>
         </div>
       </SideNavProvider>
