@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Placeholder } from "@tiptap/extensions";
@@ -10,12 +10,18 @@ import Subscript from "@tiptap/extension-subscript";
 import Superscript from "@tiptap/extension-superscript";
 import TextAlign from "@tiptap/extension-text-align";
 import { TableKit } from "@tiptap/extension-table";
+import Image from "@tiptap/extension-image";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   TbBold,
   TbItalic,
@@ -45,8 +51,50 @@ import {
   TbRowRemove,
   TbColumnRemove,
   TbTableOff,
+  TbPhoto,
+  TbTrash,
+  TbUpload,
+  TbLoader,
+  TbX,
 } from "react-icons/tb";
 import { cn } from "@/lib/utils";
+import { apiUpload } from "@/lib/api";
+
+const CustomImage = Image.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      width: {
+        default: "100%",
+        parseHTML: (element: HTMLElement) => element.style.width || element.getAttribute("width") || "100%",
+        renderHTML: (attributes: Record<string, any>) => {
+          return {
+            style: `width: ${attributes.width}; max-width: 100%; height: auto;`,
+            width: attributes.width,
+          };
+        },
+      },
+      align: {
+        default: "center",
+        parseHTML: (element: HTMLElement) => element.getAttribute("data-align") || "center",
+        renderHTML: (attributes: Record<string, any>) => {
+          let style = "display: block; ";
+          if (attributes.align === "left") {
+            style += "margin-right: auto; margin-left: 0;";
+          } else if (attributes.align === "right") {
+            style += "margin-left: auto; margin-right: 0;";
+          } else {
+            style += "margin-left: auto; margin-right: auto;";
+          }
+          return {
+            "data-align": attributes.align,
+            style,
+          };
+        },
+      },
+    };
+  },
+});
 
 const TEXT_COLORS = [
   { label: "Default", value: "" },
@@ -104,6 +152,94 @@ function Divider() {
   return <span className="mx-1 h-4 w-px shrink-0 bg-stone-200" />;
 }
 
+function InsertImageButton({ editor }: { editor: Editor }) {
+  const [open, setOpen] = useState(false);
+  const [url, setUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { url: uploadedUrl } = await apiUpload<{ url: string }>("/content/upload-image", file);
+      editor.chain().focus().setImage({ src: uploadedUrl }).run();
+      setOpen(false);
+    } catch (err: any) {
+      alert(err.message || "Upload failed");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
+  const handleUrlSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (url.trim()) {
+      editor.chain().focus().setImage({ src: url.trim() }).run();
+      setUrl("");
+      setOpen(false);
+    }
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          title="Insert Image"
+          onMouseDown={(e) => e.preventDefault()}
+          className={cn(
+            "p-1.5 rounded-md transition-colors text-stone-500 hover:bg-stone-100 hover:text-stone-900",
+            open && "bg-stone-100 text-stone-900"
+          )}
+        >
+          <TbPhoto size={16} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-80 p-3 bg-white border border-stone-200 shadow-md rounded-lg z-[110]">
+        <div className="space-y-3">
+          <h4 className="text-xs font-semibold text-stone-700">Insert Image</h4>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+              className="inline-flex items-center justify-center gap-1.5 w-full rounded-lg border border-stone-300 bg-white py-2 text-sm font-medium hover:bg-stone-50 disabled:opacity-50 text-stone-700 cursor-pointer"
+            >
+              {uploading ? <TbLoader size={15} className="animate-spin text-stone-500" /> : <TbUpload size={15} />}
+              {uploading ? "Uploading..." : "Upload from Computer"}
+            </button>
+            <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
+
+            <div className="relative flex items-center py-1">
+              <span className="absolute inset-x-0 h-px bg-stone-200" />
+              <span className="relative mx-auto bg-white px-2 text-[10px] text-stone-400 font-medium">OR</span>
+            </div>
+
+            <form onSubmit={handleUrlSubmit} className="flex gap-1.5">
+              <input
+                type="text"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                placeholder="Paste image URL..."
+                className="flex-1 h-8 px-2.5 rounded-md border border-stone-200 text-xs outline-none focus:ring-1 focus:ring-stone-900 bg-white text-stone-900"
+              />
+              <button
+                type="submit"
+                disabled={!url.trim()}
+                className="h-8 px-3 rounded-md bg-stone-900 text-white text-xs font-medium hover:bg-stone-800 disabled:opacity-50 cursor-pointer"
+              >
+                Insert
+              </button>
+            </form>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export function ParagraphBlock({
   html,
   onChange,
@@ -127,6 +263,7 @@ export function ParagraphBlock({
       Superscript,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       TableKit.configure({ table: { resizable: false } }),
+      CustomImage,
     ],
     content: html || "",
     editorProps: {
@@ -354,6 +491,8 @@ export function ParagraphBlock({
           </ToolbarButton>
         )}
 
+        <InsertImageButton editor={editor} />
+
         <ToolbarButton
           title="Insert table"
           active={inTable}
@@ -391,6 +530,101 @@ export function ParagraphBlock({
           <ToolbarButton title="Delete table" onClick={() => editor.chain().focus().deleteTable().run()}>
             <TbTableOff size={15} />
           </ToolbarButton>
+        </div>
+      )}
+
+      {/* Contextual image controls */}
+      {editor.isActive("image") && (
+        <div className="flex flex-wrap items-center gap-1.5 border-b border-stone-100 bg-stone-50/60 px-3 py-1.5 text-xs text-stone-500">
+          <span className="mr-1 text-[10px] font-bold uppercase tracking-widest text-stone-400">Image</span>
+          
+          <Divider />
+          
+          {/* Alignment */}
+          <ToolbarButton
+            title="Align Left"
+            active={editor.getAttributes("image").align === "left"}
+            onClick={() => editor.chain().focus().updateAttributes("image", { align: "left" }).run()}
+          >
+            <TbAlignLeft size={15} />
+          </ToolbarButton>
+          <ToolbarButton
+            title="Align Center"
+            active={editor.getAttributes("image").align === "center" || !editor.getAttributes("image").align}
+            onClick={() => editor.chain().focus().updateAttributes("image", { align: "center" }).run()}
+          >
+            <TbAlignCenter size={15} />
+          </ToolbarButton>
+          <ToolbarButton
+            title="Align Right"
+            active={editor.getAttributes("image").align === "right"}
+            onClick={() => editor.chain().focus().updateAttributes("image", { align: "right" }).run()}
+          >
+            <TbAlignRight size={15} />
+          </ToolbarButton>
+          
+          <Divider />
+          
+          {/* Preset Sizes */}
+          <span className="text-[11px] font-medium text-stone-400 font-sans">Size:</span>
+          {(["25%", "50%", "75%", "100%"] as const).map((size) => (
+            <button
+              key={size}
+              type="button"
+              onClick={() => editor.chain().focus().updateAttributes("image", { width: size }).run()}
+              className={cn(
+                "px-2 py-0.5 rounded text-[11px] font-semibold border transition-all cursor-pointer",
+                editor.getAttributes("image").width === size
+                  ? "bg-stone-900 border-stone-900 text-white"
+                  : "bg-white border-stone-200 hover:bg-stone-100 text-stone-600"
+              )}
+            >
+              {size}
+            </button>
+          ))}
+
+          {/* Slider for custom size */}
+          <div className="flex items-center gap-2 ml-2">
+            <span className="text-[11px] font-medium text-stone-400 font-sans">Custom:</span>
+            <input
+              type="range"
+              min="10"
+              max="100"
+              step="5"
+              value={parseInt(editor.getAttributes("image").width || "100")}
+              onChange={(e) => editor.chain().focus().updateAttributes("image", { width: `${e.target.value}%` }).run()}
+              className="w-20 accent-stone-900 cursor-pointer h-1.5 rounded-lg appearance-none bg-stone-200"
+            />
+            <span className="text-[11px] font-medium w-8 text-stone-600 font-sans text-right">
+              {parseInt(editor.getAttributes("image").width || "100")}%
+            </span>
+          </div>
+
+          <Divider />
+
+          {/* Alt text */}
+          <div className="flex items-center gap-1.5 flex-1 min-w-[200px]">
+            <span className="text-[11px] font-medium text-stone-400 shrink-0 font-sans">Alt Text:</span>
+            <input
+              type="text"
+              placeholder="Describe image..."
+              value={editor.getAttributes("image").alt || ""}
+              onChange={(e) => editor.chain().focus().updateAttributes("image", { alt: e.target.value }).run()}
+              className="flex-1 max-w-[300px] h-6 px-2 rounded border border-stone-200 text-[11px] outline-none focus:ring-1 focus:ring-stone-900 bg-white text-stone-900"
+            />
+          </div>
+
+          <Divider />
+
+          {/* Delete Image */}
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().deleteSelection().run()}
+            className="p-1 rounded text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors cursor-pointer"
+            title="Delete Image"
+          >
+            <TbTrash size={15} />
+          </button>
         </div>
       )}
 

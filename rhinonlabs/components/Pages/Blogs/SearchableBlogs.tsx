@@ -5,13 +5,36 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { ArrowRight, Search, Sparkles } from "lucide-react";
 import { type Blog } from "@/lib/api";
+import { motion, Variants } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import SchedulerModal from "@/components/Common/CTA/SchedulerModal";
 
 interface SearchableBlogsProps {
   initialBlogs: Blog[];
 }
 
+const fadeUpVariant: Variants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
+  }
+};
+
+const staggerContainer: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15
+    }
+  }
+};
+
 export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSchedulerOpen, setIsSchedulerOpen] = useState(false);
 
   // Filter all blogs based on search query
   const filteredAll = initialBlogs.filter((blog) => {
@@ -45,20 +68,43 @@ export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) 
 
       <div className="grow flex flex-col items-center">
         {/* Header Section */}
-        <div className="flex flex-col items-center text-center mb-16 px-6 max-w-3xl">
-          <div className="mb-6 inline-flex items-center px-4 py-1.5 rounded-full border border-white/10 bg-[#0F131C] backdrop-blur-md">
-            <Sparkles size={14} className="text-white/70 mr-2" />
-            <span className="text-[11px] font-semibold tracking-wider text-white/80 uppercase font-sans">
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={staggerContainer}
+          className="flex flex-col items-center text-center mb-16 px-6 max-w-3xl"
+        >
+          <motion.div
+            variants={fadeUpVariant}
+            className="mb-8 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-md"
+          >
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            <span className="text-xs font-medium tracking-widest text-[#A3B8CC] uppercase font-sans">
               Rhinon Labs Insights
             </span>
-          </div>
-          <h1 className="text-4xl md:text-6xl font-medium tracking-tight text-transparent bg-clip-text bg-linear-to-b from-white/90 to-white/50 mb-6 leading-tight">
-            The <span className="font-serif italic text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600">Founder's</span> Journal
-          </h1>
-          <p className="opacity-60 max-w-xl mx-auto text-sm md:text-base">
+          </motion.div>
+          <motion.h1
+            variants={fadeUpVariant}
+            className="text-[42px] sm:text-5xl md:text-7xl font-sans font-normal leading-[1.1] tracking-[-0.02em] text-transparent bg-clip-text bg-linear-to-b from-white/90 to-white/50 mb-6 py-2"
+          >
+            The <span className="font-serif italic text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">Founder's</span> Journal
+          </motion.h1>
+          <motion.p
+            variants={fadeUpVariant}
+            className="text-white/70 sm:text-lg max-w-2xl mx-auto mb-8 px-4"
+          >
             Deep dives into MVP development, AI engineering, and growth strategies for modern founders.
-          </p>
-        </div>
+          </motion.p>
+          <motion.div variants={fadeUpVariant}>
+            <Button
+              onClick={() => setIsSchedulerOpen(true)}
+              size="lg"
+              className="rounded-2xl max-sm:py-5 px-8 bg-primary hover:bg-primary/90 text-white max-sm:text-sm font-medium"
+            >
+              Book a Free Discovery Call
+            </Button>
+          </motion.div>
+        </motion.div>
 
         {/* Recent Articles Section (Only visible when no search query is active) */}
         {!searchQuery && recentBlogs.length > 0 && (
@@ -73,7 +119,7 @@ export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) 
                   href={`/blogs/${blog.slug}`}
                   className="group flex flex-col rounded-[20px] border border-border/7 bg-background/50 backdrop-blur-md overflow-hidden shadow-[inset_0_2px_1px_rgba(207,231,255,0.15)] hover:border-white/20 transition-all duration-300"
                 >
-                  <div className="aspect-[16/10] overflow-hidden relative bg-white/5">
+                  <div className="aspect-[21/9] overflow-hidden relative bg-white/5">
                     <img
                       src={blog.coverImage || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000&auto=format&fit=crop"}
                       alt={blog.title}
@@ -89,18 +135,18 @@ export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) 
                       </div>
                     )}
                   </div>
-                  <div className="p-8 flex flex-col flex-grow">
-                    <div className="flex items-center gap-4 text-white/40 text-[10px] font-bold uppercase tracking-widest mb-4">
+                  <div className="p-6 flex flex-col flex-grow">
+                    <div className="flex items-center gap-4 text-white/40 text-[10px] font-bold uppercase tracking-widest mb-3">
                       <span>
                         {format(new Date(blog.publishedAt), "MMM d, yyyy")}
                       </span>
                       <div className="h-1 w-1 rounded-full bg-white/20" />
                       <span>{blog.readTime}</span>
                     </div>
-                    <h3 className="text-xl md:text-2xl font-semibold text-white mb-3 group-hover:text-white/80 transition-colors leading-tight">
+                    <h3 className="text-xl md:text-2xl font-semibold text-white mb-2 group-hover:text-white/80 transition-colors leading-tight">
                       {blog.title}
                     </h3>
-                    <p className="text-white/60 text-sm line-clamp-3 mb-6 leading-relaxed">
+                    <p className="text-white/60 text-sm line-clamp-2 mb-4 leading-relaxed">
                       {blog.excerpt}
                     </p>
 
@@ -212,6 +258,7 @@ export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) 
           zIndex: 1,
         }}
       />
+      <SchedulerModal isOpen={isSchedulerOpen} onClose={() => setIsSchedulerOpen(false)} />
     </main>
   );
 }

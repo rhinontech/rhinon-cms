@@ -6,6 +6,8 @@ import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
 import { motion, Variants } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useState } from "react";
+import SchedulerModal from "@/components/Common/CTA/SchedulerModal";
 
 
 const fadeUpVariant: Variants = {
@@ -19,6 +21,7 @@ const fadeUpVariant: Variants = {
 
 const Hero1 = () => {
   const router = useRouter();
+  const [isSchedulerOpen, setIsSchedulerOpen] = useState(false);
   return (
     <div id="hero" className="overflow-hidden relative min-h-screen flex flex-col justify-center">
       <motion.div
@@ -81,7 +84,7 @@ const Hero1 = () => {
           <div className="z-20">
             <Button
               className="bg-white text-black hover:bg-gray-200 px-8 py-6 text-lg font-semibold rounded-none border-3 border-black/30 transition-all"
-              onClick={() => window.open('https://calendly.com/rhinonlabs', '_blank')}
+              onClick={() => setIsSchedulerOpen(true)}
             >
               Book a Free Discovery Call
             </Button>
@@ -164,6 +167,7 @@ const Hero1 = () => {
           <Photos />
         </motion.div>
       </div>
+      <SchedulerModal isOpen={isSchedulerOpen} onClose={() => setIsSchedulerOpen(false)} />
     </div>
   );
 };

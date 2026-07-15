@@ -239,6 +239,15 @@
   margin: 0.75rem 0;
 }
 .blog-tiptap strong { font-weight: 700; }
+.blog-tiptap img {
+  border-radius: 0.75rem;
+  margin: 0.75rem 0;
+  cursor: pointer;
+  transition: outline 0.15s ease-in-out;
+}
+.blog-tiptap img.ProseMirror-selectednode {
+  outline: 3px solid var(--primary);
+}
 
 /* ---------- Blog preview dialog (dark canvas) ---------- */
 .preview-html h2 {
@@ -278,6 +287,11 @@
   margin: 1rem 0;
 }
 .preview-html strong { font-weight: 800; color: #ffffff; }
+.preview-html img {
+  border-radius: 0.75rem;
+  margin: 1rem 0;
+  height: auto;
+}
 .preview-html pre {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);

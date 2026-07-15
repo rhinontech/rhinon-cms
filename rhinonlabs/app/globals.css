@@ -312,3 +312,8 @@ body {
   font-weight: 800;
   color: var(--foreground);
 }
+.article-html img {
+  border-radius: 0.75rem;
+  margin: 1.5rem 0;
+  height: auto;
+}
