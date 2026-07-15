@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import SchedulerModal from '@/components/Common/CTA/SchedulerModal';
 
 const steps = [
     {
@@ -32,6 +33,7 @@ const steps = [
 
 export function Process() {
     const [active, setActive] = useState(0);
+    const [isSchedulerOpen, setIsSchedulerOpen] = useState(false);
 
     // Auto-advance every 12 seconds
     useEffect(() => {
@@ -199,9 +201,12 @@ export function Process() {
                                         {steps[active].description}
                                     </p>
                                     <div className="flex justify-center lg:justify-start">
-                                        <a href="https://calendly.com/rhinonlabs" className="px-8 py-3 rounded-full bg-primary text-white font-semibold hover:bg-primary/90 transition-all shadow-[0_0_20px_rgba(28,43,255,0.3)]">
+                                        <button
+                                            onClick={() => setIsSchedulerOpen(true)}
+                                            className="px-8 py-3 rounded-full bg-primary text-white font-semibold hover:bg-primary/90 transition-all shadow-[0_0_20px_rgba(28,43,255,0.3)]"
+                                        >
                                             Book a free discovery call
-                                        </a>
+                                        </button>
                                     </div>
                                 </div>
                             </motion.div>
@@ -229,6 +234,7 @@ export function Process() {
                     zIndex: 1
                 }}
             />
+            <SchedulerModal isOpen={isSchedulerOpen} onClose={() => setIsSchedulerOpen(false)} />
         </section>
     );
 }

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import SchedulerModal from "@/components/Common/CTA/SchedulerModal";
 
 const menuItems = [
   { name: "Home", href: "#hero" },
@@ -18,6 +19,7 @@ const menuItems = [
 export const HeroHeader = () => {
   const [menuState, setMenuState] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
+  const [isSchedulerOpen, setIsSchedulerOpen] = React.useState(false);
 
   const router = useRouter()
 
@@ -109,7 +111,7 @@ export const HeroHeader = () => {
               </button>
 
               <div className="hidden lg:block">
-                <Button className="hover:bg-white bg-transparent rounded-none text-white hover:text-black p-5 backdrop-blur-xl bg-white/4 border-[1px] border-white/30" onClick={() => window.open('https://calendly.com/rhinonlabs', '_blank')}>
+                <Button className="hover:bg-white bg-transparent rounded-none text-white hover:text-black p-5 backdrop-blur-xl bg-white/4 border-[1px] border-white/30" onClick={() => setIsSchedulerOpen(true)}>
                   Book a Free Discovery Call
                 </Button>
               </div>
@@ -136,7 +138,7 @@ export const HeroHeader = () => {
                 ))}
               </ul>
               <div className="flex flex-col gap-3 mt-4">
-                <Button onClick={() => window.open('https://calendly.com/rhinonlabs', '_blank')} className="hover:bg-white bg-transparent rounded-none text-white hover:text-black p-5 backdrop-blur-xl bg-white/4 border-[1px] border-white/30">
+                <Button onClick={() => setIsSchedulerOpen(true)} className="hover:bg-white bg-transparent rounded-none text-white hover:text-black p-5 backdrop-blur-xl bg-white/4 border-[1px] border-white/30">
                   Book a Free Discovery Call
                 </Button>
               </div>
@@ -145,6 +147,7 @@ export const HeroHeader = () => {
           </div>
         </div>
       </nav>
+      <SchedulerModal isOpen={isSchedulerOpen} onClose={() => setIsSchedulerOpen(false)} />
     </header>
   );
 };

@@ -10,6 +10,7 @@ import { TableOfContents } from "@/components/Common/Blog/TableOfContents";
 import { BlogFaq } from "@/components/Common/Blog/BlogFaq";
 import { BlogSideRail } from "@/components/Common/Blog/BlogSideRail";
 import { extractToc, extractTocFromMarkdown } from "@/components/Common/Blog/blocks";
+import StickyCallButton from "@/components/Common/CTA/StickyCallButton";
 
 export const dynamic = "force-dynamic";
 
@@ -240,6 +241,7 @@ export default async function BlogDetailsPage({ params }: PageProps) {
           </aside>
         </div>
       </div>
+      <StickyCallButton />
     </div>
   );
 }

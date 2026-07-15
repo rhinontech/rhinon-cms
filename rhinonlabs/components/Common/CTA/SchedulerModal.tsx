@@ -226,7 +226,7 @@ export default function SchedulerModal({ isOpen, onClose }: SchedulerModalProps)
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="bg-[#0B0F19] border border-white/10 rounded-2xl w-full max-w-6xl min-h-[620px] overflow-hidden shadow-2xl relative flex flex-col md:flex-row text-white font-sans"
+        className="bg-[#0B0F19] border border-white/10 rounded-2xl w-full max-w-6xl max-h-[92vh] overflow-y-auto md:overflow-hidden shadow-2xl relative flex flex-col md:flex-row text-white font-sans md:min-h-[620px]"
       >
         {/* Close Button */}
         <button
@@ -237,7 +237,7 @@ export default function SchedulerModal({ isOpen, onClose }: SchedulerModalProps)
         </button>
 
         {/* Left Column: Event Metadata Info */}
-        <div className="w-full md:w-[30%] bg-[#080B12] p-8 border-b md:border-b-0 md:border-r border-white/10 flex flex-col justify-between select-none">
+        <div className="w-full md:w-[30%] bg-[#080B12] p-5 md:p-8 border-b md:border-b-0 md:border-r border-white/10 flex flex-col justify-between select-none">
           <div>
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-blue-600 p-[1px] flex items-center justify-center shadow-glow-sm">
@@ -303,7 +303,7 @@ export default function SchedulerModal({ isOpen, onClose }: SchedulerModalProps)
         </div>
 
         {/* Right Column: Dynamic Steps */}
-        <div className="flex-1 p-8 flex flex-col justify-center">
+        <div className="flex-1 p-5 md:p-8 flex flex-col justify-center">
           <AnimatePresence mode="wait">
             {step === 1 && (
               <motion.div
@@ -311,7 +311,7 @@ export default function SchedulerModal({ isOpen, onClose }: SchedulerModalProps)
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="flex flex-col lg:flex-row gap-10 w-full items-stretch"
+                className="flex flex-col lg:flex-row gap-6 lg:gap-10 w-full items-stretch"
               >
                 {/* Calendar Panel (Takes more width to be bigger) */}
                 <div className="flex-[2.2] flex flex-col justify-between">
@@ -341,7 +341,7 @@ export default function SchedulerModal({ isOpen, onClose }: SchedulerModalProps)
                     </div>
 
                     {/* Calendar Grid Header (Upper case, tracking spacing) */}
-                    <div className="grid grid-cols-7 gap-3 text-center text-[10px] font-bold text-white/40 uppercase tracking-widest mb-4">
+                    <div className="grid grid-cols-7 gap-1.5 sm:gap-3 text-center text-[10px] font-bold text-white/40 uppercase tracking-widest mb-4">
                       <span>Sun</span>
                       <span>Mon</span>
                       <span>Tue</span>
@@ -352,7 +352,7 @@ export default function SchedulerModal({ isOpen, onClose }: SchedulerModalProps)
                     </div>
 
                     {/* Calendar Days - Bigger grid and cells */}
-                    <div className="grid grid-cols-7 gap-3">
+                    <div className="grid grid-cols-7 gap-1.5 sm:gap-3">
                       {calendarCells.map((cell, idx) => {
                         if (cell === null) {
                           return <div key={`empty-${idx}`} className="w-full aspect-square" />;
@@ -367,7 +367,7 @@ export default function SchedulerModal({ isOpen, onClose }: SchedulerModalProps)
                             onClick={() => active && handleDateSelect(cell)}
                             disabled={!active}
                             className={`
-                              w-full aspect-square rounded-xl text-base font-bold flex items-center justify-center transition-all
+                              w-full aspect-square rounded-lg sm:rounded-xl text-sm sm:text-base font-bold flex items-center justify-center transition-all
                               ${
                                 selected
                                   ? "bg-white text-black shadow-glow scale-[1.05]"
@@ -386,7 +386,7 @@ export default function SchedulerModal({ isOpen, onClose }: SchedulerModalProps)
                 </div>
 
                 {/* Time Slots Panel - Width fixed to lg:w-72, hides scrollbar */}
-                <div className="w-full lg:w-72 flex flex-col border-t lg:border-t-0 lg:border-l border-white/10 pt-6 lg:pt-0 lg:pl-10">
+                <div className={`w-full lg:w-72 flex-col border-t lg:border-t-0 lg:border-l border-white/10 pt-6 lg:pt-0 lg:pl-10 ${selectedDate ? 'flex' : 'hidden lg:flex'}`}>
                   <div className="flex items-center justify-between mb-4 border-b border-white/5 pb-3">
                     <span className="font-bold text-sm text-white/80">
                       {selectedDate ? format(selectedDate, "eeee, d MMMM") : "Select Date"}
