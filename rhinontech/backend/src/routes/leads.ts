@@ -1,6 +1,6 @@
 import { Router, Response } from "express";
 import { Lead, Campaign, CampaignActivity } from "../models";
-import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
+import { authenticate, authorizeAny, AuthRequest } from "../middleware/authenticate";
 import { enrichLeadWithAI } from "../services/gemini";
 import { draftOutreachForLead } from "../services/salesAgent";
 import { fetchWebsiteText } from "../services/research";
@@ -11,19 +11,43 @@ const router = Router();
 
 router.use(authenticate);
 
-// GET /leads - list all leads
-router.get("/", authorize("outreach:read"), async (req: AuthRequest, res: Response) => {
-  const { status, campaignId, search } = req.query;
+const readAccess = authorizeAny("crm:read", "outreach:read");
+const writeAccess = authorizeAny("crm:write", "outreach:write");
+
+// GET /leads - list leads. Supports status/campaignId/source/search filters.
+// Pagination (limit/offset) is opt-in: pass `limit` to get `{ rows, count }`;
+// omit it to get the legacy plain-array shape used by existing Outreach callers.
+router.get("/", readAccess, async (req: AuthRequest, res: Response) => {
+  const { status, campaignId, source, search, limit, offset, idsOnly } = req.query;
   const where: any = {};
 
   if (status) where.status = status;
   if (campaignId) where.campaignId = campaignId;
+  if (source) where.source = source;
   if (search) {
     where[Op.or] = [
       { name: { [Op.iLike]: `%${search}%` } },
       { company: { [Op.iLike]: `%${search}%` } },
       { email: { [Op.iLike]: `%${search}%` } },
     ];
+  }
+
+  if (idsOnly) {
+    const ids = await Lead.findAll({ where, attributes: ["id"], order: [["addedAt", "DESC"]] });
+    res.json({ ids: ids.map((l) => l.id) });
+    return;
+  }
+
+  if (limit) {
+    const { rows, count } = await Lead.findAndCountAll({
+      where,
+      include: [{ model: Campaign, as: "campaign", attributes: ["name"] }],
+      order: [["addedAt", "DESC"]],
+      limit: Math.min(parseInt(limit as string, 10) || 50, 200),
+      offset: parseInt((offset as string) || "0", 10) || 0,
+    });
+    res.json({ rows, count });
+    return;
   }
 
   const leads = await Lead.findAll({
@@ -35,8 +59,19 @@ router.get("/", authorize("outreach:read"), async (req: AuthRequest, res: Respon
   res.json(leads);
 });
 
+// GET /leads/sources - distinct lead source values, for the CRM filter dropdown
+router.get("/sources", readAccess, async (_req: AuthRequest, res: Response) => {
+  const rows = await Lead.findAll({
+    attributes: [[sequelize.fn("DISTINCT", sequelize.col("source")), "source"]],
+    where: { source: { [Op.ne]: null as any } },
+    order: [["source", "ASC"]],
+    raw: true,
+  });
+  res.json((rows as any[]).map((r) => r.source).filter(Boolean));
+});
+
 // POST /leads - create lead manually
-router.post("/", authorize("outreach:write"), async (req: AuthRequest, res: Response) => {
+router.post("/", writeAccess, async (req: AuthRequest, res: Response) => {
   try {
     const lead = await Lead.create(req.body);
     res.status(201).json(lead);
@@ -46,7 +81,7 @@ router.post("/", authorize("outreach:write"), async (req: AuthRequest, res: Resp
 });
 
 // POST /leads/import - bulk import leads (rows already mapped client-side from CSV)
-router.post("/import", authorize("outreach:write"), async (req: AuthRequest, res: Response) => {
+router.post("/import", writeAccess, async (req: AuthRequest, res: Response) => {
   try {
     const incoming: any[] = Array.isArray(req.body?.leads) ? req.body.leads : [];
     if (incoming.length === 0) {
@@ -138,7 +173,7 @@ router.post("/import", authorize("outreach:write"), async (req: AuthRequest, res
 });
 
 // POST /leads/bulk-delete - delete many leads by id
-router.post("/bulk-delete", authorize("outreach:write"), async (req: AuthRequest, res: Response) => {
+router.post("/bulk-delete", writeAccess, async (req: AuthRequest, res: Response) => {
   const ids: string[] = Array.isArray(req.body?.ids) ? req.body.ids : [];
   if (ids.length === 0) {
     res.status(400).json({ message: "No ids provided" });
@@ -157,7 +192,7 @@ router.post("/bulk-delete", authorize("outreach:write"), async (req: AuthRequest
 });
 
 // GET /leads/:id - get single lead
-router.get("/:id", authorize("outreach:read"), async (req: AuthRequest, res: Response) => {
+router.get("/:id", readAccess, async (req: AuthRequest, res: Response) => {
   const lead = await Lead.findByPk(req.params.id, {
     include: [
       { model: Campaign, as: "campaign" },
@@ -174,7 +209,7 @@ router.get("/:id", authorize("outreach:read"), async (req: AuthRequest, res: Res
 });
 
 // PUT /leads/:id - update lead
-router.put("/:id", authorize("outreach:write"), async (req: AuthRequest, res: Response) => {
+router.put("/:id", writeAccess, async (req: AuthRequest, res: Response) => {
   const lead = await Lead.findByPk(req.params.id);
   if (!lead) {
     res.status(404).json({ message: "Lead not found" });
@@ -186,7 +221,7 @@ router.put("/:id", authorize("outreach:write"), async (req: AuthRequest, res: Re
 });
 
 // DELETE /leads/:id - delete lead
-router.delete("/:id", authorize("outreach:write"), async (req: AuthRequest, res: Response) => {
+router.delete("/:id", writeAccess, async (req: AuthRequest, res: Response) => {
   const lead = await Lead.findByPk(req.params.id);
   if (!lead) {
     res.status(404).json({ message: "Lead not found" });
@@ -201,7 +236,7 @@ router.delete("/:id", authorize("outreach:write"), async (req: AuthRequest, res:
 });
 
 // POST /leads/:id/enrich - trigger AI enrichment
-router.post("/:id/enrich", authorize("outreach:write"), async (req: AuthRequest, res: Response) => {
+router.post("/:id/enrich", writeAccess, async (req: AuthRequest, res: Response) => {
   const lead = await Lead.findByPk(req.params.id);
   if (!lead) {
     res.status(404).json({ message: "Lead not found" });
@@ -246,7 +281,7 @@ router.post("/:id/enrich", authorize("outreach:write"), async (req: AuthRequest,
 });
 
 // POST /leads/:id/agent-draft - run the sales agent for ONE lead (lets the UI show live, one-at-a-time progress)
-router.post("/:id/agent-draft", authorize("outreach:write"), async (req: AuthRequest, res: Response) => {
+router.post("/:id/agent-draft", writeAccess, async (req: AuthRequest, res: Response) => {
   const lead = await Lead.findByPk(req.params.id);
   if (!lead) {
     res.status(404).json({ message: "Lead not found" });

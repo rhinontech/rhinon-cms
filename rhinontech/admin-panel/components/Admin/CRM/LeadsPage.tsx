@@ -87,6 +87,8 @@ export function LeadsPage() {
   const [showImport, setShowImport] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [sources, setSources] = useState<string[]>([]);
+  const [sourceFilter, setSourceFilter] = useState<string>("All");
 
   // Form State
   const [form, setForm] = useState({
@@ -102,6 +104,7 @@ export function LeadsPage() {
     try {
       const query = new URLSearchParams();
       if (statusFilter !== "All") query.set("status", statusFilter);
+      if (sourceFilter !== "All") query.set("source", sourceFilter);
       const data = await apiFetch<Lead[]>(`/leads?${query.toString()}`);
       setLeads(data);
       if (!selectedLead && data.length > 0) {
@@ -112,11 +115,15 @@ export function LeadsPage() {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, selectedLead]);
+  }, [statusFilter, sourceFilter, selectedLead]);
 
   useEffect(() => {
     fetchLeads();
   }, [fetchLeads]);
+
+  useEffect(() => {
+    apiFetch<string[]>("/leads/sources").then(setSources).catch(() => {});
+  }, []);
 
   const filteredLeads = useMemo(() => {
     const q = search.toLowerCase();
@@ -237,7 +244,7 @@ export function LeadsPage() {
             <SubNavToggle />
             <div>
               <h1 className="text-base font-semibold tracking-tight text-gray-900">Leads</h1>
-              <p className="text-xs text-gray-500">Manage your outreach prospects and enrichment data.</p>
+              <p className="text-xs text-gray-500">Every lead across the business — website, platforms, imports and manual entries.</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -284,6 +291,14 @@ export function LeadsPage() {
               <option value="Bounced">Bounced</option>
               <option value="Unsubscribed">Unsubscribed</option>
             </select>
+            <select
+              value={sourceFilter}
+              onChange={e => setSourceFilter(e.target.value)}
+              className="w-[180px] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="All">All Sources</option>
+              {sources.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
           </div>
 
           {selectedIds.size > 0 && (
@@ -305,7 +320,7 @@ export function LeadsPage() {
           )}
 
           <div className="mt-4 overflow-auto rounded-xl glass-card">
-            <div className="grid min-w-[800px] w-full grid-cols-[44px_minmax(250px,1.5fr)_minmax(150px,1fr)_minmax(120px,0.8fr)_40px] border-b bg-stone-100 text-xs font-semibold uppercase tracking-wide text-gray-500">
+            <div className="grid min-w-[900px] w-full grid-cols-[44px_minmax(250px,1.5fr)_minmax(150px,1fr)_minmax(110px,0.7fr)_minmax(120px,0.8fr)_40px] border-b bg-stone-100 text-xs font-semibold uppercase tracking-wide text-gray-500">
               <span className="flex items-center justify-center px-2 py-3">
                 <input
                   type="checkbox"
@@ -317,6 +332,7 @@ export function LeadsPage() {
               </span>
               <span className="px-4 py-3">Lead</span>
               <span className="px-4 py-3">Company</span>
+              <span className="px-4 py-3">Source</span>
               <span className="px-4 py-3">Status</span>
               <span className="px-4 py-3 text-right"></span>
             </div>
@@ -331,7 +347,7 @@ export function LeadsPage() {
                 key={lead.id}
                 onClick={() => selectLead(lead)}
                 className={cn(
-                  "grid min-w-[800px] w-full cursor-pointer grid-cols-[44px_minmax(250px,1.5fr)_minmax(150px,1fr)_minmax(120px,0.8fr)_40px] items-center border-b text-left text-sm hover:bg-stone-50 transition-colors",
+                  "grid min-w-[900px] w-full cursor-pointer grid-cols-[44px_minmax(250px,1.5fr)_minmax(150px,1fr)_minmax(110px,0.7fr)_minmax(120px,0.8fr)_40px] items-center border-b text-left text-sm hover:bg-stone-50 transition-colors",
                   selectedLead?.id === lead.id && "bg-blue-50 hover:bg-blue-50"
                 )}
               >
@@ -351,6 +367,7 @@ export function LeadsPage() {
                   </div>
                 </span>
                 <span className="px-4 py-3 text-gray-600">{lead.company}</span>
+                <span className="px-4 py-3 text-xs text-gray-500 truncate">{lead.source}</span>
                 <span className="px-4 py-3">
                   <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider", STATUS_COLORS[lead.status])}>
                     {lead.status}

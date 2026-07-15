@@ -27,7 +27,7 @@ function PayrollLayoutContent({ children }: { children: React.ReactNode }) {
   const isAdminView = has("payroll:write");
 
   const adminItems = [
-    { label: "Dashboard",     href: `${base}/overview`,  icon: <MdOutlineDashboard size={18} /> },
+    { label: "Overview",      href: `${base}/overview`,  icon: <MdOutlineDashboard size={18} /> },
     { label: "Employees",     href: `${base}/employees`, icon: <MdOutlinePeopleAlt size={18} /> },
     { label: "Run Payroll",   href: `${base}/run`,       icon: <MdOutlinePlayCircle size={18} /> },
     { label: "Payslip Entry", href: `${base}/entry`,     icon: <TbFilePlus size={18} /> },

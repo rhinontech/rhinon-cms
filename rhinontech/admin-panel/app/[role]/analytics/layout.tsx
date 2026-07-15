@@ -4,7 +4,7 @@ import { AdminDashboardShell } from "@/components/Admin/Common/AdminDashboardShe
 import { ContentSubNav } from "@/components/Admin/Common/ContentSubNav/ContentSubNav";
 import { SideNavProvider } from "@/context/SideNavContext";
 
-export default function ContentLayout({ children }: { children: React.ReactNode }) {
+export default function AnalyticsLayout({ children }: { children: React.ReactNode }) {
   return (
     <AdminDashboardShell>
       <SideNavProvider>

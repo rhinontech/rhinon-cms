@@ -13,6 +13,8 @@ export interface SubNavItem {
   href: string;
   exact?: boolean;
   isCollapsible?: boolean;
+  /** Only meaningful when isCollapsible — forces the group open (e.g. when a child route is active). */
+  isExpanded?: boolean;
   children?: SubNavItem[];
 }
 
@@ -67,8 +69,9 @@ export function CollapsibleSubNav({ title, items }: CollapsibleSubNavProps) {
                 icon={item.icon}
                 label={item.label}
                 isCollapsible={item.isCollapsible}
+                isExpanded={item.isExpanded}
                 isActive={item.exact ? pathname === item.href : pathname.startsWith(item.href)}
-                href={item.href}
+                href={item.isCollapsible ? undefined : item.href}
               >
                 {item.children?.map((child, childIndex) => (
                   <SidebarItem
