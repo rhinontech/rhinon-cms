@@ -85,6 +85,7 @@
 @theme inline {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-instrument), ui-serif, Georgia, serif;
+  --font-mulish: var(--font-mulish), sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -171,10 +172,11 @@ body {
 }
 /* ---------- Blog article body (TipTap-authored HTML blocks) ---------- */
 .article-html h2 {
-  font-size: 1.875rem;
-  line-height: 1.2;
-  font-weight: 900;
-  letter-spacing: -0.02em;
+  font-size: 2rem;
+  line-height: 1.25;
+  font-weight: 600;
+  clear:both;
+  
   color: var(--foreground);
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   padding-bottom: 1rem;
@@ -210,7 +212,7 @@ body {
   text-decoration-color: #ffffff;
 }
 .article-html strong {
-  font-weight: 800;
+  font-weight: 500;
   color: var(--foreground) !important;
 }
 .article-html ul,
@@ -262,7 +264,7 @@ body {
 /* Blog article — extended rich-text elements */
 .article-html h4 {
   font-size: 1.125rem;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--foreground);
   margin: 2rem 0 1rem;
   scroll-margin-top: 8rem;
@@ -317,3 +319,10 @@ body {
   margin: 1.5rem 0;
   height: auto;
 }
+
+/* Scoped blog font overrides */
+.blog-theme {
+  --font-sans: var(--font-mulish), sans-serif;
+  font-family: var(--font-mulish), sans-serif;
+}
+

@@ -54,7 +54,7 @@ export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) 
   const displayedAllBlogs = searchQuery ? filteredAll : initialBlogs.slice(2);
 
   return (
-    <main className="min-h-screen bg-background relative selection:bg-primary/50 flex flex-col pt-32 pb-24 overflow-hidden">
+    <main className="blog-theme min-h-screen bg-background relative selection:bg-primary/50 flex flex-col pt-32 pb-24 overflow-hidden">
       {/* Background Image with Mask matching Home Page theme */}
       <div className="absolute inset-0 top-64 max-sm:top-52 -z-10 opacity-30 pointer-events-none">
         <div className="mask-[linear-gradient(to_bottom,transparent,white_30%,white_60%,transparent)] mask-mode:luminance relative w-full h-full">

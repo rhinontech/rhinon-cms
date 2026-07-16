@@ -56,7 +56,7 @@ export function BlogSideRail({ url }: { title?: string; url: string }) {
           </span>
         </div>
 
-        <p className="mb-3 text-xl font-black leading-snug tracking-tight text-foreground">
+        <p className="mb-3 text-xl font-[600] leading-snug tracking-tight text-foreground">
           Get an honest MVP assessment in 5 minutes.
         </p>
         <p className="mb-6 text-sm leading-relaxed text-muted-foreground">

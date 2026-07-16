@@ -43,8 +43,8 @@ export function TableOfContents({
               href={`#${item.id}`}
               className={`group flex items-start gap-2.5 text-sm leading-snug transition-colors ${
                 activeId === item.id
-                  ? "font-bold text-foreground"
-                  : "font-medium text-muted-foreground hover:text-foreground"
+                  ? "font-[500] text-foreground"
+                  : " text-muted-foreground hover:text-foreground"
               }`}
             >
               <ChevronRight
@@ -65,7 +65,7 @@ export function TableOfContents({
     // Compact disclosure rendered above the article on small screens.
     return (
       <details className="mb-12 rounded-2xl border border-white/10 bg-white/[0.03] p-5 lg:hidden">
-        <summary className="cursor-pointer list-none text-lg font-black tracking-tight text-foreground">
+        <summary className="cursor-pointer list-none text-lg font-[500] tracking-tight text-foreground">
           Table of contents
         </summary>
         <div className="mt-4">{nav}</div>
@@ -76,7 +76,7 @@ export function TableOfContents({
   // Desktop rail — stickiness is applied by the page-level wrapper.
   return (
     <div>
-      <p className="mb-6 text-xl font-black tracking-tight text-foreground">Table of contents</p>
+      <p className="mb-6 text-xl font-[500] tracking-tight text-foreground">Table of contents</p>
       {nav}
     </div>
   );
