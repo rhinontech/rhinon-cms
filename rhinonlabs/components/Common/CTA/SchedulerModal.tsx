@@ -240,10 +240,10 @@ export default function SchedulerModal({ isOpen, onClose }: SchedulerModalProps)
         <div className="w-full md:w-[30%] bg-[#080B12] p-5 md:p-8 border-b md:border-b-0 md:border-r border-white/10 flex flex-col justify-between select-none">
           <div>
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-blue-600 p-[1px] flex items-center justify-center shadow-glow-sm">
-                <div className="w-full h-full rounded-[10px] bg-background flex items-center justify-center overflow-hidden">
+              <div className="w-10 h-10 rounded-xl p-[1px] flex items-center justify-center ">
+                <div className="w-full h-full rounded-[10px] flex items-center justify-center overflow-hidden">
                   <img
-                    src="https://github.com/prabhatpk.png"
+                    src="/RhinonLabs_Dark.png"
                     alt="Rhinon Labs"
                     className="w-full h-full object-cover"
                   />
