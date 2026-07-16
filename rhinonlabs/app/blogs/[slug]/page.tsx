@@ -89,7 +89,7 @@ export default async function BlogDetailsPage({ params }: PageProps) {
       : null;
 
   return (
-    <div className="relative min-h-screen bg-background selection:bg-white/20 overflow-x-clip">
+    <div className="blog-theme relative min-h-screen bg-background selection:bg-white/20 overflow-x-clip">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostingSchema) }} />
       {faqSchema && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
@@ -121,7 +121,7 @@ export default async function BlogDetailsPage({ params }: PageProps) {
           {/* Middle — scrollable article */}
           <article className="min-w-0">
             {/* Title + excerpt */}
-            <h1 className="text-2xl md:text-[2.4rem] font-black text-foreground leading-[1.08] tracking-tight mb-7">
+            <h1 className="text-2xl md:text-[2.4rem] font-[600] text-foreground leading-[1.08] tracking-tight mb-7">
               {blog.title}
             </h1>
             <p className="text-md md:text-lg text-muted-foreground leading-relaxed mb-10">
@@ -140,16 +140,16 @@ export default async function BlogDetailsPage({ params }: PageProps) {
                   />
                 </div>
                 <div>
-                  <p className="text-sm text-foreground">
-                    By <span className="font-bold">{blog.authorName}</span>
+                  <p className="text-sm text-muted-foreground">
+                    By <span className="font-[500] text-foreground">{blog.authorName}</span>
                     {/* <span className="text-muted-foreground"> · {blog.authorRole}</span> */}
                   </p>
                   <p className="mt-0.5 text-sm text-muted-foreground">
-                    Updated on {format(new Date(blog.publishedAt), "MMM d, yyyy")}.
+                    Updated on {format(new Date(blog.publishedAt), "MMM d, yyyy")}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3.5">
+              {/* <div className="flex items-center gap-3.5">
                 <div className="h-12 w-12 overflow-hidden rounded-full border border-white/15">
                   <img
                     src={blog.authorAvatar || "https://github.com/prabhatpk.png"}
@@ -161,18 +161,18 @@ export default async function BlogDetailsPage({ params }: PageProps) {
                   <p className="text-sm text-foreground">
                     Reviewed By <span className="font-bold"> Prabhat Patra</span>
                     {/* <span className="text-muted-foreground"> · {blog.authorRole}</span> */}
-                  </p>
+                  {/* </p>
                   <p className="mt-0.5 text-sm text-muted-foreground">
                    Founder
                   </p>
                 </div>
-              </div>
+              </div>  */}
             </div>
 
             {/* Why trust our content */}
             <details className="group mb-12 border-b border-white/10 pb-8" open>
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
-                <span className="text-xl font-black tracking-tight text-foreground">Why trust our content</span>
+                <span className="text-xl font-[500] tracking-tight text-foreground">Why trust our content</span>
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/15 text-foreground transition-transform group-open:rotate-0">
                   <Minus size={15} className="hidden group-open:block" />
                   <span className="block text-sm font-bold group-open:hidden">+</span>
@@ -180,12 +180,12 @@ export default async function BlogDetailsPage({ params }: PageProps) {
               </summary>
               <div className="mt-6 space-y-4 text-base leading-relaxed text-muted-foreground">
                 <p>
-                  <strong className="font-bold text-foreground">Written by builders, not bloggers:</strong>{" "}
+                  <strong className=" text-foreground">Written by builders, not bloggers:</strong>{" "}
                   every guide comes from products we have actually designed, built and shipped for founders at
                   Rhinon Labs — not from theory.
                 </p>
                 <p>
-                  <strong className="font-bold text-foreground">Reviewed before publishing:</strong>{" "}
+                  <strong className=" text-foreground">Reviewed before publishing:</strong>{" "}
                   each article is checked by the team working on client projects every day, so the advice stays
                   practical and current.
                 </p>
@@ -232,7 +232,7 @@ export default async function BlogDetailsPage({ params }: PageProps) {
               <BlogSideRail url={pageUrl} />
             </div>
 
-            <NewsletterCta />
+            {/* <NewsletterCta /> */}
           </article>
 
           {/* Right — assessment card + Summarize with AI (sticky) */}

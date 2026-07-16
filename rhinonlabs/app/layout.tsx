@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Geist, Geist_Mono, Inter, Instrument_Serif } from "next/font/google";
+import { Inter, Instrument_Serif, Mulish } from "next/font/google";
 import "./globals.css";
 import { HeroHeader } from "@/components/Common/Header/Header";
 import { Footer } from "@/components/Common/Footer/Footer";
@@ -43,6 +43,12 @@ const instrumentSerif = Instrument_Serif({
   subsets: ["latin"],
   display: "swap",
   style: "italic"
+});
+
+const mulish = Mulish({
+  variable: "--font-mulish",
+  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -121,7 +127,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${inter.variable} ${instrumentSerif.variable} relative font-sans antialiased text-foreground bg-background`}
+        className={`${inter.variable} ${instrumentSerif.variable} ${mulish.variable} relative font-sans antialiased text-foreground bg-background`}
       >
         <StructuredData />
         <Suspense fallback={null}>

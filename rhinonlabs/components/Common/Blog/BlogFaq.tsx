@@ -11,7 +11,7 @@ export function BlogFaq({ faqs }: { faqs: BlogFaqItem[] }) {
 
   return (
     <section className="mt-20">
-      <h2 className="mb-8 text-2xl md:text-3xl font-black tracking-tight text-foreground">
+      <h2 className="mb-8 text-2xl md:text-3xl font-[600] tracking-tight text-foreground">
         Frequently asked questions
       </h2>
 
@@ -31,7 +31,7 @@ export function BlogFaq({ faqs }: { faqs: BlogFaqItem[] }) {
                 aria-expanded={isOpen}
                 className="flex w-full items-center justify-between gap-6 px-6 py-5 text-left"
               >
-                <span className="text-base md:text-lg font-bold text-foreground">{faq.question}</span>
+                <span className="text-base md:text-lg font-[500] text-foreground">{faq.question}</span>
                 <span
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition-all ${
                     isOpen ? "border-white/40 bg-white text-slate-950" : "border-white/15 text-muted-foreground"
