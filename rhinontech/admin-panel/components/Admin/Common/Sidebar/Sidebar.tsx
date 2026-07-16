@@ -48,7 +48,7 @@ export function Sidebar() {
       )}
     <aside
       className={cn(
-        "flex h-full flex-col glass-sidenav transition-all duration-300 ease-in-out",
+        "flex h-full flex-col transition-all duration-300 ease-in-out",
         // Mobile: fixed overlay drawer slid in from the left; desktop: static column.
         "fixed inset-y-0 left-0 z-50 w-64 max-lg:bg-white! shadow-xl lg:static lg:z-auto lg:shadow-none",
         mobileNavOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
@@ -58,7 +58,7 @@ export function Sidebar() {
       onMouseLeave={() => setIsHovering(false)}
     >
       {/* Logo */}
-      <div className="flex h-14 items-center justify-center border-b border-black/5 w-full">
+      <div className="flex h-14 items-center justify-center border-black/5 w-full">
         {expanded ? (
           <div className="flex items-center justify-between w-full px-3">
             <Link href="/">
