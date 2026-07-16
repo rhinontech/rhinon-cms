@@ -97,7 +97,7 @@ export function Footer() {
                     <p>© {new Date().getFullYear()} Rhinon Labs</p>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
                         {/* <p>Made by <span className="text-white/80 font-medium">Framebase</span></p> */}
-                        <a href="mailto:rhinonLabs@support.com" className="text-white/80 font-medium flex items-center gap-2 hover:text-white transition-colors">
+                        <a href="mailto:prabhat@rhinon.tech" className="text-white/80 font-medium flex items-center gap-2 hover:text-white transition-colors">
                             <Mail className='h-4 w-4' /> Send us an email
                         </a>
                     </div>
