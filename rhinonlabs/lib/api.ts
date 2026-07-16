@@ -44,6 +44,7 @@ export interface CaseStudy {
   title: string;
   description: string;
   content?: string | null;
+  contentBlocks?: BlogBlock[];
   slug: string;
   client?: string | null;
   industry?: string | null;

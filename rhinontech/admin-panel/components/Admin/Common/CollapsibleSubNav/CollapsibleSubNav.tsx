@@ -30,7 +30,8 @@ export function CollapsibleSubNav({ title, items }: CollapsibleSubNavProps) {
   const lastSegment = pathname.split("/").pop();
   const isFullScreenDetail =
     (pathname.includes("/outreach/campaigns/") && lastSegment !== "campaigns") ||
-    (pathname.includes("/content/blogs/") && lastSegment !== "blogs");
+    (pathname.includes("/content/blogs/") && lastSegment !== "blogs") ||
+    (pathname.includes("/content/case-studies/") && lastSegment !== "case-studies");
   const showNav = isExpanded && !isFullScreenDetail;
 
   // Phone: picking a sub-nav item closes the overlay (desktop keeps it pinned).
