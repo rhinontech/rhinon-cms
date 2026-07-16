@@ -398,7 +398,7 @@ router.get("/case-studies/:slug", async (req: Request, res: Response) => {
   try {
     const caseStudy = await CaseStudy.findOne({
       where: { slug: req.params.slug, status: "Published" },
-      attributes: [...PUBLIC_CASE_STUDY_FIELDS, "content"] as unknown as string[],
+      attributes: [...PUBLIC_CASE_STUDY_FIELDS, "content", "contentBlocks"] as unknown as string[],
     });
     if (!caseStudy) {
       res.status(404).json({ message: "Case study not found" });

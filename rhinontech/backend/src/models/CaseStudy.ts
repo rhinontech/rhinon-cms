@@ -15,6 +15,7 @@ interface CaseStudyAttributes {
   title: string;
   description: string;
   content?: string | null;
+  contentBlocks?: Record<string, any>[];
   slug: string;
   client?: string | null;
   industry?: string | null;
@@ -37,7 +38,7 @@ interface CaseStudyAttributes {
 interface CaseStudyCreationAttributes
   extends Optional<
     CaseStudyAttributes,
-    | "id" | "content" | "client" | "industry" | "category" | "timeline" | "liveLink" | "date"
+    | "id" | "content" | "contentBlocks" | "client" | "industry" | "category" | "timeline" | "liveLink" | "date"
     | "result" | "quote" | "image" | "images"
     | "stats" | "displayOrder" | "status" | "createdById"
   > {}
@@ -50,6 +51,7 @@ export class CaseStudy
   declare title: string;
   declare description: string;
   declare content: string | null;
+  declare contentBlocks: Record<string, any>[];
   declare slug: string;
   declare client: string | null;
   declare industry: string | null;
@@ -75,6 +77,7 @@ CaseStudy.init(
     title: { type: DataTypes.STRING, allowNull: false },
     description: { type: DataTypes.TEXT, allowNull: false },
     content: { type: DataTypes.TEXT, allowNull: true },
+    contentBlocks: { type: DataTypes.JSONB, allowNull: false, defaultValue: [] },
     slug: { type: DataTypes.STRING, allowNull: false, unique: true },
     client: { type: DataTypes.STRING, allowNull: true },
     industry: { type: DataTypes.STRING, allowNull: true },

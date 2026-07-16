@@ -6,6 +6,7 @@ import { ArrowRight, Star } from 'lucide-react';
 import Link from 'next/link';
 import type { CaseStudy } from "@/lib/api";
 import { MarkdownRenderer } from "@/components/Common/Markdown/MarkdownRenderer";
+import { BlockRenderer } from "@/components/Common/Blog/BlockRenderer";
 
 const CaseStudyDetail: React.FC<{ caseStudy: CaseStudy }> = ({ caseStudy }) => {
     const images = caseStudy.images && caseStudy.images.length
@@ -14,6 +15,7 @@ const CaseStudyDetail: React.FC<{ caseStudy: CaseStudy }> = ({ caseStudy }) => {
             ? [caseStudy.image]
             : [];
     const category = caseStudy.category || caseStudy.industry || "Case Study";
+    const blocks = caseStudy.contentBlocks?.length ? caseStudy.contentBlocks : null;
 
     return (
         <div className="text-white pt-36 pb-20">
@@ -46,11 +48,15 @@ const CaseStudyDetail: React.FC<{ caseStudy: CaseStudy }> = ({ caseStudy }) => {
                             </motion.div>
                         ))}
 
-                        {caseStudy.content && (
+                        {blocks ? (
+                            <div className="mt-2">
+                                <BlockRenderer blocks={blocks} />
+                            </div>
+                        ) : caseStudy.content ? (
                             <div className="prose prose-invert max-w-none mt-2">
                                 <MarkdownRenderer content={caseStudy.content} />
                             </div>
-                        )}
+                        ) : null}
                     </div>
 
                     {/* Right Column - Sticky Details */}
