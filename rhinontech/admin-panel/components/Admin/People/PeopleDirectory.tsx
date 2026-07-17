@@ -488,6 +488,9 @@ export function PeopleDirectory() {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [mode, setMode] = useState<PanelMode>("view");
   const [isPreviewExpanded, setIsPreviewExpanded] = useState(true);
+  const [detailWidthPct, setDetailWidthPct] = useState(42);
+  const [isResizingDetail, setIsResizingDetail] = useState(false);
+  const panesRef = useRef<HTMLDivElement>(null);
   // Phone-only: the aside becomes a full-screen overlay, opened by tapping a
   // row / Add member / Edit — never by the desktop auto-selection.
   const [mobileDetail, setMobileDetail] = useState(false);
@@ -836,8 +839,27 @@ export function PeopleDirectory() {
     }
   };
 
+  const startDetailResize = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizingDetail(true);
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      const container = panesRef.current;
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
+      const pct = ((rect.right - moveEvent.clientX) / rect.width) * 100;
+      setDetailWidthPct(Math.min(70, Math.max(28, pct)));
+    };
+    const onMouseUp = () => {
+      setIsResizingDetail(false);
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    };
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  };
+
   return (
-    <div className="flex min-h-0 gap-2 w-full h-full overflow-hidden">
+    <div ref={panesRef} className="flex min-h-0 gap-2 w-full h-full overflow-hidden">
       <main
         className={cn(
           "flex min-h-0 flex-col glass-panel rounded-xl w-full h-full overflow-hidden",
@@ -956,12 +978,27 @@ export function PeopleDirectory() {
         </div>
       </main>
 
+      {isPreviewExpanded && mode === "view" && !mobileDetail && (
+        <div
+          onMouseDown={startDetailResize}
+          className="hidden lg:block w-1.5 shrink-0 cursor-col-resize group"
+          title="Drag to resize"
+        >
+          <div className={cn(
+            "mx-auto h-full w-0.5 rounded-full transition-colors",
+            isResizingDetail ? "bg-blue-500" : "bg-transparent group-hover:bg-gray-300"
+          )} />
+        </div>
+      )}
+
       <aside
+        style={isPreviewExpanded && mode === "view" ? { width: `${detailWidthPct}%` } : undefined}
         className={cn(
-          "min-h-0 flex-col bg-white overflow-hidden transition-all duration-200 ease-in-out",
+          "min-h-0 flex-col bg-white overflow-hidden",
+          isResizingDetail ? "transition-none" : "transition-all duration-200 ease-in-out",
           mobileDetail ? "fixed inset-0 z-50 flex" : "hidden",
           "lg:static lg:z-auto lg:flex lg:h-full lg:rounded-xl",
-          isPreviewExpanded ? ((mode === "create" || mode === "edit") ? "lg:w-full" : "lg:w-[42%]") : "lg:w-0"
+          isPreviewExpanded ? (mode === "create" || mode === "edit" ? "lg:w-full" : "shrink-0") : "lg:w-0"
         )}
       >
         {isPreviewExpanded && (
