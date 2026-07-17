@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { apiFetch, apiUpload } from "@/lib/api";
 import { useSideNav } from "@/context/SideNavContext";
 import { isImageIcon, type PageDoc, type PageNode } from "./types";
+import { usePagesStore } from "./pagesStore";
 import { EMOJI_GRID } from "./emoji";
 import { createSlashCommandExtension, type SlashPageHandlers } from "./slashCommand";
 import { BubbleToolbar } from "./BubbleToolbar";
@@ -116,6 +117,7 @@ export function PageEditor({ id }: { id: string }) {
       if (idRef.current === savedId) {
         lastUpdatedAtRef.current = updated.updatedAt;
       }
+      usePagesStore.getState().notifyPageUpdate(savedId, { title: titleRef.current, icon: iconRef.current });
       setSaveStatus("saved");
     } catch (err: any) {
       if (String(err.message || "").includes("updated elsewhere")) {
