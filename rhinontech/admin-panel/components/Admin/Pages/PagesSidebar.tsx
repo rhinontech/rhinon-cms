@@ -8,6 +8,7 @@ import {
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { useSideNav } from "@/context/SideNavContext";
+import { usePagesStore } from "./pagesStore";
 import { buildTree, isImageIcon, type PageNode, type PageTreeNode } from "./types";
 
 function PageIcon({ icon, size = 14 }: { icon: string | null; size?: number }) {
@@ -54,6 +55,15 @@ export function PagesSidebar({ activeId, onChanged }: { activeId?: string; onCha
   useEffect(() => {
     fetchTree();
   }, []);
+
+  // PageEditor saves title/icon edits directly to the backend without going
+  // through this component's fetched copy — apply its patches live instead of
+  // waiting for the next fetchTree() (create/archive/refresh).
+  const lastPatch = usePagesStore((s) => s.lastPatch);
+  useEffect(() => {
+    if (!lastPatch) return;
+    setPages((prev) => prev.map((p) => (p.id === lastPatch.id ? { ...p, ...lastPatch.patch } : p)));
+  }, [lastPatch]);
 
   // A page created elsewhere (e.g. the "/page" slash command) becomes active
   // before this tree knows about it — refetch once so it appears.

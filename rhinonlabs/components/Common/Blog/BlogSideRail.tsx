@@ -42,7 +42,18 @@ const AI_TOOLS = [
   { label: "Grok", glyph: <GrokGlyph />, href: (p: string) => `https://grok.com/?q=${p}` },
 ];
 
-export function BlogSideRail({ url }: { title?: string; url: string }) {
+export function BlogSideRail({
+  url,
+  heading = "Get an honest MVP assessment in 5 minutes.",
+  subheading = "We tell you what to build, what to skip, and what it'll actually cost. No fluff.",
+  ctaLabel = "Assess My Idea",
+}: {
+  title?: string;
+  url: string;
+  heading?: string;
+  subheading?: string;
+  ctaLabel?: string;
+}) {
   const summarizePrompt = encodeURIComponent(`Summarize this article for me: ${url}`);
 
   return (
@@ -57,17 +68,17 @@ export function BlogSideRail({ url }: { title?: string; url: string }) {
         </div>
 
         <p className="mb-3 text-xl font-[600] leading-snug tracking-tight text-foreground">
-          Get an honest MVP assessment in 5 minutes.
+          {heading}
         </p>
         <p className="mb-6 text-sm leading-relaxed text-muted-foreground">
-          We tell you what to build, what to skip, and what it&apos;ll actually cost. No fluff.
+          {subheading}
         </p>
 
         <Link
           href="/contact-us"
           className="group flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3.5 text-sm font-bold text-slate-950 transition-all hover:bg-white/90"
         >
-          Assess My Idea
+          {ctaLabel}
           <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
         </Link>
 

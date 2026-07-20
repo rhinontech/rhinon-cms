@@ -173,7 +173,7 @@ export default async function BlogDetailsPage({ params }: PageProps) {
             </div>
 
             {/* Why trust our content */}
-            <details className="group mb-12 border-b border-white/10 pb-8" open>
+            {/* <details className="group mb-12 border-b border-white/10 pb-8" open>
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
                 <span className="text-xl font-[500] tracking-tight text-foreground">Why trust our content</span>
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/15 text-foreground transition-transform group-open:rotate-0">
@@ -193,7 +193,7 @@ export default async function BlogDetailsPage({ params }: PageProps) {
                   practical and current.
                 </p>
               </div>
-            </details>
+            </details> */}
 
             {/* Feature Image */}
             {blog.coverImage && (
