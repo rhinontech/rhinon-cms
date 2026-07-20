@@ -10,7 +10,7 @@ export function BlogFaq({ faqs }: { faqs: BlogFaqItem[] }) {
   if (!faqs.length) return null;
 
   return (
-    <section className="mt-20">
+    <section className="mt-20 scroll-mt-32" id="faq">
       <h2 className="mb-8 text-2xl md:text-3xl font-[600] tracking-tight text-foreground">
         Frequently asked questions
       </h2>

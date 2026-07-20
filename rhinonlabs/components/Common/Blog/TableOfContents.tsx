@@ -15,21 +15,30 @@ export function TableOfContents({
 
   useEffect(() => {
     if (items.length < 2) return;
-    const headings = items
-      .map((item) => document.getElementById(item.id))
-      .filter((el): el is HTMLElement => !!el);
-    if (!headings.length) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) setActiveId(entry.target.id);
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 140; // 140px offset for header
+      let currentActiveId: string | null = null;
+
+      for (const item of items) {
+        const el = document.getElementById(item.id);
+        if (el) {
+          const headingTop = el.getBoundingClientRect().top + window.scrollY;
+          if (scrollPosition >= headingTop) {
+            currentActiveId = item.id;
+          }
         }
-      },
-      { rootMargin: "-30% 0px -60% 0px" }
-    );
-    headings.forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
+      }
+
+      setActiveId(currentActiveId);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, [items]);
 
   if (items.length < 2) return null;
@@ -41,6 +50,14 @@ export function TableOfContents({
           <li key={item.id}>
             <a
               href={`#${item.id}`}
+              onClick={(e) => {
+                e.preventDefault();
+                const el = document.getElementById(item.id);
+                if (el) {
+                  el.scrollIntoView({ behavior: "smooth" });
+                  window.history.pushState(null, "", `#${item.id}`);
+                }
+              }}
               className={`group flex items-start gap-2.5 text-sm leading-snug transition-colors ${
                 activeId === item.id
                   ? "font-[500] text-foreground"

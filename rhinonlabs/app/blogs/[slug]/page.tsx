@@ -48,8 +48,11 @@ export default async function BlogDetailsPage({ params }: PageProps) {
   }
 
   const blocks = blog.contentBlocks?.length ? blog.contentBlocks : null;
-  const toc = blocks ? extractToc(blocks) : extractTocFromMarkdown(blog.content);
   const faqs = (blog.faqs || []).filter((f) => f.question?.trim() && f.answer?.trim());
+  const toc = blocks ? extractToc(blocks) : extractTocFromMarkdown(blog.content);
+  if (faqs.length > 0) {
+    toc.push({ id: "faq", text: "FAQ" });
+  }
   const pageUrl = `${SITE_URL}/blogs/${blog.slug}`;
 
   const blogPostingSchema = {
