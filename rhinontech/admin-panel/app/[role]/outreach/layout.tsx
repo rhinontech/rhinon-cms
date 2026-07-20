@@ -2,7 +2,7 @@
 
 import { CollapsibleSubNav } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { usePathname } from "next/navigation";
-import { TbTarget, TbTemplate, TbMailOpened, TbLayoutDashboard } from "react-icons/tb";
+import { TbTarget, TbTemplate, TbMailOpened, TbLayoutDashboard, TbBrandLinkedin } from "react-icons/tb";
 
 import { AdminDashboardShell } from "@/components/Admin/Common/AdminDashboardShell/AdminDashboardShell";
 import { SideNavProvider } from "@/context/SideNavContext";
@@ -14,7 +14,8 @@ function OutreachLayoutContent({ children }: { children: React.ReactNode }) {
 
   const items = [
     { label: "Overview", href: base, icon: <TbLayoutDashboard size={18} />, exact: true },
-    { label: "Campaigns", href: `${base}/campaigns`, icon: <TbTarget size={18} /> },
+    { label: "Email Campaigns", href: `${base}/campaigns`, icon: <TbTarget size={18} /> },
+    { label: "LinkedIn Publishing", href: `${base}/publishing`, icon: <TbBrandLinkedin size={18} /> },
     { label: "Manual Send", href: `${base}/manual`, icon: <TbMailOpened size={18} /> },
     { label: "Templates", href: `${base}/templates`, icon: <TbTemplate size={18} /> },
   ];

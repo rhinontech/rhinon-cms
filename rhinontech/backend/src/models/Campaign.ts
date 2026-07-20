@@ -3,11 +3,15 @@ import { sequelize } from "../config/database";
 
 export type CampaignStage = "Draft" | "Active" | "Paused" | "Completed";
 export type CampaignChannel = "Email" | "Cold Email" | "LinkedIn DM" | "LinkedIn Connection" | "LinkedIn Post" | "LinkedIn Video" | "LinkedIn Article";
+// How email drafts are produced: "template" = mail-merge blast, "agent" = per-lead
+// AI research + human approval. Chosen at creation; meaningless for LinkedIn channels.
+export type CampaignMode = "template" | "agent";
 
 interface CampaignAttributes {
   id: string;
   name: string;
   channel: CampaignChannel;
+  mode: CampaignMode;
   templateId?: string | null;
   stage: CampaignStage;
   dailyLimit: number;
@@ -40,12 +44,13 @@ interface CampaignAttributes {
   updatedAt?: Date;
 }
 
-interface CampaignCreationAttributes extends Optional<CampaignAttributes, "id" | "channel" | "templateId" | "stage" | "dailyLimit" | "startDate" | "runTime" | "scheduleDays" | "leadsTotal" | "leadsProcessed" | "objective" | "notes" | "mediaUrl" | "aiDraft" | "visibility" | "mediaTitle" | "mediaDescription" | "articleUrl" | "slug" | "platformPostId" | "organizationId" | "socialStats"> {}
+interface CampaignCreationAttributes extends Optional<CampaignAttributes, "id" | "channel" | "mode" | "templateId" | "stage" | "dailyLimit" | "startDate" | "runTime" | "scheduleDays" | "leadsTotal" | "leadsProcessed" | "objective" | "notes" | "mediaUrl" | "aiDraft" | "visibility" | "mediaTitle" | "mediaDescription" | "articleUrl" | "slug" | "platformPostId" | "organizationId" | "socialStats"> {}
 
 export class Campaign extends Model<CampaignAttributes, CampaignCreationAttributes> implements CampaignAttributes {
   declare id: string;
   declare name: string;
   declare channel: CampaignChannel;
+  declare mode: CampaignMode;
   declare templateId: string | null;
   declare stage: CampaignStage;
   declare dailyLimit: number;
@@ -84,6 +89,11 @@ Campaign.init(
     channel: {
       type: DataTypes.ENUM("Email", "Cold Email", "LinkedIn DM", "LinkedIn Connection", "LinkedIn Post", "LinkedIn Video", "LinkedIn Article"),
       defaultValue: "Email",
+      allowNull: false,
+    },
+    mode: {
+      type: DataTypes.ENUM("template", "agent"),
+      defaultValue: "template",
       allowNull: false,
     },
     dailyLimit: { type: DataTypes.INTEGER, defaultValue: 50, allowNull: false },

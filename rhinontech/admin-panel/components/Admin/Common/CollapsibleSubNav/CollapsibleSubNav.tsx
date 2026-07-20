@@ -30,6 +30,7 @@ export function CollapsibleSubNav({ title, items }: CollapsibleSubNavProps) {
   const lastSegment = pathname.split("/").pop();
   const isFullScreenDetail =
     (pathname.includes("/outreach/campaigns/") && lastSegment !== "campaigns") ||
+    (pathname.includes("/outreach/publishing/") && lastSegment !== "publishing") ||
     (pathname.includes("/content/blogs/") && lastSegment !== "blogs") ||
     (pathname.includes("/content/case-studies/") && lastSegment !== "case-studies");
   const showNav = isExpanded && !isFullScreenDetail;
