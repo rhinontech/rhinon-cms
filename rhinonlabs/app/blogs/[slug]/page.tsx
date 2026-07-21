@@ -26,15 +26,34 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!blog) return { title: "Blog Not Found" };
 
+  const ogTitle = blog.metaTitle || blog.title;
+  const ogDescription = blog.metaDescription || blog.excerpt;
+  const ogImage = blog.coverImage || `${SITE_URL}/og-image.jpg`;
+
   return {
     // metaTitle is used verbatim (absolute); otherwise the root "%s | Rhinon Labs" template applies.
     title: blog.metaTitle ? { absolute: blog.metaTitle } : blog.title,
-    description: blog.metaDescription || blog.excerpt,
+    description: ogDescription,
     alternates: { canonical: `${SITE_URL}/blogs/${blog.slug}` },
     openGraph: {
-      title: blog.metaTitle || blog.title,
-      description: blog.metaDescription || blog.excerpt,
-      images: blog.coverImage ? [blog.coverImage] : [],
+      title: ogTitle,
+      description: ogDescription,
+      url: `${SITE_URL}/blogs/${blog.slug}`,
+      type: "article",
+      publishedTime: blog.publishedAt,
+      authors: [blog.authorName],
+      images: [
+        {
+          url: ogImage,
+          alt: blog.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: ogTitle,
+      description: ogDescription,
+      images: [ogImage],
     },
   };
 }

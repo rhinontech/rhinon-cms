@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!cs) return { title: "Case Study Not Found" };
 
-  const ogImage = cs.image || cs.images?.[0];
+  const ogImage = cs.image || cs.images?.[0] || `${SITE_URL}/og-image.jpg`;
   return {
     title: `${cs.title} | Rhinon Labs`,
     description: cs.description,
@@ -25,7 +25,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: {
       title: cs.title,
       description: cs.description,
-      images: ogImage ? [ogImage] : [],
+      url: `${SITE_URL}/case-studies/${cs.slug}`,
+      type: "article",
+      images: [
+        {
+          url: ogImage,
+          alt: cs.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: cs.title,
+      description: cs.description,
+      images: [ogImage],
     },
   };
 }
