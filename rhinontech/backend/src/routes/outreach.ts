@@ -81,11 +81,13 @@ router.get("/stats", authorize("outreach:read"), async (_req: AuthRequest, res: 
   }
 });
 
-// GET /outreach/activities - fetch recent activity logs
+// GET /outreach/activities - fetch recent activity logs (optionally for one campaign)
 router.get("/activities", authorize("outreach:read"), async (req: AuthRequest, res: Response) => {
   const limit = parseInt(req.query.limit as string) || 20;
+  const campaignId = (req.query.campaignId as string) || null;
   try {
     const activities = await CampaignActivity.findAll({
+      ...(campaignId ? { where: { campaignId } } : {}),
       limit,
       order: [["createdAt", "DESC"]],
       include: [

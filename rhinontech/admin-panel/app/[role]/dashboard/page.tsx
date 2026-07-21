@@ -13,6 +13,7 @@ import {
   TbCash,
   TbCheck,
   TbClock,
+  TbCoffee,
   TbConfetti,
   TbMoonStars,
   TbStopwatch,
@@ -65,6 +66,7 @@ interface DashboardStats {
   todayAttendance: {
     clockIn: string | null;
     clockOut: string | null;
+    breaks?: { start: string; end: string | null }[];
     status: string;
     durationMinutes: number;
   } | null;
@@ -184,6 +186,7 @@ export default function DashboardPage() {
   const [investment, setInvestment] = useState<InvestmentSummary | null>(null);
   const [clockingIn, setClockingIn] = useState(false);
   const [clockingOut, setClockingOut] = useState(false);
+  const [breakLoading, setBreakLoading] = useState(false);
   const [todayLabel, setTodayLabel] = useState("");
 
   const fetchStats = useCallback(() => {
@@ -215,9 +218,17 @@ export default function DashboardPage() {
     finally { setClockingOut(false); }
   };
 
+  const handleToggleBreak = async () => {
+    setBreakLoading(true);
+    try { await apiFetch(onBreak ? "/attendance/break-end" : "/attendance/break-start", { method: "POST" }); fetchStats(); }
+    catch { /* error */ }
+    finally { setBreakLoading(false); }
+  };
+
   const att = stats?.todayAttendance;
   const clocked = !!att?.clockIn;
   const clockedOut = !!att?.clockOut;
+  const onBreak = !!att?.breaks?.length && !att.breaks[att.breaks.length - 1].end;
 
   return (
     <AdminDashboardShell>
@@ -323,8 +334,13 @@ export default function DashboardPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="rounded-md bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-600">DEFAULT SHIFT</span>
-                          {!clockedOut && (
+                          {!clockedOut && !onBreak && (
                             <span className="rounded-md bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700">Active</span>
+                          )}
+                          {onBreak && (
+                            <span className="rounded-md bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                              On break since {formatTime(att!.breaks![att!.breaks!.length - 1].start)}
+                            </span>
                           )}
                         </div>
                       </>
@@ -348,14 +364,26 @@ export default function DashboardPage() {
                       </button>
                     )}
                     {clocked && !clockedOut && (
-                      <button
-                        onClick={handleClockOut}
-                        disabled={clockingOut}
-                        className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-5 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-60"
-                      >
-                        <TbStopwatch size={16} />
-                        {clockingOut ? "Clocking out…" : "Clock out"}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={handleToggleBreak}
+                          disabled={breakLoading}
+                          className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium disabled:opacity-60 ${
+                            onBreak ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100" : "border-gray-300 text-gray-800 hover:bg-gray-50"
+                          }`}
+                        >
+                          <TbCoffee size={16} />
+                          {breakLoading ? "…" : onBreak ? "Resume" : "Take a break"}
+                        </button>
+                        <button
+                          onClick={handleClockOut}
+                          disabled={clockingOut}
+                          className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-5 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-60"
+                        >
+                          <TbStopwatch size={16} />
+                          {clockingOut ? "Clocking out…" : "Clock out"}
+                        </button>
+                      </div>
                     )}
                     {clocked && clockedOut && (
                       <span className="rounded-lg bg-stone-100 px-4 py-2 text-sm text-gray-500">Done for today</span>

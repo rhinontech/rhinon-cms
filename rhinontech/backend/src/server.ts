@@ -11,23 +11,32 @@ import cron from "node-cron";
 import axios from "axios";
 
 async function autoClockOut() {
-  const today = new Date().toISOString().split("T")[0];
-  // Set clock-out to 22:00 local time expressed as UTC
-  const clockOutTime = new Date(`${today}T22:00:00`);
+  const now = new Date();
+  const todayStr = now.toISOString().split("T")[0];
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split("T")[0];
 
-  const [count] = await Attendance.update(
-    { clockOut: clockOutTime, note: "Auto clocked out at 10:00 PM" },
-    {
-      where: {
-        date: today,
-        clockIn: { [Op.ne]: null } as any,
-        clockOut: null as any,
-      },
+  // Overnight shifts (clocked in yesterday, still open when this runs) keep
+  // their original day's attendance record — only clockOut moves to "now".
+  const openRecords = await Attendance.findAll({
+    where: {
+      date: { [Op.in]: [todayStr, yesterdayStr] },
+      clockIn: { [Op.ne]: null } as any,
+      clockOut: null as any,
+    },
+  });
+
+  for (const record of openRecords) {
+    const breaks = Array.isArray(record.breaks) ? [...record.breaks] : [];
+    if (breaks.length && !breaks[breaks.length - 1].end) {
+      breaks[breaks.length - 1] = { ...breaks[breaks.length - 1], end: now.toISOString() };
     }
-  );
+    await record.update({ clockOut: now, breaks, note: "Auto clocked out at 4:00 AM" });
+  }
 
-  if (count > 0) {
-    console.log(`[Cron] Auto clocked out ${count} employee(s) at 10:00 PM.`);
+  if (openRecords.length > 0) {
+    console.log(`[Cron] Auto clocked out ${openRecords.length} employee(s) at 4:00 AM.`);
   }
 }
 
@@ -56,15 +65,17 @@ async function start() {
   app.listen(env.port, () => {
     console.log(`Server running on http://localhost:${env.port}`);
 
-    // Auto clock-out: runs every day at 10:00 PM
-    cron.schedule("0 22 * * *", async () => {
+    // Auto clock-out: runs every day at 4:00 AM IST, closing out anyone still
+    // clocked in (covers late/overnight shifts) without disturbing which day's
+    // attendance record they land on.
+    cron.schedule("0 4 * * *", async () => {
       console.log("[Cron] Running auto clock-out...");
       try {
         await autoClockOut();
       } catch (err: any) {
         console.error("[Cron] Auto clock-out failed:", err.message);
       }
-    });
+    }, { timezone: "Asia/Kolkata" });
 
     // Scheduled offboardings: shortly after midnight IST, deactivate anyone whose
     // last working day has ended
