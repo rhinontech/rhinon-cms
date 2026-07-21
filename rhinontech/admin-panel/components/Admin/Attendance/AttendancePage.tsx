@@ -12,6 +12,7 @@ import {
   TbUserCheck,
   TbUserX,
   TbActivity,
+  TbCoffee,
 } from "react-icons/tb";
 import { cn } from "@/lib/utils";
 import { useSideNav } from "@/context/SideNavContext";
@@ -36,6 +37,38 @@ function toHourFraction(iso: string | null): number | null {
   if (!iso) return null;
   const d = new Date(iso);
   return d.getHours() + d.getMinutes() / 60;
+}
+
+interface TimelineSegment { startFrac: number; endFrac: number; type: "work" | "break"; startIso: string; endIso: string; }
+
+function timelineSegments(
+  clockIn: string | null,
+  clockOut: string | null,
+  breaks: { start: string; end: string | null }[] | undefined,
+  now: Date
+): TimelineSegment[] {
+  if (!clockIn) return [];
+  const endIso = clockOut ?? now.toISOString();
+  const sortedBreaks = [...(breaks || [])]
+    .filter((b) => b.start)
+    .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+
+  const segments: TimelineSegment[] = [];
+  let cursor = clockIn;
+  for (const b of sortedBreaks) {
+    if (new Date(b.start).getTime() >= new Date(endIso).getTime()) break;
+    segments.push({ startFrac: toHourFraction(cursor)!, endFrac: toHourFraction(b.start)!, type: "work", startIso: cursor, endIso: b.start });
+    const breakEnd = b.end ?? endIso;
+    segments.push({ startFrac: toHourFraction(b.start)!, endFrac: toHourFraction(breakEnd)!, type: "break", startIso: b.start, endIso: breakEnd });
+    cursor = breakEnd;
+  }
+  segments.push({ startFrac: toHourFraction(cursor)!, endFrac: toHourFraction(endIso)!, type: "work", startIso: cursor, endIso });
+  return segments.filter((s) => s.endFrac > s.startFrac);
+}
+
+function segmentTooltip(seg: TimelineSegment): string {
+  const label = seg.type === "break" ? "Break" : "Present";
+  return `${label}: ${formatTime(seg.startIso)} – ${formatTime(seg.endIso)}`;
 }
 
 function ordinalLabel(iso: string, isToday: boolean): string {
@@ -70,6 +103,7 @@ interface AttendanceDay {
   date: string;
   clockIn: string | null;
   clockOut: string | null;
+  breaks?: { start: string; end: string | null }[];
   status: "present" | "absent" | "weekend" | "holiday" | "leave";
   note: string | null;
   durationMinutes: number;
@@ -79,6 +113,7 @@ interface TodayStats {
   date: string;
   clockIn: string | null;
   clockOut: string | null;
+  breaks?: { start: string; end: string | null }[];
   status: string;
   durationMinutes: number;
 }
@@ -92,12 +127,13 @@ interface TeamEmployee {
     clockIn: string | null;
     clockOut: string | null;
     durationMinutes: number;
+    onBreak?: boolean;
   };
 }
 
 interface TeamToday {
   date: string;
-  summary: { total: number; present: number; absent: number; active: number };
+  summary: { total: number; present: number; absent: number; active: number; onBreak: number };
   employees: TeamEmployee[];
 }
 
@@ -178,12 +214,13 @@ function TeamAttendancePage() {
 
           {/* Today's summary cards */}
           {teamToday && (
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-5 gap-4">
               {[
                 { label: "Total Employees", value: teamToday.summary.total, icon: <TbUsers size={20} />, color: "text-stone-600 bg-stone-100" },
                 { label: "Present Today", value: teamToday.summary.present, icon: <TbUserCheck size={20} />, color: "text-green-700 bg-green-100" },
                 { label: "Absent Today", value: teamToday.summary.absent, icon: <TbUserX size={20} />, color: "text-red-600 bg-red-100" },
                 { label: "Currently Active", value: teamToday.summary.active, icon: <TbActivity size={20} />, color: "text-blue-600 bg-blue-100" },
+                { label: "On Break", value: teamToday.summary.onBreak, icon: <TbCoffee size={20} />, color: "text-amber-700 bg-amber-100" },
               ].map(card => (
                 <div key={card.label} className="rounded-xl glass-card p-5 flex items-center gap-4">
                   <div className={cn("p-3 rounded-xl", card.color)}>{card.icon}</div>
@@ -269,8 +306,7 @@ function TeamAttendancePage() {
                           const label = ordinalLabel(day.date, isToday);
                           const statusChar = day.status === "present" ? "P" : "A";
                           const note = day.status === "weekend" ? "Weekend" : day.status === "holiday" ? "Holiday" : day.note ?? undefined;
-                          const clockInFrac = toHourFraction(day.clockIn);
-                          const clockOutFrac = toHourFraction(day.clockOut) ?? (day.clockIn ? (now.getHours() + now.getMinutes() / 60) : null);
+                          const segments = timelineSegments(day.clockIn, day.clockOut, day.breaks, now);
 
                           return (
                             <div key={day.date} className="contents">
@@ -284,18 +320,24 @@ function TeamAttendancePage() {
                                     {note}
                                   </div>
                                 )}
-                                {clockInFrac !== null && clockOutFrac !== null && (
+                                {segments.map((seg, i) => (
                                   <div
+                                    key={i}
                                     className={cn(
-                                      "absolute top-1/2 z-10 h-7 -translate-y-1/2 rounded-full border",
-                                      isToday ? "border-blue-500 bg-blue-100" : "border-green-400 bg-green-100"
+                                      "absolute top-1/2 z-10 h-7 -translate-y-1/2 border",
+                                      i === 0 && "rounded-l-full",
+                                      i === segments.length - 1 && "rounded-r-full",
+                                      seg.type === "break"
+                                        ? "border-amber-400 bg-amber-100"
+                                        : isToday ? "border-blue-500 bg-blue-100" : "border-green-400 bg-green-100"
                                     )}
                                     style={{
-                                      left: `${(clockInFrac / 24) * 100}%`,
-                                      width: `${((clockOutFrac - clockInFrac) / 24) * 100}%`,
+                                      left: `${(seg.startFrac / 24) * 100}%`,
+                                      width: `${((seg.endFrac - seg.startFrac) / 24) * 100}%`,
                                     }}
+                                    title={segmentTooltip(seg)}
                                   />
-                                )}
+                                ))}
                               </div>
                               <div className="border-l border-t p-3 text-center"><AttendanceStatus value={statusChar} /></div>
                               <div className="border-l border-t p-3 text-center text-sm text-gray-500">{formatDuration(day.durationMinutes)}</div>
@@ -326,6 +368,7 @@ function PersonalTimesheetPage() {
   const [today, setToday] = useState<TodayStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [clockingOut, setClockingOut] = useState(false);
+  const [breakLoading, setBreakLoading] = useState(false);
   const [showRegModal, setShowRegModal] = useState(false);
   const [regDate, setRegDate] = useState(now.toISOString().split("T")[0]);
   const [regTime, setRegTime] = useState("");
@@ -369,6 +412,18 @@ function PersonalTimesheetPage() {
       fetchData();
     } catch { } finally {
       setClockingOut(false);
+    }
+  };
+
+  const onBreak = !!today?.breaks?.length && !today.breaks[today.breaks.length - 1].end;
+
+  const handleToggleBreak = async () => {
+    setBreakLoading(true);
+    try {
+      await apiFetch(onBreak ? "/attendance/break-end" : "/attendance/break-start", { method: "POST" });
+      fetchData();
+    } catch { } finally {
+      setBreakLoading(false);
     }
   };
 
@@ -422,7 +477,10 @@ function PersonalTimesheetPage() {
                       <span className="rounded-md bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-600">DEFAULT SHIFT</span>
                       <span className="text-gray-600">11:00 AM – 8:00 PM</span>
                     </div>
-                    <p className="mt-3 text-gray-600">Duration: {formatDuration(today.durationMinutes)}</p>
+                    <p className="mt-3 text-gray-600">
+                      Duration: {formatDuration(today.durationMinutes)}
+                      {onBreak && <span className="ml-2 text-sm font-medium text-amber-600">On break since {formatTime(today.breaks![today.breaks!.length - 1].start)}</span>}
+                    </p>
                   </>
                 ) : (
                   <p className="mt-8 text-lg text-gray-500">You haven't clocked in yet today.</p>
@@ -436,14 +494,27 @@ function PersonalTimesheetPage() {
                   Add regularisation
                 </button>
                 {today?.clockIn && !today?.clockOut ? (
-                  <button
-                    onClick={handleClockOut}
-                    disabled={clockingOut}
-                    className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50 disabled:opacity-60"
-                  >
-                    <TbStopwatch size={16} />
-                    {clockingOut ? "Clocking out…" : "Clock out"}
-                  </button>
+                  <>
+                    <button
+                      onClick={handleToggleBreak}
+                      disabled={breakLoading}
+                      className={cn(
+                        "inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium disabled:opacity-60",
+                        onBreak ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100" : "border-gray-300 hover:bg-gray-50"
+                      )}
+                    >
+                      <TbCoffee size={16} />
+                      {breakLoading ? "…" : onBreak ? "Resume" : "Take a break"}
+                    </button>
+                    <button
+                      onClick={handleClockOut}
+                      disabled={clockingOut}
+                      className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50 disabled:opacity-60"
+                    >
+                      <TbStopwatch size={16} />
+                      {clockingOut ? "Clocking out…" : "Clock out"}
+                    </button>
+                  </>
                 ) : !today?.clockIn ? (
                   <button
                     onClick={handleClockIn}
@@ -493,8 +564,7 @@ function PersonalTimesheetPage() {
                   const label = ordinalLabel(day.date, isToday);
                   const statusChar = day.status === "present" ? "P" : "A";
                   const note = day.status === "weekend" ? "Weekend" : day.status === "holiday" ? "Holiday" : day.note ?? undefined;
-                  const clockInFrac = toHourFraction(day.clockIn);
-                  const clockOutFrac = toHourFraction(day.clockOut) ?? (day.clockIn ? (now.getHours() + now.getMinutes() / 60) : null);
+                  const segments = timelineSegments(day.clockIn, day.clockOut, day.breaks, now);
 
                   return (
                     <div key={day.date} className="contents">
@@ -508,18 +578,24 @@ function PersonalTimesheetPage() {
                             {note}
                           </div>
                         )}
-                        {clockInFrac !== null && clockOutFrac !== null && (
+                        {segments.map((seg, i) => (
                           <div
+                            key={i}
                             className={cn(
-                              "absolute top-1/2 z-10 h-7 -translate-y-1/2 rounded-full border",
-                              isToday ? "border-blue-500 bg-blue-100" : "border-green-400 bg-green-100"
+                              "absolute top-1/2 z-10 h-7 -translate-y-1/2 border",
+                              i === 0 && "rounded-l-full",
+                              i === segments.length - 1 && "rounded-r-full",
+                              seg.type === "break"
+                                ? "border-amber-400 bg-amber-100"
+                                : isToday ? "border-blue-500 bg-blue-100" : "border-green-400 bg-green-100"
                             )}
                             style={{
-                              left: `${(clockInFrac / 24) * 100}%`,
-                              width: `${((clockOutFrac - clockInFrac) / 24) * 100}%`,
+                              left: `${(seg.startFrac / 24) * 100}%`,
+                              width: `${((seg.endFrac - seg.startFrac) / 24) * 100}%`,
                             }}
+                            title={segmentTooltip(seg)}
                           />
-                        )}
+                        ))}
                       </div>
                       <div className="border-l border-t p-3 text-center"><AttendanceStatus value={statusChar} /></div>
                       <div className="border-l border-t p-3 text-center text-sm text-gray-500">{formatDuration(day.durationMinutes)}</div>
