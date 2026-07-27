@@ -61,10 +61,10 @@ const TEMPLATES: TemplateSeed[] = [
     body: "Hi {{name}},\n\nJust floating this back to the top of your inbox. Happy to send a short demo tailored to {{company}} if useful.\n\nBest", aiInstructions: "Gentle, low-pressure, emphasise time saved." },
 ];
 
-interface CampaignSeed { name: string; channel: CampaignChannel; stage: CampaignStage; template: string; dailyLimit: number; leadsTotal: number; leadsProcessed: number; objective: string }
+interface CampaignSeed { name: string; channel: CampaignChannel; stage: CampaignStage; template: string; leadsTotal: number; leadsProcessed: number; objective: string }
 const CAMPAIGNS: CampaignSeed[] = [
-  { name: "Q3 SaaS Outreach", channel: "Cold Email", stage: "Active", template: "Cold Intro — SaaS Founders", dailyLimit: 25, leadsTotal: 6, leadsProcessed: 3, objective: "Connect with 50 SaaS operators this quarter." },
-  { name: "LinkedIn Connector Push", channel: "LinkedIn Connection", stage: "Draft", template: "Follow-up Nudge", dailyLimit: 15, leadsTotal: 4, leadsProcessed: 0, objective: "Grow first-degree network with target ICP." },
+  { name: "Q3 SaaS Outreach", channel: "Cold Email", stage: "Active", template: "Cold Intro — SaaS Founders", leadsTotal: 6, leadsProcessed: 3, objective: "Connect with 50 SaaS operators this quarter." },
+  { name: "LinkedIn Connector Push", channel: "LinkedIn Connection", stage: "Draft", template: "Follow-up Nudge", leadsTotal: 4, leadsProcessed: 0, objective: "Grow first-degree network with target ICP." },
 ];
 
 interface LeadSeed { name: string; company: string; title: string; email: string; status: LeadStatus; campaign?: string; location?: string; notes?: string }
@@ -138,7 +138,7 @@ async function seedComms() {
       where: { name: c.name, createdById: admin.id },
       defaults: {
         name: c.name, channel: c.channel, stage: c.stage, templateId: templates[c.template]?.id ?? null,
-        dailyLimit: c.dailyLimit, leadsTotal: c.leadsTotal, leadsProcessed: c.leadsProcessed,
+        leadsTotal: c.leadsTotal, leadsProcessed: c.leadsProcessed,
         startDate: daysAgo(7), objective: c.objective, createdById: admin.id,
       },
     });

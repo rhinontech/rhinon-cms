@@ -31,12 +31,12 @@ const hasGmailConfig = Boolean(smtpUser && smtpPass);
 const sesClient = hasSesConfig ? new SESv2Client({ region: sesRegion }) : null;
 const smtpTransporter = hasGmailConfig
   ? nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: smtpUser,
-        pass: smtpPass,
-      },
-    })
+    service: "gmail",
+    auth: {
+      user: smtpUser,
+      pass: smtpPass,
+    },
+  })
   : null;
 
 function toArray(value: string | string[]) {

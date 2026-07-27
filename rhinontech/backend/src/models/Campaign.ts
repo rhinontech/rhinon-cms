@@ -3,21 +3,25 @@ import { sequelize } from "../config/database";
 
 export type CampaignStage = "Draft" | "Active" | "Paused" | "Completed";
 export type CampaignChannel = "Email" | "Cold Email" | "LinkedIn DM" | "LinkedIn Connection" | "LinkedIn Post" | "LinkedIn Video" | "LinkedIn Article";
-// How email drafts are produced: "template" = mail-merge blast, "agent" = per-lead
-// AI research + human approval. Chosen at creation; meaningless for LinkedIn channels.
-export type CampaignMode = "template" | "agent";
 
 interface CampaignAttributes {
   id: string;
   name: string;
   channel: CampaignChannel;
-  mode: CampaignMode;
   templateId?: string | null;
   stage: CampaignStage;
-  dailyLimit: number;
+  // Email content, authored directly on the campaign — no shared template.
+  subject?: string | null;
+  body?: string | null;
+  // Sender identity — picked from the pool of assigned company emails (sent via SES,
+  // which is domain-verified, so any of them can be a real "From" address).
+  senderEmail?: string | null;
+  senderName?: string | null;
+  // When true, the outer cron auto-fires this campaign once at startDate/runTime.
+  // When false (default), it only ever sends via manual "Send Now".
+  autoSend: boolean;
   startDate: Date;
   runTime: string;
-  scheduleDays: string[];
   leadsTotal: number;
   leadsProcessed: number;
   objective?: string;
@@ -44,19 +48,21 @@ interface CampaignAttributes {
   updatedAt?: Date;
 }
 
-interface CampaignCreationAttributes extends Optional<CampaignAttributes, "id" | "channel" | "mode" | "templateId" | "stage" | "dailyLimit" | "startDate" | "runTime" | "scheduleDays" | "leadsTotal" | "leadsProcessed" | "objective" | "notes" | "mediaUrl" | "aiDraft" | "visibility" | "mediaTitle" | "mediaDescription" | "articleUrl" | "slug" | "platformPostId" | "organizationId" | "socialStats"> {}
+interface CampaignCreationAttributes extends Optional<CampaignAttributes, "id" | "channel" | "templateId" | "stage" | "subject" | "body" | "senderEmail" | "senderName" | "autoSend" | "startDate" | "runTime" | "leadsTotal" | "leadsProcessed" | "objective" | "notes" | "mediaUrl" | "aiDraft" | "visibility" | "mediaTitle" | "mediaDescription" | "articleUrl" | "slug" | "platformPostId" | "organizationId" | "socialStats"> {}
 
 export class Campaign extends Model<CampaignAttributes, CampaignCreationAttributes> implements CampaignAttributes {
   declare id: string;
   declare name: string;
   declare channel: CampaignChannel;
-  declare mode: CampaignMode;
   declare templateId: string | null;
   declare stage: CampaignStage;
-  declare dailyLimit: number;
+  declare subject: string | null;
+  declare body: string | null;
+  declare senderEmail: string | null;
+  declare senderName: string | null;
+  declare autoSend: boolean;
   declare startDate: Date;
   declare runTime: string;
-  declare scheduleDays: string[];
   declare leadsTotal: number;
   declare leadsProcessed: number;
   declare objective: string;
@@ -91,15 +97,13 @@ Campaign.init(
       defaultValue: "Email",
       allowNull: false,
     },
-    mode: {
-      type: DataTypes.ENUM("template", "agent"),
-      defaultValue: "template",
-      allowNull: false,
-    },
-    dailyLimit: { type: DataTypes.INTEGER, defaultValue: 50, allowNull: false },
+    subject: { type: DataTypes.STRING, allowNull: true },
+    body: { type: DataTypes.TEXT, allowNull: true },
+    senderEmail: { type: DataTypes.STRING, allowNull: true },
+    senderName: { type: DataTypes.STRING, allowNull: true },
+    autoSend: { type: DataTypes.BOOLEAN, defaultValue: false, allowNull: false },
     startDate: { type: DataTypes.DATE, defaultValue: DataTypes.NOW, allowNull: false },
     runTime: { type: DataTypes.STRING(5), defaultValue: "09:00", allowNull: false },
-    scheduleDays: { type: DataTypes.ARRAY(DataTypes.STRING), defaultValue: ["Mon", "Tue", "Wed", "Thu", "Fri"], allowNull: false },
     leadsTotal: { type: DataTypes.INTEGER, defaultValue: 0, allowNull: false },
     leadsProcessed: { type: DataTypes.INTEGER, defaultValue: 0, allowNull: false },
     objective: { type: DataTypes.TEXT, allowNull: true },

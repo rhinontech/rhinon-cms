@@ -1,8 +1,7 @@
 import { Router, Response } from "express";
-import { Lead, Campaign, CampaignActivity } from "../models";
+import { Lead, Campaign, CampaignActivity, ContactGroup, ContactGroupMember } from "../models";
 import { authenticate, authorizeAny, AuthRequest } from "../middleware/authenticate";
 import { enrichLeadWithAI } from "../services/gemini";
-import { draftOutreachForLead } from "../services/salesAgent";
 import { fetchWebsiteText } from "../services/research";
 import { sequelize } from "../config/database";
 import { Op } from "sequelize";
@@ -89,6 +88,21 @@ router.post("/import", writeAccess, async (req: AuthRequest, res: Response) => {
       return;
     }
 
+    // Optional: land the imported rows directly into a contact group ("contact list import")
+    let targetGroup: ContactGroup | null = null;
+    if (req.body?.contactGroupId) {
+      targetGroup = await ContactGroup.findByPk(req.body.contactGroupId);
+      if (!targetGroup) {
+        res.status(404).json({ message: "Contact group not found" });
+        return;
+      }
+    } else if (req.body?.newGroupName && req.body.newGroupName.trim()) {
+      [targetGroup] = await ContactGroup.findOrCreate({
+        where: { name: req.body.newGroupName.trim() },
+        defaults: { name: req.body.newGroupName.trim(), createdById: req.user!.userId },
+      });
+    }
+
     const str = (v: any): string | null => {
       const s = (v ?? "").toString().trim();
       return s === "" ? null : s;
@@ -148,7 +162,7 @@ router.post("/import", writeAccess, async (req: AuthRequest, res: Response) => {
               ...(apolloIds.length ? [{ apolloContactId: { [Op.in]: apolloIds } }] : []),
             ],
           },
-          attributes: ["email", "apolloContactId"],
+          attributes: ["id", "email", "apolloContactId"],
         })
       : [];
     const existingEmails = new Set(existing.map(e => (e.email || "").toLowerCase()));
@@ -160,12 +174,40 @@ router.post("/import", writeAccess, async (req: AuthRequest, res: Response) => {
 
     const created = await Lead.bulkCreate(toCreate, { validate: true });
 
+    const allImportedIds = [...created.map(l => l.id), ...existing.map(e => e.id)];
+
+    if (req.body?.campaignId && allImportedIds.length) {
+      const campaign = await Campaign.findByPk(req.body.campaignId);
+      if (campaign) {
+        await Lead.update(
+          { campaignId: campaign.id, status: "Enrolled", aiDraft: null },
+          { where: { id: { [Op.in]: allImportedIds } } }
+        );
+        const newTotal = await Lead.count({ where: { campaignId: campaign.id } });
+        await campaign.update({ leadsTotal: newTotal });
+      }
+    }
+
+    let addedToGroup = 0;
+    if (targetGroup) {
+      // Rows that matched an already-existing lead should still land in the target
+      // list, not be silently dropped, so the "list" reflects everything in the CSV.
+      if (allImportedIds.length) {
+        await ContactGroupMember.bulkCreate(
+          allImportedIds.map(leadId => ({ contactGroupId: targetGroup!.id, leadId, addedById: req.user!.userId })),
+          { ignoreDuplicates: true }
+        );
+        addedToGroup = allImportedIds.length;
+      }
+    }
+
     res.status(201).json({
       total: incoming.length,
       imported: created.length,
       duplicates: incoming.length - errors.length - created.length,
       invalid: errors.length,
       errors: errors.slice(0, 50),
+      ...(targetGroup ? { contactGroupId: targetGroup.id, addedToGroup } : {}),
     });
   } catch (error: any) {
     res.status(400).json({ message: error.message });
@@ -275,22 +317,6 @@ router.post("/:id/enrich", writeAccess, async (req: AuthRequest, res: Response) 
     });
 
     res.json(enrichment);
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// POST /leads/:id/agent-draft - run the sales agent for ONE lead (lets the UI show live, one-at-a-time progress)
-router.post("/:id/agent-draft", writeAccess, async (req: AuthRequest, res: Response) => {
-  const lead = await Lead.findByPk(req.params.id);
-  if (!lead) {
-    res.status(404).json({ message: "Lead not found" });
-    return;
-  }
-  try {
-    const senderName = req.user!.fullName || "Rhinon Labs";
-    const result = await draftOutreachForLead(lead, senderName);
-    res.json({ lead, result });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

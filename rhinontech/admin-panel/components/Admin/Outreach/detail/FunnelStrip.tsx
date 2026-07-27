@@ -1,20 +1,18 @@
 "use client";
 
-import { Fragment } from "react";
-import { TbChevronRight } from "react-icons/tb";
-import { cn } from "@/lib/utils";
-import type { Campaign, CampaignFunnel, CampaignLead } from "../shared/types";
+import { TbUsers, TbSparkles, TbMailOpened, TbMessageCircle, TbBan } from "react-icons/tb";
+import { StatCard } from "../shared/StatCard";
+import type { CampaignFunnel, CampaignLead } from "../shared/types";
 
 /**
- * Enrolled → Drafted → (Approved) → Sent → Replied at a glance.
+ * Enrolled / Drafted / Sent / Replied at a glance — same stat-tile language as
+ * the Outreach Overview page, so the detail page reads as part of one product.
  * Prefers the server funnel; falls back to counting the loaded leads.
  */
 export function FunnelStrip({
-  campaign,
   funnel,
   leads,
 }: {
-  campaign: Campaign;
   funnel: CampaignFunnel | null;
   leads: CampaignLead[];
 }) {
@@ -27,37 +25,24 @@ export function FunnelStrip({
     bounced: leads.filter((l) => l.status === "Bounced").length,
   };
 
-  const steps = [
-    { label: "Enrolled", value: counts.enrolled },
-    { label: "Drafted", value: counts.drafted },
-    ...(campaign.mode === "agent" ? [{ label: "Approved", value: counts.approved }] : []),
-    { label: "Sent", value: counts.sent },
-    { label: "Replied", value: counts.replied, highlight: counts.replied > 0 },
-  ];
-
   return (
-    <div className="flex items-center gap-1 overflow-x-auto rounded-xl glass-panel px-4 py-3">
-      {steps.map((step, i) => (
-        <Fragment key={step.label}>
-          {i > 0 && <TbChevronRight size={16} className="shrink-0 text-stone-300" />}
-          <div className="flex min-w-20 flex-col items-center px-2">
-            <span
-              className={cn(
-                "text-xl font-bold tabular-nums",
-                (step as any).highlight ? "text-emerald-600" : step.value > 0 ? "text-stone-900" : "text-stone-300"
-              )}
-            >
-              {step.value}
-            </span>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">{step.label}</span>
-          </div>
-        </Fragment>
-      ))}
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <StatCard label="Enrolled" value={counts.enrolled} icon={<TbUsers size={16} />} />
+      <StatCard label="Drafted" value={counts.drafted} icon={<TbSparkles size={16} />} />
+      <StatCard label="Sent" value={counts.sent} icon={<TbMailOpened size={16} />} />
+      <StatCard
+        label="Replied"
+        value={counts.replied}
+        icon={<TbMessageCircle size={16} />}
+        className={counts.replied > 0 ? "ring-1 ring-emerald-200 bg-emerald-50/40" : undefined}
+      />
       {counts.bounced > 0 && (
-        <div className="ml-auto flex min-w-20 flex-col items-center border-l border-stone-100 px-2">
-          <span className="text-xl font-bold text-red-500 tabular-nums">{counts.bounced}</span>
-          <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Bounced</span>
-        </div>
+        <StatCard
+          label="Bounced"
+          value={counts.bounced}
+          icon={<TbBan size={16} />}
+          className="ring-1 ring-red-200 bg-red-50/40 sm:col-span-4"
+        />
       )}
     </div>
   );

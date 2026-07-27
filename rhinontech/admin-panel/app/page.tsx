@@ -12,5 +12,5 @@ export default async function Home() {
 
   if (!payload) redirect("/auth/login");
 
-  redirect(`/${payload.roleSlug}/dashboard`);
+  redirect(`/${payload.roleSlug}/dashboard`); 
 }

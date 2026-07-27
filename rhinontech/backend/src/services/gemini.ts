@@ -201,65 +201,17 @@ export async function generateAISocialDraft(templateData: any = null): Promise<s
   return response.text().trim();
 }
 
-const STAGE_GUIDE: Record<number, string> = {
-  0: "Stage 0 — no contact yet. Goal: start a conversation. Do NOT pitch. Ask about their operations.",
-  2: "Stage 2 — no reply after the first email. Goal: introduce an operational hypothesis relevant to their industry. Reference likely pain.",
-  3: "Stage 3 — no reply after the second email. Goal: provide proof. Introduce ApexisPro and the outcome. Do not oversell.",
-  4: "Stage 4 — no reply after the third email. Goal: pattern interrupt. Ask one simple, specific question.",
-};
-
-export async function generateStagedOutreachEmail(
-  lead: any,
-  opts: { stage: number; enrichment?: any; senderName?: string; websiteText?: string }
-) {
-  const { stage, enrichment, senderName = "Rhinon Labs", websiteText } = opts;
-  const prompt = `
-    You are the Rhinon Labs outbound sales agent. Follow this memory EXACTLY — identity, ICP, pain patterns, email philosophy, stages, and output rules:
-
-    ${getSalesMemory()}
-
-    PROSPECT PROFILE:
-    Name: ${lead.name}
-    Title: ${lead.title || "Unknown"}
-    Company: ${lead.company}
-    Industry: ${lead.industry || "Unknown"}
-    Company size: ${lead.employeeCount ?? "Unknown"} employees
-    Location: ${lead.location || "Unknown"}
-    Website: ${lead.website || "Unknown"}
-    Services/keywords: ${(lead.keywords || "").slice(0, 600)}
-    Tech stack: ${(lead.technologies || "").slice(0, 300)}
-
-    ${enrichment ? `RESEARCH (verified):\n    Company: ${enrichment.companyDescription || ""}\n    Likely pain: ${enrichment.potentialPainPoint || ""}\n    Recent news: ${enrichment.recentNews || ""}` : ""}
-    ${websiteText ? `\n    WEBSITE CONTENT (from their own site — use a real, specific detail from here to personalize):\n    """${websiteText.slice(0, 2500)}"""\n` : ""}
-
-    CURRENT OUTREACH STAGE:
-    ${STAGE_GUIDE[stage] || STAGE_GUIDE[0]}
-
-    TASK:
-    Follow Research -> Pain Hypothesis -> Personalization -> Email. Write the next email for this stage.
-    Address the email to ${lead.name}. Sign off as ${senderName}.
-    Hard rules: under 120 words, no buzzwords, no generic agency language, business-operator tone.
-    Sell visibility / efficiency / operational scale — never sell "dashboard", "portal", "automation", or "AI agent".
-
-    Return ONLY a JSON object with: "prospectSummary", "likelyPain", "reasoning", "subject", "body".
-    Do not include any other text.
-  `;
-
-  const result = await model.generateContent(prompt);
-  const text = (await result.response).text();
-  try {
-    const m = text.match(/\{[\s\S]*\}/);
-    if (m) return JSON.parse(m[0]);
-  } catch {
-    /* fall through */
-  }
-  return { subject: `A quick thought on ${lead.company}'s operations`, body: text.trim(), prospectSummary: "", likelyPain: "", reasoning: "" };
-}
-
 export async function enrichLeadWithAI(
   leadName: string,
   companyName: string,
-  context: { title?: string; industry?: string; keywords?: string; technologies?: string; website?: string; websiteText?: string } = {}
+  context: {
+    title?: string | null;
+    industry?: string | null;
+    keywords?: string | null;
+    technologies?: string | null;
+    website?: string | null;
+    websiteText?: string | null;
+  } = {}
 ) {
   const signals = [
     context.title ? `Role: ${context.title}` : "",

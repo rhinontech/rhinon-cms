@@ -12,7 +12,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { StatusBadge } from "../shared/StatusBadge";
-import { ModeBadge } from "../shared/ModeBadge";
 import { ChannelIcon } from "../shared/ChannelIcon";
 import type { Campaign } from "../shared/types";
 
@@ -71,7 +70,6 @@ export function CampaignCard({
 
       <div className="flex flex-wrap items-center gap-1.5">
         <StatusBadge stage={campaign.stage} />
-        <ModeBadge mode={campaign.mode || "template"} />
       </div>
 
       <div className="space-y-1.5">
@@ -91,7 +89,7 @@ export function CampaignCard({
         <span className="inline-flex items-center gap-1">
           <TbClock size={13} /> {campaign.runTime || "09:00"}
         </span>
-        <span className="ml-auto">{campaign.template?.name || "No template"}</span>
+        <span className="ml-auto truncate">{campaign.subject || "No subject set"}</span>
       </div>
     </div>
   );

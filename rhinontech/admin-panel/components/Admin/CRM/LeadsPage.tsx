@@ -27,6 +27,7 @@ import { apiFetch } from "@/lib/api";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { useSideNav } from "@/context/SideNavContext";
 import { LeadImportModal } from "./LeadImportModal";
+import { AddToGroupMenu } from "@/components/Admin/Outreach/contacts/AddToGroupMenu";
 
 type LeadStatus = "New" | "Enriched" | "Enrolled" | "Emailed" | "Replied" | "Bounced" | "Unsubscribed" | "Interested";
 type PanelMode = "view" | "create" | "edit";
@@ -308,6 +309,7 @@ export function LeadsPage() {
                 <button onClick={() => setSelectedIds(new Set())} className="rounded-lg px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-white">
                   Clear
                 </button>
+                <AddToGroupMenu leadIds={Array.from(selectedIds)} onDone={() => setSelectedIds(new Set())} />
                 <button
                   onClick={handleBulkDelete}
                   disabled={bulkDeleting}

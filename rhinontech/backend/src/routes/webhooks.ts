@@ -2,7 +2,7 @@ import { Router, Request, Response } from "express";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { simpleParser } from "mailparser";
 import { Op } from "sequelize";
-import { InboxEmail } from "../models";
+import { InboxEmail, Lead, CampaignActivity } from "../models";
 import { uploadBuffer } from "../services/storage";
 import { env } from "../config/env";
 
@@ -133,6 +133,10 @@ router.post("/ses-inbound", async (req: Request, res: Response) => {
           }
         }
 
+        // If this inbound email came from a known lead, tag it to their campaign
+        // so the campaign gets its own inbox — this is what a reply belongs to.
+        const repliedLead = await Lead.findOne({ where: { email: fromEmail.toLowerCase() } });
+
         // SES can send emails to multiple recipients in our domain.
         // We should create a copy in the inbox for each valid internal recipient.
         for (const recipient of toEmails) {
@@ -153,7 +157,22 @@ router.post("/ses-inbound", async (req: Request, res: Response) => {
             attachments,
             messageId,
             inReplyTo,
+            campaignId: repliedLead?.campaignId ?? null,
+            leadId: repliedLead?.id ?? null,
             sentAt: parsed.date || new Date(),
+          });
+        }
+
+        // Surface it as a reply inside their campaign — flips status to Replied
+        // and logs the activity the campaign's Activity feed / funnel already render.
+        if (repliedLead && !["Bounced", "Unsubscribed"].includes(repliedLead.status)) {
+          await repliedLead.update({ status: "Replied" });
+          await CampaignActivity.create({
+            leadId: repliedLead.id,
+            campaignId: repliedLead.campaignId,
+            type: "ReplyReceived",
+            content: snippet || `${fromName} replied to your outreach email.`,
+            generatedContent: htmlBody,
           });
         }
       }

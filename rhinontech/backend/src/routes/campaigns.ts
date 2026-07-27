@@ -3,7 +3,6 @@ import { Campaign, CampaignTemplate, Lead, CampaignActivity, User, InboxEmail } 
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 import { env } from "../config/env";
 import { generateAIEmailDraft, generateAISocialDraft, generateTemplateWithAI } from "../services/gemini";
-import { draftOutreachForLead } from "../services/salesAgent";
 import { postToLinkedIn } from "../services/linkedin";
 import { sendEmail } from "../services/mailer";
 import { Op } from "sequelize";
@@ -25,6 +24,17 @@ router.use((req, res, next) => {
   authenticate(req as AuthRequest, res as Response, next);
 });
 
+// GET /campaigns/sender-options - assigned company emails a campaign can send from.
+// Sent via SES (domain-verified), so any of these addresses is a real, deliverable "From".
+router.get("/sender-options", authorize("outreach:read"), async (_req: AuthRequest, res: Response) => {
+  const users = await User.findAll({
+    where: { status: "active", companyEmail: { [Op.ne]: null as any } },
+    attributes: ["companyEmail", "fullName"],
+    order: [["fullName", "ASC"]],
+  });
+  res.json(users.map((u) => ({ email: u.companyEmail, name: u.fullName })));
+});
+
 // GET /campaigns - list all campaigns
 router.get("/", authorize("outreach:read"), async (req: AuthRequest, res: Response) => {
   const campaigns = await Campaign.findAll({
@@ -42,19 +52,15 @@ const isEmailChannel = (channel: string) => channel === "Email" || channel === "
 // POST /campaigns - create campaign
 router.post("/", authorize("outreach:write"), async (req: AuthRequest, res: Response) => {
   try {
-    const { channel = "Email", mode } = req.body;
+    const { channel = "Email" } = req.body;
     if (!SUPPORTED_CHANNELS.includes(channel)) {
       res.status(400).json({ message: `Unsupported channel "${channel}". Use one of: ${SUPPORTED_CHANNELS.join(", ")}` });
       return;
     }
-    if (mode && !["template", "agent"].includes(mode)) {
-      res.status(400).json({ message: `Invalid mode "${mode}". Use "template" or "agent".` });
-      return;
-    }
     const campaign = await Campaign.create({
+      senderEmail: req.user!.companyEmail,
+      senderName: req.user!.fullName,
       ...req.body,
-      // Mode only applies to email campaigns; LinkedIn publishing has one flow.
-      mode: isEmailChannel(channel) ? mode || "template" : "template",
       createdById: req.user!.userId,
     });
     res.status(201).json(campaign);
@@ -127,7 +133,7 @@ router.post("/:id/enroll", authorize("outreach:write"), async (req: AuthRequest,
   }
 
   await Lead.update(
-    { campaignId: campaign.id, status: "Enrolled" },
+    { campaignId: campaign.id, status: "Enrolled", aiDraft: null },
     { where: { id: { [Op.in]: leadIds } } }
   );
 
@@ -139,10 +145,10 @@ router.post("/:id/enroll", authorize("outreach:write"), async (req: AuthRequest,
 
 function fillPlaceholders(text: string, lead: any, senderName: string): string {
   return text
-    .replace(/\{\{lead\.name\}\}/g, lead.name)
-    .replace(/\{\{lead\.company\}\}/g, lead.company)
-    .replace(/\{\{lead\.title\}\}/g, lead.title || "colleague")
-    .replace(/\{\{sender\.name\}\}/g, senderName)
+    .replace(/\{\{\s*(?:lead\.)?name\s*\}\}/gi, lead.name)
+    .replace(/\{\{\s*(?:lead\.)?company\s*\}\}/gi, lead.company)
+    .replace(/\{\{\s*(?:lead\.)?title\s*\}\}/gi, lead.title || "colleague")
+    .replace(/\{\{\s*sender\.name\s*\}\}/gi, senderName)
     .replace(/\[Your Name\]/gi, senderName)
     .replace(/\[your name\]/gi, senderName)
     .replace(/\[Sender Name\]/gi, senderName)
@@ -153,16 +159,29 @@ const BRAND_LOGO_URL = process.env.BRAND_LOGO_URL || "https://www.rhinonlabs.com
 const BRAND_SITE_URL = process.env.BRAND_SITE_URL || "https://www.rhinonlabs.com";
 const COMPANY_ADDRESS = process.env.COMPANY_ADDRESS || ""; // registered address for compliant footer
 
+// Plain-text rendering of a rich-text draft — used for the email's text/ part,
+// the inbox snippet, and the preheader, none of which should show raw markup.
+function stripHtml(html: string): string {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<(p|div|br|li|tr)[^>]*>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 // Premium, responsive, light/dark-aware HTML email (bulletproof table layout).
-function toEmailHtml(plainText: string, imageUrl?: string): string {
+// `richTextHtml` is already-formatted HTML from the campaign's rich-text editor.
+function toEmailHtml(richTextHtml: string, imageUrl?: string): string {
   const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const paragraphs = esc(plainText)
-    .split(/\n\n+/)
-    .map(p => `<p class="text" style="margin:0 0 18px 0;line-height:1.65;color:#1f2937;font-size:15px;mso-line-height-rule:exactly">${p.replace(/\n/g, "<br>")}</p>`)
-    .join("");
 
   // Hidden inbox preview text (first real line of the email)
-  const preheader = esc((plainText.split(/\n/).find(l => l.trim()) || "A quick note from Rhinon Labs").slice(0, 120));
+  const preheader = esc((stripHtml(richTextHtml).split(/\n/).find(l => l.trim()) || "A quick note from Rhinon Labs").slice(0, 120));
 
   const imageBlock = imageUrl
     ? `<tr><td style="padding:0"><img src="${imageUrl}" alt="" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0" /></td></tr>`
@@ -183,6 +202,10 @@ function toEmailHtml(plainText: string, imageUrl?: string): string {
     body,table,td,p,a { -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; }
     img { -ms-interpolation-mode:bicubic; border:0; outline:none; text-decoration:none; }
     a { color:#4f46e5; }
+    .tiptap-content { line-height:1.65; color:#1f2937; font-size:15px; mso-line-height-rule:exactly; }
+    .tiptap-content p { margin:0 0 18px 0; }
+    .tiptap-content ul, .tiptap-content ol { margin:0 0 18px 0; padding-left:22px; }
+    .tiptap-content a { color:#4f46e5; }
     @media only screen and (max-width:620px) {
       .container { width:100% !important; border-radius:0 !important; }
       .px { padding-left:24px !important; padding-right:24px !important; }
@@ -191,7 +214,7 @@ function toEmailHtml(plainText: string, imageUrl?: string): string {
     @media (prefers-color-scheme: dark) {
       .email-bg { background:#0b0b0c !important; }
       .card { background:#161618 !important; box-shadow:none !important; }
-      .text { color:#e5e7eb !important; }
+      .text, .tiptap-content { color:#e5e7eb !important; }
       .muted { color:#8b8f98 !important; }
       .divider { border-color:#27272a !important; }
       a { color:#a5b4fc !important; }
@@ -210,7 +233,7 @@ function toEmailHtml(plainText: string, imageUrl?: string): string {
         <tr><td style="height:3px;line-height:3px;font-size:0;background:#4f46e5">&nbsp;</td></tr>
         ${imageBlock}
         <tr><td class="px" style="padding:38px 40px 8px">
-          ${paragraphs}
+          <div class="tiptap-content">${richTextHtml}</div>
         </td></tr>
         <tr><td class="px" style="padding:0 40px 32px">
           <p class="text" style="margin:0;font-size:14px;line-height:1.5;color:#111827">
@@ -246,27 +269,24 @@ router.post("/:id/process", authorize("outreach:write"), async (req: AuthRequest
     const isEmail = isEmailChannel(campaign.channel);
 
     if (isEmail) {
-      if (campaign.mode !== "template") {
-        res.status(400).json({ message: "This is an AI-agent campaign — use Run Agent instead of template drafting." });
-        return;
-      }
       const leads = await Lead.findAll({
         where: { campaignId: campaign.id, status: ["Enrolled", "New"] },
       });
 
-      const senderName = req.user!.fullName || "Rhinon Team";
+      const senderName = campaign.senderName || req.user!.fullName || "Rhinon Team";
       let processedCount = 0;
 
       for (const lead of leads) {
         try {
-          const draft = await generateAIEmailDraft(lead, (campaign as any).template, "", senderName);
-          await lead.update({ aiDraft: fillPlaceholders(draft.body, lead, senderName), status: "Interested" });
+          const rawBody = campaign.body || "Hi {{lead.name}},\n\nWe'd love to connect.\n\nBest,\n{{sender.name}}";
+          const draftBody = fillPlaceholders(rawBody, lead, senderName);
+          await lead.update({ aiDraft: draftBody, status: "Interested" });
           await CampaignActivity.create({
             leadId: lead.id,
             campaignId: campaign.id,
             type: "DraftGenerated",
-            content: "AI personalized outreach draft generated for this campaign.",
-            generatedContent: draft.body,
+            content: "Template draft prepared (mail-merge).",
+            generatedContent: draftBody,
           });
           processedCount++;
         } catch (err: any) {
@@ -307,27 +327,50 @@ router.post("/:id/send", authorize("outreach:write"), async (req: AuthRequest, r
     const isEmail = isEmailChannel(campaign.channel);
 
     if (isEmail) {
-      if (campaign.mode !== "template") {
-        res.status(400).json({ message: "This is an AI-agent campaign — use Send Approved instead of blast send." });
-        return;
+      const senderName = campaign.senderName || req.user!.fullName || "Rhinon Team";
+      const fromEmail = campaign.senderEmail || req.user!.companyEmail || "admin@rhinontech.in";
+
+      // 1. Auto-generate drafts for any leads that are still Enrolled or missing drafts
+      const enrolledLeads = await Lead.findAll({
+        where: {
+          campaignId: campaign.id,
+          status: ["Enrolled", "New"],
+        },
+      });
+
+      for (const lead of enrolledLeads) {
+        try {
+          const rawBody = campaign.body || "Hi {{lead.name}},\n\nWe'd love to connect.\n\nBest,\n{{sender.name}}";
+          const draftBody = fillPlaceholders(rawBody, lead, senderName);
+          await lead.update({ aiDraft: draftBody, status: "Interested" });
+          await CampaignActivity.create({
+            leadId: lead.id,
+            campaignId: campaign.id,
+            type: "DraftGenerated",
+            content: "Template draft prepared (mail-merge).",
+            generatedContent: draftBody,
+          });
+        } catch (err: any) {
+          console.error(`Draft error for lead ${lead.id}:`, err.message);
+        }
       }
+
+      // 2. Dispatch emails to all ready leads
       const leads = await Lead.findAll({
         where: { campaignId: campaign.id, status: "Interested" },
       });
 
-      const senderName = req.user!.fullName || "Rhinon Team";
-      const fromEmail = process.env.GMAIL_USER || process.env.SMTP_FROM_EMAIL || "admin@rhinontech.in";
       let sentCount = 0;
 
       for (const lead of leads) {
         try {
           if (!lead.aiDraft) continue;
-          const tmpl = (campaign as any).template;
-          const subject = tmpl?.subject
-            ? fillPlaceholders(tmpl.subject, lead, senderName)
+          const subject = campaign.subject
+            ? fillPlaceholders(campaign.subject, lead, senderName)
             : `Optimizing ${lead.company}'s potential`;
-          const htmlBody = toEmailHtml(lead.aiDraft, tmpl?.imageUrl);
-          await sendEmail({ to: lead.email, from: fromEmail, subject, html: htmlBody, text: lead.aiDraft });
+          const htmlBody = toEmailHtml(lead.aiDraft);
+          const plainText = stripHtml(lead.aiDraft);
+          await sendEmail({ to: lead.email, from: fromEmail, fromName: senderName, via: "ses", subject, html: htmlBody, text: plainText });
 
           await InboxEmail.create({
             threadKey: `outreach-${campaign.id}-${lead.id}`,
@@ -337,9 +380,11 @@ router.post("/:id/send", authorize("outreach:write"), async (req: AuthRequest, r
             toEmails: [lead.email],
             subject,
             body: lead.aiDraft,
-            snippet: lead.aiDraft.slice(0, 160),
+            snippet: plainText.slice(0, 160),
             ownerEmail: fromEmail,
             isRead: true,
+            campaignId: campaign.id,
+            leadId: lead.id,
             sentAt: new Date(),
           });
 
@@ -431,263 +476,115 @@ async function maybeCompleteCampaign(campaign: Campaign): Promise<boolean> {
   return true;
 }
 
-// POST /campaigns/:id/agent-draft — sales agent researches + drafts (Stage 0–5) for approval. Never sends.
-router.post("/:id/agent-draft", authorize("outreach:write"), async (req: AuthRequest, res: Response) => {
-  try {
-    const campaign = await Campaign.findByPk(req.params.id);
-    if (!campaign) {
-      res.status(404).json({ message: "Campaign not found" });
-      return;
-    }
-    if (isEmailChannel(campaign.channel) && campaign.mode !== "agent") {
-      res.status(400).json({ message: "This is a template-blast campaign — use Generate Drafts instead of the agent." });
-      return;
-    }
-
-    const senderName = req.user!.fullName || "Rhinon Labs";
-    const leads = await Lead.findAll({
-      where: { campaignId: campaign.id, draftApproved: false },
-      limit: 50,
-    });
-
-    let drafted = 0;
-    const skipped: { lead: string; reason: string }[] = [];
-    for (const lead of leads) {
-      try {
-        const result = await draftOutreachForLead(lead, senderName);
-        if (result.skipped) skipped.push({ lead: lead.name, reason: result.reason });
-        else drafted++;
-      } catch (err: any) {
-        skipped.push({ lead: lead.name, reason: err.message });
-      }
-    }
-
-    res.json({ success: true, drafted, skipped: skipped.length, total: leads.length, details: skipped.slice(0, 50) });
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// POST /campaigns/:id/send-approved — send ONLY leads whose draft was approved
-router.post("/:id/send-approved", authorize("outreach:write"), async (req: AuthRequest, res: Response) => {
-  try {
-    const campaign = await Campaign.findByPk(req.params.id);
-    if (!campaign) {
-      res.status(404).json({ message: "Campaign not found" });
-      return;
-    }
-    if (isEmailChannel(campaign.channel) && campaign.mode !== "agent") {
-      res.status(400).json({ message: "This is a template-blast campaign — use Send Now instead of Send Approved." });
-      return;
-    }
-
-    const senderName = req.user!.fullName || "Rhinon Labs";
-    const fromEmail = process.env.GMAIL_USER || process.env.SMTP_FROM_EMAIL || "admin@rhinontech.in";
-    const leads = await Lead.findAll({
-      where: { campaignId: campaign.id, draftApproved: true, aiDraft: { [Op.ne]: null } as any },
-    });
-
-    let sent = 0;
-    for (const lead of leads) {
-      try {
-        const subject = lead.draftSubject || `A quick thought on ${lead.company}'s operations`;
-        const htmlBody = toEmailHtml(lead.aiDraft);
-        await sendEmail({ to: lead.email, from: fromEmail, subject, html: htmlBody, text: lead.aiDraft });
-
-        await InboxEmail.create({
-          threadKey: `outreach-${campaign.id}-${lead.id}`,
-          folder: "sent",
-          fromName: senderName,
-          fromEmail,
-          toEmails: [lead.email],
-          subject,
-          body: lead.aiDraft,
-          snippet: lead.aiDraft.slice(0, 160),
-          ownerEmail: fromEmail,
-          isRead: true,
-          sentAt: new Date(),
-        });
-
-        await lead.update({ status: "Emailed", draftApproved: false });
-        await CampaignActivity.create({
-          leadId: lead.id,
-          campaignId: campaign.id,
-          type: "OutreachSent",
-          content: `Approved agent draft sent (${subject}).`,
-        });
-        sent++;
-      } catch (err: any) {
-        console.error(`Send-approved error for lead ${lead.id}:`, err.message);
-      }
-    }
-
-    if (campaign.leadsProcessed < campaign.leadsTotal) {
-      await campaign.increment("leadsProcessed", { by: sent });
-    }
-    const completed = await maybeCompleteCampaign(campaign);
-
-    res.json({ success: true, sent, total: leads.length, completed });
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
 // CRON ENGINE: GET /campaigns/cron/run
 router.get("/cron/run", async (req, res) => {
   const logs: string[] = [];
   try {
-    const activeCampaigns = await Campaign.findAll({
-      where: { stage: "Active" },
-      include: [{ model: CampaignTemplate, as: "template" }],
-    });
+    const { campaignId } = req.query as { campaignId?: string };
+    const where: any = { stage: "Active" };
+    if (campaignId) where.id = campaignId;
 
-    const allCampaigns = await Campaign.findAll({ attributes: ["id", "name", "stage"] });
-    logs.push(`Total campaigns in DB: ${allCampaigns.length} — ${allCampaigns.map(c => `${c.name}(${c.stage})`).join(", ")}`);
-    logs.push(`Found ${activeCampaigns.length} active campaigns ready to process.`);
+    const activeCampaigns = await Campaign.findAll({ where });
+
+    logs.push(`Found ${activeCampaigns.length} active campaign(s) ready to process.`);
 
     for (const campaign of activeCampaigns) {
-      logs.push(`\n--- Processing Campaign: ${campaign.name} (${campaign.mode}) ---`);
+      logs.push(`\n--- Processing Campaign: ${campaign.name} ---`);
 
-      // PHASE A: AI Draft Generation
+      // PHASE A: Draft generation — mail-merge only, no AI rewrite
       const enrolledLeads = await Lead.findAll({
         where: {
           campaignId: campaign.id,
           status: "Enrolled",
           aiDraft: { [Op.or]: [null, ""] } as any,
         },
-        limit: 10,
       });
 
       const campaignCreator = await User.findByPk(campaign.createdById);
-      const senderName = campaignCreator?.fullName || "Rhinon Team";
-
-      if (campaign.mode === "agent" && isEmailChannel(campaign.channel)) {
-        // Agent campaigns: research + draft only. Drafts wait for human approval
-        // (send-approved) — the cron never auto-sends them.
-        for (const lead of enrolledLeads) {
-          try {
-            const result = await draftOutreachForLead(lead, senderName);
-            logs.push(
-              result.skipped
-                ? `   [Agent Skipped] ${lead.email}: ${result.reason}`
-                : `   [Agent Draft Ready] ${lead.email} — awaiting approval`
-            );
-          } catch (err: any) {
-            logs.push(`   [Agent Error] ${lead.email}: ${err.message}`);
-          }
-        }
-        logs.push(`   [Done] Agent cycle complete — review & approve drafts to send.`);
-        continue;
-      }
+      const senderName = campaign.senderName || campaignCreator?.fullName || "Rhinon Team";
 
       for (const lead of enrolledLeads) {
         try {
-          let draftBody: string;
-          let draftSubject: string;
-          let usedAI = false;
-
-          try {
-            const aiDraft = await generateAIEmailDraft(lead, (campaign as any).template, "", senderName);
-            draftBody = fillPlaceholders(aiDraft.body, lead, senderName);
-            draftSubject = fillPlaceholders(aiDraft.subject, lead, senderName);
-            usedAI = true;
-          } catch (aiError: any) {
-            logs.push(`   [AI Draft Skipped] Rate limit or error for ${lead.email} — using template fallback.`);
-            const tmpl = (campaign as any).template;
-            const rawBody = tmpl?.body || "Hi {{lead.name}},\n\nWe'd love to connect.\n\nBest,\n{{sender.name}}";
-            draftBody = fillPlaceholders(rawBody, lead, senderName);
-            draftSubject = fillPlaceholders(tmpl?.subject || `Optimizing ${lead.company}'s potential`, lead, senderName);
-          }
+          const rawBody = campaign.body || "Hi {{lead.name}},\n\nWe'd love to connect.\n\nBest,\n{{sender.name}}";
+          const draftBody = fillPlaceholders(rawBody, lead, senderName);
 
           await lead.update({ aiDraft: draftBody, status: "Interested" });
           await CampaignActivity.create({
             leadId: lead.id,
             campaignId: campaign.id,
             type: "DraftGenerated",
-            content: usedAI ? "AI personalized outreach draft generated." : "Template-based draft prepared (AI fallback).",
+            content: "Template draft prepared (mail-merge).",
             generatedContent: draftBody,
           });
-          logs.push(`   [Draft Ready] ${usedAI ? "AI" : "Template"} draft for ${lead.email}`);
+          logs.push(`   [Draft Ready] Template draft for ${lead.email}`);
         } catch (err: any) {
           logs.push(`   [Draft Error] Failed for ${lead.email}: ${err.message}`);
         }
       }
 
-      // PHASE B: Email Dispatch
-      const startOfDay = new Date();
-      startOfDay.setHours(0, 0, 0, 0);
-
-      const sentTodayCount = await CampaignActivity.count({
+      // PHASE B: Email Dispatch — one-shot, sends the entire ready batch (no daily cap)
+      const leadsReadyToSend = await Lead.findAll({
         where: {
           campaignId: campaign.id,
-          type: "OutreachSent",
-          timestamp: { [Op.gte]: startOfDay },
+          status: "Interested",
+          aiDraft: { [Op.ne]: null } as any,
         },
       });
 
-      const remainingDailyQuota = Math.max(0, campaign.dailyLimit - sentTodayCount);
-      logs.push(`Daily Limit Check: ${sentTodayCount} sent today. Remaining: ${remainingDailyQuota}.`);
+      // Send from the campaign's chosen sender — SES is domain-verified, so any
+      // assigned company email works as a real "From" address.
+      const fromEmail = campaign.senderEmail || campaignCreator?.companyEmail || "admin@rhinontech.in";
 
-      if (remainingDailyQuota > 0) {
-        const leadsReadyToSend = await Lead.findAll({
-          where: {
+      for (const lead of leadsReadyToSend) {
+        try {
+          if (!lead.aiDraft) continue;
+          const subject = campaign.subject
+            ? fillPlaceholders(campaign.subject, lead, senderName)
+            : `Optimizing ${lead.company}'s potential`;
+          const htmlBody = toEmailHtml(lead.aiDraft);
+          const plainText = stripHtml(lead.aiDraft);
+          await sendEmail({
+            to: lead.email,
+            from: fromEmail,
+            fromName: senderName,
+            via: "ses",
+            subject,
+            html: htmlBody,
+            text: plainText,
+          });
+
+          // Archive to InboxEmail so it shows in "Sent" folder
+          await InboxEmail.create({
+            threadKey: `outreach-${campaign.id}-${lead.id}`,
+            folder: "sent",
+            fromName: campaign.senderName || campaignCreator?.fullName || "Rhinon Tech",
+            fromEmail,
+            toEmails: [lead.email],
+            subject,
+            body: lead.aiDraft,
+            snippet: plainText.slice(0, 160),
+            ownerEmail: fromEmail,
+            isRead: true,
             campaignId: campaign.id,
-            status: "Interested",
-            aiDraft: { [Op.ne]: null } as any,
-          },
-          limit: Math.min(20, remainingDailyQuota),
-        });
+            leadId: lead.id,
+            sentAt: new Date(),
+          });
 
-        // Always send from the configured SMTP account — Gmail rejects mismatched senders
-        const creator = await User.findByPk(campaign.createdById);
-        const fromEmail = process.env.GMAIL_USER || process.env.SMTP_FROM_EMAIL || "admin@rhinontech.in";
-
-        for (const lead of leadsReadyToSend) {
-          try {
-            const tmpl = (campaign as any).template;
-            const subject = tmpl?.subject
-              ? tmpl.subject.replace(/\{\{lead\.name\}\}/g, lead.name).replace(/\{\{lead\.company\}\}/g, lead.company)
-              : `Optimizing ${lead.company}'s potential`;
-            const htmlBody = toEmailHtml(lead.aiDraft, tmpl?.imageUrl);
-            await sendEmail({
-              to: lead.email,
-              from: fromEmail,
-              subject,
-              html: htmlBody,
-              text: lead.aiDraft,
-            });
-
-            // Archive to InboxEmail so it shows in "Sent" folder
-            await InboxEmail.create({
-              threadKey: `outreach-${campaign.id}-${lead.id}`,
-              folder: "sent",
-              fromName: creator?.fullName || "Rhinon Tech",
-              fromEmail,
-              toEmails: [lead.email],
-              subject,
-              body: lead.aiDraft,
-              snippet: lead.aiDraft.slice(0, 160),
-              ownerEmail: fromEmail,
-              isRead: true,
-              sentAt: new Date(),
-            });
-
-            await lead.update({ status: "Emailed" });
-            if (campaign.leadsProcessed < campaign.leadsTotal) {
-              await campaign.increment("leadsProcessed");
-            }
-
-            await CampaignActivity.create({
-              leadId: lead.id,
-              campaignId: campaign.id,
-              type: "OutreachSent",
-              content: `Automated campaign outreach email delivered.`,
-            });
-
-            logs.push(`   [Email Sent] Delivered to ${lead.email}`);
-          } catch (sendError: any) {
-            logs.push(`   [Email Error] Failed to send to ${lead.email}: ${sendError.message}`);
+          await lead.update({ status: "Emailed" });
+          if (campaign.leadsProcessed < campaign.leadsTotal) {
+            await campaign.increment("leadsProcessed");
           }
+
+          await CampaignActivity.create({
+            leadId: lead.id,
+            campaignId: campaign.id,
+            type: "OutreachSent",
+            content: `Automated campaign outreach email delivered.`,
+          });
+
+          logs.push(`   [Email Sent] Delivered to ${lead.email}`);
+        } catch (sendError: any) {
+          logs.push(`   [Email Error] Failed to send to ${lead.email}: ${sendError.message}`);
         }
       }
 
@@ -771,6 +668,18 @@ router.get("/:id/stats", authorize("outreach:read"), async (req: AuthRequest, re
   res.json({ funnel, series });
 });
 
+// GET /campaigns/:id/inbox - this campaign's own inbox: every sent email + every
+// reply it received, tagged at send/receive time so it's scoped regardless of
+// which teammate's mailbox actually received the reply.
+router.get("/:id/inbox", authorize("outreach:read"), async (req: AuthRequest, res: Response) => {
+  const emails = await InboxEmail.findAll({
+    where: { campaignId: req.params.id },
+    include: [{ model: Lead, as: "lead", attributes: ["id", "name", "company", "email"] }],
+    order: [["sentAt", "ASC"]],
+  });
+  res.json(emails);
+});
+
 // GET /campaigns/:id - get single campaign
 router.get("/:id", authorize("outreach:read"), async (req: AuthRequest, res: Response) => {
   const campaign = await Campaign.findByPk(req.params.id, {
@@ -826,7 +735,7 @@ router.delete("/:id", authorize("outreach:write"), async (req: AuthRequest, res:
       return;
     }
     // Unenroll leads before deleting
-    await Lead.update({ campaignId: null, status: "New" }, { where: { campaignId: campaign.id } });
+    await Lead.update({ campaignId: null, status: "New", aiDraft: null }, { where: { campaignId: campaign.id } });
     await campaign.destroy();
     res.json({ message: "Campaign deleted" });
   } catch (error: any) {

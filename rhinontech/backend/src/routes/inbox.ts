@@ -1,6 +1,6 @@
 import { Router, Response } from "express";
 import { Op, WhereOptions } from "sequelize";
-import { InboxEmail, User } from "../models";
+import { InboxEmail, User, Campaign } from "../models";
 import { InboxEmailFolder } from "../models/InboxEmail";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 import { sendEmail } from "../services/mailer";
@@ -62,6 +62,7 @@ router.get("/", authorize("inbox:read"), async (req: AuthRequest, res: Response)
   const emails = await InboxEmail.findAll({
     where,
     order: [["sentAt", "DESC"]],
+    include: [{ model: Campaign, as: "campaign", attributes: ["id", "name"] }],
   });
 
   res.json(emails);
@@ -123,7 +124,9 @@ router.post("/:id/note", authorize("inbox:write"), async (req: AuthRequest, res:
 });
 
 router.get("/:id", authorize("inbox:read"), async (req: AuthRequest, res: Response) => {
-  const email = await InboxEmail.findByPk(req.params.id);
+  const email = await InboxEmail.findByPk(req.params.id, {
+    include: [{ model: Campaign, as: "campaign", attributes: ["id", "name"] }],
+  });
 
   if (!email) {
     res.status(404).json({ message: "Email not found" });
@@ -245,6 +248,10 @@ router.post("/:id/reply", authorize("inbox:write"), async (req: AuthRequest, res
     isStarred: false,
     hasAttachment: attachments.length > 0,
     attachments,
+    // Keep the whole thread tagged to the same campaign/lead so replying-back
+    // from the shared Inbox still shows up inside the campaign's own inbox.
+    campaignId: original.campaignId,
+    leadId: original.leadId,
     sentAt: new Date(),
   });
 

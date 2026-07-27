@@ -1,5 +1,4 @@
 export type CampaignStage = "Draft" | "Active" | "Paused" | "Completed";
-export type CampaignMode = "template" | "agent";
 export type CampaignChannel =
   | "Email"
   | "Cold Email"
@@ -13,16 +12,20 @@ export interface Campaign {
   id: string;
   name: string;
   channel: CampaignChannel;
-  mode: CampaignMode;
   stage: CampaignStage;
   leadsProcessed: number;
   leadsTotal: number;
-  dailyLimit: number;
+  autoSend: boolean;
   startDate: string;
   runTime: string;
-  scheduleDays: string[];
   objective?: string;
   notes?: string;
+  // Email content, authored directly on the campaign (Email/Cold Email channels).
+  subject?: string | null;
+  body?: string | null;
+  senderEmail?: string | null;
+  senderName?: string | null;
+  // Still used by LinkedIn Publishing / Manual Send, which keep a shared template library.
   templateId?: string | null;
   template?: { name: string } | null;
   // Social fields
@@ -79,5 +82,3 @@ export interface LinkedInStatus {
   isExpired?: boolean;
   profile?: { name?: string } | null;
 }
-
-export const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
