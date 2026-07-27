@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 import { TbCheck, TbLoader, TbRefresh, TbTrash } from "react-icons/tb";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { WEEK_DAYS, type Campaign } from "../shared/types";
+import { Switch } from "@/components/ui/switch";
+import type { Campaign } from "../shared/types";
 
 export function SettingsTab({
   campaign,
@@ -23,10 +23,9 @@ export function SettingsTab({
   onDelete: () => void;
 }) {
   const [form, setForm] = useState({
-    dailyLimit: campaign.dailyLimit,
+    autoSend: campaign.autoSend,
     startDate: campaign.startDate.split("T")[0],
     runTime: campaign.runTime || "09:00",
-    scheduleDays: campaign.scheduleDays || ["Mon", "Tue", "Wed", "Thu", "Fri"],
     objective: campaign.objective || "",
     notes: campaign.notes || "",
   });
@@ -34,10 +33,9 @@ export function SettingsTab({
 
   useEffect(() => {
     setForm({
-      dailyLimit: campaign.dailyLimit,
+      autoSend: campaign.autoSend,
       startDate: campaign.startDate.split("T")[0],
       runTime: campaign.runTime || "09:00",
-      scheduleDays: campaign.scheduleDays || ["Mon", "Tue", "Wed", "Thu", "Fri"],
       objective: campaign.objective || "",
       notes: campaign.notes || "",
     });
@@ -59,70 +57,38 @@ export function SettingsTab({
   return (
     <div className="max-w-xl space-y-6">
       <div className="space-y-4 rounded-xl border border-stone-200 bg-white p-5">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="s-daily-limit">Daily Email Limit</Label>
-            <Input
-              id="s-daily-limit"
-              type="number"
-              min={1}
-              value={form.dailyLimit}
-              onChange={(e) => setForm((f) => ({ ...f, dailyLimit: Number(e.target.value) }))}
-            />
+        <div className="flex items-center justify-between rounded-lg border border-stone-100 bg-stone-50 px-4 py-3">
+          <div>
+            <p className="text-sm font-semibold text-stone-800">Schedule automatic send</p>
+            <p className="text-xs text-stone-500">
+              When on, the whole enrolled list sends automatically at the date/time below. When off, this campaign only sends via "Send Now".
+            </p>
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="s-start-date">Start Date</Label>
-            <Input
-              id="s-start-date"
-              type="date"
-              value={form.startDate}
-              onChange={(e) => setForm((f) => ({ ...f, startDate: e.target.value }))}
-            />
-          </div>
+          <Switch checked={form.autoSend} onCheckedChange={(v) => setForm((f) => ({ ...f, autoSend: v }))} />
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="s-run-time">Run Time</Label>
-          <div className="flex items-center gap-3">
-            <Input
-              id="s-run-time"
-              type="time"
-              value={form.runTime}
-              onChange={(e) => setForm((f) => ({ ...f, runTime: e.target.value }))}
-              className="w-32"
-            />
-            <span className="text-xs text-stone-400">Daily time the engine runs (24h)</span>
+        {form.autoSend && (
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="s-start-date">Send Date</Label>
+              <Input
+                id="s-start-date"
+                type="date"
+                value={form.startDate}
+                onChange={(e) => setForm((f) => ({ ...f, startDate: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="s-run-time">Send Time</Label>
+              <Input
+                id="s-run-time"
+                type="time"
+                value={form.runTime}
+                onChange={(e) => setForm((f) => ({ ...f, runTime: e.target.value }))}
+              />
+            </div>
           </div>
-        </div>
-
-        <div className="space-y-1.5">
-          <Label>Active Days</Label>
-          <div className="flex flex-wrap gap-1.5">
-            {WEEK_DAYS.map((day) => {
-              const active = form.scheduleDays.includes(day);
-              return (
-                <button
-                  key={day}
-                  type="button"
-                  onClick={() =>
-                    setForm((f) => ({
-                      ...f,
-                      scheduleDays: active ? f.scheduleDays.filter((d) => d !== day) : [...f.scheduleDays, day],
-                    }))
-                  }
-                  className={cn(
-                    "rounded-lg border px-3 py-1 text-xs font-bold transition-colors",
-                    active
-                      ? "border-stone-900 bg-stone-900 text-white"
-                      : "border-stone-200 bg-white text-stone-400 hover:border-stone-400"
-                  )}
-                >
-                  {day}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        )}
 
         <div className="space-y-1.5">
           <Label htmlFor="s-objective">Objective</Label>
@@ -147,18 +113,6 @@ export function SettingsTab({
             className="resize-none"
           />
         </div>
-
-        {campaign.template && (
-          <div className="flex items-center justify-between border-t border-stone-100 pt-4">
-            <div>
-              <p className="text-xs font-bold text-stone-700">Template</p>
-              <p className="mt-0.5 text-[10px] text-stone-400">Used for draft generation.</p>
-            </div>
-            <span className="rounded-lg border border-stone-200 bg-stone-100 px-2.5 py-1 text-xs font-semibold text-stone-600">
-              {campaign.template.name}
-            </span>
-          </div>
-        )}
 
         <div className="flex justify-end border-t border-stone-100 pt-4">
           <Button onClick={handleSave} disabled={saving}>

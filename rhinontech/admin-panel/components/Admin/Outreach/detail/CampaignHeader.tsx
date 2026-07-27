@@ -19,21 +19,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { StatusBadge } from "../shared/StatusBadge";
-import { ModeBadge } from "../shared/ModeBadge";
 import type { Campaign } from "../shared/types";
 
 /**
  * The "what now?" hint — one obvious next step given the campaign's state.
  * Keeps the user oriented without reading the whole page.
  */
-function nextAction(campaign: Campaign, draftedCount: number, approvedCount: number): { label: string; hint: "enroll" | "leads" } | null {
+function nextAction(campaign: Campaign, draftedCount: number): { label: string; hint: "setup" | "enroll" | "leads" } | null {
+  if (!campaign.body?.trim() || !campaign.subject?.trim()) return { label: "Write your subject & email content", hint: "setup" };
   if (campaign.leadsTotal === 0) return { label: "Enroll leads to get started", hint: "enroll" };
-  if (campaign.mode === "agent") {
-    if (approvedCount > 0) return { label: `Send ${approvedCount} approved draft${approvedCount > 1 ? "s" : ""}`, hint: "leads" };
-    if (draftedCount === 0) return { label: "Run the agent to draft emails", hint: "leads" };
-    return { label: `Review & approve ${draftedCount} draft${draftedCount > 1 ? "s" : ""}`, hint: "leads" };
-  }
-  if (draftedCount === 0) return { label: "Generate drafts from your template", hint: "leads" };
+  if (draftedCount === 0) return { label: "Generate drafts from your email", hint: "leads" };
   if (campaign.stage !== "Active") return { label: "Activate to start the schedule", hint: "leads" };
   return null;
 }
@@ -41,7 +36,6 @@ function nextAction(campaign: Campaign, draftedCount: number, approvedCount: num
 export function CampaignHeader({
   campaign,
   draftedCount,
-  approvedCount,
   running,
   onBack,
   onRunNow,
@@ -51,10 +45,10 @@ export function CampaignHeader({
   onDelete,
   onEnroll,
   onGoToLeads,
+  onGoToSetup,
 }: {
   campaign: Campaign;
   draftedCount: number;
-  approvedCount: number;
   running: boolean;
   onBack: () => void;
   onRunNow: () => void;
@@ -64,8 +58,14 @@ export function CampaignHeader({
   onDelete: () => void;
   onEnroll: () => void;
   onGoToLeads: () => void;
+  onGoToSetup: () => void;
 }) {
-  const action = nextAction(campaign, draftedCount, approvedCount);
+  const action = nextAction(campaign, draftedCount);
+  const handleActionClick = () => {
+    if (action?.hint === "enroll") onEnroll();
+    else if (action?.hint === "setup") onGoToSetup();
+    else onGoToLeads();
+  };
 
   return (
     <div className="flex min-h-16 shrink-0 flex-wrap items-center justify-between gap-2 border-b px-4 py-2">
@@ -78,15 +78,11 @@ export function CampaignHeader({
         </button>
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h1 className="truncate text-base font-semibold tracking-tight text-gray-900">{campaign.name}</h1>
+            <h1 className="truncate text-lg font-bold tracking-tight text-gray-900">{campaign.name}</h1>
             <StatusBadge stage={campaign.stage} />
-            <ModeBadge mode={campaign.mode || "template"} />
           </div>
           {action && (
-            <button
-              onClick={action.hint === "enroll" ? onEnroll : onGoToLeads}
-              className="mt-0.5 text-xs font-medium text-blue-600 hover:underline"
-            >
+            <button onClick={handleActionClick} className="mt-0.5 text-xs font-medium text-blue-600 hover:underline">
               Next: {action.label} →
             </button>
           )}
@@ -103,7 +99,7 @@ export function CampaignHeader({
             <TbPlayerPlay size={15} /> Activate
           </Button>
         ) : null}
-        {campaign.mode === "template" && campaign.stage === "Active" && (
+        {campaign.stage === "Active" && (
           <Button size="sm" onClick={onRunNow} disabled={running}>
             {running ? <TbLoader className="animate-spin" size={15} /> : <TbPlayerPlay size={15} />}
             Run Now

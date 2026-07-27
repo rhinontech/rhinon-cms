@@ -18,6 +18,7 @@ interface Email {
   subject: string; body: string; snippet: string; ownerEmail: string;
   isRead: boolean; hasAttachment: boolean; sentAt: string;
   isInternal?: boolean; attachments?: Att[]; senderAvatarUrl?: string | null;
+  campaign?: { id: string; name: string } | null;
   thread?: Email[];
 }
 
@@ -311,6 +312,11 @@ export default function Inbox() {
                     <span className="shrink-0 text-[10px] text-gray-400">{relTime(e.sentAt)}</span>
                   </div>
                   <p className="truncate text-xs font-medium text-gray-700">{e.subject}</p>
+                  {e.campaign && (
+                    <span className="mt-0.5 inline-block truncate rounded-full bg-violet-50 px-1.5 py-0.5 text-[10px] font-semibold text-violet-600">
+                      {e.campaign.name}
+                    </span>
+                  )}
                   <p className="truncate text-[11px] text-gray-400">{e.hasAttachment && <TbPaperclip size={10} className="mr-0.5 inline" />}{e.snippet}</p>
                 </div>
               </button>
@@ -333,6 +339,11 @@ export default function Inbox() {
                   <TbArrowLeft size={18} />
                 </button>
                 <p className="min-w-0 truncate text-sm font-semibold text-gray-900">{detail.subject}</p>
+                {detail.campaign && (
+                  <span className="shrink-0 rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-semibold text-violet-600">
+                    {detail.campaign.name}
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-1">
                 {folder !== "archive" && <button onClick={() => moveTo("archive")} title="Archive" className="rounded-lg p-2 text-gray-500 hover:bg-stone-100"><TbArchive size={16} /></button>}

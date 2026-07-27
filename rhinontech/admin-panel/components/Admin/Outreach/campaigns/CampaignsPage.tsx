@@ -13,8 +13,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "../shared/EmptyState";
 import { isLinkedInChannel } from "../shared/ChannelIcon";
 import { CampaignCard } from "./CampaignCard";
-import { CreateCampaignWizard } from "./CreateCampaignWizard";
-import type { Campaign, CampaignStage, Template } from "../shared/types";
+import { NewCampaignDialog } from "./NewCampaignDialog";
+import type { Campaign, CampaignStage } from "../shared/types";
 
 const STAGE_FILTERS: ("All" | CampaignStage)[] = ["All", "Active", "Draft", "Paused", "Completed"];
 
@@ -22,7 +22,6 @@ export function CampaignsPage() {
   const pathname = usePathname();
   const confirm = useConfirm();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [stageFilter, setStageFilter] = useState<"All" | CampaignStage>("All");
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -41,7 +40,6 @@ export function CampaignsPage() {
 
   useEffect(() => {
     fetchCampaigns();
-    apiFetch<Template[]>("/campaigns/templates").then(setTemplates).catch(() => {});
   }, [fetchCampaigns]);
 
   const filtered = useMemo(
@@ -170,12 +168,7 @@ export function CampaignsPage() {
         )}
       </div>
 
-      <CreateCampaignWizard
-        open={wizardOpen}
-        onOpenChange={setWizardOpen}
-        templates={templates}
-        onCreated={fetchCampaigns}
-      />
+      <NewCampaignDialog open={wizardOpen} onOpenChange={setWizardOpen} />
     </main>
   );
 }

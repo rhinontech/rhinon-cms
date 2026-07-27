@@ -6,7 +6,9 @@ import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { LeadPicker } from "../shared/LeadPicker";
+import { GroupPicker } from "../contacts/GroupPicker";
 
 export function EnrollLeadsSheet({
   campaignId,
@@ -49,7 +51,18 @@ export function EnrollLeadsSheet({
           <SheetDescription>Pick leads from your CRM to add to this campaign.</SheetDescription>
         </SheetHeader>
         <div className="flex min-h-0 flex-1 flex-col gap-3 p-4">
-          <LeadPicker selectedIds={selectedIds} onChange={setSelectedIds} />
+          <Tabs defaultValue="leads" className="flex min-h-0 flex-1 flex-col gap-3">
+            <TabsList>
+              <TabsTrigger value="leads">Pick Leads</TabsTrigger>
+              <TabsTrigger value="group">Pick Group</TabsTrigger>
+            </TabsList>
+            <TabsContent value="leads" className="flex min-h-0 flex-1 flex-col">
+              <LeadPicker selectedIds={selectedIds} onChange={setSelectedIds} />
+            </TabsContent>
+            <TabsContent value="group" className="flex min-h-0 flex-1 flex-col">
+              <GroupPicker selectedIds={selectedIds} onChange={setSelectedIds} />
+            </TabsContent>
+          </Tabs>
           <div className="flex justify-end border-t pt-4">
             <Button onClick={handleEnroll} disabled={enrolling || selectedIds.size === 0}>
               {enrolling ? (

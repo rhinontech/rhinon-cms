@@ -25,6 +25,10 @@ interface InboxEmailAttributes {
   // RFC 5322 ids for reply threading (inbound replies join the original thread)
   messageId?: string | null;
   inReplyTo?: string | null;
+  // Which campaign/lead this email belongs to (set on outbound campaign sends
+  // and on inbound replies matched to a lead) — lets a campaign show its own inbox.
+  campaignId?: string | null;
+  leadId?: string | null;
   sentAt: Date;
   createdAt?: Date;
   updatedAt?: Date;
@@ -33,7 +37,7 @@ interface InboxEmailAttributes {
 interface InboxEmailCreationAttributes
   extends Optional<
     InboxEmailAttributes,
-    "id" | "folder" | "ccEmails" | "isRead" | "isStarred" | "hasAttachment" | "attachments" | "isInternal" | "messageId" | "inReplyTo"
+    "id" | "folder" | "ccEmails" | "isRead" | "isStarred" | "hasAttachment" | "attachments" | "isInternal" | "messageId" | "inReplyTo" | "campaignId" | "leadId"
   > {}
 
 export class InboxEmail
@@ -58,6 +62,8 @@ export class InboxEmail
   declare isInternal: boolean;
   declare messageId: string | null;
   declare inReplyTo: string | null;
+  declare campaignId: string | null;
+  declare leadId: string | null;
   declare sentAt: Date;
   declare createdAt: Date;
   declare updatedAt: Date;
@@ -144,6 +150,14 @@ InboxEmail.init(
     },
     inReplyTo: {
       type: DataTypes.STRING,
+    },
+    campaignId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+    },
+    leadId: {
+      type: DataTypes.UUID,
+      allowNull: true,
     },
     sentAt: {
       type: DataTypes.DATE,

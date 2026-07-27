@@ -1,20 +1,32 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { TbLoader, TbTarget, TbUsers, TbActivity, TbSettings } from "react-icons/tb";
+import { TbLoader, TbTarget, TbUsers, TbActivity, TbSettings, TbClipboardList, TbInbox } from "react-icons/tb";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 import { useConfirm } from "@/components/Admin/Common/ConfirmDialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 import { isLinkedInChannel } from "../shared/ChannelIcon";
 import { CampaignHeader } from "./CampaignHeader";
 import { FunnelStrip } from "./FunnelStrip";
+import { CampaignSetupTab } from "./CampaignSetupTab";
 import { LeadsTab } from "./LeadsTab";
+import { CampaignInboxTab } from "./CampaignInboxTab";
 import { ActivityTab } from "./ActivityTab";
 import { SettingsTab } from "./SettingsTab";
 import { EnrollLeadsSheet } from "./EnrollLeadsSheet";
 import type { Campaign, CampaignLead, CampaignStats } from "../shared/types";
+
+type TabKey = "setup" | "leads" | "inbox" | "activity" | "settings";
+
+const NAV_ITEMS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
+  { key: "setup", label: "Setup", icon: <TbClipboardList size={16} /> },
+  { key: "leads", label: "Leads", icon: <TbUsers size={16} /> },
+  { key: "inbox", label: "Inbox", icon: <TbInbox size={16} /> },
+  { key: "activity", label: "Activity", icon: <TbActivity size={16} /> },
+  { key: "settings", label: "Settings", icon: <TbSettings size={16} /> },
+];
 
 export function CampaignDetailPage({ id }: { id: string }) {
   const router = useRouter();
@@ -29,7 +41,8 @@ export function CampaignDetailPage({ id }: { id: string }) {
   const [running, setRunning] = useState(false);
   const [runLogs, setRunLogs] = useState<string[] | null>(null);
   const [enrollOpen, setEnrollOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("leads");
+  const [activeTab, setActiveTab] = useState<TabKey>("leads");
+  const didInitTab = useRef(false);
 
   const fetchAll = useCallback(async () => {
     try {
@@ -46,6 +59,10 @@ export function CampaignDetailPage({ id }: { id: string }) {
       setCampaign(data);
       setLeads(campaignLeads);
       if (campaignStats) setStats(campaignStats);
+      if (!didInitTab.current) {
+        didInitTab.current = true;
+        if (data.stage === "Draft") setActiveTab("setup");
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -63,7 +80,7 @@ export function CampaignDetailPage({ id }: { id: string }) {
     setRunning(true);
     setRunLogs(null);
     try {
-      const result = await apiFetch<{ logs?: string[] }>("/campaigns/cron/run");
+      const result = await apiFetch<{ logs?: string[] }>(`/campaigns/cron/run?campaignId=${id}`);
       setRunLogs(result.logs || ["Engine run triggered."]);
       setActiveTab("activity");
       fetchAll();
@@ -145,7 +162,6 @@ export function CampaignDetailPage({ id }: { id: string }) {
     );
   }
 
-  const approvedCount = leads.filter((l) => l.draftApproved).length;
   const draftedCount = leads.filter((l) => l.aiDraft).length;
 
   return (
@@ -153,7 +169,6 @@ export function CampaignDetailPage({ id }: { id: string }) {
       <CampaignHeader
         campaign={campaign}
         draftedCount={draftedCount}
-        approvedCount={approvedCount}
         running={running}
         onBack={handleBack}
         onRunNow={handleRunNow}
@@ -163,34 +178,52 @@ export function CampaignDetailPage({ id }: { id: string }) {
         onDelete={handleDelete}
         onEnroll={() => setEnrollOpen(true)}
         onGoToLeads={() => setActiveTab("leads")}
+        onGoToSetup={() => setActiveTab("setup")}
       />
 
-      <div className="flex-1 space-y-4 overflow-auto p-4">
-        <FunnelStrip campaign={campaign} funnel={stats?.funnel ?? null} leads={leads} />
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-auto p-4">
+        <FunnelStrip funnel={stats?.funnel ?? null} leads={leads} />
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="gap-4">
-          <TabsList>
-            <TabsTrigger value="leads">
-              <TbUsers size={15} /> Leads
-            </TabsTrigger>
-            <TabsTrigger value="activity">
-              <TbActivity size={15} /> Activity
-            </TabsTrigger>
-            <TabsTrigger value="settings">
-              <TbSettings size={15} /> Settings
-            </TabsTrigger>
-          </TabsList>
+        <div className="flex min-h-0 flex-1 gap-4">
+          <nav className="w-44 shrink-0 space-y-0.5">
+            {NAV_ITEMS.map((item) => (
+              <button
+                key={item.key}
+                onClick={() => setActiveTab(item.key)}
+                className={cn(
+                  "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
+                  activeTab === item.key
+                    ? "bg-blue-50 text-blue-900"
+                    : "text-stone-600 hover:bg-stone-100"
+                )}
+              >
+                {item.icon}
+                {item.label}
+              </button>
+            ))}
+          </nav>
 
-          <TabsContent value="leads">
-            <LeadsTab campaign={campaign} leads={leads} setLeads={setLeads} onRefresh={fetchAll} onEnroll={() => setEnrollOpen(true)} />
-          </TabsContent>
-          <TabsContent value="activity">
-            <ActivityTab campaignId={campaign.id} runLogs={runLogs} onClearRunLogs={() => setRunLogs(null)} />
-          </TabsContent>
-          <TabsContent value="settings">
-            <SettingsTab campaign={campaign} onSaved={fetchAll} onReset={handleReset} onDelete={handleDelete} />
-          </TabsContent>
-        </Tabs>
+          <div className="min-w-0 flex-1">
+            {activeTab === "setup" && (
+              <CampaignSetupTab
+                campaign={campaign}
+                leadsTotal={leads.length}
+                onSaved={fetchAll}
+                onOpenEnroll={() => setEnrollOpen(true)}
+              />
+            )}
+            {activeTab === "leads" && (
+              <LeadsTab campaign={campaign} leads={leads} setLeads={setLeads} onRefresh={fetchAll} onEnroll={() => setEnrollOpen(true)} />
+            )}
+            {activeTab === "inbox" && <CampaignInboxTab campaignId={campaign.id} />}
+            {activeTab === "activity" && (
+              <ActivityTab campaignId={campaign.id} runLogs={runLogs} onClearRunLogs={() => setRunLogs(null)} />
+            )}
+            {activeTab === "settings" && (
+              <SettingsTab campaign={campaign} onSaved={fetchAll} onReset={handleReset} onDelete={handleDelete} />
+            )}
+          </div>
+        </div>
       </div>
 
       <EnrollLeadsSheet

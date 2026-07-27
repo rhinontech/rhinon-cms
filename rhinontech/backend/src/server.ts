@@ -87,32 +87,38 @@ async function start() {
       }
     }, { timezone: "Asia/Kolkata" });
 
-    // Outreach campaign engine: check every minute, fire for campaigns whose runTime matches now
+    // Outreach campaign engine: check every minute, one-shot fire for campaigns
+    // whose runTime + startDate (exact calendar date, not a recurring weekday)
+    // match right now. Each matching campaign is triggered independently so one
+    // campaign's schedule can never cause another Active campaign to be sent.
     cron.schedule("* * * * *", async () => {
       const now = new Date();
       const hh = now.getHours().toString().padStart(2, "0");
       const mm = now.getMinutes().toString().padStart(2, "0");
       const currentTime = `${hh}:${mm}`;
-      const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-      const currentDay = dayNames[now.getDay()];
+      const todayStr = now.toISOString().slice(0, 10);
 
       try {
-        const activeCampaigns = await Campaign.findAll({
-          where: { stage: "Active" },
-          attributes: ["id", "runTime", "scheduleDays"],
+        const dueCampaigns = await Campaign.findAll({
+          where: { stage: "Active", autoSend: true },
+          attributes: ["id", "startDate", "runTime"],
         });
 
-        for (const c of activeCampaigns) {
+        const matches = dueCampaigns.filter((c) => {
           const runTime = c.runTime || "09:00";
-          const scheduleDays: string[] = c.scheduleDays || ["Mon","Tue","Wed","Thu","Fri"];
-          if (runTime === currentTime && scheduleDays.includes(currentDay)) {
+          const campaignDateStr = new Date(c.startDate).toISOString().slice(0, 10);
+          return runTime === currentTime && campaignDateStr === todayStr;
+        });
+
+        await Promise.allSettled(
+          matches.map(async (c) => {
             console.log(`[Cron] Firing outreach engine for campaign ${c.id} at ${currentTime}`);
             await axios.get(`http://localhost:${env.port}/campaigns/cron/run`, {
+              params: { campaignId: c.id },
               headers: { Authorization: `Bearer ${env.cronSecret}` },
             });
-            break; // engine processes all active campaigns in one pass
-          }
-        }
+          })
+        );
       } catch (err: any) {
         console.error("[Cron] Outreach schedule check failed:", err.message);
       }

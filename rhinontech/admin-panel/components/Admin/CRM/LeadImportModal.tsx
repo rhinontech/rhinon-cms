@@ -35,6 +35,7 @@ interface ImportResult {
   duplicates: number;
   invalid: number;
   errors: { row: number; reason: string }[];
+  addedToGroup?: number;
 }
 
 // Lowercase + trim header keys so mapping is resilient to casing/whitespace.
@@ -93,7 +94,15 @@ function mapRow(raw: Record<string, string>): MappedLead {
   };
 }
 
-export function LeadImportModal({ onClose }: { onClose: (didImport: boolean) => void }) {
+export function LeadImportModal({
+  onClose,
+  contactGroupId,
+  groupName,
+}: {
+  onClose: (didImport: boolean) => void;
+  contactGroupId?: string;
+  groupName?: string;
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState("");
   const [rows, setRows] = useState<MappedLead[]>([]);
@@ -127,7 +136,7 @@ export function LeadImportModal({ onClose }: { onClose: (didImport: boolean) => 
     try {
       const data = await apiFetch<ImportResult>("/leads/import", {
         method: "POST",
-        body: JSON.stringify({ leads: validRows }),
+        body: JSON.stringify({ leads: validRows, ...(contactGroupId ? { contactGroupId } : {}) }),
       });
       setResult(data);
     } catch (err: any) {
@@ -143,7 +152,9 @@ export function LeadImportModal({ onClose }: { onClose: (didImport: boolean) => 
         <div className="flex h-16 items-center justify-between border-b px-5">
           <div className="flex items-center gap-2">
             <TbFileTypeCsv className="text-blue-600" size={20} />
-            <h2 className="text-base font-semibold text-gray-900">Import Leads from CSV</h2>
+            <h2 className="text-base font-semibold text-gray-900">
+              {groupName ? `Import Contacts into "${groupName}"` : "Import Leads from CSV"}
+            </h2>
           </div>
           <button onClick={() => onClose(!!result?.imported)} className="text-gray-500 hover:text-gray-900">
             <TbX size={20} />
@@ -157,6 +168,9 @@ export function LeadImportModal({ onClose }: { onClose: (didImport: boolean) => 
                 <TbCircleCheck className="text-green-500" size={40} />
                 <p className="mt-2 text-lg font-semibold text-gray-900">{result.imported} leads imported</p>
                 <p className="text-sm text-gray-500">out of {result.total} rows in the file</p>
+                {contactGroupId && (
+                  <p className="mt-1 text-xs text-stone-500">{result.addedToGroup || 0} added to {groupName ? `"${groupName}"` : "the group"}</p>
+                )}
               </div>
               <div className="grid grid-cols-3 gap-2 text-center">
                 <Stat label="Imported" value={result.imported} tone="text-green-600" />

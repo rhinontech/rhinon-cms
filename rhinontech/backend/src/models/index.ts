@@ -14,6 +14,8 @@ import { Lead } from "./Lead";
 import { CampaignTemplate } from "./CampaignTemplate";
 import { Campaign } from "./Campaign";
 import { CampaignActivity } from "./CampaignActivity";
+import { ContactGroup } from "./ContactGroup";
+import { ContactGroupMember } from "./ContactGroupMember";
 import { AttendanceRequest } from "./AttendanceRequest";
 import { AttendancePolicy } from "./AttendancePolicy";
 import { LeaveType } from "./LeaveType";
@@ -162,6 +164,19 @@ Lead.hasMany(CampaignActivity, { foreignKey: "leadId", as: "activities" });
 CampaignActivity.belongsTo(Campaign, { foreignKey: "campaignId", as: "campaign" });
 Campaign.hasMany(CampaignActivity, { foreignKey: "campaignId", as: "activities" });
 
+InboxEmail.belongsTo(Campaign, { foreignKey: "campaignId", as: "campaign" });
+Campaign.hasMany(InboxEmail, { foreignKey: "campaignId", as: "inboxEmails" });
+InboxEmail.belongsTo(Lead, { foreignKey: "leadId", as: "lead" });
+Lead.hasMany(InboxEmail, { foreignKey: "leadId", as: "inboxEmails" });
+
+// Contact Groups (many-to-many over Lead)
+Lead.belongsToMany(ContactGroup, { through: ContactGroupMember, foreignKey: "leadId", otherKey: "contactGroupId", as: "groups" });
+ContactGroup.belongsToMany(Lead, { through: ContactGroupMember, foreignKey: "contactGroupId", otherKey: "leadId", as: "members" });
+ContactGroup.belongsTo(User, { foreignKey: "createdById", as: "creator" });
+User.hasMany(ContactGroup, { foreignKey: "createdById", as: "createdContactGroups" });
+ContactGroupMember.belongsTo(Lead, { foreignKey: "leadId", as: "lead" });
+ContactGroupMember.belongsTo(ContactGroup, { foreignKey: "contactGroupId", as: "group" });
+
 // Content (CMS) Associations
 Blog.belongsTo(User, { foreignKey: "createdById", as: "author" });
 User.hasMany(Blog, { foreignKey: "createdById", as: "blogs" });
@@ -191,6 +206,8 @@ export {
   CampaignTemplate,
   Campaign,
   CampaignActivity,
+  ContactGroup,
+  ContactGroupMember,
   AttendanceRequest,
   AttendancePolicy,
   LeaveType,
