@@ -5,10 +5,17 @@ export interface TocItem {
   text: string;
 }
 
-export function slugifyHeading(text: string): string {
+export function cleanHeadingText(text: string): string {
   return text
+    .replace(/&nbsp;?/gi, " ")
+    .replace(/\u00A0/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function slugifyHeading(text: string): string {
+  return cleanHeadingText(text)
     .toLowerCase()
-    .trim()
     .replace(/<[^>]*>/g, "")
     .replace(/&[a-z#0-9]+;/g, " ")
     .replace(/[^a-z0-9\s-]/g, "")
@@ -29,7 +36,7 @@ function headingTextsFromHtml(html: string): string[] {
   const re = /<h2\b[^>]*>([\s\S]*?)<\/h2>/gi;
   let m: RegExpExecArray | null;
   while ((m = re.exec(html))) {
-    const text = m[1].replace(/<[^>]*>/g, "").trim();
+    const text = cleanHeadingText(m[1].replace(/<[^>]*>/g, ""));
     if (text) out.push(text);
   }
   return out;
@@ -60,7 +67,7 @@ export function extractToc(blocks: BlogBlock[]): TocItem[] {
  */
 export function withHeadingIds(html: string, seen: Map<string, number>): string {
   return html.replace(/<h2\b([^>]*)>([\s\S]*?)<\/h2>/gi, (_m, attrs: string, inner: string) => {
-    const text = inner.replace(/<[^>]*>/g, "").trim();
+    const text = cleanHeadingText(inner.replace(/<[^>]*>/g, ""));
     if (!text) return `<h2${attrs}>${inner}</h2>`;
     const base = slugifyHeading(text);
     const count = (seen.get(base) || 0) + 1;
@@ -77,7 +84,7 @@ export function extractTocFromMarkdown(markdown: string): TocItem[] {
     .map((l) => l.trim())
     .filter((l) => l.startsWith("## "))
     .map((l) => {
-      const text = l.slice(3).trim();
+      const text = cleanHeadingText(l.slice(3));
       return { id: slugifyHeading(text), text };
     })
     .filter((item) => item.text);
