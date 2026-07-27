@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { TbFileInvoice, TbDownload } from "react-icons/tb";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
+import { usePermissions } from "@/context/PermissionsContext";
 
 interface Payslip {
   id: string;
@@ -23,7 +24,8 @@ export function PayslipsList() {
   const [loading, setLoading] = useState(true);
   const pathname = usePathname();
   const roleSlug = pathname.split("/")[1];
-  const isAdminView = roleSlug === "superadmin" || roleSlug === "hr";
+  const { has } = usePermissions();
+  const isAdminView = has("payroll:write");
 
   useEffect(() => {
     const token = document.cookie
@@ -57,11 +59,11 @@ export function PayslipsList() {
         {loading ? (
           <p className="text-sm text-gray-400">Loading...</p>
         ) : payslips.length === 0 ? (
-          <div className="bg-white rounded-xl border border-gray-100 p-12 text-center text-gray-400 text-sm">No payslips found.</div>
+          <div className="glass-card-solid rounded-xl p-12 text-center text-gray-400 text-sm">No payslips found.</div>
         ) : (
           <div className="flex flex-col gap-3">
             {payslips.map((slip) => (
-              <div key={slip.id} className="bg-white rounded-xl border border-gray-100 px-5 py-4 flex items-center justify-between">
+              <div key={slip.id} className="glass-card-solid rounded-xl px-5 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><TbFileInvoice size={20} /></div>
                   <div>

@@ -148,8 +148,8 @@ export function ReviewsPage() {
 
   return (
     <div className="flex min-h-0 gap-2 h-full overflow-hidden">
-      <main className={cn("flex min-h-0 flex-col h-full w-full bg-stone-50 overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b bg-stone-50">
+      <main className={cn("flex min-h-0 flex-col h-full w-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b border-black/5 glass-header">
           <div className="flex items-center gap-3">
             <SubNavToggle />
             <span className="text-lg font-semibold tracking-tight">My Reviews</span>
@@ -167,7 +167,7 @@ export function ReviewsPage() {
               <section>
                 <h3 className="text-sm font-semibold text-gray-700 mb-3">My Self-Assessments</h3>
                 {selfReviews.length === 0 ? (
-                  <div className="rounded-xl border border-gray-100 bg-white p-6 text-center">
+                  <div className="rounded-xl glass-card p-6 text-center">
                     <p className="text-sm text-gray-400">No self-assessments yet.</p>
                   </div>
                 ) : (
@@ -176,7 +176,7 @@ export function ReviewsPage() {
                       <button
                         key={sub.id}
                         onClick={() => openSubmission(sub)}
-                        className="w-full text-left rounded-xl border border-gray-100 bg-white p-4 hover:border-blue-200 transition-colors"
+                        className="w-full text-left rounded-xl glass-card p-4 hover:border-blue-200 transition-colors"
                       >
                         <div className="flex items-center justify-between">
                           <div>
@@ -203,7 +203,7 @@ export function ReviewsPage() {
                       <button
                         key={sub.id}
                         onClick={() => openSubmission(sub)}
-                        className="w-full text-left rounded-xl border border-gray-100 bg-white p-4 hover:border-blue-200 transition-colors"
+                        className="w-full text-left rounded-xl glass-card p-4 hover:border-blue-200 transition-colors"
                       >
                         <div className="flex items-center justify-between">
                           <div>

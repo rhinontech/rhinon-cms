@@ -5,8 +5,12 @@ import { authenticate, authorize, AuthRequest } from "../middleware/authenticate
 const router = Router();
 router.use(authenticate, authorize("people:read"));
 
-router.get("/", async (_req: AuthRequest, res: Response) => {
+// Active members by default (assignee pickers etc.); ?include=all adds relieved
+// members for the Team directory's Alumni view.
+router.get("/", async (req: AuthRequest, res: Response) => {
+  const includeAll = req.query.include === "all";
   const employees = await User.findAll({
+    where: includeAll ? undefined : { status: "active" },
     include: [{ model: Role, as: "role", attributes: ["name", "slug"] }],
     attributes: { exclude: ["passwordHash"] },
     order: [["fullName", "ASC"]],

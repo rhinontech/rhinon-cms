@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePermissions } from "@/context/PermissionsContext";
 import {
   TbCalendarOff, TbPlus, TbX, TbLoader, TbUsers, TbClock, TbCheck, TbCalendarEvent
 } from "react-icons/tb";
@@ -104,8 +104,8 @@ function AdminLeaveOverview({ isSubNavExpanded }: { isSubNavExpanded: boolean })
   ];
 
   return (
-    <div className={cn("flex flex-col h-full bg-stone-50 overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
-      <div className="sticky top-0 z-10 flex items-center gap-3 h-16 px-5 border-b bg-stone-50">
+    <div className={cn("flex flex-col h-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
+      <div className="sticky top-0 z-10 flex items-center gap-3 h-16 px-5 border-b border-black/5 glass-header">
         <SubNavToggle />
         <h1 className="text-lg font-semibold tracking-tight">Leave Overview</h1>
       </div>
@@ -120,7 +120,7 @@ function AdminLeaveOverview({ isSubNavExpanded }: { isSubNavExpanded: boolean })
             {/* Stat cards */}
             <div className="grid grid-cols-2 gap-4">
               {statCards.map(c => (
-                <div key={c.label} className="rounded-xl border border-gray-100 bg-white p-5 flex items-center gap-4">
+                <div key={c.label} className="rounded-xl glass-card p-5 flex items-center gap-4">
                   <div className={cn("p-3 rounded-xl", c.color)}>{c.icon}</div>
                   <div>
                     <p className="text-2xl font-bold text-gray-900">{c.value}</p>
@@ -131,7 +131,7 @@ function AdminLeaveOverview({ isSubNavExpanded }: { isSubNavExpanded: boolean })
             </div>
 
             {/* Leave type breakdown */}
-            <div className="rounded-xl border border-gray-100 bg-white">
+            <div className="rounded-xl glass-card">
               <div className="px-5 py-4 border-b">
                 <h2 className="text-sm font-semibold text-gray-900">Leave Usage by Type</h2>
                 <p className="text-xs text-gray-400">Across all employees this year</p>
@@ -165,7 +165,7 @@ function AdminLeaveOverview({ isSubNavExpanded }: { isSubNavExpanded: boolean })
             </div>
 
             {/* Recent leave requests */}
-            <div className="rounded-xl border border-gray-100 bg-white">
+            <div className="rounded-xl glass-card">
               <div className="px-5 py-4 border-b flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-gray-900">Recent Leave Requests</h2>
                 <TbCalendarEvent size={16} className="text-gray-300" />
@@ -266,8 +266,8 @@ function EmployeeLeaveOverview({ isSubNavExpanded }: { isSubNavExpanded: boolean
   };
 
   return (
-    <div className={cn("flex flex-col h-full bg-stone-50 overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
-      <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b bg-stone-50">
+    <div className={cn("flex flex-col h-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
+      <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b border-black/5 glass-header">
         <div className="flex items-center gap-3">
           <SubNavToggle />
           <h1 className="text-lg font-semibold tracking-tight">Leave Overview</h1>
@@ -296,7 +296,7 @@ function EmployeeLeaveOverview({ isSubNavExpanded }: { isSubNavExpanded: boolean
                 </div>
               ) : (
                 balances.map(bal => (
-                  <div key={bal.leaveTypeId} className="rounded-xl border border-gray-100 bg-white p-5">
+                  <div key={bal.leaveTypeId} className="rounded-xl glass-card p-5">
                     <div className="flex items-center gap-2 mb-4">
                       <span className="h-3 w-3 rounded-full flex-shrink-0" style={{ backgroundColor: bal.color }} />
                       <p className="font-semibold text-gray-900 text-sm truncate">{bal.name}</p>
@@ -329,7 +329,7 @@ function EmployeeLeaveOverview({ isSubNavExpanded }: { isSubNavExpanded: boolean
               )}
             </div>
 
-            <div className="rounded-xl border border-gray-100 bg-white">
+            <div className="rounded-xl glass-card">
               <div className="px-5 py-4 border-b">
                 <h2 className="text-sm font-semibold text-gray-900">Recent Requests</h2>
               </div>
@@ -360,8 +360,8 @@ function EmployeeLeaveOverview({ isSubNavExpanded }: { isSubNavExpanded: boolean
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center glass-overlay p-4">
+          <div className="glass-modal rounded-3xl w-full max-w-md overflow-hidden">
             <div className="p-6 border-b flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-bold text-stone-900">Apply for Leave</h3>
@@ -424,9 +424,8 @@ function EmployeeLeaveOverview({ isSubNavExpanded }: { isSubNavExpanded: boolean
 ══════════════════════════════════════ */
 export function LeaveOverviewPage() {
   const { isExpanded: isSubNavExpanded } = useSideNav();
-  const pathname = usePathname();
-  const roleSlug = pathname.split("/")[1];
-  const isAdmin = roleSlug === "superadmin" || roleSlug === "hr";
+  const { has } = usePermissions();
+  const isAdmin = has("leave:write");
 
   return isAdmin
     ? <AdminLeaveOverview isSubNavExpanded={isSubNavExpanded} />

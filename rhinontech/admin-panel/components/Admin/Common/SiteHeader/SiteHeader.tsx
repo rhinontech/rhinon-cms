@@ -5,12 +5,14 @@ import Link from "next/link";
 import Cookies from "js-cookie";
 import { useEffect, useState } from "react";
 import { LogOut } from "lucide-react";
-import { TbUser, TbChevronDown, TbBell, TbEye } from "react-icons/tb";
+import { TbUser, TbChevronDown, TbBell, TbEye, TbMenu2 } from "react-icons/tb";
+import { useDashboard } from "@/components/Common/DashboardProvider/DashboardProvider";
 import {
   Popover,
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
+import { apiFetch } from "@/lib/api";
 
 function decodeJWT(token: string): { fullName?: string; companyEmail?: string; roleSlug?: string } {
   try {
@@ -27,32 +29,38 @@ const AVATAR_COLORS = [
 ];
 const avatarGradient = (name: string) => AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length];
 
-const roleViews = [
-  { slug: "superadmin", label: "Super Admin" },
-  { slug: "hr", label: "HR" },
-  { slug: "employee", label: "Employee" },
-];
+interface RoleOption { slug: string; name: string }
 
 export function SiteHeader() {
   const pathname = usePathname();
   const router   = useRouter();
+  const { setMobileNavOpen } = useDashboard();
   const roleSlug = pathname.split("/")[1] || "";
   const [currentUser, setCurrentUser] = useState<{ fullName?: string; companyEmail?: string; roleSlug?: string }>({
     fullName: "User",
     companyEmail: "",
   });
+  const [roleViews, setRoleViews] = useState<RoleOption[]>([]);
 
   useEffect(() => {
     const token = Cookies.get("authToken");
     if (token) setCurrentUser(decodeJWT(token));
   }, []);
 
+  const canPreviewRoles = currentUser.roleSlug === "superadmin";
+
+  useEffect(() => {
+    if (!canPreviewRoles) return;
+    apiFetch<{ slug: string; name: string }[]>("/roles")
+      .then((roles) => setRoleViews(roles.map((r) => ({ slug: r.slug, name: r.name }))))
+      .catch(() => setRoleViews([]));
+  }, [canPreviewRoles]);
+
   const name      = currentUser.fullName    ?? "User";
   const firstName = name.split(" ")[0];
   const email     = currentUser.companyEmail ?? "";
   const initial   = name.charAt(0).toUpperCase();
-  const canPreviewRoles = currentUser.roleSlug === "superadmin";
-  const currentRoleView = roleViews.find((role) => role.slug === roleSlug)?.label ?? roleSlug;
+  const currentRoleView = roleViews.find((role) => role.slug === roleSlug)?.name ?? roleSlug;
 
   const switchRoleView = (nextRole: string) => {
     const parts = pathname.split("/");
@@ -67,13 +75,21 @@ export function SiteHeader() {
   };
 
   return (
-    <div className="flex items-center justify-end rounded-lg bg-white border border-stone-200 px-4 h-[50px] shrink-0 gap-3">
+    <div className="flex items-center justify-end rounded-lg glass-card px-3 sm:px-4 h-[50px] shrink-0 gap-2 sm:gap-3">
+      {/* Hamburger — opens the sidebar drawer on mobile */}
+      <button
+        onClick={() => setMobileNavOpen(true)}
+        className="mr-auto rounded-lg p-2 text-gray-600 hover:bg-stone-100 lg:hidden"
+        aria-label="Open navigation"
+      >
+        <TbMenu2 size={20} />
+      </button>
       {canPreviewRoles && (
         <Popover>
           <PopoverTrigger asChild>
-            <button className="inline-flex items-center gap-2 rounded-lg border border-stone-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-stone-50">
+            <button className="inline-flex items-center gap-2 rounded-lg border border-stone-200 px-2.5 sm:px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-stone-50">
               <TbEye size={16} className="text-gray-400" />
-              Viewing as {currentRoleView}
+              <span className="hidden sm:inline">Viewing as {currentRoleView}</span>
               <TbChevronDown size={13} className="text-gray-400" />
             </button>
           </PopoverTrigger>
@@ -89,7 +105,7 @@ export function SiteHeader() {
                   role.slug === roleSlug ? "font-semibold text-gray-900" : "text-gray-700"
                 }`}
               >
-                {role.label}
+                {role.name}
                 {role.slug === roleSlug && <span className="text-xs text-blue-600">Active</span>}
               </button>
             ))}

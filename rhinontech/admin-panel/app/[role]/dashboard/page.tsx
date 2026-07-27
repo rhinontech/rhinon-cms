@@ -13,6 +13,7 @@ import {
   TbCash,
   TbCheck,
   TbClock,
+  TbCoffee,
   TbConfetti,
   TbMoonStars,
   TbStopwatch,
@@ -65,6 +66,7 @@ interface DashboardStats {
   todayAttendance: {
     clockIn: string | null;
     clockOut: string | null;
+    breaks?: { start: string; end: string | null }[];
     status: string;
     durationMinutes: number;
   } | null;
@@ -140,7 +142,7 @@ function avatar(name: string, idx: number, size = "h-9 w-9") {
 
 function StatCard({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: React.ReactNode; sub?: string }) {
   return (
-    <div className="flex items-center gap-4 rounded-xl border border-gray-100 bg-white px-5 py-4">
+    <div className="flex items-center gap-4 rounded-xl glass-card px-5 py-4">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-stone-100 text-gray-600">
         {icon}
       </div>
@@ -184,6 +186,7 @@ export default function DashboardPage() {
   const [investment, setInvestment] = useState<InvestmentSummary | null>(null);
   const [clockingIn, setClockingIn] = useState(false);
   const [clockingOut, setClockingOut] = useState(false);
+  const [breakLoading, setBreakLoading] = useState(false);
   const [todayLabel, setTodayLabel] = useState("");
 
   const fetchStats = useCallback(() => {
@@ -215,14 +218,22 @@ export default function DashboardPage() {
     finally { setClockingOut(false); }
   };
 
+  const handleToggleBreak = async () => {
+    setBreakLoading(true);
+    try { await apiFetch(onBreak ? "/attendance/break-end" : "/attendance/break-start", { method: "POST" }); fetchStats(); }
+    catch { /* error */ }
+    finally { setBreakLoading(false); }
+  };
+
   const att = stats?.todayAttendance;
   const clocked = !!att?.clockIn;
   const clockedOut = !!att?.clockOut;
+  const onBreak = !!att?.breaks?.length && !att.breaks[att.breaks.length - 1].end;
 
   return (
     <AdminDashboardShell>
-      <div className="bg-stone-50 rounded-xl w-full h-full overflow-auto">
-        <div className="mx-auto max-w-[1400px] p-6 space-y-5">
+      <div className="glass-panel rounded-xl w-full h-full overflow-auto">
+        <div className="mx-auto max-w-[1400px] p-4 sm:p-6 space-y-4 sm:space-y-5">
 
           {/* ── Header ── */}
           <div className="flex items-center gap-3">
@@ -236,7 +247,7 @@ export default function DashboardPage() {
           </div>
 
           {/* ── Stats strip ── */}
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
             <StatCard
               icon={<TbUsers size={20} />}
               label="Total employees"
@@ -279,11 +290,11 @@ export default function DashboardPage() {
           <div className="grid grid-cols-12 gap-4">
 
             {/* Today's Attendance */}
-            <div className="col-span-12 rounded-xl border border-gray-100 bg-white overflow-hidden">
+            <div className="col-span-12 rounded-xl glass-card overflow-hidden">
               <SectionTitle icon={<TbClock size={16} />} title={isSuperadmin ? "Team Attendance" : "Today's Attendance"} />
               <div className="p-5">
                 {isSuperadmin ? (
-                  <div className="flex items-center justify-between gap-4">
+                  <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <p className="text-sm text-gray-500">Super admins manage team attendance instead of clocking in.</p>
                       <p className="mt-2 text-xs text-gray-400">Use Attendance to review who is present, absent, or active today.</p>
@@ -297,7 +308,7 @@ export default function DashboardPage() {
                   </div>
                 ) : (
                 <>
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                   <div className="space-y-4">
                     {clocked ? (
                       <>
@@ -305,7 +316,7 @@ export default function DashboardPage() {
                           <p className="text-xs text-gray-400 uppercase tracking-wide">Clocked in</p>
                           <p className="mt-1 text-3xl font-bold text-gray-900">{formatTime(att?.clockIn)}</p>
                         </div>
-                        <div className="flex items-center gap-6 text-sm">
+                        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
                           <div>
                             <p className="text-xs text-gray-400">Duration</p>
                             <p className="mt-0.5 font-semibold text-gray-800">{formatDuration(att?.durationMinutes ?? 0)}</p>
@@ -323,8 +334,13 @@ export default function DashboardPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="rounded-md bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-600">DEFAULT SHIFT</span>
-                          {!clockedOut && (
+                          {!clockedOut && !onBreak && (
                             <span className="rounded-md bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700">Active</span>
+                          )}
+                          {onBreak && (
+                            <span className="rounded-md bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                              On break since {formatTime(att!.breaks![att!.breaks!.length - 1].start)}
+                            </span>
                           )}
                         </div>
                       </>
@@ -337,7 +353,7 @@ export default function DashboardPage() {
                   </div>
 
                   {/* Clock visualization */}
-                  <div className="shrink-0 flex flex-col items-end gap-3">
+                  <div className="shrink-0 flex flex-col items-start gap-3 sm:items-end">
                     {!clocked && (
                       <button
                         onClick={handleClockIn}
@@ -348,14 +364,26 @@ export default function DashboardPage() {
                       </button>
                     )}
                     {clocked && !clockedOut && (
-                      <button
-                        onClick={handleClockOut}
-                        disabled={clockingOut}
-                        className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-5 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-60"
-                      >
-                        <TbStopwatch size={16} />
-                        {clockingOut ? "Clocking out…" : "Clock out"}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={handleToggleBreak}
+                          disabled={breakLoading}
+                          className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium disabled:opacity-60 ${
+                            onBreak ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100" : "border-gray-300 text-gray-800 hover:bg-gray-50"
+                          }`}
+                        >
+                          <TbCoffee size={16} />
+                          {breakLoading ? "…" : onBreak ? "Resume" : "Take a break"}
+                        </button>
+                        <button
+                          onClick={handleClockOut}
+                          disabled={clockingOut}
+                          className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-5 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-60"
+                        >
+                          <TbStopwatch size={16} />
+                          {clockingOut ? "Clocking out…" : "Clock out"}
+                        </button>
+                      </div>
                     )}
                     {clocked && clockedOut && (
                       <span className="rounded-lg bg-stone-100 px-4 py-2 text-sm text-gray-500">Done for today</span>
@@ -401,7 +429,7 @@ export default function DashboardPage() {
           <div className="grid grid-cols-12 gap-4">
 
             {/* Birthdays */}
-            <div className="col-span-4 rounded-xl border border-gray-100 bg-white overflow-hidden">
+            <div className="col-span-12 md:col-span-4 rounded-xl glass-card overflow-hidden">
               <SectionTitle icon={<TbCake size={16} />} title="Birthdays this month" />
               {stats?.birthdays.length ? (
                 <div className="divide-y divide-gray-50">
@@ -425,7 +453,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Anniversaries */}
-            <div className="col-span-4 rounded-xl border border-gray-100 bg-white overflow-hidden">
+            <div className="col-span-12 md:col-span-4 rounded-xl glass-card overflow-hidden">
               <SectionTitle icon={<TbConfetti size={16} />} title="Work anniversaries" />
               {stats?.anniversaries.length ? (
                 <div className="divide-y divide-gray-50">
@@ -449,7 +477,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Recent Hires */}
-            <div className="col-span-4 rounded-xl border border-gray-100 bg-white overflow-hidden">
+            <div className="col-span-12 md:col-span-4 rounded-xl glass-card overflow-hidden">
               <SectionTitle icon={<TbCalendarPlus size={16} />} title="Recent hires" />
               {stats?.recentHires.length ? (
                 <div className="divide-y divide-gray-50">
@@ -471,7 +499,7 @@ export default function DashboardPage() {
           </div>
 
           {/* ── Row 4: My Pending Tasks ── */}
-          <div className="rounded-xl border border-gray-100 bg-white overflow-hidden">
+          <div className="rounded-xl glass-card overflow-hidden">
             <SectionTitle icon={<TbCalendar size={16} />} title={`My pending tasks${stats?.pendingTasks ? ` (${stats.pendingTasks})` : ""}`} />
             {stats?.pendingTasksList.length ? (
               <div className="divide-y divide-gray-50">

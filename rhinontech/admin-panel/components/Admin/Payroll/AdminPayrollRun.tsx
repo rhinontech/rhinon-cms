@@ -12,6 +12,7 @@ interface Employee {
   id: string;
   fullName: string;
   department: string;
+  exitDate?: string | null;
   basicSalary?: number;
   hra?: number;
   ta?: number;
@@ -65,8 +66,13 @@ export function AdminPayrollRun() {
       .finally(() => setLoadingPreview(false));
   }, []);
 
-  const eligible = employees.filter((e) => e.basicSalary && Number(e.basicSalary) > 0);
-  const notConfigured = employees.filter((e) => !e.basicSalary || Number(e.basicSalary) === 0);
+  // Members whose last working day falls in (or before) the selected month are paid
+  // through Final Settlements, so the run skips them — mirror that in the preview.
+  const endOfMonth = `${year}-${String(month).padStart(2, "0")}-${String(new Date(year, month, 0).getDate()).padStart(2, "0")}`;
+  const isExiting = (e: Employee) => !!e.exitDate && e.exitDate <= endOfMonth;
+  const exiting = employees.filter(isExiting);
+  const eligible = employees.filter((e) => e.basicSalary && Number(e.basicSalary) > 0 && !isExiting(e));
+  const notConfigured = employees.filter((e) => (!e.basicSalary || Number(e.basicSalary) === 0) && !isExiting(e));
 
   const run = async () => {
     setRunning(true);
@@ -89,8 +95,8 @@ export function AdminPayrollRun() {
   // Success state
   if (result) {
     return (
-      <div className="flex flex-col h-full bg-stone-50 rounded-r-xl overflow-hidden">
-        <div className="sticky top-0 z-10 flex items-center gap-4 h-16 px-5 border-b bg-stone-50">
+      <div className="flex flex-col h-full glass-panel rounded-r-xl overflow-hidden">
+        <div className="sticky top-0 z-10 flex items-center gap-4 h-16 px-5 border-b border-black/5 glass-header">
           <SubNavToggle />
           <h1 className="text-base font-semibold tracking-tight">Run Payroll</h1>
         </div>
@@ -101,7 +107,7 @@ export function AdminPayrollRun() {
             </div>
             <h2 className="text-sm font-semibold text-gray-900 mb-1">Payroll Run Complete</h2>
             <p className="text-sm text-gray-500 mb-6">{result.message}</p>
-            <div className="grid grid-cols-3 gap-4 mb-6 text-left">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 text-left">
               <div className="bg-gray-50 rounded-lg p-3">
                 <p className="text-xs text-gray-400">Period</p>
                 <p className="font-semibold text-gray-900 text-sm">{MONTHS[result.payroll.month - 1]} {result.payroll.year}</p>
@@ -136,8 +142,8 @@ export function AdminPayrollRun() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-stone-50 rounded-r-xl overflow-hidden">
-      <div className="sticky top-0 z-10 flex items-center gap-4 h-16 px-5 border-b bg-stone-50">
+    <div className="flex flex-col h-full glass-panel rounded-r-xl overflow-hidden">
+      <div className="sticky top-0 z-10 flex items-center gap-4 h-16 px-5 border-b border-black/5 glass-header">
         <SubNavToggle />
         <h1 className="text-base font-semibold tracking-tight">Run Payroll</h1>
       </div>
@@ -145,7 +151,7 @@ export function AdminPayrollRun() {
       <div className="flex-1 overflow-auto p-6">
         <div className="max-w-3xl">
           {/* Period selector */}
-          <div className="bg-white rounded-xl border border-gray-100 p-6 mb-5">
+          <div className="glass-card-solid rounded-xl p-6 mb-5">
             <p className="font-semibold text-gray-900 mb-4">Select Payroll Period</p>
             <div className="flex gap-4">
               <div className="flex flex-col gap-1.5">
@@ -174,7 +180,7 @@ export function AdminPayrollRun() {
           </div>
 
           {/* Preview — eligible employees */}
-          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden mb-5">
+          <div className="glass-card-solid rounded-xl overflow-hidden mb-5">
             <div className="px-5 py-4 border-b flex items-center justify-between">
               <p className="font-semibold text-gray-900">Payslips to be generated</p>
               <span className="text-sm text-gray-500">{eligible.length} employee{eligible.length !== 1 ? "s" : ""}</span>
@@ -190,8 +196,8 @@ export function AdminPayrollRun() {
                 </Link>
               </div>
             ) : (
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
+              <table className="w-full min-w-[640px] text-sm">
+                <thead className="glass-thead text-xs text-gray-600 uppercase">
                   <tr>
                     <th className="px-5 py-3 text-left">Employee</th>
                     <th className="px-5 py-3 text-right">Gross</th>
@@ -228,6 +234,22 @@ export function AdminPayrollRun() {
               </table>
             )}
           </div>
+
+          {/* Exiting members — settled separately */}
+          {exiting.length > 0 && (
+            <div className="flex items-start gap-3 bg-purple-50 border border-purple-200 rounded-xl px-5 py-4 mb-5 text-sm text-purple-800">
+              <TbAlertCircle size={18} className="shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium">{exiting.length} exiting member{exiting.length !== 1 ? "s" : ""} excluded from this run</p>
+                <p className="text-xs mt-0.5 text-purple-700">
+                  Last working day falls within this period for: {exiting.map((e) => e.fullName).join(", ")}
+                </p>
+                <Link href={`/${roleSlug}/payroll/settlements`} className="text-xs text-purple-900 underline mt-1 block">
+                  Pay them via Final Settlements →
+                </Link>
+              </div>
+            </div>
+          )}
 
           {/* Not configured warning */}
           {notConfigured.length > 0 && (

@@ -5,7 +5,7 @@ import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/Collap
 import { cn } from "@/lib/utils";
 import { useSideNav } from "@/context/SideNavContext";
 import { apiFetch } from "@/lib/api";
-import { usePathname } from "next/navigation";
+import { usePermissions } from "@/context/PermissionsContext";
 import { TbPlus, TbX, TbTarget, TbLoader2, TbTrash } from "react-icons/tb";
 
 interface ReviewCycle {
@@ -57,9 +57,8 @@ function ProgressBar({ value }: { value: number }) {
 
 export function GoalsPage() {
   const { isExpanded: isSubNavExpanded } = useSideNav();
-  const pathname = usePathname();
-  const roleSlug = pathname.split("/")[1];
-  const isAdmin = roleSlug === "superadmin" || roleSlug === "hr";
+  const { has } = usePermissions();
+  const isAdmin = has("performance:write");
 
   const [goals, setGoals] = useState<ReviewGoal[]>([]);
   const [cycles, setCycles] = useState<ReviewCycle[]>([]);
@@ -173,8 +172,8 @@ export function GoalsPage() {
 
   return (
     <div className="flex min-h-0 gap-2 h-full overflow-hidden">
-      <main className={cn("flex min-h-0 flex-col h-full w-full bg-stone-50 overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b bg-stone-50">
+      <main className={cn("flex min-h-0 flex-col h-full w-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b border-black/5 glass-header">
           <div className="flex items-center gap-3">
             <SubNavToggle />
             <span className="text-lg font-semibold tracking-tight">My Goals</span>
@@ -194,7 +193,7 @@ export function GoalsPage() {
               <TbLoader2 className="animate-spin text-gray-400" size={28} />
             </div>
           ) : goals.length === 0 ? (
-            <div className="rounded-xl border border-gray-100 bg-white p-10 text-center">
+            <div className="rounded-xl glass-card p-10 text-center">
               <TbTarget size={36} className="mx-auto text-gray-300 mb-3" />
               <p className="text-sm text-gray-500">No goals yet. Click "Add Goal" to create your first one.</p>
             </div>
@@ -204,7 +203,7 @@ export function GoalsPage() {
                 <button
                   key={goal.id}
                   onClick={() => openGoal(goal)}
-                  className="w-full text-left rounded-xl border border-gray-100 bg-white p-4 hover:border-blue-200 transition-colors"
+                  className="w-full text-left rounded-xl glass-card p-4 hover:border-blue-200 transition-colors"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">

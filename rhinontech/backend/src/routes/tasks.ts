@@ -1,7 +1,7 @@
 import { Router, Response } from "express";
 import { Op } from "sequelize";
 import { ClientRequest, Project, Subtask, Task, TaskComment, TaskTag, User } from "../models";
-import { authenticate, AuthRequest } from "../middleware/authenticate";
+import { authenticate, hasPermission, AuthRequest } from "../middleware/authenticate";
 
 const taskStatusToRequestStatus: Record<string, string> = {
   Pending: "In review",
@@ -21,8 +21,8 @@ const taskIncludes: any[] = [
   { model: TaskTag, as: "tags", attributes: ["id", "label", "color"] },
 ];
 
-function canEdit(task: Task, userId: string, roleSlug: string): boolean {
-  return task.assigneeId === userId || task.createdById === userId || roleSlug === "superadmin";
+function canEdit(task: Task, req: AuthRequest): boolean {
+  return task.assigneeId === req.user!.userId || task.createdById === req.user!.userId || hasPermission(req, "work:write");
 }
 
 // GET /tasks
@@ -43,7 +43,7 @@ router.get("/", async (req: AuthRequest, res: Response) => {
       ];
     } else if (scope === "team") {
       where.assigneeId = { [Op.ne]: req.user!.userId };
-      if (!["superadmin", "hr"].includes(req.user!.roleSlug)) {
+      if (!hasPermission(req, "work:write", "employees:read")) {
         const currentUser = await User.findByPk(req.user!.userId, { attributes: ["department"] });
         include[0] = {
           model: User,
@@ -103,7 +103,7 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
   try {
     const task = await Task.findByPk(req.params.id);
     if (!task) { res.status(404).json({ message: "Task not found" }); return; }
-    if (!canEdit(task, req.user!.userId, req.user!.roleSlug)) {
+    if (!canEdit(task, req)) {
       res.status(403).json({ message: "You can only edit tasks assigned to or created by you" }); return;
     }
 
@@ -166,7 +166,7 @@ router.delete("/:id", async (req: AuthRequest, res: Response) => {
   try {
     const task = await Task.findByPk(req.params.id);
     if (!task) { res.status(404).json({ message: "Task not found" }); return; }
-    if (!canEdit(task, req.user!.userId, req.user!.roleSlug)) {
+    if (!canEdit(task, req)) {
       res.status(403).json({ message: "You can only delete tasks assigned to or created by you" }); return;
     }
     await ClientRequest.update({ convertedTaskId: undefined, status: "Open" } as any, { where: { convertedTaskId: task.id } });
@@ -256,7 +256,7 @@ router.delete("/:id/comments/:commentId", async (req: AuthRequest, res: Response
   try {
     const comment = await TaskComment.findOne({ where: { id: req.params.commentId, taskId: req.params.id } });
     if (!comment) { res.status(404).json({ message: "Comment not found" }); return; }
-    if (comment.userId !== req.user!.userId && req.user!.roleSlug !== "superadmin") {
+    if (comment.userId !== req.user!.userId && !hasPermission(req, "work:write")) {
       res.status(403).json({ message: "You can only delete your own comments" }); return;
     }
     await comment.destroy();

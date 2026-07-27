@@ -9,13 +9,7 @@ export default function EngageLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <main
-      className="flex min-h-screen w-full flex-col"
-      style={{
-        minWidth: "1440px",
-        overflowX: "auto",
-      }}
-    >
+    <main className="flex min-h-screen w-full flex-col">
       <DashboardProvider>
         <SideNavProvider>
           <AdminDashboardShell>

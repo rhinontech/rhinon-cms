@@ -1,41 +1,54 @@
-import { Router, Response, Request } from "express";
-import { ClientRequest, Project, User, Lead, Blog, CaseStudy } from "../models";
+import express, { Router, Response, Request } from "express";
+import { ClientRequest, Project, User, Lead, Blog, CaseStudy, PageView, DocsAccess } from "../models";
 import { sendEmail } from "../services/mailer";
 import { env } from "../config/env";
+import { classifyChannel, parseHost, isBotUserAgent } from "../services/analytics";
 
 const router = Router();
 
 // Fields exposed to the public marketing site (never leak Draft content or internal columns).
-const PUBLIC_BLOG_FIELDS = [
-  "id", "title", "excerpt", "content", "slug",
+// The list stays light (no blocks/faqs); the detail adds the full body + SEO fields.
+const PUBLIC_BLOG_LIST_FIELDS = [
+  "id", "title", "excerpt", "slug",
   "authorName", "authorRole", "authorAvatar",
-  "coverImage", "tags", "readTime", "publishedAt",
+  "coverImage", "tags", "category", "readTime", "publishedAt",
 ] as const;
 
-// Fire-and-forget heads-up to the team when a new website lead lands. Never throws.
-async function notifyNewLead(lead: {
-  name: string;
-  email: string;
-  whatsapp: string | null;
-  message: string | null;
-  company: string | null;
-}) {
+const PUBLIC_BLOG_DETAIL_FIELDS = [
+  ...PUBLIC_BLOG_LIST_FIELDS,
+  "content", "contentBlocks", "faqs", "metaTitle", "metaDescription",
+] as const;
+
+// Fire-and-forget heads-up to the team when a new lead lands. Never throws.
+async function notifyNewLead(
+  lead: {
+    name: string;
+    email: string;
+    whatsapp: string | null;
+    message: string | null;
+    company: string | null;
+  },
+  opts?: { originLabel?: string; extra?: Array<[string, string | null]> }
+) {
   if (!env.leadsNotifyEmail) return; // notifications disabled
+  const originLabel = opts?.originLabel || "website";
   try {
-    const rows = [
+    const allRows: Array<[string, string | null]> = [
       ["Name", lead.name],
       ["Email", lead.email],
-      ["WhatsApp", lead.whatsapp || "—"],
-      ["Company", lead.company || "—"],
-      ["Message", lead.message || "—"],
-    ]
-      .map(([k, v]) => `<tr><td style="padding:4px 12px 4px 0;font-weight:600">${k}</td><td>${v}</td></tr>`)
+      ["WhatsApp / Phone", lead.whatsapp],
+      ["Company", lead.company],
+      ["Message", lead.message],
+      ...(opts?.extra || []),
+    ];
+    const rows = allRows
+      .map(([k, v]) => `<tr><td style="padding:4px 12px 4px 0;font-weight:600">${k}</td><td>${v || "—"}</td></tr>`)
       .join("");
     await sendEmail({
       to: env.leadsNotifyEmail,
-      subject: `New website lead: ${lead.name}`,
-      html: `<p>A new lead came in from the Rhinon Labs website.</p><table>${rows}</table>`,
-      text: `New website lead\nName: ${lead.name}\nEmail: ${lead.email}\nWhatsApp: ${lead.whatsapp || "—"}\nCompany: ${lead.company || "—"}\nMessage: ${lead.message || "—"}`,
+      subject: `New ${originLabel} lead: ${lead.name}`,
+      html: `<p>A new lead came in from the Rhinon Labs ${originLabel}.</p><table>${rows}</table>`,
+      text: `New ${originLabel} lead\n${allRows.map(([k, v]) => `${k}: ${v || "—"}`).join("\n")}`,
     });
   } catch (err) {
     console.error("Failed to send new-lead notification:", err);
@@ -151,12 +164,187 @@ router.post("/web-leads", async (req: Request, res: Response) => {
   }
 });
 
+// POST /public/platform-leads — unauthenticated lead capture from external Rhinon platforms
+// (e.g. the scheduler product). Saves into the same Lead table the Outreach module reads;
+// platform-specific fields (institution type, team size, lead volume) land in `raw` and show
+// up in the admin lead detail's Raw Data section.
+router.post("/platform-leads", async (req: Request, res: Response) => {
+  try {
+    const b = req.body || {};
+    const str = (v: any, max = 500): string | null => {
+      const s = (v ?? "").toString().trim();
+      return s === "" ? null : s.slice(0, max);
+    };
+
+    const name = str(b.name, 200);
+    const emailRaw = str(b.email, 320);
+    const email = emailRaw ? emailRaw.toLowerCase() : null;
+    if (!name || !email) {
+      res.status(400).json({ message: "Name and email are required" });
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      res.status(400).json({ message: "Please provide a valid email address" });
+      return;
+    }
+
+    const phone = str(b.phone, 40);
+    const website = str(b.website, 300);
+    const institutionType = str(b.institutionType, 200);
+    const annualLeadVolume = str(b.annualLeadVolume, 100);
+    const teamSize = str(b.teamSize, 100);
+    const message = str(b.message, 5000);
+    const source = str(b.source, 100) || "Platform";
+
+    // Company fallback: explicit value → website domain → generic label.
+    let company = str(b.company, 200);
+    if (!company && website) {
+      try {
+        company = new URL(website.startsWith("http") ? website : `https://${website}`).hostname.replace(/^www\./, "");
+      } catch { /* unparseable website — keep fallback */ }
+    }
+    company = company || "Platform Lead";
+
+    const summary = [
+      institutionType && `Institution: ${institutionType}`,
+      teamSize && `Team size: ${teamSize}`,
+      annualLeadVolume && `Annual lead volume: ${annualLeadVolume}`,
+      message && `Message: ${message}`,
+    ].filter(Boolean).join(" · ");
+
+    const raw = { institutionType, annualLeadVolume, teamSize, message, submittedAt: new Date().toISOString() };
+
+    // Same dedupe behaviour as web-leads: repeat enquiries append to notes instead of failing
+    // on the unique email constraint.
+    const existing = await Lead.findOne({ where: { email } });
+    if (existing) {
+      const stamp = new Date().toISOString().slice(0, 16).replace("T", " ");
+      const appended = [existing.notes, `[${stamp}] ${source} enquiry: ${summary || "(no details)"}`]
+        .filter(Boolean)
+        .join("\n");
+      // Only merge fields the new submission actually provided — never null out earlier data.
+      const rawProvided = Object.fromEntries(Object.entries(raw).filter(([, v]) => v != null));
+      await existing.update({
+        notes: appended,
+        phone: existing.phone || phone || undefined,
+        website: existing.website || website || undefined,
+        raw: { ...(existing.raw || {}), ...rawProvided },
+      });
+      res.status(200).json({ ok: true, deduped: true });
+    } else {
+      await Lead.create({
+        name,
+        email,
+        company,
+        phone,
+        website,
+        industry: institutionType,
+        notes: summary || null,
+        source,
+        status: "New",
+        raw,
+      } as any);
+      res.status(201).json({ ok: true });
+    }
+
+    // Best-effort, after the response — never blocks or fails the request.
+    void notifyNewLead(
+      { name, email, whatsapp: phone, message, company },
+      {
+        originLabel: source.toLowerCase() === "platform" ? "platform" : `${source} platform`,
+        extra: [
+          ["Website", website],
+          ["Institution Type", institutionType],
+          ["Team Size", teamSize],
+          ["Annual Lead Volume", annualLeadVolume],
+        ],
+      }
+    );
+  } catch (error: any) {
+    console.error("Failed to save platform lead:", error);
+    res.status(500).json({ message: "Failed to save lead" });
+  }
+});
+
+// POST /public/track — unauthenticated pageview ingest from the marketing site.
+// Accepts JSON (fetch) or text/plain (navigator.sendBeacon) bodies. Fire-and-forget:
+// always returns fast and never lets a tracking failure surface to the visitor.
+router.post("/track", express.text({ type: ["text/plain"] }), async (req: Request, res: Response) => {
+  try {
+    // express.json handled application/json; express.text handled text/plain (a JSON string).
+    let b: any = req.body;
+    if (typeof b === "string") {
+      try { b = JSON.parse(b); } catch { b = {}; }
+    }
+    b = b || {};
+
+    const str = (v: any, max = 512): string | null => {
+      const s = (v ?? "").toString().trim();
+      return s === "" ? null : s.slice(0, max);
+    };
+
+    // Path is required; strip any querystring/hash so grouping by page is clean.
+    let path = str(b.path, 512);
+    if (path) path = path.split("?")[0].split("#")[0];
+    if (!path || !path.startsWith("/")) {
+      res.status(204).end(); // ignore junk silently
+      return;
+    }
+
+    const visitorId = str(b.visitorId, 64);
+    const sessionId = str(b.sessionId, 64);
+    if (!visitorId || !sessionId) {
+      res.status(204).end();
+      return;
+    }
+
+    const referrer = str(b.referrer, 1024);
+    const referrerHost = parseHost(referrer);
+    const userAgent = str(req.headers["user-agent"], 1024);
+    // Treat both the configured site host and the host that sent this beacon as "us",
+    // so internal navigation reads as Direct (not Referral) on localhost and in prod.
+    const originHost = parseHost((req.headers.origin as string) || null);
+    const selfHosts = [parseHost(env.siteUrl), originHost];
+
+    const utmSource = str(b.utmSource, 256);
+    const utmMedium = str(b.utmMedium, 256);
+    const utmCampaign = str(b.utmCampaign, 256);
+    const utmTerm = str(b.utmTerm, 256);
+    const utmContent = str(b.utmContent, 256);
+
+    const channel = classifyChannel({ referrerHost, utmMedium, selfHosts });
+    const isBot = isBotUserAgent(userAgent);
+
+    await PageView.create({
+      visitorId,
+      sessionId,
+      path,
+      title: str(b.title, 512),
+      referrer,
+      referrerHost,
+      channel,
+      utmSource,
+      utmMedium,
+      utmCampaign,
+      utmTerm,
+      utmContent,
+      userAgent,
+      isBot,
+    });
+
+    res.status(204).end();
+  } catch (err) {
+    console.error("Failed to record pageview:", err);
+    res.status(204).end(); // never surface tracking errors to the visitor
+  }
+});
+
 // GET /public/blogs — published blogs for the marketing site, newest first
 router.get("/blogs", async (_req: Request, res: Response) => {
   try {
     const blogs = await Blog.findAll({
       where: { status: "Published" },
-      attributes: PUBLIC_BLOG_FIELDS as unknown as string[],
+      attributes: PUBLIC_BLOG_LIST_FIELDS as unknown as string[],
       order: [["publishedAt", "DESC"]],
     });
     res.json(blogs);
@@ -171,7 +359,7 @@ router.get("/blogs/:slug", async (req: Request, res: Response) => {
   try {
     const blog = await Blog.findOne({
       where: { slug: req.params.slug, status: "Published" },
-      attributes: PUBLIC_BLOG_FIELDS as unknown as string[],
+      attributes: PUBLIC_BLOG_DETAIL_FIELDS as unknown as string[],
     });
     if (!blog) {
       res.status(404).json({ message: "Blog not found" });
@@ -210,7 +398,7 @@ router.get("/case-studies/:slug", async (req: Request, res: Response) => {
   try {
     const caseStudy = await CaseStudy.findOne({
       where: { slug: req.params.slug, status: "Published" },
-      attributes: [...PUBLIC_CASE_STUDY_FIELDS, "content"] as unknown as string[],
+      attributes: [...PUBLIC_CASE_STUDY_FIELDS, "content", "contentBlocks"] as unknown as string[],
     });
     if (!caseStudy) {
       res.status(404).json({ message: "Case study not found" });
@@ -220,6 +408,24 @@ router.get("/case-studies/:slug", async (req: Request, res: Response) => {
   } catch (err) {
     console.error("Failed to fetch public case study:", err);
     res.status(500).json({ message: "Failed to fetch case study" });
+  }
+});
+
+// POST /public/docs-access/check — does this email have developer-docs access?
+// Called (server-side) by the Rhinon Help docs site at login. Returns only a
+// boolean — never any allowlist contents.
+router.post("/docs-access/check", async (req: Request, res: Response) => {
+  try {
+    const email = (req.body?.email ?? "").toString().trim().toLowerCase();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      res.status(400).json({ allowed: false, message: "Invalid email" });
+      return;
+    }
+    const entry = await DocsAccess.findOne({ where: { email } });
+    res.json({ allowed: Boolean(entry) });
+  } catch (err) {
+    console.error("Failed to check docs access:", err);
+    res.status(500).json({ allowed: false });
   }
 });
 

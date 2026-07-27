@@ -6,10 +6,27 @@ import { authenticate, AuthRequest } from "../middleware/authenticate";
 const router = Router();
 router.use(authenticate);
 
-function durationMinutes(clockIn: Date | null | undefined, clockOut: Date | null | undefined): number {
+function breakMinutes(breaks: { start: string; end: string | null }[] | null | undefined, referenceEnd: Date): number {
+  if (!Array.isArray(breaks)) return 0;
+  let total = 0;
+  for (const b of breaks) {
+    if (!b?.start) continue;
+    const start = new Date(b.start);
+    const end = b.end ? new Date(b.end) : referenceEnd;
+    total += Math.max(0, (end.getTime() - start.getTime()) / 60000);
+  }
+  return total;
+}
+
+function durationMinutes(
+  clockIn: Date | null | undefined,
+  clockOut: Date | null | undefined,
+  breaks?: { start: string; end: string | null }[] | null
+): number {
   if (!clockIn) return 0;
   const end = clockOut ? new Date(clockOut) : new Date();
-  return Math.max(0, Math.round((end.getTime() - new Date(clockIn).getTime()) / 60000));
+  const raw = (end.getTime() - new Date(clockIn).getTime()) / 60000;
+  return Math.max(0, Math.round(raw - breakMinutes(breaks, end)));
 }
 
 // GET /dashboard/stats
@@ -43,7 +60,7 @@ router.get("/stats", async (req: AuthRequest, res: Response) => {
     const daysPresent = monthAttendance.length;
     let totalMinutesThisMonth = 0;
     for (const r of monthAttendance) {
-      totalMinutesThisMonth += durationMinutes(r.clockIn, r.clockOut);
+      totalMinutesThisMonth += durationMinutes(r.clockIn, r.clockOut, r.breaks);
     }
 
     // Pending tasks count + list
@@ -139,7 +156,7 @@ router.get("/stats", async (req: AuthRequest, res: Response) => {
       daysPresent,
       totalMinutesThisMonth: Math.round(totalMinutesThisMonth),
       todayAttendance: todayRecord
-        ? { ...todayRecord.toJSON(), durationMinutes: durationMinutes(todayRecord.clockIn, todayRecord.clockOut) }
+        ? { ...todayRecord.toJSON(), durationMinutes: durationMinutes(todayRecord.clockIn, todayRecord.clockOut, todayRecord.breaks) }
         : null,
       birthdays,
       anniversaries,

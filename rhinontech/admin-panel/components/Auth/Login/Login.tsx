@@ -60,7 +60,7 @@ export function Login({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card className="border-slate-200/80 shadow-sm">
+      <Card className="glass-modal border-0">
         <CardContent className="p-6 sm:p-8">
           <div className="flex flex-col gap-7">
             <div className="flex flex-col items-center text-center">

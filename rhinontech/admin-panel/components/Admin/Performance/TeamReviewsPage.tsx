@@ -69,8 +69,8 @@ export function TeamReviewsPage() {
 
   return (
     <div className="flex min-h-0 gap-2 h-full overflow-hidden">
-      <main className={cn("flex min-h-0 flex-col h-full w-full bg-stone-50 overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b bg-stone-50">
+      <main className={cn("flex min-h-0 flex-col h-full w-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b border-black/5 glass-header">
           <div className="flex items-center gap-3">
             <SubNavToggle />
             <span className="text-lg font-semibold tracking-tight">Team Reviews</span>
@@ -83,12 +83,12 @@ export function TeamReviewsPage() {
               <TbLoader2 className="animate-spin text-gray-400" size={28} />
             </div>
           ) : team.length === 0 ? (
-            <div className="rounded-xl border border-gray-100 bg-white p-10 text-center">
+            <div className="rounded-xl glass-card p-10 text-center">
               <TbUsers size={36} className="mx-auto text-gray-300 mb-3" />
               <p className="text-sm text-gray-500">No team review data yet. Create a review cycle to get started.</p>
             </div>
           ) : (
-            <div className="rounded-xl border border-gray-100 bg-white overflow-hidden">
+            <div className="rounded-xl glass-card overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b bg-gray-50">

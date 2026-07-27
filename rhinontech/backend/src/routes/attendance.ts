@@ -1,7 +1,7 @@
 import { Router, Response } from "express";
 import { Op } from "sequelize";
 import { Attendance, AttendancePolicy, AttendanceRequest, Role, User } from "../models";
-import { authenticate, AuthRequest } from "../middleware/authenticate";
+import { authenticate, hasPermission, AuthRequest } from "../middleware/authenticate";
 
 const router = Router();
 router.use(authenticate);
@@ -14,16 +14,39 @@ function isWeekend(date: Date) {
   return date.getDay() === 0; // Sunday only — Mon–Sat is the work week
 }
 
-function durationMinutes(clockIn: Date | null | undefined, clockOut: Date | null | undefined) {
+function breakMinutes(breaks: { start: string; end: string | null }[] | null | undefined, referenceEnd: Date) {
+  if (!Array.isArray(breaks)) return 0;
+  let total = 0;
+  for (const b of breaks) {
+    if (!b?.start) continue;
+    const start = new Date(b.start);
+    const end = b.end ? new Date(b.end) : referenceEnd;
+    total += Math.max(0, (end.getTime() - start.getTime()) / 60000);
+  }
+  return total;
+}
+
+function durationMinutes(
+  clockIn: Date | null | undefined,
+  clockOut: Date | null | undefined,
+  breaks?: { start: string; end: string | null }[] | null
+) {
   if (!clockIn) return 0;
   const end = clockOut ? new Date(clockOut) : new Date();
-  return Math.max(0, Math.round((end.getTime() - new Date(clockIn).getTime()) / 60000));
+  const raw = (end.getTime() - new Date(clockIn).getTime()) / 60000;
+  return Math.max(0, Math.round(raw - breakMinutes(breaks, end)));
+}
+
+function isOnBreak(breaks: { start: string; end: string | null }[] | null | undefined) {
+  return Array.isArray(breaks) && breaks.length > 0 && !breaks[breaks.length - 1].end;
 }
 
 function canViewTeamAttendance(req: AuthRequest) {
-  return req.user?.roleSlug === "superadmin" || req.user?.roleSlug === "hr" || req.user?.permissions.includes("employees:read");
+  return hasPermission(req, "attendance:write", "employees:read");
 }
 
+// Intentionally a slug check, not a permission — this is about the CEO persona
+// (superadmin doesn't clock in/out), not authorization.
 function blockSuperadminClock(req: AuthRequest, res: Response) {
   if (req.user?.roleSlug !== "superadmin") return false;
   res.status(403).json({ message: "Super admins manage team attendance and do not clock in." });
@@ -77,8 +100,12 @@ router.get("/team/today", async (req: AuthRequest, res: Response) => {
       return {
         ...teamEmployeeJson(employee),
         attendance: record
-          ? { ...record.toJSON(), durationMinutes: durationMinutes(record.clockIn, record.clockOut) }
-          : { date: today, status: "absent", clockIn: null, clockOut: null, durationMinutes: 0 },
+          ? {
+              ...record.toJSON(),
+              durationMinutes: durationMinutes(record.clockIn, record.clockOut, record.breaks),
+              onBreak: isOnBreak(record.breaks),
+            }
+          : { date: today, status: "absent", clockIn: null, clockOut: null, durationMinutes: 0, onBreak: false },
       };
     });
 
@@ -88,7 +115,8 @@ router.get("/team/today", async (req: AuthRequest, res: Response) => {
         total: rows.length,
         present: rows.filter((row) => row.attendance.status === "present").length,
         absent: rows.filter((row) => row.attendance.status === "absent").length,
-        active: rows.filter((row) => row.attendance.clockIn && !row.attendance.clockOut).length,
+        active: rows.filter((row) => row.attendance.clockIn && !row.attendance.clockOut && !row.attendance.onBreak).length,
+        onBreak: rows.filter((row) => row.attendance.onBreak).length,
       },
       employees: rows,
     });
@@ -136,7 +164,7 @@ router.get("/team", async (req: AuthRequest, res: Response) => {
       const attendance = days.map((date) => {
         const record = recordMap.get(`${employee.id}:${date}`);
         if (record) {
-          const minutes = durationMinutes(record.clockIn, record.clockOut);
+          const minutes = durationMinutes(record.clockIn, record.clockOut, record.breaks);
           if (record.status === "present") presentDays += 1;
           totalMinutes += minutes;
           return { ...record.toJSON(), durationMinutes: minutes };
@@ -203,7 +231,7 @@ router.get("/", async (req: AuthRequest, res: Response) => {
       if (existing) {
         days.push({
           ...existing.toJSON(),
-          durationMinutes: durationMinutes(existing.clockIn, existing.clockOut),
+          durationMinutes: durationMinutes(existing.clockIn, existing.clockOut, existing.breaks),
         });
       } else {
         const weekend = isWeekend(date);
@@ -235,7 +263,7 @@ router.get("/today", async (req: AuthRequest, res: Response) => {
     });
 
     if (record) {
-      res.json({ ...record.toJSON(), durationMinutes: durationMinutes(record.clockIn, record.clockOut) });
+      res.json({ ...record.toJSON(), durationMinutes: durationMinutes(record.clockIn, record.clockOut, record.breaks) });
     } else {
       res.json({ date: today, status: "absent", clockIn: null, clockOut: null, durationMinutes: 0 });
     }
@@ -270,7 +298,7 @@ router.post("/clock-in", async (req: AuthRequest, res: Response) => {
       await record.update({ clockIn: now, status: "present" });
     }
 
-    res.json({ ...record.toJSON(), durationMinutes: durationMinutes(record.clockIn, record.clockOut) });
+    res.json({ ...record.toJSON(), durationMinutes: durationMinutes(record.clockIn, record.clockOut, record.breaks) });
   } catch (err) {
     res.status(500).json({ message: "Failed to clock in" });
   }
@@ -298,9 +326,66 @@ router.post("/clock-out", async (req: AuthRequest, res: Response) => {
     }
 
     await record.update({ clockOut: now });
-    res.json({ ...record.toJSON(), durationMinutes: durationMinutes(record.clockIn, record.clockOut) });
+    res.json({ ...record.toJSON(), durationMinutes: durationMinutes(record.clockIn, record.clockOut, record.breaks) });
   } catch (err) {
     res.status(500).json({ message: "Failed to clock out" });
+  }
+});
+
+// POST /attendance/break-start
+router.post("/break-start", async (req: AuthRequest, res: Response) => {
+  try {
+    if (blockSuperadminClock(req, res)) return;
+
+    const today = toDateKey(new Date());
+    const now = new Date();
+
+    const record = await Attendance.findOne({ where: { userId: req.user!.userId, date: today } });
+    if (!record || !record.clockIn) {
+      res.status(400).json({ message: "You haven't clocked in today" });
+      return;
+    }
+    if (record.clockOut) {
+      res.status(400).json({ message: "Already clocked out" });
+      return;
+    }
+    if (isOnBreak(record.breaks)) {
+      res.status(400).json({ message: "Already on a break" });
+      return;
+    }
+
+    const breaks = [...(record.breaks || []), { start: now.toISOString(), end: null }];
+    await record.update({ breaks });
+    res.json({ ...record.toJSON(), durationMinutes: durationMinutes(record.clockIn, record.clockOut, record.breaks) });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to start break" });
+  }
+});
+
+// POST /attendance/break-end
+router.post("/break-end", async (req: AuthRequest, res: Response) => {
+  try {
+    if (blockSuperadminClock(req, res)) return;
+
+    const today = toDateKey(new Date());
+    const now = new Date();
+
+    const record = await Attendance.findOne({ where: { userId: req.user!.userId, date: today } });
+    if (!record || !record.clockIn) {
+      res.status(400).json({ message: "You haven't clocked in today" });
+      return;
+    }
+    if (!isOnBreak(record.breaks)) {
+      res.status(400).json({ message: "You're not on a break" });
+      return;
+    }
+
+    const breaks = [...(record.breaks || [])];
+    breaks[breaks.length - 1] = { ...breaks[breaks.length - 1], end: now.toISOString() };
+    await record.update({ breaks });
+    res.json({ ...record.toJSON(), durationMinutes: durationMinutes(record.clockIn, record.clockOut, record.breaks) });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to end break" });
   }
 });
 
@@ -325,7 +410,7 @@ router.get("/stats", async (req: AuthRequest, res: Response) => {
     const daysPresent = records.length;
     let totalMinutes = 0;
     for (const r of records) {
-      totalMinutes += durationMinutes(r.clockIn, r.clockOut);
+      totalMinutes += durationMinutes(r.clockIn, r.clockOut, r.breaks);
     }
 
     const today = toDateKey(now);
@@ -339,7 +424,7 @@ router.get("/stats", async (req: AuthRequest, res: Response) => {
       daysPresent,
       totalMinutes: Math.round(totalMinutes),
       today: todayRecord
-        ? { ...todayRecord.toJSON(), durationMinutes: durationMinutes(todayRecord.clockIn, todayRecord.clockOut) }
+        ? { ...todayRecord.toJSON(), durationMinutes: durationMinutes(todayRecord.clockIn, todayRecord.clockOut, todayRecord.breaks) }
         : { date: today, status: "absent", clockIn: null, clockOut: null, durationMinutes: 0 },
     });
   } catch (err) {
@@ -368,8 +453,8 @@ router.get("/logs", async (req: AuthRequest, res: Response) => {
       ...r.toJSON(),
       userName: (r as any).user?.fullName,
       department: (r as any).user?.department,
-      durationMinutes: durationMinutes(r.clockIn, r.clockOut),
-      overtimeMinutes: Math.max(0, durationMinutes(r.clockIn, r.clockOut) - 540), // Example: OT after 9 hours (540m)
+      durationMinutes: durationMinutes(r.clockIn, r.clockOut, r.breaks),
+      overtimeMinutes: Math.max(0, durationMinutes(r.clockIn, r.clockOut, r.breaks) - 540), // Example: OT after 9 hours (540m)
       penalties: [] // Placeholder for penalty logic
     })));
   } catch (err) {

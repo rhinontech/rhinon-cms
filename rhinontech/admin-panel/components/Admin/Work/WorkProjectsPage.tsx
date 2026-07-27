@@ -41,6 +41,8 @@ export function WorkProjectsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ProjectStatus | "All">("All");
   const [isPreviewExpanded, setIsPreviewExpanded] = useState(true);
+  // Phone-only: the detail aside opens as a full-screen overlay.
+  const [mobileDetail, setMobileDetail] = useState(false);
   const [mode, setMode] = useState<PanelMode>("view");
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
@@ -85,7 +87,7 @@ export function WorkProjectsPage() {
   const startCreate = () => {
     setForm(emptyForm);
     setMode("create");
-    setIsPreviewExpanded(true);
+    (setIsPreviewExpanded(true), setMobileDetail(true));
   };
 
   const startEdit = () => {
@@ -97,7 +99,7 @@ export function WorkProjectsPage() {
       notes: selectedProject.notes ?? "",
     });
     setMode("edit");
-    setIsPreviewExpanded(true);
+    (setIsPreviewExpanded(true), setMobileDetail(true));
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -126,7 +128,7 @@ export function WorkProjectsPage() {
 
   return (
     <div className="flex h-full min-h-0 overflow-hidden">
-      <main className={cn("flex h-full min-h-0 w-full flex-col overflow-hidden bg-stone-50", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
+      <main className={cn("flex h-full min-h-0 w-full flex-col overflow-hidden glass-panel", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
         <div className="flex h-16 items-center justify-between border-b px-4">
           <div className="flex items-center gap-3">
             <SubNavToggle />
@@ -141,7 +143,7 @@ export function WorkProjectsPage() {
               <TbPlus size={14} />
             </button>
             {(!isPreviewExpanded || (visibleProjects.length === 0 && mode !== "create")) && (
-              <button onClick={() => setIsPreviewExpanded(true)} className="rounded-lg p-2 text-gray-600 hover:bg-stone-100">
+              <button onClick={() => (setIsPreviewExpanded(true), setMobileDetail(true))} className="rounded-lg p-2 text-gray-600 hover:bg-stone-100">
                 <TbLayoutSidebarFilled size={20} />
               </button>
             )}
@@ -172,8 +174,8 @@ export function WorkProjectsPage() {
             </select>
           </div>
 
-          <div className="mt-8 overflow-hidden rounded-xl border border-gray-100 bg-white">
-            <div className="grid grid-cols-[1.7fr_0.9fr_1fr_0.7fr_0.8fr] border-b bg-stone-100 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+          <div className="mt-8 overflow-hidden rounded-xl glass-card">
+            <div className="min-w-[680px] grid grid-cols-[1.7fr_0.9fr_1fr_0.7fr_0.8fr] border-b bg-stone-100 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
               <span>Name</span>
               <span>Status</span>
               <span>Point of contact</span>
@@ -186,7 +188,7 @@ export function WorkProjectsPage() {
                 onClick={() => {
                   setSelectedProject(project);
                   setMode("view");
-                  setIsPreviewExpanded(true);
+                  (setIsPreviewExpanded(true), setMobileDetail(true));
                 }}
                 className={cn(
                   "grid w-full grid-cols-[1.7fr_0.9fr_1fr_0.7fr_0.8fr] items-center border-b px-4 py-3 text-left text-sm hover:bg-stone-50",
@@ -207,7 +209,7 @@ export function WorkProjectsPage() {
         </div>
       </main>
 
-      <aside className={`flex min-h-0 h-full flex-col bg-white rounded-xl overflow-hidden transition-all duration-200 ease-in-out ${isPreviewExpanded && (visibleProjects.length > 0 || mode === "create") ? "w-[42%] ml-2" : "w-0"}`}>
+      <aside className={`min-h-0 flex-col bg-white overflow-hidden transition-all duration-200 ease-in-out ${mobileDetail ? "fixed inset-0 z-50 flex" : "hidden"} lg:static lg:z-auto lg:flex lg:h-full lg:rounded-xl ${isPreviewExpanded && (visibleProjects.length > 0 || mode === "create") ? "lg:w-[42%] lg:ml-2" : "lg:w-0"}`}>
         {isPreviewExpanded && (visibleProjects.length > 0 || mode === "create") && (
           <div className="flex h-full flex-1 flex-col overflow-hidden">
             <div className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-white px-5">
@@ -220,7 +222,7 @@ export function WorkProjectsPage() {
                     Edit
                   </button>
                 )}
-                <button onClick={() => setIsPreviewExpanded(false)} className="text-gray-600 hover:text-gray-900">
+                <button onClick={() => (setIsPreviewExpanded(false), setMobileDetail(false))} className="text-gray-600 hover:text-gray-900">
                   <TbLayoutSidebarRightFilled size={20} />
                 </button>
               </div>
@@ -234,7 +236,7 @@ export function WorkProjectsPage() {
                       <h2 className="text-xl font-semibold text-gray-900">{selectedProject.name}</h2>
                       <p className="mt-2 text-sm text-gray-500">{selectedProject.notes || "No notes added yet."}</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                       <Detail label="Status" value={selectedProject.status} />
                       <Detail label="Point of contact" value={selectedProject.pointOfContact || "—"} />
                       <Detail label="Total tasks" value={String(selectedProject.taskCount)} />

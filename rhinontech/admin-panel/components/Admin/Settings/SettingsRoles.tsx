@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Cookies from "js-cookie";
 import { TbPlus, TbTrash, TbShield, TbCheck } from "react-icons/tb";
 import { cn } from "@/lib/utils";
+import { useSideNav } from "@/context/SideNavContext";
+import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
+import { apiFetch } from "@/lib/api";
 
 interface Permission {
   id: string;
@@ -16,40 +18,86 @@ interface Role {
   id: string;
   name: string;
   slug: string;
+  usersCount?: number;
   Permissions?: Permission[];
 }
 
+// Human labels for known permissions — anything not listed here falls back to
+// a prettified "resource — action" string, so new permissions just work.
 const PERMISSION_LABELS: Record<string, string> = {
-  "dashboard:read":    "Dashboard — View",
-  "employees:read":    "Employees — View",
-  "employees:write":   "Employees — Manage",
-  "payroll:read":      "Payroll — View",
-  "payroll:write":     "Payroll — Manage",
-  "payslips:read":     "Payslips — View own",
-  "provisioning:read": "Provisioning — View",
-  "provisioning:write":"Provisioning — Manage",
-  "settings:read":     "Settings — View",
-  "settings:write":    "Settings — Manage",
-  "inbox:read":        "Inbox — View",
-  "inbox:write":       "Inbox — Reply",
-  "people:read":       "People Directory — View",
+  "dashboard:read": "View dashboard",
+  "employees:read": "View team directory (admin)",
+  "employees:write": "Add, edit & offboard team members",
+  "payroll:read": "View payroll data",
+  "payroll:write": "Run payroll & manage salaries",
+  "payslips:read": "View own payslips",
+  "people:read": "View people directory",
+  "provisioning:read": "View provisioning",
+  "provisioning:write": "Manage provisioning",
+  "settings:read": "View settings",
+  "settings:write": "Manage roles, permissions & branding",
+  "inbox:read": "View inbox",
+  "inbox:write": "Reply in inbox",
+  "outreach:read": "View outreach & leads",
+  "outreach:write": "Manage campaigns & outreach",
+  "content:read": "View content (blogs, case studies)",
+  "content:write": "Publish content",
+  "analytics:read": "View website analytics",
+  "docsAccess:read": "View docs access list",
+  "docsAccess:write": "Grant/revoke docs access",
+  "leave:read": "View leave (own team)",
+  "leave:write": "Manage leave types & approve requests",
+  "performance:read": "View performance (own)",
+  "performance:write": "Manage review cycles & team performance",
+  "documents:read": "View own documents",
+  "documents:write": "Manage all employee documents",
+  "attendance:read": "View own attendance",
+  "attendance:write": "View team attendance & manage governance",
+  "work:read": "View own tasks",
+  "work:write": "View & manage team's tasks",
 };
 
-const PERMISSION_GROUPS = [
-  { label: "Core", keys: ["dashboard:read"] },
-  { label: "People", keys: ["employees:read", "employees:write", "people:read"] },
-  { label: "Payroll", keys: ["payroll:read", "payroll:write", "payslips:read"] },
-  { label: "Inbox", keys: ["inbox:read", "inbox:write"] },
-  { label: "Provisioning", keys: ["provisioning:read", "provisioning:write"] },
-  { label: "Settings", keys: ["settings:read", "settings:write"] },
+// Display order + label for each resource group. Any resource not listed here
+// still renders, using a capitalized fallback — the matrix is fully data-driven.
+const RESOURCE_META: { key: string; label: string; order: number }[] = [
+  { key: "dashboard", label: "Dashboard", order: 0 },
+  { key: "people", label: "People Directory", order: 1 },
+  { key: "employees", label: "Team Management", order: 2 },
+  { key: "payroll", label: "Payroll", order: 3 },
+  { key: "payslips", label: "Payslips", order: 4 },
+  { key: "leave", label: "Leave", order: 5 },
+  { key: "performance", label: "Performance", order: 6 },
+  { key: "attendance", label: "Attendance", order: 7 },
+  { key: "documents", label: "Documents", order: 8 },
+  { key: "work", label: "Work & Tasks", order: 9 },
+  { key: "inbox", label: "Inbox", order: 10 },
+  { key: "outreach", label: "Outreach", order: 11 },
+  { key: "content", label: "Content (CMS)", order: 12 },
+  { key: "analytics", label: "Analytics", order: 13 },
+  { key: "docsAccess", label: "Docs Access", order: 14 },
+  { key: "provisioning", label: "Provisioning", order: 15 },
+  { key: "settings", label: "Settings", order: 16 },
 ];
 
-// Cannot delete these — they're the 3 core roles
+function resourceLabel(resource: string) {
+  const known = RESOURCE_META.find((r) => r.key === resource);
+  if (known) return known.label;
+  return resource.charAt(0).toUpperCase() + resource.slice(1);
+}
+
+function resourceOrder(resource: string) {
+  const known = RESOURCE_META.find((r) => r.key === resource);
+  return known ? known.order : 99;
+}
+
+// Cannot delete — the 3 core roles that ship with the app
 const PROTECTED_SLUGS = ["superadmin", "hr", "employee"];
-// Cannot edit permissions on these — managed by the system
-const LOCKED_SLUGS = ["superadmin", "employee"];
+// Cannot edit permissions — the CEO's authority is unconditional, enforced
+// server-side too (see backend routes/roles.ts)
+const LOCKED_SLUGS = ["superadmin"];
 
 export function SettingsRoles() {
+  const { isExpanded: isSubNavExpanded } = useSideNav();
   const [roles, setRoles] = useState<Role[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
@@ -61,25 +109,17 @@ export function SettingsRoles() {
   const [message, setMessage] = useState("");
   const [selectedPermIds, setSelectedPermIds] = useState<Set<string>>(new Set());
 
-  const token = Cookies.get("authToken");
-  const apiBase = process.env.NEXT_PUBLIC_API_URL;
-
   const fetchRoles = async () => {
-    const res = await fetch(`${apiBase}/roles`, { headers: { Authorization: `Bearer ${token}` } });
-    const data = await res.json();
-    const list: Role[] = Array.isArray(data) ? data : [];
-    setRoles(list);
-    return list;
+    const list = await apiFetch<Role[]>("/roles");
+    setRoles(Array.isArray(list) ? list : []);
+    return Array.isArray(list) ? list : [];
   };
 
   useEffect(() => {
     setLoading(true);
-    Promise.all([
-      fetch(`${apiBase}/roles`, { headers: { Authorization: `Bearer ${token}` } }).then((r) => r.json()),
-      fetch(`${apiBase}/permissions`, { headers: { Authorization: `Bearer ${token}` } }).then((r) => r.json()),
-    ])
+    Promise.all([apiFetch<Role[]>("/roles"), apiFetch<Permission[]>("/permissions")])
       .then(([rolesData, permsData]) => {
-        const list: Role[] = Array.isArray(rolesData) ? rolesData : [];
+        const list = Array.isArray(rolesData) ? rolesData : [];
         setRoles(list);
         setPermissions(Array.isArray(permsData) ? permsData : []);
         if (list.length > 0) selectRole(list[0]);
@@ -106,50 +146,58 @@ export function SettingsRoles() {
     if (!selectedRole) return;
     setSaving(true);
     setMessage("");
-    const res = await fetch(`${apiBase}/roles/${selectedRole.id}/permissions`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ permissionIds: Array.from(selectedPermIds) }),
-    });
-    if (res.ok) {
+    try {
+      await apiFetch(`/roles/${selectedRole.id}/permissions`, {
+        method: "PUT",
+        body: JSON.stringify({ permissionIds: Array.from(selectedPermIds) }),
+      });
       setMessage("Permissions saved.");
       const list = await fetchRoles();
       const updated = list.find((r) => r.id === selectedRole.id);
       if (updated) selectRole(updated);
-    } else {
-      setMessage("Failed to save permissions.");
+    } catch (err: any) {
+      setMessage(err.message || "Failed to save permissions.");
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   const createRole = async () => {
     if (!newRoleName.trim() || !newRoleSlug.trim()) return;
     setSaving(true);
     setMessage("");
-    const res = await fetch(`${apiBase}/roles`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ name: newRoleName.trim(), slug: newRoleSlug.trim().toLowerCase().replace(/\s+/g, "-") }),
-    });
-    if (res.ok) {
+    try {
+      await apiFetch("/roles", {
+        method: "POST",
+        body: JSON.stringify({ name: newRoleName.trim(), slug: newRoleSlug.trim().toLowerCase().replace(/\s+/g, "-") }),
+      });
       setNewRoleName("");
       setNewRoleSlug("");
       setCreating(false);
       const list = await fetchRoles();
       const created = list[list.length - 1];
       if (created) selectRole(created);
-    } else {
-      const data = await res.json().catch(() => ({}));
-      setMessage(data.message || "Failed to create role.");
+    } catch (err: any) {
+      setMessage(err.message || "Failed to create role.");
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   const deleteRole = async (role: Role) => {
-    if (!confirm(`Delete role "${role.name}"? Users assigned to this role will lose access.`)) return;
-    await fetch(`${apiBase}/roles/${role.id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
-    const list = await fetchRoles();
-    selectRole(list[0] ?? null as unknown as Role);
+    if ((role.usersCount ?? 0) > 0) {
+      alert(`${role.usersCount} member(s) still have this role. Reassign them first.`);
+      return;
+    }
+    if (!confirm(`Delete role "${role.name}"?`)) return;
+    try {
+      await apiFetch(`/roles/${role.id}`, { method: "DELETE" });
+      const list = await fetchRoles();
+      if (list[0]) selectRole(list[0]);
+      else setSelectedRole(null);
+    } catch (err: any) {
+      alert(err.message || "Failed to delete role.");
+    }
   };
 
   if (loading) {
@@ -158,12 +206,23 @@ export function SettingsRoles() {
     );
   }
 
+  const resourceGroups = [...new Set(permissions.map((p) => p.resource))]
+    .sort((a, b) => resourceOrder(a) - resourceOrder(b));
+
   return (
     <div className="flex min-h-0 gap-2 w-full h-full overflow-hidden">
       {/* Roles list */}
-      <aside className="flex flex-col bg-white rounded-xl w-64 shrink-0 h-full overflow-hidden">
-        <div className="flex items-center justify-between h-14 px-4 border-b shrink-0">
-          <span className="text-sm font-semibold text-gray-900">Roles</span>
+      <aside
+        className={cn(
+          "flex flex-col bg-white shrink-0 h-full overflow-hidden w-64",
+          isSubNavExpanded ? "rounded-r-xl rounded-l-none" : "rounded-xl"
+        )}
+      >
+        <div className="flex items-center justify-between h-16 px-4 border-b shrink-0">
+          <div className="flex items-center gap-2">
+            <SubNavToggle />
+            <span className="text-sm font-semibold text-gray-900">Roles</span>
+          </div>
           <button
             onClick={() => { setCreating(true); setMessage(""); }}
             className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
@@ -225,10 +284,12 @@ export function SettingsRoles() {
                 <span className="truncate">{role.name}</span>
               </div>
               <span className={cn(
-                "text-xs shrink-0 ml-2",
+                "flex shrink-0 items-center gap-1.5 text-xs ml-2",
                 selectedRole?.id === role.id ? "text-stone-300" : "text-gray-400"
               )}>
-                {(role.Permissions ?? []).length}
+                {typeof role.usersCount === "number" && <span>{role.usersCount} member{role.usersCount !== 1 ? "s" : ""}</span>}
+                <span>·</span>
+                <span>{(role.Permissions ?? []).length}</span>
               </span>
             </button>
           ))}
@@ -239,14 +300,17 @@ export function SettingsRoles() {
       <main className="flex flex-col bg-white rounded-xl flex-1 h-full overflow-hidden min-w-0">
         {selectedRole ? (
           <>
-            <div className="flex items-center justify-between h-14 px-5 border-b shrink-0">
+            <div className="flex items-center justify-between h-16 px-5 border-b shrink-0">
               <div>
                 <h2 className="text-sm font-semibold text-gray-900">{selectedRole.name}</h2>
-                <p className="text-xs text-gray-400">/{selectedRole.slug} · {selectedPermIds.size} permissions</p>
+                <p className="text-xs text-gray-400">
+                  /{selectedRole.slug} · {selectedPermIds.size} permissions
+                  {typeof selectedRole.usersCount === "number" && ` · ${selectedRole.usersCount} member${selectedRole.usersCount !== 1 ? "s" : ""}`}
+                </p>
               </div>
               <div className="flex items-center gap-3">
                 {message && (
-                  <span className={cn("text-xs", message.includes("Failed") ? "text-red-500" : "text-green-600")}>
+                  <span className={cn("text-xs", message.toLowerCase().includes("fail") ? "text-red-500" : "text-green-600")}>
                     {message}
                   </span>
                 )}
@@ -254,6 +318,7 @@ export function SettingsRoles() {
                   <button
                     onClick={() => deleteRole(selectedRole)}
                     className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    title={(selectedRole.usersCount ?? 0) > 0 ? "Reassign members before deleting" : "Delete role"}
                   >
                     <TbTrash size={15} />
                   </button>
@@ -272,16 +337,16 @@ export function SettingsRoles() {
             <div className="flex-1 overflow-auto p-5 space-y-5">
               {LOCKED_SLUGS.includes(selectedRole.slug) && (
                 <div className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
-                  This is a system role. Permissions are managed automatically and cannot be changed.
+                  Super Admin — the CEO panel — always has every permission and cannot be edited.
                 </div>
               )}
 
-              {PERMISSION_GROUPS.map((group) => {
-                const groupPerms = permissions.filter((p) => group.keys.includes(p.name));
+              {resourceGroups.map((resource) => {
+                const groupPerms = permissions.filter((p) => p.resource === resource);
                 if (groupPerms.length === 0) return null;
                 return (
-                  <section key={group.label}>
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{group.label}</h3>
+                  <section key={resource}>
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{resourceLabel(resource)}</h3>
                     <div className="space-y-1">
                       {groupPerms.map((perm) => {
                         const enabled = selectedPermIds.has(perm.id);

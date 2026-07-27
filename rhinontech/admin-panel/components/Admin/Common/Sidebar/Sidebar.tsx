@@ -3,84 +3,63 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import { MdDashboard, MdOutlineCloud } from "react-icons/md";
+import { MdDashboard } from "react-icons/md";
 import { FaUserGroup } from "react-icons/fa6";
 import { RiSettings3Fill } from "react-icons/ri";
 import { HiInbox } from "react-icons/hi2";
-import { TbBriefcase, TbCalendarTime, TbCash, TbSpeakerphone, TbCalendarOff, TbChartBar, TbFiles, TbNews } from "react-icons/tb";
+import { TbBriefcase, TbCash, TbSpeakerphone, TbNews, TbBook, TbTargetArrow, TbChartArcs } from "react-icons/tb";
 import { BsPinAngleFill, BsPinAngle } from "react-icons/bs";
 import { cn } from "@/lib/utils";
 import { useDashboard } from "../../../Common/DashboardProvider/DashboardProvider";
-import Cookies from "js-cookie";
 import adminImages from "@/constants/admin/images";
+import { usePermissions } from "@/context/PermissionsContext";
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { sidebarExpanded, setSidebarExpanded, isHovering, setIsHovering } = useDashboard();
-  const [permissions, setPermissions] = useState<string[]>([]);
-
+  const { sidebarExpanded, setSidebarExpanded, isHovering, setIsHovering, mobileNavOpen, setMobileNavOpen } = useDashboard();
+  const { has } = usePermissions();
+  // Built from the URL, not the async PermissionsContext state, so the very
+  // first client render (and hydration) matches the server-rendered HTML —
+  // effectiveRoleSlug starts empty until /auth/me resolves, which would
+  // otherwise render every href as "//dashboard" on first paint.
   const roleSlug = pathname.split("/")[1] || "";
-  const previewPermissions: Record<string, string[]> = {
-    superadmin: [
-      "dashboard:read",
-      "inbox:read",
-      "people:read",
-      "payslips:read",
-      "provisioning:read",
-      "settings:read",
-      "outreach:read",
-      "content:read",
-      "leave:read",
-      "performance:read",
-      "documents:read",
-    ],
-    hr: ["dashboard:read", "people:read", "payslips:read", "leave:read", "performance:read", "documents:read"],
-    employee: ["dashboard:read", "people:read", "payslips:read", "leave:read", "performance:read", "documents:read"],
-  };
 
-  useEffect(() => {
-    try {
-      setPermissions(JSON.parse(Cookies.get("permissions") || "[]"));
-    } catch {
-      setPermissions([]);
-    }
-  }, []);
-
-  const expanded = sidebarExpanded || isHovering;
+  // The mobile drawer always shows labels; desktop keeps pin/hover behavior.
+  const expanded = sidebarExpanded || isHovering || mobileNavOpen;
 
   const navItems = [
-    { title: "Dashboard",   icon: <MdDashboard size={20} className="h-5 w-5 flex-shrink-0" />,   href: `/${roleSlug}/dashboard`,    permission: "dashboard:read" },
-    { title: "Inbox",       icon: <HiInbox size={20} className="h-5 w-5 flex-shrink-0" />,        href: `/${roleSlug}/inbox`,        permission: "inbox:read" },
-    { title: "Team",        icon: <FaUserGroup size={20} className="h-5 w-5 flex-shrink-0" />,    href: `/${roleSlug}/employees`,    permission: "people:read" },
-    { title: "Payroll",     icon: <TbCash size={20} className="h-5 w-5 flex-shrink-0" />,         href: `/${roleSlug}/payroll`,      permission: "payslips:read" },
-    { title: "Work",        icon: <TbBriefcase size={20} className="h-5 w-5 flex-shrink-0" />,    href: `/${roleSlug}/work`,         permission: "dashboard:read" },
-    { title: "Attendance",   icon: <TbCalendarTime size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/attendance`,   permission: "dashboard:read" },
-    { title: "Leave",        icon: <TbCalendarOff  size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/leave`,        permission: "leave:read" },
-    { title: "Performance",  icon: <TbChartBar     size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/performance`,  permission: "performance:read" },
-    { title: "Documents",    icon: <TbFiles        size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/documents`,    permission: "documents:read" },
-    { title: "Outreach",     icon: <TbSpeakerphone size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/outreach`,     permission: "outreach:read" },
-    { title: "Content",      icon: <TbNews size={20} className="h-5 w-5 flex-shrink-0" />,         href: `/${roleSlug}/content`,      permission: "content:read" },
-    { title: "Provisioning", icon: <MdOutlineCloud size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/provisioning`, permission: "provisioning:read" },
-    { title: "Settings",     icon: <RiSettings3Fill size={20} className="h-5 w-5 flex-shrink-0" />,href: `/${roleSlug}/settings`,     permission: "settings:read" },
-  ].filter((item) => {
-    const alwaysVisible = ["leave:read", "performance:read", "documents:read"];
-    if (!alwaysVisible.includes(item.permission) && !permissions.includes(item.permission)) return false;
-    const rolePermissions = previewPermissions[roleSlug];
-    return rolePermissions ? rolePermissions.includes(item.permission) : true;
-  });
+    { title: "Dashboard", icon: <MdDashboard size={20} className="h-5 w-5 flex-shrink-0" />,    href: `/${roleSlug}/dashboard`, permissions: ["dashboard:read"] },
+    { title: "Inbox",     icon: <HiInbox size={20} className="h-5 w-5 flex-shrink-0" />,         href: `/${roleSlug}/inbox`,     permissions: ["inbox:read"] },
+    { title: "Pages",     icon: <TbBook size={20} className="h-5 w-5 flex-shrink-0" />,          href: `/${roleSlug}/pages`,     permissions: ["pages:read"] },
+    { title: "CRM",       icon: <TbTargetArrow size={20} className="h-5 w-5 flex-shrink-0" />,   href: `/${roleSlug}/crm`,       permissions: ["crm:read"] },
+    { title: "Outreach",  icon: <TbSpeakerphone size={20} className="h-5 w-5 flex-shrink-0" />,  href: `/${roleSlug}/outreach`,  permissions: ["outreach:read"] },
+    { title: "Work",      icon: <TbBriefcase size={20} className="h-5 w-5 flex-shrink-0" />,     href: `/${roleSlug}/work`,      permissions: ["work:read"] },
+    { title: "Team",      icon: <FaUserGroup size={20} className="h-5 w-5 flex-shrink-0" />,     href: `/${roleSlug}/employees`, permissions: ["people:read", "attendance:read", "leave:read", "performance:read", "documents:read"] },
+    { title: "Payroll",   icon: <TbCash size={20} className="h-5 w-5 flex-shrink-0" />,          href: `/${roleSlug}/payroll`,   permissions: ["payslips:read"] },
+    { title: "Content",   icon: <TbNews size={20} className="h-5 w-5 flex-shrink-0" />,          href: `/${roleSlug}/content`,   permissions: ["content:read"] },
+    { title: "Analytics", icon: <TbChartArcs size={20} className="h-5 w-5 flex-shrink-0" />,     href: `/${roleSlug}/analytics`, permissions: ["analytics:read"] },
+    { title: "Settings",  icon: <RiSettings3Fill size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/settings`,  permissions: ["settings:read", "docsAccess:read", "provisioning:read"] },
+  ].filter((item) => has(...item.permissions));
 
   return (
+    <>
+      {/* Mobile backdrop */}
+      {mobileNavOpen && (
+        <div className="fixed inset-0 z-40 bg-black/30 lg:hidden" onClick={() => setMobileNavOpen(false)} />
+      )}
     <aside
       className={cn(
-        "flex h-full flex-col bg-stone-200 transition-all duration-300 ease-in-out",
-        expanded ? "w-56" : "w-14"
+        "flex h-full flex-col transition-all duration-300 ease-in-out",
+        // Mobile: fixed overlay drawer slid in from the left; desktop: static column.
+        "fixed inset-y-0 left-0 z-50 w-64 max-lg:bg-white! shadow-xl lg:static lg:z-auto lg:shadow-none",
+        mobileNavOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+        expanded ? "lg:w-56" : "lg:w-14"
       )}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >
       {/* Logo */}
-      <div className="flex h-14 items-center justify-center border-b w-full">
+      <div className="flex h-14 items-center justify-center border-black/5 w-full">
         {expanded ? (
           <div className="flex items-center justify-between w-full px-3">
             <Link href="/">
@@ -88,7 +67,7 @@ export function Sidebar() {
             </Link>
             <button
               onClick={() => setSidebarExpanded(!sidebarExpanded)}
-              className="p-1 rounded bg-stone-300 hover:bg-gray-300 transition-all shrink-0"
+              className="p-1 rounded bg-white/50 hover:bg-white/70 transition-all shrink-0"
             >
               {sidebarExpanded ? <BsPinAngleFill size={14} /> : <BsPinAngle size={14} />}
             </button>
@@ -110,8 +89,8 @@ export function Sidebar() {
               className={cn(
                 "group flex items-center justify-center gap-x-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                 pathname.startsWith(item.href)
-                  ? "bg-gray-50 text-gray-900"
-                  : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                  ? "bg-white/70 text-gray-900"
+                  : "text-gray-700 hover:bg-white/40 hover:text-gray-900"
               )}
             >
               {item.icon}
@@ -121,5 +100,6 @@ export function Sidebar() {
         </div>
       </nav>
     </aside>
+    </>
   );
 }

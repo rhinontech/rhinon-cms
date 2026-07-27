@@ -6,6 +6,8 @@ import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
 import { motion, Variants } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useState } from "react";
+import SchedulerModal from "@/components/Common/CTA/SchedulerModal";
 
 
 const fadeUpVariant: Variants = {
@@ -19,6 +21,7 @@ const fadeUpVariant: Variants = {
 
 const Hero1 = () => {
   const router = useRouter();
+  const [isSchedulerOpen, setIsSchedulerOpen] = useState(false);
   return (
     <div id="hero" className="overflow-hidden relative min-h-screen flex flex-col justify-center">
       <motion.div
@@ -81,7 +84,7 @@ const Hero1 = () => {
           <div className="z-20">
             <Button
               className="bg-white text-black hover:bg-gray-200 px-8 py-6 text-lg font-semibold rounded-none border-3 border-black/30 transition-all"
-              onClick={() => window.open('https://calendly.com/rhinonlabs', '_blank')}
+              onClick={() => setIsSchedulerOpen(true)}
             >
               Book a Free Discovery Call
             </Button>
@@ -92,13 +95,13 @@ const Hero1 = () => {
             {/* Avatar Stack */}
             <div className="flex -space-x-4">
               <div className="w-12 h-12 rounded-full bg-gray-600 border-2 border-black flex items-center justify-center">
-                <img src="https://randomuser.me/api/portraits/women/1.jpg" alt="User 1" className="w-full h-full rounded-full object-cover" />
+                <img src="https://i.pinimg.com/736x/4d/8a/f4/4d8af495cd54aec459d51da422f73247.jpg" alt="User 1" className="w-full h-full rounded-full object-cover" />
               </div>
               <div className="w-12 h-12 rounded-full bg-gray-600 border-2 border-black flex items-center justify-center">
-                <img src="https://randomuser.me/api/portraits/men/2.jpg" alt="User 2" className="w-full h-full rounded-full object-cover" />
+                <img src="https://i.pinimg.com/1200x/3b/df/69/3bdf69f30479a92ba0f8cafcaf3807fb.jpg" alt="User 2" className="w-full h-full rounded-full object-cover" />
               </div>
               <div className="w-12 h-12 rounded-full bg-gray-600 border-2 border-black flex items-center justify-center">
-                <img src="https://randomuser.me/api/portraits/women/3.jpg" alt="User 3" className="w-full h-full rounded-full object-cover" />
+                <img src="https://i.pinimg.com/736x/92/ff/f7/92fff756cf08535878d1fdb008a9d8fc.jpg" alt="User 3" className="w-full h-full rounded-full object-cover" />
               </div>
             </div>
 
@@ -164,6 +167,7 @@ const Hero1 = () => {
           <Photos />
         </motion.div>
       </div>
+      <SchedulerModal isOpen={isSchedulerOpen} onClose={() => setIsSchedulerOpen(false)} />
     </div>
   );
 };

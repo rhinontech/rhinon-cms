@@ -12,6 +12,7 @@ import {
   TbX,
   TbUpload,
   TbDownload,
+  TbEye,
   TbAlertCircle,
 } from "react-icons/tb";
 
@@ -137,8 +138,8 @@ function UploadModal({ onClose, onSuccess, prefillDocId, prefillTitle, prefillCa
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center glass-overlay">
+      <div className="glass-modal rounded-xl w-full max-w-md mx-4">
         <div className="flex items-center justify-between h-14 px-5 border-b">
           <p className="font-semibold tracking-tight">{isFullfilling ? "Upload Requested Document" : "Upload Document"}</p>
           <button onClick={onClose} className="p-1 rounded hover:bg-gray-100"><TbX size={18} /></button>
@@ -202,10 +203,39 @@ function UploadModal({ onClose, onSuccess, prefillDocId, prefillTitle, prefillCa
   );
 }
 
+// ─── Preview Modal ───────────────────────────────────────────────────────────
+
+function isPreviewable(mimeType: string | null) {
+  return mimeType === "application/pdf" || !!mimeType?.startsWith("image/");
+}
+
+function PreviewModal({ title, url, onClose }: { title: string; url: string; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center glass-overlay p-4" onClick={onClose}>
+      <div
+        className="flex h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl glass-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b px-5 py-3">
+          <p className="text-sm font-semibold text-gray-900 truncate">{title}</p>
+          <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+            <TbX size={18} />
+          </button>
+        </div>
+        <div className="flex-1 overflow-hidden bg-gray-100">
+          <iframe src={url} className="h-full w-full" title={title} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Aside Panel ─────────────────────────────────────────────────────────────
 
 function DocAside({ doc, onClose }: { doc: Doc; onClose: () => void }) {
   const [downloading, setDownloading] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   async function handleDownload() {
     setDownloading(true);
@@ -214,6 +244,16 @@ function DocAside({ doc, onClose }: { doc: Doc; onClose: () => void }) {
       window.open(downloadUrl, "_blank");
     } finally {
       setDownloading(false);
+    }
+  }
+
+  async function handlePreview() {
+    setPreviewing(true);
+    try {
+      const { downloadUrl } = await apiFetch<{ downloadUrl: string }>(`/documents/${doc.id}/download`);
+      setPreviewUrl(downloadUrl);
+    } finally {
+      setPreviewing(false);
     }
   }
 
@@ -235,7 +275,7 @@ function DocAside({ doc, onClose }: { doc: Doc; onClose: () => void }) {
             <CategoryBadge category={doc.category} />
           </div>
         </div>
-        <div className="rounded-xl border border-gray-100 bg-white divide-y divide-gray-50">
+        <div className="rounded-xl glass-card divide-y divide-gray-50">
           <div className="px-4 py-3 flex justify-between">
             <span className="text-xs text-gray-400">File name</span>
             <span className="font-semibold text-gray-900 text-sm">{doc.fileName || "—"}</span>
@@ -256,16 +296,31 @@ function DocAside({ doc, onClose }: { doc: Doc; onClose: () => void }) {
           </div>
         </div>
         {doc.fileKey && (
-          <button
-            onClick={handleDownload}
-            disabled={downloading}
-            className="flex items-center gap-2 justify-center w-full py-2.5 rounded-lg bg-stone-900 text-white text-sm font-medium hover:bg-stone-800 disabled:opacity-50"
-          >
-            <TbDownload size={16} />
-            {downloading ? "Getting link..." : "Download"}
-          </button>
+          <div className="flex flex-col gap-2">
+            {isPreviewable(doc.mimeType) && (
+              <button
+                onClick={handlePreview}
+                disabled={previewing}
+                className="flex items-center gap-2 justify-center w-full py-2.5 rounded-lg border text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
+              >
+                <TbEye size={16} />
+                {previewing ? "Opening..." : "Preview"}
+              </button>
+            )}
+            <button
+              onClick={handleDownload}
+              disabled={downloading}
+              className="flex items-center gap-2 justify-center w-full py-2.5 rounded-lg bg-stone-900 text-white text-sm font-medium hover:bg-stone-800 disabled:opacity-50"
+            >
+              <TbDownload size={16} />
+              {downloading ? "Getting link..." : "Download"}
+            </button>
+          </div>
         )}
       </div>
+      {previewUrl && (
+        <PreviewModal title={doc.title} url={previewUrl} onClose={() => setPreviewUrl(null)} />
+      )}
     </div>
   );
 }
@@ -284,7 +339,9 @@ export function MyDocumentsPage() {
   const fetchDocs = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await apiFetch<Doc[]>("/documents");
+      // "self" keeps this page scoped to the signed-in user's own documents
+      // even for admins (plain /documents returns everyone's for them).
+      const data = await apiFetch<Doc[]>("/documents?employeeId=self");
       setDocs(data);
     } finally {
       setLoading(false);
@@ -302,9 +359,9 @@ export function MyDocumentsPage() {
 
   return (
     <div className="flex min-h-0 gap-2 h-full overflow-hidden">
-      <main className={cn("flex min-h-0 flex-col h-full w-full bg-stone-50 overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
+      <main className={cn("flex min-h-0 flex-col h-full w-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b bg-stone-50">
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b border-black/5 glass-header">
           <div className="flex items-center gap-2">
             <SubNavToggle />
             <p className="text-lg font-semibold tracking-tight">My Documents</p>
@@ -381,7 +438,7 @@ export function MyDocumentsPage() {
                 <button
                   key={doc.id}
                   onClick={() => setSelectedDoc(doc)}
-                  className="rounded-xl border border-gray-100 bg-white p-4 flex flex-col gap-3 text-left hover:border-blue-200 hover:shadow-sm transition-all"
+                  className="rounded-xl glass-card p-4 flex flex-col gap-3 text-left hover:border-blue-200 hover:shadow-sm transition-all"
                 >
                   <div className="flex items-start gap-3">
                     <div className="p-2 rounded-lg bg-gray-50 border">

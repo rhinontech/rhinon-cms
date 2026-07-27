@@ -61,7 +61,7 @@ export function Navbar() {
 
     return (
         <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-white/5 transition-all duration-300 py-4">
-            <div className="max-w-[1200px] mx-auto px-6 flex items-center justify-between">
+            <div className="max-w-[1400px] px-16 max-sm:px-4 mx-auto flex items-center justify-between">
                 {/* Logo */}
                 <Link href="/" className="flex items-center gap-2 group">
                     <Image

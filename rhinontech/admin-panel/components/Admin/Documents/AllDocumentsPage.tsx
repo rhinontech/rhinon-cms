@@ -12,6 +12,7 @@ import {
   TbX,
   TbUpload,
   TbDownload,
+  TbEye,
   TbTrash,
   TbSearch,
 } from "react-icons/tb";
@@ -127,8 +128,8 @@ function UploadForEmployeeModal({ employees, onClose, onSuccess }: UploadForEmpl
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center glass-overlay">
+      <div className="glass-modal rounded-xl w-full max-w-md mx-4">
         <div className="flex items-center justify-between h-14 px-5 border-b">
           <p className="font-semibold tracking-tight">Upload Document for Employee</p>
           <button onClick={onClose} className="p-1 rounded hover:bg-gray-100"><TbX size={18} /></button>
@@ -196,6 +197,33 @@ function UploadForEmployeeModal({ employees, onClose, onSuccess }: UploadForEmpl
   );
 }
 
+// ─── Preview Modal ───────────────────────────────────────────────────────────
+
+function isPreviewable(mimeType: string | null) {
+  return mimeType === "application/pdf" || !!mimeType?.startsWith("image/");
+}
+
+function PreviewModal({ title, url, onClose }: { title: string; url: string; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center glass-overlay p-4" onClick={onClose}>
+      <div
+        className="flex h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl glass-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b px-5 py-3">
+          <p className="text-sm font-semibold text-gray-900 truncate">{title}</p>
+          <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+            <TbX size={18} />
+          </button>
+        </div>
+        <div className="flex-1 overflow-hidden bg-gray-100">
+          <iframe src={url} className="h-full w-full" title={title} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Aside Panel ─────────────────────────────────────────────────────────────
 
 interface DocAsideProps {
@@ -206,6 +234,8 @@ interface DocAsideProps {
 
 function DocAside({ doc, onClose, onDeleted }: DocAsideProps) {
   const [downloading, setDownloading] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -216,6 +246,16 @@ function DocAside({ doc, onClose, onDeleted }: DocAsideProps) {
       window.open(downloadUrl, "_blank");
     } finally {
       setDownloading(false);
+    }
+  }
+
+  async function handlePreview() {
+    setPreviewing(true);
+    try {
+      const { downloadUrl } = await apiFetch<{ downloadUrl: string }>(`/documents/${doc.id}/download`);
+      setPreviewUrl(downloadUrl);
+    } finally {
+      setPreviewing(false);
     }
   }
 
@@ -249,7 +289,7 @@ function DocAside({ doc, onClose, onDeleted }: DocAsideProps) {
             <CategoryBadge category={doc.category} />
           </div>
         </div>
-        <div className="rounded-xl border border-gray-100 bg-white divide-y divide-gray-50">
+        <div className="rounded-xl glass-card divide-y divide-gray-50">
           <div className="px-4 py-3 flex justify-between">
             <span className="text-xs text-gray-400">Employee</span>
             <span className="font-semibold text-gray-900 text-sm">{doc.employee?.fullName || "—"}</span>
@@ -278,6 +318,16 @@ function DocAside({ doc, onClose, onDeleted }: DocAsideProps) {
           </div>
         </div>
         <div className="flex flex-col gap-2">
+          {doc.fileKey && isPreviewable(doc.mimeType) && (
+            <button
+              onClick={handlePreview}
+              disabled={previewing}
+              className="flex items-center gap-2 justify-center w-full py-2.5 rounded-lg border text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
+            >
+              <TbEye size={16} />
+              {previewing ? "Opening..." : "Preview"}
+            </button>
+          )}
           {doc.fileKey && (
             <button
               onClick={handleDownload}
@@ -315,6 +365,9 @@ function DocAside({ doc, onClose, onDeleted }: DocAsideProps) {
           )}
         </div>
       </div>
+      {previewUrl && (
+        <PreviewModal title={doc.title} url={previewUrl} onClose={() => setPreviewUrl(null)} />
+      )}
     </div>
   );
 }
@@ -357,9 +410,9 @@ export function AllDocumentsPage() {
 
   return (
     <div className="flex min-h-0 gap-2 h-full overflow-hidden">
-      <main className={cn("flex min-h-0 flex-col h-full w-full bg-stone-50 overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
+      <main className={cn("flex min-h-0 flex-col h-full w-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b bg-stone-50">
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b border-black/5 glass-header">
           <div className="flex items-center gap-2">
             <SubNavToggle />
             <p className="text-lg font-semibold tracking-tight">All Documents</p>
@@ -416,9 +469,9 @@ export function AllDocumentsPage() {
               <p className="text-sm">No documents found</p>
             </div>
           ) : (
-            <div className="rounded-xl border border-gray-100 bg-white overflow-hidden">
+            <div className="rounded-xl glass-card overflow-hidden">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 text-xs text-gray-400 uppercase">
+                <thead className="glass-thead text-xs text-gray-500 uppercase">
                   <tr>
                     <th className="text-left px-4 py-3">Employee</th>
                     <th className="text-left px-4 py-3">Title</th>

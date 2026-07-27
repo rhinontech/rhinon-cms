@@ -1,11 +1,73 @@
 import { Router, Response } from "express";
 import { Op } from "sequelize";
+import multer from "multer";
 import { Blog, CaseStudy } from "../models";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
+import { uploadBuffer, publicUrl } from "../services/storage";
 
 const router = Router();
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024 } });
+const MAX_VIDEO_MB = 100;
+const uploadVideo = multer({ storage: multer.memoryStorage(), limits: { fileSize: MAX_VIDEO_MB * 1024 * 1024 } });
 
 router.use(authenticate);
+
+// POST /content/upload-image — upload a blog/case-study image to S3 (public), returns a permanent URL
+router.post("/upload-image", authorize("content:write"), upload.single("image"), async (req: AuthRequest, res: Response) => {
+  if (!req.file) {
+    res.status(400).json({ message: "No file provided" });
+    return;
+  }
+  const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+  if (!allowed.includes(req.file.mimetype)) {
+    res.status(400).json({ message: "Only JPEG, PNG, WebP, or GIF images are allowed" });
+    return;
+  }
+  try {
+    const key = await uploadBuffer(req.file.buffer, req.file.originalname, "content", req.file.mimetype);
+    res.status(201).json({ url: publicUrl(key), key });
+  } catch (err: any) {
+    console.error("Content image upload failed:", err);
+    res.status(500).json({ message: "Image upload failed" });
+  }
+});
+
+// POST /content/upload-video — upload a blog video to S3 (public), returns a permanent URL
+router.post(
+  "/upload-video",
+  authorize("content:write"),
+  (req: AuthRequest, res: Response, next) => {
+    uploadVideo.single("video")(req as any, res as any, (err: any) => {
+      if (err) {
+        if (err.code === "LIMIT_FILE_SIZE") {
+          res.status(413).json({ message: `Video exceeds the ${MAX_VIDEO_MB} MB limit` });
+          return;
+        }
+        res.status(400).json({ message: err.message || "Video upload failed" });
+        return;
+      }
+      next();
+    });
+  },
+  async (req: AuthRequest, res: Response) => {
+    if (!req.file) {
+      res.status(400).json({ message: "No file provided" });
+      return;
+    }
+    const allowed = ["video/mp4", "video/webm", "video/quicktime"];
+    if (!allowed.includes(req.file.mimetype)) {
+      res.status(400).json({ message: "Only MP4, WebM, or MOV videos are allowed" });
+      return;
+    }
+    try {
+      const key = await uploadBuffer(req.file.buffer, req.file.originalname, "content", req.file.mimetype);
+      res.status(201).json({ url: publicUrl(key), key });
+    } catch (err: any) {
+      console.error("Content video upload failed:", err);
+      res.status(500).json({ message: "Video upload failed" });
+    }
+  }
+);
 
 function slugify(input: string): string {
   return (input || "")
@@ -51,13 +113,15 @@ router.get("/blogs/:id", authorize("content:read"), async (req: AuthRequest, res
 router.post("/blogs", authorize("content:write"), async (req: AuthRequest, res: Response) => {
   try {
     const b = req.body || {};
-    if (!b.title || !b.excerpt || !b.content) {
-      res.status(400).json({ message: "title, excerpt and content are required" });
+    const hasBlocks = Array.isArray(b.contentBlocks) && b.contentBlocks.length > 0;
+    if (!b.title || !b.excerpt || (!b.content && !hasBlocks)) {
+      res.status(400).json({ message: "title, excerpt and content (or content blocks) are required" });
       return;
     }
     const slug = await uniqueSlug(Blog, b.slug || b.title);
     const blog = await Blog.create({
       ...b,
+      content: b.content || "",
       slug,
       createdById: req.user!.userId,
     });

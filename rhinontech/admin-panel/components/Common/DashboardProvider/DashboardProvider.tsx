@@ -9,6 +9,10 @@ type DashboardContextType = {
   setSidebarExpanded: (expanded: boolean) => void;
   isHovering: boolean;
   setIsHovering: (hovering: boolean) => void;
+  // Mobile-only: the sidebar renders as an overlay drawer, opened from the
+  // header's hamburger. Always false on desktop (the trigger is lg:hidden).
+  mobileNavOpen: boolean;
+  setMobileNavOpen: (open: boolean) => void;
 };
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
@@ -20,6 +24,10 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [sidebarExpanded, setSidebarExpandedState] = useState(isDashboardRoute(pathname));
   const [isHovering, setIsHovering] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  // Close the drawer on any route change (nav clicks, back button).
+  useEffect(() => { setMobileNavOpen(false); }, [pathname]);
 
   useEffect(() => {
     const savedState = window.localStorage.getItem(SIDEBAR_EXPANDED_STORAGE_KEY);
@@ -36,7 +44,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <DashboardContext.Provider
-      value={{ sidebarExpanded, setSidebarExpanded, isHovering, setIsHovering }}
+      value={{ sidebarExpanded, setSidebarExpanded, isHovering, setIsHovering, mobileNavOpen, setMobileNavOpen }}
     >
       {children}
     </DashboardContext.Provider>

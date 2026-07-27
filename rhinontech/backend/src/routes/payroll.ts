@@ -1,4 +1,5 @@
 import { Router, Response } from "express";
+import { Op } from "sequelize";
 import { Payroll, Payslip, User, Role } from "../models";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 import { sendEmail } from "../services/mailer";
@@ -52,7 +53,7 @@ router.get("/admin/employees", authorize("payroll:write"), async (_req: AuthRequ
   const employees = await User.findAll({
     where: { status: "active" },
     attributes: [
-      "id", "fullName", "companyEmail", "department", "joiningDate",
+      "id", "fullName", "companyEmail", "department", "joiningDate", "exitDate",
       "employmentType", "workLocation",
       "basicSalary", "hra", "ta", "medicalAllowance", "otherAllowances",
       "pfEnabled", "ptAmount", "tdsAmount",
@@ -205,12 +206,28 @@ router.post("/admin/run", authorize("payroll:write"), async (req: AuthRequest, r
   const { month, year } = req.body;
   if (!month || !year) { res.status(400).json({ message: "month and year are required" }); return; }
 
+  // A payroll row may already exist for the period if a final settlement was created
+  // first — that's fine, we append to it. Only block if the regular run itself
+  // already happened (i.e., the period has regular payslips).
   const exists = await Payroll.findOne({ where: { month, year } });
-  if (exists) { res.status(409).json({ message: `Payroll for this period already exists (status: ${exists.status})` }); return; }
+  if (exists) {
+    const regularCount = await Payslip.count({ where: { payrollId: exists.id, type: "regular" } });
+    if (regularCount > 0) {
+      res.status(409).json({ message: `Payroll for this period already exists (status: ${exists.status})` });
+      return;
+    }
+  }
 
-  // Fetch all active employees who have a salary configured
+  // Fetch active employees with a salary configured. Anyone whose last working day
+  // falls within (or before) the run month is skipped — their exit month is paid
+  // through the Final Settlement flow instead.
+  const lastDay = new Date(year, month, 0).getDate();
+  const endOfMonth = `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
   const employees = await User.findAll({
-    where: { status: "active" },
+    where: {
+      status: "active",
+      [Op.or]: [{ exitDate: null }, { exitDate: { [Op.gt]: endOfMonth } }],
+    },
     attributes: ["id", "basicSalary", "hra", "ta", "medicalAllowance", "otherAllowances", "pfEnabled", "ptAmount", "tdsAmount"],
   });
 
@@ -220,7 +237,7 @@ router.post("/admin/run", authorize("payroll:write"), async (req: AuthRequest, r
     return;
   }
 
-  const payroll = await Payroll.create({ month, year, processedById: req.user!.userId });
+  const payroll = exists ?? (await Payroll.create({ month, year, processedById: req.user!.userId }));
 
   let totalGross = 0;
   let totalNet = 0;
@@ -264,6 +281,12 @@ router.post("/admin/run", authorize("payroll:write"), async (req: AuthRequest, r
     totalNet   += netPay;
   }
 
+  // Totals cover every slip in the period, including F&F slips created beforehand
+  if (exists) {
+    const allSlips = await Payslip.findAll({ where: { payrollId: payroll.id } });
+    totalGross = allSlips.reduce((s, p) => s + Number(p.grossPay), 0);
+    totalNet   = allSlips.reduce((s, p) => s + Number(p.netPay), 0);
+  }
   await payroll.update({ totalGross, totalNet });
 
   res.status(201).json({
@@ -337,6 +360,214 @@ router.post("/admin/payslips/manual", authorize("payroll:write"), async (req: Au
   await payroll.update({ totalGross, totalNet });
 
   res.status(201).json({ message: "Payslip created", payslip, employeeName: user.fullName });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// FINAL SETTLEMENT (F&F) — pro-rated exit-month payslips for offboarded employees
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function settlementPeriod(exitDate: string) {
+  const exit = new Date(`${exitDate}T00:00:00`);
+  return { exit, month: exit.getMonth() + 1, year: exit.getFullYear() };
+}
+
+// Pro-rated defaults for the exit month. Components are scaled by calendar days
+// worked; PF follows the pro-rated basic; PT/TDS come from the employee's config
+// and stay editable in the UI before the slip is created.
+function computeFnfPreview(user: User) {
+  const { exit, month, year } = settlementPeriod(String(user.exitDate));
+  const daysInMonth = new Date(year, month, 0).getDate();
+
+  const join = new Date(`${String(user.joiningDate)}T00:00:00`);
+  const joinedThisMonth = join.getFullYear() === year && join.getMonth() + 1 === month;
+  const startDay = joinedThisMonth ? join.getDate() : 1;
+  const daysWorked = Math.max(exit.getDate() - startDay + 1, 0);
+  const factor = daysWorked / daysInMonth;
+
+  const round2 = (v: number) => Math.round(v * 100) / 100;
+  const prorate = (v: unknown) => round2(Number(v || 0) * factor);
+
+  const basicSalary = prorate(user.basicSalary);
+  const hra = prorate(user.hra);
+  const ta = prorate(user.ta);
+  const medicalAllowance = prorate(user.medicalAllowance);
+  const otherAllowances = prorate(user.otherAllowances);
+  const pfEmployee = (user as any).pfEnabled !== false ? round2(basicSalary * 0.12) : 0;
+
+  return {
+    month,
+    year,
+    daysInMonth,
+    daysWorked,
+    basicSalary,
+    hra,
+    ta,
+    medicalAllowance,
+    otherAllowances,
+    leaveEncashment: 0,
+    noticeRecovery: 0,
+    pfEmployee,
+    professionalTax: Number((user as any).ptAmount ?? 200),
+    tds: Number((user as any).tdsAmount ?? 0),
+    // helper for the UI's encashment calculator (common convention: basic / 30 per day)
+    perDayBasic: round2(Number(user.basicSalary || 0) / 30),
+    fullMonthly: {
+      basicSalary: Number(user.basicSalary || 0),
+      hra: Number(user.hra || 0),
+      ta: Number(user.ta || 0),
+      medicalAllowance: Number(user.medicalAllowance || 0),
+      otherAllowances: Number(user.otherAllowances || 0),
+    },
+  };
+}
+
+// Everyone with an exit on record + whether their exit month is settled
+router.get("/admin/settlements", authorize("payroll:write"), async (_req: AuthRequest, res: Response) => {
+  const leavers = await User.findAll({
+    where: { exitDate: { [Op.ne]: null } },
+    attributes: ["id", "fullName", "companyEmail", "department", "status", "exitDate", "exitReason", "basicSalary"],
+    include: [{ model: Role, as: "role", attributes: ["name", "slug"] }],
+    order: [["exitDate", "DESC"]],
+  });
+
+  const items = await Promise.all(
+    leavers.map(async (user) => {
+      const { month, year } = settlementPeriod(String(user.exitDate));
+      const slip = await Payslip.findOne({
+        where: { userId: user.id },
+        include: [{ model: Payroll, as: "payroll", where: { month, year }, required: true, attributes: ["month", "year"] }],
+      });
+      return {
+        ...user.toJSON(),
+        settlement: slip
+          ? { payslipId: slip.id, type: slip.type, status: slip.status, netPay: slip.netPay, month, year }
+          : null,
+      };
+    })
+  );
+
+  res.json(items);
+});
+
+// Computed pro-rated defaults for one leaver
+router.get("/admin/settlements/:userId/preview", authorize("payroll:write"), async (req: AuthRequest, res: Response) => {
+  const user = await User.findByPk(req.params.userId);
+  if (!user) { res.status(404).json({ message: "Employee not found" }); return; }
+  if (!user.exitDate) { res.status(400).json({ message: "This employee has no exit on record. Offboard them first." }); return; }
+  if (!user.basicSalary || Number(user.basicSalary) <= 0) {
+    res.status(400).json({ message: "No salary structure configured for this employee." });
+    return;
+  }
+  res.json(computeFnfPreview(user));
+});
+
+// Create the F&F payslip for the exit month
+router.post("/admin/settlements/:userId", authorize("payroll:write"), async (req: AuthRequest, res: Response) => {
+  const user = await User.findByPk(req.params.userId, {
+    include: [{ model: Role, as: "role", attributes: ["slug"] }],
+  });
+  if (!user) { res.status(404).json({ message: "Employee not found" }); return; }
+  if (!user.exitDate) { res.status(400).json({ message: "This employee has no exit on record. Offboard them first." }); return; }
+
+  const { month, year } = settlementPeriod(String(user.exitDate));
+
+  const existing = await Payslip.findOne({
+    where: { userId: user.id },
+    include: [{ model: Payroll, as: "payroll", where: { month, year }, required: true }],
+  });
+  if (existing) {
+    res.status(409).json({ message: `A payslip already exists for ${user.fullName} for ${month}/${year}.` });
+    return;
+  }
+
+  const num = (v: unknown) => {
+    const n = Number(v ?? 0);
+    return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : NaN;
+  };
+  const basicSalary = num(req.body.basicSalary);
+  const hra = num(req.body.hra);
+  const ta = num(req.body.ta);
+  const medicalAllowance = num(req.body.medicalAllowance);
+  const otherAllowances = num(req.body.otherAllowances);
+  const leaveEncashment = num(req.body.leaveEncashment);
+  const pfEmployee = num(req.body.pfEmployee);
+  const professionalTax = num(req.body.professionalTax);
+  const tds = num(req.body.tds);
+  const noticeRecovery = num(req.body.noticeRecovery);
+  const values = [basicSalary, hra, ta, medicalAllowance, otherAllowances, leaveEncashment, pfEmployee, professionalTax, tds, noticeRecovery];
+  if (values.some(Number.isNaN)) {
+    res.status(400).json({ message: "All amounts must be non-negative numbers." });
+    return;
+  }
+  if (basicSalary <= 0) {
+    res.status(400).json({ message: "basicSalary must be greater than 0." });
+    return;
+  }
+
+  const grossPay = basicSalary + hra + ta + medicalAllowance + otherAllowances + leaveEncashment;
+  const totalDeductions = pfEmployee + professionalTax + tds + noticeRecovery;
+  const netPay = grossPay - totalDeductions;
+  if (netPay < 0) {
+    res.status(400).json({ message: "Deductions exceed earnings — net pay would be negative." });
+    return;
+  }
+
+  const markPaid = req.body.markPaid === true;
+  const [payroll] = await Payroll.findOrCreate({
+    where: { month, year },
+    defaults: { month, year, processedById: req.user!.userId, status: "draft" },
+  });
+
+  const payslip = await Payslip.create({
+    payrollId: payroll.id,
+    userId: user.id,
+    type: "fnf",
+    basicSalary,
+    hra,
+    ta,
+    medicalAllowance,
+    otherAllowances,
+    leaveEncashment,
+    grossPay,
+    pfEmployee,
+    pfEmployer: pfEmployee,
+    tds,
+    professionalTax,
+    noticeRecovery,
+    otherDeductions: 0,
+    totalDeductions,
+    netPay,
+    status: markPaid ? "paid" : "draft",
+    ...(markPaid ? { paymentDate: new Date() } : {}),
+  });
+
+  // Keep payroll totals in sync
+  const allSlips = await Payslip.findAll({ where: { payrollId: payroll.id } });
+  const totalGross = allSlips.reduce((s, p) => s + Number(p.grossPay), 0);
+  const totalNet = allSlips.reduce((s, p) => s + Number(p.netPay), 0);
+  await payroll.update({ totalGross, totalNet });
+
+  if (markPaid) {
+    const emailTo = user.personalEmail || user.companyEmail;
+    if (emailTo) {
+      const roleSlug = (user as any).role?.slug || "employee";
+      const mail = payslipPaidEmail({
+        fullName: user.fullName,
+        companyEmail: user.companyEmail,
+        netPay,
+        grossPay,
+        month,
+        year,
+        bankAccountNumber: user.bankAccountNumber,
+        payslipUrl: `${env.frontendUrl}/${roleSlug}/payroll/payslips/${payslip.id}`,
+      });
+      sendEmail({ to: emailTo, ...mail }).catch((err: Error) =>
+        console.error(`Failed to send F&F payslip email to ${emailTo}:`, err.message)
+      );
+    }
+  }
+
+  res.status(201).json({ message: "Final settlement created", payslip, employeeName: user.fullName });
 });
 
 // Mark payroll run as paid (all payslips → paid)

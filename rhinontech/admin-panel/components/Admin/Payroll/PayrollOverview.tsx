@@ -34,8 +34,8 @@ export function PayrollOverview() {
   }, []);
 
   return (
-    <div className="flex flex-col h-full bg-stone-50 rounded-r-xl overflow-hidden">
-      <div className="sticky top-0 z-10 flex items-center gap-4 h-16 px-5 border-b bg-stone-50">
+    <div className="flex flex-col h-full glass-panel rounded-r-xl overflow-hidden">
+      <div className="sticky top-0 z-10 flex items-center gap-4 h-16 px-5 border-b border-black/5 glass-header">
         <SubNavToggle />
         <h1 className="text-base font-semibold tracking-tight">Overview</h1>
       </div>
@@ -43,7 +43,7 @@ export function PayrollOverview() {
       <div className="flex-1 overflow-auto p-6">
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Recent Payslips */}
-          <div className="xl:col-span-2 bg-white rounded-xl border border-gray-100 overflow-hidden">
+          <div className="xl:col-span-2 glass-card-solid rounded-xl overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b">
               <p className="font-semibold text-gray-900">Recent Payslips</p>
               <Link href={`/${roleSlug}/payroll/payslips`} className="flex items-center gap-1 text-xs text-blue-600 hover:underline">
@@ -113,7 +113,7 @@ export function PayrollOverview() {
           {/* Right column */}
           <div className="flex flex-col gap-5">
             {/* My Requests */}
-            <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+            <div className="glass-card-solid rounded-xl overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4 border-b">
                 <p className="font-semibold text-gray-900">My Requests</p>
                 <button className="flex items-center gap-1 text-xs bg-stone-900 text-white px-2.5 py-1.5 rounded-lg hover:bg-stone-800 transition-colors">
@@ -127,7 +127,7 @@ export function PayrollOverview() {
             </div>
 
             {/* Payroll Approvals */}
-            <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+            <div className="glass-card-solid rounded-xl overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4 border-b">
                 <p className="font-semibold text-gray-900">Payroll Approvals</p>
                 <button className="text-xs text-blue-600 hover:underline">View all</button>

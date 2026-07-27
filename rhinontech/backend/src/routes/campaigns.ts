@@ -34,11 +34,27 @@ router.get("/", authorize("outreach:read"), async (req: AuthRequest, res: Respon
   res.json(campaigns);
 });
 
+// Channels the engine can actually deliver on. DM/Connection remain in the DB
+// enum (enum removal isn't additive-safe) but can no longer be created.
+const SUPPORTED_CHANNELS = ["Email", "Cold Email", "LinkedIn Post", "LinkedIn Video", "LinkedIn Article"];
+const isEmailChannel = (channel: string) => channel === "Email" || channel === "Cold Email";
+
 // POST /campaigns - create campaign
 router.post("/", authorize("outreach:write"), async (req: AuthRequest, res: Response) => {
   try {
+    const { channel = "Email", mode } = req.body;
+    if (!SUPPORTED_CHANNELS.includes(channel)) {
+      res.status(400).json({ message: `Unsupported channel "${channel}". Use one of: ${SUPPORTED_CHANNELS.join(", ")}` });
+      return;
+    }
+    if (mode && !["template", "agent"].includes(mode)) {
+      res.status(400).json({ message: `Invalid mode "${mode}". Use "template" or "agent".` });
+      return;
+    }
     const campaign = await Campaign.create({
       ...req.body,
+      // Mode only applies to email campaigns; LinkedIn publishing has one flow.
+      mode: isEmailChannel(channel) ? mode || "template" : "template",
       createdById: req.user!.userId,
     });
     res.status(201).json(campaign);
@@ -227,9 +243,13 @@ router.post("/:id/process", authorize("outreach:write"), async (req: AuthRequest
       return;
     }
 
-    const isEmail = campaign.channel === "Email" || campaign.channel === "Cold Email";
+    const isEmail = isEmailChannel(campaign.channel);
 
     if (isEmail) {
+      if (campaign.mode !== "template") {
+        res.status(400).json({ message: "This is an AI-agent campaign — use Run Agent instead of template drafting." });
+        return;
+      }
       const leads = await Lead.findAll({
         where: { campaignId: campaign.id, status: ["Enrolled", "New"] },
       });
@@ -284,9 +304,13 @@ router.post("/:id/send", authorize("outreach:write"), async (req: AuthRequest, r
       return;
     }
 
-    const isEmail = campaign.channel === "Email" || campaign.channel === "Cold Email";
+    const isEmail = isEmailChannel(campaign.channel);
 
     if (isEmail) {
+      if (campaign.mode !== "template") {
+        res.status(400).json({ message: "This is an AI-agent campaign — use Send Approved instead of blast send." });
+        return;
+      }
       const leads = await Lead.findAll({
         where: { campaignId: campaign.id, status: "Interested" },
       });
@@ -335,8 +359,9 @@ router.post("/:id/send", authorize("outreach:write"), async (req: AuthRequest, r
       if (campaign.leadsProcessed < campaign.leadsTotal) {
         await campaign.increment("leadsProcessed", { by: sentCount });
       }
+      const completed = await maybeCompleteCampaign(campaign);
 
-      res.json({ success: true, sent: sentCount, total: leads.length });
+      res.json({ success: true, sent: sentCount, total: leads.length, completed });
     } else {
       // Social / LinkedIn broadcast
       let postContent = campaign.aiDraft;
@@ -390,12 +415,32 @@ router.post("/:id/send", authorize("outreach:write"), async (req: AuthRequest, r
   }
 });
 
+// When every enrolled lead has been dealt with (sent/replied/bounced/…), an email
+// campaign is finished — flip it to Completed so it stops showing as Active.
+async function maybeCompleteCampaign(campaign: Campaign): Promise<boolean> {
+  if (campaign.stage === "Completed" || !isEmailChannel(campaign.channel)) return false;
+  if (campaign.leadsTotal === 0) return false;
+  const pending = await Lead.count({
+    where: {
+      campaignId: campaign.id,
+      status: { [Op.in]: ["New", "Enriched", "Enrolled", "Interested"] },
+    },
+  });
+  if (pending > 0) return false;
+  await campaign.update({ stage: "Completed" });
+  return true;
+}
+
 // POST /campaigns/:id/agent-draft — sales agent researches + drafts (Stage 0–5) for approval. Never sends.
 router.post("/:id/agent-draft", authorize("outreach:write"), async (req: AuthRequest, res: Response) => {
   try {
     const campaign = await Campaign.findByPk(req.params.id);
     if (!campaign) {
       res.status(404).json({ message: "Campaign not found" });
+      return;
+    }
+    if (isEmailChannel(campaign.channel) && campaign.mode !== "agent") {
+      res.status(400).json({ message: "This is a template-blast campaign — use Generate Drafts instead of the agent." });
       return;
     }
 
@@ -429,6 +474,10 @@ router.post("/:id/send-approved", authorize("outreach:write"), async (req: AuthR
     const campaign = await Campaign.findByPk(req.params.id);
     if (!campaign) {
       res.status(404).json({ message: "Campaign not found" });
+      return;
+    }
+    if (isEmailChannel(campaign.channel) && campaign.mode !== "agent") {
+      res.status(400).json({ message: "This is a template-blast campaign — use Send Now instead of Send Approved." });
       return;
     }
 
@@ -475,8 +524,9 @@ router.post("/:id/send-approved", authorize("outreach:write"), async (req: AuthR
     if (campaign.leadsProcessed < campaign.leadsTotal) {
       await campaign.increment("leadsProcessed", { by: sent });
     }
+    const completed = await maybeCompleteCampaign(campaign);
 
-    res.json({ success: true, sent, total: leads.length });
+    res.json({ success: true, sent, total: leads.length, completed });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
@@ -496,7 +546,7 @@ router.get("/cron/run", async (req, res) => {
     logs.push(`Found ${activeCampaigns.length} active campaigns ready to process.`);
 
     for (const campaign of activeCampaigns) {
-      logs.push(`\n--- Processing Campaign: ${campaign.name} ---`);
+      logs.push(`\n--- Processing Campaign: ${campaign.name} (${campaign.mode}) ---`);
 
       // PHASE A: AI Draft Generation
       const enrolledLeads = await Lead.findAll({
@@ -510,6 +560,25 @@ router.get("/cron/run", async (req, res) => {
 
       const campaignCreator = await User.findByPk(campaign.createdById);
       const senderName = campaignCreator?.fullName || "Rhinon Team";
+
+      if (campaign.mode === "agent" && isEmailChannel(campaign.channel)) {
+        // Agent campaigns: research + draft only. Drafts wait for human approval
+        // (send-approved) — the cron never auto-sends them.
+        for (const lead of enrolledLeads) {
+          try {
+            const result = await draftOutreachForLead(lead, senderName);
+            logs.push(
+              result.skipped
+                ? `   [Agent Skipped] ${lead.email}: ${result.reason}`
+                : `   [Agent Draft Ready] ${lead.email} — awaiting approval`
+            );
+          } catch (err: any) {
+            logs.push(`   [Agent Error] ${lead.email}: ${err.message}`);
+          }
+        }
+        logs.push(`   [Done] Agent cycle complete — review & approve drafts to send.`);
+        continue;
+      }
 
       for (const lead of enrolledLeads) {
         try {
@@ -622,13 +691,84 @@ router.get("/cron/run", async (req, res) => {
         }
       }
 
-      logs.push(`   [Done] Campaign cycle complete. Staying Active for future runs.`);
+      const completed = await maybeCompleteCampaign(campaign);
+      logs.push(
+        completed
+          ? `   [Done] All leads processed — campaign marked Completed.`
+          : `   [Done] Campaign cycle complete. Staying Active for future runs.`
+      );
     }
 
     res.json({ success: true, logs });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
+});
+
+// POST /campaigns/:id/pause — Active → Paused
+router.post("/:id/pause", authorize("outreach:write"), async (req: AuthRequest, res: Response) => {
+  const campaign = await Campaign.findByPk(req.params.id);
+  if (!campaign) { res.status(404).json({ message: "Campaign not found" }); return; }
+  if (campaign.stage !== "Active") {
+    res.status(400).json({ message: `Only Active campaigns can be paused (current: ${campaign.stage}).` });
+    return;
+  }
+  await campaign.update({ stage: "Paused" });
+  res.json(campaign);
+});
+
+// POST /campaigns/:id/resume — Paused/Draft → Active
+router.post("/:id/resume", authorize("outreach:write"), async (req: AuthRequest, res: Response) => {
+  const campaign = await Campaign.findByPk(req.params.id);
+  if (!campaign) { res.status(404).json({ message: "Campaign not found" }); return; }
+  if (campaign.stage !== "Paused" && campaign.stage !== "Draft") {
+    res.status(400).json({ message: `Only Paused or Draft campaigns can be activated (current: ${campaign.stage}).` });
+    return;
+  }
+  await campaign.update({ stage: "Active" });
+  res.json(campaign);
+});
+
+// GET /campaigns/:id/stats — per-campaign funnel + daily activity series
+router.get("/:id/stats", authorize("outreach:read"), async (req: AuthRequest, res: Response) => {
+  const campaign = await Campaign.findByPk(req.params.id);
+  if (!campaign) { res.status(404).json({ message: "Campaign not found" }); return; }
+
+  const leads = await Lead.findAll({
+    where: { campaignId: campaign.id },
+    attributes: ["status", "aiDraft", "draftApproved"],
+    raw: true,
+  });
+
+  const funnel = {
+    enrolled: leads.length,
+    drafted: leads.filter((l: any) => l.aiDraft).length,
+    approved: leads.filter((l: any) => l.draftApproved).length,
+    sent: leads.filter((l: any) => ["Emailed", "Replied", "Bounced", "Unsubscribed"].includes(l.status)).length,
+    replied: leads.filter((l: any) => l.status === "Replied").length,
+    bounced: leads.filter((l: any) => l.status === "Bounced").length,
+  };
+
+  const since = new Date();
+  since.setDate(since.getDate() - 29);
+  since.setHours(0, 0, 0, 0);
+  const activities = await CampaignActivity.findAll({
+    where: { campaignId: campaign.id, timestamp: { [Op.gte]: since } },
+    attributes: ["type", "timestamp"],
+    raw: true,
+  });
+  const byDay = new Map<string, { date: string; drafted: number; sent: number; replied: number }>();
+  for (const a of activities as any[]) {
+    const key = new Date(a.timestamp).toISOString().slice(0, 10);
+    const row = byDay.get(key) || { date: key, drafted: 0, sent: 0, replied: 0 };
+    if (a.type === "DraftGenerated") row.drafted++;
+    else if (a.type === "OutreachSent") row.sent++;
+    else if (a.type === "ReplyReceived") row.replied++;
+    byDay.set(key, row);
+  }
+  const series = Array.from(byDay.values()).sort((a, b) => a.date.localeCompare(b.date));
+
+  res.json({ funnel, series });
 });
 
 // GET /campaigns/:id - get single campaign

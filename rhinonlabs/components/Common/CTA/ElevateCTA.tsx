@@ -3,7 +3,8 @@ import React from 'react';
 import { motion, Variants } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2 } from 'lucide-react';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
+import SchedulerModal from './SchedulerModal';
 
 const CanvasRays = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -97,6 +98,8 @@ const fadeUpVariant: Variants = {
 };
 
 export function ElevateCTA() {
+    const [isSchedulerOpen, setIsSchedulerOpen] = useState(false);
+
     return (
         <section className="py-24 relative overflow-hidden">
             <div className="max-w-[1200px] mx-auto px-4 relative z-10">
@@ -147,7 +150,11 @@ export function ElevateCTA() {
                         </motion.p>
 
                         <motion.div variants={fadeUpVariant}>
-                            <Button size="lg" className="rounded-2xl max-sm:py-5 px-8 bg-primary hover:bg-primary/90 text-white max-sm:text-sm font-medium">
+                            <Button 
+                                onClick={() => setIsSchedulerOpen(true)}
+                                size="lg" 
+                                className="rounded-2xl max-sm:py-5 px-8 bg-primary hover:bg-primary/90 text-white max-sm:text-sm font-medium"
+                            >
                                 Get a Custom System Built for Your Business
                             </Button>
                         </motion.div>
@@ -160,6 +167,8 @@ export function ElevateCTA() {
                     />
                 </motion.div>
             </div>
+
+            <SchedulerModal isOpen={isSchedulerOpen} onClose={() => setIsSchedulerOpen(false)} />
         </section>
     );
 }

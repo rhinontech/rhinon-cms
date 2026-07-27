@@ -2,10 +2,14 @@ import { Router, Response } from "express";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import multer from "multer";
-import { User, Role } from "../models";
+import { Op } from "sequelize";
+import { User, Role, Document } from "../models";
+import type { ExitReason } from "../models/User";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
+import { finalizeOffboarding, todayIST } from "../services/offboarding";
+import { generateLetterPdf, letterTitle, LetterType, generateOfferLetterPdf, generateNdaPdf } from "../services/letters";
 import { sendEmail } from "../services/mailer";
-import { welcomeEmail, resetPasswordEmail } from "../services/emailTemplates";
+import { welcomeEmail, signDocumentsEmail, resetPasswordEmail } from "../services/emailTemplates";
 import { env } from "../config/env";
 import { uploadBuffer, deleteObject, getPresignedReadUrl, getPresignedUploadUrl } from "../services/storage";
 
@@ -49,7 +53,8 @@ const employeeEditableFields = [
   "personalEmail",
   "roleId",
   "department",
-  "status",
+  // "status" is deliberately not editable here — use /:id/offboard and /:id/reactivate
+  // so exit metadata and cleanup stay consistent.
   "dateOfBirth",
   "pan",
   "employmentType",
@@ -161,12 +166,80 @@ router.post("/", authorize("employees:write"), async (req: AuthRequest, res: Res
     ...employeePayload(req.body),
   });
 
-  // Send welcome email (non-fatal)
+  // Onboarding documents — generated as unsigned PDFs, but instead of attaching
+  // them we issue a shared signing-session token (see routes/documentSigning.ts)
+  // so the new hire reviews and e-signs both in one flow, then downloads them.
+  const attachDocs = req.body.attachDocs === true || req.body.attachDocs === "true";
+  const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:4200";
+  let signingUrl: string | undefined;
+
+  if (attachDocs) {
+    try {
+      const offerLetterPdf = await generateOfferLetterPdf(employee);
+      const ndaPdf = await generateNdaPdf(employee);
+
+      const offerLetterName = `Offer-Letter-${employee.fullName.replace(/[^a-zA-Z0-9]+/g, "-")}.pdf`;
+      const ndaName = `NDA-${employee.fullName.replace(/[^a-zA-Z0-9]+/g, "-")}.pdf`;
+
+      const offerKey = await uploadBuffer(offerLetterPdf, offerLetterName, "documents", "application/pdf");
+      const ndaKey = await uploadBuffer(ndaPdf, ndaName, "documents", "application/pdf");
+
+      const signingToken = crypto.randomUUID();
+      const signingTokenExpiry = new Date(Date.now() + 48 * 60 * 60 * 1000);
+
+      await Document.create({
+        employeeId: employee.id,
+        uploadedById: req.user!.userId,
+        title: `Offer Letter — ${employee.fullName}`,
+        category: "offer_letter",
+        fileKey: offerKey,
+        fileName: offerLetterName,
+        fileSize: offerLetterPdf.length,
+        mimeType: "application/pdf",
+        signingToken,
+        signingTokenExpiry,
+      });
+
+      await Document.create({
+        employeeId: employee.id,
+        uploadedById: req.user!.userId,
+        title: `NDA — ${employee.fullName}`,
+        category: "nda",
+        fileKey: ndaKey,
+        fileName: ndaName,
+        fileSize: ndaPdf.length,
+        mimeType: "application/pdf",
+        signingToken,
+        signingTokenExpiry,
+      });
+
+      signingUrl = `${frontendUrl}/sign-documents?token=${signingToken}`;
+    } catch (docErr) {
+      console.error("Failed to generate and upload onboarding documents:", docErr);
+    }
+  }
+
+  // Send the first onboarding email — non-fatal (the member is already created
+  // and the admin can use "Resend invite"), but the response says whether it
+  // went out so the failure is never silent.
+  //
+  // Two-stage flow: when there are documents to sign, this first email is a
+  // congratulations + signing link ONLY — the credentials/setup email is
+  // triggered automatically once both documents are signed (documentSigning.ts).
+  // Without documents (attachDocs off, or generation failed), send the full
+  // credentials email immediately so the hire is never left without a way in.
+  let welcomeEmailSent = false;
   try {
-    const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:4200";
-    const onboardingUrl = `${frontendUrl}/onboard?token=${onboardingToken}`;
-    const { subject, html, text } = welcomeEmail({ fullName, companyEmail, tempPassword, onboardingUrl });
-    await sendEmail({ to: personalEmail, subject, html, text });
+    const template = signingUrl
+      ? signDocumentsEmail({ fullName, roleTitle: employee.roleTitle || undefined, signingUrl })
+      : welcomeEmail({
+          fullName,
+          companyEmail,
+          tempPassword,
+          onboardingUrl: `${frontendUrl}/onboard?token=${onboardingToken}`,
+        });
+    await sendEmail({ to: personalEmail, via: "gmail", subject: template.subject, html: template.html, text: template.text });
+    welcomeEmailSent = true;
   } catch (err) {
     console.error("Failed to send welcome email:", err);
   }
@@ -175,7 +248,49 @@ router.post("/", authorize("employees:write"), async (req: AuthRequest, res: Res
     ...employee.toJSON(),
     passwordHash: undefined,
     onboardingToken: undefined,
+    welcomeEmailSent,
   });
+});
+
+// Live preview of an offer letter / NDA rendered from in-progress form data —
+// used by the create/edit member form so the preview always matches the real
+// generator. Nothing is persisted: `User.build` makes an in-memory instance
+// only, never written to the database.
+router.post("/preview-documents", authorize("employees:write"), async (req: AuthRequest, res: Response) => {
+  const type = req.body.type === "nda" ? "nda" : "offer";
+  const { fullName, legalName, roleTitle, workLocation, employmentType, workSchedule, remotePosition, joiningDate, department, annualCompensation, annualVariablePay } = req.body;
+
+  if (!fullName) {
+    res.status(400).json({ message: "Full name is required to preview." });
+    return;
+  }
+
+  const draft = User.build({
+    fullName,
+    legalName: legalName || undefined,
+    roleTitle: roleTitle || undefined,
+    workLocation: workLocation || undefined,
+    employmentType: employmentType || undefined,
+    workSchedule: workSchedule || undefined,
+    remotePosition: remotePosition === true || remotePosition === "true",
+    department: department || "",
+    joiningDate: parseOptionalDate(joiningDate) || new Date(),
+    annualCompensation: annualCompensation ? Number(annualCompensation) : undefined,
+    annualVariablePay: annualVariablePay ? Number(annualVariablePay) : undefined,
+    personalEmail: "preview@example.com",
+    passwordHash: "",
+    roleId: "",
+  });
+
+  try {
+    const pdf = type === "nda" ? await generateNdaPdf(draft) : await generateOfferLetterPdf(draft);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", "inline");
+    res.send(pdf);
+  } catch (err) {
+    console.error("Failed to render document preview:", err);
+    res.status(500).json({ message: "Could not render the preview." });
+  }
 });
 
 router.put("/:id", authorize("employees:write"), async (req: AuthRequest, res: Response) => {
@@ -236,15 +351,195 @@ router.post("/:id/documents/presign", authorize("employees:write"), async (req: 
   res.json({ uploadUrl, key, url: readUrl });
 });
 
-// Offboard — mark inactive
+const EXIT_REASONS: ExitReason[] = ["Resignation", "Termination", "Contract ended", "Absconded", "Other"];
+
+// Offboard — record last working day + reason. If the last working day is today or
+// earlier the employee is deactivated immediately (with cleanup); a future date keeps
+// them active until the daily cron finalizes it after that day ends.
 router.post("/:id/offboard", authorize("employees:write"), async (req: AuthRequest, res: Response) => {
+  const employee = await User.findByPk(req.params.id, { include: [{ model: Role, as: "role" }] });
+  if (!employee) {
+    res.status(404).json({ message: "Employee not found" });
+    return;
+  }
+  if (employee.status === "inactive") {
+    res.status(400).json({ message: "This employee is already offboarded." });
+    return;
+  }
+  if (employee.id === req.user!.userId) {
+    res.status(400).json({ message: "You cannot offboard your own account." });
+    return;
+  }
+  if ((employee as any).role?.slug === "superadmin") {
+    res.status(400).json({ message: "The superadmin account cannot be offboarded." });
+    return;
+  }
+
+  const today = todayIST();
+  let exitDateStr = today;
+  if (req.body.exitDate !== undefined && req.body.exitDate !== null && req.body.exitDate !== "") {
+    const parsed = parseOptionalDate(req.body.exitDate);
+    if (!parsed) {
+      res.status(400).json({ message: "exitDate must be a valid date" });
+      return;
+    }
+    exitDateStr = parsed.toISOString().split("T")[0];
+  }
+
+  const exitReason: ExitReason = EXIT_REASONS.includes(req.body.exitReason)
+    ? req.body.exitReason
+    : "Other";
+  const exitNotes = typeof req.body.exitNotes === "string"
+    ? req.body.exitNotes.trim().slice(0, 2000) || null
+    : null;
+
+  await employee.update({ exitDate: exitDateStr as any, exitReason, exitNotes });
+
+  if (exitDateStr <= today) {
+    const cleanup = await finalizeOffboarding(employee);
+    res.json({
+      message: "Employee offboarded",
+      id: employee.id,
+      effective: "immediate",
+      exitDate: exitDateStr,
+      cleanup,
+    });
+    return;
+  }
+
+  res.json({
+    message: `Exit scheduled — access will be revoked after ${exitDateStr}`,
+    id: employee.id,
+    effective: "scheduled",
+    exitDate: exitDateStr,
+  });
+});
+
+// Reactivate — cancel a scheduled exit, or restore an offboarded employee.
+router.post("/:id/reactivate", authorize("employees:write"), async (req: AuthRequest, res: Response) => {
   const employee = await User.findByPk(req.params.id);
   if (!employee) {
     res.status(404).json({ message: "Employee not found" });
     return;
   }
-  await employee.update({ status: "inactive" });
-  res.json({ message: "Employee offboarded", id: employee.id });
+  if (employee.status === "active" && !employee.exitDate) {
+    res.status(400).json({ message: "This employee is already active." });
+    return;
+  }
+
+  const wasInactive = employee.status === "inactive";
+  await employee.update({ status: "active", exitDate: null, exitReason: null, exitNotes: null });
+  res.json({
+    message: wasInactive ? "Employee reactivated" : "Scheduled exit cancelled",
+    id: employee.id,
+  });
+});
+
+// Preview a relieving/experience letter — renders the PDF on the fly, no Documents
+// row, no email. Lets HR check the content before committing to /letters below.
+router.get("/:id/letters/preview", authorize("employees:write"), async (req: AuthRequest, res: Response) => {
+  const type: LetterType = req.query.type === "experience" ? "experience" : "relieving";
+
+  const employee = await User.findByPk(req.params.id);
+  if (!employee) {
+    res.status(404).json({ message: "Employee not found" });
+    return;
+  }
+  if (!employee.exitDate) {
+    res.status(400).json({ message: "This member has no exit on record. Offboard them first." });
+    return;
+  }
+
+  const pdf = await generateLetterPdf(type, employee);
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", "inline");
+  res.send(pdf);
+});
+
+// Generate a relieving/experience letter (PDF) — saved to Documents and emailed
+// to the member's personal email.
+router.post("/:id/letters", authorize("employees:write"), async (req: AuthRequest, res: Response) => {
+  const type: LetterType = req.body.type === "experience" ? "experience" : "relieving";
+
+  const employee = await User.findByPk(req.params.id);
+  if (!employee) {
+    res.status(404).json({ message: "Employee not found" });
+    return;
+  }
+  if (!employee.exitDate) {
+    res.status(400).json({ message: "This member has no exit on record. Offboard them first." });
+    return;
+  }
+
+  const title = letterTitle(type);
+  const pdf = await generateLetterPdf(type, employee);
+  const fileName = `${title.replace(/ /g, "-")}-${employee.fullName.replace(/[^a-zA-Z0-9]+/g, "-")}.pdf`;
+
+  const fileKey = await uploadBuffer(pdf, fileName, "documents", "application/pdf");
+  const document = await Document.create({
+    employeeId: employee.id,
+    uploadedById: req.user!.userId,
+    title: `${title} — ${employee.fullName}`,
+    category: "other",
+    fileKey,
+    fileName,
+    fileSize: pdf.length,
+    mimeType: "application/pdf",
+  });
+
+  let emailedTo: string | null = null;
+  const emailTarget = employee.personalEmail || employee.companyEmail;
+  if (emailTarget) {
+    try {
+      await sendEmail({
+        to: emailTarget,
+        subject: `${title} — Rhinon Tech`,
+        html: `<p>Dear ${employee.fullName},</p><p>Please find your ${title.toLowerCase()} from Rhinon Tech attached with this email.</p><p>We wish you the very best.</p><p>— Rhinon Tech</p>`,
+        text: `Dear ${employee.fullName},\n\nPlease find your ${title.toLowerCase()} from Rhinon Tech attached with this email.\n\nWe wish you the very best.\n\n— Rhinon Tech`,
+        attachments: [{ filename: fileName, content: pdf, contentType: "application/pdf" }],
+      });
+      emailedTo = emailTarget;
+    } catch (err: any) {
+      console.error("Failed to email letter:", err.message);
+    }
+  }
+
+  const url = await getPresignedReadUrl(fileKey);
+  res.status(201).json({
+    message: emailedTo ? `${title} generated and emailed to ${emailedTo}` : `${title} generated (email could not be sent)`,
+    documentId: document.id,
+    url,
+    emailedTo,
+  });
+});
+
+const EXIT_CHECKLIST_KEYS = [
+  "emailDisabled",
+  "assetsReturned",
+  "accessRevoked",
+  "settlementPaid",
+  "lettersIssued",
+] as const;
+
+// Update the exit checklist (manual offboarding steps HR tracks per leaver)
+router.put("/:id/exit-checklist", authorize("employees:write"), async (req: AuthRequest, res: Response) => {
+  const employee = await User.findByPk(req.params.id);
+  if (!employee) {
+    res.status(404).json({ message: "Employee not found" });
+    return;
+  }
+  if (!employee.exitDate) {
+    res.status(400).json({ message: "This member has no exit on record." });
+    return;
+  }
+
+  const next: Record<string, boolean> = { ...(employee.exitChecklist ?? {}) };
+  for (const key of EXIT_CHECKLIST_KEYS) {
+    const value = req.body?.checklist?.[key];
+    if (typeof value === "boolean") next[key] = value;
+  }
+  await employee.update({ exitChecklist: next });
+  res.json({ exitChecklist: next });
 });
 
 // Resend onboarding invite — regenerate a fresh temp password + onboarding link and re-email it.
@@ -263,16 +558,34 @@ router.post("/:id/resend-onboarding", authorize("employees:write"), async (req: 
 
   await employee.update({ passwordHash, onboardingToken, onboardingTokenExpiry, onboarded: false });
 
+  // Re-include the e-signing link when unsigned onboarding documents exist —
+  // if the original welcome email was lost, this is the hire's only way back
+  // into the signing session. The token is reused (previously shared links stay
+  // valid); only its expiry is refreshed alongside the new invite.
+  const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:4200";
+  let signingUrl: string | undefined;
+  const unsignedDoc = await Document.findOne({
+    where: { employeeId: employee.id, signedAt: null, signingToken: { [Op.ne]: null } },
+    order: [["createdAt", "DESC"]],
+  });
+  if (unsignedDoc?.signingToken) {
+    await Document.update(
+      { signingTokenExpiry: new Date(Date.now() + 48 * 60 * 60 * 1000) },
+      { where: { signingToken: unsignedDoc.signingToken } }
+    );
+    signingUrl = `${frontendUrl}/sign-documents?token=${unsignedDoc.signingToken}`;
+  }
+
   try {
-    const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:4200";
     const onboardingUrl = `${frontendUrl}/onboard?token=${onboardingToken}`;
     const { subject, html, text } = welcomeEmail({
       fullName: employee.fullName,
       companyEmail: employee.companyEmail,
       tempPassword,
       onboardingUrl,
+      signingUrl,
     });
-    await sendEmail({ to: employee.personalEmail, subject, html, text });
+    await sendEmail({ to: employee.personalEmail, via: "gmail", subject, html, text });
   } catch (err) {
     console.error("Failed to resend welcome email:", err);
     res.status(502).json({ message: "Could not send the invite email. Check email configuration." });
@@ -298,7 +611,7 @@ router.post("/:id/send-reset", authorize("employees:write"), async (req: AuthReq
   try {
     const resetUrl = `${env.frontendUrl}/auth/reset-password?token=${resetToken}`;
     const { subject, html, text } = resetPasswordEmail({ fullName: employee.fullName, resetUrl });
-    await sendEmail({ to: employee.personalEmail, subject, html, text });
+    await sendEmail({ to: employee.personalEmail, via: "gmail", subject, html, text });
   } catch (err) {
     console.error("Failed to send reset email:", err);
     res.status(502).json({ message: "Could not send the reset email. Check email configuration." });

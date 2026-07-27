@@ -83,8 +83,8 @@ export function ProfileSecurity() {
   const toggle = (key: keyof typeof show) => setShow((s) => ({ ...s, [key]: !s[key] }));
 
   return (
-    <div className="flex flex-col h-full bg-stone-50 rounded-r-xl overflow-hidden">
-      <div className="sticky top-0 z-10 flex items-center gap-4 h-16 px-5 border-b bg-stone-50">
+    <div className="flex flex-col h-full glass-panel rounded-r-xl overflow-hidden">
+      <div className="sticky top-0 z-10 flex items-center gap-4 h-16 px-5 border-b border-black/5 glass-header">
         <SubNavToggle />
         <h1 className="text-xl font-bold tracking-tight">Security</h1>
       </div>

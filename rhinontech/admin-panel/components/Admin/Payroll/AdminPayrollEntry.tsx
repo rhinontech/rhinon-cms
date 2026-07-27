@@ -146,8 +146,8 @@ export function AdminPayrollEntry() {
   const selectedEmployee = employees.find((e) => e.id === selectedId);
 
   return (
-    <div className="flex flex-col h-full bg-stone-50 rounded-r-xl overflow-hidden">
-      <div className="sticky top-0 z-10 flex items-center gap-4 h-16 px-5 border-b bg-stone-50 shrink-0">
+    <div className="flex flex-col h-full glass-panel rounded-r-xl overflow-hidden">
+      <div className="sticky top-0 z-10 flex items-center gap-4 h-16 px-5 border-b border-black/5 glass-header shrink-0">
         <SubNavToggle />
         <div>
           <h1 className="text-sm font-semibold tracking-tight">Payslip Entry</h1>
@@ -180,10 +180,10 @@ export function AdminPayrollEntry() {
           ) : (
             <>
               {/* Period + Employee */}
-              <div className="bg-white rounded-xl border border-gray-100 p-5 space-y-4">
+              <div className="glass-card-solid rounded-xl p-5 space-y-4">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Period & Employee</p>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
                     Month
                     <div className="relative">
@@ -238,9 +238,9 @@ export function AdminPayrollEntry() {
               </div>
 
               {/* Earnings */}
-              <div className="bg-white rounded-xl border border-gray-100 p-5 space-y-4">
+              <div className="glass-card-solid rounded-xl p-5 space-y-4">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Earnings for this period</p>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {([
                     { label: "Basic Salary *", value: basicSalary, set: setBasicSalary },
                     { label: "HRA",             value: hra,         set: setHra         },
@@ -265,7 +265,7 @@ export function AdminPayrollEntry() {
               </div>
 
               {/* Deductions */}
-              <div className="bg-white rounded-xl border border-gray-100 p-5 space-y-4">
+              <div className="glass-card-solid rounded-xl p-5 space-y-4">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Deductions for this period</p>
 
                 <label className="flex items-center justify-between rounded-lg border border-gray-100 px-4 py-3 cursor-pointer">
@@ -283,7 +283,7 @@ export function AdminPayrollEntry() {
                   </div>
                 </label>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
                     Professional Tax (₹)
                     <div className="relative">
@@ -304,7 +304,7 @@ export function AdminPayrollEntry() {
               </div>
 
               {/* Live summary */}
-              <div className="bg-white rounded-xl border border-gray-100 p-5">
+              <div className="glass-card-solid rounded-xl p-5">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Summary</p>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">

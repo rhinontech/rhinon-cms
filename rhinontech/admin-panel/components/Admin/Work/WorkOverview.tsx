@@ -44,7 +44,7 @@ export function WorkOverview() {
   ];
 
   return (
-    <div className={cn("flex h-full flex-col overflow-hidden bg-stone-50", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
+    <div className={cn("flex h-full flex-col overflow-hidden glass-panel", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
       <div className="flex h-16 items-center gap-3 border-b px-5">
         <SubNavToggle />
         <div>
@@ -56,7 +56,7 @@ export function WorkOverview() {
       <div className="flex-1 overflow-auto p-6">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {cards.map((card) => (
-            <section key={card.label} className="rounded-xl border border-gray-100 bg-white p-5">
+            <section key={card.label} className="rounded-xl glass-card p-5">
               <div className="flex items-center gap-2 text-sm text-gray-500">
                 {card.icon}
                 {card.label}
@@ -67,7 +67,7 @@ export function WorkOverview() {
         </div>
 
         <div className="mt-6 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-          <section className="rounded-xl border border-gray-100 bg-white p-5">
+          <section className="rounded-xl glass-card p-5">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-gray-900">Recent client bugs and change requests</p>
@@ -100,7 +100,7 @@ export function WorkOverview() {
             </div>
           </section>
 
-          <section className="rounded-xl border border-gray-100 bg-white p-5">
+          <section className="rounded-xl glass-card p-5">
             <p className="text-sm font-semibold text-gray-900">Snapshot</p>
             <div className="mt-5 space-y-4">
               <StatRow label="Active projects" value={String(data?.activeProjects ?? 0)} />

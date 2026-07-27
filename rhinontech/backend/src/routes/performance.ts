@@ -1,12 +1,12 @@
 import { Router as ExpressRouter, Response } from "express";
 import { ReviewCycle, ReviewGoal, ReviewSubmission, Role, User } from "../models";
-import { authenticate, AuthRequest } from "../middleware/authenticate";
+import { authenticate, hasPermission, AuthRequest } from "../middleware/authenticate";
 
 const router = ExpressRouter();
 router.use(authenticate);
 
 function isAdmin(req: AuthRequest) {
-  return req.user?.roleSlug === "superadmin" || req.user?.roleSlug === "hr";
+  return hasPermission(req, "performance:write");
 }
 
 async function getActiveEmployees() {

@@ -85,6 +85,7 @@
 @theme inline {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-instrument), ui-serif, Georgia, serif;
+  --font-mulish: var(--font-mulish), sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -169,3 +170,159 @@ body {
 .animate-scroll-slow:hover {
   animation-play-state: paused;
 }
+/* ---------- Blog article body (TipTap-authored HTML blocks) ---------- */
+.article-html h2 {
+  font-size: 2rem;
+  line-height: 1.25;
+  font-weight: 600;
+  clear:both;
+  
+  color: var(--foreground);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding-bottom: 1rem;
+  margin: 4rem 0 2rem;
+  scroll-margin-top: 8rem;
+}
+.article-html h2:first-child {
+  margin-top: 0;
+}
+.article-html h3 {
+  font-size: 1.375rem;
+  line-height: 1.3;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--foreground);
+  margin: 2.5rem 0 1.25rem;
+  scroll-margin-top: 8rem;
+}
+.article-html p {
+  font-size: 1.125rem;
+  line-height: 1.85;
+  color: color-mix(in oklab, var(--foreground) 80%, transparent);
+  margin-bottom: 1.5rem;
+}
+.article-html a {
+  color: var(--foreground) !important;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.35);
+  text-underline-offset: 4px;
+  transition: text-decoration-color 0.2s;
+}
+.article-html a:hover {
+  text-decoration-color: #ffffff;
+}
+.article-html strong {
+  font-weight: 500;
+  color: var(--foreground) !important;
+}
+.article-html ul,
+.article-html ol {
+  margin: 0 0 1.5rem;
+  padding-left: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.article-html ul {
+  list-style: disc;
+}
+.article-html ol {
+  list-style: decimal;
+}
+.article-html li {
+  font-size: 1.125rem;
+  line-height: 1.7;
+  color: color-mix(in oklab, var(--foreground) 80%, transparent);
+}
+.article-html li::marker {
+  color: rgba(255, 255, 255, 0.6);
+}
+.article-html blockquote {
+  border-left: 3px solid rgba(255, 255, 255, 0.3);
+  padding: 0.25rem 0 0.25rem 1.5rem;
+  margin: 2rem 0;
+  font-style: italic;
+  color: color-mix(in oklab, var(--foreground) 65%, transparent);
+}
+.article-html blockquote p {
+  margin-bottom: 0.5rem;
+}
+.article-html pre {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  overflow-x: auto;
+  margin: 0 0 1.5rem;
+}
+.article-html pre code {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: color-mix(in oklab, var(--foreground) 85%, transparent);
+}
+
+/* Blog article — extended rich-text elements */
+.article-html h4 {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--foreground);
+  margin: 2rem 0 1rem;
+  scroll-margin-top: 8rem;
+}
+.article-html u { text-underline-offset: 4px; }
+.article-html s { opacity: 0.7; }
+.article-html mark {
+  border-radius: 0.25rem;
+  padding: 0.05rem 0.25rem;
+  color: #0a0f1e; /* readable dark text on light highlight colors */
+}
+.article-html sub,
+.article-html sup { font-size: 0.7em; }
+.article-html code {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.35rem;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.85em;
+  color: var(--foreground);
+}
+.article-html pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  color: color-mix(in oklab, var(--foreground) 85%, transparent);
+}
+.article-html .table-wrap,
+.article-html .tableWrapper { overflow-x: auto; margin: 2rem 0; }
+.article-html table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 2rem 0;
+  font-size: 1rem;
+}
+.article-html .tableWrapper table { margin: 0; }
+.article-html th,
+.article-html td {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 0.75rem 1rem;
+  text-align: left;
+  vertical-align: top;
+  color: color-mix(in oklab, var(--foreground) 80%, transparent);
+}
+.article-html th {
+  background: rgba(255, 255, 255, 0.05);
+  font-weight: 800;
+  color: var(--foreground);
+}
+.article-html img {
+  border-radius: 0.75rem;
+  margin: 1.5rem 0;
+  height: auto;
+}
+
+/* Scoped blog font overrides */
+.blog-theme {
+  --font-sans: var(--font-mulish), sans-serif;
+  font-family: var(--font-mulish), sans-serif;
+}
+

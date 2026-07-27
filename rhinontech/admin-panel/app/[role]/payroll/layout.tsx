@@ -15,19 +15,23 @@ import {
   TbGift,
   TbId,
   TbFilePlus,
+  TbUserMinus,
 } from "react-icons/tb";
+import { usePermissions } from "@/context/PermissionsContext";
 
 function PayrollLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const roleSlug = pathname.split("/")[1];
   const base = `/${roleSlug}/payroll`;
-  const isAdminView = roleSlug === "superadmin" || roleSlug === "hr";
+  const { has } = usePermissions();
+  const isAdminView = has("payroll:write");
 
   const adminItems = [
-    { label: "Dashboard",     href: `${base}/overview`,  icon: <MdOutlineDashboard size={18} /> },
+    { label: "Overview",      href: `${base}/overview`,  icon: <MdOutlineDashboard size={18} /> },
     { label: "Employees",     href: `${base}/employees`, icon: <MdOutlinePeopleAlt size={18} /> },
     { label: "Run Payroll",   href: `${base}/run`,       icon: <MdOutlinePlayCircle size={18} /> },
     { label: "Payslip Entry", href: `${base}/entry`,     icon: <TbFilePlus size={18} /> },
+    { label: "Settlements",   href: `${base}/settlements`, icon: <TbUserMinus size={18} /> },
     { label: "All Payslips",  href: `${base}/payslips`,  icon: <TbFileInvoice size={18} /> },
   ];
 

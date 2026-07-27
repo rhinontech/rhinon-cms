@@ -59,10 +59,10 @@ export function Deductions() {
         {loading ? (
           <p className="text-sm text-gray-400">Loading...</p>
         ) : !latest ? (
-          <div className="bg-white rounded-xl border border-gray-100 p-12 text-center text-gray-400 text-sm">No deduction data yet.</div>
+          <div className="glass-card-solid rounded-xl p-12 text-center text-gray-400 text-sm">No deduction data yet.</div>
         ) : (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl border border-gray-100 p-6">
+            <div className="glass-card-solid rounded-xl p-6">
               <p className="font-medium text-gray-900 mb-4">{MONTHS[latest.payroll.month - 1]} {latest.payroll.year} — Breakdown</p>
               <Bar label="PF (Employee 12%)" value={Number(latest.pfEmployee)} max={maxDeduction} />
               <Bar label="TDS" value={Number(latest.tds)} max={maxDeduction} />
@@ -73,10 +73,10 @@ export function Deductions() {
                 <span>₹{Number(latest.totalDeductions).toLocaleString("en-IN")}</span>
               </div>
             </div>
-            <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+            <div className="glass-card-solid rounded-xl overflow-hidden">
               <div className="px-5 py-4 border-b"><p className="font-medium text-gray-900">History</p></div>
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
+              <table className="w-full min-w-[640px] text-sm">
+                <thead className="glass-thead text-gray-600 text-xs uppercase">
                   <tr>
                     <th className="px-4 py-3 text-left">Period</th>
                     <th className="px-4 py-3 text-right">PF</th>

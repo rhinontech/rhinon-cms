@@ -91,6 +91,8 @@ export function AdminPayrollEmployees() {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [mode, setMode] = useState<PanelMode>("view");
   const [isPreviewExpanded, setIsPreviewExpanded] = useState(true);
+  // Phone-only: salary details open as a full-screen overlay from the list.
+  const [mobileDetail, setMobileDetail] = useState(false);
   const [form, setForm] = useState<SalaryForm>({ basicSalary: "", hra: "", ta: "", medicalAllowance: "", otherAllowances: "", pfEnabled: true, ptAmount: "200", tdsAmount: "0" });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -132,6 +134,7 @@ export function AdminPayrollEmployees() {
     setMode("view");
     setError("");
     setIsPreviewExpanded(true);
+    setMobileDetail(true);
   };
 
   const startEdit = () => {
@@ -211,8 +214,8 @@ export function AdminPayrollEmployees() {
 
   return (
     <div className="flex min-h-0 gap-2 h-full overflow-hidden">
-      <main className={cn("flex min-h-0 flex-col h-full w-full bg-stone-50 overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b bg-stone-50">
+      <main className={cn("flex min-h-0 flex-col h-full w-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b border-black/5 glass-header">
           <div className="flex items-center gap-4">
             <SubNavToggle />
             <h1 className="text-lg font-semibold tracking-tight">Employee Salary Setup</h1>
@@ -238,14 +241,14 @@ export function AdminPayrollEmployees() {
             />
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+          <div className="glass-card-solid rounded-xl overflow-hidden">
             {loading ? (
               <div className="p-8 text-center text-sm text-gray-400">Loading employees...</div>
             ) : filtered.length === 0 ? (
               <div className="p-8 text-center text-sm text-gray-400">No employees found.</div>
             ) : (
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
+              <table className="w-full min-w-[640px] text-sm">
+                <thead className="glass-thead text-xs text-gray-600 uppercase">
                   <tr>
                     <th className="px-5 py-3 text-left">Employee</th>
                     <th className="px-5 py-3 text-left">Role / Dept</th>
@@ -310,8 +313,10 @@ export function AdminPayrollEmployees() {
       </main>
 
       <aside
-        className={`flex min-h-0 h-full flex-col bg-white rounded-xl overflow-hidden transition-all duration-200 ease-in-out ${
-          isPreviewExpanded ? "w-[42%]" : "w-0"
+        className={`min-h-0 flex-col bg-white overflow-hidden transition-all duration-200 ease-in-out ${
+          mobileDetail ? "fixed inset-0 z-50 flex" : "hidden"
+        } lg:static lg:z-auto lg:flex lg:h-full lg:rounded-xl ${
+          isPreviewExpanded ? "lg:w-[42%]" : "lg:w-0"
         }`}
       >
         {isPreviewExpanded && (
@@ -332,7 +337,7 @@ export function AdminPayrollEmployees() {
                 )}
                 <button
                   className="cursor-pointer text-gray-600 hover:text-gray-900"
-                  onClick={() => setIsPreviewExpanded(false)}
+                  onClick={() => { setIsPreviewExpanded(false); setMobileDetail(false); }}
                 >
                   <TbLayoutSidebarRightFilled size={20} />
                 </button>
@@ -349,7 +354,7 @@ export function AdminPayrollEmployees() {
                       <p className="text-xs text-gray-400 mt-1">{selectedEmployee.role?.name ?? "-"} / {selectedEmployee.department}</p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                       <div className="rounded-lg border border-gray-100 p-3">
                         <p className="text-xs text-gray-400">Legal name</p>
                         <p className="mt-1 font-semibold text-gray-900">{selectedEmployee.legalName || selectedEmployee.fullName}</p>
@@ -400,7 +405,7 @@ export function AdminPayrollEmployees() {
 
                     <div className="rounded-lg border border-gray-100 p-4 text-sm space-y-3">
                       <p className="font-semibold text-gray-900">Payment Information</p>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <PayrollDetail label="Account number" value={selectedEmployee.bankAccountNumber || "-"} />
                         <PayrollDetail label="IFSC code" value={selectedEmployee.bankIfscCode || "-"} />
                         <PayrollDetail label="Beneficiary" value={selectedEmployee.bankBeneficiaryName || "-"} />
@@ -410,7 +415,7 @@ export function AdminPayrollEmployees() {
 
                     <div className="rounded-lg border border-gray-100 p-4 text-sm space-y-3">
                       <p className="font-semibold text-gray-900">Past Payroll & Statutory</p>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <PayrollDetail label="Financial year" value={selectedEmployee.pastPayrollFinancialYear || "FY 2026 - 2027"} />
                         <PayrollDetail label="Past taxable salary" value={INR(Number(selectedEmployee.pastTaxableSalary || 0))} />
                         <PayrollDetail label="Past TDS deducted" value={INR(Number(selectedEmployee.pastTdsDeducted || 0))} />
@@ -449,7 +454,7 @@ export function AdminPayrollEmployees() {
               </div>
             ) : (
               <div className="flex-1 overflow-auto p-5 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {([
                     { key: "basicSalary",      label: "Basic Salary *" },
                     { key: "hra",              label: "HRA" },
@@ -489,7 +494,7 @@ export function AdminPayrollEmployees() {
                       <div className={cn("w-4 h-4 bg-white rounded-full shadow-sm transition-transform", form.pfEnabled ? "translate-x-4" : "translate-x-0")} />
                     </div>
                   </label>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
                       Professional Tax (₹/mo)
                       <div className="relative">

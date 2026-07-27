@@ -1,5 +1,5 @@
 import { Router, Response } from "express";
-import { authenticate, AuthRequest } from "../middleware/authenticate";
+import { authenticate, hasPermission, AuthRequest } from "../middleware/authenticate";
 import { Document } from "../models/Document";
 import { User } from "../models/User";
 import {
@@ -12,7 +12,7 @@ const router = Router();
 router.use(authenticate);
 
 function isAdmin(req: AuthRequest): boolean {
-  return req.user?.roleSlug === "superadmin" || req.user?.roleSlug === "hr";
+  return hasPermission(req, "documents:write");
 }
 
 // GET /documents
@@ -21,11 +21,13 @@ router.get("/", async (req: AuthRequest, res: Response) => {
     const userId = req.user!.userId;
     const admin = isAdmin(req);
 
+    // "self" scopes to the caller's own documents regardless of role — admins
+    // use it for "My Documents" (without it they'd see everyone's there too).
     const where: Record<string, unknown> = {};
     if (!admin) {
       where.employeeId = userId;
     } else if (req.query.employeeId) {
-      where.employeeId = req.query.employeeId as string;
+      where.employeeId = req.query.employeeId === "self" ? userId : (req.query.employeeId as string);
     }
 
     const docs = await Document.findAll({

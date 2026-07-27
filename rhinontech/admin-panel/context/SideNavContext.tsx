@@ -11,7 +11,11 @@ type SideNavContextType = {
 const SideNavContext = createContext<SideNavContextType | undefined>(undefined);
 
 export function SideNavProvider({ children }: { children: React.ReactNode }) {
-  const [isExpanded, setIsExpanded] = useState(true);
+  // Collapsed by default on phones — the sub-nav renders as an overlay there,
+  // so starting open would cover the page content.
+  const [isExpanded, setIsExpanded] = useState(
+    () => typeof window === "undefined" || window.matchMedia("(min-width: 1024px)").matches
+  );
 
   const toggleSideNav = () => setIsExpanded((prev) => !prev);
 

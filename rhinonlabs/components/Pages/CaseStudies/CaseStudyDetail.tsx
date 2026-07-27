@@ -1,179 +1,232 @@
-"use client"
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { ArrowRight, Star } from 'lucide-react';
-import Link from 'next/link';
+import Link from "next/link";
+import { ArrowRight, ShieldCheck, Sparkles } from "lucide-react";
 import type { CaseStudy } from "@/lib/api";
 import { MarkdownRenderer } from "@/components/Common/Markdown/MarkdownRenderer";
+import { BlockRenderer } from "@/components/Common/Blog/BlockRenderer";
+import { TableOfContents } from "@/components/Common/Blog/TableOfContents";
+import { BlogSideRail } from "@/components/Common/Blog/BlogSideRail";
+import { extractToc } from "@/components/Common/Blog/blocks";
+import StickyCallButton from "@/components/Common/CTA/StickyCallButton";
 
-const CaseStudyDetail: React.FC<{ caseStudy: CaseStudy }> = ({ caseStudy }) => {
-    const images = caseStudy.images && caseStudy.images.length
-        ? caseStudy.images
-        : caseStudy.image
-            ? [caseStudy.image]
-            : [];
-    const category = caseStudy.category || caseStudy.industry || "Case Study";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://rhinonlabs.com";
 
-    return (
-        <div className="text-white pt-36 pb-20">
-            <motion.div
-                className="absolute inset-0 top-0 left-0 -z-10"
-                initial={{ opacity: 0, }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
-                viewport={{ once: true }}
-            >
-                <div className="[mask-image:linear-gradient(to_bottom,transparent,white_30%,white_60%,transparent)] mask-mode:luminance">
-                    <img src="/images/background/q3lzdr4u88731.jpg" className="w-full h-full object-cover" alt="" />
-                </div>
-            </motion.div>
-            <div className="max-w-[1440px] mx-auto px-5 md:px-10">
-                <div className="flex flex-col lg:flex-row gap-6">
+export default function CaseStudyDetail({ caseStudy }: { caseStudy: CaseStudy }) {
+  const category = caseStudy.category || caseStudy.industry || "Case Study";
+  const blocks = caseStudy.contentBlocks?.length ? caseStudy.contentBlocks : null;
+  const toc = blocks ? extractToc(blocks) : [];
+  const cover = caseStudy.image || caseStudy.images?.[0];
+  const gallery = (caseStudy.images || []).filter((img) => img !== cover);
+  const pageUrl = `${SITE_URL}/case-studies/${caseStudy.slug}`;
+  const stats = caseStudy.stats || [];
 
-                    {/* Left Column - Scrollable Images */}
-                    <div className="w-full lg:w-2/3 flex flex-col gap-10 pt-10">
-                        {images.map((img, index) => (
-                            <motion.div
-                                key={index}
-                                initial={{ opacity: 0, y: 20 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.6, delay: index * 0.1 }}
-                                viewport={{ once: true }}
-                                className="w-full rounded-lg overflow-hidden border border-white/10"
-                            >
-                                <img src={img} alt={`${caseStudy.title} screenshot ${index + 1}`} className="w-full h-auto object-cover" />
-                            </motion.div>
-                        ))}
+  const caseStudySchema = {
+    "@context": "https://schema.org",
+    "@type": "CreativeWork",
+    name: caseStudy.title,
+    description: caseStudy.description,
+    ...(cover ? { image: [cover] } : {}),
+    ...(caseStudy.date ? { datePublished: caseStudy.date } : {}),
+    creator: {
+      "@type": "Organization",
+      name: "Rhinon Labs",
+      url: SITE_URL,
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": pageUrl,
+    },
+  };
 
-                        {caseStudy.content && (
-                            <div className="prose prose-invert max-w-none mt-2">
-                                <MarkdownRenderer content={caseStudy.content} />
-                            </div>
-                        )}
-                    </div>
+  return (
+    <div className="relative min-h-screen bg-background selection:bg-white/20 overflow-x-clip">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(caseStudySchema) }} />
 
-                    {/* Right Column - Sticky Details */}
-                    <motion.div
-                        style={{ position: "sticky", top: "150px" }}
-                        className="h-fit flex items-center justify-center font-semibold pt-20 w-full lg:w-[50%]"
-                    >
-                        <section className="px-8">
-                            <div>
-                                <div className="mb-3">
-                                    <span className="text-sm font-semibold tracking-widest text-white/80">{category}</span>
-                                </div>
+      <div className="max-w-[1400px] mx-auto px-16 pt-28 pb-24 relative">
+        {/* Breadcrumb */}
+        <nav aria-label="Breadcrumb" className="mb-12 flex items-center gap-2 text-sm">
+          <Link href="/case-studies" className="font-bold text-foreground transition-opacity hover:opacity-70">
+            Case Studies
+          </Link>
+          <span className="text-muted-foreground/60">»</span>
+          <span className="font-medium text-muted-foreground">{category}</span>
+          <span className="text-muted-foreground/60">»</span>
+          <span className="truncate font-medium text-muted-foreground">{caseStudy.title}</span>
+        </nav>
 
-                                <h1 className="text-5xl md:text-6xl font-light mb-6 leading-tight">{caseStudy.title}</h1>
+        {/* 3-column layout: sticky TOC | scrollable article | sticky side rail */}
+        <div className="lg:grid lg:grid-cols-[240px_minmax(0,1fr)_320px] lg:gap-10 xl:grid-cols-[240px_minmax(0,1fr)_256px] xl:gap-12 relative">
+          {/* Left — Table of contents (sticky) */}
+          <aside className="hidden lg:block self-start sticky top-28 max-h-[calc(100vh-9rem)] overflow-y-auto pr-1">
+            <TableOfContents items={toc} />
+          </aside>
 
-                                <p className="text-lg text-white/80 mb-8 font-normal max-w-lg">{caseStudy.description}</p>
+          {/* Middle — scrollable article */}
+          <article className="min-w-0">
+            <span className="mb-5 inline-block text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">
+              {category}
+            </span>
 
-                                {/* Headline stats */}
-                                {caseStudy.stats && caseStudy.stats.length > 0 && (
-                                    <div className="flex flex-wrap gap-8 mb-8">
-                                        {caseStudy.stats.map((stat, i) => (
-                                            <div key={i}>
-                                                <p className="text-3xl font-medium">
-                                                    {stat.value}<span className="text-base text-white/60">{stat.suffix}</span>
-                                                </p>
-                                                <p className="text-sm text-white/60">{stat.label}</p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
+            {/* Title + description */}
+            <h1 className="text-2xl md:text-[2.4rem] font-black text-foreground leading-[1.08] tracking-tight mb-7">
+              {caseStudy.title}
+            </h1>
+            <p className="text-md md:text-lg text-muted-foreground leading-relaxed mb-10">
+              {caseStudy.description}
+            </p>
 
-                                {/* Quote / outcome */}
-                                {caseStudy.quote && (
-                                    <p className="text-lg italic text-white/70 border-l-2 border-white/20 pl-4 mb-10 max-w-lg">
-                                        {caseStudy.quote}
-                                    </p>
-                                )}
-
-                                <div className='flex items-center gap-5 flex-wrap'>
-                                    <Button className="bg-white text-black hover:bg-gray-200 px-6 py-6 text-base font-semibold rounded-none border-3 border-black/30">
-                                        <Link href="/contact-us">Start a Project</Link>
-                                    </Button>
-
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex -space-x-4">
-                                            <div className="w-12 h-12 rounded-full bg-gray-600 border-2 border-black flex items-center justify-center">
-                                                <img src="https://randomuser.me/api/portraits/women/1.jpg" alt="User 1" className="w-full h-full rounded-full object-cover" />
-                                            </div>
-                                            <div className="w-12 h-12 rounded-full bg-gray-600 border-2 border-black flex items-center justify-center">
-                                                <img src="https://randomuser.me/api/portraits/men/2.jpg" alt="User 2" className="w-full h-full rounded-full object-cover" />
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <div className="flex gap-1">
-                                                {[...Array(5)].map((_, i) => (
-                                                    <Star key={i} className="w-3 h-3 fill-white text-white" />
-                                                ))}
-                                            </div>
-                                            <span className="text-white/80 text-sm font-light mt-1">
-                                                Trusted by leading enterprises &amp; fast-growing teams worldwide.
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-col gap-2 mt-10">
-                                    {caseStudy.date && (
-                                        <>
-                                            <div className='flex items-center justify-between'>
-                                                <p className="font-medium uppercase tracking-wider">Date</p>
-                                                <p className="font-medium text-white/50 tracking-wider">{caseStudy.date}</p>
-                                            </div>
-                                            <div className="w-full h-px bg-white/10 my-2"></div>
-                                        </>
-                                    )}
-                                    {caseStudy.industry && (
-                                        <>
-                                            <div className='flex items-center justify-between'>
-                                                <p className="font-medium uppercase tracking-wider">Industry</p>
-                                                <p className="font-medium text-white/50 tracking-wider">{caseStudy.industry}</p>
-                                            </div>
-                                            <div className="w-full h-px bg-white/10 my-2"></div>
-                                        </>
-                                    )}
-                                    {caseStudy.timeline && (
-                                        <>
-                                            <div className='flex items-center justify-between'>
-                                                <p className="font-medium uppercase tracking-wider">Timeline</p>
-                                                <p className="font-medium text-white/50 tracking-wider">{caseStudy.timeline}</p>
-                                            </div>
-                                            <div className="w-full h-px bg-white/10 my-2"></div>
-                                        </>
-                                    )}
-                                    {caseStudy.liveLink && (
-                                        <>
-                                            <div className='flex items-center justify-between'>
-                                                <div className='flex items-center gap-2'>
-                                                    <span className="relative flex h-2 w-2">
-                                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
-                                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                                                    </span>
-                                                    <p className="font-medium uppercase tracking-wider">Live</p>
-                                                </div>
-                                                <a
-                                                    href={caseStudy.liveLink}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    className="flex items-center gap-2 font-medium text-white/50 tracking-wider hover:text-white transition-colors cursor-pointer"
-                                                >
-                                                    Visit Site <ArrowRight size={18} />
-                                                </a>
-                                            </div>
-                                            <div className="w-full h-px bg-white/10 my-2"></div>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-                        </section>
-                    </motion.div>
-                </div>
+            {/* Project facts row */}
+            <div className="mb-10 flex flex-wrap items-center gap-x-10 gap-y-4 border-b border-white/10 pb-10">
+              {caseStudy.client && (
+                <Fact label="Client" value={caseStudy.client} />
+              )}
+              {caseStudy.industry && (
+                <Fact label="Industry" value={caseStudy.industry} />
+              )}
+              {caseStudy.timeline && (
+                <Fact label="Timeline" value={caseStudy.timeline} />
+              )}
+              {caseStudy.date && (
+                <Fact label="Date" value={caseStudy.date} />
+              )}
+              {caseStudy.liveLink && (
+                <a
+                  href={caseStudy.liveLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2 text-sm font-bold text-foreground transition-colors hover:opacity-70"
+                >
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                  </span>
+                  Visit live site <ArrowRight size={14} />
+                </a>
+              )}
             </div>
-        </div>
-    );
-};
 
-export default CaseStudyDetail;
+            {/* Headline stats */}
+            {stats.length > 0 && (
+              <div className="mb-12 flex flex-wrap gap-x-12 gap-y-6">
+                {stats.map((stat, i) => (
+                  <div key={i}>
+                    <p className="text-3xl md:text-4xl font-black tracking-tight text-foreground">
+                      {stat.value}
+                      <span className="text-lg text-muted-foreground">{stat.suffix}</span>
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Cover image */}
+            {cover && (
+              <div className="mb-14 aspect-video w-full overflow-hidden rounded-3xl border border-white/10">
+                <img src={cover} alt={caseStudy.title} className="h-full w-full object-cover" />
+              </div>
+            )}
+
+            {/* Mobile TOC */}
+            <TableOfContents items={toc} variant="mobile" />
+
+            {/* Body */}
+            {blocks ? (
+              <BlockRenderer blocks={blocks} />
+            ) : caseStudy.content ? (
+              <div className="prose prose-invert max-w-none">
+                <MarkdownRenderer content={caseStudy.content} />
+              </div>
+            ) : null}
+
+            {/* Gallery */}
+            {gallery.length > 0 && (
+              <div className="mt-14 space-y-8">
+                {gallery.map((img, i) => (
+                  <div key={i} className="overflow-hidden rounded-3xl border border-white/10">
+                    <img
+                      src={img}
+                      alt={`${caseStudy.title} screenshot ${i + 1}`}
+                      className="w-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Quote / outcome */}
+            {(caseStudy.quote || caseStudy.result) && (
+              <div className="mt-16 space-y-6 border-l-2 border-white/20 pl-6">
+                {caseStudy.result && (
+                  <p className="text-lg font-semibold text-foreground">{caseStudy.result}</p>
+                )}
+                {caseStudy.quote && (
+                  <p className="text-lg italic leading-relaxed text-muted-foreground">{caseStudy.quote}</p>
+                )}
+              </div>
+            )}
+
+            {/* Side rail content stacks below the article on mobile */}
+            <div className="mt-14 lg:hidden">
+              <BlogSideRail
+                url={pageUrl}
+                heading="Want results like this for your product?"
+                subheading="Tell us what you're building — we'll tell you what it'll take to ship it."
+                ctaLabel="Start a Project"
+              />
+            </div>
+
+            <ContactCta />
+          </article>
+
+          {/* Right — CTA card (sticky) */}
+          <aside className="hidden lg:block self-start sticky top-28 max-h-[calc(100vh-9rem)] overflow-y-auto pr-1">
+            <BlogSideRail
+              url={pageUrl}
+              heading="Want results like this for your product?"
+              subheading="Tell us what you're building — we'll tell you what it'll take to ship it."
+              ctaLabel="Start a Project"
+            />
+          </aside>
+        </div>
+      </div>
+      <StickyCallButton />
+    </div>
+  );
+}
+
+function Fact({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-foreground">{value}</p>
+    </div>
+  );
+}
+
+function ContactCta() {
+  return (
+    <div className="relative mt-20 flex flex-col items-center justify-between gap-8 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-8 md:flex-row md:p-10">
+      <div className="pointer-events-none absolute top-0 left-0 p-8 opacity-[0.04]">
+        <Sparkles size={200} className="text-white" />
+      </div>
+
+      <div className="space-y-4 text-center md:text-left">
+        <div className="flex items-center justify-center gap-3 text-foreground md:justify-start">
+          <ShieldCheck size={20} />
+          <span className="text-[10px] font-black uppercase tracking-[0.2em]">Real project, real results</span>
+        </div>
+        <p className="text-xl font-black text-foreground">Ready to build something like this?</p>
+      </div>
+
+      <div className="flex gap-4">
+        <Link
+          href="/contact-us"
+          className="flex h-14 items-center rounded-2xl bg-white px-10 text-xs font-black uppercase tracking-widest text-slate-950 transition-all hover:bg-white/90 hover:translate-y-[-2px]"
+        >
+          Start a Project
+        </Link>
+      </div>
+    </div>
+  );
+}
