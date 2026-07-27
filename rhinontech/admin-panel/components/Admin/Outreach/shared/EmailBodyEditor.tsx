@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import Link from "@tiptap/extension-link";
 import { Placeholder } from "@tiptap/extensions";
 import { TextStyleKit } from "@tiptap/extension-text-style";
 import TextAlign from "@tiptap/extension-text-align";
@@ -23,6 +24,8 @@ import {
   TbCopy,
   TbClipboardText,
   TbBraces,
+  TbPlus,
+  TbSquarePlus,
 } from "react-icons/tb";
 import { cn } from "@/lib/utils";
 import {
@@ -31,12 +34,47 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 const VARIABLES = [
   { label: "Name", token: "{{name}}" },
   { label: "Company", token: "{{company}}" },
   { label: "Title", token: "{{title}}" },
 ];
+
+const CustomLink = Link.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      style: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("style"),
+        renderHTML: (attributes) => {
+          if (!attributes.style) {
+            return {};
+          }
+          return { style: attributes.style };
+        },
+      },
+      class: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("class"),
+        renderHTML: (attributes) => {
+          if (!attributes.class) {
+            return {};
+          }
+          return { class: attributes.class };
+        },
+      },
+    };
+  },
+});
 
 /** Shared rich-text email body editor (TipTap) — used for campaign composition and draft review. */
 export function EmailBodyEditor({
@@ -52,11 +90,19 @@ export function EmailBodyEditor({
 }) {
   const textColorRef = useRef<HTMLInputElement>(null);
   const bgColorRef = useRef<HTMLInputElement>(null);
+  const [isButtonModalOpen, setIsButtonModalOpen] = useState(false);
 
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
-      StarterKit.configure({ link: { openOnClick: false, autolink: true, defaultProtocol: "https" } }),
+      StarterKit.configure({
+        link: false,
+      }),
+      CustomLink.configure({
+        openOnClick: false,
+        autolink: true,
+        defaultProtocol: "https",
+      }),
       Placeholder.configure({ placeholder }),
       TextStyleKit,
       TextAlign.configure({ types: ["paragraph"] }),
@@ -73,9 +119,6 @@ export function EmailBodyEditor({
 
   // Keep the editor in sync when the parent swaps in a different value
   // (e.g. loading a different campaign) without fighting the user's typing.
-  // Re-sync when the parent swaps in a different value (loading a different
-  // campaign/lead, or a Cancel button reverting local state) — but never while
-  // the user is actively typing, since onUpdate already keeps `value` current.
   useEffect(() => {
     if (editor && !editor.isFocused && value !== editor.getHTML()) {
       editor.commands.setContent(value || "", { emitUpdate: false });
@@ -116,6 +159,22 @@ export function EmailBodyEditor({
 
   const insertVariable = (token: string) => {
     editor.chain().focus().insertContent(token).run();
+  };
+
+  const handleInsertButton = (data: {
+    text: string;
+    url: string;
+    bgColor: string;
+    textColor: string;
+    borderRadius: string;
+    padding: string;
+  }) => {
+    const href = data.url.trim() || "#";
+    const label = data.text.trim() || "Click Here";
+    const buttonHtml = `<a href="${href}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: ${data.bgColor}; color: ${data.textColor}; border-radius: ${data.borderRadius}; padding: ${data.padding}; text-decoration: none; font-weight: 600; font-size: 14px; text-align: center; margin: 4px 0;">${label}</a>&nbsp;`;
+
+    editor.chain().focus().insertContent(buttonHtml).run();
+    setIsButtonModalOpen(false);
   };
 
   return (
@@ -175,6 +234,16 @@ export function EmailBodyEditor({
         <ToolbarBtn active={editor.isActive("link")} onClick={setLink} title="Link">
           <TbLink size={15} />
         </ToolbarBtn>
+
+        <button
+          type="button"
+          onClick={() => setIsButtonModalOpen(true)}
+          className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-medium text-stone-600 hover:bg-stone-100 transition-colors"
+          title="Insert Button"
+        >
+          <TbSquarePlus size={14} /> Button
+        </button>
+
         <ToolbarBtn onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()} title="Clear formatting">
           <TbClearFormatting size={15} />
         </ToolbarBtn>
@@ -221,9 +290,199 @@ export function EmailBodyEditor({
       <div className="px-3 py-2.5">
         <EditorContent editor={editor} />
       </div>
+
+      <InsertButtonModal
+        isOpen={isButtonModalOpen}
+        onClose={() => setIsButtonModalOpen(false)}
+        onInsert={handleInsertButton}
+      />
     </div>
   );
 }
+
+function InsertButtonModal({
+  isOpen,
+  onClose,
+  onInsert,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onInsert: (data: {
+    text: string;
+    url: string;
+    bgColor: string;
+    textColor: string;
+    borderRadius: string;
+    padding: string;
+  }) => void;
+}) {
+  const [buttonText, setButtonText] = useState("Click Here");
+  const [url, setUrl] = useState("");
+  const [bgColor, setBgColor] = useState("#335DC8");
+  const [textColor, setTextColor] = useState("#ffffff");
+  const [borderRadius, setBorderRadius] = useState("12px");
+  const [padding, setPadding] = useState("12px 24px");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onInsert({
+      text: buttonText,
+      url,
+      bgColor,
+      textColor,
+      borderRadius,
+      padding,
+    });
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md p-6 bg-white rounded-2xl border border-stone-100 shadow-2xl">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-xl font-bold text-stone-900">Insert Button</DialogTitle>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4 pt-1">
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-stone-800">Button Text</label>
+            <Input
+              type="text"
+              value={buttonText}
+              onChange={(e) => setButtonText(e.target.value)}
+              placeholder="Click Here"
+              className="h-10 rounded-xl border-stone-200 text-sm focus-visible:ring-stone-400"
+              required
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-stone-800">URL</label>
+            <Input
+              type="text"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://example.com"
+              className="h-10 rounded-xl border-stone-200 text-sm focus-visible:ring-stone-400"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-stone-800">Background Color</label>
+              <div className="flex items-center gap-2">
+                <div
+                  className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-stone-200 shadow-xs cursor-pointer"
+                  style={{ backgroundColor: bgColor }}
+                >
+                  <input
+                    type="color"
+                    value={bgColor.startsWith("#") && bgColor.length === 7 ? bgColor : "#335DC8"}
+                    onChange={(e) => setBgColor(e.target.value)}
+                    className="absolute inset-0 h-full w-full opacity-0 cursor-pointer"
+                  />
+                </div>
+                <Input
+                  type="text"
+                  value={bgColor}
+                  onChange={(e) => setBgColor(e.target.value)}
+                  className="h-10 font-mono text-xs rounded-xl border-stone-200"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-stone-800">Text Color</label>
+              <div className="flex items-center gap-2">
+                <div
+                  className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-stone-200 shadow-xs cursor-pointer"
+                  style={{ backgroundColor: textColor }}
+                >
+                  <input
+                    type="color"
+                    value={textColor.startsWith("#") && textColor.length === 7 ? textColor : "#ffffff"}
+                    onChange={(e) => setTextColor(e.target.value)}
+                    className="absolute inset-0 h-full w-full opacity-0 cursor-pointer"
+                  />
+                </div>
+                <Input
+                  type="text"
+                  value={textColor}
+                  onChange={(e) => setTextColor(e.target.value)}
+                  className="h-10 font-mono text-xs rounded-xl border-stone-200"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-stone-800">Border Radius</label>
+              <Input
+                type="text"
+                value={borderRadius}
+                onChange={(e) => setBorderRadius(e.target.value)}
+                placeholder="12px"
+                className="h-10 rounded-xl border-stone-200 text-sm"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-stone-800">Padding</label>
+              <Input
+                type="text"
+                value={padding}
+                onChange={(e) => setPadding(e.target.value)}
+                placeholder="12px 24px"
+                className="h-10 rounded-xl border-stone-200 text-sm"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2 pt-1">
+            <label className="text-xs font-medium text-stone-800">Preview:</label>
+            <div className="flex min-h-[110px] w-full items-center justify-center rounded-2xl border border-stone-100 bg-stone-50/70 p-6">
+              <a
+                href={url || "#"}
+                onClick={(e) => e.preventDefault()}
+                style={{
+                  backgroundColor: bgColor,
+                  color: textColor,
+                  borderRadius: borderRadius,
+                  padding: padding,
+                  display: "inline-block",
+                  textDecoration: "none",
+                  fontWeight: 600,
+                  fontSize: "14px",
+                  textAlign: "center",
+                  boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                }}
+              >
+                {buttonText || "Click Here"}
+              </a>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 pt-3">
+            <button
+              type="submit"
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white hover:bg-stone-800 transition-colors shadow-xs cursor-pointer"
+            >
+              <TbPlus size={16} /> Insert Button
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-xl border border-stone-200 bg-white px-5 py-3 text-sm font-medium text-stone-700 hover:bg-stone-50 transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 function Divider() {
   return <span className="mx-1 h-5 w-px shrink-0 bg-stone-200" />;

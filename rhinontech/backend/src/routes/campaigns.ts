@@ -133,7 +133,7 @@ router.post("/:id/enroll", authorize("outreach:write"), async (req: AuthRequest,
   }
 
   await Lead.update(
-    { campaignId: campaign.id, status: "Enrolled" },
+    { campaignId: campaign.id, status: "Enrolled", aiDraft: null },
     { where: { id: { [Op.in]: leadIds } } }
   );
 
@@ -327,12 +327,39 @@ router.post("/:id/send", authorize("outreach:write"), async (req: AuthRequest, r
     const isEmail = isEmailChannel(campaign.channel);
 
     if (isEmail) {
+      const senderName = campaign.senderName || req.user!.fullName || "Rhinon Team";
+      const fromEmail = campaign.senderEmail || req.user!.companyEmail || "admin@rhinontech.in";
+
+      // 1. Auto-generate drafts for any leads that are still Enrolled or missing drafts
+      const enrolledLeads = await Lead.findAll({
+        where: {
+          campaignId: campaign.id,
+          status: ["Enrolled", "New"],
+        },
+      });
+
+      for (const lead of enrolledLeads) {
+        try {
+          const rawBody = campaign.body || "Hi {{lead.name}},\n\nWe'd love to connect.\n\nBest,\n{{sender.name}}";
+          const draftBody = fillPlaceholders(rawBody, lead, senderName);
+          await lead.update({ aiDraft: draftBody, status: "Interested" });
+          await CampaignActivity.create({
+            leadId: lead.id,
+            campaignId: campaign.id,
+            type: "DraftGenerated",
+            content: "Template draft prepared (mail-merge).",
+            generatedContent: draftBody,
+          });
+        } catch (err: any) {
+          console.error(`Draft error for lead ${lead.id}:`, err.message);
+        }
+      }
+
+      // 2. Dispatch emails to all ready leads
       const leads = await Lead.findAll({
         where: { campaignId: campaign.id, status: "Interested" },
       });
 
-      const senderName = campaign.senderName || req.user!.fullName || "Rhinon Team";
-      const fromEmail = campaign.senderEmail || req.user!.companyEmail || "admin@rhinontech.in";
       let sentCount = 0;
 
       for (const lead of leads) {
@@ -510,6 +537,7 @@ router.get("/cron/run", async (req, res) => {
 
       for (const lead of leadsReadyToSend) {
         try {
+          if (!lead.aiDraft) continue;
           const subject = campaign.subject
             ? fillPlaceholders(campaign.subject, lead, senderName)
             : `Optimizing ${lead.company}'s potential`;
@@ -707,7 +735,7 @@ router.delete("/:id", authorize("outreach:write"), async (req: AuthRequest, res:
       return;
     }
     // Unenroll leads before deleting
-    await Lead.update({ campaignId: null, status: "New" }, { where: { campaignId: campaign.id } });
+    await Lead.update({ campaignId: null, status: "New", aiDraft: null }, { where: { campaignId: campaign.id } });
     await campaign.destroy();
     res.json({ message: "Campaign deleted" });
   } catch (error: any) {

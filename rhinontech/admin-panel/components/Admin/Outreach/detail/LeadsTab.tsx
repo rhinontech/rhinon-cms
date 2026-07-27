@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { TbLoader, TbSend, TbSparkles, TbUserPlus } from "react-icons/tb";
+import { TbLoader, TbSend, TbUserPlus } from "react-icons/tb";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 import { useConfirm } from "@/components/Admin/Common/ConfirmDialog";
@@ -26,36 +26,30 @@ export function LeadsTab({
 }) {
   const confirm = useConfirm();
 
-  const [generating, setGenerating] = useState(false);
   const [sending, setSending] = useState(false);
   const [draftLead, setDraftLead] = useState<CampaignLead | null>(null);
 
   const draftedCount = leads.filter((l) => l.aiDraft).length;
 
-  const handleGenerateDrafts = async () => {
-    setGenerating(true);
-    try {
-      const r = await apiFetch<{ processed: number; total: number }>(`/campaigns/${campaign.id}/process`, {
-        method: "POST",
-      });
-      onRefresh();
-      toast.success(`Drafted ${r.processed} of ${r.total} leads.`);
-    } catch (err: any) {
-      toast.error("Draft generation failed: " + err.message);
-    } finally {
-      setGenerating(false);
-    }
-  };
-
   const handleSendNow = async () => {
-    const ready = leads.filter((l) => l.status === "Interested" && l.aiDraft).length;
-    if (ready === 0) {
-      toast.info("No drafted leads ready to send — generate drafts first.");
+    if (leads.length === 0) {
+      toast.info("No enrolled leads to send to.");
       return;
     }
+
+    let description = "This will generate drafts and send emails immediately to all enrolled leads.";
+    if (campaign.autoSend && campaign.startDate) {
+      const dateObj = new Date(campaign.startDate);
+      const dateStr = !isNaN(dateObj.getTime())
+        ? dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+        : campaign.startDate;
+      const timeStr = campaign.runTime ? ` at ${campaign.runTime}` : "";
+      description = `This campaign is scheduled for ${dateStr}${timeStr}. Do you want to send it immediately instead?`;
+    }
+
     const ok = await confirm({
-      title: `Send to ${ready} drafted lead${ready > 1 ? "s" : ""} now?`,
-      description: "This sends immediately to every drafted lead in one pass.",
+      title: `Send emails to ${leads.length} lead${leads.length > 1 ? "s" : ""} now?`,
+      description,
       confirmLabel: "Send now",
     });
     if (!ok) return;
@@ -93,10 +87,6 @@ export function LeadsTab({
           {draftedCount} drafted · {leads.length} enrolled
         </p>
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={handleGenerateDrafts} disabled={generating}>
-            {generating ? <TbLoader className="animate-spin" size={14} /> : <TbSparkles size={14} />}
-            Generate Drafts
-          </Button>
           <Button size="sm" onClick={handleSendNow} disabled={sending}>
             {sending ? <TbLoader className="animate-spin" size={14} /> : <TbSend size={14} />}
             Send Now

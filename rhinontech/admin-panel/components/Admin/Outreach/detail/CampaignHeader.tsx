@@ -29,7 +29,7 @@ function nextAction(campaign: Campaign, draftedCount: number): { label: string; 
   if (!campaign.body?.trim() || !campaign.subject?.trim()) return { label: "Write your subject & email content", hint: "setup" };
   if (campaign.leadsTotal === 0) return { label: "Enroll leads to get started", hint: "enroll" };
   if (draftedCount === 0) return { label: "Generate drafts from your email", hint: "leads" };
-  if (campaign.stage !== "Active") return { label: "Activate to start the schedule", hint: "leads" };
+  if (campaign.stage !== "Active" && campaign.autoSend) return { label: "Activate to start the schedule", hint: "leads" };
   return null;
 }
 
@@ -94,7 +94,7 @@ export function CampaignHeader({
           <Button variant="outline" size="sm" onClick={onPause}>
             <TbPlayerPause size={15} /> Pause
           </Button>
-        ) : campaign.stage !== "Completed" ? (
+        ) : campaign.stage !== "Completed" && campaign.autoSend ? (
           <Button variant="outline" size="sm" onClick={onResume}>
             <TbPlayerPlay size={15} /> Activate
           </Button>

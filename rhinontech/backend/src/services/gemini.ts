@@ -204,7 +204,14 @@ export async function generateAISocialDraft(templateData: any = null): Promise<s
 export async function enrichLeadWithAI(
   leadName: string,
   companyName: string,
-  context: { title?: string; industry?: string; keywords?: string; technologies?: string; website?: string; websiteText?: string } = {}
+  context: {
+    title?: string | null;
+    industry?: string | null;
+    keywords?: string | null;
+    technologies?: string | null;
+    website?: string | null;
+    websiteText?: string | null;
+  } = {}
 ) {
   const signals = [
     context.title ? `Role: ${context.title}` : "",

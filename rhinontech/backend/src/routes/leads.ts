@@ -174,17 +174,30 @@ router.post("/import", writeAccess, async (req: AuthRequest, res: Response) => {
 
     const created = await Lead.bulkCreate(toCreate, { validate: true });
 
+    const allImportedIds = [...created.map(l => l.id), ...existing.map(e => e.id)];
+
+    if (req.body?.campaignId && allImportedIds.length) {
+      const campaign = await Campaign.findByPk(req.body.campaignId);
+      if (campaign) {
+        await Lead.update(
+          { campaignId: campaign.id, status: "Enrolled", aiDraft: null },
+          { where: { id: { [Op.in]: allImportedIds } } }
+        );
+        const newTotal = await Lead.count({ where: { campaignId: campaign.id } });
+        await campaign.update({ leadsTotal: newTotal });
+      }
+    }
+
     let addedToGroup = 0;
     if (targetGroup) {
       // Rows that matched an already-existing lead should still land in the target
       // list, not be silently dropped, so the "list" reflects everything in the CSV.
-      const leadIdsForGroup = [...created.map(l => l.id), ...existing.map(e => e.id)];
-      if (leadIdsForGroup.length) {
+      if (allImportedIds.length) {
         await ContactGroupMember.bulkCreate(
-          leadIdsForGroup.map(leadId => ({ contactGroupId: targetGroup!.id, leadId, addedById: req.user!.userId })),
+          allImportedIds.map(leadId => ({ contactGroupId: targetGroup!.id, leadId, addedById: req.user!.userId })),
           { ignoreDuplicates: true }
         );
-        addedToGroup = leadIdsForGroup.length;
+        addedToGroup = allImportedIds.length;
       }
     }
 

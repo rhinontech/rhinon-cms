@@ -7,14 +7,8 @@ import { apiFetch } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EmailBodyEditor } from "../shared/EmailBodyEditor";
 import type { Campaign } from "../shared/types";
-
-interface SenderOption {
-  email: string;
-  name: string;
-}
 
 function stripHtml(html: string): string {
   return html.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").trim();
@@ -55,10 +49,8 @@ export function CampaignSetupTab({
   onSaved: () => void;
   onOpenEnroll: () => void;
 }) {
-  const [senderOptions, setSenderOptions] = useState<SenderOption[]>([]);
-  const [senderEmail, setSenderEmail] = useState(campaign.senderEmail || "");
-  const [senderName, setSenderName] = useState(campaign.senderName || "");
-  const [savingSender, setSavingSender] = useState(false);
+  const senderEmail = campaign.senderEmail || "";
+  const senderName = campaign.senderName || "";
 
   const [subject, setSubject] = useState(campaign.subject || "");
   const [savingSubject, setSavingSubject] = useState(false);
@@ -67,12 +59,6 @@ export function CampaignSetupTab({
   const [savingBody, setSavingBody] = useState(false);
 
   useEffect(() => {
-    apiFetch<SenderOption[]>("/campaigns/sender-options").then(setSenderOptions).catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    setSenderEmail(campaign.senderEmail || "");
-    setSenderName(campaign.senderName || "");
     setSubject(campaign.subject || "");
     setBody(campaign.body || "");
   }, [campaign]);
@@ -82,27 +68,8 @@ export function CampaignSetupTab({
     onSaved();
   };
 
-  const senderDirty = senderEmail !== (campaign.senderEmail || "") || senderName !== (campaign.senderName || "");
   const subjectDirty = subject !== (campaign.subject || "");
   const bodyDirty = body !== (campaign.body || "");
-
-  const pickSender = (email: string) => {
-    setSenderEmail(email);
-    const match = senderOptions.find((o) => o.email === email);
-    if (match) setSenderName(match.name);
-  };
-
-  const handleSaveSender = async () => {
-    setSavingSender(true);
-    try {
-      await patch({ senderEmail, senderName });
-      toast.success("Sender saved");
-    } catch (err: any) {
-      toast.error(err.message || "Save failed");
-    } finally {
-      setSavingSender(false);
-    }
-  };
 
   const handleSaveSubject = async () => {
     setSavingSubject(true);
@@ -129,51 +96,17 @@ export function CampaignSetupTab({
   };
 
   return (
-    <div className="mx-auto max-w-2xl space-y-4">
+    <div className="mx-auto space-y-4">
       <SetupSection title="Sender" complete={!!senderEmail.trim() && !!senderName.trim()}>
-        <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label>Sender Name</Label>
+            <Input value={senderName || "—"} disabled className="bg-stone-50/80 font-medium text-stone-800" />
+          </div>
           <div className="space-y-1.5">
             <Label>Sender Email</Label>
-            <Select value={senderEmail} onValueChange={pickSender}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select sender email" />
-              </SelectTrigger>
-              <SelectContent>
-                {senderOptions.map((o) => (
-                  <SelectItem key={o.email} value={o.email}>
-                    {o.name} — {o.email}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-[10px] text-stone-400">Sent via your organization's verified domain — any assigned email works.</p>
+            <Input value={senderEmail || "—"} disabled className="bg-stone-50/80 font-medium text-stone-800" />
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="setup-sender-name">Sender Name</Label>
-            <Input
-              id="setup-sender-name"
-              value={senderName}
-              onChange={(e) => setSenderName(e.target.value)}
-              placeholder="e.g. Rhinon Team"
-            />
-          </div>
-          {senderDirty && (
-            <div className="flex gap-2">
-              <Button size="sm" onClick={handleSaveSender} disabled={savingSender}>
-                {savingSender ? "Saving..." : "Save"}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setSenderEmail(campaign.senderEmail || "");
-                  setSenderName(campaign.senderName || "");
-                }}
-              >
-                Cancel
-              </Button>
-            </div>
-          )}
         </div>
       </SetupSection>
 
