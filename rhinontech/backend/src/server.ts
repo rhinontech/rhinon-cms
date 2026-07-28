@@ -5,6 +5,7 @@ import { syncDatabase } from "./models";
 import { Campaign } from "./models/Campaign";
 import { Attendance } from "./models/Attendance";
 import { finalizeDueOffboardings } from "./services/offboarding";
+import { runWorkflowEngineCycle } from "./services/workflowEngine";
 import { syncPermissionCatalog } from "./config/permissions";
 import { Op } from "sequelize";
 import cron from "node-cron";
@@ -121,6 +122,13 @@ async function start() {
         );
       } catch (err: any) {
         console.error("[Cron] Outreach schedule check failed:", err.message);
+      }
+
+      // Workflow execution engine: check pending wait steps and batch emails every minute
+      try {
+        await runWorkflowEngineCycle();
+      } catch (err: any) {
+        console.error("[Cron] Workflow engine cycle failed:", err.message);
       }
     });
   });
