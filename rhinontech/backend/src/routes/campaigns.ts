@@ -235,12 +235,7 @@ function toEmailHtml(richTextHtml: string, imageUrl?: string): string {
         <tr><td class="px" style="padding:38px 40px 8px">
           <div class="tiptap-content">${richTextHtml}</div>
         </td></tr>
-        <tr><td class="px" style="padding:0 40px 32px">
-          <p class="text" style="margin:0;font-size:14px;line-height:1.5;color:#111827">
-            <strong style="font-weight:600">Rhinon Labs</strong><br>
-            <a href="${BRAND_SITE_URL}" target="_blank" rel="noopener noreferrer" style="color:#4f46e5;text-decoration:none">rhinonlabs.com</a>
-          </p>
-        </td></tr>
+        
         <tr><td class="px divider" style="padding:18px 40px 32px;border-top:1px solid #ececed">
           <p class="muted" style="margin:0;font-size:12px;line-height:1.6;color:#9ca3af">
             Rhinon Labs is a product of Rhinon Tech Pvt&nbsp;Ltd${COMPANY_ADDRESS ? ` &middot; ${esc(COMPANY_ADDRESS)}` : ""}.<br>
