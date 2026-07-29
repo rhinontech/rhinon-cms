@@ -3,6 +3,7 @@ import { ContactGroup, ContactGroupMember, Lead } from "../models";
 import { authenticate, authorizeAny, AuthRequest } from "../middleware/authenticate";
 import { sequelize } from "../config/database";
 import { Op } from "sequelize";
+import { runWorkflowEngineCycle } from "../services/workflowEngine";
 
 const router = Router();
 
@@ -148,6 +149,9 @@ router.post("/:id/members", writeAccess, async (req: AuthRequest, res: Response)
     leadIds.map((leadId) => ({ contactGroupId: group.id, leadId, addedById: req.user!.userId })),
     { ignoreDuplicates: true }
   );
+
+  // Instantly trigger auto-enrollment for active workflows monitoring this list
+  runWorkflowEngineCycle().catch((err) => console.error("[ContactGroup] Auto-enrollment error:", err));
 
   const memberCount = await ContactGroupMember.count({ where: { contactGroupId: group.id } });
   res.json({ message: `${leadIds.length} leads added`, memberCount });

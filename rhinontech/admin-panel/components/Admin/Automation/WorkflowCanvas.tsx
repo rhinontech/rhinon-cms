@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import {
   ReactFlow,
   Background,
@@ -13,6 +13,8 @@ import {
   applyNodeChanges,
   applyEdgeChanges,
   NodeMouseHandler,
+  useNodesState,
+  useEdgesState,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
@@ -46,24 +48,38 @@ const EDGE_TYPES = {
 interface WorkflowCanvasProps {
   nodes: WorkflowNode[];
   edges: WorkflowEdge[];
-  setNodes: React.Dispatch<React.SetStateAction<WorkflowNode[]>>;
-  setEdges: React.Dispatch<React.SetStateAction<WorkflowEdge[]>>;
+  onChangeCanvas: (nodes: WorkflowNode[], edges: WorkflowEdge[], persistToApi?: boolean) => void;
   onSelectNode: (node: WorkflowNode | null) => void;
   readOnly?: boolean;
 }
 
 export function WorkflowCanvas({
-  nodes,
-  edges,
-  setNodes,
-  setEdges,
+  nodes: initialNodes,
+  edges: initialEdges,
+  onChangeCanvas,
   onSelectNode,
   readOnly = false,
 }: WorkflowCanvasProps) {
-  const nodesRef = useRef(nodes);
-  nodesRef.current = nodes;
-  const edgesRef = useRef(edges);
-  edgesRef.current = edges;
+  const [nodes, setNodes, onNodesChangeInternal] = useNodesState(initialNodes as any[]);
+  const [edges, setEdges, onEdgesChangeInternal] = useEdgesState(initialEdges as any[]);
+
+  const nodesRef = useRef(nodes as unknown as WorkflowNode[]);
+  nodesRef.current = nodes as unknown as WorkflowNode[];
+  const edgesRef = useRef(edges as unknown as WorkflowEdge[]);
+  edgesRef.current = edges as unknown as WorkflowEdge[];
+
+  // Sync external props when changed by parent (e.g. on workflow load)
+  useEffect(() => {
+    if (initialNodes && initialNodes.length > 0) {
+      setNodes(initialNodes as any[]);
+    }
+  }, [initialNodes, setNodes]);
+
+  useEffect(() => {
+    if (initialEdges) {
+      setEdges(initialEdges as any[]);
+    }
+  }, [initialEdges, setEdges]);
 
   // Handle adding new node in between an edge
   const handleAddNodeInEdge = useCallback(
@@ -72,12 +88,15 @@ export function WorkflowCanvas({
 
       const result = addNodeInEdge(edgeId, nodeType, nodesRef.current, edgesRef.current);
       if (result.newNode) {
-        setNodes(result.nodes);
-        setEdges(result.edges);
+        setNodes(result.nodes as any[]);
+        setEdges(result.edges as any[]);
+        nodesRef.current = result.nodes;
+        edgesRef.current = result.edges;
+        onChangeCanvas(result.nodes, result.edges, true);
         onSelectNode(result.newNode);
       }
     },
-    [readOnly, onSelectNode, setNodes, setEdges]
+    [readOnly, onSelectNode, onChangeCanvas, setNodes, setEdges]
   );
 
   const onNodesChange = useCallback(
@@ -97,15 +116,24 @@ export function WorkflowCanvas({
           }
         }
 
-        setNodes(currentNodes);
-        setEdges(currentEdges);
+        setNodes(currentNodes as any[]);
+        setEdges(currentEdges as any[]);
+        nodesRef.current = currentNodes;
+        edgesRef.current = currentEdges;
+        onChangeCanvas(currentNodes, currentEdges, true);
         return;
       }
 
-      setNodes((nds) => applyNodeChanges(changes, nds as any[]) as unknown as WorkflowNode[]);
+      // Delegate internal drag movements to React Flow's optimized hook
+      onNodesChangeInternal(changes);
     },
-    [setNodes, setEdges, readOnly]
+    [onNodesChangeInternal, onChangeCanvas, readOnly, setNodes, setEdges]
   );
+
+  const onNodeDragStop = useCallback(() => {
+    if (readOnly) return;
+    onChangeCanvas(nodesRef.current, edgesRef.current, true);
+  }, [onChangeCanvas, readOnly]);
 
   const onNodesDelete = useCallback(
     (deletedNodes: Node[]) => {
@@ -119,18 +147,30 @@ export function WorkflowCanvas({
         currentEdges = res.edges;
       }
 
-      setNodes(currentNodes);
-      setEdges(currentEdges);
+      setNodes(currentNodes as any[]);
+      setEdges(currentEdges as any[]);
+      nodesRef.current = currentNodes;
+      edgesRef.current = currentEdges;
+      onChangeCanvas(currentNodes, currentEdges, true);
     },
-    [setNodes, setEdges, readOnly]
+    [onChangeCanvas, readOnly, setNodes, setEdges]
   );
 
   const onEdgesChange = useCallback(
     (changes: EdgeChange<Edge>[]) => {
       if (readOnly) return;
-      setEdges((eds) => applyEdgeChanges(changes, eds as any[]) as unknown as WorkflowEdge[]);
+      const removeChanges = changes.filter((c) => c.type === "remove");
+      if (removeChanges.length === 0) {
+        onEdgesChangeInternal(changes);
+        return;
+      }
+
+      const nextEdges = applyEdgeChanges(changes, edgesRef.current as any[]) as unknown as WorkflowEdge[];
+      setEdges(nextEdges as any[]);
+      edgesRef.current = nextEdges;
+      onChangeCanvas(nodesRef.current, nextEdges, true);
     },
-    [setEdges, readOnly]
+    [onEdgesChangeInternal, onChangeCanvas, readOnly, setEdges]
   );
 
   const onNodeClick: NodeMouseHandler = useCallback(
@@ -144,11 +184,12 @@ export function WorkflowCanvas({
     <WorkflowCanvasContext.Provider value={{ onAddNode: handleAddNodeInEdge }}>
       <div className="h-full w-full relative bg-gray-50/50">
         <ReactFlow
-          nodes={nodes as any[]}
-          edges={edges as any[]}
+          nodes={nodes}
+          edges={edges}
           onNodesChange={onNodesChange}
           onNodesDelete={onNodesDelete}
           onEdgesChange={onEdgesChange}
+          onNodeDragStop={onNodeDragStop}
           onNodeClick={onNodeClick}
           nodeTypes={NODE_TYPES as any}
           edgeTypes={EDGE_TYPES as any}

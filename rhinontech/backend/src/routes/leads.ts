@@ -5,6 +5,7 @@ import { enrichLeadWithAI } from "../services/gemini";
 import { fetchWebsiteText } from "../services/research";
 import { sequelize } from "../config/database";
 import { Op } from "sequelize";
+import { runWorkflowEngineCycle } from "../services/workflowEngine";
 
 const router = Router();
 
@@ -198,6 +199,7 @@ router.post("/import", writeAccess, async (req: AuthRequest, res: Response) => {
           { ignoreDuplicates: true }
         );
         addedToGroup = allImportedIds.length;
+        runWorkflowEngineCycle().catch((err) => console.error("[Leads Import] Auto-enrollment error:", err));
       }
     }
 

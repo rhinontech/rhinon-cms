@@ -90,13 +90,13 @@ export function AddStepEdge({
                 <TbGitFork size={18} className="text-purple-500" />
                 <span className="font-medium">If / then</span>
               </button>
-              <button
+              {/* <button
                 onClick={() => handleSelectType("exit")}
                 className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
               >
                 <TbLogout size={18} className="text-emerald-500" />
                 <span className="font-medium">Exit</span>
-              </button>
+              </button> */}
             </div>
           )}
         </div>

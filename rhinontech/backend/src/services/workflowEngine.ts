@@ -21,47 +21,43 @@ export async function enrollStaticListLeads(workflowId: string) {
     const watchedSources: string[] = triggerConfig.watchedSources || [];
     const allowReEnrollment = Boolean(triggerConfig.allowReEnrollment);
 
+    if (watchedSources.length === 0) {
+      console.log(`[Workflow Engine] No recipient sources/lists configured for workflow ${workflow.id}. Skipping enrollment.`);
+      return;
+    }
+
+    const validUuidSources = watchedSources.filter(isUuid);
+    const orConditions: any[] = [{ name: { [Op.in]: watchedSources } }];
+    if (validUuidSources.length > 0) {
+      orConditions.push({ id: { [Op.in]: validUuidSources } });
+    }
+
     let targetLeads: Lead[] = [];
 
-    // 1. Try finding leads via Contact Groups matching names/IDs in watchedSources
-    if (watchedSources.length > 0) {
-      const validUuidSources = watchedSources.filter(isUuid);
-      const orConditions: any[] = [{ name: { [Op.in]: watchedSources } }];
-      if (validUuidSources.length > 0) {
-        orConditions.push({ id: { [Op.in]: validUuidSources } });
-      }
+    const groups = await ContactGroup.findAll({
+      where: {
+        [Op.or]: orConditions,
+      },
+    });
 
-      const groups = await ContactGroup.findAll({
-        where: {
-          [Op.or]: orConditions,
-        },
+    if (groups.length > 0) {
+      const groupIds = groups.map((g) => g.id);
+      const members = await ContactGroupMember.findAll({
+        where: { contactGroupId: { [Op.in]: groupIds } },
       });
-
-      if (groups.length > 0) {
-        const groupIds = groups.map((g) => g.id);
-        const members = await ContactGroupMember.findAll({
-          where: { contactGroupId: { [Op.in]: groupIds } },
-        });
-        const leadIds = members
-          .map((m) => m.leadId)
-          .filter((id): id is string => Boolean(id) && isUuid(id));
-        if (leadIds.length > 0) {
-          targetLeads = await Lead.findAll({ where: { id: { [Op.in]: leadIds } } });
-        }
-      }
-
-      // 2. If no group leads, find leads matching source column directly
-      if (targetLeads.length === 0) {
-        targetLeads = await Lead.findAll({
-          where: { source: { [Op.in]: watchedSources } },
-          limit: 200,
-        });
+      const leadIds = members
+        .map((m) => m.leadId)
+        .filter((id): id is string => Boolean(id) && isUuid(id));
+      if (leadIds.length > 0) {
+        targetLeads = await Lead.findAll({ where: { id: { [Op.in]: leadIds } } });
       }
     }
 
-    // 3. Fallback: if no specific source leads found, get recent leads
     if (targetLeads.length === 0) {
-      targetLeads = await Lead.findAll({ limit: 50, order: [["addedAt", "DESC"]] });
+      targetLeads = await Lead.findAll({
+        where: { source: { [Op.in]: watchedSources } },
+        limit: 500,
+      });
     }
 
     const triggerNode = workflow.nodes?.find((n: any) => n.type === "trigger") || workflow.nodes?.[0];
@@ -70,16 +66,15 @@ export async function enrollStaticListLeads(workflowId: string) {
     let enrolledCount = 0;
 
     for (const lead of targetLeads) {
-      if (!allowReEnrollment) {
-        const existing = await WorkflowEnrollment.findOne({
-          where: {
-            workflowId: workflow.id,
-            leadEmail: lead.email,
-            status: "active",
-          },
-        });
-        if (existing) continue;
-      }
+      // Check if lead is already enrolled (if allowReEnrollment is false, prevent re-enrolling completed/active leads)
+      const existing = await WorkflowEnrollment.findOne({
+        where: {
+          workflowId: workflow.id,
+          leadEmail: lead.email,
+          ...(allowReEnrollment ? { status: "active" } : {}),
+        },
+      });
+      if (existing) continue;
 
       await WorkflowEnrollment.create({
         id: `enr-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
@@ -98,7 +93,9 @@ export async function enrollStaticListLeads(workflowId: string) {
       enrolledCount++;
     }
 
-    console.log(`[Workflow Engine] Enrolled ${enrolledCount} lead(s) into workflow ${workflow.id}`);
+    if (enrolledCount > 0) {
+      console.log(`[Workflow Engine] Enrolled ${enrolledCount} lead(s) into workflow ${workflow.id}`);
+    }
     await updateWorkflowStats(workflow.id);
   } catch (err: any) {
     console.error("[Workflow Engine] Failed to enroll static list leads:", err.message);
@@ -117,6 +114,9 @@ export async function runWorkflowEngineCycle() {
     const now = new Date();
 
     for (const workflow of activeWorkflows) {
+      // Auto-enroll any newly added leads from targeted static lists or sources
+      await enrollStaticListLeads(workflow.id);
+
       const batchSize = Number(workflow.triggerConfig?.batchSize) || 100;
 
       // Find active enrollments eligible to run (nextStepAt <= now or null)
@@ -197,7 +197,7 @@ async function executeEnrollmentSteps(
 
       // Inject email tracking pixel and link click wrappers
       const port = process.env.PORT || 5003;
-      const baseUrl = `http://localhost:5003`;
+      const baseUrl = process.env.BACKEND_URL || `https://bkk52949-5003.inc1.devtunnels.ms`;
 
       // Rewrite links for click tracking
       htmlBody = htmlBody.replace(/<a\s+(?:[^>]*?\s+)?href=["']([^"']+)["']/gi, (match, url) => {
@@ -226,10 +226,10 @@ async function executeEnrollmentSteps(
           step: `Email sent to ${enrollment.leadEmail}: "${subject}"`,
         });
       } catch (err: any) {
-        console.error(`[Workflow Engine] Email dispatch failed for ${enrollment.leadEmail}:`, err.message);
+        console.error(`[Workflow Engine] Email dispatch failed for ${enrollment.leadEmail}: `, err.message);
         logs.push({
           timestamp: new Date().toISOString(),
-          step: `Email dispatch failed: ${err.message}`,
+          step: `Email dispatch failed: ${err.message} `,
         });
       }
 
@@ -276,7 +276,7 @@ async function executeEnrollmentSteps(
 
         logs.push({
           timestamp: new Date().toISOString(),
-          step: `Wait node: paused until ${nextExecution.toISOString()}`,
+          step: `Wait node: paused until ${nextExecution.toISOString()} `,
         });
 
         await enrollment.update({
@@ -308,7 +308,7 @@ async function executeEnrollmentSteps(
 
         logs.push({
           timestamp: new Date().toISOString(),
-          step: `If/Then node: waiting until ${nextExecution.toISOString()} before evaluating condition (${config.conditionType || "email_opened"})`,
+          step: `If / Then node: waiting until ${nextExecution.toISOString()} before evaluating condition(${config.conditionType || "email_opened"})`,
         });
 
         await enrollment.update({
@@ -333,7 +333,7 @@ async function executeEnrollmentSteps(
 
         logs.push({
           timestamp: new Date().toISOString(),
-          step: `If/Then condition (${config.conditionType || "email_opened"}) evaluated to: ${conditionResult ? "YES (True)" : "NO (False)"}`,
+          step: `If / Then condition(${config.conditionType || "email_opened"}) evaluated to: ${conditionResult ? "YES (True)" : "NO (False)"} `,
         });
 
         // Find matching edge for 'yes' / 'true' or 'no' / 'false' branch

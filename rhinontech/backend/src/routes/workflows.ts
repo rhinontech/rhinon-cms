@@ -130,6 +130,20 @@ router.put("/:id", async (req, res) => {
     }
 
     const previousStatus = item.status;
+    const requestedStatus = req.body.status;
+
+    if (requestedStatus === "active") {
+      const watchedSources = req.body.triggerConfig?.watchedSources || item.triggerConfig?.watchedSources || [];
+      const triggerType = req.body.triggerType || item.triggerType || "static_list";
+
+      if (triggerType === "static_list" && watchedSources.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Please select recipient lists or sources in the Trigger tab before publishing.",
+        });
+      }
+    }
+
     await item.update(req.body);
 
     // If workflow status was set to 'active', trigger static list enrollment and immediate execution cycle

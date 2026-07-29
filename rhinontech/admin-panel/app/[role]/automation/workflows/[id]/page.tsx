@@ -8,9 +8,10 @@ import { NodeConfigDrawer } from "@/components/Admin/Automation/NodeConfigDrawer
 import { WorkflowTriggerTab } from "@/components/Admin/Automation/WorkflowTriggerTab";
 import { WorkflowSettingsTab } from "@/components/Admin/Automation/WorkflowSettingsTab";
 import { WorkflowEnrollmentsTab } from "@/components/Admin/Automation/WorkflowEnrollmentsTab";
+import { toast } from "sonner";
 import { WorkflowItem, WorkflowNode, WorkflowEdge, NodeConfig, WorkflowEnrollment, WorkflowTriggerType } from "@/types/automation";
 import { apiFetch } from "@/lib/api";
-import { removeNodeAndBridge } from "@/lib/workflowUtils";
+import { removeNodeAndBridge, repairWorkflowEdges } from "@/lib/workflowUtils";
 
 export default function SingleWorkflowPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -35,9 +36,17 @@ export default function SingleWorkflowPage({ params }: { params: Promise<{ id: s
       ]);
 
       if (wfRes.status === "fulfilled" && wfRes.value.success && wfRes.value.data) {
-        setWorkflow(wfRes.value.data);
-        setNodes(wfRes.value.data.nodes || []);
-        setEdges(wfRes.value.data.edges || []);
+        const rawWf = wfRes.value.data;
+        const { nodes: repairedNodes, edges: repairedEdges, repaired } = repairWorkflowEdges(
+          rawWf.nodes || [],
+          rawWf.edges || []
+        );
+        setWorkflow(rawWf);
+        setNodes(repairedNodes);
+        setEdges(repairedEdges);
+        if (repaired) {
+          saveWorkflowChanges({ nodes: repairedNodes, edges: repairedEdges });
+        }
       }
 
       if (enrRes.status === "fulfilled" && enrRes.value.success && Array.isArray(enrRes.value.data)) {
@@ -61,16 +70,30 @@ export default function SingleWorkflowPage({ params }: { params: Promise<{ id: s
         method: "PUT",
         body: JSON.stringify(updates),
       });
+
       if (res.success && res.data) {
         setWorkflow(res.data);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to save workflow changes:", err);
+      toast.error(err.message || "Failed to update workflow");
     }
   };
 
   const handleStatusChange = (newStatus: "draft" | "active" | "paused" | "archived") => {
     if (!workflow) return;
+
+    if (newStatus === "active") {
+      const watchedSources = workflow.triggerConfig?.watchedSources || [];
+      const isNotSet = workflow.triggerType === "static_list" && watchedSources.length === 0;
+
+      if (isNotSet) {
+        toast.error("Please select recipient lists or sources in the Trigger tab before publishing.");
+        setActiveTab("Trigger");
+        return;
+      }
+    }
+
     setWorkflow((prev) => (prev ? { ...prev, status: newStatus } : null));
     saveWorkflowChanges({ status: newStatus });
   };
@@ -135,14 +158,16 @@ export default function SingleWorkflowPage({ params }: { params: Promise<{ id: s
     setSelectedNode(null);
   };
 
-  const handleCanvasNodesChange = (newNodes: WorkflowNode[]) => {
+  const handleCanvasChange = (
+    newNodes: WorkflowNode[],
+    newEdges: WorkflowEdge[],
+    persistToApi: boolean = true
+  ) => {
     setNodes(newNodes);
-    saveWorkflowChanges({ nodes: newNodes, edges });
-  };
-
-  const handleCanvasEdgesChange = (newEdges: WorkflowEdge[]) => {
     setEdges(newEdges);
-    saveWorkflowChanges({ nodes, edges: newEdges });
+    if (persistToApi) {
+      saveWorkflowChanges({ nodes: newNodes, edges: newEdges });
+    }
   };
 
   const handleEnrollTest = async () => {
@@ -163,12 +188,12 @@ export default function SingleWorkflowPage({ params }: { params: Promise<{ id: s
         setWorkflow((prev) =>
           prev
             ? {
-                ...prev,
-                stats: {
-                  ...prev.stats,
-                  active: (prev.stats?.active || 0) + 1,
-                },
-              }
+              ...prev,
+              stats: {
+                ...prev.stats,
+                active: (prev.stats?.active || 0) + 1,
+              },
+            }
             : null
         );
       }
@@ -246,8 +271,7 @@ export default function SingleWorkflowPage({ params }: { params: Promise<{ id: s
             <WorkflowCanvas
               nodes={nodes}
               edges={edges}
-              setNodes={handleCanvasNodesChange as any}
-              setEdges={handleCanvasEdgesChange as any}
+              onChangeCanvas={handleCanvasChange}
               onSelectNode={setSelectedNode}
               readOnly={workflow.status === "archived"}
             />
@@ -278,8 +302,22 @@ export default function SingleWorkflowPage({ params }: { params: Promise<{ id: s
             watchedSources={workflow.triggerConfig?.watchedSources || []}
             onSourcesChange={(sources: string[]) => {
               const updatedConfig = { ...workflow.triggerConfig, watchedSources: sources };
-              setWorkflow((prev) => (prev ? { ...prev, triggerConfig: updatedConfig } : null));
-              saveWorkflowChanges({ triggerConfig: updatedConfig });
+              const updatedNodes = nodes.map((n) => {
+                if (n.type === "trigger" || n.data?.nodeType === "trigger") {
+                  return {
+                    ...n,
+                    data: {
+                      ...n.data,
+                      status: sources.length > 0 ? ("READY" as const) : ("NOT SET" as const),
+                      subtitle: sources.length > 0 ? `Selected (${sources.length})` : "Click to choose how leads enter this workflow",
+                    },
+                  };
+                }
+                return n;
+              });
+              setNodes(updatedNodes);
+              setWorkflow((prev) => (prev ? { ...prev, triggerConfig: updatedConfig, nodes: updatedNodes } : null));
+              saveWorkflowChanges({ triggerConfig: updatedConfig, nodes: updatedNodes, edges });
             }}
             batchSize={workflow.triggerConfig?.batchSize || 100}
             onBatchSizeChange={(batchSize: number) => {

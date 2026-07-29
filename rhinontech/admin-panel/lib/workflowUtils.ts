@@ -220,3 +220,51 @@ export function addNodeInEdge(
 
   return { nodes: updatedNodes, edges: updatedEdges, newNode };
 }
+
+/**
+ * Validates and repairs workflow graph connectivity (e.g. ensures trigger node is connected to the first step).
+ */
+export function repairWorkflowEdges(
+  nodes: WorkflowNode[],
+  edges: WorkflowEdge[]
+): { nodes: WorkflowNode[]; edges: WorkflowEdge[]; repaired: boolean } {
+  if (!nodes || nodes.length === 0) return { nodes: [], edges: [], repaired: false };
+
+  let updatedEdges = [...(edges || [])];
+  let repaired = false;
+
+  // 1. Clean up invalid edges pointing to non-existent nodes
+  const nodeIds = new Set(nodes.map((n) => n.id));
+  const validEdges = updatedEdges.filter((e) => nodeIds.has(e.source) && nodeIds.has(e.target));
+  if (validEdges.length !== updatedEdges.length) {
+    updatedEdges = validEdges;
+    repaired = true;
+  }
+
+  // 2. Ensure Trigger node has an outgoing edge if other nodes exist
+  const triggerNode = nodes.find((n) => n.type === "trigger" || n.data?.nodeType === "trigger");
+  if (triggerNode) {
+    const triggerOutgoing = updatedEdges.filter((e) => e.source === triggerNode.id);
+    if (triggerOutgoing.length === 0) {
+      // Find the non-trigger node positioned closest directly below the trigger
+      const candidateNodes = nodes
+        .filter((n) => n.id !== triggerNode.id)
+        .sort((a, b) => a.position.y - b.position.y);
+
+      if (candidateNodes.length > 0) {
+        const nextNode = candidateNodes[0];
+        const newEdge: WorkflowEdge = {
+          id: `e_${triggerNode.id}_${nextNode.id}`,
+          source: triggerNode.id,
+          target: nextNode.id,
+          type: "addStepEdge",
+        };
+        updatedEdges.push(newEdge);
+        repaired = true;
+      }
+    }
+  }
+
+  return { nodes, edges: updatedEdges, repaired };
+}
+

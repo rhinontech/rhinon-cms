@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { TbX, TbTrash, TbCopy, TbSend } from "react-icons/tb";
 import { WorkflowNode, NodeConfig } from "@/types/automation";
 import { apiFetch } from "@/lib/api";
+import { EmailBodyEditor } from "@/components/Admin/Outreach/shared/EmailBodyEditor";
 
 interface NodeConfigDrawerProps {
   node: WorkflowNode | null;
@@ -38,7 +39,7 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
           }));
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   useEffect(() => {
@@ -84,9 +85,8 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
         <div className="flex items-center gap-2">
           <button
             onClick={handleSave}
-            className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all ${
-              isSaved ? "bg-emerald-100 text-emerald-700" : "bg-gray-900 text-white hover:bg-gray-800"
-            }`}
+            className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all ${isSaved ? "bg-emerald-100 text-emerald-700" : "bg-gray-900 text-white hover:bg-gray-800"
+              }`}
           >
             {isSaved ? "Saved ✓" : "Save"}
           </button>
@@ -179,12 +179,11 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
                 </div>
               </div>
 
-              <textarea
-                rows={8}
+              <EmailBodyEditor
                 value={config.emailBody || ""}
-                onChange={(e) => setConfig({ ...config, emailBody: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none font-sans"
+                onChange={(html) => setConfig({ ...config, emailBody: html })}
                 placeholder="Hi {{name}},&#10;&#10;Welcome to Rhinon Tech! We are excited to work with you..."
+                minHeight="220px"
               />
             </div>
           </>
@@ -203,8 +202,8 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
                     config.delayUnit === "minutes" || (!config.delayUnit && config.delayMinutes)
                       ? config.delayMinutes || config.delayValue || 30
                       : config.delayUnit === "days" || (!config.delayUnit && config.delayDays)
-                      ? config.delayDays || config.delayValue || 1
-                      : config.delayHours || config.delayValue || 6
+                        ? config.delayDays || config.delayValue || 1
+                        : config.delayHours || config.delayValue || 6
                   }
                   onChange={(e) => {
                     const val = parseInt(e.target.value) || 1;
@@ -234,8 +233,8 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
                       (unit === "minutes"
                         ? config.delayMinutes || 30
                         : unit === "days"
-                        ? config.delayDays || 1
-                        : config.delayHours || 6);
+                          ? config.delayDays || 1
+                          : config.delayHours || 6);
 
                     setConfig({
                       ...config,
@@ -285,8 +284,8 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
                     config.checkDelayUnit === "minutes" || (!config.checkDelayUnit && config.checkDelayMinutes)
                       ? config.checkDelayMinutes || config.checkDelayValue || 30
                       : config.checkDelayUnit === "days" || (!config.checkDelayUnit && config.checkDelayDays)
-                      ? config.checkDelayDays || config.checkDelayValue || 1
-                      : config.checkDelayHours || config.checkDelayValue || 24
+                        ? config.checkDelayDays || config.checkDelayValue || 1
+                        : config.checkDelayHours || config.checkDelayValue || 24
                   }
                   onChange={(e) => {
                     const val = parseInt(e.target.value) || 1;
@@ -316,8 +315,8 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
                       (unit === "minutes"
                         ? config.checkDelayMinutes || 30
                         : unit === "days"
-                        ? config.checkDelayDays || 1
-                        : config.checkDelayHours || 24);
+                          ? config.checkDelayDays || 1
+                          : config.checkDelayHours || 24);
 
                     setConfig({
                       ...config,
