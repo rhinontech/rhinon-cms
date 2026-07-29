@@ -103,6 +103,88 @@ export async function enrollStaticListLeads(workflowId: string) {
 }
 
 /**
+ * Real-time auto-enrollment for new leads arriving via website landing page forms.
+ */
+export async function enrollRealtimeLead(lead: any, formSource: string) {
+  try {
+    if (!lead || !lead.email) return;
+
+    const activeWorkflows = await Workflow.findAll({
+      where: {
+        status: "active",
+        triggerType: "realtime_lead",
+      },
+    });
+
+    if (activeWorkflows.length === 0) return;
+
+    const normalizedSource = (formSource || lead.source || "").toLowerCase();
+
+    for (const workflow of activeWorkflows) {
+      const triggerConfig = workflow.triggerConfig || {};
+      const watchedSources: string[] = triggerConfig.watchedSources || [];
+      const allowReEnrollment = Boolean(triggerConfig.allowReEnrollment);
+
+      // Match formSource against watchedSources
+      const matchesSource =
+        watchedSources.length === 0 ||
+        watchedSources.some((src) => {
+          const s = src.toLowerCase();
+          return (
+            normalizedSource.includes(s) ||
+            s.includes(normalizedSource) ||
+            (normalizedSource.includes("contact") && s.includes("contact")) ||
+            (normalizedSource.includes("schedule") && s.includes("schedule")) ||
+            s === "website" ||
+            s === "all"
+          );
+        });
+
+      if (!matchesSource) continue;
+
+      const existing = await WorkflowEnrollment.findOne({
+        where: {
+          workflowId: workflow.id,
+          leadEmail: lead.email,
+          ...(allowReEnrollment ? { status: "active" } : {}),
+        },
+      });
+
+      if (existing) continue;
+
+      const triggerNode = workflow.nodes?.find((n: any) => n.type === "trigger") || workflow.nodes?.[0];
+      const initialNodeId = triggerNode ? triggerNode.id : "node-trigger";
+
+      const displaySource = formSource || lead.source || "Website Form";
+
+      await WorkflowEnrollment.create({
+        id: `enr-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        workflowId: workflow.id,
+        leadId: lead.id && isUuid(lead.id) ? lead.id : null,
+        leadName: lead.name || "Lead",
+        leadEmail: lead.email,
+        source: displaySource,
+        status: "active",
+        currentNodeId: initialNodeId,
+        nextStepAt: new Date(),
+        enrolledAt: new Date(),
+        executionLogs: [
+          { timestamp: new Date().toISOString(), step: `Real-time auto-enrollment via ${displaySource}` },
+        ],
+      });
+
+      console.log(`[Workflow Engine] Real-time lead ${lead.email} enrolled into workflow ${workflow.id} via ${displaySource}`);
+      await updateWorkflowStats(workflow.id);
+    }
+
+    // Instantly process step 1
+    await runWorkflowEngineCycle();
+  } catch (err: any) {
+    console.error("[Workflow Engine] Real-time lead enrollment failed:", err.message);
+  }
+}
+
+/**
  * Runs a single cycle of the workflow execution engine.
  * Processes step execution for active enrollments across active workflows.
  */

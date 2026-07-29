@@ -243,25 +243,76 @@ export function WorkflowTriggerTab({
             </p>
           </div>
 
-          {/* Watched Sources */}
-          <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-between">
+          {/* Watched Landing Page Forms */}
+          <div className="space-y-3">
             <div>
-              <h5 className="text-sm font-bold text-gray-900">Forms / events / resources / Meta ad forms to watch</h5>
-              <p className="text-xs text-gray-600 mt-0.5 font-medium">
-                {selectedSources.length > 0
-                  ? `Watching: ${selectedSources.join(", ")}`
-                  : "Watching user signups"}
-              </p>
-              <p className="text-[11px] text-gray-400 mt-1">
-                Pick the website forms, events, resources, or Meta ad forms to listen on.
+              <h5 className="text-sm font-bold text-gray-900">Select Rhinon Labs Landing Page Forms</h5>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Choose which website form submission(s) will trigger this automation workflow:
               </p>
             </div>
-            <button
-              onClick={openRecipientsModal}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700 shadow-2xs"
-            >
-              <TbPencil size={15} /> Edit
-            </button>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+              {/* Form 1: Contact Us Form */}
+              <div
+                onClick={() => {
+                  const formKey = "Contact Us Form";
+                  const nextSources = selectedSources.includes(formKey)
+                    ? selectedSources.filter((s) => s !== formKey)
+                    : [...selectedSources, formKey];
+                  setSelectedSources(nextSources);
+                  if (onSourcesChange) onSourcesChange(nextSources);
+                }}
+                className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                  selectedSources.includes("Contact Us Form")
+                    ? "border-emerald-600 bg-emerald-50/40 shadow-xs"
+                    : "border-gray-200 hover:border-gray-300 bg-white"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedSources.includes("Contact Us Form")}
+                  onChange={() => {}}
+                  className="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500"
+                />
+                <div>
+                  <h6 className="text-sm font-bold text-gray-900">📩 Contact Us Form</h6>
+                  <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+                    Triggers when a visitor submits the main Contact Us form on rhinontech.com
+                  </p>
+                </div>
+              </div>
+
+              {/* Form 2: Schedule a Call Form */}
+              <div
+                onClick={() => {
+                  const formKey = "Schedule a Call Form";
+                  const nextSources = selectedSources.includes(formKey)
+                    ? selectedSources.filter((s) => s !== formKey)
+                    : [...selectedSources, formKey];
+                  setSelectedSources(nextSources);
+                  if (onSourcesChange) onSourcesChange(nextSources);
+                }}
+                className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                  selectedSources.includes("Schedule a Call Form")
+                    ? "border-emerald-600 bg-emerald-50/40 shadow-xs"
+                    : "border-gray-200 hover:border-gray-300 bg-white"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedSources.includes("Schedule a Call Form")}
+                  onChange={() => {}}
+                  className="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500"
+                />
+                <div>
+                  <h6 className="text-sm font-bold text-gray-900">📅 Schedule a Call Form</h6>
+                  <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+                    Triggers when a lead schedules a demo or call on rhinontech.com
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Re-enrollment Toggle */}

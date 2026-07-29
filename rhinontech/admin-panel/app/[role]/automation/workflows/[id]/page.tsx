@@ -309,7 +309,7 @@ export default function SingleWorkflowPage({ params }: { params: Promise<{ id: s
                     data: {
                       ...n.data,
                       status: sources.length > 0 ? ("READY" as const) : ("NOT SET" as const),
-                      subtitle: sources.length > 0 ? `Selected (${sources.length})` : "Click to choose how leads enter this workflow",
+                      subtitle: sources.length > 0 ? `Selected: ${sources.join(", ")}` : "Click to choose how leads enter this workflow",
                     },
                   };
                 }

@@ -3,6 +3,7 @@ import { ClientRequest, Project, User, Lead, Blog, CaseStudy, PageView, DocsAcce
 import { sendEmail } from "../services/mailer";
 import { env } from "../config/env";
 import { classifyChannel, parseHost, isBotUserAgent } from "../services/analytics";
+import { enrollRealtimeLead } from "../services/workflowEngine";
 
 const router = Router();
 
@@ -156,6 +157,12 @@ router.post("/web-leads", async (req: Request, res: Response) => {
       res.status(201).json({ ok: true });
     }
 
+    // Trigger real-time workflow enrollment for Contact Us Form
+    const createdOrUpdatedLead = existing || (await Lead.findOne({ where: { email } }));
+    if (createdOrUpdatedLead) {
+      void enrollRealtimeLead(createdOrUpdatedLead, "Contact Us Form");
+    }
+
     // Best-effort, after the response — never blocks or fails the request.
     void notifyNewLead({ name, email, whatsapp, message, company });
   } catch (error: any) {
@@ -245,6 +252,12 @@ router.post("/platform-leads", async (req: Request, res: Response) => {
         raw,
       } as any);
       res.status(201).json({ ok: true });
+    }
+
+    // Trigger real-time workflow enrollment for Schedule a Call Form
+    const createdOrUpdatedLead = existing || (await Lead.findOne({ where: { email } }));
+    if (createdOrUpdatedLead) {
+      void enrollRealtimeLead(createdOrUpdatedLead, "Schedule a Call Form");
     }
 
     // Best-effort, after the response — never blocks or fails the request.
