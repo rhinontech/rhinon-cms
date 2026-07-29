@@ -31,7 +31,7 @@ export function ContactsPage() {
   const selectedGroup = groups.find((g) => g.id === selectedGroupId) ?? null;
 
   return (
-    <main className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-xl glass-panel">
+    <main className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-r-xl glass-panel">
       <div className="flex h-16 shrink-0 items-center gap-3 border-b px-4">
         <SubNavToggle />
         <div>

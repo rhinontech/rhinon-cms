@@ -35,6 +35,8 @@ import { PageView } from "./PageView";
 import { DocsAccess } from "./DocsAccess";
 import { Page } from "./Page";
 import { PageShare } from "./PageShare";
+import { Workflow } from "./Workflow";
+import { WorkflowEnrollment } from "./WorkflowEnrollment";
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/database";
 
@@ -191,7 +193,8 @@ Page.hasMany(Page, { foreignKey: "parentId", as: "children" });
 Page.hasMany(PageShare, { foreignKey: "pageId", as: "shares", onDelete: "CASCADE" });
 PageShare.belongsTo(Page, { foreignKey: "pageId", as: "page" });
 PageShare.belongsTo(User, { foreignKey: "userId", as: "user" });
-User.hasMany(PageShare, { foreignKey: "userId", as: "pageShares" });
+Workflow.hasMany(WorkflowEnrollment, { foreignKey: "workflowId", as: "enrollments", onDelete: "CASCADE" });
+WorkflowEnrollment.belongsTo(Workflow, { foreignKey: "workflowId", as: "workflow" });
 
 export {
   Role, Permission, RolePermission,
@@ -227,6 +230,8 @@ export {
   DocsAccess,
   Page,
   PageShare,
+  Workflow,
+  WorkflowEnrollment,
 };
 
 export async function syncDatabase(force = false) {

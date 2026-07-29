@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
+import { EmailBodyView } from "../Outreach/shared/EmailBodyView";
 import {
   TbSearch, TbRefresh, TbPlus, TbX, TbPaperclip, TbSend2, TbFile, TbDownload,
   TbInfoCircle, TbMail, TbArchive, TbTrash, TbSend, TbArrowLeft,
@@ -368,7 +369,12 @@ export default function Inbox() {
                       </div>
                       <div className="min-w-0 max-w-[85%] sm:max-w-[70%] rounded-xl rounded-tl-sm border border-black/5 bg-white px-4 py-3 shadow-sm">
                         <p className="mb-1 text-[11px] text-gray-400">{msg.fromName} · {fmtTime(msg.sentAt)}</p>
-                        <div className="max-w-full overflow-x-auto"><div className="prose prose-sm max-w-none break-words text-sm text-gray-800 [&_*]:!my-0.5 [&_img]:h-auto [&_img]:max-w-full [&_table]:max-w-full" dangerouslySetInnerHTML={{ __html: msg.body }} /></div>
+                        <div className="max-w-full overflow-x-auto">
+                          <EmailBodyView
+                            body={msg.body}
+                            proseClassName="prose prose-sm max-w-none break-words text-sm text-gray-800 [&_*]:!my-0.5 [&_img]:h-auto [&_img]:max-w-full [&_table]:max-w-full"
+                          />
+                        </div>
                         {(msg.attachments ?? []).map((a) => <AttachmentView key={a.key} att={a} />)}
                       </div>
                     </div>

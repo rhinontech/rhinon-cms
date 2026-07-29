@@ -1,8 +1,9 @@
 import express, { Router, Response, Request } from "express";
-import { ClientRequest, Project, User, Lead, Blog, CaseStudy, PageView, DocsAccess } from "../models";
+import { ClientRequest, Project, User, Lead, Blog, CaseStudy, PageView, DocsAccess, WorkflowEnrollment } from "../models";
 import { sendEmail } from "../services/mailer";
 import { env } from "../config/env";
 import { classifyChannel, parseHost, isBotUserAgent } from "../services/analytics";
+import { enrollRealtimeLead } from "../services/workflowEngine";
 
 const router = Router();
 
@@ -156,6 +157,12 @@ router.post("/web-leads", async (req: Request, res: Response) => {
       res.status(201).json({ ok: true });
     }
 
+    // Trigger real-time workflow enrollment for Contact Us Form
+    const createdOrUpdatedLead = existing || (await Lead.findOne({ where: { email } }));
+    if (createdOrUpdatedLead) {
+      void enrollRealtimeLead(createdOrUpdatedLead, "Contact Us Form");
+    }
+
     // Best-effort, after the response — never blocks or fails the request.
     void notifyNewLead({ name, email, whatsapp, message, company });
   } catch (error: any) {
@@ -245,6 +252,12 @@ router.post("/platform-leads", async (req: Request, res: Response) => {
         raw,
       } as any);
       res.status(201).json({ ok: true });
+    }
+
+    // Trigger real-time workflow enrollment for Schedule a Call Form
+    const createdOrUpdatedLead = existing || (await Lead.findOne({ where: { email } }));
+    if (createdOrUpdatedLead) {
+      void enrollRealtimeLead(createdOrUpdatedLead, "Schedule a Call Form");
     }
 
     // Best-effort, after the response — never blocks or fails the request.
@@ -427,6 +440,94 @@ router.post("/docs-access/check", async (req: Request, res: Response) => {
     console.error("Failed to check docs access:", err);
     res.status(500).json({ allowed: false });
   }
+});
+// GET /public/track/open — Email open tracking pixel (1x1 GIF)
+router.get("/track/open", async (req: Request, res: Response) => {
+  try {
+    console.log("email got opened");
+    const enrollmentId = req.query.e as string;
+    if (enrollmentId) {
+      const enrollment = await WorkflowEnrollment.findByPk(enrollmentId);
+      if (enrollment) {
+        const state = enrollment.trackingState || {};
+        const logs = Array.isArray(enrollment.executionLogs) ? [...enrollment.executionLogs] : [];
+
+        if (!state.emailOpened) {
+          logs.push({
+            timestamp: new Date().toISOString(),
+            step: `Email opened by recipient (${enrollment.leadEmail})`,
+          });
+        }
+
+        enrollment.changed("trackingState", true);
+        enrollment.changed("executionLogs", true);
+        await enrollment.update({
+          trackingState: {
+            ...state,
+            emailOpened: true,
+            openedAt: state.openedAt || new Date().toISOString(),
+          },
+          executionLogs: logs,
+        });
+      }
+    }
+  } catch (err: any) {
+    console.error("[Tracking] Email open tracking failed:", err.message);
+  }
+
+  const pixel = Buffer.from(
+    "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+    "base64"
+  );
+  res.writeHead(200, {
+    "Content-Type": "image/gif",
+    "Content-Length": pixel.length,
+    "Cache-Control": "no-store, no-cache, must-revalidate, private",
+  });
+  res.end(pixel);
+});
+
+// GET /public/track/click — Email link click tracking redirect
+router.get("/track/click", async (req: Request, res: Response) => {
+  const targetUrl = (req.query.url as string) || "https://rhinontech.com";
+  try {
+    const enrollmentId = req.query.e as string;
+    if (enrollmentId) {
+      const enrollment = await WorkflowEnrollment.findByPk(enrollmentId);
+      if (enrollment) {
+        const state = enrollment.trackingState || {};
+        const logs = Array.isArray(enrollment.executionLogs) ? [...enrollment.executionLogs] : [];
+        const clickedUrls = Array.isArray(state.clickedUrls) ? [...state.clickedUrls] : [];
+
+        if (!clickedUrls.includes(targetUrl)) {
+          clickedUrls.push(targetUrl);
+        }
+
+        if (!state.linkClicked) {
+          logs.push({
+            timestamp: new Date().toISOString(),
+            step: `Link inside email clicked by recipient: ${targetUrl}`,
+          });
+        }
+
+        enrollment.changed("trackingState", true);
+        enrollment.changed("executionLogs", true);
+        await enrollment.update({
+          trackingState: {
+            ...state,
+            linkClicked: true,
+            clickedAt: state.clickedAt || new Date().toISOString(),
+            clickedUrls,
+          },
+          executionLogs: logs,
+        });
+      }
+    }
+  } catch (err: any) {
+    console.error("[Tracking] Link click tracking failed:", err.message);
+  }
+
+  res.redirect(302, targetUrl);
 });
 
 export default router;

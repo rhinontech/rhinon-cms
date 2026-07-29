@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from "../shared/EmptyState";
+import { EmailBodyView } from "../shared/EmailBodyView";
 
 interface ThreadEmail {
   id: string;
@@ -110,7 +111,7 @@ export function CampaignInboxTab({ campaignId }: { campaignId: string }) {
   }
 
   return (
-    <div className="flex h-[600px] min-h-0 overflow-hidden rounded-lg border border-stone-100 bg-white">
+    <div className="flex h-full min-h-0 overflow-hidden rounded-lg border border-stone-100 bg-white">
       <div className="w-64 shrink-0 overflow-auto border-r border-stone-100">
         {conversations.map((c) => (
           <button
@@ -157,10 +158,7 @@ export function CampaignInboxTab({ campaignId }: { campaignId: string }) {
                     <span>{e.folder === "sent" ? "You" : e.fromName}</span>
                     <span>{new Date(e.sentAt).toLocaleString()}</span>
                   </div>
-                  <div
-                    className="prose prose-sm max-w-none break-words [&_*]:!my-1"
-                    dangerouslySetInnerHTML={{ __html: e.body }}
-                  />
+                  <EmailBodyView body={e.body} />
                 </div>
               ))}
             </div>
