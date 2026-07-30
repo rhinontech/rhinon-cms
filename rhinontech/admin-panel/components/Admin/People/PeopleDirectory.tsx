@@ -501,6 +501,13 @@ export function PeopleDirectory() {
   // send them along with POST /employees. Never touches the shared template.
   const [offerOverrides, setOfferOverrides] = useState<{ blockId: string; text: string }[]>([]);
   const [ndaOverrides, setNdaOverrides] = useState<{ blockId: string; text: string }[]>([]);
+  // Signing status for the employee currently open in edit mode — drives
+  // whether the "Resend for signing" action shows per-tab (never once signed).
+  const [docStatus, setDocStatus] = useState<{
+    offer_letter: { exists: boolean; signed: boolean };
+    nda: { exists: boolean; signed: boolean };
+  } | null>(null);
+  const [resendingDoc, setResendingDoc] = useState(false);
   // Which offer-letter template applies to this hire. Empty string = not yet
   // manually chosen — auto-follows Employment Type (matching the backend's
   // default) until the admin picks one explicitly from the dropdown.
@@ -639,9 +646,47 @@ export function PeopleDirectory() {
     setNdaOverrides([]);
     setOfferTemplateKey("");
     setOfferTemplateManuallySet(false);
+    setDocStatus(null);
     setMessage("");
     setIsPreviewExpanded(true);
     setMobileDetail(true);
+  };
+
+  const resendDocument = async (category: "offer_letter" | "nda") => {
+    if (!selectedEmployee) return;
+    const label = category === "nda" ? "NDA" : "offer letter";
+    if (!confirm(`Regenerate and re-send the ${label} to ${selectedEmployee.personalEmail} for signing?\n\nThis rebuilds it from the current template and this employee's current details, plus any edits shown in the preview right now. Edits from an earlier resend that aren't reflected in the preview above won't carry over automatically.`)) return;
+
+    setResendingDoc(true);
+    try {
+      const overrides = category === "offer_letter" ? offerOverrides : ndaOverrides;
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/employees/${selectedEmployee.id}/documents/${category}/resend`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          templateKey: category === "offer_letter" ? offerTemplateKey || undefined : undefined,
+          overrides: overrides.length > 0 ? overrides : undefined,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data.message || `Could not resend the ${label}.`);
+        return;
+      }
+      if (category === "offer_letter") setOfferOverrides([]);
+      else setNdaOverrides([]);
+      alert(`${label === "NDA" ? "NDA" : "Offer letter"} updated and re-sent to ${data.sentTo || selectedEmployee.personalEmail}.`);
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/employees/${selectedEmployee.id}/documents/status`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((r) => r.json())
+        .then((d) => setDocStatus(d))
+        .catch(() => {});
+    } catch {
+      alert(`Could not resend the ${label}. Please try again.`);
+    } finally {
+      setResendingDoc(false);
+    }
   };
 
   const selectEmployee = (employee: Employee) => {
@@ -659,8 +704,20 @@ export function PeopleDirectory() {
 
     setMode("edit");
     setForm(employeeToForm(selectedEmployee));
+    setOfferOverrides([]);
+    setNdaOverrides([]);
+    setOfferTemplateKey("");
+    setOfferTemplateManuallySet(false);
     setMessage("");
     setIsPreviewExpanded(true);
+    setDocStatus(null);
+
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/employees/${selectedEmployee.id}/documents/status`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((data) => setDocStatus(data))
+      .catch(() => setDocStatus(null));
   };
 
   const resendInvite = async () => {
@@ -1460,6 +1517,29 @@ export function PeopleDirectory() {
                         NDA
                       </button>
                     </div>
+
+                    {mode === "edit" && docStatus && (() => {
+                      const category = previewTab === "offer" ? "offer_letter" : "nda";
+                      const status = docStatus[category];
+                      if (!status.exists) return null;
+                      if (status.signed) {
+                        return (
+                          <p className="mb-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700">
+                            ✓ Signed — this document is final and can no longer be edited or resent.
+                          </p>
+                        );
+                      }
+                      return (
+                        <button
+                          type="button"
+                          disabled={resendingDoc}
+                          onClick={() => resendDocument(category)}
+                          className="mb-3 w-full rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-xs font-semibold text-stone-700 hover:bg-stone-50 disabled:opacity-50"
+                        >
+                          {resendingDoc ? "Sending…" : `Resend ${previewTab === "offer" ? "Offer Letter" : "NDA"} for signing`}
+                        </button>
+                      );
+                    })()}
 
                     {previewTab === "offer" && (
                       <div className="flex items-center gap-2 mb-3">

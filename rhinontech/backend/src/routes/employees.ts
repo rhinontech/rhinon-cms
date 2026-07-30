@@ -613,6 +613,95 @@ router.post("/:id/resend-onboarding", authorize("employees:write"), async (req: 
   res.json({ message: "Invite re-sent", id: employee.id, sentTo: employee.personalEmail });
 });
 
+// Signing status for this employee's offer letter / NDA — used by the edit-member
+// form to decide whether to show a "Resend for signing" action (only meaningful
+// while unsigned; a signed document is a legal record and isn't editable in place).
+router.get("/:id/documents/status", authorize("employees:write"), async (req: AuthRequest, res: Response) => {
+  const employee = await User.findByPk(req.params.id);
+  if (!employee) {
+    res.status(404).json({ message: "Employee not found" });
+    return;
+  }
+  const docs = await Document.findAll({
+    where: { employeeId: employee.id, category: ["offer_letter", "nda"] },
+    order: [["createdAt", "DESC"]],
+  });
+  const statusFor = (category: "offer_letter" | "nda") => {
+    const doc = docs.find((d) => d.category === category);
+    return { exists: !!doc, signed: !!doc?.signedAt, documentId: doc?.id ?? null };
+  };
+  res.json({ offer_letter: statusFor("offer_letter"), nda: statusFor("nda") });
+});
+
+// Regenerates an existing (unsigned) offer letter or NDA from the employee's
+// current field values + template selection + AI/manual overrides, and
+// re-sends the signing email. Mirrors the attachDocs generation path in
+// POST /employees, but for an employee who already exists — the natural
+// companion to editing a hire's details or wording after the fact.
+router.post("/:id/documents/:category/resend", authorize("employees:write"), async (req: AuthRequest, res: Response) => {
+  const category = req.params.category;
+  if (category !== "offer_letter" && category !== "nda") {
+    res.status(400).json({ message: `category must be "offer_letter" or "nda".` });
+    return;
+  }
+
+  const employee = await User.findByPk(req.params.id);
+  if (!employee) {
+    res.status(404).json({ message: "Employee not found" });
+    return;
+  }
+
+  const document = await Document.findOne({
+    where: { employeeId: employee.id, category },
+    order: [["createdAt", "DESC"]],
+  });
+  if (!document) {
+    res.status(404).json({ message: `No ${category === "nda" ? "NDA" : "offer letter"} has been generated for this employee yet.` });
+    return;
+  }
+  if (document.signedAt) {
+    res.status(400).json({ message: "This document has already been signed and cannot be resent." });
+    return;
+  }
+
+  try {
+    const type = category === "nda" ? "nda" : "offer";
+    const resolved = await resolveLetterBlocks(type, employee, category === "offer_letter" ? req.body.templateKey : undefined);
+    const blocks = applyBlockOverrides(resolved.blocks, req.body.overrides);
+    const pdf = category === "nda" ? await generateNdaPdf(employee, undefined, blocks) : await generateOfferLetterPdf(employee, undefined, blocks);
+
+    const fileName = document.fileName || `${category === "nda" ? "NDA" : "Offer-Letter"}-${employee.fullName.replace(/[^a-zA-Z0-9]+/g, "-")}.pdf`;
+    const newKey = await uploadBuffer(pdf, fileName, "documents", "application/pdf");
+    const oldKey = document.fileKey;
+
+    const signingTokenExpiry = new Date(Date.now() + 48 * 60 * 60 * 1000);
+    await document.update({
+      fileKey: newKey,
+      fileName,
+      fileSize: pdf.length,
+      contentBlocks: blocks,
+      templateVersion: resolved.templateVersion,
+      signingTokenExpiry,
+    });
+    if (oldKey) await deleteObject(oldKey).catch(() => {});
+
+    const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:4200";
+    const signingUrl = `${frontendUrl}/sign-documents?token=${document.signingToken}`;
+    const { subject, html, text } = signDocumentsEmail({
+      fullName: employee.fullName,
+      roleTitle: employee.roleTitle || undefined,
+      signingUrl,
+      updated: true,
+    });
+    await sendEmail({ to: employee.personalEmail, via: "gmail", subject, html, text });
+
+    res.json({ message: "Document updated and re-sent for signing.", documentId: document.id, sentTo: employee.personalEmail });
+  } catch (err) {
+    console.error("Failed to regenerate/resend document:", err);
+    res.status(500).json({ message: "Could not regenerate and resend this document." });
+  }
+});
+
 // Admin-triggered password reset — emails a reset link without overwriting the current password.
 // Best for members who have already onboarded but are locked out.
 router.post("/:id/send-reset", authorize("employees:write"), async (req: AuthRequest, res: Response) => {

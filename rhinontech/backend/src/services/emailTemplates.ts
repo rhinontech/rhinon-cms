@@ -168,26 +168,41 @@ interface SignDocumentsEmailOptions {
   fullName: string;
   roleTitle?: string;
   signingUrl: string;
+  // True when re-sending after an admin edited an already-issued (unsigned)
+  // document — swaps the first-time "welcome" framing for an "updated,
+  // please re-review" one. See POST /employees/:id/documents/:category/resend.
+  updated?: boolean;
 }
 
-export function signDocumentsEmail({ fullName, roleTitle, signingUrl }: SignDocumentsEmailOptions) {
+export function signDocumentsEmail({ fullName, roleTitle, signingUrl, updated }: SignDocumentsEmailOptions) {
   const firstName = fullName.split(" ")[0];
   const roleBit = roleTitle ? ` as ${roleTitle}` : "";
-  const subject = `Congratulations — Welcome to Rhinon Tech`;
+  const subject = updated ? `Your Offer Letter has been updated — Rhinon Tech` : `Congratulations — Welcome to Rhinon Tech`;
 
-  const header = `
+  const header = updated
+    ? `
+    <p style="margin:16px 0 0;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.4px;">
+      Your documents have<br/>been updated
+    </p>`
+    : `
     <p style="margin:16px 0 0;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.4px;">
       Congratulations &<br/>welcome aboard
     </p>`;
 
+  const intro = updated
+    ? `<p style="margin:0 0 24px;font-size:14px;color:#78716c;line-height:1.7;">
+      We've made an update to your onboarding documents at <strong style="color:#1c1917;">Rhinon Tech</strong>${roleBit}. Please review the latest version below.
+    </p>`
+    : `<p style="margin:0 0 24px;font-size:14px;color:#78716c;line-height:1.7;">
+      Congratulations on joining <strong style="color:#1c1917;">Rhinon Tech</strong>${roleBit}! We're excited to have you on the team.
+    </p>`;
+
   const body = `
     <p style="margin:0 0 6px;font-size:15px;font-weight:600;color:#1c1917;">Hi ${firstName},</p>
-    <p style="margin:0 0 24px;font-size:14px;color:#78716c;line-height:1.7;">
-      Congratulations on joining <strong style="color:#1c1917;">Rhinon Tech</strong>${roleBit}! We're excited to have you on the team.
-    </p>
+    ${intro}
 
     <p style="margin:0 0 20px;font-size:13px;color:#78716c;line-height:1.7;">
-      Your first step: review and e-sign your <strong style="color:#1c1917;">Offer Letter</strong> and
+      ${updated ? "Please review and e-sign your" : "Your first step: review and e-sign your"} <strong style="color:#1c1917;">Offer Letter</strong> and
       <strong style="color:#1c1917;">Non-Disclosure Agreement (NDA)</strong> online — no printing needed.<br/>
       <strong style="color:#1c1917;">This link expires in 48 hours.</strong>
     </p>
@@ -219,16 +234,23 @@ export function signDocumentsEmail({ fullName, roleTitle, signingUrl }: SignDocu
 
   const html = emailWrapper(header, body);
 
-  const text = `Congratulations, ${firstName} — welcome to Rhinon Tech${roleBit}!
+  const text = updated
+    ? `Hi ${firstName}, we've updated your onboarding documents at Rhinon Tech${roleBit}.
+
+Please review and e-sign your Offer Letter and Non-Disclosure Agreement (NDA):
+${signingUrl}`
+    : `Congratulations, ${firstName} — welcome to Rhinon Tech${roleBit}!
 
 Your first step: review and e-sign your Offer Letter and Non-Disclosure Agreement (NDA):
-${signingUrl}
+${signingUrl}`;
+
+  const textFooter = `
 
 This link expires in 48 hours.
 
 What happens next? As soon as both documents are signed, we'll automatically email you your account credentials and setup link.`;
 
-  return { subject, html, text };
+  return { subject, html, text: text + textFooter };
 }
 
 // ─── Password Reset ──────────────────────────────────────────────────────────
