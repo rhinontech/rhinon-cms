@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import adminImages from "@/constants/admin/images";
+import { apiFetch } from "@/lib/api";
 
 // Static, non-editable wrapper matching the fixed parts of the real PDF
 // (letterhead, date/salutation, party block, signature lines) that
@@ -19,6 +21,25 @@ export function LetterEnvelope({
   children: React.ReactNode;
 }) {
   const t = (key: string, placeholder: string) => tokens?.[key] ?? placeholder;
+
+  // The real PDF draws the actual signature uploaded in Settings → General
+  // (branding/signature.png via GET /branding/signature), not placeholder
+  // text — fetched here so the preview shows the same image or the same
+  // blank-space fallback when none has been uploaded yet.
+  const [signatureUrl, setSignatureUrl] = useState<string | null>(null);
+  useEffect(() => {
+    apiFetch<{ url: string | null }>("/branding/signature")
+      .then((data) => setSignatureUrl(data.url))
+      .catch(() => setSignatureUrl(null));
+  }, []);
+
+  const SignatureBlock = () =>
+    signatureUrl ? (
+      // eslint-disable-next-line @next/next/no-img-element -- external presigned S3 URL, not a static import
+      <img src={signatureUrl} alt="Signature" className="h-10 w-auto object-contain" />
+    ) : (
+      <div className="h-10" />
+    );
 
   return (
     <div className="mx-auto max-w-3xl bg-white text-[13px] text-stone-800">
@@ -59,7 +80,9 @@ export function LetterEnvelope({
         {type === "offer" ? (
           <>
             <p className="mt-4">Best regards,</p>
-            <p className="mt-2 font-[cursive] text-lg italic">Prabhat Patra</p>
+            <div className="mt-2">
+              <SignatureBlock />
+            </div>
             <p className="font-bold">Prabhat Patra (Founder)</p>
             <p className="mt-6 text-[11px] text-stone-400">
               (Followed by a signature/acknowledgment page — not shown in this preview.)
@@ -73,7 +96,9 @@ export function LetterEnvelope({
             <div className="mt-4 grid grid-cols-2 gap-4">
               <div>
                 <p>For Rhinon Tech,</p>
-                <p className="mt-4 font-[cursive] text-lg italic">Prabhat Patra</p>
+                <div className="mt-4">
+                  <SignatureBlock />
+                </div>
                 <p className="mt-1 font-bold">Authorized Signatory</p>
               </div>
               <div>

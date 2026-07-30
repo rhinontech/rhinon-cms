@@ -652,30 +652,34 @@ export function PeopleDirectory() {
     setMobileDetail(true);
   };
 
-  const resendDocument = async (category: "offer_letter" | "nda") => {
+  // One combined action for both documents — mirrors the original create-time
+  // flow (one shared signing session, one email covering both). Any already-
+  // signed document is left untouched server-side; only unsigned ones are
+  // regenerated, but there's still just one email either way, never one per
+  // document, so re-sending doesn't spam the employee with duplicate emails.
+  const resendDocuments = async () => {
     if (!selectedEmployee) return;
-    const label = category === "nda" ? "NDA" : "offer letter";
-    if (!confirm(`Regenerate and re-send the ${label} to ${selectedEmployee.personalEmail} for signing?\n\nThis rebuilds it from the current template and this employee's current details, plus any edits shown in the preview right now. Edits from an earlier resend that aren't reflected in the preview above won't carry over automatically.`)) return;
+    if (!confirm(`Regenerate and re-send the offer letter and/or NDA to ${selectedEmployee.personalEmail} for signing?\n\nOne email is sent covering whichever documents are still unsigned, rebuilt from the current template and this employee's current details, plus any edits shown in the previews right now. Already-signed documents are left untouched. Edits from an earlier resend that aren't reflected in the preview won't carry over automatically.`)) return;
 
     setResendingDoc(true);
     try {
-      const overrides = category === "offer_letter" ? offerOverrides : ndaOverrides;
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/employees/${selectedEmployee.id}/documents/${category}/resend`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/employees/${selectedEmployee.id}/documents/resend`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
-          templateKey: category === "offer_letter" ? offerTemplateKey || undefined : undefined,
-          overrides: overrides.length > 0 ? overrides : undefined,
+          offerLetterTemplateKey: offerTemplateKey || undefined,
+          offerLetterOverrides: offerOverrides.length > 0 ? offerOverrides : undefined,
+          ndaOverrides: ndaOverrides.length > 0 ? ndaOverrides : undefined,
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        alert(data.message || `Could not resend the ${label}.`);
+        alert(data.message || "Could not resend the documents.");
         return;
       }
-      if (category === "offer_letter") setOfferOverrides([]);
-      else setNdaOverrides([]);
-      alert(`${label === "NDA" ? "NDA" : "Offer letter"} updated and re-sent to ${data.sentTo || selectedEmployee.personalEmail}.`);
+      setOfferOverrides([]);
+      setNdaOverrides([]);
+      alert(`Updated and re-sent to ${data.sentTo || selectedEmployee.personalEmail} (${(data.regenerated || []).join(", ") || "no changes"}).`);
       fetch(`${process.env.NEXT_PUBLIC_API_URL}/employees/${selectedEmployee.id}/documents/status`, {
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -683,7 +687,7 @@ export function PeopleDirectory() {
         .then((d) => setDocStatus(d))
         .catch(() => {});
     } catch {
-      alert(`Could not resend the ${label}. Please try again.`);
+      alert("Could not resend the documents. Please try again.");
     } finally {
       setResendingDoc(false);
     }
@@ -1519,25 +1523,32 @@ export function PeopleDirectory() {
                     </div>
 
                     {mode === "edit" && docStatus && (() => {
-                      const category = previewTab === "offer" ? "offer_letter" : "nda";
-                      const status = docStatus[category];
-                      if (!status.exists) return null;
-                      if (status.signed) {
-                        return (
-                          <p className="mb-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700">
-                            ✓ Signed — this document is final and can no longer be edited or resent.
-                          </p>
-                        );
-                      }
+                      const rows = (["offer_letter", "nda"] as const)
+                        .filter((c) => docStatus[c].exists)
+                        .map((c) => ({ label: c === "offer_letter" ? "Offer Letter" : "NDA", signed: docStatus[c].signed }));
+                      if (rows.length === 0) return null;
+                      const anyUnsigned = rows.some((r) => !r.signed);
+
                       return (
-                        <button
-                          type="button"
-                          disabled={resendingDoc}
-                          onClick={() => resendDocument(category)}
-                          className="mb-3 w-full rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-xs font-semibold text-stone-700 hover:bg-stone-50 disabled:opacity-50"
-                        >
-                          {resendingDoc ? "Sending…" : `Resend ${previewTab === "offer" ? "Offer Letter" : "NDA"} for signing`}
-                        </button>
+                        <div className="mb-3 space-y-2">
+                          <p className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-stone-500">
+                            {rows.map((r) => (
+                              <span key={r.label}>
+                                {r.label}: {r.signed ? <span className="font-medium text-emerald-600">✓ Signed</span> : <span className="text-amber-600">Pending signature</span>}
+                              </span>
+                            ))}
+                          </p>
+                          {anyUnsigned && (
+                            <button
+                              type="button"
+                              disabled={resendingDoc}
+                              onClick={resendDocuments}
+                              className="w-full rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-xs font-semibold text-stone-700 hover:bg-stone-50 disabled:opacity-50"
+                            >
+                              {resendingDoc ? "Sending…" : "Resend for signing"}
+                            </button>
+                          )}
+                        </div>
                       );
                     })()}
 

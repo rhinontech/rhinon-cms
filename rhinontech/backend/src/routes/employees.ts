@@ -633,60 +633,68 @@ router.get("/:id/documents/status", authorize("employees:write"), async (req: Au
   res.json({ offer_letter: statusFor("offer_letter"), nda: statusFor("nda") });
 });
 
-// Regenerates an existing (unsigned) offer letter or NDA from the employee's
-// current field values + template selection + AI/manual overrides, and
-// re-sends the signing email. Mirrors the attachDocs generation path in
-// POST /employees, but for an employee who already exists — the natural
-// companion to editing a hire's details or wording after the fact.
-router.post("/:id/documents/:category/resend", authorize("employees:write"), async (req: AuthRequest, res: Response) => {
-  const category = req.params.category;
-  if (category !== "offer_letter" && category !== "nda") {
-    res.status(400).json({ message: `category must be "offer_letter" or "nda".` });
-    return;
-  }
-
+// Regenerates this employee's offer letter and/or NDA from their current
+// field values + template selection + AI/manual overrides, and re-sends ONE
+// signing email — mirroring the original attachDocs flow in POST /employees
+// (one combined email, one shared signing session covering both documents),
+// not a separate email per document. Any already-signed document is silently
+// left untouched (it's a legal record); only unsigned ones are regenerated.
+router.post("/:id/documents/resend", authorize("employees:write"), async (req: AuthRequest, res: Response) => {
   const employee = await User.findByPk(req.params.id);
   if (!employee) {
     res.status(404).json({ message: "Employee not found" });
     return;
   }
 
-  const document = await Document.findOne({
-    where: { employeeId: employee.id, category },
+  const docs = await Document.findAll({
+    where: { employeeId: employee.id, category: ["offer_letter", "nda"] },
     order: [["createdAt", "DESC"]],
   });
-  if (!document) {
-    res.status(404).json({ message: `No ${category === "nda" ? "NDA" : "offer letter"} has been generated for this employee yet.` });
+  const offerDoc = docs.find((d) => d.category === "offer_letter");
+  const ndaDoc = docs.find((d) => d.category === "nda");
+  if (!offerDoc && !ndaDoc) {
+    res.status(404).json({ message: "No documents have been generated for this employee yet." });
     return;
   }
-  if (document.signedAt) {
-    res.status(400).json({ message: "This document has already been signed and cannot be resent." });
+
+  const targets = [offerDoc, ndaDoc].filter((d): d is NonNullable<typeof d> => !!d && !d.signedAt);
+  if (targets.length === 0) {
+    res.status(400).json({ message: "Both documents have already been signed — nothing to resend." });
     return;
   }
 
   try {
-    const type = category === "nda" ? "nda" : "offer";
-    const resolved = await resolveLetterBlocks(type, employee, category === "offer_letter" ? req.body.templateKey : undefined);
-    const blocks = applyBlockOverrides(resolved.blocks, req.body.overrides);
-    const pdf = category === "nda" ? await generateNdaPdf(employee, undefined, blocks) : await generateOfferLetterPdf(employee, undefined, blocks);
+    const regenerated: string[] = [];
+    let signingToken: string | null = null;
 
-    const fileName = document.fileName || `${category === "nda" ? "NDA" : "Offer-Letter"}-${employee.fullName.replace(/[^a-zA-Z0-9]+/g, "-")}.pdf`;
-    const newKey = await uploadBuffer(pdf, fileName, "documents", "application/pdf");
-    const oldKey = document.fileKey;
+    for (const doc of targets) {
+      const category = doc.category as "offer_letter" | "nda";
+      const type = category === "nda" ? "nda" : "offer";
+      const resolved = await resolveLetterBlocks(type, employee, category === "offer_letter" ? req.body.offerLetterTemplateKey : undefined);
+      const overrides = category === "offer_letter" ? req.body.offerLetterOverrides : req.body.ndaOverrides;
+      const blocks = applyBlockOverrides(resolved.blocks, overrides);
+      const pdf = category === "nda" ? await generateNdaPdf(employee, undefined, blocks) : await generateOfferLetterPdf(employee, undefined, blocks);
 
-    const signingTokenExpiry = new Date(Date.now() + 48 * 60 * 60 * 1000);
-    await document.update({
-      fileKey: newKey,
-      fileName,
-      fileSize: pdf.length,
-      contentBlocks: blocks,
-      templateVersion: resolved.templateVersion,
-      signingTokenExpiry,
-    });
-    if (oldKey) await deleteObject(oldKey).catch(() => {});
+      const fileName = doc.fileName || `${category === "nda" ? "NDA" : "Offer-Letter"}-${employee.fullName.replace(/[^a-zA-Z0-9]+/g, "-")}.pdf`;
+      const newKey = await uploadBuffer(pdf, fileName, "documents", "application/pdf");
+      const oldKey = doc.fileKey;
+
+      await doc.update({
+        fileKey: newKey,
+        fileName,
+        fileSize: pdf.length,
+        contentBlocks: blocks,
+        templateVersion: resolved.templateVersion,
+        signingTokenExpiry: new Date(Date.now() + 48 * 60 * 60 * 1000),
+      });
+      if (oldKey) await deleteObject(oldKey).catch(() => {});
+
+      signingToken = doc.signingToken;
+      regenerated.push(category);
+    }
 
     const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:4200";
-    const signingUrl = `${frontendUrl}/sign-documents?token=${document.signingToken}`;
+    const signingUrl = `${frontendUrl}/sign-documents?token=${signingToken}`;
     const { subject, html, text } = signDocumentsEmail({
       fullName: employee.fullName,
       roleTitle: employee.roleTitle || undefined,
@@ -695,10 +703,10 @@ router.post("/:id/documents/:category/resend", authorize("employees:write"), asy
     });
     await sendEmail({ to: employee.personalEmail, via: "gmail", subject, html, text });
 
-    res.json({ message: "Document updated and re-sent for signing.", documentId: document.id, sentTo: employee.personalEmail });
+    res.json({ message: "Documents updated and re-sent for signing.", regenerated, sentTo: employee.personalEmail });
   } catch (err) {
-    console.error("Failed to regenerate/resend document:", err);
-    res.status(500).json({ message: "Could not regenerate and resend this document." });
+    console.error("Failed to regenerate/resend documents:", err);
+    res.status(500).json({ message: "Could not regenerate and resend the documents." });
   }
 });
 
