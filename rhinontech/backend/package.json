@@ -9,7 +9,10 @@
     "db:migrate": "ts-node src/config/migrate.ts",
     "db:seed": "ts-node src/config/seed.ts",
     "db:seed:work": "ts-node src/config/seed_work.ts",
-    "db:seed:comms": "ts-node src/config/seed_comms.ts"
+    "db:seed:comms": "ts-node src/config/seed_comms.ts",
+    "db:seed:letters": "ts-node src/config/seedLetterTemplates.ts",
+    "db:backfill:letters": "ts-node src/config/backfillLetterContentBlocks.ts",
+    "db:seed:leadership-template": "ts-node src/config/seedLeadershipTemplate.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1043.0",

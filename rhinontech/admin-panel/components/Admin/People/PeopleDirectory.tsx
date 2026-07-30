@@ -6,6 +6,20 @@ import { TbCamera, TbLayoutSidebarFilled, TbLayoutSidebarRightFilled, TbPencil, 
 import { cn } from "@/lib/utils";
 import { WorkSchedulePicker } from "@/components/Admin/Common/WorkSchedulePicker";
 import { usePermissions } from "@/context/PermissionsContext";
+import { LetterBlocksView } from "@/components/Admin/People/LetterBlocksView";
+import { LetterEnvelope } from "@/components/Admin/People/LetterEnvelope";
+import { RewriteToolbar } from "@/components/Admin/People/RewriteToolbar";
+import { NewTemplateDialog } from "@/components/Admin/People/NewTemplateDialog";
+import type { LetterBlock } from "@/types/letterBlocks";
+
+// Splices local (unsaved) block-level edits onto a freshly-resolved preview —
+// mirrors backend applyBlockOverrides so an AI edit survives a form-field
+// change that re-triggers the debounced preview fetch.
+function applyLocalOverrides(blocks: LetterBlock[], overrides: { blockId: string; text: string }[]): LetterBlock[] {
+  if (overrides.length === 0) return blocks;
+  const map = new Map(overrides.map((o) => [o.blockId, o.text]));
+  return blocks.map((b) => (b.kind !== "pagebreak" && map.has(b.id) ? { ...b, text: map.get(b.id)! } : b));
+}
 
 interface Role {
   id: string;
@@ -481,6 +495,19 @@ export function PeopleDirectory() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [attachDocs, setAttachDocs] = useState(true);
   const [previewTab, setPreviewTab] = useState<"offer" | "nda">("offer");
+  // Per-block AI/manual edits made in the live preview during create — kept
+  // here (not inside LiveLetterPreview) so they survive form-field changes
+  // that re-trigger the debounced preview fetch, and so submitEmployee can
+  // send them along with POST /employees. Never touches the shared template.
+  const [offerOverrides, setOfferOverrides] = useState<{ blockId: string; text: string }[]>([]);
+  const [ndaOverrides, setNdaOverrides] = useState<{ blockId: string; text: string }[]>([]);
+  // Which offer-letter template applies to this hire. Empty string = not yet
+  // manually chosen — auto-follows Employment Type (matching the backend's
+  // default) until the admin picks one explicitly from the dropdown.
+  const [offerTemplates, setOfferTemplates] = useState<{ key: string; title: string }[]>([]);
+  const [offerTemplateKey, setOfferTemplateKey] = useState("");
+  const [offerTemplateManuallySet, setOfferTemplateManuallySet] = useState(false);
+  const [showNewTemplateDialog, setShowNewTemplateDialog] = useState(false);
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -555,6 +582,34 @@ export function PeopleDirectory() {
       .catch(() => setRoles([]));
   }, [canManage]);
 
+  const fetchOfferTemplates = () => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/letter-templates?category=offer_letter`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((data) => setOfferTemplates(Array.isArray(data) ? data : []))
+      .catch(() => setOfferTemplates([]));
+  };
+
+  useEffect(() => {
+    if (!canManage) return;
+    fetchOfferTemplates();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canManage]);
+
+  // Auto-follows Employment Type (same default the backend applies) until the
+  // admin explicitly picks a template from the dropdown — matches the create
+  // flow's existing "smart defaults until touched" pattern.
+  useEffect(() => {
+    if (offerTemplateManuallySet || offerTemplates.length === 0) return;
+    const isIntern = form.employmentType?.toLowerCase().startsWith("intern");
+    const defaultKey = offerTemplates.find((t) => t.key === (isIntern ? "offer_letter_intern" : "offer_letter_fulltime"))?.key
+      ?? offerTemplates[0]?.key
+      ?? "";
+    setOfferTemplateKey(defaultKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [offerTemplates, form.employmentType, offerTemplateManuallySet]);
+
   const activeCount = useMemo(() => employees.filter((e) => e.status === "active").length, [employees]);
   const alumniCount = employees.length - activeCount;
 
@@ -580,6 +635,10 @@ export function PeopleDirectory() {
   const openCreate = () => {
     setMode("create");
     setForm(emptyForm);
+    setOfferOverrides([]);
+    setNdaOverrides([]);
+    setOfferTemplateKey("");
+    setOfferTemplateManuallySet(false);
     setMessage("");
     setIsPreviewExpanded(true);
     setMobileDetail(true);
@@ -780,6 +839,9 @@ export function PeopleDirectory() {
     const payload = {
       ...formPayload(form, mode),
       attachDocs: mode === "create" ? attachDocs : undefined,
+      offerLetterOverrides: mode === "create" && attachDocs && offerOverrides.length > 0 ? offerOverrides : undefined,
+      ndaOverrides: mode === "create" && attachDocs && ndaOverrides.length > 0 ? ndaOverrides : undefined,
+      offerLetterTemplateKey: mode === "create" && attachDocs && offerTemplateKey ? offerTemplateKey : undefined,
     };
 
     const res = await fetch(endpoint, {
@@ -812,6 +874,10 @@ export function PeopleDirectory() {
 
     if (mode === "create") {
       setForm(emptyForm);
+      setOfferOverrides([]);
+      setNdaOverrides([]);
+      setOfferTemplateKey("");
+      setOfferTemplateManuallySet(false);
     }
 
     const nextSelected = nextEmployees.find((employee) => employee.id === savedEmployee?.id) ?? selectedEmployee;
@@ -1395,10 +1461,63 @@ export function PeopleDirectory() {
                       </button>
                     </div>
 
+                    {previewTab === "offer" && (
+                      <div className="flex items-center gap-2 mb-3">
+                        <select
+                          value={offerTemplateKey}
+                          onChange={(e) => {
+                            setOfferTemplateKey(e.target.value);
+                            setOfferTemplateManuallySet(true);
+                          }}
+                          className="flex-1 rounded-lg border border-stone-200 bg-white px-2 py-1.5 text-xs font-medium text-stone-700"
+                        >
+                          {offerTemplates.map((t) => (
+                            <option key={t.key} value={t.key}>
+                              {t.title}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => setShowNewTemplateDialog(true)}
+                          className="rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-stone-500 hover:bg-stone-50 hover:text-stone-900"
+                        >
+                          + New
+                        </button>
+                      </div>
+                    )}
+
                     <div className="flex-1 bg-white border border-stone-200 rounded-xl overflow-hidden w-full relative">
-                      <LiveLetterPreview form={form} type={previewTab} token={token} />
+                      <LiveLetterPreview
+                        form={form}
+                        type={previewTab}
+                        token={token}
+                        templateKey={previewTab === "offer" ? offerTemplateKey : undefined}
+                        overrides={previewTab === "offer" ? offerOverrides : ndaOverrides}
+                        onOverride={(blockId, text) => {
+                          const setOverrides = previewTab === "offer" ? setOfferOverrides : setNdaOverrides;
+                          setOverrides((prev) => {
+                            const next = prev.filter((o) => o.blockId !== blockId);
+                            next.push({ blockId, text });
+                            return next;
+                          });
+                        }}
+                      />
                     </div>
                   </div>
+
+                  {showNewTemplateDialog && (
+                    <NewTemplateDialog
+                      existing={offerTemplates}
+                      onClose={() => setShowNewTemplateDialog(false)}
+                      onCreated={(key) => {
+                        setShowNewTemplateDialog(false);
+                        fetchOfferTemplates();
+                        setOfferTemplateKey(key);
+                        setOfferTemplateManuallySet(true);
+                      }}
+                    />
+                  )}
                 </form>
             ) : (
               <div className="flex items-center justify-center flex-1 text-sm text-gray-400">
@@ -1435,20 +1554,41 @@ export function PeopleDirectory() {
   );
 }
 
-// Renders the real, backend-generated PDF (same generator used for the actual
-// offer letter / NDA) from the in-progress form fields, debounced as the admin
-// types. Nothing is persisted — see POST /employees/preview-documents.
-function LiveLetterPreview({ form, type, token }: { form: EmployeeForm; type: "offer" | "nda"; token?: string }) {
-  const [url, setUrl] = useState<string | null>(null);
+// Renders the real, backend-resolved letter content (same LetterTemplate +
+// token resolution used for the actual offer letter / NDA) from the
+// in-progress form fields, debounced as the admin types. Nothing is
+// persisted server-side — see POST /employees/preview-documents. Rendered as
+// selectable HTML (not a PDF-in-iframe) so RewriteToolbar can capture a text
+// selection and offer an AI rewrite scoped to this one employee's copy;
+// accepted rewrites are lifted to the parent via onOverride and sent along
+// with the final POST /employees, never touching the shared template.
+function LiveLetterPreview({
+  form,
+  type,
+  token,
+  templateKey,
+  overrides,
+  onOverride,
+}: {
+  form: EmployeeForm;
+  type: "offer" | "nda";
+  token?: string;
+  templateKey?: string;
+  overrides: { blockId: string; text: string }[];
+  onOverride: (blockId: string, text: string) => void;
+}) {
+  const [blocks, setBlocks] = useState<LetterBlock[] | null>(null);
+  const [tokens, setTokens] = useState<Record<string, string> | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const urlRef = useRef<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const fullName = form.fullName.trim();
 
   useEffect(() => {
     if (!fullName) {
-      setUrl(null);
+      setBlocks(null);
+      setTokens(null);
       setError("");
       setLoading(false);
       return;
@@ -1464,6 +1604,7 @@ function LiveLetterPreview({ form, type, token }: { form: EmployeeForm; type: "o
         signal: controller.signal,
         body: JSON.stringify({
           type,
+          templateKey: type === "offer" ? templateKey || undefined : undefined,
           fullName: form.fullName,
           legalName: form.legalName,
           roleTitle: form.roleTitle,
@@ -1482,13 +1623,11 @@ function LiveLetterPreview({ form, type, token }: { form: EmployeeForm; type: "o
             const data = await res.json().catch(() => ({}));
             throw new Error(data.message || "Could not render the preview.");
           }
-          return res.blob();
+          return res.json() as Promise<{ blocks: LetterBlock[]; tokens: Record<string, string> }>;
         })
-        .then((blob) => {
-          const next = URL.createObjectURL(blob);
-          if (urlRef.current) URL.revokeObjectURL(urlRef.current);
-          urlRef.current = next;
-          setUrl(next);
+        .then((data) => {
+          setBlocks(applyLocalOverrides(data.blocks, overrides));
+          setTokens(data.tokens);
           setLoading(false);
         })
         .catch((err) => {
@@ -1502,9 +1641,13 @@ function LiveLetterPreview({ form, type, token }: { form: EmployeeForm; type: "o
       clearTimeout(timer);
       controller.abort();
     };
+    // overrides intentionally excluded — re-applying them on every keystroke
+    // in `instruction` (etc.) would refetch the whole preview; onOverride
+    // already patches local state immediately (see below).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     type,
+    templateKey,
     fullName,
     form.legalName,
     form.roleTitle,
@@ -1518,10 +1661,6 @@ function LiveLetterPreview({ form, type, token }: { form: EmployeeForm; type: "o
     form.annualVariablePay,
     token,
   ]);
-
-  useEffect(() => () => {
-    if (urlRef.current) URL.revokeObjectURL(urlRef.current);
-  }, []);
 
   if (!fullName) {
     return (
@@ -1538,8 +1677,22 @@ function LiveLetterPreview({ form, type, token }: { form: EmployeeForm; type: "o
   }
 
   return (
-    <div className="relative h-full w-full">
-      {url && <iframe src={url} className="h-full w-full" title={type === "offer" ? "Offer letter preview" : "NDA preview"} />}
+    <div className="relative h-full w-full overflow-auto" ref={containerRef}>
+      {blocks && (
+        <>
+          <LetterEnvelope type={type} tokens={tokens ?? undefined}>
+            <LetterBlocksView blocks={blocks} />
+          </LetterEnvelope>
+          <RewriteToolbar
+            containerRef={containerRef}
+            blocks={blocks}
+            onApply={(blockId, text) => {
+              setBlocks((prev) => (prev ? prev.map((b) => (b.id === blockId ? { ...b, text } : b)) : prev));
+              onOverride(blockId, text);
+            }}
+          />
+        </>
+      )}
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center bg-white/70 text-xs text-stone-400">
           Rendering preview...

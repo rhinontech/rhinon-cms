@@ -25,6 +25,7 @@ import { ReviewCycle } from "./ReviewCycle";
 import { ReviewGoal } from "./ReviewGoal";
 import { ReviewSubmission } from "./ReviewSubmission";
 import { Document } from "./Document";
+import { LetterTemplate } from "./LetterTemplate";
 import { LinkedInToken } from "./LinkedInToken";
 import { Subtask } from "./Subtask";
 import { TaskComment } from "./TaskComment";
@@ -147,6 +148,9 @@ Document.belongsTo(User, { foreignKey: "employeeId", as: "employee" });
 Document.belongsTo(User, { foreignKey: "uploadedById", as: "uploader" });
 User.hasMany(Document, { foreignKey: "employeeId", as: "documents" });
 
+// Letter Templates
+LetterTemplate.belongsTo(User, { foreignKey: "updatedById", as: "updatedBy" });
+
 // Outreach Associations
 Campaign.belongsTo(CampaignTemplate, { foreignKey: "templateId", as: "template" });
 CampaignTemplate.hasMany(Campaign, { foreignKey: "templateId", as: "campaigns" });
@@ -220,6 +224,7 @@ export {
   ReviewGoal,
   ReviewSubmission,
   Document,
+  LetterTemplate,
   LinkedInToken,
   Subtask,
   TaskComment,

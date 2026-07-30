@@ -201,6 +201,40 @@ export async function generateAISocialDraft(templateData: any = null): Promise<s
   return response.text().trim();
 }
 
+// Rewrites one offer-letter/NDA block's text per an admin's instruction —
+// used by both the letter-template editor (master template) and the
+// per-employee live preview (see routes/letterTemplates.ts). Takes the
+// block's FULL text (not just the selected span) so the model can return a
+// complete, well-formed replacement rather than the caller having to splice
+// a fragment back into **bold**/{{token}} markup itself.
+export async function rewriteLetterSentence(blockFullText: string, selectedText: string, instruction: string): Promise<string> {
+  const prompt = `
+    You are editing one paragraph of a formal HR document (an offer letter or
+    NDA clause) for Rhinon Tech. Apply the requested change ONLY to the
+    selected portion, keeping the rest of the passage exactly as-is.
+
+    FULL PASSAGE:
+    """${blockFullText}"""
+
+    SELECTED TEXT WITHIN THE PASSAGE:
+    """${selectedText}"""
+
+    REQUESTED CHANGE:
+    ${instruction}
+
+    RULES:
+    - Return the ENTIRE passage with the change applied, not just the changed part.
+    - Preserve **bold** markup exactly (double-asterisk pairs) where it already exists.
+    - Preserve every {{token.name}} placeholder verbatim, character-for-character — never rename, remove, or reword text inside {{ }}.
+    - Keep the same formal, professional tone as the rest of the document.
+    - Do not add headings, labels, quotes, or any commentary — output only the revised passage text.
+  `;
+
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  return response.text().trim().replace(/^"""|"""$/g, "").trim();
+}
+
 export async function enrichLeadWithAI(
   leadName: string,
   companyName: string,

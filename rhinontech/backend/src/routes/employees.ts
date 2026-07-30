@@ -7,7 +7,7 @@ import { User, Role, Document } from "../models";
 import type { ExitReason } from "../models/User";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 import { finalizeOffboarding, todayIST } from "../services/offboarding";
-import { generateLetterPdf, letterTitle, LetterType, generateOfferLetterPdf, generateNdaPdf } from "../services/letters";
+import { generateLetterPdf, letterTitle, LetterType, generateOfferLetterPdf, generateNdaPdf, resolveLetterBlocks, applyBlockOverrides } from "../services/letters";
 import { sendEmail } from "../services/mailer";
 import { welcomeEmail, signDocumentsEmail, resetPasswordEmail } from "../services/emailTemplates";
 import { env } from "../config/env";
@@ -175,8 +175,21 @@ router.post("/", authorize("employees:write"), async (req: AuthRequest, res: Res
 
   if (attachDocs) {
     try {
-      const offerLetterPdf = await generateOfferLetterPdf(employee);
-      const ndaPdf = await generateNdaPdf(employee);
+      // Resolve the current template against this employee, then splice in
+      // whatever the admin AI-edited (or hand-edited) in the create-member
+      // form's live preview — the master template itself is never touched.
+      // The merged result is snapshotted on each Document row so it (a) is
+      // what actually gets rendered below and (b) survives to the signed PDF
+      // (see documentSigning.ts, which renders from this snapshot).
+      const [offerResolved, ndaResolved] = await Promise.all([
+        resolveLetterBlocks("offer", employee, req.body.offerLetterTemplateKey),
+        resolveLetterBlocks("nda", employee),
+      ]);
+      const offerBlocks = applyBlockOverrides(offerResolved.blocks, req.body.offerLetterOverrides);
+      const ndaBlocks = applyBlockOverrides(ndaResolved.blocks, req.body.ndaOverrides);
+
+      const offerLetterPdf = await generateOfferLetterPdf(employee, undefined, offerBlocks);
+      const ndaPdf = await generateNdaPdf(employee, undefined, ndaBlocks);
 
       const offerLetterName = `Offer-Letter-${employee.fullName.replace(/[^a-zA-Z0-9]+/g, "-")}.pdf`;
       const ndaName = `NDA-${employee.fullName.replace(/[^a-zA-Z0-9]+/g, "-")}.pdf`;
@@ -198,6 +211,8 @@ router.post("/", authorize("employees:write"), async (req: AuthRequest, res: Res
         mimeType: "application/pdf",
         signingToken,
         signingTokenExpiry,
+        contentBlocks: offerBlocks,
+        templateVersion: offerResolved.templateVersion,
       });
 
       await Document.create({
@@ -211,6 +226,8 @@ router.post("/", authorize("employees:write"), async (req: AuthRequest, res: Res
         mimeType: "application/pdf",
         signingToken,
         signingTokenExpiry,
+        contentBlocks: ndaBlocks,
+        templateVersion: ndaResolved.templateVersion,
       });
 
       signingUrl = `${frontendUrl}/sign-documents?token=${signingToken}`;
@@ -252,10 +269,12 @@ router.post("/", authorize("employees:write"), async (req: AuthRequest, res: Res
   });
 });
 
-// Live preview of an offer letter / NDA rendered from in-progress form data —
+// Live preview of an offer letter / NDA resolved from in-progress form data —
 // used by the create/edit member form so the preview always matches the real
-// generator. Nothing is persisted: `User.build` makes an in-memory instance
-// only, never written to the database.
+// template + token resolution. Nothing is persisted: `User.build` makes an
+// in-memory instance only, never written to the database. Returns the
+// resolved LetterBlock[] (not a PDF) so the admin panel can render it as
+// selectable HTML and offer AI rewrites on it (see LetterBlocksView).
 router.post("/preview-documents", authorize("employees:write"), async (req: AuthRequest, res: Response) => {
   const type = req.body.type === "nda" ? "nda" : "offer";
   const { fullName, legalName, roleTitle, workLocation, employmentType, workSchedule, remotePosition, joiningDate, department, annualCompensation, annualVariablePay } = req.body;
@@ -283,10 +302,9 @@ router.post("/preview-documents", authorize("employees:write"), async (req: Auth
   });
 
   try {
-    const pdf = type === "nda" ? await generateNdaPdf(draft) : await generateOfferLetterPdf(draft);
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", "inline");
-    res.send(pdf);
+    const templateKey = typeof req.body.templateKey === "string" ? req.body.templateKey : undefined;
+    const { blocks, templateVersion, tokens, templateKey: resolvedKey } = await resolveLetterBlocks(type, draft, templateKey);
+    res.json({ blocks, templateVersion, tokens, templateKey: resolvedKey });
   } catch (err) {
     console.error("Failed to render document preview:", err);
     res.status(500).json({ message: "Could not render the preview." });

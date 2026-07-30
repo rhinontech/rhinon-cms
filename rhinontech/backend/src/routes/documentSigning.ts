@@ -116,9 +116,15 @@ router.post("/:token/documents/:documentId/sign", async (req: Request, res: Resp
     return;
   }
 
+  // Render from the snapshot taken at document-creation time (contentBlocks)
+  // rather than regenerating from live User fields — that snapshot is what
+  // any pre-send AI edit was applied to, and re-deriving from `user` here
+  // would silently discard those edits. Legacy documents created before this
+  // column existed (contentBlocks null) fall back to a fresh generation.
+  const blocks = doc.contentBlocks ?? undefined;
   const newPdf = doc.category === "nda"
-    ? await generateNdaPdf(user, signature)
-    : await generateOfferLetterPdf(user, signature);
+    ? await generateNdaPdf(user, signature, blocks)
+    : await generateOfferLetterPdf(user, signature, blocks);
 
   const newKey = await uploadBuffer(newPdf, doc.fileName || `${doc.category}.pdf`, "documents", "application/pdf");
 

@@ -1,5 +1,6 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../config/database";
+import type { LetterBlock } from "../types/letterBlocks";
 
 export type DocumentCategory =
   | "offer_letter"
@@ -32,6 +33,12 @@ interface DocumentAttributes {
   signatureType: SignatureType | null;
   signedName: string | null;
   signatureImageKey: string | null;
+  // Snapshot of the exact resolved (and possibly AI-edited) letter content used
+  // to render this document's PDF — the source of truth for re-rendering at
+  // signing time, so pre-send edits aren't discarded (see documentSigning.ts).
+  // Null on legacy rows created before this column existed.
+  contentBlocks: LetterBlock[] | null;
+  templateVersion: number | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -41,6 +48,7 @@ interface DocumentCreationAttributes
     DocumentAttributes,
     | "id" | "fileKey" | "fileName" | "fileSize" | "mimeType" | "isRequest" | "requestNote"
     | "signingToken" | "signingTokenExpiry" | "signedAt" | "signatureType" | "signedName" | "signatureImageKey"
+    | "contentBlocks" | "templateVersion"
   > {}
 
 export class Document
@@ -64,6 +72,8 @@ export class Document
   declare signatureType: SignatureType | null;
   declare signedName: string | null;
   declare signatureImageKey: string | null;
+  declare contentBlocks: LetterBlock[] | null;
+  declare templateVersion: number | null;
   declare createdAt: Date;
   declare updatedAt: Date;
 }
@@ -90,6 +100,8 @@ Document.init(
     signatureType: { type: DataTypes.ENUM("typed", "drawn"), allowNull: true, defaultValue: null },
     signedName: { type: DataTypes.STRING, allowNull: true, defaultValue: null },
     signatureImageKey: { type: DataTypes.STRING, allowNull: true, defaultValue: null },
+    contentBlocks: { type: DataTypes.JSONB, allowNull: true, defaultValue: null },
+    templateVersion: { type: DataTypes.INTEGER, allowNull: true, defaultValue: null },
   },
   {
     sequelize,
