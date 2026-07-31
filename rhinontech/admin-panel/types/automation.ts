@@ -75,6 +75,7 @@ export interface WorkflowItem {
 export interface WorkflowEnrollment {
   id: string;
   workflowId: string;
+  workflowName?: string;
   leadName: string;
   leadEmail: string;
   source: string;

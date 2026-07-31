@@ -36,6 +36,7 @@ export function WorkflowTriggerTab({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [contactGroups, setContactGroups] = useState<ContactGroupItem[]>([]);
   const [loadingGroups, setLoadingGroups] = useState(false);
+  const [groupsError, setGroupsError] = useState<string | null>(null);
   const [selectedSources, setSelectedSources] = useState<string[]>(watchedSources);
   const [localBatchSize, setLocalBatchSize] = useState<number | string>(batchSize);
   const [isBatchSizeSaved, setIsBatchSizeSaved] = useState<boolean>(false);
@@ -70,20 +71,19 @@ export function WorkflowTriggerTab({
 
   const openRecipientsModal = async () => {
     setIsModalOpen(true);
+    setGroupsError(null);
     try {
       setLoadingGroups(true);
       const res = await apiFetch<ContactGroupItem[]>("/contact-groups");
       if (Array.isArray(res)) {
         setContactGroups(res);
+      } else {
+        setContactGroups([]);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to load contact groups:", err);
-      // Fallback default groups if endpoint fails
-      setContactGroups([
-        { id: "cg-1", name: "User Signups", memberCount: 1450 },
-        { id: "cg-2", name: "Newsletter Subscribers", memberCount: 3200 },
-        { id: "cg-3", name: "Meta Ads Leads", memberCount: 890 },
-      ]);
+      setContactGroups([]);
+      setGroupsError(err.message || "Failed to load contact groups. Server error or permission issue.");
     } finally {
       setLoadingGroups(false);
     }
@@ -358,6 +358,12 @@ export function WorkflowTriggerTab({
 
               {loadingGroups ? (
                 <div className="py-8 text-center text-xs text-gray-500">Loading contact groups...</div>
+              ) : groupsError ? (
+                <div className="py-6 px-2 text-center">
+                  <div className="text-xs font-medium text-rose-600 bg-rose-50 border border-rose-200 rounded-xl p-3.5">
+                    {groupsError}
+                  </div>
+                </div>
               ) : contactGroups.length > 0 ? (
                 <div className="space-y-2">
                   {contactGroups.map((group) => {

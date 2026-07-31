@@ -28,18 +28,18 @@ export function Sidebar() {
   const expanded = sidebarExpanded || isHovering || mobileNavOpen;
 
   const navItems = [
-    { title: "Dashboard",  icon: <MdDashboard size={20} className="h-5 w-5 flex-shrink-0" />,    href: `/${roleSlug}/dashboard`,  permissions: ["dashboard:read"] },
-    { title: "Inbox",      icon: <HiInbox size={20} className="h-5 w-5 flex-shrink-0" />,         href: `/${roleSlug}/inbox`,      permissions: ["inbox:read"] },
-    { title: "Pages",      icon: <TbBook size={20} className="h-5 w-5 flex-shrink-0" />,          href: `/${roleSlug}/pages`,      permissions: ["pages:read"] },
-    { title: "CRM",        icon: <TbTargetArrow size={20} className="h-5 w-5 flex-shrink-0" />,   href: `/${roleSlug}/crm`,        permissions: ["crm:read"] },
-    { title: "Outreach",   icon: <TbSpeakerphone size={20} className="h-5 w-5 flex-shrink-0" />,  href: `/${roleSlug}/outreach`,   permissions: ["outreach:read"] },
-    { title: "Automation", icon: <TbHierarchy size={20} className="h-5 w-5 flex-shrink-0" />,    href: `/${roleSlug}/automation`, permissions: ["outreach:read", "crm:read", "dashboard:read"] },
-    { title: "Work",       icon: <TbBriefcase size={20} className="h-5 w-5 flex-shrink-0" />,     href: `/${roleSlug}/work`,       permissions: ["work:read"] },
-    { title: "Team",       icon: <FaUserGroup size={20} className="h-5 w-5 flex-shrink-0" />,     href: `/${roleSlug}/employees`,  permissions: ["people:read", "attendance:read", "leave:read", "performance:read", "documents:read"] },
-    { title: "Payroll",    icon: <TbCash size={20} className="h-5 w-5 flex-shrink-0" />,          href: `/${roleSlug}/payroll`,    permissions: ["payslips:read"] },
-    { title: "Content",    icon: <TbNews size={20} className="h-5 w-5 flex-shrink-0" />,          href: `/${roleSlug}/content`,    permissions: ["content:read"] },
-    { title: "Analytics",  icon: <TbChartArcs size={20} className="h-5 w-5 flex-shrink-0" />,     href: `/${roleSlug}/analytics`,  permissions: ["analytics:read"] },
-    { title: "Settings",   icon: <RiSettings3Fill size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/settings`,   permissions: ["settings:read", "docsAccess:read", "provisioning:read"] },
+    { title: "Dashboard", icon: <MdDashboard size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/dashboard`, permissions: ["dashboard:read"] },
+    { title: "Inbox", icon: <HiInbox size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/inbox`, permissions: ["inbox:read"] },
+    { title: "Pages", icon: <TbBook size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/pages`, permissions: ["pages:read"] },
+    { title: "CRM", icon: <TbTargetArrow size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/crm`, permissions: ["crm:read"] },
+    { title: "Outreach", icon: <TbSpeakerphone size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/outreach`, permissions: ["outreach:read"] },
+    { title: "Automation", icon: <TbHierarchy size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/automation`, permissions: ["outreach:read", "crm:read"] },
+    { title: "Work", icon: <TbBriefcase size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/work`, permissions: ["work:read"] },
+    { title: "Team", icon: <FaUserGroup size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/employees`, permissions: ["people:read", "attendance:read", "leave:read", "performance:read", "documents:read"] },
+    { title: "Payroll", icon: <TbCash size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/payroll`, permissions: ["payslips:read"] },
+    { title: "Content", icon: <TbNews size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/content`, permissions: ["content:read"] },
+    { title: "Analytics", icon: <TbChartArcs size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/analytics`, permissions: ["analytics:read"] },
+    { title: "Settings", icon: <RiSettings3Fill size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/settings`, permissions: ["settings:read", "docsAccess:read", "provisioning:read"] },
   ].filter((item) => has(...item.permissions));
 
   return (
@@ -48,59 +48,59 @@ export function Sidebar() {
       {mobileNavOpen && (
         <div className="fixed inset-0 z-40 bg-black/30 lg:hidden" onClick={() => setMobileNavOpen(false)} />
       )}
-    <aside
-      className={cn(
-        "flex h-full flex-col transition-all duration-300 ease-in-out",
-        // Mobile: fixed overlay drawer slid in from the left; desktop: static column.
-        "fixed inset-y-0 left-0 z-50 w-64 max-lg:bg-white! shadow-xl lg:static lg:z-auto lg:shadow-none",
-        mobileNavOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
-        expanded ? "lg:w-56" : "lg:w-14"
-      )}
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => setIsHovering(false)}
-    >
-      {/* Logo */}
-      <div className="flex h-14 items-center justify-center border-black/5 w-full">
-        {expanded ? (
-          <div className="flex items-center justify-between w-full px-3">
-            <Link href="/">
-              <Image src={adminImages.Logo_Rhinon_Tech_Dark} alt="Rhinon Tech" priority className="h-10 w-full object-cover" />
-            </Link>
-            <button
-              onClick={() => setSidebarExpanded(!sidebarExpanded)}
-              className="p-1 rounded bg-white/50 hover:bg-white/70 transition-all shrink-0"
-            >
-              {sidebarExpanded ? <BsPinAngleFill size={14} /> : <BsPinAngle size={14} />}
-            </button>
-          </div>
-        ) : (
-          <Link href="/">
-            <Image src={adminImages.blueLogo} alt="Rhinon Tech" priority className="h-8 w-8 object-cover" />
-          </Link>
+      <aside
+        className={cn(
+          "flex h-full flex-col transition-all duration-300 ease-in-out",
+          // Mobile: fixed overlay drawer slid in from the left; desktop: static column.
+          "fixed inset-y-0 left-0 z-50 w-64 max-lg:bg-white! shadow-xl lg:static lg:z-auto lg:shadow-none",
+          mobileNavOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+          expanded ? "lg:w-56" : "lg:w-14"
         )}
-      </div>
-
-      {/* Nav */}
-      <nav className="flex flex-1 flex-col py-4">
-        <div className="space-y-1 px-2">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "group flex items-center justify-center gap-x-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                pathname.startsWith(item.href)
-                  ? "bg-white/70 text-gray-900"
-                  : "text-gray-700 hover:bg-white/40 hover:text-gray-900"
-              )}
-            >
-              {item.icon}
-              {expanded && <span className="flex-1 truncate">{item.title}</span>}
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+      >
+        {/* Logo */}
+        <div className="flex h-14 items-center justify-center border-black/5 w-full">
+          {expanded ? (
+            <div className="flex items-center justify-between w-full px-3">
+              <Link href="/">
+                <Image src={adminImages.Logo_Rhinon_Tech_Dark} alt="Rhinon Tech" priority className="h-10 w-full object-cover" />
+              </Link>
+              <button
+                onClick={() => setSidebarExpanded(!sidebarExpanded)}
+                className="p-1 rounded bg-white/50 hover:bg-white/70 transition-all shrink-0"
+              >
+                {sidebarExpanded ? <BsPinAngleFill size={14} /> : <BsPinAngle size={14} />}
+              </button>
+            </div>
+          ) : (
+            <Link href="/">
+              <Image src={adminImages.blueLogo} alt="Rhinon Tech" priority className="h-8 w-8 object-cover" />
             </Link>
-          ))}
+          )}
         </div>
-      </nav>
-    </aside>
+
+        {/* Nav */}
+        <nav className="flex flex-1 flex-col py-4">
+          <div className="space-y-1 px-2">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "group flex items-center justify-center gap-x-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  pathname.startsWith(item.href)
+                    ? "bg-white/70 text-gray-900"
+                    : "text-gray-700 hover:bg-white/40 hover:text-gray-900"
+                )}
+              >
+                {item.icon}
+                {expanded && <span className="flex-1 truncate">{item.title}</span>}
+              </Link>
+            ))}
+          </div>
+        </nav>
+      </aside>
     </>
   );
 }

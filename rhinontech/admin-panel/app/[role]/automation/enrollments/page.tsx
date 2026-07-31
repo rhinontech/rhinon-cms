@@ -1,12 +1,47 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { WorkflowEnrollmentsTab } from "@/components/Admin/Automation/WorkflowEnrollmentsTab";
-import { initialEnrollments } from "@/lib/automationStore";
 import { WorkflowEnrollment } from "@/types/automation";
+import { apiFetch } from "@/lib/api";
+import { toast } from "sonner";
 
 export default function EnrollmentsGlobalPage() {
-  const [enrollments, setEnrollments] = useState<WorkflowEnrollment[]>(initialEnrollments);
+  const [enrollments, setEnrollments] = useState<WorkflowEnrollment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchGlobalEnrollments = async () => {
+    try {
+      setLoading(true);
+      const res = await apiFetch<{ success: boolean; data: WorkflowEnrollment[] }>("/workflows/enrollments/all");
+      if (res.success && Array.isArray(res.data)) {
+        setEnrollments(res.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch global enrollments:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchGlobalEnrollments();
+  }, []);
+
+  const handleCancelAll = async () => {
+    try {
+      const res = await apiFetch<{ success: boolean; message: string }>("/workflows/cancel-all-enrollments", {
+        method: "POST",
+      });
+      if (res.success) {
+        toast.success("Cancelled all running enrollments");
+        fetchGlobalEnrollments();
+      }
+    } catch (err: any) {
+      console.error("Failed to cancel running enrollments:", err);
+      toast.error(err.message || "Failed to cancel running enrollments");
+    }
+  };
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-6">
@@ -17,13 +52,10 @@ export default function EnrollmentsGlobalPage() {
 
       <WorkflowEnrollmentsTab
         enrollments={enrollments}
-        onRefresh={() => setEnrollments([...enrollments])}
-        onCancelAll={() =>
-          setEnrollments((prev) =>
-            prev.map((e) => (e.status === "active" ? { ...e, status: "cancelled" } : e))
-          )
-        }
+        onRefresh={fetchGlobalEnrollments}
+        onCancelAll={handleCancelAll}
       />
     </div>
   );
 }
+

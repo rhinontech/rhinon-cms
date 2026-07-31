@@ -252,103 +252,107 @@ export default function SingleWorkflowPage({ params }: { params: Promise<{ id: s
   }
 
   return (
-    <div className="flex flex-col h-full w-full overflow-hidden bg-gray-50/50">
-      {/* Fixed Top Header */}
-      <WorkflowHeader
-        workflow={workflow}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        onStatusChange={handleStatusChange}
-        onEnrollTest={handleEnrollTest}
-        onRunWorkflow={handleRunWorkflow}
-        roleSlug={roleSlug}
-      />
+    <div className="flex h-full w-full overflow-hidden bg-gray-50/50 rounded-r-xl">
+      {/* Left Column: Top Header + Main Tab Content (both shrink together when sidebar opens) */}
+      <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden">
+        <WorkflowHeader
+          workflow={workflow}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          onStatusChange={handleStatusChange}
+          onEnrollTest={handleEnrollTest}
+          onRunWorkflow={handleRunWorkflow}
+          roleSlug={roleSlug}
+        />
 
-      {/* Main Tab Content */}
-      <div className="flex-1 overflow-auto relative">
-        {activeTab === "Editor" && (
-          <div className="h-full w-full relative">
-            <WorkflowCanvas
-              nodes={nodes}
-              edges={edges}
-              onChangeCanvas={handleCanvasChange}
-              onSelectNode={setSelectedNode}
-              readOnly={workflow.status === "archived"}
-            />
-            {selectedNode && (
-              <NodeConfigDrawer
-                node={selectedNode}
-                onClose={() => setSelectedNode(null)}
-                onSave={handleSaveNodeConfig}
-                onDelete={handleDeleteNode}
+        <div className="flex-1 overflow-auto relative">
+          {activeTab === "Editor" && (
+            <div className="h-full w-full relative">
+              <WorkflowCanvas
+                nodes={nodes}
+                edges={edges}
+                onChangeCanvas={handleCanvasChange}
+                onSelectNode={setSelectedNode}
+                readOnly={workflow.status === "archived"}
               />
-            )}
-          </div>
-        )}
+            </div>
+          )}
 
-        {activeTab === "Trigger" && (
-          <WorkflowTriggerTab
-            triggerType={workflow.triggerType}
-            onTypeChange={(type: WorkflowTriggerType) => {
-              setWorkflow((prev) => (prev ? { ...prev, triggerType: type } : null));
-              saveWorkflowChanges({ triggerType: type });
-            }}
-            allowReEnrollment={workflow.triggerConfig?.allowReEnrollment || false}
-            onReEnrollmentChange={(allow: boolean) => {
-              const updatedConfig = { ...workflow.triggerConfig, allowReEnrollment: allow };
-              setWorkflow((prev) => (prev ? { ...prev, triggerConfig: updatedConfig } : null));
-              saveWorkflowChanges({ triggerConfig: updatedConfig });
-            }}
-            watchedSources={workflow.triggerConfig?.watchedSources || []}
-            onSourcesChange={(sources: string[]) => {
-              const updatedConfig = { ...workflow.triggerConfig, watchedSources: sources };
-              const updatedNodes = nodes.map((n) => {
-                if (n.type === "trigger" || n.data?.nodeType === "trigger") {
-                  return {
-                    ...n,
-                    data: {
-                      ...n.data,
-                      status: sources.length > 0 ? ("READY" as const) : ("NOT SET" as const),
-                      subtitle: sources.length > 0 ? `Selected: ${sources.join(", ")}` : "Click to choose how leads enter this workflow",
-                    },
-                  };
-                }
-                return n;
-              });
-              setNodes(updatedNodes);
-              setWorkflow((prev) => (prev ? { ...prev, triggerConfig: updatedConfig, nodes: updatedNodes } : null));
-              saveWorkflowChanges({ triggerConfig: updatedConfig, nodes: updatedNodes, edges });
-            }}
-            batchSize={workflow.triggerConfig?.batchSize || 100}
-            onBatchSizeChange={(batchSize: number) => {
-              const updatedConfig = { ...workflow.triggerConfig, batchSize };
-              setWorkflow((prev) => (prev ? { ...prev, triggerConfig: updatedConfig } : null));
-              saveWorkflowChanges({ triggerConfig: updatedConfig });
-            }}
-          />
-        )}
+          {activeTab === "Trigger" && (
+            <WorkflowTriggerTab
+              triggerType={workflow.triggerType}
+              onTypeChange={(type: WorkflowTriggerType) => {
+                setWorkflow((prev) => (prev ? { ...prev, triggerType: type } : null));
+                saveWorkflowChanges({ triggerType: type });
+              }}
+              allowReEnrollment={workflow.triggerConfig?.allowReEnrollment || false}
+              onReEnrollmentChange={(allow: boolean) => {
+                const updatedConfig = { ...workflow.triggerConfig, allowReEnrollment: allow };
+                setWorkflow((prev) => (prev ? { ...prev, triggerConfig: updatedConfig } : null));
+                saveWorkflowChanges({ triggerConfig: updatedConfig });
+              }}
+              watchedSources={workflow.triggerConfig?.watchedSources || []}
+              onSourcesChange={(sources: string[]) => {
+                const updatedConfig = { ...workflow.triggerConfig, watchedSources: sources };
+                const updatedNodes = nodes.map((n) => {
+                  if (n.type === "trigger" || n.data?.nodeType === "trigger") {
+                    return {
+                      ...n,
+                      data: {
+                        ...n.data,
+                        status: sources.length > 0 ? ("READY" as const) : ("NOT SET" as const),
+                        subtitle: sources.length > 0 ? `Selected: ${sources.join(", ")}` : "Click to choose how leads enter this workflow",
+                      },
+                    };
+                  }
+                  return n;
+                });
+                setNodes(updatedNodes);
+                setWorkflow((prev) => (prev ? { ...prev, triggerConfig: updatedConfig, nodes: updatedNodes } : null));
+                saveWorkflowChanges({ triggerConfig: updatedConfig, nodes: updatedNodes, edges });
+              }}
+              batchSize={workflow.triggerConfig?.batchSize || 100}
+              onBatchSizeChange={(batchSize: number) => {
+                const updatedConfig = { ...workflow.triggerConfig, batchSize };
+                setWorkflow((prev) => (prev ? { ...prev, triggerConfig: updatedConfig } : null));
+                saveWorkflowChanges({ triggerConfig: updatedConfig });
+              }}
+            />
+          )}
 
-        {activeTab === "Settings" && (
-          <WorkflowSettingsTab
-            workflow={workflow}
-            onSave={(updated) => {
-              setWorkflow((prev) =>
-                prev ? { ...prev, name: updated.name, description: updated.description } : null
-              );
-              saveWorkflowChanges({ name: updated.name, description: updated.description });
-            }}
-            roleSlug={roleSlug}
-          />
-        )}
+          {activeTab === "Settings" && (
+            <WorkflowSettingsTab
+              workflow={workflow}
+              onSave={(updated) => {
+                setWorkflow((prev) =>
+                  prev ? { ...prev, name: updated.name, description: updated.description } : null
+                );
+                saveWorkflowChanges({ name: updated.name, description: updated.description });
+              }}
+              roleSlug={roleSlug}
+            />
+          )}
 
-        {activeTab === "Enrollments" && (
-          <WorkflowEnrollmentsTab
-            enrollments={enrollments}
-            onRefresh={fetchWorkflowAndEnrollments}
-            onCancelAll={handleCancelAllEnrollments}
-          />
-        )}
+          {activeTab === "Enrollments" && (
+            <WorkflowEnrollmentsTab
+              enrollments={enrollments}
+              nodes={nodes}
+              onRefresh={fetchWorkflowAndEnrollments}
+              onCancelAll={handleCancelAllEnrollments}
+            />
+          )}
+        </div>
       </div>
+
+      {/* Right Sidebar Panel (spanning 100% full height beside Header + Main Content) */}
+      {selectedNode && (
+        <NodeConfigDrawer
+          node={selectedNode}
+          onClose={() => setSelectedNode(null)}
+          onSave={handleSaveNodeConfig}
+          onDelete={handleDeleteNode}
+        />
+      )}
     </div>
   );
 }

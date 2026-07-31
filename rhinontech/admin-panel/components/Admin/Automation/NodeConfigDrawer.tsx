@@ -44,7 +44,7 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
 
   useEffect(() => {
     if (node) {
-      const initialConfig = node.data.config || {
+      const initialConfig: NodeConfig = node.data.config ? { ...node.data.config } : {
         fromEmail: currentUserEmail || "user.email",
         fromName: "Rhinon Tech",
         subject: "",
@@ -53,6 +53,9 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
         delayDays: 1,
         conditionType: "email_opened",
       };
+      if (!initialConfig.fromName) {
+        initialConfig.fromName = "Rhinon Tech";
+      }
       if (currentUserEmail && (!initialConfig.fromEmail || initialConfig.fromEmail === "user.email" || initialConfig.fromEmail === "noreply@rhinontech.com")) {
         initialConfig.fromEmail = currentUserEmail;
       }
@@ -65,9 +68,11 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
   if (!node) return null;
 
   const handleSave = () => {
+    const defaultSystemEmail = "prabhat@rhinontech.in";
     const finalConfig = {
       ...config,
-      fromEmail: currentUserEmail || config.fromEmail || "user.email",
+      fromEmail: config.fromEmail || currentUserEmail || defaultSystemEmail,
+      fromName: config.fromName || "Rhinon Tech",
     };
     onSave(node.id, finalConfig, label);
     setIsSaved(true);
@@ -75,7 +80,7 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
   };
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 w-[500px] max-w-full bg-white shadow-2xl border-l border-gray-200 flex flex-col animate-in slide-in-from-right duration-200">
+    <div className="w-[480px] max-w-full h-full bg-white border-l border-gray-200 shadow-xl shrink-0 flex flex-col animate-in slide-in-from-right duration-200 relative z-20">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
         <div>
@@ -125,16 +130,45 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
         {/* Send Email Specific Fields */}
         {node.type === "send_email" && (
           <>
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">From email</label>
-              <input
-                type="text"
-                readOnly
-                value={currentUserEmail || config.fromEmail || "Loading email..."}
-                className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 font-medium cursor-not-allowed outline-none"
-              />
-              <p className="text-[11px] text-gray-400 mt-1">Automatically set to logged-in user's email address.</p>
-            </div>
+            {(() => {
+              const defaultSystemEmail = "prabhat@rhinontech.in";
+              const rawList = [currentUserEmail, defaultSystemEmail].filter(
+                (e) => Boolean(e) && e !== "user.email" && e !== "Loading email..."
+              );
+              const emailOptions = Array.from(new Set(rawList));
+              const currentSelected = config.fromEmail || currentUserEmail || defaultSystemEmail;
+
+              return (
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">From email</label>
+                  {emailOptions.length > 1 ? (
+                    <select
+                      value={currentSelected}
+                      onChange={(e) => setConfig({ ...config, fromEmail: e.target.value })}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800 font-medium bg-white outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                    >
+                      {emailOptions.map((email) => (
+                        <option key={email} value={email}>
+                          {email} {email === currentUserEmail ? "(Your email)" : "(System email)"}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      readOnly
+                      value={emailOptions[0] || currentUserEmail || defaultSystemEmail}
+                      className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 font-medium cursor-not-allowed outline-none"
+                    />
+                  )}
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    {emailOptions.length > 1
+                      ? "Select sender email for this step."
+                      : "Automatically set to logged-in user's email address."}
+                  </p>
+                </div>
+              );
+            })()}
 
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1">From name</label>

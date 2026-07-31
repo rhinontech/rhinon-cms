@@ -25,6 +25,32 @@ interface WorkflowsListPageProps {
   onDuplicateWorkflow: (id: string) => void;
 }
 
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+
+function formatWorkflowDate(dateStr?: string): string {
+  if (!dateStr) return "-";
+
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) {
+    return dateStr;
+  }
+
+  const day = date.getDate();
+  const month = MONTHS[date.getMonth()];
+  const year = date.getFullYear();
+
+  let hours = date.getHours();
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12 || 12;
+  const formattedHours = hours.toString().padStart(2, "0");
+
+  return `${day} ${month} ${year}, ${formattedHours}:${minutes} ${ampm}`;
+}
+
 export function WorkflowsListPage({
   workflows,
   roleSlug,
@@ -55,6 +81,19 @@ export function WorkflowsListPage({
     return true;
   });
 
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+
+  const handleRefreshClick = async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.resolve(onRefresh());
+    } catch (err) {
+      console.error("Refresh failed:", err);
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 500);
+    }
+  };
+
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newWorkflowName.trim()) return;
@@ -76,11 +115,12 @@ export function WorkflowsListPage({
 
         <div className="flex items-center gap-3">
           <button
-            onClick={onRefresh}
-            className="p-2.5 rounded-xl border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all shadow-2xs"
+            onClick={handleRefreshClick}
+            disabled={isRefreshing}
+            className="p-2.5 rounded-xl border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all shadow-2xs disabled:opacity-60 cursor-pointer"
             title="Refresh"
           >
-            <TbRefresh size={18} />
+            <TbRefresh size={18} className={isRefreshing ? "animate-spin text-indigo-600" : ""} />
           </button>
 
           <Link
@@ -188,7 +228,9 @@ export function WorkflowsListPage({
                       </span>
                     </td>
                     <td className="px-6 py-4 font-mono font-semibold text-gray-900">{item.stats.active}</td>
-                    <td className="px-6 py-4 text-xs text-gray-500">{item.updatedAt}</td>
+                    <td className="px-6 py-4 text-xs text-gray-600 font-medium font-sans">
+                      {formatWorkflowDate(item.updatedAt)}
+                    </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
