@@ -228,7 +228,7 @@ router.post("/admin/run", authorize("payroll:write"), async (req: AuthRequest, r
       status: "active",
       [Op.or]: [{ exitDate: null }, { exitDate: { [Op.gt]: endOfMonth } }],
     },
-    attributes: ["id", "basicSalary", "hra", "ta", "medicalAllowance", "otherAllowances", "pfEnabled", "ptAmount", "tdsAmount"],
+    attributes: ["id", "joiningDate", "basicSalary", "hra", "ta", "medicalAllowance", "otherAllowances", "pfEnabled", "ptAmount", "tdsAmount"],
   });
 
   const eligible = employees.filter((e) => e.basicSalary && Number(e.basicSalary) > 0);
@@ -242,12 +242,22 @@ router.post("/admin/run", authorize("payroll:write"), async (req: AuthRequest, r
   let totalGross = 0;
   let totalNet = 0;
 
+  const lastDayOfMonth = new Date(year, month, 0).getDate();
+  const round2 = (v: number) => Math.round(v * 100) / 100;
+
   for (const emp of eligible) {
-    const basicSalary  = Number(emp.basicSalary);
-    const hra          = Number(emp.hra ?? 0);
-    const ta           = Number(emp.ta ?? 0);
-    const medicalAllowance = Number(emp.medicalAllowance ?? 0);
-    const otherAllowances  = Number(emp.otherAllowances ?? 0);
+    // If this employee's first day falls within the run month, prorate their
+    // earnings by calendar days worked — same day-counting convention used for
+    // exit-month F&F settlements (see computeFnfPreview below).
+    const join = emp.joiningDate ? new Date(`${emp.joiningDate}T00:00:00`) : null;
+    const joinedThisMonth = !!join && join.getFullYear() === Number(year) && join.getMonth() + 1 === Number(month);
+    const factor = joinedThisMonth ? Math.max(lastDayOfMonth - join!.getDate() + 1, 0) / lastDayOfMonth : 1;
+
+    const basicSalary  = round2(Number(emp.basicSalary) * factor);
+    const hra          = round2(Number(emp.hra ?? 0) * factor);
+    const ta           = round2(Number(emp.ta ?? 0) * factor);
+    const medicalAllowance = round2(Number(emp.medicalAllowance ?? 0) * factor);
+    const otherAllowances  = round2(Number(emp.otherAllowances ?? 0) * factor);
 
     const grossPay        = basicSalary + hra + ta + medicalAllowance + otherAllowances;
     const pfEmployee      = (emp as any).pfEnabled !== false ? Math.round(basicSalary * 0.12 * 100) / 100 : 0;
