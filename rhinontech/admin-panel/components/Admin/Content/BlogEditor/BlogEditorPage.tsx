@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useParams } from "next/navigation";
 import { TbArrowLeft, TbEye, TbLoader, TbSparkles } from "react-icons/tb";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
@@ -11,6 +11,7 @@ import { ParagraphBlock } from "./ParagraphBlock";
 import { FaqEditor } from "./FaqEditor";
 import { BlogPreview } from "./BlogPreview";
 import { legacyMarkdownToHtml } from "./legacyMarkdown";
+import { getDomainConfig } from "../domains";
 import {
   type Blog,
   type BlogFaq,
@@ -19,6 +20,13 @@ import {
   newBlockId,
   slugifyTitle,
 } from "./types";
+
+const RESOURCE_LABEL: Record<"blogs" | "events", string> = { blogs: "Blog", events: "Event" };
+// Rhinon Labs' blogs default to the founder byline; other sites/resources start blank
+// so the admin isn't left with the wrong person's name on a post they didn't write.
+const DEFAULT_AUTHOR: Record<string, { name: string; role: string }> = {
+  "rhinonlabs:blogs": { name: "Prabhat Patra", role: "Founder @ Rhinon Tech" },
+};
 
 const META_TITLE_LIMIT = 60;
 const META_DESC_LIMIT = 160;
@@ -34,11 +42,19 @@ function computeReadTimeFromHtml(html: string): string {
   return `${Math.max(1, Math.round(words / WORDS_PER_MINUTE))} min read`;
 }
 
-export function BlogEditorPage({ id }: { id?: string }) {
+export function BlogEditorPage({ id, resource = "blogs" }: { id?: string; resource?: "blogs" | "events" }) {
   const router = useRouter();
   const pathname = usePathname();
+  const params = useParams();
   const roleSlug = pathname.split("/")[1];
-  const listPath = `/${roleSlug}/content`;
+  const domain = params.domain as string;
+  const domainConfig = getDomainConfig(domain);
+  const domainBase = `/${roleSlug}/content/${domain}`;
+  // Blogs live at the domain root; other resources (events, case studies) get their own segment.
+  const listPath = resource === "blogs" ? domainBase : `${domainBase}/${resource}`;
+  const resourceLabel = RESOURCE_LABEL[resource];
+  const apiBase = `/content/${resource}`;
+  const defaultAuthor = DEFAULT_AUTHOR[`${domain}:${resource}`] || { name: "", role: "" };
 
   const [loading, setLoading] = useState(!!id);
   const [saving, setSaving] = useState<BlogStatus | null>(null);
@@ -65,16 +81,16 @@ export function BlogEditorPage({ id }: { id?: string }) {
   const [publishedAt, setPublishedAt] = useState(() => new Date().toISOString().slice(0, 10));
   const [metaTitle, setMetaTitle] = useState("");
   const [metaDescription, setMetaDescription] = useState("");
-  const [authorName, setAuthorName] = useState("Prabhat Patra");
-  const [authorRole, setAuthorRole] = useState("Founder @ Rhinon Tech");
+  const [authorName, setAuthorName] = useState(defaultAuthor.name);
+  const [authorRole, setAuthorRole] = useState(defaultAuthor.role);
   const [authorAvatar, setAuthorAvatar] = useState("");
 
-  // Load the blog (edit mode) + the list once for the category suggestions.
+  // Load the post (edit mode) + the list once for the category suggestions.
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const list = await apiFetch<Blog[]>("/content/blogs");
+        const list = await apiFetch<Blog[]>(resource === "blogs" ? `${apiBase}?domain=${domain}` : apiBase);
         if (cancelled) return;
         const distinct = Array.from(
           new Map(
@@ -94,7 +110,7 @@ export function BlogEditorPage({ id }: { id?: string }) {
 
     (async () => {
       try {
-        const blog = await apiFetch<Blog>(`/content/blogs/${id}`);
+        const blog = await apiFetch<Blog>(`${apiBase}/${id}`);
         if (cancelled) return;
         setOriginal(blog);
         setTitle(blog.title);
@@ -109,8 +125,8 @@ export function BlogEditorPage({ id }: { id?: string }) {
         setPublishedAt(new Date(blog.publishedAt).toISOString().slice(0, 10));
         setMetaTitle(blog.metaTitle || "");
         setMetaDescription(blog.metaDescription || "");
-        setAuthorName(blog.authorName || "Prabhat Patra");
-        setAuthorRole(blog.authorRole || "Founder @ Rhinon Tech");
+        setAuthorName(blog.authorName || defaultAuthor.name);
+        setAuthorRole(blog.authorRole || defaultAuthor.role);
         setAuthorAvatar(blog.authorAvatar || "");
         setFaqs(blog.faqs || []);
         if (blog.contentBlocks?.length) {
@@ -125,13 +141,14 @@ export function BlogEditorPage({ id }: { id?: string }) {
           setLegacyConverted(true);
         }
       } catch (err: any) {
-        setError(err.message || "Failed to load blog");
+        setError(err.message || `Failed to load ${resourceLabel.toLowerCase()}`);
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
 
     return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   // Auto slug (create mode, until touched) + auto read time (until touched).
@@ -161,7 +178,7 @@ export function BlogEditorPage({ id }: { id?: string }) {
         return;
       }
 
-      const payload = {
+      const payload: Record<string, unknown> = {
         title: title.trim(),
         slug: slug.trim() || slugifyTitle(title),
         excerpt: excerpt.trim(),
@@ -174,16 +191,19 @@ export function BlogEditorPage({ id }: { id?: string }) {
         publishedAt: new Date(`${publishedAt}T00:00:00`).toISOString(),
         metaTitle: metaTitle.trim() || null,
         metaDescription: metaDescription.trim() || null,
-        authorName: authorName.trim() || "Prabhat Patra",
-        authorRole: authorRole.trim() || "Founder @ Rhinon Tech",
+        authorName: authorName.trim() || defaultAuthor.name,
+        authorRole: authorRole.trim() || defaultAuthor.role,
         authorAvatar: authorAvatar || null,
         status,
       };
+      // domain is only meaningful for the shared `blogs` resource — case
+      // studies/events are single-domain resources with no such column.
+      if (resource === "blogs") payload.domain = domain;
 
       setSaving(status);
       try {
         if (id) {
-          const updated = await apiFetch<Blog>(`/content/blogs/${id}`, {
+          const updated = await apiFetch<Blog>(`${apiBase}/${id}`, {
             method: "PUT",
             body: JSON.stringify(payload),
           });
@@ -191,11 +211,11 @@ export function BlogEditorPage({ id }: { id?: string }) {
           setSlug(updated.slug);
           setLegacyConverted(false);
         } else {
-          const created = await apiFetch<Blog>("/content/blogs", {
+          const created = await apiFetch<Blog>(apiBase, {
             method: "POST",
             body: JSON.stringify(payload),
           });
-          router.replace(`${listPath}/blogs/${created.id}`);
+          router.replace(`${domainBase}/${resource}/${created.id}`);
         }
       } catch (err: any) {
         setError(err.message || "Save failed");
@@ -203,10 +223,11 @@ export function BlogEditorPage({ id }: { id?: string }) {
         setSaving(null);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       id, title, slug, excerpt, content, cleanFaqs, coverImage, category, tags, readTime,
       publishedAt, metaTitle, metaDescription, authorName, authorRole, authorAvatar,
-      original, router, listPath,
+      original, router, listPath, resource, domain, apiBase, domainBase, defaultAuthor,
     ]
   );
 
@@ -230,14 +251,14 @@ export function BlogEditorPage({ id }: { id?: string }) {
           <button
             onClick={() => router.push(listPath)}
             className="rounded-lg p-2 text-gray-600 hover:bg-stone-100"
-            title="Back to blogs"
+            title={`Back to ${resourceLabel.toLowerCase()}s`}
           >
             <TbArrowLeft size={18} />
           </button>
           <SubNavToggle />
           <div className="min-w-0">
             <h1 className="truncate text-base font-semibold tracking-tight text-gray-900">
-              {id ? "Edit Blog" : "New Blog"}
+              {id ? `Edit ${resourceLabel}` : `New ${resourceLabel}`}
             </h1>
           </div>
           <span
@@ -303,9 +324,9 @@ export function BlogEditorPage({ id }: { id?: string }) {
               </label>
 
               <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
-                Blog URL
+                {resourceLabel} URL
                 <div className="flex items-center overflow-hidden rounded-lg border border-stone-200 bg-white focus-within:ring-2 focus-within:ring-stone-900">
-                  <span className="shrink-0 border-r border-stone-100 bg-stone-50 px-3 py-2 text-sm text-stone-400">/blogs/</span>
+                  <span className="shrink-0 border-r border-stone-100 bg-stone-50 px-3 py-2 text-sm text-stone-400">/{resource}/</span>
                   <input
                     type="text"
                     value={slug}
@@ -476,6 +497,8 @@ export function BlogEditorPage({ id }: { id?: string }) {
         blocks={isEmptyHtml(content) ? [] : [{ id: "preview", type: "paragraph", html: content }]}
         faqs={faqs}
         slug={original?.slug || ""}
+        siteUrl={domainConfig?.siteUrl}
+        path={resource}
         isPublished={status === "Published"}
       />
     </main>

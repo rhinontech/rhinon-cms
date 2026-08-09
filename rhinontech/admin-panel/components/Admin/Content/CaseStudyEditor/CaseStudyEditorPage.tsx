@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useParams } from "next/navigation";
 import { TbArrowLeft, TbLoader, TbPlus, TbTrash, TbUpload } from "react-icons/tb";
 import { cn } from "@/lib/utils";
 import { apiFetch, apiUpload } from "@/lib/api";
@@ -49,8 +49,10 @@ function isEmptyHtml(html: string): boolean {
 export function CaseStudyEditorPage({ id }: { id?: string }) {
   const router = useRouter();
   const pathname = usePathname();
+  const params = useParams();
   const roleSlug = pathname.split("/")[1];
-  const listPath = `/${roleSlug}/content/case-studies`;
+  const domain = params.domain as string;
+  const listPath = `/${roleSlug}/content/${domain}/case-studies`;
 
   const [loading, setLoading] = useState(!!id);
   const [saving, setSaving] = useState<Status | null>(null);

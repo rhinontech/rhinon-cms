@@ -32,6 +32,7 @@ import { TaskComment } from "./TaskComment";
 import { TaskTag } from "./TaskTag";
 import { Blog } from "./Blog";
 import { CaseStudy } from "./CaseStudy";
+import { Event } from "./Event";
 import { PageView } from "./PageView";
 import { DocsAccess } from "./DocsAccess";
 import { Page } from "./Page";
@@ -188,6 +189,8 @@ Blog.belongsTo(User, { foreignKey: "createdById", as: "author" });
 User.hasMany(Blog, { foreignKey: "createdById", as: "blogs" });
 CaseStudy.belongsTo(User, { foreignKey: "createdById", as: "author" });
 User.hasMany(CaseStudy, { foreignKey: "createdById", as: "caseStudies" });
+Event.belongsTo(User, { foreignKey: "createdById", as: "author" });
+User.hasMany(Event, { foreignKey: "createdById", as: "events" });
 
 // Pages (Notion-like docs) Associations
 Page.belongsTo(User, { foreignKey: "ownerId", as: "owner" });
@@ -231,6 +234,7 @@ export {
   TaskTag,
   Blog,
   CaseStudy,
+  Event,
   PageView,
   DocsAccess,
   Page,

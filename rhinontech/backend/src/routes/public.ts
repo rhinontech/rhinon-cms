@@ -1,11 +1,17 @@
 import express, { Router, Response, Request } from "express";
-import { ClientRequest, Project, User, Lead, Blog, CaseStudy, PageView, DocsAccess, WorkflowEnrollment } from "../models";
+import { ClientRequest, Project, User, Lead, Blog, CaseStudy, Event, PageView, DocsAccess, WorkflowEnrollment } from "../models";
+import type { BlogDomain } from "../models/Blog";
 import { sendEmail } from "../services/mailer";
 import { env } from "../config/env";
 import { classifyChannel, parseHost, isBotUserAgent } from "../services/analytics";
 import { enrollRealtimeLead } from "../services/workflowEngine";
 
 const router = Router();
+
+const BLOG_DOMAINS: BlogDomain[] = ["rhinonlabs", "uppercurve"];
+function parseDomain(value: unknown): BlogDomain {
+  return BLOG_DOMAINS.includes(value as BlogDomain) ? (value as BlogDomain) : "rhinonlabs";
+}
 
 // Fields exposed to the public marketing site (never leak Draft content or internal columns).
 // The list stays light (no blocks/faqs); the detail adds the full body + SEO fields.
@@ -17,6 +23,18 @@ const PUBLIC_BLOG_LIST_FIELDS = [
 
 const PUBLIC_BLOG_DETAIL_FIELDS = [
   ...PUBLIC_BLOG_LIST_FIELDS,
+  "content", "contentBlocks", "faqs", "metaTitle", "metaDescription",
+] as const;
+
+// Events mirror the blog field shape (no `domain` column — the Events table is uppercurve-only).
+const PUBLIC_EVENT_LIST_FIELDS = [
+  "id", "title", "excerpt", "slug",
+  "authorName", "authorRole", "authorAvatar",
+  "coverImage", "tags", "category", "readTime", "publishedAt",
+] as const;
+
+const PUBLIC_EVENT_DETAIL_FIELDS = [
+  ...PUBLIC_EVENT_LIST_FIELDS,
   "content", "contentBlocks", "faqs", "metaTitle", "metaDescription",
 ] as const;
 
@@ -352,11 +370,13 @@ router.post("/track", express.text({ type: ["text/plain"] }), async (req: Reques
   }
 });
 
-// GET /public/blogs — published blogs for the marketing site, newest first
-router.get("/blogs", async (_req: Request, res: Response) => {
+// GET /public/blogs?domain=rhinonlabs|uppercurve — published blogs for the marketing site,
+// newest first. `domain` defaults to rhinonlabs so the existing Rhinon Labs site (which doesn't
+// send it) keeps working unchanged.
+router.get("/blogs", async (req: Request, res: Response) => {
   try {
     const blogs = await Blog.findAll({
-      where: { status: "Published" },
+      where: { status: "Published", domain: parseDomain(req.query.domain) },
       attributes: PUBLIC_BLOG_LIST_FIELDS as unknown as string[],
       order: [["publishedAt", "DESC"]],
     });
@@ -367,11 +387,11 @@ router.get("/blogs", async (_req: Request, res: Response) => {
   }
 });
 
-// GET /public/blogs/:slug — single published blog
+// GET /public/blogs/:slug?domain=rhinonlabs|uppercurve — single published blog
 router.get("/blogs/:slug", async (req: Request, res: Response) => {
   try {
     const blog = await Blog.findOne({
-      where: { slug: req.params.slug, status: "Published" },
+      where: { slug: req.params.slug, status: "Published", domain: parseDomain(req.query.domain) },
       attributes: PUBLIC_BLOG_DETAIL_FIELDS as unknown as string[],
     });
     if (!blog) {
@@ -382,6 +402,39 @@ router.get("/blogs/:slug", async (req: Request, res: Response) => {
   } catch (err) {
     console.error("Failed to fetch public blog:", err);
     res.status(500).json({ message: "Failed to fetch blog" });
+  }
+});
+
+// GET /public/events — published uppercurve events, newest first
+router.get("/events", async (_req: Request, res: Response) => {
+  try {
+    const events = await Event.findAll({
+      where: { status: "Published" },
+      attributes: PUBLIC_EVENT_LIST_FIELDS as unknown as string[],
+      order: [["publishedAt", "DESC"]],
+    });
+    res.json(events);
+  } catch (err) {
+    console.error("Failed to fetch public events:", err);
+    res.status(500).json({ message: "Failed to fetch events" });
+  }
+});
+
+// GET /public/events/:slug — single published event
+router.get("/events/:slug", async (req: Request, res: Response) => {
+  try {
+    const event = await Event.findOne({
+      where: { slug: req.params.slug, status: "Published" },
+      attributes: PUBLIC_EVENT_DETAIL_FIELDS as unknown as string[],
+    });
+    if (!event) {
+      res.status(404).json({ message: "Event not found" });
+      return;
+    }
+    res.json(event);
+  } catch (err) {
+    console.error("Failed to fetch public event:", err);
+    res.status(500).json({ message: "Failed to fetch event" });
   }
 });
 

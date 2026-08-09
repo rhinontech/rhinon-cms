@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { TbExternalLink } from "react-icons/tb";
 import { type BlogBlock, type BlogFaq, extractYouTubeId } from "./types";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://rhinonlabs.com";
+const DEFAULT_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://rhinonlabs.com";
 
 export function BlogPreview({
   open,
@@ -19,6 +19,8 @@ export function BlogPreview({
   blocks,
   faqs,
   slug,
+  siteUrl = DEFAULT_SITE_URL,
+  path = "blogs",
   isPublished,
 }: {
   open: boolean;
@@ -33,6 +35,8 @@ export function BlogPreview({
   blocks: BlogBlock[];
   faqs: BlogFaq[];
   slug: string;
+  siteUrl?: string;
+  path?: string;
   isPublished: boolean;
 }) {
   return (
@@ -46,7 +50,7 @@ export function BlogPreview({
             </span>
             {isPublished && slug && (
               <a
-                href={`${SITE_URL}/blogs/${slug}`}
+                href={`${siteUrl}/${path}/${slug}`}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-1.5 text-xs font-medium text-cyan-400 hover:text-cyan-300"

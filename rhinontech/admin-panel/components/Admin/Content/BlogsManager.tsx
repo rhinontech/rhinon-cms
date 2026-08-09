@@ -1,44 +1,55 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useParams } from "next/navigation";
 import { TbArticle, TbPlus, TbTrash, TbExternalLink, TbClock } from "react-icons/tb";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { useSideNav } from "@/context/SideNavContext";
+import { getDomainConfig, type ContentResource } from "./domains";
 import type { Blog } from "./BlogEditor/types";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://rhinonlabs.com";
+const RESOURCE_COPY: Record<ContentResource, { title: string; newLabel: string; empty: string }> = {
+  blogs: { title: "Blogs", newLabel: "New Blog", empty: "No blogs yet. Create your first post." },
+  "case-studies": { title: "Case Studies", newLabel: "New Case Study", empty: "No case studies yet." },
+  events: { title: "Events", newLabel: "New Event", empty: "No events yet. Create your first event." },
+};
 
-export function BlogsManager() {
+export function BlogsManager({ resource = "blogs" }: { resource?: "blogs" | "events" }) {
   const { isExpanded: isSubNavExpanded } = useSideNav();
   const router = useRouter();
   const pathname = usePathname();
+  const params = useParams();
   const roleSlug = pathname.split("/")[1];
+  const domain = params.domain as string;
+  const domainConfig = getDomainConfig(domain);
+  const copy = RESOURCE_COPY[resource];
+  const basePath = `/${roleSlug}/content/${domain}`;
 
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchBlogs = useCallback(async () => {
     try {
-      const data = await apiFetch<Blog[]>("/content/blogs");
+      const path = resource === "blogs" ? `/content/blogs?domain=${domain}` : "/content/events";
+      const data = await apiFetch<Blog[]>(path);
       setBlogs(data);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [resource, domain]);
 
   useEffect(() => {
     fetchBlogs();
   }, [fetchBlogs]);
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this blog post?")) return;
+    if (!confirm(`Delete this ${resource === "events" ? "event" : "post"}?`)) return;
     try {
-      await apiFetch(`/content/blogs/${id}`, { method: "DELETE" });
+      await apiFetch(`/content/${resource}/${id}`, { method: "DELETE" });
       fetchBlogs();
     } catch {
       alert("Delete failed");
@@ -57,15 +68,15 @@ export function BlogsManager() {
         <div className="flex items-center gap-3">
           <SubNavToggle />
           <div>
-            <h1 className="text-base font-semibold tracking-tight text-gray-900">Blogs</h1>
-            <p className="text-xs text-gray-500">Posts published to the Rhinon Labs website.</p>
+            <h1 className="text-base font-semibold tracking-tight text-gray-900">{copy.title}</h1>
+            <p className="text-xs text-gray-500">Posts published to the {domainConfig?.label || "site"} website.</p>
           </div>
         </div>
         <button
-          onClick={() => router.push(`/${roleSlug}/content/blogs/new`)}
+          onClick={() => router.push(`${basePath}/${resource}/new`)}
           className="inline-flex items-center gap-2 rounded-lg bg-stone-900 px-3.5 py-1.5 text-xs font-medium text-white hover:bg-stone-800 transition-colors"
         >
-          New Blog <TbPlus size={14} />
+          {copy.newLabel} <TbPlus size={14} />
         </button>
       </div>
 
@@ -77,12 +88,12 @@ export function BlogsManager() {
               <div key={i} className="h-16 rounded-xl border border-stone-100 bg-white animate-pulse" />
             ))
           ) : blogs.length === 0 ? (
-            <div className="py-20 text-center text-sm text-gray-400">No blogs yet. Create your first post.</div>
+            <div className="py-20 text-center text-sm text-gray-400">{copy.empty}</div>
           ) : (
             blogs.map((blog) => (
               <div
                 key={blog.id}
-                onClick={() => router.push(`/${roleSlug}/content/blogs/${blog.id}`)}
+                onClick={() => router.push(`${basePath}/${resource}/${blog.id}`)}
                 className="flex items-center justify-between p-4 rounded-xl border border-gray-200 bg-white cursor-pointer hover:bg-stone-50 transition-colors group"
               >
                 <div className="flex items-center gap-4 min-w-0">
@@ -119,9 +130,9 @@ export function BlogsManager() {
                   </div>
                 </div>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all shrink-0">
-                  {blog.status === "Published" && (
+                  {blog.status === "Published" && domainConfig && (
                     <a
-                      href={`${SITE_URL}/blogs/${blog.slug}`}
+                      href={`${domainConfig.siteUrl}/${resource}/${blog.slug}`}
                       target="_blank"
                       rel="noreferrer"
                       onClick={(e) => e.stopPropagation()}

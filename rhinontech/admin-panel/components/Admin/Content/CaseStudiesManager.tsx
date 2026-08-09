@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useParams } from "next/navigation";
 import { TbTrophy, TbPlus, TbTrash } from "react-icons/tb";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
@@ -24,7 +24,10 @@ export function CaseStudiesManager() {
   const { isExpanded: isSubNavExpanded } = useSideNav();
   const router = useRouter();
   const pathname = usePathname();
+  const params = useParams();
   const roleSlug = pathname.split("/")[1];
+  const domain = params.domain as string;
+  const basePath = `/${roleSlug}/content/${domain}/case-studies`;
 
   const [items, setItems] = useState<CaseStudy[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,7 +73,7 @@ export function CaseStudiesManager() {
           </div>
         </div>
         <button
-          onClick={() => router.push(`/${roleSlug}/content/case-studies/new`)}
+          onClick={() => router.push(`${basePath}/new`)}
           className="inline-flex items-center gap-2 rounded-lg bg-stone-900 px-3.5 py-1.5 text-xs font-medium text-white hover:bg-stone-800 transition-colors"
         >
           New Case Study <TbPlus size={14} />
@@ -89,7 +92,7 @@ export function CaseStudiesManager() {
             items.map((cs) => (
               <div
                 key={cs.id}
-                onClick={() => router.push(`/${roleSlug}/content/case-studies/${cs.id}`)}
+                onClick={() => router.push(`${basePath}/${cs.id}`)}
                 className="flex items-center justify-between p-4 rounded-xl border border-gray-200 bg-white cursor-pointer hover:bg-stone-50 transition-colors group"
               >
                 <div className="flex items-center gap-4 min-w-0">

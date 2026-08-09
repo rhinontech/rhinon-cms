@@ -1,9 +1,15 @@
 import { Router, Response } from "express";
 import { Op } from "sequelize";
 import multer from "multer";
-import { Blog, CaseStudy } from "../models";
+import { Blog, CaseStudy, Event } from "../models";
+import type { BlogDomain } from "../models/Blog";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 import { uploadBuffer, publicUrl } from "../services/storage";
+
+const BLOG_DOMAINS: BlogDomain[] = ["rhinonlabs", "uppercurve"];
+function parseDomain(value: unknown): BlogDomain {
+  return BLOG_DOMAINS.includes(value as BlogDomain) ? (value as BlogDomain) : "rhinonlabs";
+}
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024 } });
@@ -96,9 +102,10 @@ async function uniqueSlug(model: any, base: string, excludeId?: string): Promise
 
 /* ----------------------------- BLOGS ----------------------------- */
 
-// GET /content/blogs — all blogs (drafts included) for the CMS
-router.get("/blogs", authorize("content:read"), async (_req: AuthRequest, res: Response) => {
-  const blogs = await Blog.findAll({ order: [["updatedAt", "DESC"]] });
+// GET /content/blogs?domain=rhinonlabs|uppercurve — all blogs (drafts included) for the CMS,
+// scoped to one site's blog (defaults to rhinonlabs when omitted).
+router.get("/blogs", authorize("content:read"), async (req: AuthRequest, res: Response) => {
+  const blogs = await Blog.findAll({ where: { domain: parseDomain(req.query.domain) }, order: [["updatedAt", "DESC"]] });
   res.json(blogs);
 });
 
@@ -123,6 +130,7 @@ router.post("/blogs", authorize("content:write"), async (req: AuthRequest, res: 
       ...b,
       content: b.content || "",
       slug,
+      domain: parseDomain(b.domain),
       createdById: req.user!.userId,
     });
     res.status(201).json(blog);
@@ -139,6 +147,8 @@ router.put("/blogs/:id", authorize("content:write"), async (req: AuthRequest, re
     const b = { ...req.body };
     delete b.id;
     delete b.createdById;
+    // Domain is set at creation time and never re-assigned from the editor.
+    delete b.domain;
     // Re-slug only when an explicit slug/title change requires it
     if (b.slug && b.slug !== blog.slug) {
       b.slug = await uniqueSlug(Blog, b.slug, blog.id);
@@ -216,6 +226,74 @@ router.delete("/case-studies/:id", authorize("content:write"), async (req: AuthR
   const item = await CaseStudy.findByPk(req.params.id);
   if (!item) { res.status(404).json({ message: "Case study not found" }); return; }
   await item.destroy();
+  res.json({ ok: true });
+});
+
+/* ----------------------------- EVENTS ----------------------------- */
+// Uppercurve's events — same shape/CRUD as Blogs, but a single-domain resource
+// (no `domain` filter/field, since only uppercurve owns events).
+
+// GET /content/events — all events (drafts included) for the CMS
+router.get("/events", authorize("content:read"), async (_req: AuthRequest, res: Response) => {
+  const events = await Event.findAll({ order: [["updatedAt", "DESC"]] });
+  res.json(events);
+});
+
+// GET /content/events/:id — single event (for the editor)
+router.get("/events/:id", authorize("content:read"), async (req: AuthRequest, res: Response) => {
+  const event = await Event.findByPk(req.params.id);
+  if (!event) { res.status(404).json({ message: "Event not found" }); return; }
+  res.json(event);
+});
+
+// POST /content/events
+router.post("/events", authorize("content:write"), async (req: AuthRequest, res: Response) => {
+  try {
+    const b = req.body || {};
+    const hasBlocks = Array.isArray(b.contentBlocks) && b.contentBlocks.length > 0;
+    if (!b.title || !b.excerpt || (!b.content && !hasBlocks)) {
+      res.status(400).json({ message: "title, excerpt and content (or content blocks) are required" });
+      return;
+    }
+    const slug = await uniqueSlug(Event, b.slug || b.title);
+    const event = await Event.create({
+      ...b,
+      content: b.content || "",
+      slug,
+      createdById: req.user!.userId,
+    });
+    res.status(201).json(event);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// PUT /content/events/:id
+router.put("/events/:id", authorize("content:write"), async (req: AuthRequest, res: Response) => {
+  try {
+    const event = await Event.findByPk(req.params.id);
+    if (!event) { res.status(404).json({ message: "Event not found" }); return; }
+    const b = { ...req.body };
+    delete b.id;
+    delete b.createdById;
+    // Re-slug only when an explicit slug/title change requires it
+    if (b.slug && b.slug !== event.slug) {
+      b.slug = await uniqueSlug(Event, b.slug, event.id);
+    } else {
+      delete b.slug;
+    }
+    await event.update(b);
+    res.json(event);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// DELETE /content/events/:id
+router.delete("/events/:id", authorize("content:write"), async (req: AuthRequest, res: Response) => {
+  const event = await Event.findByPk(req.params.id);
+  if (!event) { res.status(404).json({ message: "Event not found" }); return; }
+  await event.destroy();
   res.json({ ok: true });
 });
 
