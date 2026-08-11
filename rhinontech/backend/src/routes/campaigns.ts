@@ -143,6 +143,29 @@ router.post("/:id/enroll", authorize("outreach:write"), async (req: AuthRequest,
   res.json({ message: `${leadIds.length} leads enrolled` });
 });
 
+// DELETE /campaigns/:id/leads/:leadId - remove a single lead from this campaign
+// (unenrolls it back to the general lead pool; does not delete the lead itself).
+router.delete("/:id/leads/:leadId", authorize("outreach:write"), async (req: AuthRequest, res: Response) => {
+  const campaign = await Campaign.findByPk(req.params.id);
+  if (!campaign) {
+    res.status(404).json({ message: "Campaign not found" });
+    return;
+  }
+
+  const lead = await Lead.findOne({ where: { id: req.params.leadId, campaignId: campaign.id } });
+  if (!lead) {
+    res.status(404).json({ message: "Lead not found on this campaign" });
+    return;
+  }
+
+  await lead.update({ campaignId: null, status: "New", aiDraft: null });
+
+  const newTotal = await Lead.count({ where: { campaignId: campaign.id } });
+  await campaign.update({ leadsTotal: newTotal });
+
+  res.json({ message: "Lead removed from campaign" });
+});
+
 function fillPlaceholders(text: string, lead: any, senderName: string): string {
   return text
     .replace(/\{\{\s*(?:lead\.)?name\s*\}\}/gi, lead.name)
@@ -175,10 +198,21 @@ function stripHtml(html: string): string {
     .trim();
 }
 
+// Many email clients (Outlook, mobile Gmail's clipped/AMP views, etc.) ignore
+// class-based rules in a <style> block, so list markers silently disappear
+// unless they're also declared inline on the <ul>/<ol>/<li> tags themselves.
+function inlineListStyles(html: string): string {
+  return html
+    .replace(/<ul(?![^>]*style=)([^>]*)>/gi, '<ul$1 style="margin:0 0 18px 0;padding-left:22px;list-style-type:disc;">')
+    .replace(/<ol(?![^>]*style=)([^>]*)>/gi, '<ol$1 style="margin:0 0 18px 0;padding-left:22px;list-style-type:decimal;">')
+    .replace(/<li(?![^>]*style=)([^>]*)>/gi, '<li$1 style="margin:0 0 6px 0;">');
+}
+
 // Premium, responsive, light/dark-aware HTML email (bulletproof table layout).
 // `richTextHtml` is already-formatted HTML from the campaign's rich-text editor.
 function toEmailHtml(richTextHtml: string, imageUrl?: string): string {
   const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  richTextHtml = inlineListStyles(richTextHtml);
 
   // Hidden inbox preview text (first real line of the email)
   const preheader = esc((stripHtml(richTextHtml).split(/\n/).find(l => l.trim()) || "A quick note from Rhinon Labs").slice(0, 120));
@@ -204,7 +238,9 @@ function toEmailHtml(richTextHtml: string, imageUrl?: string): string {
     a { color:#4f46e5; }
     .tiptap-content { line-height:1.65; color:#1f2937; font-size:15px; mso-line-height-rule:exactly; }
     .tiptap-content p { margin:0 0 18px 0; }
-    .tiptap-content ul, .tiptap-content ol { margin:0 0 18px 0; padding-left:22px; }
+    .tiptap-content ul { margin:0 0 18px 0; padding-left:22px; list-style-type:disc; }
+    .tiptap-content ol { margin:0 0 18px 0; padding-left:22px; list-style-type:decimal; }
+    .tiptap-content li { margin:0 0 6px 0; }
     .tiptap-content a { color:#4f46e5; }
     @media only screen and (max-width:620px) {
       .container { width:100% !important; border-radius:0 !important; }
@@ -347,6 +383,35 @@ router.post("/:id/send", authorize("outreach:write"), async (req: AuthRequest, r
           });
         } catch (err: any) {
           console.error(`Draft error for lead ${lead.id}:`, err.message);
+        }
+      }
+
+      // 1b. Explicit resend: re-run the mail-merge from the campaign's current
+      // body/subject for already-emailed leads (so template edits made after the
+      // first send actually go out), then queue them back up for dispatch. This
+      // overwrites any manual per-lead draft edits made since the last send.
+      // Deliberately excludes Bounced/Unsubscribed/Replied — those must never
+      // be re-emailed regardless of what the caller asks for.
+      if (req.body?.resend === true) {
+        const emailedLeads = await Lead.findAll({
+          where: { campaignId: campaign.id, status: "Emailed" },
+        });
+
+        for (const lead of emailedLeads) {
+          try {
+            const rawBody = campaign.body || "Hi {{lead.name}},\n\nWe'd love to connect.\n\nBest,\n{{sender.name}}";
+            const draftBody = fillPlaceholders(rawBody, lead, senderName);
+            await lead.update({ aiDraft: draftBody, status: "Interested" });
+            await CampaignActivity.create({
+              leadId: lead.id,
+              campaignId: campaign.id,
+              type: "DraftGenerated",
+              content: "Draft regenerated from campaign template for resend.",
+              generatedContent: draftBody,
+            });
+          } catch (err: any) {
+            console.error(`Resend draft error for lead ${lead.id}:`, err.message);
+          }
         }
       }
 

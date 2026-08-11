@@ -435,3 +435,19 @@
 .page-tiptap ul[data-type="taskList"] li > div > p { margin: 0; line-height: 1.6em; }
 .page-tiptap ul[data-type="taskList"] li[data-checked="true"] > div { color: oklch(0.65 0.01 250); text-decoration: line-through; }
 .page-tiptap ul[data-type="taskList"] input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: #1c1917; }
+
+/* ---------- Outreach email body editor (TipTap) ---------- */
+.email-tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: oklch(0.75 0.01 250);
+  white-space: pre-line;
+}
+.email-tiptap p { margin: 0.5rem 0; }
+.email-tiptap a { color: oklch(0.55 0.15 250); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.email-tiptap ul, .email-tiptap ol { padding-left: 1.4rem; margin: 0.5rem 0; }
+.email-tiptap ul { list-style: disc; }
+.email-tiptap ol { list-style: decimal; }
+.email-tiptap li { margin: 0.2rem 0; }
