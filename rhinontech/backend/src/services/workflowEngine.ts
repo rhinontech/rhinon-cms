@@ -3,6 +3,7 @@ import { Workflow } from "../models/Workflow";
 import { WorkflowEnrollment } from "../models/WorkflowEnrollment";
 import { Lead, ContactGroup, ContactGroupMember } from "../models";
 import { sendEmail } from "./mailer";
+import { toEmailHtml, stripHtml, BACKEND_URL } from "./emailTemplate";
 
 const UUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 function isUuid(val: any): boolean {
@@ -275,24 +276,25 @@ async function executeEnrollmentSteps(
         config.emailBody || "Hi {{name}},\n\nThank you for choosing us!";
 
       const subject = parseMergeTags(subjectTemplate, enrollment);
-      let htmlBody = parseMergeTags(bodyTemplate, enrollment).replace(/\n/g, "<br/>");
-
-      // Inject email tracking pixel and link click wrappers
-      const port = process.env.PORT || 5003;
-      const baseUrl = process.env.BACKEND_URL || `https://bkk52949-5003.inc1.devtunnels.ms`;
+      // .replace(/\n/g, "<br/>") only matters for the plain-text fallback
+      // above — real content from the rich-text editor is already HTML.
+      let richHtml = parseMergeTags(bodyTemplate, enrollment).replace(/\n/g, "<br/>");
 
       // Rewrite links for click tracking
-      htmlBody = htmlBody.replace(/<a\s+(?:[^>]*?\s+)?href=["']([^"']+)["']/gi, (match, url) => {
+      richHtml = richHtml.replace(/<a\s+(?:[^>]*?\s+)?href=["']([^"']+)["']/gi, (match, url) => {
         if (url && url.startsWith("http") && !url.includes("/public/track/")) {
-          const trackedUrl = `${baseUrl}/public/track/click?e=${enrollment.id}&url=${encodeURIComponent(url)}`;
+          const trackedUrl = `${BACKEND_URL}/public/track/click?e=${enrollment.id}&url=${encodeURIComponent(url)}`;
           return match.replace(url, trackedUrl);
         }
         return match;
       });
 
-      // Append 1x1 transparent tracking pixel
-      const trackingPixel = `<img src="${baseUrl}/public/track/open?e=${enrollment.id}" width="1" height="1" style="display:none;" alt="" />`;
-      htmlBody = `${htmlBody}\n${trackingPixel}`;
+      // Same branded wrapper the Outreach campaign engine uses — gives the
+      // rich-text content (lists, bold, links, etc.) the CSS it actually
+      // needs to render across email clients, instead of going out as bare
+      // unstyled HTML. Also carries the open-tracking pixel.
+      const trackingPixelUrl = `${BACKEND_URL}/public/track/open?e=${enrollment.id}`;
+      const htmlBody = toEmailHtml(richHtml, undefined, trackingPixelUrl);
 
       try {
         await sendEmail({
@@ -301,6 +303,7 @@ async function executeEnrollmentSteps(
           fromName: config.fromName || "Rhinon Automation",
           subject,
           html: htmlBody,
+          text: stripHtml(richHtml),
         });
 
         logs.push({

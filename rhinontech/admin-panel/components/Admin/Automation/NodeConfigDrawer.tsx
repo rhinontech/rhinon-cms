@@ -13,6 +13,10 @@ interface NodeConfigDrawerProps {
   onDelete: (nodeId: string) => void;
 }
 
+// The shared/support inbox — always available as a "From" choice alongside
+// whichever user is currently logged in.
+const SHARED_SENDER = "info@rhinontech.in";
+
 export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfigDrawerProps) {
   const [currentUserEmail, setCurrentUserEmail] = useState<string>("");
   const [config, setConfig] = useState<NodeConfig>({
@@ -31,13 +35,7 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
     apiFetch<{ companyEmail?: string; email?: string }>("/auth/me")
       .then((user) => {
         const mail = user.companyEmail || user.email || "";
-        if (mail) {
-          setCurrentUserEmail(mail);
-          setConfig((prev) => ({
-            ...prev,
-            fromEmail: prev.fromEmail && prev.fromEmail !== "user.email" && prev.fromEmail !== "noreply@rhinontech.com" ? prev.fromEmail : mail,
-          }));
-        }
+        if (mail) setCurrentUserEmail(mail);
       })
       .catch(() => { });
   }, []);
@@ -45,7 +43,7 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
   useEffect(() => {
     if (node) {
       const initialConfig = node.data.config || {
-        fromEmail: currentUserEmail || "user.email",
+        fromEmail: currentUserEmail || SHARED_SENDER,
         fromName: "Rhinon Tech",
         subject: "",
         emailBody: "",
@@ -53,8 +51,13 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
         delayDays: 1,
         conditionType: "email_opened",
       };
-      if (currentUserEmail && (!initialConfig.fromEmail || initialConfig.fromEmail === "user.email" || initialConfig.fromEmail === "noreply@rhinontech.com")) {
-        initialConfig.fromEmail = currentUserEmail;
+      // "From email" only ever offers two choices — the shared inbox or the
+      // logged-in user's own address — so clamp anything else (an unset
+      // placeholder, or a value left behind by a different user) back to a
+      // valid default instead of silently sending from a stale address.
+      const validSenders = [SHARED_SENDER, currentUserEmail].filter(Boolean);
+      if (currentUserEmail && !validSenders.includes(initialConfig.fromEmail || "")) {
+        initialConfig.fromEmail = SHARED_SENDER;
       }
       setConfig(initialConfig);
       setLabel(node.data.label || "");
@@ -65,11 +68,7 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
   if (!node) return null;
 
   const handleSave = () => {
-    const finalConfig = {
-      ...config,
-      fromEmail: currentUserEmail || config.fromEmail || "user.email",
-    };
-    onSave(node.id, finalConfig, label);
+    onSave(node.id, config, label);
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 2000);
   };
@@ -127,13 +126,17 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
           <>
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1">From email</label>
-              <input
-                type="text"
-                readOnly
-                value={currentUserEmail || config.fromEmail || "Loading email..."}
-                className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 font-medium cursor-not-allowed outline-none"
-              />
-              <p className="text-[11px] text-gray-400 mt-1">Automatically set to logged-in user's email address.</p>
+              <select
+                value={config.fromEmail || SHARED_SENDER}
+                onChange={(e) => setConfig({ ...config, fromEmail: e.target.value })}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white font-medium text-gray-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+              >
+                <option value={SHARED_SENDER}>{SHARED_SENDER} (shared)</option>
+                {currentUserEmail && currentUserEmail !== SHARED_SENDER && (
+                  <option value={currentUserEmail}>{currentUserEmail} (you)</option>
+                )}
+              </select>
+              <p className="text-[11px] text-gray-400 mt-1">Send as the shared inbox, or your own address.</p>
             </div>
 
             <div>
