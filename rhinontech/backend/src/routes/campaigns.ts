@@ -133,7 +133,7 @@ router.post("/:id/enroll", authorize("outreach:write"), async (req: AuthRequest,
   }
 
   await Lead.update(
-    { campaignId: campaign.id, status: "Enrolled", aiDraft: null },
+    { campaignId: campaign.id, status: "Enrolled", aiDraft: null, emailOpened: false, openedAt: null },
     { where: { id: { [Op.in]: leadIds } } }
   );
 
@@ -158,7 +158,7 @@ router.delete("/:id/leads/:leadId", authorize("outreach:write"), async (req: Aut
     return;
   }
 
-  await lead.update({ campaignId: null, status: "New", aiDraft: null });
+  await lead.update({ campaignId: null, status: "New", aiDraft: null, emailOpened: false, openedAt: null });
 
   const newTotal = await Lead.count({ where: { campaignId: campaign.id } });
   await campaign.update({ leadsTotal: newTotal });
@@ -181,6 +181,13 @@ function fillPlaceholders(text: string, lead: any, senderName: string): string {
 const BRAND_LOGO_URL = process.env.BRAND_LOGO_URL || "https://www.rhinonlabs.com/Logo_Rhinon_Labs_Light.png";
 const BRAND_SITE_URL = process.env.BRAND_SITE_URL || "https://www.rhinonlabs.com";
 const COMPANY_ADDRESS = process.env.COMPANY_ADDRESS || ""; // registered address for compliant footer
+const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:5002";
+
+// 1x1 open-tracking pixel URL for a given lead's send — hits GET /public/track/open,
+// which flips Lead.emailOpened/openedAt and logs a CampaignActivity the first time it loads.
+function openTrackingPixelUrl(leadId: string, campaignId: string): string {
+  return `${BACKEND_URL}/public/track/open?l=${leadId}&c=${campaignId}`;
+}
 
 // Plain-text rendering of a rich-text draft — used for the email's text/ part,
 // the inbox snippet, and the preheader, none of which should show raw markup.
@@ -210,9 +217,15 @@ function inlineListStyles(html: string): string {
 
 // Premium, responsive, light/dark-aware HTML email (bulletproof table layout).
 // `richTextHtml` is already-formatted HTML from the campaign's rich-text editor.
-function toEmailHtml(richTextHtml: string, imageUrl?: string): string {
+// `trackingPixelUrl`, when given, is appended as a hidden 1x1 image so an open
+// can be recorded — omitted entirely for previews/tests where there's no real send to track.
+function toEmailHtml(richTextHtml: string, imageUrl?: string, trackingPixelUrl?: string): string {
   const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   richTextHtml = inlineListStyles(richTextHtml);
+
+  const trackingPixel = trackingPixelUrl
+    ? `<img src="${trackingPixelUrl}" width="1" height="1" alt="" style="display:block;border:0;width:1px;height:1px;" />`
+    : "";
 
   // Hidden inbox preview text (first real line of the email)
   const preheader = esc((stripHtml(richTextHtml).split(/\n/).find(l => l.trim()) || "A quick note from Rhinon Labs").slice(0, 120));
@@ -282,6 +295,7 @@ function toEmailHtml(richTextHtml: string, imageUrl?: string): string {
       <!--[if mso]></td></tr></table><![endif]-->
     </td></tr>
   </table>
+  ${trackingPixel}
 </body>
 </html>`;
 }
@@ -401,7 +415,7 @@ router.post("/:id/send", authorize("outreach:write"), async (req: AuthRequest, r
           try {
             const rawBody = campaign.body || "Hi {{lead.name}},\n\nWe'd love to connect.\n\nBest,\n{{sender.name}}";
             const draftBody = fillPlaceholders(rawBody, lead, senderName);
-            await lead.update({ aiDraft: draftBody, status: "Interested" });
+            await lead.update({ aiDraft: draftBody, status: "Interested", emailOpened: false, openedAt: null });
             await CampaignActivity.create({
               leadId: lead.id,
               campaignId: campaign.id,
@@ -428,7 +442,7 @@ router.post("/:id/send", authorize("outreach:write"), async (req: AuthRequest, r
           const subject = campaign.subject
             ? fillPlaceholders(campaign.subject, lead, senderName)
             : `Optimizing ${lead.company}'s potential`;
-          const htmlBody = toEmailHtml(lead.aiDraft);
+          const htmlBody = toEmailHtml(lead.aiDraft, undefined, openTrackingPixelUrl(lead.id, campaign.id));
           const plainText = stripHtml(lead.aiDraft);
           await sendEmail({ to: lead.email, from: fromEmail, fromName: senderName, via: "ses", subject, html: htmlBody, text: plainText });
 
@@ -601,7 +615,7 @@ router.get("/cron/run", async (req, res) => {
           const subject = campaign.subject
             ? fillPlaceholders(campaign.subject, lead, senderName)
             : `Optimizing ${lead.company}'s potential`;
-          const htmlBody = toEmailHtml(lead.aiDraft);
+          const htmlBody = toEmailHtml(lead.aiDraft, undefined, openTrackingPixelUrl(lead.id, campaign.id));
           const plainText = stripHtml(lead.aiDraft);
           await sendEmail({
             to: lead.email,
@@ -693,7 +707,7 @@ router.get("/:id/stats", authorize("outreach:read"), async (req: AuthRequest, re
 
   const leads = await Lead.findAll({
     where: { campaignId: campaign.id },
-    attributes: ["status", "aiDraft", "draftApproved"],
+    attributes: ["status", "aiDraft", "draftApproved", "emailOpened"],
     raw: true,
   });
 
@@ -702,6 +716,7 @@ router.get("/:id/stats", authorize("outreach:read"), async (req: AuthRequest, re
     drafted: leads.filter((l: any) => l.aiDraft).length,
     approved: leads.filter((l: any) => l.draftApproved).length,
     sent: leads.filter((l: any) => ["Emailed", "Replied", "Bounced", "Unsubscribed"].includes(l.status)).length,
+    opened: leads.filter((l: any) => l.emailOpened).length,
     replied: leads.filter((l: any) => l.status === "Replied").length,
     bounced: leads.filter((l: any) => l.status === "Bounced").length,
   };

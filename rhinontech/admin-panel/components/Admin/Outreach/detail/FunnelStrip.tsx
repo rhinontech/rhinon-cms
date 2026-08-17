@@ -1,6 +1,6 @@
 "use client";
 
-import { TbUsers, TbSparkles, TbMailOpened, TbMessageCircle, TbBan } from "react-icons/tb";
+import { TbUsers, TbSparkles, TbMailOpened, TbEye, TbMessageCircle, TbBan } from "react-icons/tb";
 import { StatCard } from "../shared/StatCard";
 import type { CampaignFunnel, CampaignLead } from "../shared/types";
 
@@ -21,15 +21,17 @@ export function FunnelStrip({
     drafted: leads.filter((l) => l.aiDraft).length,
     approved: leads.filter((l) => l.draftApproved).length,
     sent: leads.filter((l) => ["Emailed", "Replied", "Bounced", "Unsubscribed"].includes(l.status)).length,
+    opened: leads.filter((l) => l.emailOpened).length,
     replied: leads.filter((l) => l.status === "Replied").length,
     bounced: leads.filter((l) => l.status === "Bounced").length,
   };
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
       <StatCard label="Enrolled" value={counts.enrolled} icon={<TbUsers size={16} />} />
       <StatCard label="Drafted" value={counts.drafted} icon={<TbSparkles size={16} />} />
       <StatCard label="Sent" value={counts.sent} icon={<TbMailOpened size={16} />} />
+      <StatCard label="Opened" value={counts.opened} icon={<TbEye size={16} />} />
       <StatCard
         label="Replied"
         value={counts.replied}
@@ -41,7 +43,7 @@ export function FunnelStrip({
           label="Bounced"
           value={counts.bounced}
           icon={<TbBan size={16} />}
-          className="ring-1 ring-red-200 bg-red-50/40 sm:col-span-4"
+          className="ring-1 ring-red-200 bg-red-50/40 sm:col-span-5"
         />
       )}
     </div>

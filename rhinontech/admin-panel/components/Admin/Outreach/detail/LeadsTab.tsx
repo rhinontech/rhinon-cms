@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { TbLoader, TbSend, TbTrash, TbUserPlus } from "react-icons/tb";
+import { TbLoader, TbSend, TbTrash, TbUserPlus, TbEye } from "react-icons/tb";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 import { useConfirm } from "@/components/Admin/Common/ConfirmDialog";
@@ -156,6 +156,7 @@ export function LeadsTab({
               <TableHead>Lead</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Draft</TableHead>
+              <TableHead>Opened</TableHead>
               <TableHead className="w-8" />
             </TableRow>
           </TableHeader>
@@ -181,6 +182,18 @@ export function LeadsTab({
                     </button>
                   ) : (
                     <span className="text-[10px] font-bold italic uppercase text-stone-300">Pending</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {lead.emailOpened ? (
+                    <span
+                      title={lead.openedAt ? new Date(lead.openedAt).toLocaleString() : undefined}
+                      className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600"
+                    >
+                      <TbEye size={13} /> Opened
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-bold italic uppercase text-stone-300">—</span>
                   )}
                 </TableCell>
                 <TableCell>

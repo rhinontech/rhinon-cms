@@ -52,6 +52,8 @@ export interface CampaignLead {
   aiDraft?: string | null;
   draftSubject?: string | null;
   draftApproved?: boolean;
+  emailOpened?: boolean;
+  openedAt?: string | null;
 }
 
 export interface Template {
@@ -68,6 +70,7 @@ export interface CampaignFunnel {
   drafted: number;
   approved: number;
   sent: number;
+  opened: number;
   replied: number;
   bounced: number;
 }

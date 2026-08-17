@@ -32,6 +32,10 @@ interface LeadAttributes {
   status: LeadStatus;
   campaignId?: string | null;
   aiDraft?: string | null;
+  // Set by the tracking-pixel hit in the sent campaign email. Reset on each
+  // fresh send (enroll / resend) so it always reflects the latest email out.
+  emailOpened?: boolean;
+  openedAt?: Date | null;
   source: string;
   notes?: string | null;
   addedAt: Date;
@@ -46,6 +50,7 @@ interface LeadCreationAttributes
     | "phone" | "seniority" | "department" | "industry" | "employeeCount" | "location"
     | "website" | "companyLinkedinUrl" | "emailStatus" | "emailConfidence" | "keywords" | "apolloContactId"
     | "technologies" | "annualRevenue" | "raw" | "enrichment" | "draftSubject" | "draftApproved"
+    | "emailOpened" | "openedAt"
   > {}
 
 export class Lead extends Model<LeadAttributes, LeadCreationAttributes> implements LeadAttributes {
@@ -76,6 +81,8 @@ export class Lead extends Model<LeadAttributes, LeadCreationAttributes> implemen
   declare status: LeadStatus;
   declare campaignId: string | null;
   declare aiDraft: string | null;
+  declare emailOpened: boolean;
+  declare openedAt: Date | null;
   declare source: string;
   declare notes: string | null;
   declare addedAt: Date;
@@ -116,6 +123,8 @@ Lead.init(
     },
     campaignId: { type: DataTypes.UUID, allowNull: true },
     aiDraft: { type: DataTypes.TEXT, allowNull: true },
+    emailOpened: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+    openedAt: { type: DataTypes.DATE, allowNull: true },
     source: { type: DataTypes.STRING, defaultValue: "Manual", allowNull: false },
     notes: { type: DataTypes.TEXT, allowNull: true },
     addedAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW, allowNull: false },

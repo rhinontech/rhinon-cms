@@ -1,5 +1,5 @@
 import express, { Router, Response, Request } from "express";
-import { ClientRequest, Project, User, Lead, Blog, CaseStudy, Event, PageView, DocsAccess, WorkflowEnrollment } from "../models";
+import { ClientRequest, Project, User, Lead, Blog, CaseStudy, Event, PageView, DocsAccess, WorkflowEnrollment, CampaignActivity } from "../models";
 import type { BlogDomain } from "../models/Blog";
 import { sendEmail } from "../services/mailer";
 import { env } from "../config/env";
@@ -494,11 +494,16 @@ router.post("/docs-access/check", async (req: Request, res: Response) => {
     res.status(500).json({ allowed: false });
   }
 });
-// GET /public/track/open — Email open tracking pixel (1x1 GIF)
+// GET /public/track/open — Email open tracking pixel (1x1 GIF).
+// `e` = workflow enrollment id (automation sequences); `l`+`c` = lead+campaign
+// id (outreach campaign sends). Both just mark "opened" the first time the
+// recipient's client loads this image — see the caveats on that in the docs.
 router.get("/track/open", async (req: Request, res: Response) => {
   try {
-    console.log("email got opened");
     const enrollmentId = req.query.e as string;
+    const leadId = req.query.l as string;
+    const campaignId = req.query.c as string;
+
     if (enrollmentId) {
       const enrollment = await WorkflowEnrollment.findByPk(enrollmentId);
       if (enrollment) {
@@ -521,6 +526,17 @@ router.get("/track/open", async (req: Request, res: Response) => {
             openedAt: state.openedAt || new Date().toISOString(),
           },
           executionLogs: logs,
+        });
+      }
+    } else if (leadId && campaignId) {
+      const lead = await Lead.findOne({ where: { id: leadId, campaignId } });
+      if (lead && !lead.emailOpened) {
+        await lead.update({ emailOpened: true, openedAt: new Date() });
+        await CampaignActivity.create({
+          leadId: lead.id,
+          campaignId,
+          type: "EmailOpened",
+          content: "Recipient opened the email.",
         });
       }
     }

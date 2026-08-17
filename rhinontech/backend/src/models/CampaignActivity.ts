@@ -1,7 +1,7 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../config/database";
 
-export type CampaignActivityType = "Enrichment" | "DraftGenerated" | "OutreachSent" | "ReplyReceived" | "Other";
+export type CampaignActivityType = "Enrichment" | "DraftGenerated" | "OutreachSent" | "EmailOpened" | "ReplyReceived" | "Other";
 
 interface CampaignActivityAttributes {
   id: string;
@@ -35,7 +35,7 @@ CampaignActivity.init(
     leadId: { type: DataTypes.UUID, allowNull: false },
     campaignId: { type: DataTypes.UUID, allowNull: true },
     type: {
-      type: DataTypes.ENUM("Enrichment", "DraftGenerated", "OutreachSent", "ReplyReceived", "Other"),
+      type: DataTypes.ENUM("Enrichment", "DraftGenerated", "OutreachSent", "EmailOpened", "ReplyReceived", "Other"),
       defaultValue: "Other",
       allowNull: false,
     },
