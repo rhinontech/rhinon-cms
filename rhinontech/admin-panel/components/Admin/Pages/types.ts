@@ -14,6 +14,16 @@ export interface PageShareEntry {
   user?: { id: string; fullName: string; avatarKey?: string | null };
 }
 
+export interface PageAttachmentEntry {
+  id: string;
+  name: string;
+  mimeType: string;
+  size: number;
+  url: string;
+  createdAt: string;
+  uploadedBy?: { id: string; fullName: string } | null;
+}
+
 export interface PageDoc extends PageNode {
   coverImage: string | null;
   content: Record<string, any> | null;

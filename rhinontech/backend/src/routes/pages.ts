@@ -1,10 +1,13 @@
 import { Router, Response } from "express";
 import { Op } from "sequelize";
-import { Page, PageShare, User } from "../models";
+import multer from "multer";
+import { Page, PageShare, PageAttachment, User } from "../models";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 import { sequelize } from "../config/database";
+import { uploadBuffer, getPresignedReadUrl, deleteObject } from "../services/storage";
 
 const router = Router();
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 
 router.use(authenticate, authorize("pages:read"));
 
@@ -210,6 +213,66 @@ router.delete("/:id", authorize("pages:write"), async (req: AuthRequest, res: Re
   }
   await archiveTree(page.id);
 
+  res.json({ ok: true });
+});
+
+// GET /pages/:id/attachments — files attached to this page. Attachments live in a
+// private S3 prefix (unlike Content's public images), since a page's own access
+// control (owner/share/workspace) should gate its files too — so each row gets a
+// freshly-signed, short-lived download URL rather than a permanent public one.
+router.get("/:id/attachments", async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.userId;
+  const page = await requireAccess(req.params.id, userId, "view");
+  if (!page) { res.status(403).json({ message: "You don't have access to this page" }); return; }
+
+  const rows = await PageAttachment.findAll({
+    where: { pageId: page.id },
+    include: [{ model: User, as: "uploadedBy", attributes: ["id", "fullName"] }],
+    order: [["createdAt", "DESC"]],
+  });
+
+  const withUrls = await Promise.all(
+    rows.map(async (a) => ({ ...a.toJSON(), url: await getPresignedReadUrl(a.key) }))
+  );
+  res.json(withUrls);
+});
+
+// POST /pages/:id/attachments — upload a file of any type, requires edit access.
+router.post("/:id/attachments", authorize("pages:write"), upload.single("file"), async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.userId;
+  const page = await requireAccess(req.params.id, userId, "edit");
+  if (!page) { res.status(403).json({ message: "You don't have edit access to this page" }); return; }
+  if (!req.file) { res.status(400).json({ message: "No file provided" }); return; }
+
+  try {
+    const key = await uploadBuffer(req.file.buffer, req.file.originalname, "pages", req.file.mimetype);
+    const attachment = await PageAttachment.create({
+      pageId: page.id,
+      name: req.file.originalname,
+      key,
+      mimeType: req.file.mimetype,
+      size: req.file.size,
+      uploadedById: userId,
+    });
+    const url = await getPresignedReadUrl(attachment.key);
+    res.status(201).json({ ...attachment.toJSON(), uploadedBy: { id: userId, fullName: req.user!.fullName }, url });
+  } catch (err: any) {
+    console.error("Page attachment upload failed:", err);
+    res.status(500).json({ message: "Upload failed" });
+  }
+});
+
+// DELETE /pages/:id/attachments/:attachmentId — requires edit access.
+router.delete("/:id/attachments/:attachmentId", authorize("pages:write"), async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.userId;
+  const page = await requireAccess(req.params.id, userId, "edit");
+  if (!page) { res.status(403).json({ message: "You don't have edit access to this page" }); return; }
+
+  const attachment = await PageAttachment.findOne({ where: { id: req.params.attachmentId, pageId: page.id } });
+  if (!attachment) { res.status(404).json({ message: "Attachment not found" }); return; }
+
+  await deleteObject(attachment.key);
+  await attachment.destroy();
   res.json({ ok: true });
 });
 

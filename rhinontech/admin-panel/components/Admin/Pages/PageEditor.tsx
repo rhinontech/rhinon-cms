@@ -25,6 +25,7 @@ import { createSlashCommandExtension, type SlashPageHandlers } from "./slashComm
 import { BubbleToolbar } from "./BubbleToolbar";
 import { ShareDialog } from "./ShareDialog";
 import { CoverImage } from "./CoverImage";
+import { PageAttachments } from "./PageAttachments";
 import {
   Popover,
   PopoverContent,
@@ -411,6 +412,8 @@ export function PageEditor({ id }: { id: string }) {
               <BubbleToolbar editor={editor} />
               <EditorContent editor={editor} />
             </div>
+
+            <PageAttachments pageId={id} canEdit={canEdit} />
 
             {children.length > 0 && (
               <div className="mt-10 border-t border-stone-100 pt-5">

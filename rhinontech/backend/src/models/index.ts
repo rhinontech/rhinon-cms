@@ -37,6 +37,7 @@ import { PageView } from "./PageView";
 import { DocsAccess } from "./DocsAccess";
 import { Page } from "./Page";
 import { PageShare } from "./PageShare";
+import { PageAttachment } from "./PageAttachment";
 import { Workflow } from "./Workflow";
 import { WorkflowEnrollment } from "./WorkflowEnrollment";
 import { DataTypes } from "sequelize";
@@ -200,6 +201,9 @@ Page.hasMany(Page, { foreignKey: "parentId", as: "children" });
 Page.hasMany(PageShare, { foreignKey: "pageId", as: "shares", onDelete: "CASCADE" });
 PageShare.belongsTo(Page, { foreignKey: "pageId", as: "page" });
 PageShare.belongsTo(User, { foreignKey: "userId", as: "user" });
+Page.hasMany(PageAttachment, { foreignKey: "pageId", as: "attachments", onDelete: "CASCADE" });
+PageAttachment.belongsTo(Page, { foreignKey: "pageId", as: "page" });
+PageAttachment.belongsTo(User, { foreignKey: "uploadedById", as: "uploadedBy" });
 Workflow.hasMany(WorkflowEnrollment, { foreignKey: "workflowId", as: "enrollments", onDelete: "CASCADE" });
 WorkflowEnrollment.belongsTo(Workflow, { foreignKey: "workflowId", as: "workflow" });
 
@@ -239,6 +243,7 @@ export {
   DocsAccess,
   Page,
   PageShare,
+  PageAttachment,
   Workflow,
   WorkflowEnrollment,
 };
