@@ -104,17 +104,17 @@ function RequestModal({ employees, onClose, onSuccess }: RequestModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center glass-overlay">
-      <div className="glass-modal rounded-xl w-full max-w-md mx-4">
-        <div className="flex items-center justify-between h-14 px-5 border-b">
-          <p className="font-semibold tracking-tight">Request Document</p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center glass-overlay p-3 sm:p-4" onClick={onClose}>
+      <div className="glass-modal rounded-xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between h-14 px-4 sm:px-5 border-b shrink-0">
+          <p className="font-semibold tracking-tight text-sm sm:text-base">Request Document</p>
           <button onClick={onClose} className="p-1 rounded hover:bg-gray-100"><TbX size={18} /></button>
         </div>
-        <form onSubmit={handleSubmit} className="p-5 flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-5 flex flex-col gap-3.5 sm:gap-4 overflow-y-auto">
           <div className="flex flex-col gap-1.5">
             <label className="text-xs text-gray-400">Employee</label>
             <select
-              className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-full"
               value={employeeId}
               onChange={e => setEmployeeId(e.target.value)}
               required
@@ -128,7 +128,7 @@ function RequestModal({ employees, onClose, onSuccess }: RequestModalProps) {
           <div className="flex flex-col gap-1.5">
             <label className="text-xs text-gray-400">Document Title</label>
             <input
-              className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={title}
               onChange={e => setTitle(e.target.value)}
               placeholder="e.g. Passport Copy"
@@ -138,7 +138,7 @@ function RequestModal({ employees, onClose, onSuccess }: RequestModalProps) {
           <div className="flex flex-col gap-1.5">
             <label className="text-xs text-gray-400">Category</label>
             <select
-              className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-full"
               value={category}
               onChange={e => setCategory(e.target.value as Category)}
             >
@@ -150,7 +150,7 @@ function RequestModal({ employees, onClose, onSuccess }: RequestModalProps) {
           <div className="flex flex-col gap-1.5">
             <label className="text-xs text-gray-400">Note to Employee <span className="text-gray-300">(optional)</span></label>
             <textarea
-              className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="border rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               rows={3}
               value={requestNote}
               onChange={e => setRequestNote(e.target.value)}
@@ -159,11 +159,11 @@ function RequestModal({ employees, onClose, onSuccess }: RequestModalProps) {
           </div>
           {error && <p className="text-xs text-red-500">{error}</p>}
           <div className="flex gap-2 justify-end pt-1">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm rounded-lg border hover:bg-gray-50">Cancel</button>
+            <button type="button" onClick={onClose} className="px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg border hover:bg-gray-50">Cancel</button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 text-sm rounded-lg bg-stone-900 text-white hover:bg-stone-800 disabled:opacity-50"
+              className="px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg bg-stone-900 text-white hover:bg-stone-800 disabled:opacity-50"
             >
               {loading ? "Requesting..." : "Send Request"}
             </button>
@@ -179,16 +179,16 @@ function RequestModal({ employees, onClose, onSuccess }: RequestModalProps) {
 function PendingRow({ doc }: { doc: Doc }) {
   return (
     <tr className="hover:bg-gray-50 transition-colors">
-      <td className="px-4 py-3">
+      <td className="px-3.5 sm:px-4 py-2.5 sm:py-3">
         <p className="font-medium text-gray-900">{doc.employee?.fullName || "—"}</p>
         <p className="text-xs text-gray-400">{doc.employee?.department || ""}</p>
       </td>
-      <td className="px-4 py-3 text-gray-800">{doc.title}</td>
-      <td className="px-4 py-3"><CategoryBadge category={doc.category} /></td>
-      <td className="px-4 py-3 text-gray-600">
+      <td className="px-3.5 sm:px-4 py-2.5 sm:py-3 text-gray-800">{doc.title}</td>
+      <td className="px-3.5 sm:px-4 py-2.5 sm:py-3"><CategoryBadge category={doc.category} /></td>
+      <td className="px-3.5 sm:px-4 py-2.5 sm:py-3 text-gray-600">
         {new Date(doc.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
       </td>
-      <td className="px-4 py-3 text-gray-500 max-w-[200px] truncate">{doc.requestNote || "—"}</td>
+      <td className="px-3.5 sm:px-4 py-2.5 sm:py-3 text-gray-500 max-w-[200px] truncate">{doc.requestNote || "—"}</td>
     </tr>
   );
 }
@@ -208,23 +208,23 @@ function FulfilledRow({ doc }: { doc: Doc }) {
 
   return (
     <tr className="hover:bg-gray-50 transition-colors">
-      <td className="px-4 py-3">
+      <td className="px-3.5 sm:px-4 py-2.5 sm:py-3">
         <p className="font-medium text-gray-900">{doc.employee?.fullName || "—"}</p>
         <p className="text-xs text-gray-400">{doc.employee?.department || ""}</p>
       </td>
-      <td className="px-4 py-3 text-gray-800">{doc.title}</td>
-      <td className="px-4 py-3"><CategoryBadge category={doc.category} /></td>
-      <td className="px-4 py-3 text-gray-600">
+      <td className="px-3.5 sm:px-4 py-2.5 sm:py-3 text-gray-800">{doc.title}</td>
+      <td className="px-3.5 sm:px-4 py-2.5 sm:py-3"><CategoryBadge category={doc.category} /></td>
+      <td className="px-3.5 sm:px-4 py-2.5 sm:py-3 text-gray-600">
         {new Date(doc.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
       </td>
-      <td className="px-4 py-3 text-gray-600">
+      <td className="px-3.5 sm:px-4 py-2.5 sm:py-3 text-gray-600">
         {new Date(doc.updatedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
       </td>
-      <td className="px-4 py-3">
+      <td className="px-3.5 sm:px-4 py-2.5 sm:py-3">
         <button
           onClick={handleDownload}
           disabled={downloading}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-medium hover:bg-blue-100 disabled:opacity-50"
+          className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-medium hover:bg-blue-100 disabled:opacity-50"
         >
           <TbDownload size={14} />
           {downloading ? "..." : "Download"}
@@ -263,48 +263,48 @@ export function RequestsPage() {
   const fulfilled = docs.filter(d => !!d.fileKey);
 
   return (
-    <div className={cn("flex flex-col h-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
+    <div className={cn("flex min-h-0 min-w-0 flex-col h-full w-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl max-sm:rounded-xl" : "rounded-xl")}>
       {/* Header */}
-      <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b border-black/5 glass-header">
-        <div className="flex items-center gap-2">
+      <div className="sticky top-0 z-10 flex min-h-16 flex-wrap items-center justify-between gap-2 px-4 sm:px-5 py-2 sm:py-0 border-b border-black/5 glass-header">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
           <SubNavToggle />
-          <p className="text-lg font-semibold tracking-tight">Document Requests</p>
+          <p className="text-base sm:text-lg font-semibold tracking-tight truncate">Document Requests</p>
         </div>
         <button
           onClick={() => setShowRequest(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-stone-900 text-white text-sm font-medium hover:bg-stone-800"
+          className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-stone-900 text-white text-xs sm:text-sm font-medium hover:bg-stone-800 transition-colors whitespace-nowrap shrink-0"
         >
-          <TbFileAlert size={16} />
-          Request Document
+          <TbFileAlert size={15} />
+          <span>Request Document</span>
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-6">
+      <div className="flex-1 min-h-0 min-w-0 overflow-y-auto p-3 sm:p-5 flex flex-col gap-4 sm:gap-6 max-w-full">
         {loading ? (
           <div className="flex items-center justify-center py-20 text-gray-400 text-sm">Loading...</div>
         ) : (
           <>
             {/* Pending Section */}
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2.5 sm:gap-3">
               <div className="flex items-center gap-2">
                 <TbFileAlert size={18} className="text-amber-500" />
-                <p className="text-sm font-semibold text-gray-700">Pending Requests</p>
+                <p className="text-xs sm:text-sm font-semibold text-gray-700">Pending Requests</p>
                 <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">{pending.length}</span>
               </div>
               {pending.length === 0 ? (
-                <div className="rounded-xl glass-card px-4 py-8 text-center text-sm text-gray-400">
+                <div className="rounded-xl glass-card px-4 py-8 text-center text-xs sm:text-sm text-gray-400">
                   No pending requests
                 </div>
               ) : (
-                <div className="rounded-xl glass-card overflow-hidden">
-                  <table className="w-full text-sm">
+                <div className="rounded-xl glass-card overflow-x-auto shadow-xs max-w-full w-full">
+                  <table className="w-full min-w-[560px] text-xs sm:text-sm">
                     <thead className="glass-thead text-xs text-gray-500 uppercase">
                       <tr>
-                        <th className="text-left px-4 py-3">Employee</th>
-                        <th className="text-left px-4 py-3">Document Requested</th>
-                        <th className="text-left px-4 py-3">Category</th>
-                        <th className="text-left px-4 py-3">Requested Date</th>
-                        <th className="text-left px-4 py-3">Note</th>
+                        <th className="text-left px-3.5 sm:px-4 py-2.5 sm:py-3">Employee</th>
+                        <th className="text-left px-3.5 sm:px-4 py-2.5 sm:py-3">Document Requested</th>
+                        <th className="text-left px-3.5 sm:px-4 py-2.5 sm:py-3">Category</th>
+                        <th className="text-left px-3.5 sm:px-4 py-2.5 sm:py-3">Requested Date</th>
+                        <th className="text-left px-3.5 sm:px-4 py-2.5 sm:py-3">Note</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
@@ -316,27 +316,27 @@ export function RequestsPage() {
             </div>
 
             {/* Fulfilled Section */}
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2.5 sm:gap-3">
               <div className="flex items-center gap-2">
                 <TbFileCheck size={18} className="text-green-500" />
-                <p className="text-sm font-semibold text-gray-700">Fulfilled Requests</p>
+                <p className="text-xs sm:text-sm font-semibold text-gray-700">Fulfilled Requests</p>
                 <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-700">{fulfilled.length}</span>
               </div>
               {fulfilled.length === 0 ? (
-                <div className="rounded-xl glass-card px-4 py-8 text-center text-sm text-gray-400">
+                <div className="rounded-xl glass-card px-4 py-8 text-center text-xs sm:text-sm text-gray-400">
                   No fulfilled requests yet
                 </div>
               ) : (
-                <div className="rounded-xl glass-card overflow-hidden">
-                  <table className="w-full text-sm">
+                <div className="rounded-xl glass-card overflow-x-auto shadow-xs max-w-full w-full">
+                  <table className="w-full min-w-[560px] text-xs sm:text-sm">
                     <thead className="glass-thead text-xs text-gray-500 uppercase">
                       <tr>
-                        <th className="text-left px-4 py-3">Employee</th>
-                        <th className="text-left px-4 py-3">Document</th>
-                        <th className="text-left px-4 py-3">Category</th>
-                        <th className="text-left px-4 py-3">Requested</th>
-                        <th className="text-left px-4 py-3">Uploaded</th>
-                        <th className="text-left px-4 py-3">Action</th>
+                        <th className="text-left px-3.5 sm:px-4 py-2.5 sm:py-3">Employee</th>
+                        <th className="text-left px-3.5 sm:px-4 py-2.5 sm:py-3">Document</th>
+                        <th className="text-left px-3.5 sm:px-4 py-2.5 sm:py-3">Category</th>
+                        <th className="text-left px-3.5 sm:px-4 py-2.5 sm:py-3">Requested</th>
+                        <th className="text-left px-3.5 sm:px-4 py-2.5 sm:py-3">Uploaded</th>
+                        <th className="text-left px-3.5 sm:px-4 py-2.5 sm:py-3">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">

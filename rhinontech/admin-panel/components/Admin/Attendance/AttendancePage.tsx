@@ -203,18 +203,18 @@ function TeamAttendancePage() {
   const selected = teamMonth?.employees.find(e => e.userId === selectedEmployee);
 
   return (
-    <div className={cn("flex flex-col h-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
-      <div className="sticky top-0 z-10 flex h-16 items-center gap-3 border-b border-black/5 glass-header px-5">
+    <div className={cn("flex flex-col h-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl max-sm:rounded-xl" : "rounded-xl")}>
+      <div className="sticky top-0 z-10 flex min-h-16 items-center gap-3 border-b border-black/5 glass-header px-4 sm:px-5">
         <SubNavToggle />
-        <span className="text-lg font-semibold tracking-tight">Team Attendance</span>
+        <span className="text-base sm:text-lg font-semibold tracking-tight truncate">Team Attendance</span>
       </div>
 
       <div className="flex-1 overflow-auto">
-        <div className="mx-auto max-w-[1400px] p-6 space-y-6">
+        <div className="mx-auto max-w-[1400px] p-3 sm:p-6 space-y-4 sm:space-y-6">
 
           {/* Today's summary cards */}
           {teamToday && (
-            <div className="grid grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-4">
               {[
                 { label: "Total Employees", value: teamToday.summary.total, icon: <TbUsers size={20} />, color: "text-stone-600 bg-stone-100" },
                 { label: "Present Today", value: teamToday.summary.present, icon: <TbUserCheck size={20} />, color: "text-green-700 bg-green-100" },
@@ -222,11 +222,11 @@ function TeamAttendancePage() {
                 { label: "Currently Active", value: teamToday.summary.active, icon: <TbActivity size={20} />, color: "text-blue-600 bg-blue-100" },
                 { label: "On Break", value: teamToday.summary.onBreak, icon: <TbCoffee size={20} />, color: "text-amber-700 bg-amber-100" },
               ].map(card => (
-                <div key={card.label} className="rounded-xl glass-card p-5 flex items-center gap-4">
-                  <div className={cn("p-3 rounded-xl", card.color)}>{card.icon}</div>
-                  <div>
-                    <p className="text-2xl font-bold text-stone-900">{card.value}</p>
-                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">{card.label}</p>
+                <div key={card.label} className="rounded-xl glass-card p-3 sm:p-5 flex items-center gap-2.5 sm:gap-4 min-w-0">
+                  <div className={cn("p-2 sm:p-3 rounded-xl shrink-0", card.color)}>{card.icon}</div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-lg sm:text-2xl font-bold text-stone-900 truncate">{card.value}</p>
+                    <p className="text-[9px] sm:text-[10px] font-bold text-stone-400 uppercase tracking-widest truncate">{card.label}</p>
                   </div>
                 </div>
               ))}
@@ -234,9 +234,9 @@ function TeamAttendancePage() {
           )}
 
           {/* Monthly timesheet by employee */}
-          <div className="rounded-xl glass-card p-4">
-            <div className="flex items-center justify-between px-2 pb-4">
-              <div className="flex items-center gap-3">
+          <div className="rounded-xl glass-card p-3 sm:p-4">
+            <div className="flex items-center justify-between px-1 sm:px-2 pb-3 sm:pb-4 flex-wrap gap-2">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <button onClick={prevMonth} className="p-1 rounded hover:bg-gray-100">
                   <TbChevronLeft size={20} className="text-gray-500" />
                 </button>
@@ -245,7 +245,7 @@ function TeamAttendancePage() {
                   <TbChevronRight size={20} className="text-gray-500" />
                 </button>
               </div>
-              <button className="rounded-lg border border-gray-300 p-2 text-gray-600 hover:bg-gray-50">
+              <button className="rounded-lg border border-gray-300 p-1.5 sm:p-2 text-gray-600 hover:bg-gray-50">
                 <TbDownload size={18} />
               </button>
             </div>
@@ -456,40 +456,40 @@ function PersonalTimesheetPage() {
   const monthLabel = new Date(year, month - 1, 1).toLocaleString("en-GB", { month: "long", year: "numeric" });
 
   return (
-    <div className={cn("flex flex-col h-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
-      <div className="sticky top-0 z-10 flex h-16 items-center gap-3 border-b border-black/5 glass-header px-5">
+    <div className={cn("flex flex-col h-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl max-sm:rounded-xl" : "rounded-xl")}>
+      <div className="sticky top-0 z-10 flex min-h-16 items-center gap-3 border-b border-black/5 glass-header px-4 sm:px-5">
         <SubNavToggle />
-        <span className="text-lg font-semibold tracking-tight">My Timesheet</span>
+        <span className="text-base sm:text-lg font-semibold tracking-tight truncate">My Timesheet</span>
       </div>
 
       <div className="flex-1 overflow-auto">
-        <div className="mx-auto max-w-[1220px] p-6 space-y-6">
-          <section className="rounded-xl glass-card p-5">
-            <div className="flex items-center justify-between">
-              <div>
+        <div className="mx-auto max-w-[1220px] p-3 sm:p-6 space-y-4 sm:space-y-6">
+          <section className="rounded-xl glass-card p-4 sm:p-5">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-gray-900">
                   {now.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
                 </p>
                 {today?.clockIn ? (
                   <>
-                    <p className="mt-8 text-lg text-gray-500">You clocked in at {formatTime(today.clockIn)}</p>
-                    <div className="mt-4 flex items-center gap-3">
+                    <p className="mt-3 sm:mt-6 text-base sm:text-lg text-gray-500">You clocked in at {formatTime(today.clockIn)}</p>
+                    <div className="mt-3 flex items-center gap-2.5 flex-wrap">
                       <span className="rounded-md bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-600">DEFAULT SHIFT</span>
-                      <span className="text-gray-600">11:00 AM – 8:00 PM</span>
+                      <span className="text-sm text-gray-600">11:00 AM – 8:00 PM</span>
                     </div>
-                    <p className="mt-3 text-gray-600">
+                    <p className="mt-2 text-sm text-gray-600">
                       Duration: {formatDuration(today.durationMinutes)}
-                      {onBreak && <span className="ml-2 text-sm font-medium text-amber-600">On break since {formatTime(today.breaks![today.breaks!.length - 1].start)}</span>}
+                      {onBreak && <span className="ml-2 text-xs font-medium text-amber-600">On break since {formatTime(today.breaks![today.breaks!.length - 1].start)}</span>}
                     </p>
                   </>
                 ) : (
-                  <p className="mt-8 text-lg text-gray-500">You haven't clocked in yet today.</p>
+                  <p className="mt-3 sm:mt-6 text-base sm:text-lg text-gray-500">You haven't clocked in yet today.</p>
                 )}
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto shrink-0">
                 <button
                   onClick={() => setShowRegModal(true)}
-                  className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50"
+                  className="rounded-lg border border-gray-300 px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-medium hover:bg-gray-50"
                 >
                   Add regularisation
                 </button>
@@ -499,7 +499,7 @@ function PersonalTimesheetPage() {
                       onClick={handleToggleBreak}
                       disabled={breakLoading}
                       className={cn(
-                        "inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium disabled:opacity-60",
+                        "inline-flex items-center gap-1.5 sm:gap-2 rounded-lg border px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-medium disabled:opacity-60",
                         onBreak ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100" : "border-gray-300 hover:bg-gray-50"
                       )}
                     >
@@ -509,7 +509,7 @@ function PersonalTimesheetPage() {
                     <button
                       onClick={handleClockOut}
                       disabled={clockingOut}
-                      className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50 disabled:opacity-60"
+                      className="inline-flex items-center gap-1.5 sm:gap-2 rounded-lg border border-gray-300 px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-medium hover:bg-gray-50 disabled:opacity-60"
                     >
                       <TbStopwatch size={16} />
                       {clockingOut ? "Clocking out…" : "Clock out"}
@@ -518,20 +518,20 @@ function PersonalTimesheetPage() {
                 ) : !today?.clockIn ? (
                   <button
                     onClick={handleClockIn}
-                    className="inline-flex items-center gap-2 rounded-lg border border-gray-900 px-4 py-2 text-sm font-medium hover:bg-gray-50"
+                    className="inline-flex items-center gap-2 rounded-lg border border-gray-900 bg-stone-900 text-white px-4 py-2 text-xs sm:text-sm font-medium hover:bg-stone-800"
                   >
                     Clock in
                   </button>
                 ) : (
-                  <span className="text-sm text-gray-400">Clocked out at {formatTime(today.clockOut)}</span>
+                  <span className="text-xs sm:text-sm text-gray-400">Clocked out at {formatTime(today.clockOut)}</span>
                 )}
               </div>
             </div>
           </section>
 
-          <section className="rounded-xl glass-card p-4">
-            <div className="flex items-center justify-between px-2 pb-4">
-              <div className="flex items-center gap-3">
+          <section className="rounded-xl glass-card p-3 sm:p-4">
+            <div className="flex items-center justify-between px-1 sm:px-2 pb-3 sm:pb-4 flex-wrap gap-2">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <button onClick={prevMonth} className="p-1 rounded hover:bg-gray-100">
                   <TbChevronLeft size={20} className="text-gray-500" />
                 </button>
@@ -540,7 +540,7 @@ function PersonalTimesheetPage() {
                   <TbChevronRight size={20} className="text-gray-500" />
                 </button>
               </div>
-              <button className="rounded-lg border border-gray-300 p-2 text-gray-600 hover:bg-gray-50">
+              <button className="rounded-lg border border-gray-300 p-1.5 sm:p-2 text-gray-600 hover:bg-gray-50">
                 <TbDownload size={18} />
               </button>
             </div>
@@ -548,8 +548,9 @@ function PersonalTimesheetPage() {
             {loading ? (
               <div className="p-8 text-center text-sm text-gray-400">Loading…</div>
             ) : (
-              <div className="grid overflow-hidden rounded-lg border border-gray-100"
-                style={{ gridTemplateColumns: "150px repeat(24, minmax(38px, 1fr)) 72px 86px" }}>
+              <div className="overflow-x-auto">
+                <div className="grid rounded-lg border border-gray-100 min-w-[900px]"
+                  style={{ gridTemplateColumns: "150px repeat(24, minmax(38px, 1fr)) 72px 86px" }}>
                 <div className="bg-gray-50 p-3 text-sm text-gray-500">Date</div>
                 {hourColumns.map(h => (
                   <div key={h} className="border-l bg-gray-50 p-3 text-center text-sm text-gray-500">
@@ -602,6 +603,7 @@ function PersonalTimesheetPage() {
                     </div>
                   );
                 })}
+                </div>
               </div>
             )}
           </section>

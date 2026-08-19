@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
+import { useSideNav } from "@/context/SideNavContext";
+import { cn } from "@/lib/utils";
 import { TbLoader2, TbCheck, TbAlertCircle, TbChevronRight } from "react-icons/tb";
 import { MdOutlinePlayCircle } from "react-icons/md";
 import Link from "next/link";
@@ -42,6 +44,7 @@ const MONTHS = ["January","February","March","April","May","June","July","August
 const INR = (v: number) => `₹${Number(v).toLocaleString("en-IN")}`;
 
 export function AdminPayrollRun() {
+  const { isExpanded: isSubNavExpanded } = useSideNav();
   const pathname = usePathname();
   const roleSlug = pathname.split("/")[1];
 
@@ -95,42 +98,42 @@ export function AdminPayrollRun() {
   // Success state
   if (result) {
     return (
-      <div className="flex flex-col h-full glass-panel rounded-r-xl overflow-hidden">
-        <div className="sticky top-0 z-10 flex items-center gap-4 h-16 px-5 border-b border-black/5 glass-header">
+      <div className={cn("flex min-h-0 min-w-0 flex-col h-full w-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl max-sm:rounded-xl" : "rounded-xl")}>
+        <div className="sticky top-0 z-10 flex min-h-16 flex-wrap items-center gap-2.5 sm:gap-4 px-4 sm:px-5 py-2 sm:py-0 border-b border-black/5 glass-header">
           <SubNavToggle />
-          <h1 className="text-base font-semibold tracking-tight">Run Payroll</h1>
+          <h1 className="text-base sm:text-lg font-semibold tracking-tight truncate">Run Payroll</h1>
         </div>
-        <div className="flex-1 flex items-center justify-center p-6">
-          <div className="bg-white rounded-2xl border border-green-100 p-10 text-center max-w-md w-full">
-            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-5">
-              <TbCheck size={32} className="text-green-600" />
+        <div className="flex-1 flex items-center justify-center p-4 sm:p-6 overflow-auto">
+          <div className="bg-white rounded-2xl border border-green-100 p-6 sm:p-10 text-center max-w-md w-full">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4 sm:mb-5">
+              <TbCheck size={28} className="text-green-600" />
             </div>
-            <h2 className="text-sm font-semibold text-gray-900 mb-1">Payroll Run Complete</h2>
-            <p className="text-sm text-gray-500 mb-6">{result.message}</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 text-left">
-              <div className="bg-gray-50 rounded-lg p-3">
+            <h2 className="text-sm sm:text-base font-semibold text-gray-900 mb-1">Payroll Run Complete</h2>
+            <p className="text-xs sm:text-sm text-gray-500 mb-5 sm:mb-6">{result.message}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4 mb-5 sm:mb-6 text-left">
+              <div className="bg-gray-50 rounded-lg p-2.5 sm:p-3">
                 <p className="text-xs text-gray-400">Period</p>
-                <p className="font-semibold text-gray-900 text-sm">{MONTHS[result.payroll.month - 1]} {result.payroll.year}</p>
+                <p className="font-semibold text-gray-900 text-xs sm:text-sm truncate">{MONTHS[result.payroll.month - 1]} {result.payroll.year}</p>
               </div>
-              <div className="bg-gray-50 rounded-lg p-3">
+              <div className="bg-gray-50 rounded-lg p-2.5 sm:p-3">
                 <p className="text-xs text-gray-400">Total Net</p>
-                <p className="font-semibold text-gray-900 text-sm">{INR(result.payroll.totalNet)}</p>
+                <p className="font-semibold text-gray-900 text-xs sm:text-sm truncate">{INR(result.payroll.totalNet)}</p>
               </div>
-              <div className="bg-gray-50 rounded-lg p-3">
+              <div className="bg-gray-50 rounded-lg p-2.5 sm:p-3">
                 <p className="text-xs text-gray-400">Payslips</p>
-                <p className="font-semibold text-gray-900 text-sm">{result.payroll.count}</p>
+                <p className="font-semibold text-gray-900 text-xs sm:text-sm">{result.payroll.count}</p>
               </div>
             </div>
-            <div className="flex gap-3 justify-center">
+            <div className="flex flex-wrap sm:flex-nowrap gap-2.5 sm:gap-3 justify-center">
               <Link
                 href={`/${roleSlug}/payroll/overview`}
-                className="flex items-center gap-2 px-4 py-2 bg-stone-900 text-white text-sm font-medium rounded-lg hover:bg-stone-800"
+                className="flex items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-2 bg-stone-900 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-stone-800 transition-colors w-full sm:w-auto"
               >
                 View Dashboard <TbChevronRight size={14} />
               </Link>
               <button
                 onClick={() => { setResult(null); setError(""); }}
-                className="px-4 py-2 border border-gray-200 text-sm text-gray-600 rounded-lg hover:bg-gray-50"
+                className="px-3.5 sm:px-4 py-2 border border-gray-200 text-xs sm:text-sm text-gray-600 rounded-lg hover:bg-gray-50 transition-colors w-full sm:w-auto"
               >
                 Run Another
               </button>
@@ -142,34 +145,34 @@ export function AdminPayrollRun() {
   }
 
   return (
-    <div className="flex flex-col h-full glass-panel rounded-r-xl overflow-hidden">
-      <div className="sticky top-0 z-10 flex items-center gap-4 h-16 px-5 border-b border-black/5 glass-header">
+    <div className={cn("flex min-h-0 min-w-0 flex-col h-full w-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl max-sm:rounded-xl" : "rounded-xl")}>
+      <div className="sticky top-0 z-10 flex min-h-16 flex-wrap items-center gap-2.5 sm:gap-4 px-4 sm:px-5 py-2 sm:py-0 border-b border-black/5 glass-header">
         <SubNavToggle />
-        <h1 className="text-base font-semibold tracking-tight">Run Payroll</h1>
+        <h1 className="text-base sm:text-lg font-semibold tracking-tight truncate">Run Payroll</h1>
       </div>
 
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 min-h-0 min-w-0 overflow-auto p-3 sm:p-6 max-w-full">
         <div className="max-w-3xl">
           {/* Period selector */}
-          <div className="glass-card-solid rounded-xl p-6 mb-5">
-            <p className="font-semibold text-gray-900 mb-4">Select Payroll Period</p>
-            <div className="flex gap-4">
-              <div className="flex flex-col gap-1.5">
+          <div className="glass-card-solid rounded-xl p-4 sm:p-6 mb-4 sm:mb-5">
+            <p className="font-semibold text-xs sm:text-sm text-gray-900 mb-3 sm:mb-4">Select Payroll Period</p>
+            <div className="flex flex-wrap sm:flex-nowrap gap-3 sm:gap-4">
+              <div className="flex flex-col gap-1.5 flex-1 min-w-[140px]">
                 <label className="text-xs text-gray-500">Month</label>
                 <select
                   value={month}
                   onChange={(e) => setMonth(Number(e.target.value))}
-                  className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  className="px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                 >
                   {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
                 </select>
               </div>
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1.5 flex-1 min-w-[140px]">
                 <label className="text-xs text-gray-500">Year</label>
                 <select
                   value={year}
                   onChange={(e) => setYear(Number(e.target.value))}
-                  className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  className="px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                 >
                   {[now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1].map((y) => (
                     <option key={y} value={y}>{y}</option>
@@ -180,30 +183,30 @@ export function AdminPayrollRun() {
           </div>
 
           {/* Preview — eligible employees */}
-          <div className="glass-card-solid rounded-xl overflow-hidden mb-5">
-            <div className="px-5 py-4 border-b flex items-center justify-between">
-              <p className="font-semibold text-gray-900">Payslips to be generated</p>
-              <span className="text-sm text-gray-500">{eligible.length} employee{eligible.length !== 1 ? "s" : ""}</span>
+          <div className="glass-card-solid rounded-xl overflow-x-auto shadow-xs max-w-full w-full mb-4 sm:mb-5">
+            <div className="px-4 sm:px-5 py-3 sm:py-4 border-b flex items-center justify-between">
+              <p className="font-semibold text-xs sm:text-sm text-gray-900">Payslips to be generated</p>
+              <span className="text-xs sm:text-sm text-gray-500">{eligible.length} employee{eligible.length !== 1 ? "s" : ""}</span>
             </div>
 
             {loadingPreview ? (
-              <div className="p-6 text-sm text-gray-400">Loading preview…</div>
+              <div className="p-6 text-xs sm:text-sm text-gray-400">Loading preview…</div>
             ) : eligible.length === 0 ? (
-              <div className="p-8 text-center">
-                <p className="text-sm text-gray-500">No employees have a salary configured.</p>
+              <div className="p-6 sm:p-8 text-center">
+                <p className="text-xs sm:text-sm text-gray-500">No employees have a salary configured.</p>
                 <Link href={`/${roleSlug}/payroll/employees`} className="text-xs text-blue-600 hover:underline mt-1 block">
                   Set up employee salaries →
                 </Link>
               </div>
             ) : (
-              <table className="w-full min-w-[640px] text-sm">
+              <table className="w-full min-w-[560px] text-xs sm:text-sm">
                 <thead className="glass-thead text-xs text-gray-600 uppercase">
                   <tr>
-                    <th className="px-5 py-3 text-left">Employee</th>
-                    <th className="px-5 py-3 text-right">Gross</th>
-                    <th className="px-5 py-3 text-right">PF</th>
-                    <th className="px-5 py-3 text-right">PT</th>
-                    <th className="px-5 py-3 text-right">Net Pay</th>
+                    <th className="px-4 sm:px-5 py-2.5 sm:py-3 text-left">Employee</th>
+                    <th className="px-4 sm:px-5 py-2.5 sm:py-3 text-right">Gross</th>
+                    <th className="px-4 sm:px-5 py-2.5 sm:py-3 text-right">PF</th>
+                    <th className="px-4 sm:px-5 py-2.5 sm:py-3 text-right">PT</th>
+                    <th className="px-4 sm:px-5 py-2.5 sm:py-3 text-right">Net Pay</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
@@ -211,24 +214,24 @@ export function AdminPayrollRun() {
                     const { gross, pf, pt, tds, net } = calcEmp(emp);
                     return (
                       <tr key={emp.id} className="hover:bg-gray-50">
-                        <td className="px-5 py-3">
+                        <td className="px-4 sm:px-5 py-2.5 sm:py-3">
                           <p className="font-medium text-gray-900">{emp.fullName}</p>
                           <p className="text-xs text-gray-400">{emp.role?.name} · {emp.department}</p>
                         </td>
-                        <td className="px-5 py-3 text-right">{INR(gross)}</td>
-                        <td className="px-5 py-3 text-right text-red-600">{pf > 0 ? `−${INR(pf)}` : <span className="text-gray-300">—</span>}</td>
-                        <td className="px-5 py-3 text-right text-red-600">{pt > 0 ? `−${INR(pt)}` : <span className="text-gray-300">—</span>}</td>
-                        <td className="px-5 py-3 text-right font-semibold text-green-700">{INR(net)}</td>
+                        <td className="px-4 sm:px-5 py-2.5 sm:py-3 text-right">{INR(gross)}</td>
+                        <td className="px-4 sm:px-5 py-2.5 sm:py-3 text-right text-red-600">{pf > 0 ? `−${INR(pf)}` : <span className="text-gray-300">—</span>}</td>
+                        <td className="px-4 sm:px-5 py-2.5 sm:py-3 text-right text-red-600">{pt > 0 ? `−${INR(pt)}` : <span className="text-gray-300">—</span>}</td>
+                        <td className="px-4 sm:px-5 py-2.5 sm:py-3 text-right font-semibold text-green-700">{INR(net)}</td>
                       </tr>
                     );
                   })}
                 </tbody>
                 <tfoot className="border-t border-gray-200 bg-gray-50 font-semibold text-gray-900">
                   <tr>
-                    <td className="px-5 py-3">Total ({eligible.length})</td>
-                    <td className="px-5 py-3 text-right">{INR(eligible.reduce((s, e) => s + calcEmp(e).gross, 0))}</td>
+                    <td className="px-4 sm:px-5 py-2.5 sm:py-3">Total ({eligible.length})</td>
+                    <td className="px-4 sm:px-5 py-2.5 sm:py-3 text-right">{INR(eligible.reduce((s, e) => s + calcEmp(e).gross, 0))}</td>
                     <td colSpan={2} />
-                    <td className="px-5 py-3 text-right text-green-700">{INR(eligible.reduce((s, e) => s + calcEmp(e).net, 0))}</td>
+                    <td className="px-4 sm:px-5 py-2.5 sm:py-3 text-right text-green-700">{INR(eligible.reduce((s, e) => s + calcEmp(e).net, 0))}</td>
                   </tr>
                 </tfoot>
               </table>
@@ -237,11 +240,11 @@ export function AdminPayrollRun() {
 
           {/* Exiting members — settled separately */}
           {exiting.length > 0 && (
-            <div className="flex items-start gap-3 bg-purple-50 border border-purple-200 rounded-xl px-5 py-4 mb-5 text-sm text-purple-800">
+            <div className="flex items-start gap-2.5 sm:gap-3 bg-purple-50 border border-purple-200 rounded-xl px-3.5 sm:px-5 py-3 sm:py-4 mb-4 sm:mb-5 text-xs sm:text-sm text-purple-800">
               <TbAlertCircle size={18} className="shrink-0 mt-0.5" />
               <div>
                 <p className="font-medium">{exiting.length} exiting member{exiting.length !== 1 ? "s" : ""} excluded from this run</p>
-                <p className="text-xs mt-0.5 text-purple-700">
+                <p className="text-[11px] sm:text-xs mt-0.5 text-purple-700">
                   Last working day falls within this period for: {exiting.map((e) => e.fullName).join(", ")}
                 </p>
                 <Link href={`/${roleSlug}/payroll/settlements`} className="text-xs text-purple-900 underline mt-1 block">
@@ -253,19 +256,19 @@ export function AdminPayrollRun() {
 
           {/* Not configured warning */}
           {notConfigured.length > 0 && (
-            <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 mb-5 text-sm text-amber-800">
+            <div className="flex items-start gap-2.5 sm:gap-3 bg-amber-50 border border-amber-200 rounded-xl px-3.5 sm:px-5 py-3 sm:py-4 mb-4 sm:mb-5 text-xs sm:text-sm text-amber-800">
               <TbAlertCircle size={18} className="shrink-0 mt-0.5" />
               <div>
                 <p className="font-medium">{notConfigured.length} employee{notConfigured.length !== 1 ? "s" : ""} will be skipped</p>
-                <p className="text-xs mt-0.5 text-amber-700">No salary structure set for: {notConfigured.map((e) => e.fullName).join(", ")}</p>
+                <p className="text-[11px] sm:text-xs mt-0.5 text-amber-700">No salary structure set for: {notConfigured.map((e) => e.fullName).join(", ")}</p>
                 <Link href={`/${roleSlug}/payroll/employees`} className="text-xs text-amber-900 underline mt-1 block">Set up salaries →</Link>
               </div>
             </div>
           )}
 
           {error && (
-            <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-5 py-3 mb-5 text-sm text-red-700">
-              <TbAlertCircle size={16} /> {error}
+            <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-3.5 sm:px-5 py-2.5 sm:py-3 mb-4 sm:mb-5 text-xs sm:text-sm text-red-700">
+              <TbAlertCircle size={16} className="shrink-0" /> {error}
             </div>
           )}
 
@@ -273,10 +276,10 @@ export function AdminPayrollRun() {
           <button
             onClick={run}
             disabled={running || eligible.length === 0}
-            className="flex items-center gap-2 px-6 py-3 bg-stone-900 text-white font-medium rounded-lg hover:bg-stone-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 bg-stone-900 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-stone-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
           >
             {running ? <TbLoader2 size={18} className="animate-spin" /> : <MdOutlinePlayCircle size={18} />}
-            {running ? "Running…" : `Run Payroll for ${MONTHS[month - 1]} ${year}`}
+            <span>{running ? "Running…" : `Run Payroll for ${MONTHS[month - 1]} ${year}`}</span>
           </button>
         </div>
       </div>

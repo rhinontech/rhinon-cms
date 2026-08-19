@@ -83,7 +83,7 @@ function ComposeModal({ onClose, onSent }: { onClose: () => void; onSent: () => 
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    apiFetch<Array<{ fullName: string; companyEmail: string }>>("/inbox/contacts").then(setContacts).catch(() => {});
+    apiFetch<Array<{ fullName: string; companyEmail: string }>>("/inbox/contacts").then(setContacts).catch(() => { });
   }, []);
 
   // Suggestions match the fragment after the last comma; already-added
@@ -92,9 +92,9 @@ function ComposeModal({ onClose, onSent }: { onClose: () => void; onSent: () => 
   const chosen = to.toLowerCase();
   const suggestions = toFocused
     ? contacts.filter((c) =>
-        !chosen.includes(c.companyEmail.toLowerCase()) &&
-        (!fragment || c.companyEmail.toLowerCase().includes(fragment) || c.fullName.toLowerCase().includes(fragment))
-      ).slice(0, 6)
+      !chosen.includes(c.companyEmail.toLowerCase()) &&
+      (!fragment || c.companyEmail.toLowerCase().includes(fragment) || c.fullName.toLowerCase().includes(fragment))
+    ).slice(0, 6)
     : [];
 
   const pickContact = (email: string) => {
@@ -193,8 +193,16 @@ export default function Inbox() {
   const [pending, setPending] = useState<Att[]>([]);
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   const fetchEmails = useCallback(async () => {
     setLoading(true);
@@ -304,24 +312,24 @@ export default function Inbox() {
         <div className="flex-1 overflow-y-auto">
           {loading ? <div className="flex h-32 items-center justify-center text-sm text-gray-400">Loading...</div>
             : emails.length === 0 ? <div className="flex h-32 items-center justify-center text-sm text-gray-400">No emails</div>
-            : emails.map((e) => (
-              <button key={e.id} onClick={() => setSelectedId(e.id)} className={cn("flex w-full items-start gap-2.5 border-b border-black/5 px-4 py-3 text-left transition-colors", selectedId === e.id ? "bg-blue-50/60" : "hover:bg-gray-50")}>
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-50 text-xs font-semibold text-teal-700">{initials(e.fromName)}</div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className={cn("truncate text-sm", e.isRead ? "font-medium text-gray-700" : "font-bold text-gray-900")}>{e.fromName}</p>
-                    <span className="shrink-0 text-[10px] text-gray-400">{relTime(e.sentAt)}</span>
+              : emails.map((e) => (
+                <button key={e.id} onClick={() => setSelectedId(e.id)} className={cn("flex w-full items-start gap-2.5 border-b border-black/5 px-4 py-3 text-left transition-colors", selectedId === e.id ? "bg-blue-50/60" : "hover:bg-gray-50")}>
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-50 text-xs font-semibold text-teal-700">{initials(e.fromName)}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className={cn("truncate text-sm", e.isRead ? "font-medium text-gray-700" : "font-bold text-gray-900")}>{e.fromName}</p>
+                      <span className="shrink-0 text-[10px] text-gray-400">{relTime(e.sentAt)}</span>
+                    </div>
+                    <p className="truncate text-xs font-medium text-gray-700">{e.subject}</p>
+                    {e.campaign && (
+                      <span className="mt-0.5 inline-block truncate rounded-full bg-violet-50 px-1.5 py-0.5 text-[10px] font-semibold text-violet-600">
+                        {e.campaign.name}
+                      </span>
+                    )}
+                    <p className="truncate text-[11px] text-gray-400">{e.hasAttachment && <TbPaperclip size={10} className="mr-0.5 inline" />}{e.snippet}</p>
                   </div>
-                  <p className="truncate text-xs font-medium text-gray-700">{e.subject}</p>
-                  {e.campaign && (
-                    <span className="mt-0.5 inline-block truncate rounded-full bg-violet-50 px-1.5 py-0.5 text-[10px] font-semibold text-violet-600">
-                      {e.campaign.name}
-                    </span>
-                  )}
-                  <p className="truncate text-[11px] text-gray-400">{e.hasAttachment && <TbPaperclip size={10} className="mr-0.5 inline" />}{e.snippet}</p>
-                </div>
-              </button>
-            ))}
+                </button>
+              ))}
         </div>
       </main>
 
@@ -420,7 +428,13 @@ export default function Inbox() {
                 <textarea
                   value={draft} onChange={(e) => setDraft(e.target.value)} rows={1}
                   onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-                  placeholder={uploading ? "Uploading attachment..." : `${mode === "note" ? "Add an internal note" : "Reply"}...  (Enter to send, Shift+Enter for new line)`}
+                  placeholder={
+                    uploading
+                      ? "Uploading attachment..."
+                      : isMobile
+                        ? `${mode === "note" ? "Add internal note" : "Reply"}...`
+                        : `${mode === "note" ? "Add an internal note" : "Reply"}...  (Enter to send, Shift+Enter for new line)`
+                  }
                   className="max-h-32 min-h-[42px] flex-1 resize-y rounded-lg border px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <button onClick={send} disabled={sending || uploading || (!draft.trim() && pending.length === 0)} className={cn("rounded-lg p-2.5 text-white disabled:opacity-40", mode === "note" ? "bg-amber-500 hover:bg-amber-600" : "bg-blue-600 hover:bg-blue-700")}><TbSend2 size={17} /></button>

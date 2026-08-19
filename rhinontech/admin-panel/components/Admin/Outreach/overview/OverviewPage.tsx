@@ -89,37 +89,39 @@ export function OverviewPage() {
     : [];
 
   return (
-    <main className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-r-xl glass-panel">
-      <div className="flex h-16 shrink-0 items-center justify-between border-b px-4">
-        <div className="flex items-center gap-3">
+    <main className="flex h-full min-h-0 w-full flex-col overflow-hidden lg:rounded-r-xl rounded-xl glass-panel">
+      <div className="flex min-h-16 flex-wrap items-center justify-between gap-3 border-b px-3 sm:px-4 py-2.5 sm:py-0 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <SubNavToggle />
-          <div>
-            <h1 className="text-base font-semibold tracking-tight text-gray-900">Outreach Overview</h1>
-            <p className="text-xs text-gray-500">Cold email, AI-drafted outreach, and LinkedIn publishing at a glance.</p>
+          <div className="min-w-0">
+            <h1 className="text-base font-semibold tracking-tight text-gray-900 truncate">Outreach Overview</h1>
+            <p className="hidden text-xs text-gray-500 sm:block truncate">Cold email, AI-drafted outreach, and LinkedIn publishing at a glance.</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" asChild>
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <Button size="sm" variant="outline" className="px-2.5 sm:px-3 text-xs" asChild>
             <Link href={`/${roleSlug}/outreach/publishing`}>
-              <TbBrandLinkedin size={15} /> Publish
+              <TbBrandLinkedin size={15} />
+              <span className="hidden xs:inline sm:inline">Publish</span>
             </Link>
           </Button>
-          <Button size="sm" asChild>
+          <Button size="sm" className="px-2.5 sm:px-3 text-xs" asChild>
             <Link href={`/${roleSlug}/outreach/campaigns`}>
-              <TbPlus size={15} /> New Campaign
+              <TbPlus size={15} />
+              <span><span className="hidden xs:inline sm:inline">New </span>Campaign</span>
             </Link>
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 space-y-4 overflow-auto p-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="flex-1 space-y-3 sm:space-y-4 overflow-auto p-3 sm:p-4">
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {(loading && !stats ? Array.from({ length: 4 }) : cards).map((c: any, i) => (
             <StatCard key={i} label={c?.label} value={c?.value} icon={c?.icon} loading={loading && !stats} />
           ))}
         </div>
 
-        <div className="rounded-xl glass-panel p-4">
+        <div className="rounded-xl glass-panel p-3 sm:p-4">
           <div className="mb-3">
             <h2 className="text-sm font-semibold text-stone-900">Activity, last 14 days</h2>
             <p className="text-xs text-stone-400">Drafts, sends, and replies across every campaign.</p>
@@ -127,12 +129,12 @@ export function OverviewPage() {
           <OutreachChart data={chartData} loading={loading} />
         </div>
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div className="rounded-xl glass-panel p-4">
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-2">
+          <div className="rounded-xl glass-panel p-3 sm:p-4">
             <h2 className="mb-3 text-sm font-semibold text-stone-900">Needs Attention</h2>
             <NeedsAttention campaigns={campaigns} loading={loading} />
           </div>
-          <div className="rounded-xl glass-panel p-4">
+          <div className="rounded-xl glass-panel p-3 sm:p-4">
             <h2 className="mb-3 text-sm font-semibold text-stone-900">Recent Activity</h2>
             <ActivityFeed activities={activities.slice(0, 12)} loading={loading} />
           </div>

@@ -72,24 +72,24 @@ export function LeaveCalendarPage() {
   const todayStr = now.toISOString().split("T")[0];
 
   return (
-    <div className={cn("flex flex-col h-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
-      <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b border-black/5 glass-header">
-        <div className="flex items-center gap-3">
+    <div className={cn("flex flex-col h-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl max-sm:rounded-xl" : "rounded-xl")}>
+      <div className="sticky top-0 z-10 flex min-h-16 flex-wrap items-center justify-between gap-2 px-3 sm:px-5 py-2 sm:py-0 border-b border-black/5 glass-header">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
           <SubNavToggle />
-          <h1 className="text-lg font-semibold tracking-tight">Team Leave Calendar</h1>
+          <h1 className="text-sm sm:text-lg font-semibold tracking-tight truncate">Team Leave Calendar</h1>
         </div>
-        <div className="flex items-center gap-2">
-          <button onClick={prevMonth} className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors">
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          <button onClick={prevMonth} className="p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors">
             <TbChevronLeft size={18} />
           </button>
-          <span className="text-sm font-semibold text-gray-900 min-w-[140px] text-center">{monthLabel}</span>
-          <button onClick={nextMonth} className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors">
+          <span className="text-xs sm:text-sm font-semibold text-gray-900 min-w-[100px] sm:min-w-[130px] text-center">{monthLabel}</span>
+          <button onClick={nextMonth} className="p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors">
             <TbChevronRight size={18} />
           </button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-3 sm:p-6">
         {loading ? (
           <div className="flex items-center justify-center py-20 text-gray-400">
             <TbLoader size={32} className="animate-spin" />

@@ -11,6 +11,7 @@ import {
   TbMail,
   TbSearch,
   TbSend,
+  TbX,
 } from "react-icons/tb";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -132,35 +133,36 @@ export function ManualOutreachPage() {
   };
 
   return (
-    <div className="flex h-full min-h-0 overflow-hidden">
+    <div className="relative flex h-full min-h-0 w-full overflow-hidden">
       <main
         className={cn(
-          "flex h-full min-h-0 w-full flex-col overflow-hidden glass-panel",
-          isSubNavExpanded ? "rounded-r-xl" : "rounded-xl"
+          "flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden glass-panel",
+          isSubNavExpanded ? "rounded-r-xl max-sm:rounded-xl" : "rounded-xl"
         )}
       >
-        <div className="flex h-16 items-center justify-between border-b px-4">
-          <div className="flex items-center gap-3">
+        <div className="flex h-16 shrink-0 items-center justify-between border-b px-3 sm:px-4">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <SubNavToggle />
-            <div>
-              <h1 className="text-base font-semibold tracking-tight text-gray-900">Manual Send</h1>
-              <p className="text-xs text-gray-500">1-to-1 personalized email outreach with AI assistance.</p>
+            <div className="min-w-0">
+              <h1 className="text-base font-semibold tracking-tight text-gray-900 truncate">Manual Send</h1>
+              <p className="hidden text-xs text-gray-500 sm:block truncate">1-to-1 personalized email outreach with AI assistance.</p>
             </div>
           </div>
           {(!isPreviewExpanded || filteredLeads.length === 0) && (
             <button
               onClick={() => setIsPreviewExpanded(true)}
-              className="rounded-lg p-2 text-gray-600 hover:bg-stone-100"
+              className="rounded-lg p-2 text-gray-600 hover:bg-stone-100 shrink-0"
+              title="Open composer"
             >
               <TbLayoutSidebarFilled size={20} />
             </button>
           )}
         </div>
 
-        <div className="flex flex-1 flex-col overflow-auto p-4">
-          <div className="flex flex-1 flex-col overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
-            <div className="border-b border-stone-100 bg-stone-50/50 p-4">
-              <div className="relative max-w-sm">
+        <div className="flex flex-1 flex-col overflow-auto p-3 sm:p-4">
+          <div className="flex flex-1 flex-col overflow-hidden rounded-xl border border-stone-200 bg-white shadow-xs">
+            <div className="border-b border-stone-100 bg-stone-50/50 p-3 sm:p-4">
+              <div className="relative w-full max-w-sm">
                 <TbSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={16} />
                 <Input
                   type="text"
@@ -174,7 +176,7 @@ export function ManualOutreachPage() {
             <div className="flex-1 divide-y divide-stone-50 overflow-auto">
               {loading ? (
                 <div className="p-10 text-center">
-                  <TbLoader className="mx-auto animate-spin text-stone-200" size={32} />
+                  <TbLoader className="mx-auto animate-spin text-stone-300" size={32} />
                 </div>
               ) : filteredLeads.length === 0 ? (
                 <div className="p-10 text-center text-sm italic text-stone-400">No leads found</div>
@@ -188,17 +190,17 @@ export function ManualOutreachPage() {
                       setIsPreviewExpanded(true);
                     }}
                     className={cn(
-                      "group flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-stone-50",
-                      selectedLead?.id === lead.id && "bg-blue-50 hover:bg-blue-50"
+                      "group flex w-full items-center justify-between p-3.5 sm:p-4 text-left transition-colors hover:bg-stone-50",
+                      selectedLead?.id === lead.id && "bg-blue-50/80 hover:bg-blue-50"
                     )}
                   >
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1 pr-2">
                       <p className="truncate text-sm font-bold text-stone-900">{lead.name}</p>
                       <p className="truncate text-xs text-stone-500">{lead.company}</p>
                     </div>
                     <TbChevronRight
                       className={cn(
-                        "text-stone-300 transition-transform group-hover:translate-x-1",
+                        "text-stone-300 transition-transform group-hover:translate-x-1 shrink-0",
                         selectedLead?.id === lead.id && "text-blue-600"
                       )}
                     />
@@ -210,21 +212,36 @@ export function ManualOutreachPage() {
         </div>
       </main>
 
+      {/* Mobile Drawer Backdrop */}
+      {isPreviewExpanded && (filteredLeads.length > 0 || selectedLead) && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs lg:hidden"
+          onClick={() => setIsPreviewExpanded(false)}
+        />
+      )}
+
       {/* Composer aside */}
       <aside
         className={cn(
-          "flex h-full min-h-0 flex-col overflow-hidden rounded-xl bg-white transition-all duration-200 ease-in-out",
-          isPreviewExpanded && (filteredLeads.length > 0 || selectedLead) ? "ml-2 w-[55%]" : "w-0"
+          "flex min-h-0 flex-col overflow-hidden bg-white transition-all duration-200 ease-in-out",
+          isPreviewExpanded && (filteredLeads.length > 0 || selectedLead)
+            ? "fixed inset-y-0 right-0 z-50 flex h-full w-full sm:w-[500px] max-w-full shadow-2xl lg:static lg:z-auto lg:h-full lg:w-[55%] lg:max-w-none lg:ml-2 lg:rounded-xl lg:shadow-none lg:border lg:border-black/5"
+            : "hidden lg:flex lg:h-full lg:w-0"
         )}
       >
         {isPreviewExpanded && (filteredLeads.length > 0 || selectedLead) && (
           <div className="flex h-full flex-1 flex-col overflow-hidden">
-            <div className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-white px-5">
+            <div className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-white px-4 sm:px-5">
               <p className="text-md -mb-px flex items-center self-stretch border-b-2 border-blue-600 font-medium tracking-tight text-black">
                 Email Composer
               </p>
-              <button onClick={() => setIsPreviewExpanded(false)} className="text-gray-600 hover:text-gray-900">
-                <TbLayoutSidebarRightFilled size={20} />
+              <button
+                onClick={() => setIsPreviewExpanded(false)}
+                className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+                aria-label="Close composer"
+              >
+                <TbX size={18} className="lg:hidden" />
+                <TbLayoutSidebarRightFilled size={20} className="hidden lg:block" />
               </button>
             </div>
 
@@ -240,18 +257,18 @@ export function ManualOutreachPage() {
               ) : (
                 <div className="flex flex-1 flex-col overflow-hidden">
                   {/* Lead header + controls */}
-                  <div className="space-y-3 border-b border-stone-100 bg-stone-50/30 p-5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-stone-900 text-lg font-bold text-white">
+                  <div className="space-y-3 border-b border-stone-100 bg-stone-50/30 p-4 sm:p-5">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-stone-900 text-base sm:text-lg font-bold text-white">
                           {selectedLead.name.charAt(0)}
                         </div>
-                        <div>
-                          <h2 className="text-base font-bold leading-none text-stone-900">{selectedLead.name}</h2>
-                          <p className="mt-1 text-xs font-medium text-stone-500">{selectedLead.email}</p>
+                        <div className="min-w-0">
+                          <h2 className="truncate text-sm sm:text-base font-bold leading-none text-stone-900">{selectedLead.name}</h2>
+                          <p className="mt-1 truncate text-xs font-medium text-stone-500">{selectedLead.email}</p>
                         </div>
                       </div>
-                      <Button size="sm" variant="outline" onClick={handleGenerateDraft} disabled={generating} className="shrink-0 border-indigo-100 text-indigo-600 hover:bg-indigo-50">
+                      <Button size="sm" variant="outline" onClick={handleGenerateDraft} disabled={generating} className="shrink-0 border-indigo-100 text-indigo-600 hover:bg-indigo-50 text-xs px-2.5 sm:px-3">
                         {generating ? <TbLoader className="animate-spin" size={14} /> : <TbBulb size={14} />}
                         AI Draft
                       </Button>
@@ -271,7 +288,7 @@ export function ManualOutreachPage() {
                   </div>
 
                   {/* Composer */}
-                  <div className="flex flex-1 flex-col gap-5 overflow-auto p-6">
+                  <div className="flex flex-1 flex-col gap-4 sm:gap-5 overflow-auto p-4 sm:p-6">
                     <div className="space-y-1.5">
                       <Label htmlFor="manual-subject" className="text-[10px] font-bold uppercase tracking-widest text-stone-400">
                         Subject Line
@@ -293,12 +310,12 @@ export function ManualOutreachPage() {
                         value={composer.body}
                         onChange={(e) => setComposer({ ...composer, body: e.target.value })}
                         placeholder="Type your message here or generate an AI draft..."
-                        className="min-h-80 flex-1 resize-none text-sm leading-relaxed"
+                        className="min-h-60 sm:min-h-80 flex-1 resize-none text-sm leading-relaxed"
                       />
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between border-t border-stone-100 bg-stone-50/50 p-5">
+                  <div className="flex items-center justify-between border-t border-stone-100 bg-stone-50/50 p-4 sm:p-5">
                     <div className="text-[10px] font-bold uppercase tracking-widest text-stone-400">
                       {composer.body.length > 0 && `~${Math.ceil(composer.body.length / 5)} words`}
                     </div>

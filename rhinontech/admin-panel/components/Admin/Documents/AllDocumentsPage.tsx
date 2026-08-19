@@ -128,17 +128,17 @@ function UploadForEmployeeModal({ employees, onClose, onSuccess }: UploadForEmpl
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center glass-overlay">
-      <div className="glass-modal rounded-xl w-full max-w-md mx-4">
-        <div className="flex items-center justify-between h-14 px-5 border-b">
-          <p className="font-semibold tracking-tight">Upload Document for Employee</p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center glass-overlay p-3 sm:p-4" onClick={onClose}>
+      <div className="glass-modal rounded-xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between h-14 px-4 sm:px-5 border-b shrink-0">
+          <p className="font-semibold tracking-tight text-sm sm:text-base">Upload Document for Employee</p>
           <button onClick={onClose} className="p-1 rounded hover:bg-gray-100"><TbX size={18} /></button>
         </div>
-        <form onSubmit={handleSubmit} className="p-5 flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-5 flex flex-col gap-3.5 sm:gap-4 overflow-y-auto">
           <div className="flex flex-col gap-1.5">
             <label className="text-xs text-gray-400">Employee</label>
             <select
-              className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-full"
               value={employeeId}
               onChange={e => setEmployeeId(e.target.value)}
               required
@@ -152,7 +152,7 @@ function UploadForEmployeeModal({ employees, onClose, onSuccess }: UploadForEmpl
           <div className="flex flex-col gap-1.5">
             <label className="text-xs text-gray-400">Title</label>
             <input
-              className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={title}
               onChange={e => setTitle(e.target.value)}
               placeholder="Document title"
@@ -162,7 +162,7 @@ function UploadForEmployeeModal({ employees, onClose, onSuccess }: UploadForEmpl
           <div className="flex flex-col gap-1.5">
             <label className="text-xs text-gray-400">Category</label>
             <select
-              className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-full"
               value={category}
               onChange={e => setCategory(e.target.value as Category)}
             >
@@ -175,18 +175,18 @@ function UploadForEmployeeModal({ employees, onClose, onSuccess }: UploadForEmpl
             <label className="text-xs text-gray-400">File</label>
             <input
               type="file"
-              className="border rounded-lg px-3 py-2 text-sm"
+              className="border rounded-lg px-3 py-2 text-xs sm:text-sm max-w-full"
               onChange={e => setFile(e.target.files?.[0] || null)}
               required
             />
           </div>
           {error && <p className="text-xs text-red-500">{error}</p>}
           <div className="flex gap-2 justify-end pt-1">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm rounded-lg border hover:bg-gray-50">Cancel</button>
+            <button type="button" onClick={onClose} className="px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg border hover:bg-gray-50">Cancel</button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 text-sm rounded-lg bg-stone-900 text-white hover:bg-stone-800 disabled:opacity-50"
+              className="px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg bg-stone-900 text-white hover:bg-stone-800 disabled:opacity-50"
             >
               {loading ? "Uploading..." : "Upload"}
             </button>
@@ -273,56 +273,56 @@ function DocAside({ doc, onClose, onDeleted }: DocAsideProps) {
 
   return (
     <div className="flex min-h-0 h-full w-full flex-col overflow-hidden">
-      <div className="sticky top-0 w-full flex items-center justify-between h-16 px-5 border-b bg-white z-10">
-        <p className="flex self-stretch items-center text-md font-medium tracking-tight border-b-2 border-blue-600 text-black -mb-px">
+      <div className="sticky top-0 w-full flex items-center justify-between min-h-16 px-4 sm:px-5 py-2 sm:py-0 border-b bg-white z-10 shrink-0">
+        <p className="flex self-stretch items-center text-sm sm:text-md font-medium tracking-tight border-b-2 border-blue-600 text-black -mb-px">
           Document Details
         </p>
-        <button onClick={onClose} className="p-1.5 rounded-md hover:bg-gray-100 text-gray-500"><TbX size={18} /></button>
+        <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors"><TbX size={18} /></button>
       </div>
-      <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-5">
-        <div className="flex items-start gap-4">
-          <div className="p-3 rounded-xl bg-gray-50 border">
-            <FileIcon mimeType={doc.mimeType} size={32} />
+      <div className="flex-1 overflow-y-auto p-4 sm:p-5 flex flex-col gap-4 sm:gap-5">
+        <div className="flex items-start gap-3 sm:gap-4">
+          <div className="p-2.5 sm:p-3 rounded-xl bg-gray-50 border shrink-0">
+            <FileIcon mimeType={doc.mimeType} size={30} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-gray-900 truncate">{doc.title}</p>
+            <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">{doc.title}</p>
             <CategoryBadge category={doc.category} />
           </div>
         </div>
         <div className="rounded-xl glass-card divide-y divide-gray-50">
-          <div className="px-4 py-3 flex justify-between">
+          <div className="px-3.5 sm:px-4 py-2.5 sm:py-3 flex justify-between gap-2">
             <span className="text-xs text-gray-400">Employee</span>
-            <span className="font-semibold text-gray-900 text-sm">{doc.employee?.fullName || "—"}</span>
+            <span className="font-semibold text-gray-900 text-xs sm:text-sm truncate max-w-[55%] text-right">{doc.employee?.fullName || "—"}</span>
           </div>
-          <div className="px-4 py-3 flex justify-between">
+          <div className="px-3.5 sm:px-4 py-2.5 sm:py-3 flex justify-between gap-2">
             <span className="text-xs text-gray-400">Department</span>
-            <span className="font-semibold text-gray-900 text-sm">{doc.employee?.department || "—"}</span>
+            <span className="font-semibold text-gray-900 text-xs sm:text-sm">{doc.employee?.department || "—"}</span>
           </div>
-          <div className="px-4 py-3 flex justify-between">
+          <div className="px-3.5 sm:px-4 py-2.5 sm:py-3 flex justify-between gap-2">
             <span className="text-xs text-gray-400">File name</span>
-            <span className="font-semibold text-gray-900 text-sm truncate max-w-[55%] text-right">{doc.fileName || "—"}</span>
+            <span className="font-semibold text-gray-900 text-xs sm:text-sm truncate max-w-[55%] text-right">{doc.fileName || "—"}</span>
           </div>
-          <div className="px-4 py-3 flex justify-between">
+          <div className="px-3.5 sm:px-4 py-2.5 sm:py-3 flex justify-between gap-2">
             <span className="text-xs text-gray-400">File size</span>
-            <span className="font-semibold text-gray-900 text-sm">{formatFileSize(doc.fileSize)}</span>
+            <span className="font-semibold text-gray-900 text-xs sm:text-sm">{formatFileSize(doc.fileSize)}</span>
           </div>
-          <div className="px-4 py-3 flex justify-between">
+          <div className="px-3.5 sm:px-4 py-2.5 sm:py-3 flex justify-between gap-2">
             <span className="text-xs text-gray-400">Uploaded by</span>
-            <span className="font-semibold text-gray-900 text-sm">{doc.uploader?.fullName || "—"}</span>
+            <span className="font-semibold text-gray-900 text-xs sm:text-sm">{doc.uploader?.fullName || "—"}</span>
           </div>
-          <div className="px-4 py-3 flex justify-between">
+          <div className="px-3.5 sm:px-4 py-2.5 sm:py-3 flex justify-between gap-2">
             <span className="text-xs text-gray-400">Date</span>
-            <span className="font-semibold text-gray-900 text-sm">
+            <span className="font-semibold text-gray-900 text-xs sm:text-sm">
               {new Date(doc.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
             </span>
           </div>
         </div>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 pt-1">
           {doc.fileKey && isPreviewable(doc.mimeType) && (
             <button
               onClick={handlePreview}
               disabled={previewing}
-              className="flex items-center gap-2 justify-center w-full py-2.5 rounded-lg border text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
+              className="flex items-center gap-2 justify-center w-full py-2.5 rounded-lg border text-gray-700 text-xs sm:text-sm font-medium hover:bg-gray-50 disabled:opacity-50 transition-colors"
             >
               <TbEye size={16} />
               {previewing ? "Opening..." : "Preview"}
@@ -332,7 +332,7 @@ function DocAside({ doc, onClose, onDeleted }: DocAsideProps) {
             <button
               onClick={handleDownload}
               disabled={downloading}
-              className="flex items-center gap-2 justify-center w-full py-2.5 rounded-lg bg-stone-900 text-white text-sm font-medium hover:bg-stone-800 disabled:opacity-50"
+              className="flex items-center gap-2 justify-center w-full py-2.5 rounded-lg bg-stone-900 text-white text-xs sm:text-sm font-medium hover:bg-stone-800 disabled:opacity-50 transition-colors"
             >
               <TbDownload size={16} />
               {downloading ? "Getting link..." : "Download"}
@@ -341,7 +341,7 @@ function DocAside({ doc, onClose, onDeleted }: DocAsideProps) {
           {!confirmDelete ? (
             <button
               onClick={() => setConfirmDelete(true)}
-              className="flex items-center gap-2 justify-center w-full py-2.5 rounded-lg border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50"
+              className="flex items-center gap-2 justify-center w-full py-2.5 rounded-lg border border-red-200 text-red-600 text-xs sm:text-sm font-medium hover:bg-red-50 transition-colors"
             >
               <TbTrash size={16} />
               Delete
@@ -350,14 +350,14 @@ function DocAside({ doc, onClose, onDeleted }: DocAsideProps) {
             <div className="flex gap-2">
               <button
                 onClick={() => setConfirmDelete(false)}
-                className="flex-1 py-2 rounded-lg border text-sm"
+                className="flex-1 py-2 rounded-lg border text-xs sm:text-sm"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
                 disabled={deleting}
-                className="flex-1 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 disabled:opacity-50"
+                className="flex-1 py-2 rounded-lg bg-red-600 text-white text-xs sm:text-sm font-medium hover:bg-red-700 disabled:opacity-50 transition-colors"
               >
                 {deleting ? "Deleting..." : "Confirm Delete"}
               </button>
@@ -383,6 +383,7 @@ export function AllDocumentsPage() {
   const [categoryFilter, setCategoryFilter] = useState<"all" | Category>("all");
   const [search, setSearch] = useState("");
   const [selectedDoc, setSelectedDoc] = useState<Doc | null>(null);
+  const [mobileDetail, setMobileDetail] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
 
   const fetchDocs = useCallback(async () => {
@@ -409,28 +410,28 @@ export function AllDocumentsPage() {
   });
 
   return (
-    <div className="flex min-h-0 gap-2 h-full overflow-hidden">
-      <main className={cn("flex min-h-0 flex-col h-full w-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
+    <div className="flex min-h-0 min-w-0 gap-2 h-full overflow-hidden w-full">
+      <main className={cn("flex min-h-0 min-w-0 flex-col h-full w-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl max-sm:rounded-xl" : "rounded-xl")}>
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b border-black/5 glass-header">
-          <div className="flex items-center gap-2">
+        <div className="sticky top-0 z-10 flex min-h-16 flex-wrap items-center justify-between gap-2 px-4 sm:px-5 py-2 sm:py-0 border-b border-black/5 glass-header">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <SubNavToggle />
-            <p className="text-lg font-semibold tracking-tight">All Documents</p>
+            <p className="text-base sm:text-lg font-semibold tracking-tight truncate">All Documents</p>
           </div>
           <button
             onClick={() => setShowUpload(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-stone-900 text-white text-sm font-medium hover:bg-stone-800"
+            className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-stone-900 text-white text-xs sm:text-sm font-medium hover:bg-stone-800 transition-colors whitespace-nowrap shrink-0"
           >
-            <TbUpload size={16} />
-            Upload for Employee
+            <TbUpload size={15} />
+            <span>Upload for Employee</span>
           </button>
         </div>
 
-        <div className="flex-1 overflow-auto p-5 flex flex-col gap-4">
+        <div className="flex-1 min-h-0 min-w-0 overflow-auto p-3 sm:p-5 flex flex-col gap-3.5 sm:gap-4 max-w-full">
           {/* Filters */}
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2 sm:gap-3 w-full">
             <select
-              className="border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto max-w-full"
               value={employeeFilter}
               onChange={e => setEmployeeFilter(e.target.value)}
             >
@@ -440,7 +441,7 @@ export function AllDocumentsPage() {
               ))}
             </select>
             <select
-              className="border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto max-w-full"
               value={categoryFilter}
               onChange={e => setCategoryFilter(e.target.value as "all" | Category)}
             >
@@ -449,10 +450,10 @@ export function AllDocumentsPage() {
                 <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
               ))}
             </select>
-            <div className="flex-1 min-w-[180px] relative">
+            <div className="flex-1 min-w-[180px] max-w-full relative">
               <TbSearch size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
-                className="w-full border rounded-lg pl-9 pr-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border rounded-lg pl-9 pr-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Search by title..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
@@ -466,19 +467,19 @@ export function AllDocumentsPage() {
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-gray-400 gap-2">
               <TbFile size={40} className="text-gray-200" />
-              <p className="text-sm">No documents found</p>
+              <p className="text-xs sm:text-sm">No documents found</p>
             </div>
           ) : (
-            <div className="rounded-xl glass-card overflow-hidden">
-              <table className="w-full text-sm">
+            <div className="rounded-xl glass-card overflow-x-auto shadow-xs max-w-full w-full">
+              <table className="w-full min-w-[640px] text-xs sm:text-sm">
                 <thead className="glass-thead text-xs text-gray-500 uppercase">
                   <tr>
-                    <th className="text-left px-4 py-3">Employee</th>
-                    <th className="text-left px-4 py-3">Title</th>
-                    <th className="text-left px-4 py-3">Category</th>
-                    <th className="text-left px-4 py-3">Uploaded by</th>
-                    <th className="text-left px-4 py-3">Date</th>
-                    <th className="text-left px-4 py-3">Size</th>
+                    <th className="text-left px-3.5 sm:px-4 py-2.5 sm:py-3">Employee</th>
+                    <th className="text-left px-3.5 sm:px-4 py-2.5 sm:py-3">Title</th>
+                    <th className="text-left px-3.5 sm:px-4 py-2.5 sm:py-3">Category</th>
+                    <th className="text-left px-3.5 sm:px-4 py-2.5 sm:py-3">Uploaded by</th>
+                    <th className="text-left px-3.5 sm:px-4 py-2.5 sm:py-3">Date</th>
+                    <th className="text-left px-3.5 sm:px-4 py-2.5 sm:py-3">Size</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
@@ -489,24 +490,24 @@ export function AllDocumentsPage() {
                         "hover:bg-blue-50 cursor-pointer transition-colors",
                         selectedDoc?.id === doc.id && "bg-blue-50"
                       )}
-                      onClick={() => setSelectedDoc(doc)}
+                      onClick={() => { setSelectedDoc(doc); setMobileDetail(true); }}
                     >
-                      <td className="px-4 py-3">
+                      <td className="px-3.5 sm:px-4 py-2.5 sm:py-3">
                         <p className="font-medium text-gray-900">{doc.employee?.fullName || "—"}</p>
                         <p className="text-xs text-gray-400">{doc.employee?.department || ""}</p>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3.5 sm:px-4 py-2.5 sm:py-3">
                         <div className="flex items-center gap-2">
                           <FileIcon mimeType={doc.mimeType} />
                           <span className="text-gray-800">{doc.title}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3"><CategoryBadge category={doc.category} /></td>
-                      <td className="px-4 py-3 text-gray-600">{doc.uploader?.fullName || "—"}</td>
-                      <td className="px-4 py-3 text-gray-600">
+                      <td className="px-3.5 sm:px-4 py-2.5 sm:py-3"><CategoryBadge category={doc.category} /></td>
+                      <td className="px-3.5 sm:px-4 py-2.5 sm:py-3 text-gray-600">{doc.uploader?.fullName || "—"}</td>
+                      <td className="px-3.5 sm:px-4 py-2.5 sm:py-3 text-gray-600">
                         {new Date(doc.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                       </td>
-                      <td className="px-4 py-3 text-gray-600">{formatFileSize(doc.fileSize)}</td>
+                      <td className="px-3.5 sm:px-4 py-2.5 sm:py-3 text-gray-600">{formatFileSize(doc.fileSize)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -517,13 +518,15 @@ export function AllDocumentsPage() {
       </main>
 
       <aside className={cn(
-        "flex min-h-0 h-full flex-col bg-white rounded-xl overflow-hidden transition-all duration-200 ease-in-out",
-        selectedDoc ? "w-[42%]" : "w-0"
+        "min-h-0 flex-col bg-white overflow-hidden transition-all duration-200 ease-in-out",
+        mobileDetail && selectedDoc ? "fixed inset-0 z-50 flex w-full max-w-full" : "hidden",
+        "lg:static lg:z-auto lg:flex lg:h-full lg:rounded-xl",
+        selectedDoc ? "lg:w-[42%]" : "lg:w-0"
       )}>
         {selectedDoc && (
           <DocAside
             doc={selectedDoc}
-            onClose={() => setSelectedDoc(null)}
+            onClose={() => { setSelectedDoc(null); setMobileDetail(false); }}
             onDeleted={fetchDocs}
           />
         )}

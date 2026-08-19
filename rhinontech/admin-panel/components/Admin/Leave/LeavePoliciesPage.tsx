@@ -7,6 +7,7 @@ import {
   TbLayoutSidebarRightFilled,
   TbLoader,
   TbChevronRight,
+  TbX,
 } from "react-icons/tb";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
@@ -33,6 +34,7 @@ export function LeavePoliciesPage() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<LeaveType | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [mobileDetail, setMobileDetail] = useState(false);
   const [isNew, setIsNew] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -62,6 +64,7 @@ export function LeavePoliciesPage() {
     setSelected(null);
     setIsNew(true);
     setIsPanelOpen(true);
+    setMobileDetail(true);
   };
 
   const openEdit = (type: LeaveType) => {
@@ -75,6 +78,7 @@ export function LeavePoliciesPage() {
     setSelected(type);
     setIsNew(false);
     setIsPanelOpen(true);
+    setMobileDetail(true);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -96,6 +100,7 @@ export function LeavePoliciesPage() {
         setSelected(updated);
       }
       if (isNew) { setIsPanelOpen(false); setIsNew(false); }
+      setMobileDetail(false);
     } catch (err: any) {
       alert(err?.message || "Failed to save leave type");
     } finally {
@@ -107,23 +112,23 @@ export function LeavePoliciesPage() {
     <div className="flex min-h-0 gap-2 h-full overflow-hidden">
       <main className={cn(
         "flex min-h-0 flex-col h-full w-full overflow-hidden glass-panel",
-        isSubNavExpanded ? "rounded-r-xl" : "rounded-xl"
+        isSubNavExpanded ? "rounded-r-xl max-sm:rounded-xl" : "rounded-xl"
       )}>
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b border-black/5 glass-header">
-          <div className="flex items-center gap-3">
+        <div className="sticky top-0 z-10 flex min-h-16 flex-wrap items-center justify-between gap-2 px-4 sm:px-5 py-2 sm:py-0 border-b border-black/5 glass-header">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <SubNavToggle />
-            <h1 className="text-lg font-semibold tracking-tight">Leave Policies</h1>
+            <h1 className="text-base sm:text-lg font-semibold tracking-tight truncate">Leave Policies</h1>
           </div>
           <button
             onClick={openNew}
-            className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
+            className="inline-flex items-center gap-1.5 sm:gap-2 rounded-lg bg-gray-900 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-white hover:bg-gray-800 transition-colors whitespace-nowrap shrink-0"
           >
-            <TbPlus size={16} />
-            Add Leave Type
+            <TbPlus size={15} />
+            <span>Add Leave Type</span>
           </button>
         </div>
 
-        <div className="flex-1 overflow-auto p-6">
+        <div className="flex-1 overflow-auto p-3 sm:p-6">
           {loading ? (
             <div className="flex items-center justify-center py-20 text-gray-400">
               <TbLoader size={32} className="animate-spin" />
@@ -137,8 +142,8 @@ export function LeavePoliciesPage() {
               </div>
             </div>
           ) : (
-            <div className="rounded-xl glass-card overflow-hidden">
-              <table className="w-full text-sm">
+            <div className="rounded-xl glass-card overflow-x-auto shadow-xs">
+              <table className="w-full min-w-[560px] text-sm">
                 <thead>
                   <tr className="border-b bg-gray-50 text-left">
                     <th className="px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Leave Type</th>
@@ -173,7 +178,7 @@ export function LeavePoliciesPage() {
                       </td>
                       <td className="px-4 py-3">
                         <div
-                          className="h-6 w-6 rounded-full border-2 border-white shadow"
+                          className="h-6 w-6 rounded-full border-2 border-white shadow shrink-0"
                           style={{ backgroundColor: type.color }}
                         />
                       </td>
@@ -192,22 +197,29 @@ export function LeavePoliciesPage() {
 
       {/* Aside Panel */}
       <aside className={cn(
-        "flex min-h-0 h-full flex-col bg-white rounded-xl overflow-hidden transition-all duration-200 ease-in-out",
-        isPanelOpen ? "w-[42%]" : "w-0"
+        "min-h-0 flex-col bg-white overflow-hidden transition-all duration-200 ease-in-out",
+        mobileDetail ? "fixed inset-0 z-50 flex w-full max-w-full" : "hidden",
+        "lg:static lg:z-auto lg:flex lg:h-full lg:rounded-xl",
+        isPanelOpen ? "lg:w-[42%]" : "lg:w-0"
       )}>
         <div className="flex h-full flex-col">
-          <div className="sticky top-0 w-full flex items-center justify-between h-16 px-5 border-b bg-white z-10">
+          <div className="sticky top-0 w-full flex items-center justify-between min-h-16 px-4 sm:px-5 py-2 sm:py-0 border-b bg-white z-10 shrink-0">
             <div className="flex items-center gap-4 self-stretch">
-              <p className="flex self-stretch items-center text-md font-medium tracking-tight border-b-2 border-blue-600 text-black -mb-px">
+              <p className="flex self-stretch items-center text-sm sm:text-md font-medium tracking-tight border-b-2 border-blue-600 text-black -mb-px">
                 {isNew ? "New Leave Type" : "Edit Leave Type"}
               </p>
             </div>
-            <button onClick={() => setIsPanelOpen(false)} className="text-gray-400 hover:text-gray-900 transition-colors">
-              <TbLayoutSidebarRightFilled size={20} />
+            <button
+              onClick={() => { setIsPanelOpen(false); setMobileDetail(false); }}
+              className="p-1.5 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-stone-100 transition-colors"
+              title="Close"
+            >
+              <TbX size={18} className="lg:hidden" />
+              <TbLayoutSidebarRightFilled size={18} className="hidden lg:block" />
             </button>
           </div>
 
-          <form onSubmit={handleSave} className="flex-1 overflow-auto p-5 space-y-4">
+          <form onSubmit={handleSave} className="flex-1 overflow-auto p-4 sm:p-5 space-y-3.5 sm:space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs text-gray-400">Name</label>
               <input
@@ -215,7 +227,7 @@ export function LeavePoliciesPage() {
                 value={form.name}
                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                 placeholder="e.g. Sick Leave"
-                className="w-full px-4 py-2 text-sm rounded-xl border border-gray-100 bg-stone-50 focus:ring-2 focus:ring-stone-900 outline-none"
+                className="w-full px-3.5 sm:px-4 py-2 text-xs sm:text-sm rounded-xl border border-gray-100 bg-stone-50 focus:ring-2 focus:ring-stone-900 outline-none"
                 required
               />
             </div>
@@ -227,7 +239,7 @@ export function LeavePoliciesPage() {
                 value={form.daysPerYear}
                 onChange={e => setForm(f => ({ ...f, daysPerYear: parseInt(e.target.value) || 0 }))}
                 min={1}
-                className="w-full px-4 py-2 text-sm rounded-xl border border-gray-100 bg-stone-50 focus:ring-2 focus:ring-stone-900 outline-none"
+                className="w-full px-3.5 sm:px-4 py-2 text-xs sm:text-sm rounded-xl border border-gray-100 bg-stone-50 focus:ring-2 focus:ring-stone-900 outline-none"
                 required
               />
             </div>
@@ -241,7 +253,7 @@ export function LeavePoliciesPage() {
                     type="button"
                     onClick={() => setForm(f => ({ ...f, color: c }))}
                     className={cn(
-                      "h-8 w-8 rounded-full border-2 transition-all",
+                      "h-7 w-7 sm:h-8 sm:w-8 rounded-full border-2 transition-all shrink-0",
                       form.color === c ? "border-gray-900 scale-110" : "border-transparent hover:scale-105"
                     )}
                     style={{ backgroundColor: c }}
@@ -253,7 +265,7 @@ export function LeavePoliciesPage() {
                   type="color"
                   value={form.color}
                   onChange={e => setForm(f => ({ ...f, color: e.target.value }))}
-                  className="h-8 w-8 rounded-lg border border-gray-100 cursor-pointer"
+                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg border border-gray-100 cursor-pointer shrink-0"
                 />
                 <span className="text-xs text-gray-400">Custom: {form.color}</span>
               </div>
@@ -261,12 +273,12 @@ export function LeavePoliciesPage() {
 
             <div className="space-y-1.5">
               <label className="text-xs text-gray-400">Type</label>
-              <div className="flex gap-3">
+              <div className="flex gap-2.5 sm:gap-3">
                 <button
                   type="button"
                   onClick={() => setForm(f => ({ ...f, isPaid: true }))}
                   className={cn(
-                    "flex-1 py-2 rounded-xl text-sm font-semibold border transition-all",
+                    "flex-1 py-2 rounded-xl text-xs sm:text-sm font-semibold border transition-all",
                     form.isPaid ? "bg-green-600 text-white border-green-600" : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
                   )}
                 >
@@ -276,7 +288,7 @@ export function LeavePoliciesPage() {
                   type="button"
                   onClick={() => setForm(f => ({ ...f, isPaid: false }))}
                   className={cn(
-                    "flex-1 py-2 rounded-xl text-sm font-semibold border transition-all",
+                    "flex-1 py-2 rounded-xl text-xs sm:text-sm font-semibold border transition-all",
                     !form.isPaid ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
                   )}
                 >
@@ -291,15 +303,15 @@ export function LeavePoliciesPage() {
                 value={form.description}
                 onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                 placeholder="Brief description of this leave type..."
-                className="w-full px-4 py-2 text-sm rounded-xl border border-gray-100 bg-stone-50 focus:ring-2 focus:ring-stone-900 outline-none h-20 resize-none"
+                className="w-full px-3.5 sm:px-4 py-2 text-xs sm:text-sm rounded-xl border border-gray-100 bg-stone-50 focus:ring-2 focus:ring-stone-900 outline-none h-20 resize-none"
               />
             </div>
 
-            <div className="pt-4">
+            <div className="pt-3 sm:pt-4">
               <button
                 type="submit"
                 disabled={saving}
-                className="w-full py-3 bg-stone-900 text-white rounded-xl font-bold text-sm hover:bg-stone-800 transition-all shadow-lg active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
+                className="w-full py-2.5 sm:py-3 bg-stone-900 text-white rounded-xl font-bold text-xs sm:text-sm hover:bg-stone-800 transition-all shadow-lg active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
               >
                 {saving && <TbLoader size={16} className="animate-spin" />}
                 {isNew ? "Create Leave Type" : "Save Changes"}

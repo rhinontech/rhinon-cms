@@ -395,28 +395,28 @@ export function TasksPage({ scope, currentUserId }: { scope: TaskScope; currentU
 
   return (
     <div className="flex h-full min-h-0 overflow-hidden">
-      <main className={cn("flex h-full min-h-0 w-full flex-col overflow-hidden glass-panel", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
+      <main className={cn("flex h-full min-h-0 w-full flex-col overflow-hidden glass-panel", isSubNavExpanded ? "rounded-r-xl max-sm:rounded-xl" : "rounded-xl")}>
         {/* Header */}
-        <div className="flex h-16 items-center justify-between border-b px-4 shrink-0 bg-white">
-          <div className="flex items-center gap-2">
+        <div className="flex min-h-16 flex-wrap items-center justify-between gap-2 border-b px-3 sm:px-4 py-2 sm:py-0 shrink-0 bg-white">
+          <div className="flex items-center gap-2 min-w-0">
             <SubNavToggle />
-            <h1 className="text-lg font-semibold tracking-tight">{scope}</h1>
+            <h1 className="text-base sm:text-lg font-semibold tracking-tight truncate">{scope}</h1>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="flex bg-gray-100 rounded-lg p-1 mr-1">
-              <button onClick={() => setViewMode("list")} className={cn("px-3 py-1.5 rounded-md text-xs flex items-center gap-2 transition-colors", viewMode === "list" ? "bg-white font-medium text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900")}>
-                <TbList size={15} /> List
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <div className="flex bg-gray-100 rounded-lg p-0.5 sm:p-1">
+              <button onClick={() => setViewMode("list")} className={cn("px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-md text-xs flex items-center gap-1.5 sm:gap-2 transition-colors", viewMode === "list" ? "bg-white font-medium text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900")}>
+                <TbList size={14} /> <span>List</span>
               </button>
-              <button onClick={() => setViewMode("kanban")} className={cn("px-3 py-1.5 rounded-md text-xs flex items-center gap-2 transition-colors", viewMode === "kanban" ? "bg-white font-medium text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900")}>
-                <TbLayoutKanban size={15} /> Kanban
+              <button onClick={() => setViewMode("kanban")} className={cn("px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-md text-xs flex items-center gap-1.5 sm:gap-2 transition-colors", viewMode === "kanban" ? "bg-white font-medium text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900")}>
+                <TbLayoutKanban size={14} /> <span>Kanban</span>
               </button>
             </div>
-            <button onClick={startCreate} className="inline-flex items-center gap-2 rounded-lg bg-stone-900 px-3 py-2 text-xs font-medium text-white hover:bg-stone-800 transition-colors">
-              Add a task <TbPlus size={14} />
+            <button onClick={startCreate} className="inline-flex items-center gap-1 sm:gap-1.5 rounded-lg bg-stone-900 px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-medium text-white hover:bg-stone-800 transition-colors whitespace-nowrap shrink-0">
+              <TbPlus size={14} /> <span className="hidden sm:inline">Add a task</span><span className="sm:hidden">Add</span>
             </button>
             {(!isPreviewExpanded || (visibleTasks.length === 0 && mode !== "create")) && (
-              <button onClick={() => (setIsPreviewExpanded(true), setMobileDetail(true))} className="rounded-lg p-2 text-gray-600 hover:bg-stone-100 transition-colors">
-                <TbLayoutSidebarFilled size={20} />
+              <button onClick={() => (setIsPreviewExpanded(true), setMobileDetail(true))} className="rounded-lg p-1.5 sm:p-2 text-gray-600 hover:bg-stone-100 transition-colors shrink-0" title="Open details">
+                <TbLayoutSidebarFilled size={18} />
               </button>
             )}
           </div>
@@ -424,7 +424,7 @@ export function TasksPage({ scope, currentUserId }: { scope: TaskScope; currentU
 
         {/* Saved filter chips */}
         {savedFilters.length > 0 && (
-          <div className="flex items-center gap-2 px-4 py-2 border-b bg-white overflow-x-auto shrink-0">
+          <div className="flex items-center gap-2 px-3 sm:px-4 py-2 border-b bg-white overflow-x-auto shrink-0">
             <TbBookmark size={13} className="text-stone-400 shrink-0" />
             {savedFilters.map(f => (
               <div key={f.id} className="flex items-center gap-1 bg-blue-50 border border-blue-100 rounded-full px-3 py-0.5 text-xs font-medium text-blue-700 shrink-0">
@@ -435,35 +435,35 @@ export function TasksPage({ scope, currentUserId }: { scope: TaskScope; currentU
           </div>
         )}
 
-        <div className="flex-1 overflow-auto p-4">
+        <div className="flex-1 overflow-auto p-3 sm:p-4">
           {/* Filters */}
           <div className="flex flex-wrap items-center gap-2 mb-3">
-            <div className="relative">
+            <div className="relative flex-1 sm:flex-initial sm:w-48 min-w-[140px]">
               <TbSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search..." className="rounded-lg border border-gray-200 bg-white py-1.5 pl-8 pr-3 text-sm outline-none focus:border-blue-500 w-48" />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search..." className="w-full rounded-lg border border-gray-200 bg-white py-1.5 pl-8 pr-3 text-sm outline-none focus:border-blue-500" />
             </div>
-            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as TaskStatus | "all")} className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm outline-none focus:border-blue-500">
+            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as TaskStatus | "all")} className="flex-1 sm:flex-initial min-w-[120px] rounded-lg border border-gray-200 bg-white px-2.5 sm:px-3 py-1.5 text-sm outline-none focus:border-blue-500">
               <option value="all">All statuses</option>
               <option value="Pending">Pending</option>
               <option value="In progress">In progress</option>
               <option value="Done">Done</option>
             </select>
-            <select value={projectFilter} onChange={e => setProjectFilter(e.target.value)} className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm outline-none focus:border-blue-500">
+            <select value={projectFilter} onChange={e => setProjectFilter(e.target.value)} className="flex-1 sm:flex-initial min-w-[120px] rounded-lg border border-gray-200 bg-white px-2.5 sm:px-3 py-1.5 text-sm outline-none focus:border-blue-500">
               <option value="all">All projects</option>
               {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
-            <select value={assigneeFilter} onChange={e => setAssigneeFilter(e.target.value)} className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm outline-none focus:border-blue-500">
+            <select value={assigneeFilter} onChange={e => setAssigneeFilter(e.target.value)} className="flex-1 sm:flex-initial min-w-[120px] rounded-lg border border-gray-200 bg-white px-2.5 sm:px-3 py-1.5 text-sm outline-none focus:border-blue-500">
               <option value="all">All assignees</option>
               {employees.map(e => <option key={e.id} value={e.id}>{e.fullName}</option>)}
             </select>
-            <select value={priorityFilter} onChange={e => setPriorityFilter(e.target.value as TaskPriority | "all")} className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm outline-none focus:border-blue-500">
+            <select value={priorityFilter} onChange={e => setPriorityFilter(e.target.value as TaskPriority | "all")} className="flex-1 sm:flex-initial min-w-[120px] rounded-lg border border-gray-200 bg-white px-2.5 sm:px-3 py-1.5 text-sm outline-none focus:border-blue-500">
               <option value="all">All priorities</option>
               <option value="High">High</option>
               <option value="Medium">Medium</option>
               <option value="Low">Low</option>
             </select>
             {allTags.length > 0 && (
-              <select value={tagFilter} onChange={e => setTagFilter(e.target.value)} className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm outline-none focus:border-blue-500">
+              <select value={tagFilter} onChange={e => setTagFilter(e.target.value)} className="flex-1 sm:flex-initial min-w-[110px] rounded-lg border border-gray-200 bg-white px-2.5 sm:px-3 py-1.5 text-sm outline-none focus:border-blue-500">
                 <option value="">All tags</option>
                 {allTags.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
@@ -514,8 +514,8 @@ export function TasksPage({ scope, currentUserId }: { scope: TaskScope; currentU
           ) : visibleTasks.length === 0 ? (
             <div className="mt-4 rounded-xl border border-gray-200 bg-white p-12 text-center text-sm text-gray-400">No tasks found.</div>
           ) : viewMode === "list" ? (
-            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-              <table className="w-full min-w-[640px] text-left text-sm text-gray-600">
+            <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-xs">
+              <table className="w-full min-w-[680px] text-left text-sm text-gray-600">
                 <thead className="border-b border-gray-200 glass-thead text-xs font-medium text-gray-600">
                   <tr>
                     <th className="px-4 py-3 w-8"><input type="checkbox" checked={visibleTasks.length > 0 && selectedIds.size === visibleTasks.length} onChange={selectAll} className="rounded border-gray-300" /></th>
@@ -662,8 +662,13 @@ export function TasksPage({ scope, currentUserId }: { scope: TaskScope; currentU
                 {mode === "view" && selectedTask && canEditTask(selectedTask) && (
                   <button onClick={startEdit} className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors">Edit</button>
                 )}
-                <button onClick={() => (setIsPreviewExpanded(false), setMobileDetail(false))} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 transition-colors">
-                  <TbLayoutSidebarRightFilled size={18} />
+                <button
+                  onClick={() => (setIsPreviewExpanded(false), setMobileDetail(false))}
+                  className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                  aria-label="Close task details"
+                >
+                  <TbX size={18} className="lg:hidden" />
+                  <TbLayoutSidebarRightFilled size={18} className="hidden lg:block" />
                 </button>
               </div>
             </div>

@@ -65,6 +65,7 @@ export function GoalsPage() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<ReviewGoal | null>(null);
   const [asideMode, setAsideMode] = useState<"view" | "create">("view");
+  const [mobileDetail, setMobileDetail] = useState(false);
   const [saving, setSaving] = useState(false);
   const [userFilter, setUserFilter] = useState("");
 
@@ -102,6 +103,7 @@ export function GoalsPage() {
     setForm({ title: "", description: "", status: "not_started", progress: 0, targetDate: "", cycleId: "" });
     setSelected(null);
     setAsideMode("create");
+    setMobileDetail(true);
   }
 
   function openGoal(goal: ReviewGoal) {
@@ -115,11 +117,13 @@ export function GoalsPage() {
       cycleId: goal.cycleId ?? "",
     });
     setAsideMode("view");
+    setMobileDetail(true);
   }
 
   function closeAside() {
     setSelected(null);
     setAsideMode("view");
+    setMobileDetail(false);
   }
 
   async function handleSave() {
@@ -172,45 +176,45 @@ export function GoalsPage() {
 
   return (
     <div className="flex min-h-0 gap-2 h-full overflow-hidden">
-      <main className={cn("flex min-h-0 flex-col h-full w-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b border-black/5 glass-header">
-          <div className="flex items-center gap-3">
+      <main className={cn("flex min-h-0 flex-col h-full w-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl max-sm:rounded-xl" : "rounded-xl")}>
+        <div className="sticky top-0 z-10 flex min-h-16 flex-wrap items-center justify-between gap-2 px-4 sm:px-5 py-2 sm:py-0 border-b border-black/5 glass-header">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <SubNavToggle />
-            <span className="text-lg font-semibold tracking-tight">My Goals</span>
+            <span className="text-base sm:text-lg font-semibold tracking-tight truncate">My Goals</span>
           </div>
           <button
             onClick={openCreate}
-            className="flex items-center gap-1.5 rounded-lg bg-stone-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-stone-800 transition-colors"
+            className="flex items-center gap-1.5 rounded-lg bg-stone-900 px-3 py-1.5 text-xs sm:text-sm font-medium text-white hover:bg-stone-800 transition-colors whitespace-nowrap shrink-0"
           >
-            <TbPlus size={16} />
-            Add Goal
+            <TbPlus size={15} />
+            <span>Add Goal</span>
           </button>
         </div>
 
-        <div className="flex-1 overflow-auto p-5">
+        <div className="flex-1 overflow-auto p-3 sm:p-5">
           {loading ? (
             <div className="flex items-center justify-center h-40">
               <TbLoader2 className="animate-spin text-gray-400" size={28} />
             </div>
           ) : goals.length === 0 ? (
-            <div className="rounded-xl glass-card p-10 text-center">
+            <div className="rounded-xl glass-card p-8 sm:p-10 text-center">
               <TbTarget size={36} className="mx-auto text-gray-300 mb-3" />
-              <p className="text-sm text-gray-500">No goals yet. Click "Add Goal" to create your first one.</p>
+              <p className="text-xs sm:text-sm text-gray-500">No goals yet. Click "Add Goal" to create your first one.</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2.5 sm:space-y-3">
               {goals.map((goal) => (
                 <button
                   key={goal.id}
                   onClick={() => openGoal(goal)}
-                  className="w-full text-left rounded-xl glass-card p-4 hover:border-blue-200 transition-colors"
+                  className="w-full text-left rounded-xl glass-card p-3.5 sm:p-4 hover:border-blue-200 transition-colors"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-medium text-gray-900 text-sm truncate">{goal.title}</p>
+                        <p className="font-medium text-gray-900 text-xs sm:text-sm truncate">{goal.title}</p>
                         {goal.cycle && (
-                          <span className="text-xs rounded-md px-2 py-0.5 bg-purple-50 text-purple-700 font-medium">{goal.cycle.name}</span>
+                          <span className="text-[10px] sm:text-xs rounded-md px-1.5 sm:px-2 py-0.5 bg-purple-50 text-purple-700 font-medium">{goal.cycle.name}</span>
                         )}
                       </div>
                       {isAdmin && goal.user && (
@@ -218,7 +222,7 @@ export function GoalsPage() {
                       )}
                       <div className="mt-2 space-y-1">
                         <ProgressBar value={goal.progress} />
-                        <p className="text-xs text-gray-400">{goal.progress}% complete{goal.targetDate ? ` · Due ${goal.targetDate}` : ""}</p>
+                        <p className="text-[11px] sm:text-xs text-gray-400">{goal.progress}% complete{goal.targetDate ? ` · Due ${goal.targetDate}` : ""}</p>
                       </div>
                     </div>
                     <StatusChip status={goal.status} />
@@ -231,118 +235,120 @@ export function GoalsPage() {
       </main>
 
       <aside className={cn(
-        "flex min-h-0 h-full flex-col bg-white rounded-xl overflow-hidden transition-all duration-200 ease-in-out",
-        asideOpen ? "w-[42%]" : "w-0"
+        "min-h-0 flex-col bg-white overflow-hidden transition-all duration-200 ease-in-out",
+        mobileDetail && asideOpen ? "fixed inset-0 z-50 flex w-full max-w-full" : "hidden",
+        "lg:static lg:z-auto lg:flex lg:h-full lg:rounded-xl",
+        asideOpen ? "lg:w-[42%]" : "lg:w-0"
       )}>
-          {asideOpen && (
-            <>
-              <div className="sticky top-0 w-full flex items-center justify-between h-16 px-5 border-b bg-white z-10">
-                <div className="flex gap-4 border-b border-transparent -mb-px">
-                  <p className="flex self-stretch items-center text-md font-medium tracking-tight border-b-2 border-blue-600 text-black -mb-px">
-                    {asideMode === "create" ? "New Goal" : "Goal Details"}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {selected && (
-                    <button onClick={() => handleDelete(selected)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-500 transition-colors">
-                      <TbTrash size={16} />
-                    </button>
-                  )}
-                  <button onClick={closeAside} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
-                    <TbX size={18} />
-                  </button>
-                </div>
+        {asideOpen && (
+          <div className="flex h-full flex-col">
+            <div className="sticky top-0 w-full flex items-center justify-between min-h-16 px-4 sm:px-5 py-2 sm:py-0 border-b bg-white z-10 shrink-0">
+              <div className="flex gap-4 border-b border-transparent -mb-px">
+                <p className="flex self-stretch items-center text-sm sm:text-md font-medium tracking-tight border-b-2 border-blue-600 text-black -mb-px">
+                  {asideMode === "create" ? "New Goal" : "Goal Details"}
+                </p>
               </div>
-
-              <div className="flex-1 overflow-y-auto p-5 space-y-4">
-                <div className="space-y-1">
-                  <label className="text-xs text-gray-400">Title *</label>
-                  <input
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={form.title}
-                    onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                    placeholder="Goal title"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs text-gray-400">Description</label>
-                  <textarea
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                    rows={3}
-                    value={form.description}
-                    onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                    placeholder="Optional description"
-                  />
-                </div>
-
-                {asideMode === "view" && (
-                  <>
-                    <div className="space-y-1">
-                      <label className="text-xs text-gray-400">Status</label>
-                      <select
-                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        value={form.status}
-                        onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as ReviewGoal["status"] }))}
-                      >
-                        <option value="not_started">Not Started</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="completed">Completed</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-xs text-gray-400">Progress: {form.progress}%</label>
-                      <input
-                        type="range"
-                        min={0}
-                        max={100}
-                        step={5}
-                        className="w-full accent-blue-600"
-                        value={form.progress}
-                        onChange={(e) => setForm((f) => ({ ...f, progress: Number(e.target.value) }))}
-                      />
-                      <ProgressBar value={form.progress} />
-                    </div>
-                  </>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                {selected && (
+                  <button onClick={() => handleDelete(selected)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-500 transition-colors">
+                    <TbTrash size={16} />
+                  </button>
                 )}
-
-                <div className="space-y-1">
-                  <label className="text-xs text-gray-400">Target Date</label>
-                  <input
-                    type="date"
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={form.targetDate}
-                    onChange={(e) => setForm((f) => ({ ...f, targetDate: e.target.value }))}
-                  />
-                </div>
-
-                {isAdmin && cycles.length > 0 && (
-                  <div className="space-y-1">
-                    <label className="text-xs text-gray-400">Review Cycle</label>
-                    <select
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      value={form.cycleId}
-                      onChange={(e) => setForm((f) => ({ ...f, cycleId: e.target.value }))}
-                    >
-                      <option value="">No cycle</option>
-                      {cycles.map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                <button
-                  onClick={handleSave}
-                  disabled={saving || !form.title}
-                  className="w-full rounded-lg bg-stone-900 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50 transition-colors"
-                >
-                  {saving ? "Saving…" : asideMode === "create" ? "Create Goal" : "Save Changes"}
+                <button onClick={closeAside} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
+                  <TbX size={18} />
                 </button>
               </div>
-            </>
-          )}
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 sm:space-y-4">
+              <div className="space-y-1">
+                <label className="text-xs text-gray-400">Title *</label>
+                <input
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={form.title}
+                  onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                  placeholder="Goal title"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs text-gray-400">Description</label>
+                <textarea
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  rows={3}
+                  value={form.description}
+                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                  placeholder="Optional description"
+                />
+              </div>
+
+              {asideMode === "view" && (
+                <>
+                  <div className="space-y-1">
+                    <label className="text-xs text-gray-400">Status</label>
+                    <select
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={form.status}
+                      onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as ReviewGoal["status"] }))}
+                    >
+                      <option value="not_started">Not Started</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="completed">Completed</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-400">Progress: {form.progress}%</label>
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      step={5}
+                      className="w-full accent-blue-600"
+                      value={form.progress}
+                      onChange={(e) => setForm((f) => ({ ...f, progress: Number(e.target.value) }))}
+                    />
+                    <ProgressBar value={form.progress} />
+                  </div>
+                </>
+              )}
+
+              <div className="space-y-1">
+                <label className="text-xs text-gray-400">Target Date</label>
+                <input
+                  type="date"
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={form.targetDate}
+                  onChange={(e) => setForm((f) => ({ ...f, targetDate: e.target.value }))}
+                />
+              </div>
+
+              {isAdmin && cycles.length > 0 && (
+                <div className="space-y-1">
+                  <label className="text-xs text-gray-400">Review Cycle</label>
+                  <select
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={form.cycleId}
+                    onChange={(e) => setForm((f) => ({ ...f, cycleId: e.target.value }))}
+                  >
+                    <option value="">No cycle</option>
+                    {cycles.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <button
+                onClick={handleSave}
+                disabled={saving || !form.title}
+                className="w-full rounded-lg bg-stone-900 py-2.5 text-xs sm:text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50 transition-colors"
+              >
+                {saving ? "Saving…" : asideMode === "create" ? "Create Goal" : "Save Changes"}
+              </button>
+            </div>
+          </div>
+        )}
       </aside>
     </div>
   );

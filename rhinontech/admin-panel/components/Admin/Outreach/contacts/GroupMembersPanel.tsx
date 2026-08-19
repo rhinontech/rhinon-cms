@@ -9,6 +9,8 @@ import {
   TbX,
   TbBookmark,
   TbUsers,
+  TbArrowLeft,
+  TbLoader,
 } from "react-icons/tb";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -45,10 +47,12 @@ export function GroupMembersPanel({
   group,
   onGroupChanged,
   onGroupDeleted,
+  onBack,
 }: {
   group: ContactGroupSummary;
   onGroupChanged: () => void;
   onGroupDeleted: () => void;
+  onBack?: () => void;
 }) {
   const confirm = useConfirm();
   const [members, setMembers] = useState<ContactLead[]>([]);
@@ -206,42 +210,53 @@ export function GroupMembersPanel({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <div className="flex h-16 shrink-0 items-center justify-between gap-3 border-b px-4">
-        <div className="min-w-0 flex-1">
-          {renaming ? (
-            <input
-              autoFocus
-              value={nameDraft}
-              onChange={(e) => setNameDraft(e.target.value)}
-              onBlur={handleRename}
-              onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
-              className="rounded-lg border border-stone-200 px-2 py-1 text-base font-semibold outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          ) : (
-            <h1
-              onClick={() => setRenaming(true)}
-              className="cursor-text truncate text-base font-semibold tracking-tight text-gray-900 hover:underline"
-              title="Click to rename"
+      <div className="flex min-h-16 shrink-0 flex-wrap items-center justify-between gap-2.5 border-b px-3 sm:px-4 py-2 sm:py-0">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="rounded-lg p-1.5 text-stone-500 hover:bg-stone-100 md:hidden shrink-0"
+              aria-label="Back to groups"
             >
-              {group.name}
-            </h1>
+              <TbArrowLeft size={18} />
+            </button>
           )}
-          <p className="text-xs text-gray-500">{group.memberCount} contact{group.memberCount === 1 ? "" : "s"} in this list</p>
+          <div className="min-w-0 flex-1">
+            {renaming ? (
+              <input
+                autoFocus
+                value={nameDraft}
+                onChange={(e) => setNameDraft(e.target.value)}
+                onBlur={handleRename}
+                onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+                className="w-full max-w-[200px] rounded-lg border border-stone-200 px-2 py-1 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            ) : (
+              <h1
+                onClick={() => setRenaming(true)}
+                className="cursor-text truncate text-sm sm:text-base font-semibold tracking-tight text-gray-900 hover:underline"
+                title="Click to rename"
+              >
+                {group.name}
+              </h1>
+            )}
+            <p className="truncate text-xs text-gray-500">{group.memberCount} contact{group.memberCount === 1 ? "" : "s"} in this list</p>
+          </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <Button size="sm" variant="outline" onClick={() => setShowImport(true)}>
-            <TbUpload size={14} /> Import CSV
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <Button size="sm" variant="outline" className="px-2.5 sm:px-3 text-xs" onClick={() => setShowImport(true)}>
+            <TbUpload size={14} /> <span className="hidden sm:inline">Import CSV</span>
           </Button>
-          <Button size="sm" variant="outline" onClick={() => setShowAddLeads(true)}>
-            <TbUserPlus size={14} /> Add Leads
+          <Button size="sm" variant="outline" className="px-2.5 sm:px-3 text-xs" onClick={() => setShowAddLeads(true)}>
+            <TbUserPlus size={14} /> <span className="hidden sm:inline">Add Leads</span>
           </Button>
-          <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700" onClick={handleDeleteGroup}>
+          <Button size="sm" variant="outline" className="px-2 text-red-600 hover:text-red-700" onClick={handleDeleteGroup}>
             <TbTrash size={14} />
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 space-y-3 overflow-auto p-4">
+      <div className="flex-1 space-y-3 overflow-auto p-3 sm:p-4">
         {savedViews.length > 0 && (
           <div className="flex flex-wrap items-center gap-2">
             {savedViews.map((v) => (
@@ -255,38 +270,40 @@ export function GroupMembersPanel({
           </div>
         )}
 
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative w-[260px]">
+        <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2">
+          <div className="relative flex-1 sm:max-w-xs">
             <TbSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={15} />
             <input
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Search contacts..."
-              className="w-full rounded-lg border border-stone-200 py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg border border-stone-200 py-1.5 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             />
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[160px]" size="sm">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="All">All Statuses</SelectItem>
-              {LEAD_STATUSES.map((s) => (
-                <SelectItem key={s} value={s}>{s}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={sourceFilter} onValueChange={setSourceFilter}>
-            <SelectTrigger className="w-[160px]" size="sm">
-              <SelectValue placeholder="Source" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="All">All Sources</SelectItem>
-              {sources.map((s) => (
-                <SelectItem key={s} value={s}>{s}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="flex-1 sm:w-[140px] md:w-[150px]" size="sm">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Statuses</SelectItem>
+                {LEAD_STATUSES.map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={sourceFilter} onValueChange={setSourceFilter}>
+              <SelectTrigger className="flex-1 sm:w-[140px] md:w-[150px]" size="sm">
+                <SelectValue placeholder="Source" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Sources</SelectItem>
+                {sources.map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           {hasActiveFilters && (
             <button onClick={saveCurrentAsView} className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline">
               <TbBookmark size={13} /> Save as view
@@ -323,7 +340,10 @@ export function GroupMembersPanel({
             <span className="px-4 py-3">Status</span>
           </div>
           {loading ? (
-            Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-12 animate-pulse border-b bg-stone-50/50" />)
+            <div className="flex flex-col items-center justify-center gap-2.5 py-16 text-center">
+              <TbLoader className="animate-spin text-stone-400" size={30} />
+              <p className="text-xs font-medium text-stone-400">Loading contacts...</p>
+            </div>
           ) : members.length === 0 ? (
             <div className="flex flex-col items-center gap-2 px-4 py-12 text-center text-sm text-gray-400">
               <TbUsers size={28} className="text-stone-300" />

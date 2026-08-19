@@ -135,6 +135,17 @@ export function PagesSidebar({ activeId, onChanged }: { activeId?: string; onCha
     }
   };
 
+  // Auto-close overlay on route changes on mobile
+  const prevPath = useRef(pathname);
+  useEffect(() => {
+    if (prevPath.current !== pathname) {
+      prevPath.current = pathname;
+      if (isExpanded && typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches) {
+        toggleSideNav();
+      }
+    }
+  }, [pathname, isExpanded, toggleSideNav]);
+
   const renderNode = (node: PageTreeNode, depth: number) => {
     const isOpen = expandedIds.has(node.id);
     const isActive = node.id === activeId;
@@ -142,11 +153,16 @@ export function PagesSidebar({ activeId, onChanged }: { activeId?: string; onCha
       <div key={node.id}>
         <div
           className={cn(
-            "group flex items-center gap-1 rounded-md py-1 pr-1.5 text-sm cursor-pointer",
-            isActive ? "bg-white/70 text-gray-900 font-medium" : "text-gray-600 hover:bg-white/40"
+            "group flex items-center gap-1 rounded-md py-1.5 pr-1.5 text-sm cursor-pointer",
+            isActive ? "bg-white/80 text-gray-900 font-medium shadow-xs" : "text-gray-600 hover:bg-white/40"
           )}
           style={{ paddingLeft: `${depth * 14 + 6}px` }}
-          onClick={() => router.push(`/${roleSlug}/pages/${node.id}`)}
+          onClick={() => {
+            router.push(`/${roleSlug}/pages/${node.id}`);
+            if (isExpanded && typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches) {
+              toggleSideNav();
+            }
+          }}
         >
           <button
             onClick={(e) => { e.stopPropagation(); toggleExpand(node.id); }}
@@ -155,18 +171,21 @@ export function PagesSidebar({ activeId, onChanged }: { activeId?: string; onCha
             <TbChevronRight size={13} className={cn("transition-transform", isOpen && "rotate-90")} />
           </button>
           <PageIcon icon={node.icon} />
-          <span className="flex-1 truncate">{node.title || "Untitled"}</span>
+          <span className="flex-1 min-w-0 truncate">{node.title || "Untitled"}</span>
           <button
             onClick={(e) => { e.stopPropagation(); createPage(node.id); }}
-            className="shrink-0 rounded p-0.5 opacity-0 hover:bg-black/5 group-hover:opacity-100"
+            className="shrink-0 rounded p-1 text-gray-400 hover:text-gray-700 hover:bg-black/5 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
             title="Add sub-page"
           >
-            <TbPlus size={13} />
+            <TbPlus size={14} />
           </button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button onClick={(e) => e.stopPropagation()} className="shrink-0 rounded p-0.5 opacity-0 hover:bg-black/5 group-hover:opacity-100">
-                <TbDots size={13} />
+              <button
+                onClick={(e) => e.stopPropagation()}
+                className="shrink-0 rounded p-1 text-gray-400 hover:text-gray-700 hover:bg-black/5 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
+              >
+                <TbDots size={14} />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
@@ -182,73 +201,90 @@ export function PagesSidebar({ activeId, onChanged }: { activeId?: string; onCha
   };
 
   return (
-    <aside
-      className={cn(
-        "flex-col glass-sidenav transition-all duration-200 ease-in-out overflow-hidden",
-        isExpanded
-          ? "flex lg:h-full lg:w-[15%] lg:min-w-[220px] lg:rounded-l-xl lg:border-r lg:border-black/5"
-          : "hidden lg:flex lg:h-full lg:w-0"
-      )}
-    >
+    <>
+      {/* Phone backdrop */}
       {isExpanded && (
-        <div className="flex h-full w-full flex-col">
-          <div className="flex items-center justify-between border-b border-black/5 px-4 py-3.5">
-            <span className="text-lg font-semibold tracking-tight">Pages</span>
-            <button onClick={() => createPage()} className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100" title="New page">
-              <TbPlus size={17} />
-            </button>
-          </div>
-
-          <div className="px-3 pt-3">
-            <div className="relative">
-              <TbSearch size={13} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search pages…"
-                className="w-full rounded-lg border border-black/10 bg-white/60 py-1.5 pl-7 pr-7 text-xs outline-none focus:ring-1 focus:ring-stone-400"
-              />
-              {search && (
-                <button onClick={() => setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700">
-                  <TbX size={13} />
+        <div className="fixed inset-0 z-40 bg-black/30 lg:hidden" onClick={toggleSideNav} />
+      )}
+      <aside
+        className={cn(
+          "flex-col glass-sidenav transition-all duration-200 ease-in-out overflow-hidden",
+          isExpanded
+            ? "fixed inset-y-0 left-0 z-50 flex w-72 max-lg:bg-white! shadow-xl lg:static lg:z-auto lg:h-full lg:w-[18%] lg:min-w-[220px] lg:rounded-l-xl lg:glass-sidenav lg:shadow-none lg:border-r lg:border-black/5"
+            : "hidden lg:flex lg:h-full lg:w-0"
+        )}
+      >
+        {isExpanded && (
+          <div className="flex h-full w-full flex-col">
+            <div className="flex items-center justify-between border-b border-black/5 px-4 py-3.5">
+              <span className="text-lg font-semibold tracking-tight">Pages</span>
+              <div className="flex items-center gap-1">
+                <button onClick={() => createPage()} className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100" title="New page">
+                  <TbPlus size={17} />
                 </button>
+                <button onClick={toggleSideNav} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 lg:hidden" aria-label="Close menu">
+                  <TbX size={18} />
+                </button>
+              </div>
+            </div>
+
+            <div className="px-3 pt-3">
+              <div className="relative">
+                <TbSearch size={13} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search pages…"
+                  className="w-full rounded-lg border border-black/10 bg-white/60 py-1.5 pl-7 pr-7 text-xs outline-none focus:ring-1 focus:ring-stone-400"
+                />
+                {search && (
+                  <button onClick={() => setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700">
+                    <TbX size={13} />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-2 py-2">
+              {loading ? (
+                <div className="space-y-1.5 px-2">
+                  {Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-6 animate-pulse rounded bg-white/40" />)}
+                </div>
+              ) : searchResults ? (
+                searchResults.length === 0 ? (
+                  <p className="px-3 py-4 text-center text-xs text-gray-400">No matches</p>
+                ) : (
+                  searchResults.map((p) => (
+                    <div
+                      key={p.id}
+                      onClick={() => {
+                        setSearch("");
+                        router.push(`/${roleSlug}/pages/${p.id}`);
+                        if (isExpanded && typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches) {
+                          toggleSideNav();
+                        }
+                      }}
+                      className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm text-gray-700 hover:bg-white/40"
+                    >
+                      <PageIcon icon={p.icon} />
+                      <span className="truncate">{p.title || "Untitled"}</span>
+                    </div>
+                  ))
+                )
+              ) : tree.length === 0 ? (
+                <div className="px-3 py-6 text-center">
+                  <p className="mb-2 text-xs text-gray-400">No pages yet</p>
+                  <button onClick={() => createPage()} className="text-xs font-semibold text-stone-700 hover:underline">
+                    + New page
+                  </button>
+                </div>
+              ) : (
+                tree.map((node) => renderNode(node, 0))
               )}
             </div>
           </div>
-
-          <div className="flex-1 overflow-y-auto px-2 py-2">
-            {loading ? (
-              <div className="space-y-1.5 px-2">
-                {Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-6 animate-pulse rounded bg-white/40" />)}
-              </div>
-            ) : searchResults ? (
-              searchResults.length === 0 ? (
-                <p className="px-3 py-4 text-center text-xs text-gray-400">No matches</p>
-              ) : (
-                searchResults.map((p) => (
-                  <div
-                    key={p.id}
-                    onClick={() => { setSearch(""); router.push(`/${roleSlug}/pages/${p.id}`); }}
-                    className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm text-gray-700 hover:bg-white/40"
-                  >
-                    <PageIcon icon={p.icon} />
-                    <span className="truncate">{p.title || "Untitled"}</span>
-                  </div>
-                ))
-              )
-            ) : tree.length === 0 ? (
-              <div className="px-3 py-6 text-center">
-                <p className="mb-2 text-xs text-gray-400">No pages yet</p>
-                <button onClick={() => createPage()} className="text-xs font-semibold text-stone-700 hover:underline">
-                  + New page
-                </button>
-              </div>
-            ) : (
-              tree.map((node) => renderNode(node, 0))
-            )}
-          </div>
-        </div>
-      )}
-    </aside>
+        )}
+      </aside>
+    </>
   );
 }

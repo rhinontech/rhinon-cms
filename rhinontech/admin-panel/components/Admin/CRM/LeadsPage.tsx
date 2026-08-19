@@ -238,36 +238,36 @@ export function LeadsPage() {
   };
 
   return (
-    <div className="flex h-full min-h-0 overflow-hidden">
-      <main className={cn("flex h-full min-h-0 w-full flex-col overflow-hidden glass-panel", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
-        <div className="flex h-16 items-center justify-between border-b px-4">
-          <div className="flex items-center gap-3">
+    <div className="relative flex h-full min-h-0 w-full overflow-hidden">
+      <main className={cn("flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden glass-panel", isSubNavExpanded ? "lg:rounded-r-xl rounded-xl" : "rounded-xl")}>
+        <div className="flex min-h-16 flex-wrap items-center justify-between gap-3 border-b px-3 sm:px-4 py-2.5 sm:py-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <SubNavToggle />
-            <div>
+            <div className="min-w-0">
               <h1 className="text-base font-semibold tracking-tight text-gray-900">Leads</h1>
-              <p className="text-xs text-gray-500">Every lead across the business — website, platforms, imports and manual entries.</p>
+              <p className="hidden text-xs text-gray-500 sm:block truncate">Every lead across the business — website, platforms, imports and manual entries.</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button onClick={() => setShowImport(true)} className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium hover:bg-stone-100">
-              Import CSV
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <button onClick={() => setShowImport(true)} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-2.5 sm:px-3 py-1.5 text-xs font-medium hover:bg-stone-100">
               <TbUpload size={14} />
+              <span className="hidden xs:inline sm:inline">Import CSV</span>
             </button>
-            <button onClick={startCreate} className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium hover:bg-stone-100">
-              Add Lead
+            <button onClick={startCreate} className="inline-flex items-center gap-1.5 rounded-lg bg-stone-900 text-white px-2.5 sm:px-3 py-1.5 text-xs font-medium hover:bg-stone-800">
               <TbPlus size={14} />
+              <span>Add Lead</span>
             </button>
             {(!isPreviewExpanded || (filteredLeads.length === 0 && panelMode !== "create")) && (
-              <button onClick={() => setIsPreviewExpanded(true)} className="rounded-lg p-2 text-gray-600 hover:bg-stone-100">
+              <button onClick={() => setIsPreviewExpanded(true)} className="rounded-lg p-2 text-gray-600 hover:bg-stone-100" title="Open details">
                 <TbLayoutSidebarFilled size={20} />
               </button>
             )}
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto p-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="relative w-[300px]">
+        <div className="flex-1 overflow-auto p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3">
+            <div className="relative flex-1 sm:max-w-xs md:max-w-sm">
               <TbSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={16} />
               <input
                 type="text"
@@ -277,52 +277,54 @@ export function LeadsPage() {
                 className="w-full pl-9 pr-4 py-2 text-sm rounded-lg border border-stone-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               />
             </div>
-            <select
-              value={statusFilter}
-              onChange={e => setStatusFilter(e.target.value as any)}
-              className="w-[180px] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="All">All Statuses</option>
-              <option value="New">New</option>
-              <option value="Enriched">Enriched</option>
-              <option value="Enrolled">Enrolled</option>
-              <option value="Interested">Interested</option>
-              <option value="Emailed">Emailed</option>
-              <option value="Replied">Replied</option>
-              <option value="Bounced">Bounced</option>
-              <option value="Unsubscribed">Unsubscribed</option>
-            </select>
-            <select
-              value={sourceFilter}
-              onChange={e => setSourceFilter(e.target.value)}
-              className="w-[180px] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="All">All Sources</option>
-              {sources.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
+            <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+              <select
+                value={statusFilter}
+                onChange={e => setStatusFilter(e.target.value as any)}
+                className="flex-1 sm:w-[150px] md:w-[180px] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="All">All Statuses</option>
+                <option value="New">New</option>
+                <option value="Enriched">Enriched</option>
+                <option value="Enrolled">Enrolled</option>
+                <option value="Interested">Interested</option>
+                <option value="Emailed">Emailed</option>
+                <option value="Replied">Replied</option>
+                <option value="Bounced">Bounced</option>
+                <option value="Unsubscribed">Unsubscribed</option>
+              </select>
+              <select
+                value={sourceFilter}
+                onChange={e => setSourceFilter(e.target.value)}
+                className="flex-1 sm:w-[150px] md:w-[180px] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="All">All Sources</option>
+                {sources.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
           </div>
 
           {selectedIds.size > 0 && (
-            <div className="mt-4 flex items-center justify-between rounded-lg border border-blue-100 bg-blue-50 px-4 py-2.5">
+            <div className="mt-3 sm:mt-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-blue-100 bg-blue-50 px-3 sm:px-4 py-2 sm:py-2.5">
               <span className="text-sm font-medium text-blue-900">{selectedIds.size} selected</span>
-              <div className="flex items-center gap-2">
-                <button onClick={() => setSelectedIds(new Set())} className="rounded-lg px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-white">
+              <div className="flex flex-wrap items-center gap-2">
+                <button onClick={() => setSelectedIds(new Set())} className="rounded-lg px-2.5 sm:px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-white">
                   Clear
                 </button>
                 <AddToGroupMenu leadIds={Array.from(selectedIds)} onDone={() => setSelectedIds(new Set())} />
                 <button
                   onClick={handleBulkDelete}
                   disabled={bulkDeleting}
-                  className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-2.5 sm:px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-60"
                 >
-                  <TbTrash size={14} /> {bulkDeleting ? "Deleting..." : `Delete ${selectedIds.size}`}
+                  <TbTrash size={14} /> {bulkDeleting ? "Deleting..." : `Delete (${selectedIds.size})`}
                 </button>
               </div>
             </div>
           )}
 
-          <div className="mt-4 overflow-auto rounded-xl glass-card">
-            <div className="grid min-w-[900px] w-full grid-cols-[44px_minmax(250px,1.5fr)_minmax(150px,1fr)_minmax(110px,0.7fr)_minmax(120px,0.8fr)_40px] border-b bg-stone-100 text-xs font-semibold uppercase tracking-wide text-gray-500">
+          <div className="mt-3 sm:mt-4 overflow-x-auto rounded-xl glass-card border border-stone-200/60">
+            <div className="grid min-w-[760px] sm:min-w-[900px] w-full grid-cols-[44px_minmax(220px,1.5fr)_minmax(130px,1fr)_minmax(100px,0.7fr)_minmax(110px,0.8fr)_40px] border-b bg-stone-100 text-xs font-semibold uppercase tracking-wide text-gray-500">
               <span className="flex items-center justify-center px-2 py-3">
                 <input
                   type="checkbox"
@@ -332,11 +334,11 @@ export function LeadsPage() {
                   title="Select all"
                 />
               </span>
-              <span className="px-4 py-3">Lead</span>
-              <span className="px-4 py-3">Company</span>
-              <span className="px-4 py-3">Source</span>
-              <span className="px-4 py-3">Status</span>
-              <span className="px-4 py-3 text-right"></span>
+              <span className="px-3 sm:px-4 py-3">Lead</span>
+              <span className="px-3 sm:px-4 py-3">Company</span>
+              <span className="px-3 sm:px-4 py-3">Source</span>
+              <span className="px-3 sm:px-4 py-3">Status</span>
+              <span className="px-3 sm:px-4 py-3 text-right"></span>
             </div>
             {loading ? (
               Array.from({ length: 5 }).map((_, i) => (
@@ -349,7 +351,7 @@ export function LeadsPage() {
                 key={lead.id}
                 onClick={() => selectLead(lead)}
                 className={cn(
-                  "grid min-w-[900px] w-full cursor-pointer grid-cols-[44px_minmax(250px,1.5fr)_minmax(150px,1fr)_minmax(110px,0.7fr)_minmax(120px,0.8fr)_40px] items-center border-b text-left text-sm hover:bg-stone-50 transition-colors",
+                  "grid min-w-[760px] sm:min-w-[900px] w-full cursor-pointer grid-cols-[44px_minmax(220px,1.5fr)_minmax(130px,1fr)_minmax(100px,0.7fr)_minmax(110px,0.8fr)_40px] items-center border-b text-left text-sm hover:bg-stone-50 transition-colors",
                   selectedLead?.id === lead.id && "bg-blue-50 hover:bg-blue-50"
                 )}
               >
@@ -362,20 +364,20 @@ export function LeadsPage() {
                     className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-blue-600"
                   />
                 </span>
-                <span className="px-4 py-3">
-                  <div className="flex flex-col">
-                    <span className="font-medium text-stone-900">{lead.name}</span>
-                    <span className="text-xs text-stone-500">{lead.email}</span>
+                <span className="px-3 sm:px-4 py-3 min-w-0">
+                  <div className="flex flex-col min-w-0">
+                    <span className="font-medium text-stone-900 truncate">{lead.name}</span>
+                    <span className="text-xs text-stone-500 truncate">{lead.email}</span>
                   </div>
                 </span>
-                <span className="px-4 py-3 text-gray-600">{lead.company}</span>
-                <span className="px-4 py-3 text-xs text-gray-500 truncate">{lead.source}</span>
-                <span className="px-4 py-3">
+                <span className="px-3 sm:px-4 py-3 text-gray-600 truncate">{lead.company}</span>
+                <span className="px-3 sm:px-4 py-3 text-xs text-gray-500 truncate">{lead.source}</span>
+                <span className="px-3 sm:px-4 py-3">
                   <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider", STATUS_COLORS[lead.status])}>
                     {lead.status}
                   </span>
                 </span>
-                <span className="px-4 py-3 text-right">
+                <span className="px-3 sm:px-4 py-3 text-right">
                   <button
                     onClick={(e) => { e.stopPropagation(); handleDeleteLead(lead.id); }}
                     className="p-1 text-stone-400 hover:text-red-600 rounded"
@@ -389,29 +391,49 @@ export function LeadsPage() {
         </div>
       </main>
 
-      {/* Aside Panel */}
-      <aside className={`flex min-h-0 h-full flex-col bg-white rounded-xl overflow-hidden transition-all duration-200 ease-in-out ${isPreviewExpanded && (filteredLeads.length > 0 || panelMode === "create") ? "w-[42%] ml-2" : "w-0"}`}>
+      {/* Mobile Drawer Backdrop */}
+      {isPreviewExpanded && (filteredLeads.length > 0 || panelMode === "create") && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs lg:hidden"
+          onClick={() => setIsPreviewExpanded(false)}
+        />
+      )}
+
+      {/* Aside Detail & Edit Panel */}
+      <aside
+        className={cn(
+          "flex min-h-0 flex-col bg-white overflow-hidden transition-all duration-200 ease-in-out",
+          isPreviewExpanded && (filteredLeads.length > 0 || panelMode === "create")
+            ? "fixed inset-y-0 right-0 z-50 flex h-full w-full sm:w-[480px] max-w-full shadow-2xl lg:static lg:z-auto lg:h-full lg:w-[42%] lg:max-w-none lg:ml-2 lg:rounded-xl lg:shadow-none lg:border lg:border-black/5"
+            : "hidden lg:flex lg:h-full lg:w-0"
+        )}
+      >
         {isPreviewExpanded && (filteredLeads.length > 0 || panelMode === "create") && (
           <div className="flex h-full flex-1 flex-col overflow-hidden">
-            <div className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-white px-5">
+            <div className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-white px-4 sm:px-5">
               <p className="-mb-px flex self-stretch items-center border-b-2 border-blue-600 text-md font-medium tracking-tight text-black">
                 {panelMode === "create" ? "Add Lead" : panelMode === "edit" ? "Edit Lead" : "Details"}
               </p>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 {panelMode === "view" && selectedLead && (
-                  <button onClick={startEdit} className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100">
+                  <button onClick={startEdit} className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100">
                     Edit
                   </button>
                 )}
-                <button onClick={() => setIsPreviewExpanded(false)} className="text-gray-600 hover:text-gray-900">
-                  <TbLayoutSidebarRightFilled size={20} />
+                <button
+                  onClick={() => setIsPreviewExpanded(false)}
+                  className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+                  aria-label="Close details"
+                >
+                  <TbX size={18} className="lg:hidden" />
+                  <TbLayoutSidebarRightFilled size={20} className="hidden lg:block" />
                 </button>
               </div>
             </div>
 
             <div className="flex-1 overflow-auto">
               {panelMode === "view" && selectedLead ? (
-                <div className="p-5 space-y-6">
+                <div className="p-4 sm:p-5 space-y-5 sm:space-y-6">
                   <div>
                     <h2 className="text-xl font-bold text-stone-900 leading-tight">{selectedLead.name}</h2>
                     <p className="text-sm text-stone-500 font-medium">{selectedLead.title || "No title"} @ {selectedLead.company}</p>
@@ -447,7 +469,7 @@ export function LeadsPage() {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-1 gap-3 sm:gap-4">
                     <DetailCard label="Email" value={selectedLead.email} />
                     {selectedLead.phone && <DetailCard label="Phone" value={selectedLead.phone} />}
                     <DetailCard label="LinkedIn" value={selectedLead.linkedinUrl || "—"} isLink={!!selectedLead.linkedinUrl} />
@@ -470,10 +492,10 @@ export function LeadsPage() {
                   )}
                 </div>
               ) : (
-                <form onSubmit={handleSave} className="flex flex-col h-full p-5 space-y-4">
+                <form onSubmit={handleSave} className="flex flex-col h-full p-4 sm:p-5 space-y-4">
                   <div className="space-y-4">
                     <FormInput label="Full Name" value={form.name} onChange={v => setForm({ ...form, name: v })} required placeholder="John Doe" />
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <FormInput label="Company" value={form.company} onChange={v => setForm({ ...form, company: v })} required placeholder="Acme Inc" />
                       <FormInput label="Job Title" value={form.title} onChange={v => setForm({ ...form, title: v })} placeholder="CEO" />
                     </div>

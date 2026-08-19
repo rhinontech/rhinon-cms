@@ -6,6 +6,7 @@ import {
   TbLayoutSidebarRightFilled,
   TbLoader,
   TbTrash,
+  TbX,
 } from "react-icons/tb";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
@@ -50,6 +51,7 @@ export function LeaveRequestsPage() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<LeaveRequest | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [mobileDetail, setMobileDetail] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
 
   const fetchRequests = useCallback(async () => {
@@ -68,6 +70,7 @@ export function LeaveRequestsPage() {
   const handleSelect = (req: LeaveRequest) => {
     setSelected(req);
     setIsPanelOpen(true);
+    setMobileDetail(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -76,7 +79,7 @@ export function LeaveRequestsPage() {
     try {
       await apiFetch(`/leave/requests/${id}`, { method: "DELETE" });
       setRequests(prev => prev.filter(r => r.id !== id));
-      if (selected?.id === id) { setSelected(null); setIsPanelOpen(false); }
+      if (selected?.id === id) { setSelected(null); setIsPanelOpen(false); setMobileDetail(false); }
     } catch (err: any) {
       alert(err?.message || "Failed to delete request");
     } finally {
@@ -88,16 +91,16 @@ export function LeaveRequestsPage() {
     <div className="flex min-h-0 gap-2 h-full overflow-hidden">
       <main className={cn(
         "flex min-h-0 flex-col h-full w-full overflow-hidden glass-panel",
-        isSubNavExpanded ? "rounded-r-xl" : "rounded-xl"
+        isSubNavExpanded ? "rounded-r-xl max-sm:rounded-xl" : "rounded-xl"
       )}>
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b border-black/5 glass-header">
-          <div className="flex items-center gap-3">
+        <div className="sticky top-0 z-10 flex min-h-16 flex-wrap items-center justify-between gap-2 px-4 sm:px-5 py-2 sm:py-0 border-b border-black/5 glass-header">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <SubNavToggle />
-            <h1 className="text-lg font-semibold tracking-tight">My Leave Requests</h1>
+            <h1 className="text-base sm:text-lg font-semibold tracking-tight truncate">My Leave Requests</h1>
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto p-6">
+        <div className="flex-1 overflow-auto p-3 sm:p-6">
           {loading ? (
             <div className="flex items-center justify-center py-20 text-gray-400">
               <TbLoader size={32} className="animate-spin" />
@@ -111,8 +114,8 @@ export function LeaveRequestsPage() {
               </div>
             </div>
           ) : (
-            <div className="rounded-xl glass-card overflow-hidden">
-              <table className="w-full text-sm">
+            <div className="rounded-xl glass-card overflow-x-auto shadow-xs">
+              <table className="w-full min-w-[560px] text-sm">
                 <thead>
                   <tr className="border-b bg-gray-50 text-left">
                     <th className="px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Type</th>
@@ -170,62 +173,69 @@ export function LeaveRequestsPage() {
 
       {/* Aside Panel */}
       <aside className={cn(
-        "flex min-h-0 h-full flex-col bg-white rounded-xl overflow-hidden transition-all duration-200 ease-in-out",
-        isPanelOpen && selected ? "w-[42%]" : "w-0"
+        "min-h-0 flex-col bg-white overflow-hidden transition-all duration-200 ease-in-out",
+        mobileDetail ? "fixed inset-0 z-50 flex w-full max-w-full" : "hidden",
+        "lg:static lg:z-auto lg:flex lg:h-full lg:rounded-xl",
+        isPanelOpen && selected ? "lg:w-[42%]" : "lg:w-0"
       )}>
         {selected && (
           <div className="flex h-full flex-col">
-            <div className="sticky top-0 w-full flex items-center justify-between h-16 px-5 border-b bg-white z-10">
+            <div className="sticky top-0 w-full flex items-center justify-between min-h-16 px-4 sm:px-5 py-2 sm:py-0 border-b bg-white z-10 shrink-0">
               <div className="flex items-center gap-4 self-stretch">
-                <p className="flex self-stretch items-center text-md font-medium tracking-tight border-b-2 border-blue-600 text-black -mb-px">
+                <p className="flex self-stretch items-center text-sm sm:text-md font-medium tracking-tight border-b-2 border-blue-600 text-black -mb-px">
                   Leave Details
                 </p>
               </div>
-              <button onClick={() => setIsPanelOpen(false)} className="text-gray-400 hover:text-gray-900 transition-colors">
-                <TbLayoutSidebarRightFilled size={20} />
+              <button
+                onClick={() => { setIsPanelOpen(false); setMobileDetail(false); }}
+                className="p-1.5 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-stone-100 transition-colors"
+                title="Close"
+              >
+                <TbX size={18} className="lg:hidden" />
+                <TbLayoutSidebarRightFilled size={18} className="hidden lg:block" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-auto p-5 space-y-4">
+            <div className="flex-1 overflow-auto p-4 sm:p-5 space-y-3 sm:space-y-4">
               <div className="flex items-center gap-3">
                 <span
                   className="h-4 w-4 rounded-full flex-shrink-0"
                   style={{ backgroundColor: selected.leaveTypeColor || "#6B7280" }}
                 />
-                <h2 className="text-lg font-semibold text-gray-900">{selected.leaveTypeName}</h2>
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900">{selected.leaveTypeName}</h2>
                 <StatusBadge status={selected.status} />
               </div>
 
-              <div className="space-y-3">
-                <div className="rounded-lg border border-gray-100 p-3">
+              <div className="space-y-2.5 sm:space-y-3">
+                <div className="rounded-lg border border-gray-100 p-2.5 sm:p-3">
                   <p className="text-xs text-gray-400 mb-1">Start Date</p>
-                  <p className="font-semibold text-gray-900">
+                  <p className="font-semibold text-sm sm:text-base text-gray-900">
                     {new Date(selected.startDate).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
                   </p>
                 </div>
-                <div className="rounded-lg border border-gray-100 p-3">
+                <div className="rounded-lg border border-gray-100 p-2.5 sm:p-3">
                   <p className="text-xs text-gray-400 mb-1">End Date</p>
-                  <p className="font-semibold text-gray-900">
+                  <p className="font-semibold text-sm sm:text-base text-gray-900">
                     {new Date(selected.endDate).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
                   </p>
                 </div>
-                <div className="rounded-lg border border-gray-100 p-3">
+                <div className="rounded-lg border border-gray-100 p-2.5 sm:p-3">
                   <p className="text-xs text-gray-400 mb-1">Duration</p>
-                  <p className="font-semibold text-gray-900">{selected.days} working day{selected.days !== 1 ? "s" : ""}</p>
+                  <p className="font-semibold text-sm sm:text-base text-gray-900">{selected.days} working day{selected.days !== 1 ? "s" : ""}</p>
                 </div>
-                <div className="rounded-lg border border-gray-100 p-3">
-                  <p className="text-xs text-gray-400 mb-2">Reason</p>
-                  <p className="text-sm text-gray-600 leading-relaxed font-medium">"{selected.reason}"</p>
+                <div className="rounded-lg border border-gray-100 p-2.5 sm:p-3">
+                  <p className="text-xs text-gray-400 mb-1 sm:mb-2">Reason</p>
+                  <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-medium">"{selected.reason}"</p>
                 </div>
                 {selected.managerNote && (
-                  <div className="rounded-lg border border-gray-100 p-3">
-                    <p className="text-xs text-gray-400 mb-2">Manager Note</p>
-                    <p className="text-sm text-gray-600 leading-relaxed font-medium">"{selected.managerNote}"</p>
+                  <div className="rounded-lg border border-gray-100 p-2.5 sm:p-3">
+                    <p className="text-xs text-gray-400 mb-1 sm:mb-2">Manager Note</p>
+                    <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-medium">"{selected.managerNote}"</p>
                   </div>
                 )}
-                <div className="rounded-lg border border-gray-100 p-3">
+                <div className="rounded-lg border border-gray-100 p-2.5 sm:p-3">
                   <p className="text-xs text-gray-400 mb-1">Applied On</p>
-                  <p className="font-semibold text-gray-900">{formatDate(selected.createdAt)}</p>
+                  <p className="font-semibold text-sm sm:text-base text-gray-900">{formatDate(selected.createdAt)}</p>
                 </div>
               </div>
             </div>
