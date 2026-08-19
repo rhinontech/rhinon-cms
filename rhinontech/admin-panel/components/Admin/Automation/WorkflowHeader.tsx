@@ -46,13 +46,12 @@ export function WorkflowHeader({
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold text-gray-900 tracking-tight">{workflow.name}</h1>
             <span
-              className={`px-2 py-0.5 text-xs font-semibold rounded-md uppercase tracking-wider ${
-                workflow.status === "active"
+              className={`px-2 py-0.5 text-xs font-semibold rounded-md uppercase tracking-wider ${workflow.status === "active"
                   ? "bg-emerald-100 text-emerald-700"
                   : workflow.status === "paused"
-                  ? "bg-amber-100 text-amber-700"
-                  : "bg-gray-100 text-gray-600"
-              }`}
+                    ? "bg-amber-100 text-amber-700"
+                    : "bg-gray-100 text-gray-600"
+                }`}
             >
               {workflow.status}
             </span>
@@ -72,13 +71,13 @@ export function WorkflowHeader({
             </button>
           )}
 
-          <button
+          {/* <button
             onClick={onEnrollTest}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-2xs transition-all"
           >
             <TbExclamationMark size={14} className="text-amber-500 font-bold" />
             Enroll one (test)
-          </button>
+          </button> */}
 
           {workflow.status === "active" ? (
             <button
@@ -130,11 +129,10 @@ export function WorkflowHeader({
           <button
             key={tab.name}
             onClick={() => setActiveTab(tab.name)}
-            className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-all flex items-center gap-1.5 ${
-              activeTab === tab.name
+            className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-all flex items-center gap-1.5 ${activeTab === tab.name
                 ? "border-gray-900 text-gray-900"
                 : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            }`}
+              }`}
           >
             {tab.name}
             {tab.count !== null && tab.count > 0 && (

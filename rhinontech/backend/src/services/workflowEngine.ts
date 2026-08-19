@@ -264,7 +264,7 @@ async function executeEnrollmentSteps(
         currNodeId = nextEdge.target;
         continue;
       } else {
-        await enrollment.update({ status: "completed", completedAt: new Date(), nextStepAt: null });
+        await enrollment.update({ status: "completed", currentNodeId: currNodeId, completedAt: new Date(), nextStepAt: null });
         break;
       }
     }
@@ -298,7 +298,7 @@ async function executeEnrollmentSteps(
         await sendEmail({
           to: enrollment.leadEmail,
           from: config.fromEmail,
-          fromName: config.fromName || "Rhinon Automation",
+          fromName: config.fromName || "Rhinon Tech",
           subject,
           html: htmlBody,
         });
@@ -439,6 +439,7 @@ async function executeEnrollmentSteps(
       logs.push({ timestamp: new Date().toISOString(), step: "Workflow execution completed at Exit node." });
       await enrollment.update({
         status: "completed",
+        currentNodeId: currNodeId,
         completedAt: new Date(),
         nextStepAt: null,
         executionLogs: logs,

@@ -9,7 +9,7 @@ const router = Router();
 
 router.use(authenticate);
 
-const readAccess = authorizeAny("crm:read", "outreach:read");
+const readAccess = authorizeAny("crm:read", "outreach:read", "automation:read");
 const writeAccess = authorizeAny("crm:write", "outreach:write");
 
 // GET /contact-groups - list all groups with member counts

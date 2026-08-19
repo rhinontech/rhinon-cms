@@ -82,6 +82,66 @@ router.get("/", async (req, res) => {
   }
 });
 
+// GET /workflows/enrollments/all - list all enrollments across all workflows
+router.get("/enrollments/all", async (req, res) => {
+  try {
+    const enrollments = await WorkflowEnrollment.findAll({
+      include: [{ model: Workflow, as: "workflow", attributes: ["id", "name"] }],
+      order: [["enrolledAt", "DESC"]],
+    });
+
+    const formatted = enrollments.map((e) => {
+      const plain = e.get({ plain: true }) as any;
+      return {
+        ...plain,
+        workflowName: plain.workflow?.name || plain.workflowId || "Unknown Workflow",
+      };
+    });
+
+    res.json({ success: true, data: formatted });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST /workflows/cancel-all-enrollments - cancel all active enrollments across all workflows
+router.post("/cancel-all-enrollments", async (req, res) => {
+  try {
+    await WorkflowEnrollment.update(
+      { status: "cancelled" },
+      { where: { status: "active" } }
+    );
+
+    const workflows = await Workflow.findAll();
+    for (const wf of workflows) {
+      const activeCount = await WorkflowEnrollment.count({
+        where: { workflowId: wf.id, status: "active" },
+      });
+      const completedCount = await WorkflowEnrollment.count({
+        where: { workflowId: wf.id, status: "completed" },
+      });
+      const failedCount = await WorkflowEnrollment.count({
+        where: { workflowId: wf.id, status: "failed" },
+      });
+      const cancelledCount = await WorkflowEnrollment.count({
+        where: { workflowId: wf.id, status: "cancelled" },
+      });
+      await wf.update({
+        stats: {
+          active: activeCount,
+          completed: completedCount,
+          failed: failedCount,
+          cancelled: cancelledCount,
+        },
+      });
+    }
+
+    res.json({ success: true, message: "All active enrollments cancelled" });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // GET /workflows/:id
 router.get("/:id", async (req, res) => {
   try {
