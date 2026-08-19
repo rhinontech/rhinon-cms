@@ -96,7 +96,7 @@ export function TemplatesPage() {
   };
 
   return (
-    <main className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-r-xl glass-panel">
+    <main className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-r-xl max-sm:rounded-xl glass-panel">
       <div className="flex h-16 shrink-0 items-center justify-between border-b px-4">
         <div className="flex items-center gap-3">
           <SubNavToggle />

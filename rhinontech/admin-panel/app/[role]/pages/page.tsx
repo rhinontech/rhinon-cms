@@ -12,7 +12,7 @@ export default function PagesIndexPage() {
   const router = useRouter();
   const pathname = usePathname();
   const roleSlug = pathname.split("/")[1];
-  const { isExpanded } = useSideNav();
+  const { isExpanded, toggleSideNav } = useSideNav();
   const [loading, setLoading] = useState(true);
   const [hasPages, setHasPages] = useState(false);
 
@@ -35,15 +35,34 @@ export default function PagesIndexPage() {
   if (loading) return null;
 
   return (
-    <div className={cn("flex h-full w-full flex-col items-center justify-center gap-3 text-center glass-panel", isExpanded ? "rounded-r-xl" : "rounded-xl")}>
+    <div className={cn("relative flex h-full w-full flex-col items-center justify-center gap-3 text-center glass-panel", isExpanded ? "lg:rounded-r-xl rounded-xl" : "rounded-xl")}>
+      <div className="absolute left-4 top-4 lg:hidden">
+        <button
+          onClick={toggleSideNav}
+          className="rounded-lg border border-stone-200 bg-white/80 p-2 text-gray-600 hover:bg-stone-100"
+          aria-label="Open sidebar"
+        >
+          <TbFileText size={18} />
+        </button>
+      </div>
       <TbFileText size={40} className="text-stone-200" />
       <p className="text-sm text-stone-400">{hasPages ? "Select a page from the sidebar" : "No pages yet"}</p>
-      <button
-        onClick={createPage}
-        className="inline-flex items-center gap-1.5 rounded-lg border border-stone-300 px-3.5 py-1.5 text-xs font-medium hover:bg-stone-100"
-      >
-        <TbPlus size={14} /> New page
-      </button>
+      <div className="flex items-center gap-2">
+        {hasPages && (
+          <button
+            onClick={toggleSideNav}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-stone-300 px-3.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-stone-100 lg:hidden"
+          >
+            Open sidebar
+          </button>
+        )}
+        <button
+          onClick={createPage}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-stone-900 px-3.5 py-1.5 text-xs font-medium text-white hover:bg-stone-800"
+        >
+          <TbPlus size={14} /> New page
+        </button>
+      </div>
     </div>
   );
 }

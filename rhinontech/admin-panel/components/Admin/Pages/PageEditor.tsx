@@ -324,8 +324,8 @@ export function PageEditor({ id }: { id: string }) {
   };
 
   return (
-    <div className={cn("flex h-full min-h-0 w-full flex-col overflow-hidden glass-panel", isExpanded ? "rounded-r-xl" : "rounded-xl")}>
-      <div className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-black/5 px-4">
+    <div className={cn("flex h-full min-h-0 w-full flex-col overflow-hidden glass-panel", isExpanded ? "lg:rounded-r-xl rounded-xl" : "rounded-xl")}>
+      <div className="flex h-14 shrink-0 items-center justify-between gap-2 sm:gap-3 border-b border-black/5 px-3 sm:px-4">
         <div className="flex min-w-0 items-center gap-1">
           <button onClick={toggleSideNav} className="shrink-0 rounded-md p-1.5 text-gray-500 hover:bg-gray-100">
             {isExpanded ? <TbLayoutSidebarLeftCollapse size={18} /> : <TbLayoutSidebarLeftExpand size={18} />}
@@ -337,7 +337,7 @@ export function PageEditor({ id }: { id: string }) {
               <span key={a.id} className="flex min-w-0 items-center gap-1">
                 <button
                   onClick={() => navigateToPage(`/${roleSlug}/pages/${a.id}`)}
-                  className="max-w-[160px] truncate rounded-md px-1.5 py-0.5 text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+                  className="max-w-[80px] sm:max-w-[160px] truncate rounded-md px-1.5 py-0.5 text-gray-500 hover:bg-gray-100 hover:text-gray-900"
                 >
                   {a.icon && !isImageIcon(a.icon) ? `${a.icon} ` : ""}{a.title || "Untitled"}
                 </button>
@@ -345,20 +345,20 @@ export function PageEditor({ id }: { id: string }) {
               </span>
             ))}
             {!loadError && (
-              <span className="max-w-[200px] truncate px-1.5 py-0.5 font-medium text-gray-900">
+              <span className="max-w-[100px] sm:max-w-[200px] truncate px-1.5 py-0.5 font-medium text-gray-900">
                 {icon && !isImageIcon(icon) ? `${icon} ` : ""}{title || "Untitled"}
               </span>
             )}
           </nav>
         </div>
-        <div className="flex shrink-0 items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           <SaveIndicator status={saveStatus} onReload={() => load(id)} />
           {canEdit && (
             <button
               onClick={() => setShareOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 px-2.5 py-1 text-xs font-medium text-stone-600 hover:bg-stone-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 px-2 sm:px-2.5 py-1 text-xs font-medium text-stone-600 hover:bg-stone-50"
             >
-              <TbUsersPlus size={14} /> Share
+              <TbUsersPlus size={14} /> <span className="hidden sm:inline">Share</span>
             </button>
           )}
         </div>

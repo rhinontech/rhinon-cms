@@ -68,21 +68,21 @@ export function CampaignHeader({
   };
 
   return (
-    <div className="flex min-h-16 shrink-0 flex-wrap items-center justify-between gap-2 border-b px-4 py-2">
-      <div className="flex min-w-0 items-center gap-3">
+    <div className="flex min-h-16 shrink-0 flex-wrap items-center justify-between gap-2 border-b px-3 sm:px-4 py-2">
+      <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
         <button
           onClick={onBack}
-          className="-ml-2 rounded-lg p-2 text-gray-500 transition-colors hover:bg-stone-100 hover:text-gray-900"
+          className="-ml-1 sm:-ml-2 shrink-0 rounded-lg p-1.5 sm:p-2 text-gray-500 transition-colors hover:bg-stone-100 hover:text-gray-900"
         >
           <TbArrowLeft size={20} />
         </button>
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <h1 className="truncate text-lg font-bold tracking-tight text-gray-900">{campaign.name}</h1>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="truncate text-base sm:text-lg font-bold tracking-tight text-gray-900">{campaign.name}</h1>
             <StatusBadge stage={campaign.stage} />
           </div>
           {action && (
-            <button onClick={handleActionClick} className="mt-0.5 text-xs font-medium text-blue-600 hover:underline">
+            <button onClick={handleActionClick} className="mt-0.5 text-xs font-medium text-blue-600 hover:underline truncate block max-w-full text-left">
               Next: {action.label} →
             </button>
           )}

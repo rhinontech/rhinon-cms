@@ -213,49 +213,49 @@ export function AdminPayrollEmployees() {
   const selectedNet = selectedGross - selectedPF - selectedPT - selectedTDS;
 
   return (
-    <div className="flex min-h-0 gap-2 h-full overflow-hidden">
-      <main className={cn("flex min-h-0 flex-col h-full w-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b border-black/5 glass-header">
-          <div className="flex items-center gap-4">
+    <div className="flex min-h-0 min-w-0 gap-2 h-full overflow-hidden w-full">
+      <main className={cn("flex min-h-0 min-w-0 flex-col h-full w-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl max-sm:rounded-xl" : "rounded-xl")}>
+        <div className="sticky top-0 z-10 flex min-h-16 flex-wrap items-center justify-between gap-2 px-4 sm:px-5 py-2 sm:py-0 border-b border-black/5 glass-header">
+          <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
             <SubNavToggle />
-            <h1 className="text-lg font-semibold tracking-tight">Employee Salary Setup</h1>
+            <h1 className="text-base sm:text-lg font-semibold tracking-tight truncate">Employee Salary Setup</h1>
           </div>
           {!isPreviewExpanded && (
             <button
               onClick={() => setIsPreviewExpanded(true)}
-              className="p-2 text-gray-600 hover:bg-stone-100 rounded-lg"
+              className="p-1.5 sm:p-2 text-gray-600 hover:bg-stone-100 rounded-lg shrink-0"
             >
-              <TbLayoutSidebarFilled size={20} />
+              <TbLayoutSidebarFilled size={18} />
             </button>
           )}
         </div>
 
-        <div className="flex-1 overflow-auto p-6">
-          <div className="relative mb-5 max-w-sm">
+        <div className="flex-1 min-h-0 min-w-0 overflow-auto p-3 sm:p-6 max-w-full">
+          <div className="relative mb-3.5 sm:mb-5 max-w-sm w-full">
             <TbSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by name, department or role..."
-              className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-9 pr-4 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
-          <div className="glass-card-solid rounded-xl overflow-hidden">
+          <div className="glass-card-solid rounded-xl overflow-x-auto shadow-xs max-w-full w-full">
             {loading ? (
-              <div className="p-8 text-center text-sm text-gray-400">Loading employees...</div>
+              <div className="p-8 text-center text-xs sm:text-sm text-gray-400">Loading employees...</div>
             ) : filtered.length === 0 ? (
-              <div className="p-8 text-center text-sm text-gray-400">No employees found.</div>
+              <div className="p-8 text-center text-xs sm:text-sm text-gray-400">No employees found.</div>
             ) : (
-              <table className="w-full min-w-[640px] text-sm">
+              <table className="w-full min-w-[640px] text-xs sm:text-sm">
                 <thead className="glass-thead text-xs text-gray-600 uppercase">
                   <tr>
-                    <th className="px-5 py-3 text-left">Employee</th>
-                    <th className="px-5 py-3 text-left">Role / Dept</th>
-                    <th className="px-5 py-3 text-right">Basic (mo.)</th>
-                    <th className="px-5 py-3 text-right">Gross (mo.)</th>
-                    <th className="px-5 py-3 text-right">Net (mo.)</th>
-                    <th className="px-5 py-3 text-left">Status</th>
+                    <th className="px-3.5 sm:px-5 py-2.5 sm:py-3 text-left">Employee</th>
+                    <th className="px-3.5 sm:px-5 py-2.5 sm:py-3 text-left">Role / Dept</th>
+                    <th className="px-3.5 sm:px-5 py-2.5 sm:py-3 text-right">Basic (mo.)</th>
+                    <th className="px-3.5 sm:px-5 py-2.5 sm:py-3 text-right">Gross (mo.)</th>
+                    <th className="px-3.5 sm:px-5 py-2.5 sm:py-3 text-right">Net (mo.)</th>
+                    <th className="px-3.5 sm:px-5 py-2.5 sm:py-3 text-left">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
@@ -278,24 +278,24 @@ export function AdminPayrollEmployees() {
                           selectedEmployee?.id === emp.id && "bg-blue-50 hover:bg-blue-50"
                         )}
                       >
-                        <td className="px-5 py-3">
+                        <td className="px-3.5 sm:px-5 py-2.5 sm:py-3">
                           <p className="font-medium text-gray-900">{emp.fullName}</p>
                           <p className="text-xs text-gray-400">{emp.companyEmail}</p>
                         </td>
-                        <td className="px-5 py-3">
+                        <td className="px-3.5 sm:px-5 py-2.5 sm:py-3">
                           <p className="text-gray-700">{emp.role?.name ?? "—"}</p>
                           <p className="text-xs text-gray-400">{emp.department}</p>
                         </td>
-                        <td className="px-5 py-3 text-right font-medium">
+                        <td className="px-3.5 sm:px-5 py-2.5 sm:py-3 text-right font-medium">
                           {hasSalary ? INR(Number(emp.basicSalary)) : <span className="text-gray-300">—</span>}
                         </td>
-                        <td className="px-5 py-3 text-right">
+                        <td className="px-3.5 sm:px-5 py-2.5 sm:py-3 text-right">
                           {gross ? INR(gross) : <span className="text-gray-300">—</span>}
                         </td>
-                        <td className="px-5 py-3 text-right font-semibold">
+                        <td className="px-3.5 sm:px-5 py-2.5 sm:py-3 text-right font-semibold">
                           {net ? INR(net) : <span className="text-gray-300">—</span>}
                         </td>
-                        <td className="px-5 py-3">
+                        <td className="px-3.5 sm:px-5 py-2.5 sm:py-3">
                           {hasSalary ? (
                             <span className="px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700 font-medium">Set</span>
                           ) : (
@@ -313,39 +313,41 @@ export function AdminPayrollEmployees() {
       </main>
 
       <aside
-        className={`min-h-0 flex-col bg-white overflow-hidden transition-all duration-200 ease-in-out ${
-          mobileDetail ? "fixed inset-0 z-50 flex" : "hidden"
-        } lg:static lg:z-auto lg:flex lg:h-full lg:rounded-xl ${
+        className={cn(
+          "min-h-0 flex-col bg-white overflow-hidden transition-all duration-200 ease-in-out",
+          mobileDetail ? "fixed inset-0 z-50 flex w-full max-w-full" : "hidden",
+          "lg:static lg:z-auto lg:flex lg:h-full lg:rounded-xl",
           isPreviewExpanded ? "lg:w-[42%]" : "lg:w-0"
-        }`}
+        )}
       >
         {isPreviewExpanded && (
           <div className="flex flex-col w-full flex-1 h-full overflow-hidden relative">
-            <div className="sticky top-0 w-full flex items-center justify-between h-16 px-5 border-b bg-white z-10">
-              <p className="flex self-stretch items-center text-md font-medium tracking-tight border-b-2 border-blue-600 text-black -mb-px">
+            <div className="sticky top-0 w-full flex items-center justify-between min-h-16 px-4 sm:px-5 py-2 sm:py-0 border-b bg-white z-10 shrink-0">
+              <p className="flex self-stretch items-center text-sm sm:text-md font-medium tracking-tight border-b-2 border-blue-600 text-black -mb-px">
                 Salary Details
               </p>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 {mode === "view" && selectedEmployee && (
                   <button
                     onClick={startEdit}
-                    className="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                    className="inline-flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
                   >
-                    <TbPencil size={15} />
-                    Edit
+                    <TbPencil size={14} />
+                    <span>Edit</span>
                   </button>
                 )}
                 <button
-                  className="cursor-pointer text-gray-600 hover:text-gray-900"
+                  className="p-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-stone-100 transition-colors"
                   onClick={() => { setIsPreviewExpanded(false); setMobileDetail(false); }}
                 >
-                  <TbLayoutSidebarRightFilled size={20} />
+                  <TbX size={18} className="lg:hidden" />
+                  <TbLayoutSidebarRightFilled size={18} className="hidden lg:block" />
                 </button>
               </div>
             </div>
 
             {mode === "view" ? (
-              <div className="flex-1 overflow-auto p-5">
+              <div className="flex-1 overflow-auto p-4 sm:p-5">
                 {selectedEmployee ? (
                   <div className="space-y-5">
                     <div>

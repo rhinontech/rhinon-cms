@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { TbChevronRight, TbPlus, TbFileInvoice, TbClockHour4 } from "react-icons/tb";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
+import { useSideNav } from "@/context/SideNavContext";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -17,6 +19,7 @@ interface Payslip {
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
 export function PayrollOverview() {
+  const { isExpanded: isSubNavExpanded } = useSideNav();
   const pathname = usePathname();
   const roleSlug = pathname.split("/")[1];
   const [payslips, setPayslips] = useState<Payslip[]>([]);
@@ -34,34 +37,34 @@ export function PayrollOverview() {
   }, []);
 
   return (
-    <div className="flex flex-col h-full glass-panel rounded-r-xl overflow-hidden">
-      <div className="sticky top-0 z-10 flex items-center gap-4 h-16 px-5 border-b border-black/5 glass-header">
+    <div className={cn("flex min-h-0 min-w-0 flex-col h-full w-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl max-sm:rounded-xl" : "rounded-xl")}>
+      <div className="sticky top-0 z-10 flex min-h-16 flex-wrap items-center gap-2.5 sm:gap-4 px-4 sm:px-5 py-2 sm:py-0 border-b border-black/5 glass-header">
         <SubNavToggle />
-        <h1 className="text-base font-semibold tracking-tight">Overview</h1>
+        <h1 className="text-base sm:text-lg font-semibold tracking-tight truncate">Overview</h1>
       </div>
 
-      <div className="flex-1 overflow-auto p-6">
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div className="flex-1 min-h-0 min-w-0 overflow-auto p-3 sm:p-6 max-w-full">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
           {/* Recent Payslips */}
           <div className="xl:col-span-2 glass-card-solid rounded-xl overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b">
-              <p className="font-semibold text-gray-900">Recent Payslips</p>
+            <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b">
+              <p className="font-semibold text-xs sm:text-sm text-gray-900">Recent Payslips</p>
               <Link href={`/${roleSlug}/payroll/payslips`} className="flex items-center gap-1 text-xs text-blue-600 hover:underline">
                 View all <TbChevronRight size={14} />
               </Link>
             </div>
 
             {loading ? (
-              <div className="p-6 space-y-3">
+              <div className="p-4 sm:p-6 space-y-3">
                 {[1, 2, 3].map((n) => (
                   <div key={n} className="h-16 bg-gray-100 rounded-lg animate-pulse" />
                 ))}
               </div>
             ) : payslips.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center text-gray-400">
+              <div className="flex flex-col items-center justify-center py-12 sm:py-16 text-center text-gray-400">
                 <TbFileInvoice size={36} className="mb-3 text-gray-300" />
-                <p className="text-sm font-medium text-gray-500">No payslips yet</p>
-                <p className="text-xs mt-1">Your payslips will appear here once payroll is processed.</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-500">No payslips yet</p>
+                <p className="text-[11px] sm:text-xs mt-1">Your payslips will appear here once payroll is processed.</p>
               </div>
             ) : (
               <div className="divide-y divide-gray-50">
@@ -69,24 +72,24 @@ export function PayrollOverview() {
                   <Link
                     key={slip.id}
                     href={`/${roleSlug}/payroll/payslips/${slip.id}`}
-                    className="flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors group"
+                    className="flex items-center justify-between px-3.5 sm:px-5 py-3 sm:py-4 hover:bg-gray-50 transition-colors group gap-2"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
-                        <TbFileInvoice size={20} />
+                    <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
+                        <TbFileInvoice size={18} />
                       </div>
-                      <div>
-                        <p className="font-medium text-gray-900 text-sm">
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-900 text-xs sm:text-sm truncate">
                           {MONTHS[slip.payroll.month - 1]} {slip.payroll.year}
                         </p>
-                        <p className="text-xs text-gray-400 mt-0.5">
+                        <p className="text-[11px] sm:text-xs text-gray-400 mt-0.5 truncate">
                           Gross ₹{Number(slip.grossPay).toLocaleString("en-IN")}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 sm:gap-4 shrink-0">
                       <span
-                        className={`px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide ${
+                        className={`px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold uppercase tracking-wide ${
                           slip.payroll.status === "paid"
                             ? "bg-green-100 text-green-700"
                             : slip.payroll.status === "processed"
@@ -97,12 +100,12 @@ export function PayrollOverview() {
                         {slip.payroll.status}
                       </span>
                       <div className="text-right">
-                        <p className="font-semibold text-gray-900 text-sm">
+                        <p className="font-semibold text-gray-900 text-xs sm:text-sm">
                           ₹{Number(slip.netPay).toLocaleString("en-IN")}
                         </p>
-                        <p className="text-xs text-gray-400">Net Pay</p>
+                        <p className="text-[10px] sm:text-xs text-gray-400">Net Pay</p>
                       </div>
-                      <TbChevronRight size={16} className="text-gray-300 group-hover:text-gray-500 transition-colors" />
+                      <TbChevronRight size={16} className="text-gray-300 group-hover:text-gray-500 transition-colors hidden sm:block" />
                     </div>
                   </Link>
                 ))}
@@ -111,32 +114,32 @@ export function PayrollOverview() {
           </div>
 
           {/* Right column */}
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-4 sm:gap-5">
             {/* My Requests */}
             <div className="glass-card-solid rounded-xl overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-4 border-b">
-                <p className="font-semibold text-gray-900">My Requests</p>
-                <button className="flex items-center gap-1 text-xs bg-stone-900 text-white px-2.5 py-1.5 rounded-lg hover:bg-stone-800 transition-colors">
+              <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b">
+                <p className="font-semibold text-xs sm:text-sm text-gray-900">My Requests</p>
+                <button className="inline-flex items-center gap-1 text-xs bg-stone-900 text-white px-2.5 py-1 sm:py-1.5 rounded-lg hover:bg-stone-800 transition-colors">
                   <TbPlus size={13} /> New
                 </button>
               </div>
-              <div className="flex flex-col items-center justify-center py-10 text-center px-4">
+              <div className="flex flex-col items-center justify-center py-8 sm:py-10 text-center px-4">
                 <TbClockHour4 size={32} className="mb-2 text-gray-200" />
-                <p className="text-sm text-gray-400">No pending requests</p>
+                <p className="text-xs sm:text-sm text-gray-400">No pending requests</p>
               </div>
             </div>
 
             {/* Payroll Approvals */}
             <div className="glass-card-solid rounded-xl overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-4 border-b">
-                <p className="font-semibold text-gray-900">Payroll Approvals</p>
+              <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b">
+                <p className="font-semibold text-xs sm:text-sm text-gray-900">Payroll Approvals</p>
                 <button className="text-xs text-blue-600 hover:underline">View all</button>
               </div>
-              <div className="flex flex-col items-center justify-center py-10 text-center px-4">
+              <div className="flex flex-col items-center justify-center py-8 sm:py-10 text-center px-4">
                 <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center mb-2">
                   <TbFileInvoice size={16} className="text-gray-300" />
                 </div>
-                <p className="text-sm text-gray-400">No approvals pending</p>
+                <p className="text-xs sm:text-sm text-gray-400">No approvals pending</p>
               </div>
             </div>
           </div>

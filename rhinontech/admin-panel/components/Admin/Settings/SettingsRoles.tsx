@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { TbPlus, TbTrash, TbShield, TbCheck } from "react-icons/tb";
+import { TbPlus, TbTrash, TbShield, TbCheck, TbX, TbChevronLeft } from "react-icons/tb";
 import { cn } from "@/lib/utils";
 import { useSideNav } from "@/context/SideNavContext";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
@@ -101,6 +101,7 @@ export function SettingsRoles() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [mobileDetail, setMobileDetail] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -131,6 +132,11 @@ export function SettingsRoles() {
     setSelectedRole(role);
     setSelectedPermIds(new Set((role.Permissions ?? []).map((p) => p.id)));
     setMessage("");
+  };
+
+  const handleRoleClick = (role: Role) => {
+    selectRole(role);
+    setMobileDetail(true);
   };
 
   const togglePermission = (permId: string) => {
@@ -176,7 +182,10 @@ export function SettingsRoles() {
       setCreating(false);
       const list = await fetchRoles();
       const created = list[list.length - 1];
-      if (created) selectRole(created);
+      if (created) {
+        selectRole(created);
+        setMobileDetail(true);
+      }
     } catch (err: any) {
       setMessage(err.message || "Failed to create role.");
     } finally {
@@ -194,7 +203,10 @@ export function SettingsRoles() {
       await apiFetch(`/roles/${role.id}`, { method: "DELETE" });
       const list = await fetchRoles();
       if (list[0]) selectRole(list[0]);
-      else setSelectedRole(null);
+      else {
+        setSelectedRole(null);
+        setMobileDetail(false);
+      }
     } catch (err: any) {
       alert(err.message || "Failed to delete role.");
     }
@@ -210,22 +222,22 @@ export function SettingsRoles() {
     .sort((a, b) => resourceOrder(a) - resourceOrder(b));
 
   return (
-    <div className="flex min-h-0 gap-2 w-full h-full overflow-hidden">
+    <div className="flex min-h-0 min-w-0 gap-2 w-full h-full overflow-hidden">
       {/* Roles list */}
       <aside
         className={cn(
-          "flex flex-col bg-white shrink-0 h-full overflow-hidden w-64",
-          isSubNavExpanded ? "rounded-r-xl rounded-l-none" : "rounded-xl"
+          "flex flex-col bg-white shrink-0 h-full overflow-hidden w-full lg:w-64",
+          isSubNavExpanded ? "rounded-r-xl max-sm:rounded-xl lg:rounded-l-none" : "rounded-xl"
         )}
       >
-        <div className="flex items-center justify-between h-16 px-4 border-b shrink-0">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between min-h-16 px-4 py-2 sm:py-0 border-b shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
             <SubNavToggle />
-            <span className="text-sm font-semibold text-gray-900">Roles</span>
+            <span className="text-sm font-semibold text-gray-900 truncate">Roles</span>
           </div>
           <button
             onClick={() => { setCreating(true); setMessage(""); }}
-            className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
+            className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 shrink-0"
           >
             <TbPlus size={14} /> New
           </button>
@@ -241,13 +253,13 @@ export function SettingsRoles() {
                 setNewRoleName(e.target.value);
                 setNewRoleSlug(e.target.value.toLowerCase().replace(/\s+/g, "-"));
               }}
-              className="w-full text-xs border border-gray-200 rounded-md px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full text-xs border border-gray-200 rounded-md px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             />
             <input
               placeholder="slug (e.g. hr-manager)"
               value={newRoleSlug}
               onChange={(e) => setNewRoleSlug(e.target.value)}
-              className="w-full text-xs border border-gray-200 rounded-md px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full text-xs border border-gray-200 rounded-md px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             />
             <div className="flex gap-2">
               <button
@@ -267,13 +279,13 @@ export function SettingsRoles() {
           </div>
         )}
 
-        <nav className="flex-1 overflow-auto py-2 px-2 space-y-0.5">
+        <nav className="flex-1 min-h-0 overflow-y-auto py-2 px-2 space-y-0.5">
           {roles.map((role) => (
             <button
               key={role.id}
-              onClick={() => selectRole(role)}
+              onClick={() => handleRoleClick(role)}
               className={cn(
-                "w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm text-left transition-colors",
+                "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm text-left transition-colors",
                 selectedRole?.id === role.id
                   ? "bg-stone-900 text-white"
                   : "text-gray-700 hover:bg-stone-100"
@@ -297,20 +309,35 @@ export function SettingsRoles() {
       </aside>
 
       {/* Permissions editor */}
-      <main className="flex flex-col bg-white rounded-xl flex-1 h-full overflow-hidden min-w-0">
+      <main
+        className={cn(
+          "min-h-0 flex-col bg-white overflow-hidden transition-all duration-200 ease-in-out",
+          mobileDetail ? "fixed inset-0 z-50 flex w-full max-w-full" : "hidden",
+          "lg:static lg:z-auto lg:flex lg:h-full lg:flex-1 lg:rounded-xl min-w-0"
+        )}
+      >
         {selectedRole ? (
           <>
-            <div className="flex items-center justify-between h-16 px-5 border-b shrink-0">
-              <div>
-                <h2 className="text-sm font-semibold text-gray-900">{selectedRole.name}</h2>
-                <p className="text-xs text-gray-400">
-                  /{selectedRole.slug} · {selectedPermIds.size} permissions
-                  {typeof selectedRole.usersCount === "number" && ` · ${selectedRole.usersCount} member${selectedRole.usersCount !== 1 ? "s" : ""}`}
-                </p>
+            <div className="flex items-center justify-between min-h-16 px-4 sm:px-5 py-2 sm:py-0 border-b shrink-0 gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <button
+                  onClick={() => setMobileDetail(false)}
+                  className="lg:hidden p-1.5 -ml-1 rounded-lg text-gray-600 hover:bg-stone-100 transition-colors shrink-0"
+                  aria-label="Back to roles"
+                >
+                  <TbChevronLeft size={20} />
+                </button>
+                <div className="min-w-0">
+                  <h2 className="text-sm sm:text-base font-semibold text-gray-900 truncate">{selectedRole.name}</h2>
+                  <p className="text-xs text-gray-400 truncate">
+                    /{selectedRole.slug} · {selectedPermIds.size} permissions
+                    {typeof selectedRole.usersCount === "number" && ` · ${selectedRole.usersCount} member${selectedRole.usersCount !== 1 ? "s" : ""}`}
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                 {message && (
-                  <span className={cn("text-xs", message.toLowerCase().includes("fail") ? "text-red-500" : "text-green-600")}>
+                  <span className={cn("text-xs hidden sm:inline", message.toLowerCase().includes("fail") ? "text-red-500" : "text-green-600")}>
                     {message}
                   </span>
                 )}
@@ -326,17 +353,29 @@ export function SettingsRoles() {
                 <button
                   onClick={savePermissions}
                   disabled={saving || LOCKED_SLUGS.includes(selectedRole.slug)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-stone-900 text-white rounded-lg hover:bg-stone-800 disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-stone-900 text-white rounded-lg hover:bg-stone-800 disabled:opacity-50"
                 >
                   <TbCheck size={13} />
-                  {saving ? "Saving..." : "Save"}
+                  <span>{saving ? "Saving..." : "Save"}</span>
+                </button>
+                <button
+                  onClick={() => setMobileDetail(false)}
+                  className="lg:hidden p-1.5 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <TbX size={18} />
                 </button>
               </div>
             </div>
 
-            <div className="flex-1 overflow-auto p-5 space-y-5">
+            {message && (
+              <div className={cn("sm:hidden px-4 py-1.5 text-xs border-b", message.toLowerCase().includes("fail") ? "bg-red-50 text-red-600 border-red-100" : "bg-green-50 text-green-700 border-green-100")}>
+                {message}
+              </div>
+            )}
+
+            <div className="flex-1 min-h-0 min-w-0 overflow-y-auto p-4 sm:p-5 space-y-4 sm:space-y-5">
               {LOCKED_SLUGS.includes(selectedRole.slug) && (
-                <div className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
+                <div className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3.5 sm:px-4 py-2.5 sm:py-3">
                   Super Admin — the CEO panel — always has every permission and cannot be edited.
                 </div>
               )}
@@ -355,18 +394,18 @@ export function SettingsRoles() {
                           <label
                             key={perm.id}
                             className={cn(
-                              "flex items-center justify-between px-4 py-3 rounded-lg border transition-colors",
+                              "flex items-center justify-between px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-lg border transition-colors gap-2",
                               locked ? "cursor-default" : "cursor-pointer",
                               enabled
                                 ? "border-blue-200 bg-blue-50"
                                 : "border-gray-100 bg-gray-50 hover:border-gray-200"
                             )}
                           >
-                            <div>
-                              <p className="text-sm font-medium text-gray-800">
+                            <div className="min-w-0">
+                              <p className="text-xs sm:text-sm font-medium text-gray-800 truncate">
                                 {PERMISSION_LABELS[perm.name] ?? perm.name}
                               </p>
-                              <p className="text-xs text-gray-400 mt-0.5">{perm.name}</p>
+                              <p className="text-[11px] sm:text-xs text-gray-400 mt-0.5 truncate">{perm.name}</p>
                             </div>
                             <div
                               className={cn(

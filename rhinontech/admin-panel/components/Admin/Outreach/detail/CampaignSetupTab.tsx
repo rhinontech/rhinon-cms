@@ -24,8 +24,8 @@ function SetupSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-stone-200 bg-white p-5">
-      <div className="mb-4 flex items-center gap-2.5">
+    <div className="rounded-xl border border-stone-200 bg-white p-4 sm:p-5">
+      <div className="mb-3.5 sm:mb-4 flex items-center gap-2.5">
         {complete ? (
           <TbCircleCheck className="shrink-0 text-emerald-500" size={22} />
         ) : (
@@ -96,9 +96,9 @@ export function CampaignSetupTab({
   };
 
   return (
-    <div className="mx-auto space-y-4">
+    <div className="mx-auto space-y-3 sm:space-y-4">
       <SetupSection title="Sender" complete={!!senderEmail.trim() && !!senderName.trim()}>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div className="space-y-1.5">
             <Label>Sender Name</Label>
             <Input value={senderName || "—"} disabled className="bg-stone-50/80 font-medium text-stone-800" />

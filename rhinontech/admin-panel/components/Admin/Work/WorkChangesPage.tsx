@@ -272,23 +272,23 @@ export function WorkChangesPage() {
 
   return (
     <div className="flex h-full min-h-0 overflow-hidden">
-      <main className={cn("flex h-full min-h-0 w-full flex-col overflow-hidden glass-panel", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
-        <div className="flex h-16 items-center justify-between border-b px-4">
-          <div className="flex items-center gap-3">
+      <main className={cn("flex h-full min-h-0 w-full flex-col overflow-hidden glass-panel", isSubNavExpanded ? "rounded-r-xl max-sm:rounded-xl" : "rounded-xl")}>
+        <div className="flex min-h-16 shrink-0 items-center justify-between border-b px-3 sm:px-4 py-2 sm:py-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <SubNavToggle />
-            <div>
-              <h1 className="text-base font-semibold tracking-tight text-gray-900">Changes & Bugs</h1>
-              <p className="text-xs text-gray-500">Project-wise grid for client-reported issues and requested changes.</p>
+            <div className="min-w-0">
+              <h1 className="text-base font-semibold tracking-tight text-gray-900 truncate">Changes & Bugs</h1>
+              <p className="hidden text-xs text-gray-500 sm:block truncate">Project-wise grid for client-reported issues and requested changes.</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button onClick={startCreate} className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium hover:bg-stone-100">
-              Add item
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <button onClick={startCreate} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-2.5 sm:px-3 py-1.5 text-xs font-medium hover:bg-stone-100 whitespace-nowrap shrink-0">
               <TbPlus size={14} />
+              <span>Add item</span>
             </button>
             {(!isPreviewExpanded || (visibleRequests.length === 0 && mode !== "create")) && (
-              <button onClick={() => (setIsPreviewExpanded(true), setMobileDetail(true))} className="rounded-lg p-2 text-gray-600 hover:bg-stone-100">
-                <TbLayoutSidebarFilled size={20} />
+              <button onClick={() => (setIsPreviewExpanded(true), setMobileDetail(true))} className="rounded-lg p-1.5 sm:p-2 text-gray-600 hover:bg-stone-100 shrink-0" title="Open details">
+                <TbLayoutSidebarFilled size={18} />
               </button>
             )}
           </div>

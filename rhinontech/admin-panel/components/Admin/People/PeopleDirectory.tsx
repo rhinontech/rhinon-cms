@@ -6,6 +6,8 @@ import { TbCamera, TbLayoutSidebarFilled, TbLayoutSidebarRightFilled, TbPencil, 
 import { cn } from "@/lib/utils";
 import { WorkSchedulePicker } from "@/components/Admin/Common/WorkSchedulePicker";
 import { usePermissions } from "@/context/PermissionsContext";
+import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
+import { useSideNav } from "@/context/SideNavContext";
 import { LetterBlocksView } from "@/components/Admin/People/LetterBlocksView";
 import { LetterEnvelope } from "@/components/Admin/People/LetterEnvelope";
 import { RewriteToolbar } from "@/components/Admin/People/RewriteToolbar";
@@ -238,11 +240,11 @@ function StatusBadge({ status, exitDate }: { status: string; exitDate?: string |
 const EXIT_REASONS = ["Resignation", "Termination", "Contract ended", "Absconded", "Other"];
 
 const EXIT_CHECKLIST_ITEMS: { key: string; label: string }[] = [
-  { key: "emailDisabled",   label: "Company email account disabled" },
-  { key: "assetsReturned",  label: "Company assets returned" },
-  { key: "accessRevoked",   label: "Third-party tool access revoked" },
-  { key: "settlementPaid",  label: "Final settlement paid" },
-  { key: "lettersIssued",   label: "Relieving / experience letters issued" },
+  { key: "emailDisabled", label: "Company email account disabled" },
+  { key: "assetsReturned", label: "Company assets returned" },
+  { key: "accessRevoked", label: "Third-party tool access revoked" },
+  { key: "settlementPaid", label: "Final settlement paid" },
+  { key: "lettersIssued", label: "Relieving / experience letters issued" },
 ];
 
 function localToday() {
@@ -492,9 +494,11 @@ function FormSelect({
 }
 
 export function PeopleDirectory() {
+  const { isExpanded: isSubNavExpanded } = useSideNav();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [attachDocs, setAttachDocs] = useState(true);
   const [previewTab, setPreviewTab] = useState<"offer" | "nda">("offer");
+  const [mobileFormTab, setMobileFormTab] = useState<"form" | "preview">("form");
   // Per-block AI/manual edits made in the live preview during create — kept
   // here (not inside LiveLetterPreview) so they survive form-field changes
   // that re-trigger the debounced preview fetch, and so submitEmployee can
@@ -648,6 +652,7 @@ export function PeopleDirectory() {
     setOfferTemplateManuallySet(false);
     setDocStatus(null);
     setMessage("");
+    setMobileFormTab("form");
     setIsPreviewExpanded(true);
     setMobileDetail(true);
   };
@@ -685,7 +690,7 @@ export function PeopleDirectory() {
       })
         .then((r) => r.json())
         .then((d) => setDocStatus(d))
-        .catch(() => {});
+        .catch(() => { });
     } catch {
       alert("Could not resend the documents. Please try again.");
     } finally {
@@ -989,23 +994,27 @@ export function PeopleDirectory() {
     <div ref={panesRef} className="flex min-h-0 gap-2 w-full h-full overflow-hidden">
       <main
         className={cn(
-          "flex min-h-0 flex-col glass-panel rounded-xl w-full h-full overflow-hidden",
+          "flex min-h-0 flex-col glass-panel w-full h-full overflow-hidden",
+          isSubNavExpanded ? "rounded-r-xl max-sm:rounded-xl" : "rounded-xl",
           (mode === "create" || mode === "edit") && "hidden"
         )}
       >
-        <div className="sticky top-0 glass-header z-10 flex items-center justify-between gap-4 h-16 px-5 border-b border-black/5">
-          <div>
-            <h1 className="text-sm font-semibold tracking-tight">Team</h1>
-            <p className="text-xs text-gray-500">
-              {activeCount} active{alumniCount > 0 ? ` · ${alumniCount} alumni` : ""}
-            </p>
+        <div className="sticky top-0 glass-header z-10 flex min-h-16 flex-wrap items-center justify-between gap-2.5 px-3 sm:px-5 py-2.5 sm:py-0 border-b border-black/5">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <SubNavToggle />
+            <div className="min-w-0">
+              <h1 className="text-sm sm:text-base font-semibold tracking-tight truncate">Team</h1>
+              <p className="text-xs text-gray-500 truncate">
+                {activeCount} active{alumniCount > 0 ? ` · ${alumniCount} alumni` : ""}
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center rounded-lg border border-gray-200 bg-white p-0.5">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap">
+            <div className="flex items-center rounded-lg border border-gray-200 bg-white p-0.5 shrink-0">
               <button
                 onClick={() => switchTab("active")}
                 className={cn(
-                  "rounded-md px-3 py-1 text-xs font-medium transition-colors",
+                  "rounded-md px-2.5 sm:px-3 py-1 text-xs font-medium transition-colors",
                   tab === "active" ? "bg-stone-900 text-white" : "text-gray-500 hover:text-gray-900"
                 )}
               >
@@ -1014,43 +1023,45 @@ export function PeopleDirectory() {
               <button
                 onClick={() => switchTab("alumni")}
                 className={cn(
-                  "rounded-md px-3 py-1 text-xs font-medium transition-colors",
+                  "rounded-md px-2.5 sm:px-3 py-1 text-xs font-medium transition-colors",
                   tab === "alumni" ? "bg-stone-900 text-white" : "text-gray-500 hover:text-gray-900"
                 )}
               >
                 Alumni{alumniCount > 0 ? ` (${alumniCount})` : ""}
               </button>
             </div>
-            <div className="relative">
-              <TbSearch size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <div className="relative min-w-[120px] flex-1 sm:flex-initial">
+              <TbSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search employees..."
-                className="pl-9 pr-4 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-36 sm:w-64"
+                placeholder="Search..."
+                className="w-full pl-8 sm:pl-9 pr-3 py-1.5 sm:py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:w-56 md:w-64 bg-white"
               />
             </div>
             {canManage && (
               <button
                 onClick={openCreate}
-                className="inline-flex items-center gap-2 rounded-lg bg-stone-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-stone-800"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-stone-900 px-2.5 sm:px-3 py-1.5 text-xs font-medium text-white hover:bg-stone-800 whitespace-nowrap shrink-0"
               >
-                Add member
                 <TbPlus size={14} />
+                <span className="hidden sm:inline">Add member</span>
+                <span className="sm:hidden">Add</span>
               </button>
             )}
             {!isPreviewExpanded && (
               <button
-                onClick={() => setIsPreviewExpanded(true)}
-                className="p-2 text-gray-600 hover:bg-stone-100 rounded-lg"
+                onClick={() => { setIsPreviewExpanded(true); setMobileDetail(true); }}
+                className="p-1.5 sm:p-2 text-gray-600 hover:bg-stone-100 rounded-lg shrink-0"
+                title="Open details"
               >
-                <TbLayoutSidebarFilled size={20} />
+                <TbLayoutSidebarFilled size={18} />
               </button>
             )}
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto p-5">
+        <div className="flex-1 overflow-auto p-3 sm:p-5">
           {loading ? (
             <div className="flex items-center justify-center h-full text-gray-400 text-sm">Loading...</div>
           ) : filtered.length === 0 ? (
@@ -1058,7 +1069,7 @@ export function PeopleDirectory() {
               {tab === "alumni" ? "No alumni yet." : "No employees found."}
             </div>
           ) : (
-            <div className="rounded-xl border border-gray-100 overflow-x-auto">
+            <div className="rounded-xl border border-gray-100 overflow-x-auto shadow-xs">
               <table className="w-full min-w-[640px] text-sm">
                 <thead className="glass-thead text-gray-600 text-xs uppercase">
                   <tr>
@@ -1066,11 +1077,11 @@ export function PeopleDirectory() {
                     <th className="px-5 py-3 text-left">Role</th>
                     <th className="px-5 py-3 text-left">Department</th>
                     <th className="px-5 py-3 text-left">Status</th>
-                  <th className="px-5 py-3 text-left">{tab === "alumni" ? "Left" : "Joined"}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 bg-white">
-                {filtered.map((emp) => (
+                    <th className="px-5 py-3 text-left">{tab === "alumni" ? "Left" : "Joined"}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 bg-white">
+                  {filtered.map((emp) => (
                     <tr
                       key={emp.id}
                       onClick={() => selectEmployee(emp)}
@@ -1119,73 +1130,77 @@ export function PeopleDirectory() {
       )}
 
       <aside
-        style={isPreviewExpanded && mode === "view" ? { width: `${detailWidthPct}%` } : undefined}
+        style={
+          isPreviewExpanded && mode === "view" && !mobileDetail
+            ? { width: `${detailWidthPct}%` }
+            : undefined
+        }
         className={cn(
           "min-h-0 flex-col bg-white overflow-hidden",
           isResizingDetail ? "transition-none" : "transition-all duration-200 ease-in-out",
-          mobileDetail ? "fixed inset-0 z-50 flex" : "hidden",
+          mobileDetail ? "fixed inset-0 z-50 flex w-full max-w-full" : "hidden",
           "lg:static lg:z-auto lg:flex lg:h-full lg:rounded-xl",
           isPreviewExpanded ? (mode === "create" || mode === "edit" ? "lg:w-full" : "shrink-0") : "lg:w-0"
         )}
       >
         {isPreviewExpanded && (
           <div className="flex flex-col w-full flex-1 h-full overflow-hidden relative">
-            <div className="sticky top-0 w-full flex items-center justify-between h-16 px-5 border-b bg-white z-10">
-              <div className="flex items-center gap-4 self-stretch">
-                <p className="flex self-stretch items-center text-md font-medium tracking-tight border-b-2 border-blue-600 text-black -mb-px">
+            <div className="sticky top-0 w-full flex min-h-16 items-center justify-between px-4 sm:px-5 py-2 sm:py-0 border-b bg-white z-10 shrink-0">
+              <div className="flex items-center gap-2 sm:gap-4 self-stretch min-w-0">
+                <p className="flex self-stretch items-center text-sm sm:text-md font-medium tracking-tight border-b-2 border-blue-600 text-black -mb-px truncate">
                   {mode === "create" ? "Add Member" : mode === "edit" ? "Edit Member" : "Member Details"}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                 {canWrite && mode === "view" && selectedEmployee && selectedEmployee.status === "active" && (
                   selectedEmployee.onboarded ? (
                     <button
                       onClick={sendReset}
                       disabled={resending}
-                      className="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 sm:gap-2 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
                       title="Email a password reset link (doesn't change their current password)"
                     >
                       <TbKey size={15} />
-                      {resending ? "Sending..." : "Send password reset"}
+                      <span className="hidden sm:inline">{resending ? "Sending..." : "Send password reset"}</span>
+                      <span className="sm:hidden">{resending ? "..." : "Reset pwd"}</span>
                     </button>
                   ) : (
                     <button
                       onClick={resendInvite}
                       disabled={resending}
-                      className="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 sm:gap-2 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
                       title="Email a fresh temporary password + setup link"
                     >
                       <TbMailForward size={15} />
-                      {resending ? "Sending..." : "Resend invite"}
+                      <span className="hidden sm:inline">{resending ? "Sending..." : "Resend invite"}</span>
+                      <span className="sm:hidden">{resending ? "..." : "Invite"}</span>
                     </button>
                   )
                 )}
                 {canManage && mode === "view" && selectedEmployee && (
                   <button
                     onClick={openEdit}
-                    className="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                    className="inline-flex items-center gap-1.5 sm:gap-2 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-100"
                   >
                     <TbPencil size={15} />
-                    Edit
+                    <span>Edit</span>
                   </button>
                 )}
-                {mode === "create" || mode === "edit" ? (
-                  <button
-                    className="cursor-pointer text-gray-600 hover:text-gray-900 p-1 rounded-lg hover:bg-gray-100"
-                    onClick={() => { setMode("view"); setMobileDetail(false); }}
-                    title="Close"
-                  >
-                    <TbX size={20} />
-                  </button>
-                ) : (
-                  <button
-                    className="cursor-pointer text-gray-600 hover:text-gray-900"
-                    onClick={() => { setIsPreviewExpanded(false); setMobileDetail(false); }}
-                    title="Collapse panel"
-                  >
-                    <TbLayoutSidebarRightFilled size={20} />
-                  </button>
-                )}
+                <button
+                  className="cursor-pointer text-gray-600 hover:text-gray-900 p-1.5 rounded-lg hover:bg-gray-100"
+                  onClick={() => {
+                    if (mode === "create" || mode === "edit") {
+                      setMode("view");
+                    } else {
+                      setIsPreviewExpanded(false);
+                    }
+                    setMobileDetail(false);
+                  }}
+                  title="Close"
+                >
+                  <TbX size={18} className="lg:hidden" />
+                  <TbLayoutSidebarRightFilled size={18} className="hidden lg:block" />
+                </button>
               </div>
             </div>
 
@@ -1397,219 +1412,251 @@ export function PeopleDirectory() {
                 )}
               </div>
             ) : canManage ? (
-              <form onSubmit={submitEmployee} className="flex-1 flex overflow-y-auto lg:overflow-hidden min-h-0 lg:divide-x bg-gray-50/50">
-                  {/* Left: Input fields */}
-                  <div className="w-full lg:w-1/2 overflow-visible lg:overflow-auto p-4 sm:p-6 bg-white space-y-4 flex flex-col justify-between">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
-                        Full name
-                        <input value={form.fullName} onChange={(e) => updateForm("fullName", e.target.value)} className="rounded-lg border border-gray-200 px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-                      </label>
-                      <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
-                        Personal email
-                        <input type="email" value={form.personalEmail} onChange={(e) => updateForm("personalEmail", e.target.value)} className="rounded-lg border border-gray-200 px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-                      </label>
-                      <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
-                        Role
-                        <select value={form.roleId} onChange={(e) => updateForm("roleId", e.target.value)} className="rounded-lg border border-gray-200 px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                          <option value="">Select role</option>
-                          {roles.map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}
-                        </select>
-                      </label>
-                      <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
-                        Department
-                        <input value={form.department} onChange={(e) => updateForm("department", e.target.value)} className="rounded-lg border border-gray-200 px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-                      </label>
-                      <FormInput label="Legal name" value={form.legalName} onChange={(value) => updateForm("legalName", value)} />
-                      <FormInput label="PAN" value={form.pan} onChange={(value) => updateForm("pan", value)} />
-                      <FormInput label="Role title" value={form.roleTitle} onChange={(value) => updateForm("roleTitle", value)} />
-                      <FormInput label="Joining date" type="date" value={form.joiningDate} onChange={(value) => updateForm("joiningDate", value)} required />
-                      <FormInput label="Date of birth" type="date" value={form.dateOfBirth} onChange={(value) => updateForm("dateOfBirth", value)} />
-                      <FormInput label="Work location" value={form.workLocation} onChange={(value) => updateForm("workLocation", value)} />
-                      <FormSelect label="Employment type" value={form.employmentType} onChange={(value) => updateForm("employmentType", value)} options={EMPLOYMENT_TYPES} />
-                      <FormSelect label="Compensation type" value={form.compensationType} onChange={(value) => updateForm("compensationType", value)} options={COMPENSATION_TYPES} />
-                      <div className="col-span-2 flex flex-col gap-1.5">
-                        <label className="text-xs font-medium text-gray-500">Work Schedule</label>
-                        <WorkSchedulePicker
-                          value={form.workSchedule || "11 AM – 8 PM (Mon–Sat)"}
-                          onChange={(v) => updateForm("workSchedule", v)}
-                        />
-                      </div>
-                      <FormSelect label="Payment frequency" value={form.paymentFrequency} onChange={(value) => updateForm("paymentFrequency", value)} options={PAYMENT_FREQUENCIES} />
-                      <FormInput label="Annual compensation" type="number" value={form.annualCompensation} onChange={(value) => updateForm("annualCompensation", value)} />
-                      <FormInput label="Annual variable pay" type="number" value={form.annualVariablePay} onChange={(value) => updateForm("annualVariablePay", value)} />
-                      <FormInput label="Basic salary" type="number" value={form.basicSalary} onChange={(value) => updateForm("basicSalary", value)} />
-                      <FormInput label="HRA" type="number" value={form.hra} onChange={(value) => updateForm("hra", value)} />
-                      <FormInput label="Transport" type="number" value={form.ta} onChange={(value) => updateForm("ta", value)} />
-                      <FormInput label="Medical" type="number" value={form.medicalAllowance} onChange={(value) => updateForm("medicalAllowance", value)} />
-                      <FormInput label="Other allowances" type="number" value={form.otherAllowances} onChange={(value) => updateForm("otherAllowances", value)} />
-                      <FormInput label="Past payroll FY" value={form.pastPayrollFinancialYear} onChange={(value) => updateForm("pastPayrollFinancialYear", value)} />
-                      <FormInput label="Past taxable salary" type="number" value={form.pastTaxableSalary} onChange={(value) => updateForm("pastTaxableSalary", value)} />
-                      <FormInput label="Past TDS deducted" type="number" value={form.pastTdsDeducted} onChange={(value) => updateForm("pastTdsDeducted", value)} />
-                      <FormInput label="Bank account number" value={form.bankAccountNumber} onChange={(value) => updateForm("bankAccountNumber", value)} />
-                      <FormInput label="IFSC code" value={form.bankIfscCode} onChange={(value) => updateForm("bankIfscCode", value)} />
-                      <FormInput label="Beneficiary name" value={form.bankBeneficiaryName} onChange={(value) => updateForm("bankBeneficiaryName", value)} />
-                      <FormInput label="PF UAN number" value={form.pfUanNumber} onChange={(value) => updateForm("pfUanNumber", value)} />
-                      <FormInput label="ESIC IP number" value={form.esicIpNumber} onChange={(value) => updateForm("esicIpNumber", value)} />
-                      <Checkbox label="Remote position" checked={form.remotePosition} onChange={(value) => updateForm("remotePosition", value)} />
-                      <Checkbox label="Labour Welfare Fund" checked={form.labourWelfareFundEnabled} onChange={(value) => updateForm("labourWelfareFundEnabled", value)} />
-                      <Checkbox label="National Pension System" checked={form.npsEnabled} onChange={(value) => updateForm("npsEnabled", value)} />
-                      <Checkbox label="Professional Tax" checked={form.professionalTaxEnabled} onChange={(value) => updateForm("professionalTaxEnabled", value)} />
-                      
-                      {mode === "create" && (
-                        <label className="col-span-2 flex flex-col gap-1 text-sm font-medium text-gray-700">
-                          Company Email
-                          <div className="flex items-center rounded-lg border border-gray-200 overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
-                            <input
-                              type="text"
-                              value={form.emailPrefix}
-                              onChange={(e) => updateForm("emailPrefix", e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, ""))}
-                              placeholder="firstname.lastname"
-                              className="flex-1 px-3 py-2 text-sm font-normal focus:outline-none"
-                              required
-                            />
-                            <span className="px-3 py-2 bg-gray-50 text-gray-500 text-sm border-l border-gray-200 select-none whitespace-nowrap">@rhinontech.in</span>
-                          </div>
-                          <p className="text-xs text-gray-400 font-normal">A welcome email with login credentials will be sent to their personal email.</p>
-                        </label>
+              <form onSubmit={submitEmployee} className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0 lg:divide-x bg-gray-50/50">
+                {/* Mobile Tab Switcher */}
+                <div className="flex lg:hidden items-center justify-center p-2.5 bg-white border-b border-stone-200 shrink-0">
+                  <div className="flex bg-stone-100 rounded-lg p-0.5 w-full max-w-xs">
+                    <button
+                      type="button"
+                      onClick={() => setMobileFormTab("form")}
+                      className={cn(
+                        "flex-1 py-1.5 text-xs font-semibold rounded-md transition-all text-center",
+                        mobileFormTab === "form" ? "bg-white text-stone-900 shadow-xs" : "text-stone-500 hover:text-stone-900"
                       )}
-                      
-                      {mode === "create" && (
-                        <label className="col-span-2 flex items-center gap-2 rounded-lg border border-stone-200 bg-stone-50/30 px-3 py-2 text-sm font-medium text-gray-700 mt-2 cursor-pointer">
-                          <input type="checkbox" checked={attachDocs} onChange={(e) => setAttachDocs(e.target.checked)} className="rounded" />
-                          Generate Offer Letter & NDA for e-signing (credentials email is sent automatically after both are signed)
-                        </label>
+                    >
+                      Form Details
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMobileFormTab("preview")}
+                      className={cn(
+                        "flex-1 py-1.5 text-xs font-semibold rounded-md transition-all text-center",
+                        mobileFormTab === "preview" ? "bg-white text-stone-900 shadow-xs" : "text-stone-500 hover:text-stone-900"
                       )}
-                    </div>
-
-                    {message && <p className={cn("text-sm mt-4", message.includes("Unable") ? "text-red-600" : "text-green-600")}>{message}</p>}
-
-                    <div className="flex items-center justify-end gap-3 border-t pt-4 mt-6">
-                      <button type="button" onClick={() => { setMode("view"); setMobileDetail(false); }} className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">
-                        Cancel
-                      </button>
-                      <button type="submit" disabled={saving} className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-60">
-                        {saving ? "Saving..." : mode === "create" ? "Add member" : "Save changes"}
-                      </button>
-                    </div>
+                    >
+                      Live Preview
+                    </button>
                   </div>
+                </div>
 
-                  {/* Right: Live Preview */}
-                  <div className="hidden lg:flex w-1/2 overflow-hidden flex-col p-6 bg-stone-100/50">
-                    <p className="text-xs font-semibold text-stone-500 uppercase tracking-widest mb-3">Live Document Preview</p>
-                    
-                    {/* Tabs */}
-                    <div className="flex gap-2 mb-4 border-b border-stone-200">
-                      <button
-                        type="button"
-                        onClick={() => setPreviewTab("offer")}
-                        className={cn(
-                          "px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 -mb-px transition-all",
-                          previewTab === "offer" ? "border-stone-900 text-stone-900" : "border-transparent text-stone-400 hover:text-stone-600"
-                        )}
-                      >
-                        Offer Letter
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPreviewTab("nda")}
-                        className={cn(
-                          "px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 -mb-px transition-all",
-                          previewTab === "nda" ? "border-stone-900 text-stone-900" : "border-transparent text-stone-400 hover:text-stone-600"
-                        )}
-                      >
-                        NDA
-                      </button>
-                    </div>
-
-                    {mode === "edit" && docStatus && (() => {
-                      const rows = (["offer_letter", "nda"] as const)
-                        .filter((c) => docStatus[c].exists)
-                        .map((c) => ({ label: c === "offer_letter" ? "Offer Letter" : "NDA", signed: docStatus[c].signed }));
-                      if (rows.length === 0) return null;
-                      const anyUnsigned = rows.some((r) => !r.signed);
-
-                      return (
-                        <div className="mb-3 space-y-2">
-                          <p className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-stone-500">
-                            {rows.map((r) => (
-                              <span key={r.label}>
-                                {r.label}: {r.signed ? <span className="font-medium text-emerald-600">✓ Signed</span> : <span className="text-amber-600">Pending signature</span>}
-                              </span>
-                            ))}
-                          </p>
-                          {anyUnsigned && (
-                            <button
-                              type="button"
-                              disabled={resendingDoc}
-                              onClick={resendDocuments}
-                              className="w-full rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-xs font-semibold text-stone-700 hover:bg-stone-50 disabled:opacity-50"
-                            >
-                              {resendingDoc ? "Sending…" : "Resend for signing"}
-                            </button>
-                          )}
-                        </div>
-                      );
-                    })()}
-
-                    {previewTab === "offer" && (
-                      <div className="flex items-center gap-2 mb-3">
-                        <select
-                          value={offerTemplateKey}
-                          onChange={(e) => {
-                            setOfferTemplateKey(e.target.value);
-                            setOfferTemplateManuallySet(true);
-                          }}
-                          className="flex-1 rounded-lg border border-stone-200 bg-white px-2 py-1.5 text-xs font-medium text-stone-700"
-                        >
-                          {offerTemplates.map((t) => (
-                            <option key={t.key} value={t.key}>
-                              {t.title}
-                            </option>
-                          ))}
-                        </select>
-                        <button
-                          type="button"
-                          onClick={() => setShowNewTemplateDialog(true)}
-                          className="rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-stone-500 hover:bg-stone-50 hover:text-stone-900"
-                        >
-                          + New
-                        </button>
-                      </div>
-                    )}
-
-                    <div className="flex-1 bg-white border border-stone-200 rounded-xl overflow-hidden w-full relative">
-                      <LiveLetterPreview
-                        form={form}
-                        type={previewTab}
-                        token={token}
-                        templateKey={previewTab === "offer" ? offerTemplateKey : undefined}
-                        overrides={previewTab === "offer" ? offerOverrides : ndaOverrides}
-                        onOverride={(blockId, text) => {
-                          const setOverrides = previewTab === "offer" ? setOfferOverrides : setNdaOverrides;
-                          setOverrides((prev) => {
-                            const next = prev.filter((o) => o.blockId !== blockId);
-                            next.push({ blockId, text });
-                            return next;
-                          });
-                        }}
+                {/* Left: Input fields */}
+                <div className={cn(
+                  "w-full lg:w-1/2 overflow-y-auto p-4 sm:p-6 bg-white space-y-4 flex-col justify-between",
+                  mobileFormTab === "form" ? "flex flex-1" : "hidden lg:flex"
+                )}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                      Full name
+                      <input value={form.fullName} onChange={(e) => updateForm("fullName", e.target.value)} className="rounded-lg border border-gray-200 px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                    </label>
+                    <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                      Personal email
+                      <input type="email" value={form.personalEmail} onChange={(e) => updateForm("personalEmail", e.target.value)} className="rounded-lg border border-gray-200 px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                    </label>
+                    <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                      Role
+                      <select value={form.roleId} onChange={(e) => updateForm("roleId", e.target.value)} className="rounded-lg border border-gray-200 px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <option value="">Select role</option>
+                        {roles.map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}
+                      </select>
+                    </label>
+                    <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                      Department
+                      <input value={form.department} onChange={(e) => updateForm("department", e.target.value)} className="rounded-lg border border-gray-200 px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                    </label>
+                    <FormInput label="Legal name" value={form.legalName} onChange={(value) => updateForm("legalName", value)} />
+                    <FormInput label="PAN" value={form.pan} onChange={(value) => updateForm("pan", value)} />
+                    <FormInput label="Role title" value={form.roleTitle} onChange={(value) => updateForm("roleTitle", value)} />
+                    <FormInput label="Joining date" type="date" value={form.joiningDate} onChange={(value) => updateForm("joiningDate", value)} required />
+                    <FormInput label="Date of birth" type="date" value={form.dateOfBirth} onChange={(value) => updateForm("dateOfBirth", value)} />
+                    <FormInput label="Work location" value={form.workLocation} onChange={(value) => updateForm("workLocation", value)} />
+                    <FormSelect label="Employment type" value={form.employmentType} onChange={(value) => updateForm("employmentType", value)} options={EMPLOYMENT_TYPES} />
+                    <FormSelect label="Compensation type" value={form.compensationType} onChange={(value) => updateForm("compensationType", value)} options={COMPENSATION_TYPES} />
+                    <div className="col-span-2 flex flex-col gap-1.5">
+                      <label className="text-xs font-medium text-gray-500">Work Schedule</label>
+                      <WorkSchedulePicker
+                        value={form.workSchedule || "11 AM – 8 PM (Mon–Sat)"}
+                        onChange={(v) => updateForm("workSchedule", v)}
                       />
                     </div>
+                    <FormSelect label="Payment frequency" value={form.paymentFrequency} onChange={(value) => updateForm("paymentFrequency", value)} options={PAYMENT_FREQUENCIES} />
+                    <FormInput label="Annual compensation" type="number" value={form.annualCompensation} onChange={(value) => updateForm("annualCompensation", value)} />
+                    <FormInput label="Annual variable pay" type="number" value={form.annualVariablePay} onChange={(value) => updateForm("annualVariablePay", value)} />
+                    <FormInput label="Basic salary" type="number" value={form.basicSalary} onChange={(value) => updateForm("basicSalary", value)} />
+                    <FormInput label="HRA" type="number" value={form.hra} onChange={(value) => updateForm("hra", value)} />
+                    <FormInput label="Transport" type="number" value={form.ta} onChange={(value) => updateForm("ta", value)} />
+                    <FormInput label="Medical" type="number" value={form.medicalAllowance} onChange={(value) => updateForm("medicalAllowance", value)} />
+                    <FormInput label="Other allowances" type="number" value={form.otherAllowances} onChange={(value) => updateForm("otherAllowances", value)} />
+                    <FormInput label="Past payroll FY" value={form.pastPayrollFinancialYear} onChange={(value) => updateForm("pastPayrollFinancialYear", value)} />
+                    <FormInput label="Past taxable salary" type="number" value={form.pastTaxableSalary} onChange={(value) => updateForm("pastTaxableSalary", value)} />
+                    <FormInput label="Past TDS deducted" type="number" value={form.pastTdsDeducted} onChange={(value) => updateForm("pastTdsDeducted", value)} />
+                    <FormInput label="Bank account number" value={form.bankAccountNumber} onChange={(value) => updateForm("bankAccountNumber", value)} />
+                    <FormInput label="IFSC code" value={form.bankIfscCode} onChange={(value) => updateForm("bankIfscCode", value)} />
+                    <FormInput label="Beneficiary name" value={form.bankBeneficiaryName} onChange={(value) => updateForm("bankBeneficiaryName", value)} />
+                    <FormInput label="PF UAN number" value={form.pfUanNumber} onChange={(value) => updateForm("pfUanNumber", value)} />
+                    <FormInput label="ESIC IP number" value={form.esicIpNumber} onChange={(value) => updateForm("esicIpNumber", value)} />
+                    <Checkbox label="Remote position" checked={form.remotePosition} onChange={(value) => updateForm("remotePosition", value)} />
+                    <Checkbox label="Labour Welfare Fund" checked={form.labourWelfareFundEnabled} onChange={(value) => updateForm("labourWelfareFundEnabled", value)} />
+                    <Checkbox label="National Pension System" checked={form.npsEnabled} onChange={(value) => updateForm("npsEnabled", value)} />
+                    <Checkbox label="Professional Tax" checked={form.professionalTaxEnabled} onChange={(value) => updateForm("professionalTaxEnabled", value)} />
+
+                    {mode === "create" && (
+                      <label className="col-span-2 flex flex-col gap-1 text-sm font-medium text-gray-700">
+                        Company Email
+                        <div className="flex items-center rounded-lg border border-gray-200 overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
+                          <input
+                            type="text"
+                            value={form.emailPrefix}
+                            onChange={(e) => updateForm("emailPrefix", e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, ""))}
+                            placeholder="firstname.lastname"
+                            className="flex-1 px-3 py-2 text-sm font-normal focus:outline-none"
+                            required
+                          />
+                          <span className="px-3 py-2 bg-gray-50 text-gray-500 text-sm border-l border-gray-200 select-none whitespace-nowrap">@rhinontech.in</span>
+                        </div>
+                        <p className="text-xs text-gray-400 font-normal">A welcome email with login credentials will be sent to their personal email.</p>
+                      </label>
+                    )}
+
+                    {mode === "create" && (
+                      <label className="col-span-2 flex items-center gap-2 rounded-lg border border-stone-200 bg-stone-50/30 px-3 py-2 text-sm font-medium text-gray-700 mt-2 cursor-pointer">
+                        <input type="checkbox" checked={attachDocs} onChange={(e) => setAttachDocs(e.target.checked)} className="rounded" />
+                        Generate Offer Letter & NDA for e-signing (credentials email is sent automatically after both are signed)
+                      </label>
+                    )}
                   </div>
 
-                  {showNewTemplateDialog && (
-                    <NewTemplateDialog
-                      existing={offerTemplates}
-                      onClose={() => setShowNewTemplateDialog(false)}
-                      onCreated={(key) => {
-                        setShowNewTemplateDialog(false);
-                        fetchOfferTemplates();
-                        setOfferTemplateKey(key);
-                        setOfferTemplateManuallySet(true);
+                  {message && <p className={cn("text-sm mt-4", message.includes("Unable") ? "text-red-600" : "text-green-600")}>{message}</p>}
+
+                  <div className="flex items-center justify-end gap-3 border-t pt-4 mt-6">
+                    <button type="button" onClick={() => { setMode("view"); setMobileDetail(false); }} className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">
+                      Cancel
+                    </button>
+                    <button type="submit" disabled={saving} className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-60">
+                      {saving ? "Saving..." : mode === "create" ? "Add member" : "Save changes"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Right: Live Preview */}
+                <div className={cn(
+                  "w-full lg:w-1/2 overflow-y-auto flex-col p-4 sm:p-6 bg-stone-100/50",
+                  mobileFormTab === "preview" ? "flex flex-1 min-h-[500px]" : "hidden lg:flex"
+                )}>
+                  <p className="text-xs font-semibold text-stone-500 uppercase tracking-widest mb-3">Live Document Preview</p>
+
+                  {/* Tabs */}
+                  <div className="flex gap-2 mb-4 border-b border-stone-200">
+                    <button
+                      type="button"
+                      onClick={() => setPreviewTab("offer")}
+                      className={cn(
+                        "px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 -mb-px transition-all",
+                        previewTab === "offer" ? "border-stone-900 text-stone-900" : "border-transparent text-stone-400 hover:text-stone-600"
+                      )}
+                    >
+                      Offer Letter
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPreviewTab("nda")}
+                      className={cn(
+                        "px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 -mb-px transition-all",
+                        previewTab === "nda" ? "border-stone-900 text-stone-900" : "border-transparent text-stone-400 hover:text-stone-600"
+                      )}
+                    >
+                      NDA
+                    </button>
+                  </div>
+
+                  {mode === "edit" && docStatus && (() => {
+                    const rows = (["offer_letter", "nda"] as const)
+                      .filter((c) => docStatus[c].exists)
+                      .map((c) => ({ label: c === "offer_letter" ? "Offer Letter" : "NDA", signed: docStatus[c].signed }));
+                    if (rows.length === 0) return null;
+                    const anyUnsigned = rows.some((r) => !r.signed);
+
+                    return (
+                      <div className="mb-3 space-y-2">
+                        <p className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-stone-500">
+                          {rows.map((r) => (
+                            <span key={r.label}>
+                              {r.label}: {r.signed ? <span className="font-medium text-emerald-600">✓ Signed</span> : <span className="text-amber-600">Pending signature</span>}
+                            </span>
+                          ))}
+                        </p>
+                        {anyUnsigned && (
+                          <button
+                            type="button"
+                            disabled={resendingDoc}
+                            onClick={resendDocuments}
+                            className="w-full rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-xs font-semibold text-stone-700 hover:bg-stone-50 disabled:opacity-50"
+                          >
+                            {resendingDoc ? "Sending…" : "Resend for signing"}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  {previewTab === "offer" && (
+                    <div className="flex items-center gap-2 mb-3">
+                      <select
+                        value={offerTemplateKey}
+                        onChange={(e) => {
+                          setOfferTemplateKey(e.target.value);
+                          setOfferTemplateManuallySet(true);
+                        }}
+                        className="flex-1 rounded-lg border border-stone-200 bg-white px-2 py-1.5 text-xs font-medium text-stone-700"
+                      >
+                        {offerTemplates.map((t) => (
+                          <option key={t.key} value={t.key}>
+                            {t.title}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => setShowNewTemplateDialog(true)}
+                        className="rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-stone-500 hover:bg-stone-50 hover:text-stone-900"
+                      >
+                        + New
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="flex-1 bg-white border border-stone-200 rounded-xl overflow-hidden w-full relative">
+                    <LiveLetterPreview
+                      form={form}
+                      type={previewTab}
+                      token={token}
+                      templateKey={previewTab === "offer" ? offerTemplateKey : undefined}
+                      overrides={previewTab === "offer" ? offerOverrides : ndaOverrides}
+                      onOverride={(blockId, text) => {
+                        const setOverrides = previewTab === "offer" ? setOfferOverrides : setNdaOverrides;
+                        setOverrides((prev) => {
+                          const next = prev.filter((o) => o.blockId !== blockId);
+                          next.push({ blockId, text });
+                          return next;
+                        });
                       }}
                     />
-                  )}
-                </form>
+                  </div>
+                </div>
+
+                {showNewTemplateDialog && (
+                  <NewTemplateDialog
+                    existing={offerTemplates}
+                    onClose={() => setShowNewTemplateDialog(false)}
+                    onCreated={(key) => {
+                      setShowNewTemplateDialog(false);
+                      fetchOfferTemplates();
+                      setOfferTemplateKey(key);
+                      setOfferTemplateManuallySet(true);
+                    }}
+                  />
+                )}
+              </form>
             ) : (
               <div className="flex items-center justify-center flex-1 text-sm text-gray-400">
                 Select a team member to view their profile.

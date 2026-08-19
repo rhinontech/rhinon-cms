@@ -142,14 +142,14 @@ function avatar(name: string, idx: number, size = "h-9 w-9") {
 
 function StatCard({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: React.ReactNode; sub?: string }) {
   return (
-    <div className="flex items-center gap-4 rounded-xl glass-card px-5 py-4">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-stone-100 text-gray-600">
+    <div className="flex items-center gap-3.5 sm:gap-4 rounded-xl glass-card p-4 sm:p-5 min-w-0">
+      <div className="flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-lg bg-stone-100 text-gray-600">
         {icon}
       </div>
-      <div className="min-w-0">
-        <p className="text-xs text-gray-400 truncate">{label}</p>
-        <p className="mt-0.5 text-xl font-bold text-gray-900 leading-none">{value}</p>
-        {sub && <p className="mt-1 text-xs text-gray-400">{sub}</p>}
+      <div className="min-w-0 flex-1">
+        <p className="text-xs text-gray-400 truncate" title={label}>{label}</p>
+        <p className="mt-0.5 text-lg sm:text-xl font-bold text-gray-900 leading-none">{value}</p>
+        {sub && <p className="mt-1 text-xs text-gray-400 truncate" title={sub}>{sub}</p>}
       </div>
     </div>
   );
@@ -247,7 +247,7 @@ export default function DashboardPage() {
           </div>
 
           {/* ── Stats strip ── */}
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 ${isSuperadmin ? "lg:grid-cols-3" : "lg:grid-cols-4"}`}>
             <StatCard
               icon={<TbUsers size={20} />}
               label="Total employees"

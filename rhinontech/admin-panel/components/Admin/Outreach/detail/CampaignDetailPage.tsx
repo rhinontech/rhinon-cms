@@ -181,24 +181,24 @@ export function CampaignDetailPage({ id }: { id: string }) {
         onGoToSetup={() => setActiveTab("setup")}
       />
 
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-auto p-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 sm:gap-4 overflow-auto p-3 sm:p-4">
         <FunnelStrip funnel={stats?.funnel ?? null} leads={leads} />
 
-        <div className="flex min-h-0 flex-1 gap-4">
-          <nav className="w-44 shrink-0 space-y-0.5">
+        <div className="flex min-h-0 flex-1 flex-col md:flex-row gap-3 sm:gap-4">
+          <nav className="flex shrink-0 flex-row overflow-x-auto gap-1 border-b border-black/5 pb-2.5 pt-0.5 md:pb-0 md:pt-0 md:w-44 md:flex-col md:border-b-0 md:space-y-0.5">
             {NAV_ITEMS.map((item) => (
               <button
                 key={item.key}
                 onClick={() => setActiveTab(item.key)}
                 className={cn(
-                  "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
+                  "flex shrink-0 items-center justify-center md:justify-start gap-2 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors whitespace-nowrap",
                   activeTab === item.key
-                    ? "bg-blue-50 text-blue-900"
+                    ? "bg-blue-50 text-blue-900 font-semibold"
                     : "text-stone-600 hover:bg-stone-100"
                 )}
               >
                 {item.icon}
-                {item.label}
+                <span>{item.label}</span>
               </button>
             ))}
           </nav>

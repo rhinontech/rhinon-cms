@@ -45,7 +45,7 @@ export function GroupList({
   };
 
   return (
-    <div className="flex h-full w-[280px] shrink-0 flex-col border-r">
+    <div className="flex h-full max-sm:w-full w-[280px] flex-col border-r">
       <div className="flex items-center gap-2 p-3">
         <div className="relative flex-1">
           <TbSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-stone-400" size={14} />
