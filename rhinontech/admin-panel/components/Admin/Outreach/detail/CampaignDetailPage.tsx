@@ -215,7 +215,7 @@ export function CampaignDetailPage({ id }: { id: string }) {
             {activeTab === "leads" && (
               <LeadsTab campaign={campaign} leads={leads} setLeads={setLeads} onRefresh={fetchAll} onEnroll={() => setEnrollOpen(true)} />
             )}
-            {activeTab === "inbox" && <CampaignInboxTab campaignId={campaign.id} />}
+            {activeTab === "inbox" && <CampaignInboxTab campaignId={campaign.id} leads={leads} />}
             {activeTab === "activity" && (
               <ActivityTab campaignId={campaign.id} runLogs={runLogs} onClearRunLogs={() => setRunLogs(null)} />
             )}
