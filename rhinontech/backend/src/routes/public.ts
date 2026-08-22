@@ -1,10 +1,11 @@
 import express, { Router, Response, Request } from "express";
-import { ClientRequest, Project, User, Lead, Blog, CaseStudy, Event, PageView, DocsAccess, WorkflowEnrollment, CampaignActivity } from "../models";
+import { ClientRequest, Project, User, Lead, Blog, CaseStudy, Event, PageView, DocsAccess, WorkflowEnrollment, CampaignActivity, Visitor } from "../models";
 import type { BlogDomain } from "../models/Blog";
 import { sendEmail } from "../services/mailer";
 import { env } from "../config/env";
 import { classifyChannel, parseHost, isBotUserAgent } from "../services/analytics";
 import { enrollRealtimeLead } from "../services/workflowEngine";
+import { extractClientIp, lookupIpLocation } from "../services/geolocation";
 
 const router = Router();
 
@@ -367,6 +368,54 @@ router.post("/track", express.text({ type: ["text/plain"] }), async (req: Reques
   } catch (err) {
     console.error("Failed to record pageview:", err);
     res.status(204).end(); // never surface tracking errors to the visitor
+  }
+});
+
+// POST /public/visitors — captures visitor email from URL params, detects IP and resolves location
+router.post("/visitors", express.text({ type: ["text/plain"] }), async (req: Request, res: Response) => {
+  try {
+    let b: any = req.body;
+    if (typeof b === "string") {
+      try {
+        b = JSON.parse(b);
+      } catch {
+        b = {};
+      }
+    }
+    b = b || {};
+
+    const rawEmail = typeof b.email === "string" ? b.email.trim().toLowerCase() : "";
+    if (!rawEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawEmail)) {
+      res.status(400).json({ message: "Valid email is required" });
+      return;
+    }
+
+    const ip = extractClientIp(req);
+    const geo = await lookupIpLocation(ip);
+
+    const path = typeof b.path === "string" ? b.path.slice(0, 512) : null;
+    const referrer = typeof b.referrer === "string" ? b.referrer.slice(0, 1024) : null;
+    const userAgent = (req.headers["user-agent"] as string) || null;
+
+    const visitor = await Visitor.create({
+      email: rawEmail,
+      ip,
+      city: geo.city,
+      region: geo.region,
+      country: geo.country,
+      location: geo.location,
+      latitude: geo.latitude,
+      longitude: geo.longitude,
+      path,
+      referrer,
+      userAgent: userAgent ? userAgent.slice(0, 1024) : null,
+      visitedAt: new Date(),
+    });
+
+    res.status(201).json({ success: true, visitor });
+  } catch (err) {
+    console.error("Failed to record visitor:", err);
+    res.status(204).end();
   }
 });
 

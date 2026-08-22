@@ -1,6 +1,6 @@
 import { Router, Response } from "express";
 import { Op, fn, col, literal } from "sequelize";
-import { PageView } from "../models";
+import { PageView, Visitor } from "../models";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 
 const router = Router();
@@ -177,6 +177,25 @@ router.get("/top-pages", async (req: AuthRequest, res: Response) => {
   } catch (err) {
     console.error("analytics/top-pages failed:", err);
     res.status(500).json({ message: "Failed to load top pages" });
+  }
+});
+
+// GET /analytics/visitors — list recorded email visitors with IP and location
+router.get("/visitors", async (req: AuthRequest, res: Response) => {
+  try {
+    const { from, to } = resolveRange(req);
+    const limit = Math.min(200, Math.max(1, Number(req.query.limit) || 100));
+    const visitors = await Visitor.findAll({
+      where: {
+        visitedAt: { [Op.gte]: from, [Op.lt]: to },
+      },
+      order: [["visitedAt", "DESC"]],
+      limit,
+    });
+    res.json({ visitors });
+  } catch (err) {
+    console.error("analytics/visitors failed:", err);
+    res.status(500).json({ message: "Failed to load visitors" });
   }
 });
 

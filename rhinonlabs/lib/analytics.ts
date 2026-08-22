@@ -92,3 +92,30 @@ export function trackPageview(path: string) {
     utmContent: utm("utm_content"),
   });
 }
+
+// Captures email from query params (e.g. ?email=...) and sends to backend for IP & Location tracking
+export function trackEmailVisitor(email: string, path: string) {
+  if (typeof window === "undefined" || !email) return;
+
+  const cleanEmail = email.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) return;
+
+  const url = `${API_BASE}/public/visitors`;
+  const body = JSON.stringify({
+    email: cleanEmail,
+    path,
+    referrer: document.referrer || undefined,
+  });
+
+  try {
+    fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+      keepalive: true,
+      mode: "cors",
+    }).catch(() => fallbackBeacon(url, body));
+  } catch {
+    fallbackBeacon(url, body);
+  }
+}

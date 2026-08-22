@@ -40,6 +40,7 @@ import { PageShare } from "./PageShare";
 import { PageAttachment } from "./PageAttachment";
 import { Workflow } from "./Workflow";
 import { WorkflowEnrollment } from "./WorkflowEnrollment";
+import { Visitor } from "./Visitor";
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/database";
 
@@ -246,6 +247,7 @@ export {
   PageAttachment,
   Workflow,
   WorkflowEnrollment,
+  Visitor,
 };
 
 export async function syncDatabase(force = false) {
