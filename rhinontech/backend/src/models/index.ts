@@ -41,6 +41,7 @@ import { PageAttachment } from "./PageAttachment";
 import { Workflow } from "./Workflow";
 import { WorkflowEnrollment } from "./WorkflowEnrollment";
 import { Visitor } from "./Visitor";
+import { GoogleCalendarToken } from "./GoogleCalendarToken";
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/database";
 
@@ -248,6 +249,7 @@ export {
   Workflow,
   WorkflowEnrollment,
   Visitor,
+  GoogleCalendarToken,
 };
 
 export async function syncDatabase(force = false) {

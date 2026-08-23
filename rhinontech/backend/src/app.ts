@@ -31,6 +31,8 @@ import docsAccessRoutes from "./routes/docs-access";
 import brandingRoutes from "./routes/branding";
 import documentSigningRoutes from "./routes/documentSigning";
 import pagesRoutes from "./routes/pages";
+import googleCalendarSettingsRoutes from "./routes/googleCalendarSettings";
+import meetingsRoutes from "./routes/meetings";
 
 const app = express();
 
@@ -79,6 +81,8 @@ app.use("/leave", leaveRoutes);
 app.use("/performance", performanceRoutes);
 app.use("/documents", documentsRoutes);
 app.use("/linkedin", linkedinRoutes);
+app.use("/google-calendar", googleCalendarSettingsRoutes);
+app.use("/meetings", meetingsRoutes);
 app.use("/ai", aiRoutes);
 app.use("/content", contentRoutes);
 app.use("/analytics", analyticsRoutes);

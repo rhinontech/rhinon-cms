@@ -37,6 +37,8 @@ export const PERMISSION_CATALOG = [
   { name: "crm:write",          resource: "crm",          action: "write" },
   { name: "pages:read",         resource: "pages",        action: "read"  },
   { name: "pages:write",        resource: "pages",        action: "write" },
+  { name: "meetings:read",      resource: "meetings",     action: "read"  },
+  { name: "meetings:write",     resource: "meetings",     action: "write" },
 ];
 
 // Grants applied only when a permission is FIRST created, preserving today's
@@ -49,6 +51,9 @@ export const DEFAULT_ROLE_GRANTS: Record<string, string[]> = {
     "documents:read", "documents:write",
     "attendance:read",
     "work:read",
+    // The support@rhinon.tech calendar is company-wide reference — everyone can see it,
+    // but only superadmin gets meetings:write by default (grant it per role in Settings).
+    "meetings:read",
   ],
   employee: [
     "leave:read",
@@ -56,6 +61,7 @@ export const DEFAULT_ROLE_GRANTS: Record<string, string[]> = {
     "documents:read",
     "attendance:read",
     "work:read",
+    "meetings:read",
   ],
 };
 

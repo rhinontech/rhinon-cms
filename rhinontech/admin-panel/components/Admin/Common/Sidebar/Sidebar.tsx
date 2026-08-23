@@ -7,7 +7,7 @@ import { MdDashboard } from "react-icons/md";
 import { FaUserGroup } from "react-icons/fa6";
 import { RiSettings3Fill } from "react-icons/ri";
 import { HiInbox } from "react-icons/hi2";
-import { TbBriefcase, TbCash, TbSpeakerphone, TbNews, TbBook, TbTargetArrow, TbChartArcs, TbHierarchy } from "react-icons/tb";
+import { TbBriefcase, TbCash, TbSpeakerphone, TbNews, TbBook, TbTargetArrow, TbChartArcs, TbHierarchy, TbCalendarEvent } from "react-icons/tb";
 import { BsPinAngleFill, BsPinAngle } from "react-icons/bs";
 import { cn } from "@/lib/utils";
 import { useDashboard } from "../../../Common/DashboardProvider/DashboardProvider";
@@ -38,6 +38,7 @@ export function Sidebar() {
     { title: "Team",       icon: <FaUserGroup size={20} className="h-5 w-5 flex-shrink-0" />,     href: `/${roleSlug}/employees`,  permissions: ["people:read", "attendance:read", "leave:read", "performance:read", "documents:read"] },
     { title: "Payroll",    icon: <TbCash size={20} className="h-5 w-5 flex-shrink-0" />,          href: `/${roleSlug}/payroll`,    permissions: ["payslips:read"] },
     { title: "Content",    icon: <TbNews size={20} className="h-5 w-5 flex-shrink-0" />,          href: `/${roleSlug}/content`,    permissions: ["content:read"] },
+    { title: "Meetings",   icon: <TbCalendarEvent size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/meetings`,   permissions: ["meetings:read"] },
     { title: "Analytics",  icon: <TbChartArcs size={20} className="h-5 w-5 flex-shrink-0" />,     href: `/${roleSlug}/analytics`,  permissions: ["analytics:read"] },
     { title: "Settings",   icon: <RiSettings3Fill size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/settings`,   permissions: ["settings:read", "docsAccess:read", "provisioning:read"] },
   ].filter((item) => has(...item.permissions));
