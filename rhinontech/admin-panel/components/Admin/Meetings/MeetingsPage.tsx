@@ -97,8 +97,11 @@ export function MeetingsPage() {
     });
     if (!ok) return;
     try {
-      await apiFetch(`/meetings/${event.id}`, { method: "DELETE" });
+      const res = await apiFetch<{ inviteSent?: boolean }>(`/meetings/${event.id}`, { method: "DELETE" });
       toast.success("Meeting deleted");
+      if (event.attendees.length > 0 && !res.inviteSent) {
+        toast.warning("Removed from the calendar, but the cancellation email didn't go out.");
+      }
       fetchEvents();
     } catch (err: any) {
       toast.error(err.message || "Couldn't delete the meeting");

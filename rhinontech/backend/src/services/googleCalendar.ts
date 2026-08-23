@@ -97,6 +97,10 @@ async function requireClient(): Promise<CalendarClient> {
 
 export interface MeetingEvent {
   id: string;
+  /** Stable across updates — used as the .ics UID so REQUEST/CANCEL match up. */
+  iCalUID: string | null;
+  /** Google bumps this on every edit; the .ics SEQUENCE rides on it. */
+  sequence: number;
   summary: string;
   description: string | null;
   location: string | null;
@@ -119,6 +123,8 @@ function toMeetingEvent(event: calendar_v3.Schema$Event): MeetingEvent {
   const allDay = Boolean(event.start?.date && !event.start?.dateTime);
   return {
     id: event.id!,
+    iCalUID: event.iCalUID ?? null,
+    sequence: event.sequence ?? 0,
     summary: event.summary || "(no title)",
     description: event.description ?? null,
     location: event.location ?? null,
@@ -164,7 +170,7 @@ export async function createEvent(input: EventInput): Promise<MeetingEvent> {
   const { data } = await calendar.events.insert({
     calendarId,
     conferenceDataVersion: input.addMeet ? 1 : 0,
-    sendUpdates: "all", // attendees are real people being invited — let Google notify them
+    sendUpdates: "none", // we email the .ics ourselves (see meetingInvite.ts) — Google must not double-send
     requestBody: {
       summary: input.summary,
       description: input.description || undefined,
@@ -194,7 +200,7 @@ export async function updateEvent(eventId: string, input: Partial<EventInput>): 
   const { data } = await calendar.events.patch({
     calendarId,
     eventId,
-    sendUpdates: "all",
+    sendUpdates: "none",
     requestBody: {
       ...(input.summary !== undefined ? { summary: input.summary } : {}),
       ...(input.description !== undefined ? { description: input.description || undefined } : {}),
@@ -207,7 +213,13 @@ export async function updateEvent(eventId: string, input: Partial<EventInput>): 
   return toMeetingEvent(data);
 }
 
+export async function getEvent(eventId: string): Promise<MeetingEvent> {
+  const { calendar, calendarId } = await requireClient();
+  const { data } = await calendar.events.get({ calendarId, eventId });
+  return toMeetingEvent(data);
+}
+
 export async function deleteEvent(eventId: string): Promise<void> {
   const { calendar, calendarId } = await requireClient();
-  await calendar.events.delete({ calendarId, eventId, sendUpdates: "all" });
+  await calendar.events.delete({ calendarId, eventId, sendUpdates: "none" });
 }

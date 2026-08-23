@@ -5,11 +5,31 @@ import {
   createEvent,
   deleteEvent,
   getConnectionStatus,
+  getEvent,
   listEvents,
   updateEvent,
+  type MeetingEvent,
 } from "../services/googleCalendar";
+import { sendMeetingInvite, type InviteKind } from "../services/meetingInvite";
 
 const router = Router();
+
+// Google is told not to email anyone (sendUpdates: "none") so the invite comes from the
+// teammate who made the change, over SES, with our own .ics. A failed send must not undo a
+// calendar change that already succeeded — report it instead and let the UI warn.
+async function notifyAttendees(event: MeetingEvent, kind: InviteKind, req: AuthRequest): Promise<boolean> {
+  const email = req.user?.companyEmail;
+  if (!email) {
+    console.warn(`No companyEmail for user ${req.user?.userId} — skipping ${kind} invite for event ${event.id}`);
+    return false;
+  }
+  try {
+    return await sendMeetingInvite(event, kind, { email, name: req.user!.fullName });
+  } catch (err: any) {
+    console.error(`Failed to send meeting ${kind} invite for ${event.id}:`, err.message);
+    return false;
+  }
+}
 
 // The shared support@rhinon.tech calendar isn't connected yet — surface that as a clean 409
 // the UI can turn into "ask an admin to connect it", not a 500.
@@ -98,7 +118,8 @@ router.post("/", authenticate, authorize("meetings:write"), async (req: AuthRequ
       addMeet: Boolean(req.body?.addMeet),
     });
 
-    res.status(201).json(event);
+    const invited = await notifyAttendees(event, "request", req);
+    res.status(201).json({ ...event, inviteSent: invited });
   } catch (error: any) {
     handleError(error, res, "Failed to create meeting");
   }
@@ -143,7 +164,11 @@ router.patch("/:id", authenticate, authorize("meetings:write"), async (req: Auth
       return;
     }
 
-    res.json(await updateEvent(req.params.id, patch));
+    const event = await updateEvent(req.params.id, patch);
+    // Same UID with a bumped SEQUENCE, so clients update the existing entry in place
+    // rather than showing a second copy of the meeting.
+    const invited = await notifyAttendees(event, "request", req);
+    res.json({ ...event, inviteSent: invited });
   } catch (error: any) {
     if (error.code === 404 || error.response?.status === 404) {
       res.status(404).json({ message: "That meeting no longer exists on the calendar" });
@@ -156,8 +181,24 @@ router.patch("/:id", authenticate, authorize("meetings:write"), async (req: Auth
 // DELETE /meetings/:id
 router.delete("/:id", authenticate, authorize("meetings:write"), async (req: AuthRequest, res: Response) => {
   try {
+    // Read it first — once it's deleted we can't recover the attendee list or the iCalUID
+    // that the CANCEL notice has to reference.
+    let existing: MeetingEvent | null = null;
+    try {
+      existing = await getEvent(req.params.id);
+    } catch (err: any) {
+      if (!(err instanceof CalendarNotConnectedError)) {
+        console.warn(`Couldn't read event ${req.params.id} before delete:`, err.message);
+      } else {
+        throw err;
+      }
+    }
+
     await deleteEvent(req.params.id);
-    res.json({ ok: true });
+
+    const invited = existing ? await notifyAttendees(existing, "cancel", req) : false;
+    res.json({ ok: true, inviteSent: invited });
+    return;
   } catch (error: any) {
     // Already gone on Google's side — treat as success so the UI converges.
     if (error.code === 404 || error.code === 410 || error.response?.status === 404 || error.response?.status === 410) {

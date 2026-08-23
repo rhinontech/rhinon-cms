@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import MailComposer from "nodemailer/lib/mail-composer";
 import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
 
 type SendEmailPayload = {
@@ -14,8 +15,11 @@ type SendEmailPayload = {
   subject: string;
   html?: string;
   text?: string;
-  // Attachments only go out over SMTP (SES "Simple" content doesn't support them)
   attachments?: { filename: string; content: Buffer; contentType?: string }[];
+  // A calendar invite. Emitted as a `text/calendar; method=…` alternative part
+  // (what makes Gmail/Outlook/Apple Mail show RSVP buttons) plus a .ics attachment
+  // for clients that only understand the file.
+  icalEvent?: { method: string; content: string; filename?: string };
 };
 
 const sesRegion = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION;
@@ -54,6 +58,7 @@ export async function sendEmail({
   html,
   text,
   attachments,
+  icalEvent,
 }: SendEmailPayload) {
   const toAddresses = toArray(to);
   const fromAddress = from || sesFromEmail;
@@ -66,9 +71,34 @@ export async function sendEmail({
     throw new Error("No sender email configured");
   }
 
-  if (attachments?.length) {
+  // SES's "Simple" content can't carry attachments or a calendar part, so those have to go
+  // out as raw MIME. Gmail SMTP stays the default for attachments (unchanged behaviour for
+  // existing callers like the letter PDFs); SES raw is used when it's explicitly asked for,
+  // or when it's the only transport configured.
+  const needsMime = Boolean(attachments?.length || icalEvent);
+  if (needsMime) {
+    const useSesRaw = sesClient && (via === "ses" || !smtpTransporter);
+    if (useSesRaw) {
+      const mime = await new MailComposer({
+        from: `"${displayName}" <${fromAddress}>`,
+        replyTo,
+        to: toAddresses,
+        cc: cc.length ? cc : undefined,
+        subject,
+        html,
+        text,
+        attachments,
+        icalEvent,
+      })
+        .compile()
+        .build();
+
+      await sesClient!.send(new SendEmailCommand({ Content: { Raw: { Data: mime } } }));
+      return;
+    }
+
     if (!smtpTransporter) {
-      throw new Error("Attachments require an SMTP transport (Gmail). Configure GMAIL_USER/GMAIL_APP_PASSWORD.");
+      throw new Error("Sending attachments requires SES or SMTP credentials to be configured.");
     }
     await smtpTransporter.sendMail({
       from: `"${displayName}" <${fromAddress}>`,
@@ -79,6 +109,7 @@ export async function sendEmail({
       html,
       text,
       attachments,
+      icalEvent,
     });
     return;
   }

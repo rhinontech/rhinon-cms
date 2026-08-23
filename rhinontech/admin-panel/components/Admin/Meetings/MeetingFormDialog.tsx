@@ -87,12 +87,15 @@ export function MeetingFormDialog({ event, defaultDate, onClose, onSaved }: Prop
         attendees: emails,
       };
 
-      if (isEdit) {
-        await apiFetch(`/meetings/${event!.id}`, { method: "PATCH", body: JSON.stringify(payload) });
-        toast.success("Meeting updated");
-      } else {
-        await apiFetch("/meetings", { method: "POST", body: JSON.stringify({ ...payload, addMeet }) });
-        toast.success("Meeting created");
+      const saved = isEdit
+        ? await apiFetch<{ inviteSent?: boolean }>(`/meetings/${event!.id}`, { method: "PATCH", body: JSON.stringify(payload) })
+        : await apiFetch<{ inviteSent?: boolean }>("/meetings", { method: "POST", body: JSON.stringify({ ...payload, addMeet }) });
+
+      toast.success(isEdit ? "Meeting updated" : "Meeting created");
+      // The calendar change already landed — only the invite email failed, so say so
+      // rather than letting the attendee silently never hear about it.
+      if (emails.length > 0 && !saved.inviteSent) {
+        toast.warning("Saved to the calendar, but the invite email didn't go out. Let attendees know directly.");
       }
       onSaved();
       onClose();
@@ -135,7 +138,9 @@ export function MeetingFormDialog({ event, defaultDate, onClose, onSaved }: Prop
               onChange={(e) => setAttendees(e.target.value)}
               placeholder="someone@example.com, another@example.com"
             />
-            <p className="text-[11px] text-muted-foreground">Google emails them the invite automatically.</p>
+            <p className="text-[11px] text-muted-foreground">
+              They&apos;ll get a calendar invite emailed from your address — works in Gmail, Outlook and Apple Mail.
+            </p>
           </div>
 
           <div className="space-y-1.5">
