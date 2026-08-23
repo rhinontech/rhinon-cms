@@ -170,6 +170,7 @@ router.delete("/:id/leads/:leadId", authorize("outreach:write"), async (req: Aut
 function fillPlaceholders(text: string, lead: any, senderName: string): string {
   return text
     .replace(/\{\{\s*(?:lead\.)?name\s*\}\}/gi, lead.name)
+    .replace(/\{\{\s*(?:lead\.)?email\s*\}\}/gi, lead.email || "")
     .replace(/\{\{\s*(?:lead\.)?company\s*\}\}/gi, lead.company)
     .replace(/\{\{\s*(?:lead\.)?title\s*\}\}/gi, lead.title || "colleague")
     .replace(/\{\{\s*sender\.name\s*\}\}/gi, senderName)

@@ -44,6 +44,7 @@ import { Input } from "@/components/ui/input";
 
 const VARIABLES = [
   { label: "Name", token: "{{name}}" },
+  { label: "Email", token: "{{email}}" },
   { label: "Company", token: "{{company}}" },
   { label: "Title", token: "{{title}}" },
 ];
