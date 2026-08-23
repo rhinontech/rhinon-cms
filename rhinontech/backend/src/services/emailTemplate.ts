@@ -74,8 +74,9 @@ export function toEmailHtml(richTextHtml: string, imageUrl?: string, trackingPix
     .tiptap-content li { margin:0 0 6px 0; }
     .tiptap-content a { color:#4f46e5; }
     @media only screen and (max-width:620px) {
-      .container { width:100% !important; border-radius:0 !important; }
-      .px { padding-left:24px !important; padding-right:24px !important; }
+      .outer-cell { padding: 16px 0 !important; }
+      .container { width:100% !important; max-width:100% !important; border-radius:0 !important; box-shadow:none !important; }
+      .px { padding-left:16px !important; padding-right:16px !important; padding-top:28px !important; padding-bottom:24px !important; }
       .logo { width:150px !important; }
     }
     @media (prefers-color-scheme: dark) {
@@ -91,24 +92,17 @@ export function toEmailHtml(richTextHtml: string, imageUrl?: string, trackingPix
 <body class="email-bg" style="margin:0;padding:0;width:100%;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all">${preheader}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="email-bg" style="background:#f4f4f5">
-    <tr><td align="center" style="padding:40px 16px">
+    <tr><td class="outer-cell" align="center" style="padding:40px 16px">
       <!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0"><tr><td><![endif]-->
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" class="container card" style="width:600px;max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 10px 28px rgba(0,0,0,0.06)">
-        <tr><td align="center" style="background:#0f0f0f;padding:30px 32px">
-          <img class="logo" src="${BRAND_LOGO_URL}" alt="Rhinon Labs" width="170" style="display:block;width:170px;max-width:170px;height:auto;border:0" />
-        </td></tr>
+        
         <tr><td style="height:3px;line-height:3px;font-size:0;background:#4f46e5">&nbsp;</td></tr>
         ${imageBlock}
         <tr><td class="px" style="padding:38px 40px 8px">
           <div class="tiptap-content">${richTextHtml}</div>
         </td></tr>
 
-        <tr><td class="px divider" style="padding:18px 40px 32px;border-top:1px solid #ececed">
-          <p class="muted" style="margin:0;font-size:12px;line-height:1.6;color:#9ca3af">
-            Rhinon Labs is a product of Rhinon Tech Pvt&nbsp;Ltd${COMPANY_ADDRESS ? ` &middot; ${esc(COMPANY_ADDRESS)}` : ""}.<br>
-            You received this because we believe Rhinon Labs may be a fit for your operations. Not interested? Just reply &ldquo;unsubscribe&rdquo; and we&rsquo;ll remove you.
-          </p>
-        </td></tr>
+        
       </table>
       <!--[if mso]></td></tr></table><![endif]-->
     </td></tr>
