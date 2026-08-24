@@ -40,7 +40,8 @@ const PUBLIC_EVENT_DETAIL_FIELDS = [
 ] as const;
 
 // Fire-and-forget heads-up to the team when a new lead lands. Never throws.
-async function notifyNewLead(
+// Exported so routes/scheduleCall.ts can reuse it rather than keeping a second copy.
+export async function notifyNewLead(
   lead: {
     name: string;
     email: string;

@@ -155,6 +155,38 @@ export async function listEvents(timeMin: Date, timeMax: Date): Promise<MeetingE
   return (data.items || []).filter((e) => e.status !== "cancelled").map(toMeetingEvent);
 }
 
+/**
+ * Busy windows on the shared calendar, used to grey out slots on the public booking page.
+ * Built from events.list rather than freebusy.query because freebusy needs a broader scope
+ * (calendar.readonly) than the calendar.events one this integration consents to.
+ * Events explicitly marked "Free" (transparent) don't block — matching Google's own semantics.
+ */
+export async function getBusyIntervals(timeMin: Date, timeMax: Date): Promise<{ start: Date; end: Date }[]> {
+  const { calendar, calendarId } = await requireClient();
+  const { data } = await calendar.events.list({
+    calendarId,
+    timeMin: timeMin.toISOString(),
+    timeMax: timeMax.toISOString(),
+    singleEvents: true,
+    orderBy: "startTime",
+    maxResults: 2500,
+  });
+
+  const busy: { start: Date; end: Date }[] = [];
+  for (const e of data.items || []) {
+    if (e.status === "cancelled" || e.transparency === "transparent") continue;
+
+    // All-day entries (a holiday, an offsite) carry `date` not `dateTime` and block the
+    // whole IST day; `end.date` is exclusive per the API.
+    const start = e.start?.dateTime ? new Date(e.start.dateTime) : e.start?.date ? new Date(`${e.start.date}T00:00:00+05:30`) : null;
+    const end = e.end?.dateTime ? new Date(e.end.dateTime) : e.end?.date ? new Date(`${e.end.date}T00:00:00+05:30`) : null;
+    if (!start || !end || isNaN(start.getTime()) || isNaN(end.getTime())) continue;
+
+    busy.push({ start, end });
+  }
+  return busy;
+}
+
 export interface EventInput {
   summary: string;
   description?: string | null;
