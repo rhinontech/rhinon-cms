@@ -1,4 +1,6 @@
-import { google, calendar_v3 } from "googleapis";
+// Scoped package, not the `googleapis` barrel: the barrel pulls type definitions for every
+// Google API (~200MB) and OOMs `tsc` on the EC2 box during `npm run build`.
+import { auth, calendar as googleCalendar, calendar_v3 } from "@googleapis/calendar";
 import crypto from "crypto";
 import { GoogleCalendarToken, getActiveCalendarToken } from "../models/GoogleCalendarToken";
 
@@ -20,7 +22,7 @@ export function getOAuthCredentials(): { clientId: string; clientSecret: string;
 export function buildOAuthClient() {
   const creds = getOAuthCredentials();
   if (!creds) return null;
-  return new google.auth.OAuth2(creds.clientId, creds.clientSecret, creds.redirectUri);
+  return new auth.OAuth2(creds.clientId, creds.clientSecret, creds.redirectUri);
 }
 
 interface CalendarClient {
@@ -39,7 +41,7 @@ async function getCalendarClient(): Promise<CalendarClient | null> {
   const stored = await getActiveCalendarToken();
   if (!stored?.refreshToken) return null;
 
-  const oauth2Client = new google.auth.OAuth2(creds.clientId, creds.clientSecret, creds.redirectUri);
+  const oauth2Client = new auth.OAuth2(creds.clientId, creds.clientSecret, creds.redirectUri);
   oauth2Client.setCredentials({ refresh_token: stored.refreshToken });
 
   oauth2Client.on("tokens", (tokens) => {
@@ -54,7 +56,7 @@ async function getCalendarClient(): Promise<CalendarClient | null> {
   });
 
   return {
-    calendar: google.calendar({ version: "v3", auth: oauth2Client }),
+    calendar: googleCalendar({ version: "v3", auth: oauth2Client }),
     calendarId: stored.calendarId || "primary",
   };
 }
