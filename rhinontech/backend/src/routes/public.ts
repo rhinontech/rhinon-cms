@@ -1,5 +1,5 @@
 import express, { Router, Response, Request } from "express";
-import { ClientRequest, Project, User, Lead, Blog, CaseStudy, Event, PageView, DocsAccess, WorkflowEnrollment, CampaignActivity, Visitor } from "../models";
+import { ClientRequest, Project, User, Lead, Blog, CaseStudy, Event, PageView, DocsAccess, WorkflowEnrollment, CampaignActivity, Visitor, Unsubscribe } from "../models";
 import type { BlogDomain } from "../models/Blog";
 import { sendEmail } from "../services/mailer";
 import { env } from "../config/env";
@@ -646,6 +646,46 @@ router.get("/track/click", async (req: Request, res: Response) => {
   }
 
   res.redirect(302, targetUrl);
+});
+
+// POST /public/unsubscribe — captures email unsubscribe reason and records it
+router.post("/unsubscribe", async (req: Request, res: Response) => {
+  try {
+    const b = req.body || {};
+    const emailRaw = (b.email ?? "").toString().trim();
+    const email = emailRaw.toLowerCase();
+    const reason = (b.reason ?? "").toString().trim();
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      res.status(400).json({ message: "A valid email address is required" });
+      return;
+    }
+
+    if (!reason) {
+      res.status(400).json({ message: "Please provide a reason for unsubscribing" });
+      return;
+    }
+
+    const unsubscribeEntry = await Unsubscribe.create({
+      email,
+      reason,
+    });
+
+    // Optionally update lead status if lead exists with this email
+    // try {
+    //   const existingLead = await Lead.findOne({ where: { email } });
+    //   if (existingLead && existingLead.status !== "Unsubscribed") {
+    //     await existingLead.update({ status: "Unsubscribed" });
+    //   }
+    // } catch {
+    //   // Ignore lead update failure
+    // }
+
+    res.status(201).json({ success: true, message: "Unsubscribed successfully", data: unsubscribeEntry });
+  } catch (err: any) {
+    console.error("Failed to record unsubscribe:", err);
+    res.status(500).json({ message: "Failed to process unsubscribe request" });
+  }
 });
 
 export default router;

@@ -1,5 +1,5 @@
 import { Router, Response } from "express";
-import { Campaign, CampaignTemplate, Lead, CampaignActivity, User, InboxEmail } from "../models";
+import { Campaign, CampaignTemplate, Lead, CampaignActivity, User, InboxEmail, Unsubscribe } from "../models";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 import { env } from "../config/env";
 import { generateAIEmailDraft, generateAISocialDraft, generateTemplateWithAI } from "../services/gemini";
@@ -325,10 +325,26 @@ router.post("/:id/send", authorize("outreach:write"), async (req: AuthRequest, r
       for (const lead of leads) {
         try {
           if (!lead.aiDraft) continue;
+
+          // Check if user has unsubscribed
+          const isUnsubscribed = await Unsubscribe.findOne({
+            where: { email: lead.email.toLowerCase().trim() },
+          });
+          if (isUnsubscribed) {
+            await lead.update({ status: "Unsubscribed" });
+            await CampaignActivity.create({
+              leadId: lead.id,
+              campaignId: campaign.id,
+              type: "Other",
+              content: `Outreach email skipped: ${lead.email} has unsubscribed.`,
+            });
+            continue;
+          }
+
           const subject = campaign.subject
             ? fillPlaceholders(campaign.subject, lead, senderName)
             : `Optimizing ${lead.company}'s potential`;
-          const htmlBody = toEmailHtml(lead.aiDraft, undefined, openTrackingPixelUrl(lead.id, campaign.id));
+          const htmlBody = toEmailHtml(lead.aiDraft, undefined, openTrackingPixelUrl(lead.id, campaign.id), lead.email);
           const plainText = stripHtml(lead.aiDraft);
           await sendEmail({ to: lead.email, from: fromEmail, fromName: senderName, via: "ses", subject, html: htmlBody, text: plainText });
 
@@ -498,10 +514,24 @@ router.get("/cron/run", async (req, res) => {
       for (const lead of leadsReadyToSend) {
         try {
           if (!lead.aiDraft) continue;
+
+          // Check if user has unsubscribed
+          const isUnsubscribed = await Unsubscribe.findOne({
+            where: { email: lead.email.toLowerCase().trim() },
+          });
+          if (isUnsubscribed) {
+            await lead.update({ status: "Unsubscribed" });
+            if (campaign.leadsProcessed < campaign.leadsTotal) {
+              await campaign.increment("leadsProcessed");
+            }
+            logs.push(`   [Email Skipped] ${lead.email} is in the unsubscribe list.`);
+            continue;
+          }
+
           const subject = campaign.subject
             ? fillPlaceholders(campaign.subject, lead, senderName)
             : `Optimizing ${lead.company}'s potential`;
-          const htmlBody = toEmailHtml(lead.aiDraft, undefined, openTrackingPixelUrl(lead.id, campaign.id));
+          const htmlBody = toEmailHtml(lead.aiDraft, undefined, openTrackingPixelUrl(lead.id, campaign.id), lead.email);
           const plainText = stripHtml(lead.aiDraft);
           await sendEmail({
             to: lead.email,
@@ -601,7 +631,7 @@ router.get("/:id/stats", authorize("outreach:read"), async (req: AuthRequest, re
     enrolled: leads.length,
     drafted: leads.filter((l: any) => l.aiDraft).length,
     approved: leads.filter((l: any) => l.draftApproved).length,
-    sent: leads.filter((l: any) => ["Emailed", "Replied", "Bounced", "Unsubscribed"].includes(l.status)).length,
+    sent: leads.filter((l: any) => ["Emailed", "Replied", "Bounced"].includes(l.status)).length,
     opened: leads.filter((l: any) => l.emailOpened).length,
     replied: leads.filter((l: any) => l.status === "Replied").length,
     bounced: leads.filter((l: any) => l.status === "Bounced").length,

@@ -1,7 +1,7 @@
 import { Op } from "sequelize";
 import { Workflow } from "../models/Workflow";
 import { WorkflowEnrollment } from "../models/WorkflowEnrollment";
-import { Lead, ContactGroup, ContactGroupMember } from "../models";
+import { Lead, ContactGroup, ContactGroupMember, Unsubscribe } from "../models";
 import { sendEmail } from "./mailer";
 import { toEmailHtml, stripHtml, BACKEND_URL } from "./emailTemplate";
 
@@ -271,51 +271,65 @@ async function executeEnrollmentSteps(
     }
 
     if (nodeType === "send_email") {
-      const subjectTemplate = config.subject || "Updates from Rhinon Labs";
-      const bodyTemplate =
-        config.emailBody || "Hi {{name}},\n\nThank you for choosing us!";
+      const recipientEmail = (enrollment.leadEmail || "").toLowerCase().trim();
 
-      const subject = parseMergeTags(subjectTemplate, enrollment);
-      // .replace(/\n/g, "<br/>") only matters for the plain-text fallback
-      // above — real content from the rich-text editor is already HTML.
-      let richHtml = parseMergeTags(bodyTemplate, enrollment).replace(/\n/g, "<br/>");
+      // Check if user has unsubscribed
+      const isUnsubscribed = recipientEmail
+        ? await Unsubscribe.findOne({ where: { email: recipientEmail } })
+        : null;
 
-      // Rewrite links for click tracking
-      richHtml = richHtml.replace(/<a\s+(?:[^>]*?\s+)?href=["']([^"']+)["']/gi, (match, url) => {
-        if (url && url.startsWith("http") && !url.includes("/public/track/")) {
-          const trackedUrl = `${BACKEND_URL}/public/track/click?e=${enrollment.id}&url=${encodeURIComponent(url)}`;
-          return match.replace(url, trackedUrl);
+      if (isUnsubscribed) {
+        logs.push({
+          timestamp: new Date().toISOString(),
+          step: `Email skipped: ${enrollment.leadEmail} is in the unsubscribe list.`,
+        });
+      } else {
+        const subjectTemplate = config.subject || "Updates from Rhinon Labs";
+        const bodyTemplate =
+          config.emailBody || "Hi {{name}},\n\nThank you for choosing us!";
+
+        const subject = parseMergeTags(subjectTemplate, enrollment);
+        // .replace(/\n/g, "<br/>") only matters for the plain-text fallback
+        // above — real content from the rich-text editor is already HTML.
+        let richHtml = parseMergeTags(bodyTemplate, enrollment).replace(/\n/g, "<br/>");
+
+        // Rewrite links for click tracking
+        richHtml = richHtml.replace(/<a\s+(?:[^>]*?\s+)?href=["']([^"']+)["']/gi, (match, url) => {
+          if (url && url.startsWith("http") && !url.includes("/public/track/")) {
+            const trackedUrl = `${BACKEND_URL}/public/track/click?e=${enrollment.id}&url=${encodeURIComponent(url)}`;
+            return match.replace(url, trackedUrl);
+          }
+          return match;
+        });
+
+        // Same branded wrapper the Outreach campaign engine uses — gives the
+        // rich-text content (lists, bold, links, etc.) the CSS it actually
+        // needs to render across email clients, instead of going out as bare
+        // unstyled HTML. Also carries the open-tracking pixel.
+        const trackingPixelUrl = `${BACKEND_URL}/public/track/open?e=${enrollment.id}`;
+        const htmlBody = toEmailHtml(richHtml, undefined, trackingPixelUrl, enrollment.leadEmail);
+
+        try {
+          await sendEmail({
+            to: enrollment.leadEmail,
+            from: config.fromEmail,
+            fromName: config.fromName || "Rhinon Automation",
+            subject,
+            html: htmlBody,
+            text: stripHtml(richHtml),
+          });
+
+          logs.push({
+            timestamp: new Date().toISOString(),
+            step: `Email sent to ${enrollment.leadEmail}: "${subject}"`,
+          });
+        } catch (err: any) {
+          console.error(`[Workflow Engine] Email dispatch failed for ${enrollment.leadEmail}: `, err.message);
+          logs.push({
+            timestamp: new Date().toISOString(),
+            step: `Email dispatch failed: ${err.message} `,
+          });
         }
-        return match;
-      });
-
-      // Same branded wrapper the Outreach campaign engine uses — gives the
-      // rich-text content (lists, bold, links, etc.) the CSS it actually
-      // needs to render across email clients, instead of going out as bare
-      // unstyled HTML. Also carries the open-tracking pixel.
-      const trackingPixelUrl = `${BACKEND_URL}/public/track/open?e=${enrollment.id}`;
-      const htmlBody = toEmailHtml(richHtml, undefined, trackingPixelUrl);
-
-      try {
-        await sendEmail({
-          to: enrollment.leadEmail,
-          from: config.fromEmail,
-          fromName: config.fromName || "Rhinon Automation",
-          subject,
-          html: htmlBody,
-          text: stripHtml(richHtml),
-        });
-
-        logs.push({
-          timestamp: new Date().toISOString(),
-          step: `Email sent to ${enrollment.leadEmail}: "${subject}"`,
-        });
-      } catch (err: any) {
-        console.error(`[Workflow Engine] Email dispatch failed for ${enrollment.leadEmail}: `, err.message);
-        logs.push({
-          timestamp: new Date().toISOString(),
-          step: `Email dispatch failed: ${err.message} `,
-        });
       }
 
       const nextEdge = edges.find((e) => e.source === currNodeId);

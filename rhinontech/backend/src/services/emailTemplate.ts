@@ -6,6 +6,7 @@
 const BRAND_LOGO_URL = process.env.BRAND_LOGO_URL || "https://www.rhinonlabs.com/Logo_Rhinon_Labs_Light.png";
 const COMPANY_ADDRESS = process.env.COMPANY_ADDRESS || ""; // registered address for compliant footer
 export const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:5002";
+export const FRONTEND_URL = process.env.SITE_URL || process.env.RHINONLABS_URL || process.env.FRONTEND_URL || "https://rhinonlabs.com";
 
 // Plain-text rendering of a rich-text draft — used for the email's text/ part,
 // the inbox snippet, and the preheader, none of which should show raw markup.
@@ -37,7 +38,13 @@ function inlineListStyles(html: string): string {
 // `richTextHtml` is already-formatted HTML from a TipTap rich-text editor.
 // `trackingPixelUrl`, when given, is appended as a hidden 1x1 image so an open
 // can be recorded — omitted entirely for previews/tests where there's no real send to track.
-export function toEmailHtml(richTextHtml: string, imageUrl?: string, trackingPixelUrl?: string): string {
+// `email`, when provided, personalizes the unsubscribe link.
+export function toEmailHtml(
+  richTextHtml: string,
+  imageUrl?: string,
+  trackingPixelUrl?: string,
+  email?: string
+): string {
   const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   richTextHtml = inlineListStyles(richTextHtml);
 
@@ -51,6 +58,10 @@ export function toEmailHtml(richTextHtml: string, imageUrl?: string, trackingPix
   const imageBlock = imageUrl
     ? `<tr><td style="padding:0"><img src="${imageUrl}" alt="" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0" /></td></tr>`
     : "";
+
+  const unsubscribeUrl = email
+    ? `http://localhost:3000/unsubscribe?email=${email}`
+    : `http://localhost:3000/unsubscribe`;
 
   return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
@@ -85,6 +96,7 @@ export function toEmailHtml(richTextHtml: string, imageUrl?: string, trackingPix
       .text, .tiptap-content { color:#e5e7eb !important; }
       .muted { color:#8b8f98 !important; }
       .divider { border-color:#27272a !important; }
+      .unsub-link { color:#a5b4fc !important; }
       a { color:#a5b4fc !important; }
     }
   </style>
@@ -102,6 +114,11 @@ export function toEmailHtml(richTextHtml: string, imageUrl?: string, trackingPix
           <div class="tiptap-content">${richTextHtml}</div>
         </td></tr>
 
+        <tr><td class="px divider" style="padding:16px 40px 24px;border-top:1px solid #f0f0f2;text-align:center;">
+          <p class="muted" style="margin:0;font-size:12px;line-height:1.5;color:#8b8f98;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+            No longer want to receive these emails? <a href="${unsubscribeUrl}" target="_blank" class="unsub-link" style="color:#6366f1;text-decoration:underline;font-weight:500;">unsubscribe</a>
+          </p>
+        </td></tr>
         
       </table>
       <!--[if mso]></td></tr></table><![endif]-->
@@ -111,3 +128,4 @@ export function toEmailHtml(richTextHtml: string, imageUrl?: string, trackingPix
 </body>
 </html>`;
 }
+
