@@ -119,9 +119,11 @@ export function MeetingsPage() {
   };
 
   return (
-    <div className="h-full overflow-auto rounded-xl bg-muted/30">
-      <div className="mx-auto max-w-[1280px] space-y-5 p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+    // Full-bleed, full-height: the header is fixed and the calendar/agenda fill whatever
+    // viewport is left, each scrolling internally rather than the whole page scrolling.
+    <div className="flex h-full flex-col rounded-xl bg-muted/30">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 p-4 sm:p-6">
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Meetings</h1>
             <p className="text-sm text-muted-foreground">
@@ -149,10 +151,10 @@ export function MeetingsPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
             {/* Month grid */}
-            <div className="rounded-xl border bg-white p-4">
-              <div className="mb-4 flex items-center justify-between">
+            <div className="flex min-h-0 flex-col rounded-xl border bg-white p-4">
+              <div className="mb-4 flex shrink-0 items-center justify-between">
                 <span className="text-sm font-semibold">{format(month, "MMMM yyyy")}</span>
                 <div className="flex items-center gap-1">
                   <button onClick={() => setMonth(subMonths(month, 1))} className="rounded-md border p-1.5 hover:bg-stone-100">
@@ -174,36 +176,42 @@ export function MeetingsPage() {
                 </div>
               </div>
 
-              <div className="mb-1 grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase tracking-widest text-stone-400">
+              <div className="mb-1 grid shrink-0 grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase tracking-widest text-stone-400">
                 {WEEKDAYS.map((d) => (
                   <span key={d}>{d}</span>
                 ))}
               </div>
 
-              <div className="grid grid-cols-7 gap-1">
+              {/* 6 equal rows stretch to whatever height is left, so the month always
+                  fills the card instead of leaving dead space underneath. */}
+              <div className="grid min-h-0 flex-1 auto-rows-fr grid-cols-7 gap-1">
                 {gridDays.map((day) => {
                   const dayEvents = eventsByDay.get(dayKey(day)) || [];
                   const inMonth = day.getMonth() === month.getMonth();
                   const selected = isSameDay(day, selectedDay);
+                  // Taller cells fit more chips; keep 2 as the floor on short viewports.
+                  const shown = dayEvents.slice(0, 3);
                   return (
                     <button
                       key={day.toISOString()}
                       onClick={() => setSelectedDay(day)}
                       className={cn(
-                        "flex min-h-[68px] flex-col items-start gap-1 rounded-lg border p-1.5 text-left transition-colors",
+                        "flex min-h-[64px] flex-col items-start gap-1 overflow-hidden rounded-lg border p-1.5 text-left transition-colors",
                         selected ? "border-blue-400 bg-blue-50" : "border-stone-100 hover:bg-stone-50",
                         !inMonth && "opacity-40"
                       )}
                     >
-                      <span className={cn("text-xs font-semibold", isToday(day) && "text-blue-600")}>{format(day, "d")}</span>
-                      <div className="w-full space-y-0.5">
-                        {dayEvents.slice(0, 2).map((e) => (
+                      <span className={cn("shrink-0 text-xs font-semibold", isToday(day) && "text-blue-600")}>
+                        {format(day, "d")}
+                      </span>
+                      <div className="min-h-0 w-full flex-1 space-y-0.5 overflow-hidden">
+                        {shown.map((e) => (
                           <span key={e.id} className="block truncate rounded bg-blue-600/10 px-1 text-[10px] text-blue-800">
                             {e.summary}
                           </span>
                         ))}
-                        {dayEvents.length > 2 && (
-                          <span className="block text-[10px] text-stone-500">+{dayEvents.length - 2} more</span>
+                        {dayEvents.length > shown.length && (
+                          <span className="block text-[10px] text-stone-500">+{dayEvents.length - shown.length} more</span>
                         )}
                       </div>
                     </button>
@@ -212,10 +220,11 @@ export function MeetingsPage() {
               </div>
             </div>
 
-            {/* Selected-day agenda */}
-            <div className="rounded-xl border bg-white p-4">
-              <h2 className="mb-3 text-sm font-semibold">{format(selectedDay, "EEEE, d MMMM")}</h2>
+            {/* Selected-day agenda — scrolls on its own so a busy day never stretches the page */}
+            <div className="flex min-h-0 flex-col rounded-xl border bg-white p-4">
+              <h2 className="mb-3 shrink-0 text-sm font-semibold">{format(selectedDay, "EEEE, d MMMM")}</h2>
 
+              <div className="min-h-0 flex-1 overflow-y-auto">
               {loading ? (
                 <p className="py-8 text-center text-xs text-muted-foreground">Loading…</p>
               ) : selectedEvents.length === 0 ? (
@@ -284,6 +293,7 @@ export function MeetingsPage() {
                   ))}
                 </div>
               )}
+              </div>
             </div>
           </div>
         )}
