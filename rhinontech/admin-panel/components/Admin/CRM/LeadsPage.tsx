@@ -239,16 +239,18 @@ export function LeadsPage() {
 
   return (
     <div className="relative flex h-full min-h-0 w-full overflow-hidden">
-      <main className={cn("flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden glass-panel", isSubNavExpanded ? "lg:rounded-r-xl rounded-xl" : "rounded-xl")}>
-        <div className="flex min-h-16 flex-wrap items-center justify-between gap-3 border-b px-3 sm:px-4 py-2.5 sm:py-0">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+      <main className={cn("flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden glass-panel", isSubNavExpanded ? "lg:rounded-r-xl" : "rounded-xl")}>
+        {/* Single row: the title block absorbs the slack and truncates, so the actions stay
+            pinned right instead of wrapping onto a second line when the detail panel is open. */}
+        <div className="flex min-h-16 flex-nowrap items-center justify-between gap-3 border-b px-3 sm:px-4 py-2.5 sm:py-0">
+          <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
             <SubNavToggle />
-            <div className="min-w-0">
-              <h1 className="text-base font-semibold tracking-tight text-gray-900">Leads</h1>
-              <p className="hidden text-xs text-gray-500 sm:block truncate">Every lead across the business — website, platforms, imports and manual entries.</p>
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate text-base font-semibold tracking-tight text-gray-900">Leads</h1>
+              <p className="hidden truncate text-xs text-gray-500 lg:block">Every lead across the business — website, platforms, imports and manual entries.</p>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <button onClick={() => setShowImport(true)} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-2.5 sm:px-3 py-1.5 text-xs font-medium hover:bg-stone-100">
               <TbUpload size={14} />
               <span className="hidden xs:inline sm:inline">Import CSV</span>
