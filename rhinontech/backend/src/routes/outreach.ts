@@ -1,5 +1,5 @@
 import { Router, Response } from "express";
-import { Lead, Campaign, CampaignActivity, InboxEmail } from "../models";
+import { Lead, Campaign, CampaignActivity, InboxEmail, Unsubscribe } from "../models";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 import { sendEmail } from "../services/mailer";
 
@@ -22,6 +22,16 @@ router.post("/send", authorize("outreach:write"), async (req: AuthRequest, res: 
       res.status(404).json({ message: "Lead not found" });
       return;
     }
+
+    // Check if lead has unsubscribed
+    // const isUnsubscribed = await Unsubscribe.findOne({
+    //   where: { email: lead.email.toLowerCase().trim() },
+    // });
+    // if (isUnsubscribed) {
+    //   await lead.update({ status: "Unsubscribed" });
+    //   res.status(400).json({ message: "Cannot send email: This recipient is in the unsubscribe list." });
+    //   return;
+    // }
 
     const fromEmail = req.user!.companyEmail || "admin@rhinontech.in";
 

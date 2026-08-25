@@ -20,7 +20,7 @@ export function FunnelStrip({
     enrolled: leads.length,
     drafted: leads.filter((l) => l.aiDraft).length,
     approved: leads.filter((l) => l.draftApproved).length,
-    sent: leads.filter((l) => ["Emailed", "Replied", "Bounced", "Unsubscribed"].includes(l.status)).length,
+    sent: leads.filter((l) => ["Emailed", "Replied", "Bounced"].includes(l.status)).length,
     opened: leads.filter((l) => l.emailOpened).length,
     replied: leads.filter((l) => l.status === "Replied").length,
     bounced: leads.filter((l) => l.status === "Bounced").length,

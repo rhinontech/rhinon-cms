@@ -42,6 +42,7 @@ import { Workflow } from "./Workflow";
 import { WorkflowEnrollment } from "./WorkflowEnrollment";
 import { Visitor } from "./Visitor";
 import { GoogleCalendarToken } from "./GoogleCalendarToken";
+import { Unsubscribe } from "./Unsubscribe";
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/database";
 
@@ -250,6 +251,7 @@ export {
   WorkflowEnrollment,
   Visitor,
   GoogleCalendarToken,
+  Unsubscribe,
 };
 
 export async function syncDatabase(force = false) {

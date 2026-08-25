@@ -171,3 +171,24 @@ export async function bookScheduleCall(payload: ScheduleCallPayload): Promise<Sc
   return res.json();
 }
 
+
+
+export interface UnsubscribePayload {
+  email: string;
+  reason: string;
+}
+
+export async function submitUnsubscribe(payload: UnsubscribePayload): Promise<{ success: boolean; message?: string }> {
+  const res = await fetch(`${API_BASE}/public/unsubscribe`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.message || "Failed to unsubscribe. Please try again.");
+  }
+  return data;
+}
