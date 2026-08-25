@@ -1,4 +1,6 @@
-import { google, calendar_v3 } from "googleapis";
+// Scoped package, not the `googleapis` barrel: the barrel pulls type definitions for every
+// Google API (~200MB) and OOMs `tsc` on the EC2 box during `npm run build`.
+import { auth, calendar as googleCalendar, calendar_v3 } from "@googleapis/calendar";
 import crypto from "crypto";
 import { GoogleCalendarToken, getActiveCalendarToken } from "../models/GoogleCalendarToken";
 
@@ -20,7 +22,7 @@ export function getOAuthCredentials(): { clientId: string; clientSecret: string;
 export function buildOAuthClient() {
   const creds = getOAuthCredentials();
   if (!creds) return null;
-  return new google.auth.OAuth2(creds.clientId, creds.clientSecret, creds.redirectUri);
+  return new auth.OAuth2(creds.clientId, creds.clientSecret, creds.redirectUri);
 }
 
 interface CalendarClient {
@@ -39,7 +41,7 @@ async function getCalendarClient(): Promise<CalendarClient | null> {
   const stored = await getActiveCalendarToken();
   if (!stored?.refreshToken) return null;
 
-  const oauth2Client = new google.auth.OAuth2(creds.clientId, creds.clientSecret, creds.redirectUri);
+  const oauth2Client = new auth.OAuth2(creds.clientId, creds.clientSecret, creds.redirectUri);
   oauth2Client.setCredentials({ refresh_token: stored.refreshToken });
 
   oauth2Client.on("tokens", (tokens) => {
@@ -54,7 +56,7 @@ async function getCalendarClient(): Promise<CalendarClient | null> {
   });
 
   return {
-    calendar: google.calendar({ version: "v3", auth: oauth2Client }),
+    calendar: googleCalendar({ version: "v3", auth: oauth2Client }),
     calendarId: stored.calendarId || "primary",
   };
 }
@@ -153,6 +155,38 @@ export async function listEvents(timeMin: Date, timeMax: Date): Promise<MeetingE
     maxResults: 2500,
   });
   return (data.items || []).filter((e) => e.status !== "cancelled").map(toMeetingEvent);
+}
+
+/**
+ * Busy windows on the shared calendar, used to grey out slots on the public booking page.
+ * Built from events.list rather than freebusy.query because freebusy needs a broader scope
+ * (calendar.readonly) than the calendar.events one this integration consents to.
+ * Events explicitly marked "Free" (transparent) don't block — matching Google's own semantics.
+ */
+export async function getBusyIntervals(timeMin: Date, timeMax: Date): Promise<{ start: Date; end: Date }[]> {
+  const { calendar, calendarId } = await requireClient();
+  const { data } = await calendar.events.list({
+    calendarId,
+    timeMin: timeMin.toISOString(),
+    timeMax: timeMax.toISOString(),
+    singleEvents: true,
+    orderBy: "startTime",
+    maxResults: 2500,
+  });
+
+  const busy: { start: Date; end: Date }[] = [];
+  for (const e of data.items || []) {
+    if (e.status === "cancelled" || e.transparency === "transparent") continue;
+
+    // All-day entries (a holiday, an offsite) carry `date` not `dateTime` and block the
+    // whole IST day; `end.date` is exclusive per the API.
+    const start = e.start?.dateTime ? new Date(e.start.dateTime) : e.start?.date ? new Date(`${e.start.date}T00:00:00+05:30`) : null;
+    const end = e.end?.dateTime ? new Date(e.end.dateTime) : e.end?.date ? new Date(`${e.end.date}T00:00:00+05:30`) : null;
+    if (!start || !end || isNaN(start.getTime()) || isNaN(end.getTime())) continue;
+
+    busy.push({ start, end });
+  }
+  return busy;
 }
 
 export interface EventInput {

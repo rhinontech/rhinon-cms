@@ -113,6 +113,66 @@ export async function createPlatformLead(payload: PlatformLeadPayload): Promise<
   }
 }
 
+export interface AvailabilitySlot {
+  startTime: string;
+  endTime: string;
+  available: boolean;
+}
+
+export interface AvailabilityResponse {
+  date: string;
+  timezone: string;
+  slots: AvailabilitySlot[];
+}
+
+/** Real availability off the shared Rhinon calendar — booked slots come back available:false. */
+export async function getScheduleCallAvailability(dateStr: string): Promise<AvailabilityResponse> {
+  const res = await fetch(`${API_BASE}/public/schedule-call/availability?date=${encodeURIComponent(dateStr)}`, {
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    const err = new Error(errData.message || "Could not load available times") as Error & { code?: string };
+    err.code = errData.code;
+    throw err;
+  }
+  return res.json();
+}
+
+export interface ScheduleCallPayload extends Omit<PlatformLeadPayload, "source"> {
+  /** ISO start of the chosen slot. */
+  startTime: string;
+  timezone: string;
+}
+
+export interface ScheduleCallResult {
+  ok: boolean;
+  /** false when the calendar write failed — the enquiry is saved, but nothing is booked yet. */
+  booked: boolean;
+  inviteSent: boolean;
+  booking: { startTime: string; endTime: string; meetLink: string | null };
+}
+
+export async function bookScheduleCall(payload: ScheduleCallPayload): Promise<ScheduleCallResult> {
+  const res = await fetch(`${API_BASE}/public/schedule-call`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    const err = new Error(errData.message || "Could not book that time") as Error & { code?: string };
+    err.code = errData.code;
+    throw err;
+  }
+  return res.json();
+}
+
+
+
 export interface UnsubscribePayload {
   email: string;
   reason: string;
@@ -126,12 +186,9 @@ export async function submitUnsubscribe(payload: UnsubscribePayload): Promise<{ 
     },
     body: JSON.stringify(payload),
   });
-
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new Error(data.message || "Failed to unsubscribe. Please try again.");
   }
   return data;
 }
-
-

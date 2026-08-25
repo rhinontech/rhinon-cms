@@ -4,8 +4,8 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Calendar, Clock, Globe, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
-import { format, addMonths, subMonths, isBefore, startOfMonth, getDay, getDaysInMonth, isToday } from "date-fns";
-import { createPlatformLead } from "@/lib/api";
+import { format, addMonths, subMonths, isBefore, startOfMonth, getDay, getDaysInMonth } from "date-fns";
+import { bookScheduleCall, getScheduleCallAvailability, type AvailabilitySlot } from "@/lib/api";
 
 interface SchedulerCoreProps {
   /** Present when embedded in the SchedulerModal overlay — shows the X button and
@@ -13,54 +13,30 @@ interface SchedulerCoreProps {
   onClose?: () => void;
 }
 
-// Generate all 48 half-hour slots for a 24-hour day dynamically
-const TIME_SLOTS_12H = Array.from({ length: 48 }, (_, i) => {
-  const hour = Math.floor(i / 2);
-  const min = (i % 2) * 30;
-  const ampm = hour >= 12 ? "pm" : "am";
-  const displayH = hour % 12 === 0 ? 12 : hour % 12;
-  const minStr = min === 0 ? "00" : "30";
-  return `${displayH}:${minStr}${ampm}`;
-});
-
-const TIME_SLOTS_24H = Array.from({ length: 48 }, (_, i) => {
-  const hour = Math.floor(i / 2);
-  const min = (i % 2) * 30;
-  const hourStr = hour.toString().padStart(2, "0");
-  const minStr = min === 0 ? "00" : "30";
-  return `${hourStr}:${minStr}`;
-});
-
-// Helpers to get end times of 30-min duration slots
-const getEndTime12h = (i: number): string => {
-  const nextSlot = (i + 1) % 48;
-  const hour = Math.floor(nextSlot / 2);
-  const min = (nextSlot % 2) * 30;
-  const ampm = hour >= 12 ? "pm" : "am";
-  const displayH = hour % 12 === 0 ? 12 : hour % 12;
-  const minStr = min === 0 ? "00" : "30";
-  return `${displayH}:${minStr}${ampm}`;
-};
-
-const getEndTime24h = (i: number): string => {
-  const nextSlot = (i + 1) % 48;
-  const hour = Math.floor(nextSlot / 2);
-  const min = (nextSlot % 2) * 30;
-  const hourStr = hour.toString().padStart(2, "0");
-  const minStr = min === 0 ? "00" : "30";
-  return `${hourStr}:${minStr}`;
-};
+/** Slots arrive as UTC instants; render them in whichever zone the visitor is in. */
+const slotLabel = (iso: string, timezone: string, is24h: boolean) =>
+  new Date(iso).toLocaleTimeString("en-US", {
+    hour: is24h ? "2-digit" : "numeric",
+    minute: "2-digit",
+    hour12: !is24h,
+    timeZone: timezone,
+  });
 
 export default function SchedulerCore({ onClose }: SchedulerCoreProps) {
   const [step, setStep] = useState(1); // 1: Date & Time, 2: Form, 3: Success
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<AvailabilitySlot | null>(null);
+  const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [slotsError, setSlotsError] = useState<string | null>(null);
   const [is24h, setIs24h] = useState(false);
   const [timezone, setTimezone] = useState("Asia/Kolkata");
   const [countryCode, setCountryCode] = useState("+91");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [meetLink, setMeetLink] = useState<string | null>(null);
+  const [booked, setBooked] = useState(true);
 
   // Form State matching Cal.com image layout
   const [formData, setFormData] = useState({
@@ -81,6 +57,40 @@ export default function SchedulerCore({ onClose }: SchedulerCoreProps) {
       setTimezone("Asia/Kolkata");
     }
   }, []);
+
+  // Pull real availability off the Rhinon calendar whenever the date changes, so slots that
+  // are already booked (from here or from the internal Meetings tab) show as unavailable.
+  useEffect(() => {
+    if (!selectedDate) {
+      setSlots([]);
+      return;
+    }
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
+    let cancelled = false;
+
+    setLoadingSlots(true);
+    setSlotsError(null);
+    getScheduleCallAvailability(dateStr)
+      .then((res) => {
+        if (!cancelled) setSlots(res.slots);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setSlots([]);
+        setSlotsError(
+          err.code === "CALENDAR_UNAVAILABLE"
+            ? "Booking is temporarily unavailable. Please try again shortly."
+            : "Couldn't load available times. Please try another date."
+        );
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingSlots(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedDate]);
 
   // Calendar calculations
   const year = currentDate.getFullYear();
@@ -109,11 +119,12 @@ export default function SchedulerCore({ onClose }: SchedulerCoreProps) {
 
     if (isBefore(selected, today)) return;
     setSelectedDate(selected);
-    setSelectedSlotIndex(null); // Reset time when date changes
+    setSelectedSlot(null); // Reset time when date changes
   };
 
-  const handleTimeSelect = (idx: number) => {
-    setSelectedSlotIndex(idx);
+  const handleTimeSelect = (slot: AvailabilitySlot) => {
+    if (!slot.available) return;
+    setSelectedSlot(slot);
     setStep(2); // Go to form
   };
 
@@ -124,36 +135,50 @@ export default function SchedulerCore({ onClose }: SchedulerCoreProps) {
     });
   };
 
+  const refreshSlots = async () => {
+    if (!selectedDate) return;
+    try {
+      const res = await getScheduleCallAvailability(format(selectedDate, "yyyy-MM-dd"));
+      setSlots(res.slots);
+    } catch {
+      /* the banner on step 1 already covers a failed refresh */
+    }
+  };
+
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedSlot) return;
     setSubmitting(true);
     setSubmitError(null);
 
-    const timeSlotStr = selectedSlotIndex !== null
-      ? `${TIME_SLOTS_12H[selectedSlotIndex]} - ${getEndTime12h(selectedSlotIndex)}`
-      : "";
-    const dateStr = selectedDate ? format(selectedDate, "eeee, MMMM d, yyyy") : "";
-    const message = `Scheduled call: ${dateStr} from ${timeSlotStr} (Timezone: ${timezone})`;
-
-    const payload = {
-      name: formData.name,
-      email: formData.email,
-      phone: `${countryCode} ${formData.phone}`.trim(),
-      website: formData.website,
-      institutionType: formData.institutionType,
-      annualLeadVolume: formData.annualLeadVolume,
-      teamSize: formData.teamSize,
-      message,
-      source: "Scheduler",
-    };
-
     try {
-      await createPlatformLead(payload);
+      const result = await bookScheduleCall({
+        name: formData.name,
+        email: formData.email,
+        phone: `${countryCode} ${formData.phone}`.trim(),
+        website: formData.website,
+        institutionType: formData.institutionType,
+        annualLeadVolume: formData.annualLeadVolume,
+        teamSize: formData.teamSize,
+        startTime: selectedSlot.startTime,
+        timezone,
+      });
 
+      setMeetLink(result.booking.meetLink);
+      setBooked(result.booked);
       setStep(3); // Success Screen
     } catch (err: any) {
       console.error("Failed to submit scheduled call:", err);
-      setSubmitError(err.message || "Something went wrong. Please try again.");
+      if (err.code === "SLOT_TAKEN") {
+        // Somebody grabbed it while the form was open — send them back to a fresh grid.
+        setSelectedSlot(null);
+        setSubmitError(null);
+        setStep(1);
+        await refreshSlots();
+        setSlotsError("That time was just taken. Please choose another slot.");
+      } else {
+        setSubmitError(err.message || "Something went wrong. Please try again.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -175,17 +200,10 @@ export default function SchedulerCore({ onClose }: SchedulerCoreProps) {
     );
   };
 
-  const isSlotPastForToday = (idx: number) => {
-    if (!selectedDate) return false;
-    if (!isToday(selectedDate)) return false;
-
-    const hour = Math.floor(idx / 2);
-    const min = (idx % 2) * 30;
-
-    const slotTime = new Date(selectedDate);
-    slotTime.setHours(hour, min, 0, 0);
-
-    return slotTime < new Date();
+  // Calls are Mon–Fri only, so weekends are never selectable.
+  const isWeekend = (day: number) => {
+    const weekday = new Date(year, month, day).getDay();
+    return weekday === 0 || weekday === 6;
   };
 
   // Grid layout helper - Pad cells to exactly 42 (6 rows * 7 columns) to prevent height jumps
@@ -243,7 +261,7 @@ export default function SchedulerCore({ onClose }: SchedulerCoreProps) {
 
           <div className="space-y-4 pt-6 border-t border-white/5">
             {/* Selected Slot Information */}
-            {selectedDate && selectedSlotIndex !== null && (
+            {selectedDate && selectedSlot && (
               <div className="flex items-start gap-3 text-sm text-white/80">
                 <Calendar size={16} className="text-primary mt-0.5 shrink-0" />
                 <div>
@@ -251,9 +269,7 @@ export default function SchedulerCore({ onClose }: SchedulerCoreProps) {
                     {format(selectedDate, "eeee, MMMM d, yyyy")}
                   </span>
                   <span className="text-xs text-white/50">
-                    {is24h
-                      ? `${TIME_SLOTS_24H[selectedSlotIndex]} – ${getEndTime24h(selectedSlotIndex)}`
-                      : `${TIME_SLOTS_12H[selectedSlotIndex]} – ${getEndTime12h(selectedSlotIndex)}`}
+                    {slotLabel(selectedSlot.startTime, timezone, is24h)} – {slotLabel(selectedSlot.endTime, timezone, is24h)}
                   </span>
                 </div>
               </div>
@@ -335,7 +351,7 @@ export default function SchedulerCore({ onClose }: SchedulerCoreProps) {
                         return <div key={`empty-${idx}`} className="w-full aspect-square" />;
                       }
 
-                      const active = !isPastDate(cell);
+                      const active = !isPastDate(cell) && !isWeekend(cell);
                       const selected = isSelected(cell);
 
                       return (
@@ -389,35 +405,68 @@ export default function SchedulerCore({ onClose }: SchedulerCoreProps) {
                 {/* Time slots container - fixed height, scrollbar completely hidden */}
                 <div className="h-[360px] lg:h-[400px] overflow-y-auto space-y-2 pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {selectedDate ? (() => {
-                    const filteredSlots = (is24h ? TIME_SLOTS_24H : TIME_SLOTS_12H)
-                      .map((time, idx) => ({ time, idx }))
-                      .filter(({ idx }) => !isSlotPastForToday(idx));
+                    if (loadingSlots) {
+                      return (
+                        <div className="h-full flex flex-col items-center justify-center py-16 text-center">
+                          <span className="w-5 h-5 border-2 border-white/20 border-t-white/60 rounded-full animate-spin mb-3" />
+                          <p className="text-xs text-white/30">Checking availability…</p>
+                        </div>
+                      );
+                    }
 
-                    if (filteredSlots.length === 0) {
+                    if (slotsError) {
+                      return (
+                        <div className="h-full flex flex-col items-center justify-center py-16 text-center">
+                          <Clock className="w-8 h-8 text-white/10 mb-3" />
+                          <p className="text-xs text-white/40 max-w-[190px]">{slotsError}</p>
+                        </div>
+                      );
+                    }
+
+                    if (slots.length === 0) {
                       return (
                         <div className="h-full flex flex-col items-center justify-center py-16 text-center">
                           <Clock className="w-8 h-8 text-white/10 mb-3" />
                           <p className="text-xs text-white/30 max-w-[170px]">
-                            No remaining slots for today. Please pick another date.
+                            No slots on this date. Please pick another day.
                           </p>
                         </div>
                       );
                     }
 
-                    return filteredSlots.map(({ time, idx }) => (
+                    if (slots.every((s) => !s.available)) {
+                      return (
+                        <div className="h-full flex flex-col items-center justify-center py-16 text-center">
+                          <Clock className="w-8 h-8 text-white/10 mb-3" />
+                          <p className="text-xs text-white/30 max-w-[180px]">
+                            Fully booked on this date. Please pick another day.
+                          </p>
+                        </div>
+                      );
+                    }
+
+                    // Booked slots stay visible but disabled, so it's obvious the day is
+                    // filling up rather than the times silently vanishing.
+                    return slots.map((slot) => (
                       <button
-                        key={time}
-                        onClick={() => handleTimeSelect(idx)}
-                        className="w-full py-3 px-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 hover:border-primary/50 text-sm font-semibold text-center text-white/80 hover:text-white transition-all duration-200 active:scale-[0.98]"
+                        key={slot.startTime}
+                        onClick={() => handleTimeSelect(slot)}
+                        disabled={!slot.available}
+                        title={slot.available ? undefined : "Already booked"}
+                        className={`w-full py-3 px-4 rounded-xl border text-sm font-semibold text-center transition-all duration-200 ${
+                          slot.available
+                            ? "border-white/5 bg-white/5 hover:bg-white/10 hover:border-primary/50 text-white/80 hover:text-white active:scale-[0.98]"
+                            : "border-white/5 bg-transparent text-white/20 line-through cursor-not-allowed"
+                        }`}
                       >
-                        {time}
+                        {slotLabel(slot.startTime, timezone, is24h)}
                       </button>
                     ));
                   })() : (
                     <div className="h-full flex flex-col items-center justify-center py-16 text-center">
                       <Calendar className="w-8 h-8 text-white/10 mb-3" />
                       <p className="text-xs text-white/30 max-w-[170px]">
-                        Select a date from the calendar to view available 24h slots.
+                        Select a date from the calendar to view available slots.
                       </p>
                     </div>
                   )}
@@ -644,10 +693,33 @@ export default function SchedulerCore({ onClose }: SchedulerCoreProps) {
               <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-6 shadow-glow">
                 <CheckCircle2 size={32} />
               </div>
-              <h3 className="text-2xl font-bold text-white mb-2">Booking Confirmed!</h3>
-              <p className="text-white/60 text-sm mb-8 leading-relaxed max-w-sm">
-                Your discovery call has been successfully scheduled. Check your email inbox for the calendar invite and meeting link.
+              <h3 className="text-2xl font-bold text-white mb-2">
+                {booked ? "Booking Confirmed!" : "Request Received"}
+              </h3>
+              <p className="text-white/60 text-sm mb-6 leading-relaxed max-w-sm">
+                {booked
+                  ? "Your discovery call is scheduled. Check your inbox for the calendar invite and meeting link."
+                  : "We've got your request and will email you a confirmation shortly."}
               </p>
+
+              {booked && selectedSlot && (
+                <p className="text-white/80 text-sm font-semibold mb-4">
+                  {format(new Date(selectedSlot.startTime), "eeee, MMMM d")} ·{" "}
+                  {slotLabel(selectedSlot.startTime, timezone, is24h)} – {slotLabel(selectedSlot.endTime, timezone, is24h)}
+                </p>
+              )}
+
+              {meetLink && (
+                <a
+                  href={meetLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mb-8 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary/15 border border-primary/30 text-sm font-semibold text-white hover:bg-primary/25 transition-all"
+                >
+                  Join with Google Meet
+                </a>
+              )}
+              {!meetLink && <div className="mb-8" />}
 
               {onClose ? (
                 <button

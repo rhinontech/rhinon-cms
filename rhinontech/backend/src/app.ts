@@ -33,6 +33,7 @@ import documentSigningRoutes from "./routes/documentSigning";
 import pagesRoutes from "./routes/pages";
 import googleCalendarSettingsRoutes from "./routes/googleCalendarSettings";
 import meetingsRoutes from "./routes/meetings";
+import scheduleCallRoutes from "./routes/scheduleCall";
 
 const app = express();
 
@@ -96,6 +97,7 @@ app.use("/webhooks", express.text({ type: ["application/json", "text/plain"] }),
 
 // Public unauthenticated routes
 app.use("/public", publicRoutes);
+app.use("/public", scheduleCallRoutes);
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });

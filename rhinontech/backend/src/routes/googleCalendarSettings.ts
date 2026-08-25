@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { google } from "googleapis";
+import { oauth2 as googleOauth2 } from "@googleapis/oauth2";
 import { GoogleCalendarToken, getActiveCalendarToken } from "../models/GoogleCalendarToken";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 import { buildOAuthClient, getConnectionStatus, GOOGLE_CALENDAR_SCOPES } from "../services/googleCalendar";
@@ -69,7 +69,7 @@ router.get("/callback", async (req: Request, res: Response) => {
     const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
 
-    const { data: profile } = await google.oauth2({ version: "v2", auth: oauth2Client }).userinfo.get();
+    const { data: profile } = await googleOauth2({ version: "v2", auth: oauth2Client as any }).userinfo.get();
 
     // Google only returns a refresh_token on first consent for a given client/account pair;
     // `prompt: "consent"` above should force one, but fall back to the previous value rather
