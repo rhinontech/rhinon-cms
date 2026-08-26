@@ -95,7 +95,7 @@ export function trackPageview(path: string) {
 
 // Captures email from query params (e.g. ?email=...) and sends to backend for IP & Location tracking
 export function trackEmailVisitor(email: string, path: string) {
-  if (typeof window === "undefined" || !email) return;
+  if (typeof window === "undefined" || !email || path.startsWith("/unsubscribe")) return;
 
   const cleanEmail = email.trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) return;
