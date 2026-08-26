@@ -15,9 +15,10 @@ export function PageviewTracker() {
     if (!pathname) return;
     trackPageview(pathname);
 
-    // If URL contains ?email=..., capture the visitor with IP & location
+    // If URL contains ?email=..., capture the visitor with IP & location (ignore unsubscribe pages)
     const email = searchParams.get("email");
-    if (email && email.trim() && email !== lastTrackedEmail.current) {
+    const isUnsubscribePage = pathname.startsWith("/unsubscribe");
+    if (email && email.trim() && !isUnsubscribePage && email !== lastTrackedEmail.current) {
       lastTrackedEmail.current = email;
       trackEmailVisitor(email, pathname);
     }
