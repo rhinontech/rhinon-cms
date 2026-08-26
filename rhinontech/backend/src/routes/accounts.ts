@@ -3,6 +3,7 @@ import { Op, fn, col } from "sequelize";
 import { Account, Lead, Deal, User, Activity } from "../models";
 import { normalizeDomain, domainFromEmail } from "../models/Account";
 import { authenticate, authorizeAny, AuthRequest } from "../middleware/authenticate";
+import { sequelize } from "../config/database";
 
 const router = Router();
 router.use(authenticate);
@@ -177,24 +178,106 @@ router.delete("/:id", writeAccess, async (req: AuthRequest, res: Response) => {
   res.json({ message: "Account deleted" });
 });
 
+/** Leads and accounts are both UUID-keyed; validated before interpolation. */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // POST /accounts/backfill - group existing leads into accounts by domain.
-// Idempotent: leads that already have an accountId are skipped.
+//
+// Set-based on purpose: the obvious per-lead findOrCreate loop costs 2-3 round
+// trips per row, which is minutes of sequential RDS latency on a few thousand
+// leads. This resolves every key in memory and touches the database ~6 times
+// regardless of volume. Idempotent — leads that already have an accountId are
+// never scanned.
 router.post("/backfill", writeAccess, async (req: AuthRequest, res: Response) => {
   try {
-    const leads = await Lead.findAll({ where: { accountId: null as any } });
-    let linked = 0;
-    let createdAccounts = 0;
-    const before = await Account.count();
+    const leads = await Lead.findAll({
+      where: { accountId: null as any },
+      attributes: [
+        "id", "company", "email", "website", "industry",
+        "employeeCount", "location", "annualRevenue", "companyLinkedinUrl",
+      ],
+    });
 
-    for (const lead of leads) {
-      const account = await findOrCreateAccountForLead(lead, req.user!.userId);
-      if (!account) continue;
-      await lead.update({ accountId: account.id });
-      linked++;
+    // 1. Derive each lead's account key. Domain wins; a plain company name is
+    //    the fallback, and leads with neither are skipped entirely.
+    const keyed = leads.flatMap((lead) => {
+      const domain = normalizeDomain(lead.website) || domainFromEmail(lead.email);
+      const raw = (lead.company || "").trim();
+      const name = raw && raw !== "—" ? raw : null;
+      if (!domain && !name) return [];
+      return [{ lead, domain, name, key: domain ? `d:${domain}` : `n:${name}` }];
+    });
+
+    if (keyed.length === 0) {
+      res.json({ scanned: leads.length, linked: 0, createdAccounts: 0, skipped: leads.length });
+      return;
     }
 
-    createdAccounts = (await Account.count()) - before;
-    res.json({ scanned: leads.length, linked, createdAccounts });
+    // 2. One read for every account those keys might already match.
+    const domains = [...new Set(keyed.map((k) => k.domain).filter(Boolean) as string[])];
+    const names = [...new Set(keyed.filter((k) => !k.domain && k.name).map((k) => k.name) as string[])];
+    const or: any[] = [];
+    if (domains.length) or.push({ domain: { [Op.in]: domains } });
+    if (names.length) or.push({ name: { [Op.in]: names }, domain: null as any });
+
+    const existing = or.length ? await Account.findAll({ where: { [Op.or]: or } }) : [];
+    const byKey = new Map<string, Account>();
+    for (const a of existing) byKey.set(a.domain ? `d:${a.domain}` : `n:${a.name}`, a);
+
+    // 3. Everything still unmatched becomes one new account per key. The first
+    //    lead seen for a key donates the firmographics.
+    const toCreate = new Map<string, any>();
+    for (const k of keyed) {
+      if (byKey.has(k.key) || toCreate.has(k.key)) continue;
+      toCreate.set(k.key, {
+        name: k.name || k.domain!,
+        domain: k.domain,
+        website: k.lead.website || (k.domain ? `https://${k.domain}` : null),
+        industry: k.lead.industry || null,
+        employeeCount: k.lead.employeeCount ?? null,
+        location: k.lead.location || null,
+        annualRevenue: k.lead.annualRevenue || null,
+        linkedinUrl: k.lead.companyLinkedinUrl || null,
+        createdById: req.user!.userId,
+      });
+    }
+
+    const created = toCreate.size
+      ? await Account.bulkCreate([...toCreate.values()], { returning: true })
+      : [];
+    for (const a of created) byKey.set(a.domain ? `d:${a.domain}` : `n:${a.name}`, a);
+
+    // 4. Link in bulk. One UPDATE ... FROM (VALUES ...) per chunk beats one
+    //    statement per account, which is what the grouping would otherwise cost.
+    const pairs = keyed.flatMap((k) => {
+      const account = byKey.get(k.key);
+      if (!account) return [];
+      if (!UUID_RE.test(k.lead.id) || !UUID_RE.test(account.id)) return [];
+      return [[k.lead.id, account.id] as const];
+    });
+
+    const CHUNK = 1000;
+    let linked = 0;
+    await sequelize.transaction(async (t) => {
+      for (let i = 0; i < pairs.length; i += CHUNK) {
+        const chunk = pairs.slice(i, i + CHUNK);
+        const values = chunk.map(([l, a]) => `('${l}'::uuid,'${a}'::uuid)`).join(",");
+        await sequelize.query(
+          `UPDATE leads SET "accountId" = v.account_id, "updatedAt" = NOW()
+           FROM (VALUES ${values}) AS v(lead_id, account_id)
+           WHERE leads.id = v.lead_id`,
+          { transaction: t }
+        );
+        linked += chunk.length;
+      }
+    });
+
+    res.json({
+      scanned: leads.length,
+      linked,
+      createdAccounts: created.length,
+      skipped: leads.length - keyed.length,
+    });
   } catch (error: any) {
     res.status(400).json({ message: error.message });
   }

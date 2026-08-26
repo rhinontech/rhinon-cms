@@ -1,5 +1,5 @@
 import { Router, Response } from "express";
-import { Lead, Campaign, CampaignActivity, ContactGroup, ContactGroupMember, Account, Deal, PipelineStage, Activity, User, Task } from "../models";
+import { Lead, Campaign, CampaignActivity, ContactGroup, ContactGroupMember, Account, Deal, PipelineStage, Activity, User, Task, InboxEmail, WorkflowEnrollment } from "../models";
 import { findOrCreateAccountForLead } from "./accounts";
 import { authenticate, authorizeAny, AuthRequest } from "../middleware/authenticate";
 import { enrichLeadWithAI } from "../services/gemini";
@@ -21,6 +21,32 @@ const LIST_INCLUDES = [
 
 const readAccess = authorizeAny("crm:read", "outreach:read");
 const writeAccess = authorizeAny("crm:write", "outreach:write");
+
+/**
+ * Clears everything that points at a set of leads, before they're destroyed.
+ *
+ * Split by intent rather than blanket-deleting: history that only makes sense
+ * against the lead goes away with it, while records that stand on their own —
+ * a deal worth real money, a task someone still has to do, an email already in
+ * the inbox — survive with the link nulled out.
+ */
+async function detachLeadReferences(ids: string[], transaction: any) {
+  const where = { leadId: { [Op.in]: ids } };
+
+  // Sequential, not Promise.all: a transaction is pinned to one connection, so
+  // firing these concurrently would interleave statements on it.
+
+  // Lead-scoped history: meaningless once the lead is gone.
+  await Activity.destroy({ where, transaction });
+  await CampaignActivity.destroy({ where, transaction });
+  await ContactGroupMember.destroy({ where, transaction });
+
+  // Independently meaningful: keep the record, drop the pointer.
+  await Deal.update({ primaryLeadId: null }, { where: { primaryLeadId: { [Op.in]: ids } }, transaction });
+  await Task.update({ leadId: null }, { where, transaction });
+  await InboxEmail.update({ leadId: null }, { where, transaction });
+  await WorkflowEnrollment.update({ leadId: null }, { where, transaction });
+}
 
 // GET /leads - list leads. Supports status/campaignId/source/search filters.
 // Pagination (limit/offset) is opt-in: pass `limit` to get `{ rows, count }`;
@@ -243,8 +269,8 @@ router.post("/bulk-delete", writeAccess, async (req: AuthRequest, res: Response)
   }
   try {
     const deleted = await sequelize.transaction(async (t) => {
-      // Remove dependent activities first (FK has no cascade)
-      await CampaignActivity.destroy({ where: { leadId: { [Op.in]: ids } }, transaction: t });
+      // Dependents first — the FKs have no cascade.
+      await detachLeadReferences(ids, t);
       return Lead.destroy({ where: { id: { [Op.in]: ids } }, transaction: t });
     });
     res.json({ deleted });
@@ -324,7 +350,7 @@ router.delete("/:id", writeAccess, async (req: AuthRequest, res: Response) => {
   }
 
   await sequelize.transaction(async (t) => {
-    await CampaignActivity.destroy({ where: { leadId: lead.id }, transaction: t });
+    await detachLeadReferences([lead.id], t);
     await lead.destroy({ transaction: t });
   });
   res.json({ message: "Lead deleted" });

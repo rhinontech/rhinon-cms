@@ -60,7 +60,7 @@ router.post("/send", authorize("outreach:write"), async (req: AuthRequest, res: 
     });
 
     // Update lead status
-    await lead.update({ status: "Emailed" });
+    await lead.update({ status: "Emailed", lastActivityAt: new Date() });
 
     // Log Activity
     await CampaignActivity.create({

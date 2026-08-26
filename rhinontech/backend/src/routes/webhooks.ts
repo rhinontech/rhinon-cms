@@ -166,7 +166,7 @@ router.post("/ses-inbound", async (req: Request, res: Response) => {
         // Surface it as a reply inside their campaign — flips status to Replied
         // and logs the activity the campaign's Activity feed / funnel already render.
         if (repliedLead && !["Bounced", "Unsubscribed"].includes(repliedLead.status)) {
-          await repliedLead.update({ status: "Replied" });
+          await repliedLead.update({ status: "Replied", lastActivityAt: new Date() });
           await CampaignActivity.create({
             leadId: repliedLead.id,
             campaignId: repliedLead.campaignId,

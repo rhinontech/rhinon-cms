@@ -364,7 +364,7 @@ router.post("/:id/send", authorize("outreach:write"), async (req: AuthRequest, r
             sentAt: new Date(),
           });
 
-          await lead.update({ status: "Emailed" });
+          await lead.update({ status: "Emailed", lastActivityAt: new Date() });
           await CampaignActivity.create({
             leadId: lead.id,
             campaignId: campaign.id,
@@ -560,7 +560,7 @@ router.get("/cron/run", async (req, res) => {
             sentAt: new Date(),
           });
 
-          await lead.update({ status: "Emailed" });
+          await lead.update({ status: "Emailed", lastActivityAt: new Date() });
           if (campaign.leadsProcessed < campaign.leadsTotal) {
             await campaign.increment("leadsProcessed");
           }

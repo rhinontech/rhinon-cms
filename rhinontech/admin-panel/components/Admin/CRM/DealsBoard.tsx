@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   DndContext, DragOverlay, PointerSensor, useSensor, useSensors,
   useDroppable, useDraggable, type DragEndEvent, type DragStartEvent,
@@ -11,7 +11,8 @@ import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { useSideNav } from "@/context/SideNavContext";
-import type { BoardStage, Deal, UserRef, AccountRef } from "./types";
+import type { BoardStage, Deal, UserRef, AccountRef, PipelineStage } from "./types";
+import { DealDrawer } from "./DealDrawer";
 import { Avatar, StageDot, TBtn, formatMoney, formatDate } from "./ui";
 
 interface BoardResponse {
@@ -28,6 +29,7 @@ export function DealsBoard() {
   const [ownerFilter, setOwnerFilter] = useState("All");
   const [showNew, setShowNew] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [openDealId, setOpenDealId] = useState<string | null>(null);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
@@ -51,6 +53,10 @@ export function DealsBoard() {
     [board]
   );
   const activeDeal = allDeals.find((d) => d.id === activeId) || null;
+  const stageList: PipelineStage[] = useMemo(
+    () => (board?.stages || []).map(({ deals: _deals, dealCount: _c, totalValue: _t, weightedValue: _w, ...stage }) => stage),
+    [board]
+  );
 
   const totals = useMemo(() => {
     if (!board) return { open: 0, weighted: 0, count: 0 };
@@ -148,12 +154,22 @@ export function DealsBoard() {
             onDragEnd={handleDragEnd}
           >
             <div className="flex h-full gap-2.5">
-              {board?.stages.map((stage) => <StageColumn key={stage.id} stage={stage} />)}
+              {board?.stages.map((stage) => <StageColumn key={stage.id} stage={stage} onOpen={setOpenDealId} />)}
             </div>
             <DragOverlay>{activeDeal ? <DealCard deal={activeDeal} overlay /> : null}</DragOverlay>
           </DndContext>
         )}
       </div>
+
+      {openDealId && (
+        <DealDrawer
+          dealId={openDealId}
+          stages={stageList}
+          owners={owners}
+          onClose={() => setOpenDealId(null)}
+          onChanged={load}
+        />
+      )}
 
       {showNew && (
         <NewDealDialog
@@ -179,7 +195,7 @@ function recount(stages: BoardStage[]): BoardStage[] {
   });
 }
 
-function StageColumn({ stage }: { stage: BoardStage }) {
+function StageColumn({ stage, onOpen }: { stage: BoardStage; onOpen: (id: string) => void }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
   return (
     <div
@@ -207,7 +223,7 @@ function StageColumn({ stage }: { stage: BoardStage }) {
         </p>
       </div>
       <div className="flex-1 space-y-1.5 overflow-y-auto p-1.5">
-        {stage.deals.map((deal) => <DealCard key={deal.id} deal={deal} />)}
+        {stage.deals.map((deal) => <DealCard key={deal.id} deal={deal} onOpen={onOpen} />)}
         {stage.deals.length === 0 && (
           <div className="rounded border border-dashed border-stone-200 py-5 text-center text-[10px] text-stone-300">
             Drop here
@@ -218,7 +234,7 @@ function StageColumn({ stage }: { stage: BoardStage }) {
   );
 }
 
-function DealCard({ deal, overlay }: { deal: Deal; overlay?: boolean }) {
+function DealCard({ deal, overlay, onOpen }: { deal: Deal; overlay?: boolean; onOpen?: (id: string) => void }) {
   // The DragOverlay copy must not register a second draggable with the same id.
   if (overlay) {
     return (
@@ -227,16 +243,29 @@ function DealCard({ deal, overlay }: { deal: Deal; overlay?: boolean }) {
       </div>
     );
   }
-  return <DraggableDealCard deal={deal} />;
+  return <DraggableDealCard deal={deal} onOpen={onOpen} />;
 }
 
-function DraggableDealCard({ deal }: { deal: Deal }) {
+function DraggableDealCard({ deal, onOpen }: { deal: Deal; onOpen?: (id: string) => void }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: deal.id });
+  // dnd-kit still emits a click after a drag settles, which would pop the
+  // drawer open every time a card is moved. Compare pointer-down to pointer-up
+  // and treat anything that travelled as a drag, not a click.
+  const downAt = useRef<{ x: number; y: number } | null>(null);
+
   return (
     <div
       ref={setNodeRef}
       {...listeners}
       {...attributes}
+      onPointerDown={(e) => { downAt.current = { x: e.clientX, y: e.clientY }; }}
+      onClick={(e) => {
+        const start = downAt.current;
+        downAt.current = null;
+        if (!start) return;
+        const travelled = Math.hypot(e.clientX - start.x, e.clientY - start.y);
+        if (travelled < 5) onOpen?.(deal.id);
+      }}
       style={{ transform: CSS.Translate.toString(transform) }}
       className={cn(
         "cursor-grab touch-none rounded-md border border-stone-200 bg-white/90 p-2 shadow-sm transition-shadow hover:shadow active:cursor-grabbing",
