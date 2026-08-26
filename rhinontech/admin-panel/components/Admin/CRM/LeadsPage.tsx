@@ -1,26 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import {
-  TbUsers,
-  TbSearch,
-  TbPlus,
-  TbUpload,
-  TbRefresh,
-  TbTrash,
-  TbEdit,
-  TbExternalLink,
-  TbBulb,
-  TbActivity,
-  TbCircleCheck,
-  TbLoader,
-  TbX,
-  TbMail,
-  TbTarget,
-  TbBrandLinkedin,
-  TbLayoutSidebarFilled,
-  TbLayoutSidebarRightFilled,
-  TbChevronDown
+  TbSearch, TbPlus, TbUpload, TbTrash, TbX, TbBulb, TbRefresh, TbLoader,
+  TbExternalLink, TbTargetArrow, TbChevronDown, TbBuilding,
 } from "react-icons/tb";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
@@ -28,580 +11,658 @@ import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/Collap
 import { useSideNav } from "@/context/SideNavContext";
 import { LeadImportModal } from "./LeadImportModal";
 import { AddToGroupMenu } from "@/components/Admin/Outreach/contacts/AddToGroupMenu";
+import { ConvertDealDialog } from "./ConvertDealDialog";
+import { Timeline } from "./Timeline";
+import { LIFECYCLE_STAGES, type Lead, type LifecycleStage, type UserRef } from "./types";
+import {
+  Avatar, DataRow, EmptyState, HeaderRow, OutreachStatus,
+  Pagination, SkeletonRows, TableShell, TBtn, relativeTime,
+} from "./ui";
 
-type LeadStatus = "New" | "Enriched" | "Enrolled" | "Emailed" | "Replied" | "Bounced" | "Unsubscribed" | "Interested";
+/**
+ * Two column sets. With the detail panel open the table has roughly 550px to
+ * work with, so all eight columns overflow and clip the right-hand edge. The
+ * lower-priority ones (account, outreach state, last touch) drop out instead —
+ * they're still on the record, just not worth a scrollbar.
+ */
+const COLS_FULL = "26px minmax(180px,2.2fr) minmax(110px,1.1fr) 104px 132px 84px 78px 28px";
+const COLS_COMPACT = "26px minmax(150px,2.4fr) 104px 34px 28px";
+const LIMIT = 50;
+
 type PanelMode = "view" | "create" | "edit";
 
-interface Lead {
-  id: string;
-  name: string;
-  company: string;
-  title: string | null;
-  email: string;
-  linkedinUrl: string | null;
-  status: LeadStatus;
-  campaignId: string | null;
-  campaign?: { name: string };
-  source: string;
-  notes: string | null;
-  addedAt: string;
-  phone?: string | null;
-  seniority?: string | null;
-  department?: string | null;
-  industry?: string | null;
-  employeeCount?: number | null;
-  location?: string | null;
-  website?: string | null;
-  companyLinkedinUrl?: string | null;
-  emailStatus?: string | null;
-  emailConfidence?: string | null;
-  keywords?: string | null;
-  technologies?: string | null;
-  annualRevenue?: string | null;
-  raw?: Record<string, string> | null;
-  enrichment?: Record<string, any> | null;
-}
-
-const STATUS_COLORS: Record<LeadStatus, string> = {
-  New: "bg-blue-50 text-blue-600 border-blue-100",
-  Enriched: "bg-purple-50 text-purple-600 border-purple-100",
-  Enrolled: "bg-indigo-50 text-indigo-600 border-indigo-100",
-  Emailed: "bg-yellow-50 text-yellow-600 border-yellow-100",
-  Interested: "bg-green-50 text-green-600 border-green-100",
-  Replied: "bg-emerald-50 text-emerald-600 border-emerald-100",
-  Bounced: "bg-red-50 text-red-600 border-red-100",
-  Unsubscribed: "bg-stone-50 text-stone-600 border-stone-100",
-};
-
 export function LeadsPage() {
-  const { isExpanded: isSubNavExpanded } = useSideNav();
+  const { isExpanded: isSubNavExpanded, toggleSideNav } = useSideNav();
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [count, setCount] = useState(0);
+  const [offset, setOffset] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<LeadStatus | "All">("All");
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  const [panelMode, setPanelMode] = useState<PanelMode>("view");
-  const [isPreviewExpanded, setIsPreviewExpanded] = useState(true);
-  const [enriching, setEnriching] = useState(false);
-  const [enrichment, setEnrichment] = useState<any>(null);
-  const [saving, setSaving] = useState(false);
-  const [showImport, setShowImport] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [debounced, setDebounced] = useState("");
+  const [lifecycleFilter, setLifecycleFilter] = useState("All");
+  const [sourceFilter, setSourceFilter] = useState("All");
+  const [ownerFilter, setOwnerFilter] = useState("All");
   const [sources, setSources] = useState<string[]>([]);
-  const [sourceFilter, setSourceFilter] = useState<string>("All");
+  const [owners, setOwners] = useState<UserRef[]>([]);
 
-  // Form State
-  const [form, setForm] = useState({
-    name: "",
-    company: "",
-    email: "",
-    title: "",
-    linkedinUrl: "",
-    notes: ""
-  });
+  const [selected, setSelected] = useState<Lead | null>(null);
+  const [panelMode, setPanelMode] = useState<PanelMode>("view");
+  const [panelOpen, setPanelOpen] = useState(true);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const fetchLeads = useCallback(async () => {
+  const [enriching, setEnriching] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+  const [converting, setConverting] = useState<Lead | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const [form, setForm] = useState({ name: "", company: "", email: "", title: "", linkedinUrl: "", notes: "" });
+
+  const panelVisible = Boolean((selected || panelMode === "create") && panelOpen);
+  const compact = panelVisible;
+  const COLS = compact ? COLS_COMPACT : COLS_FULL;
+
+  // The CRM sub-nav holds three links but costs 15% of the shell. Reclaim it
+  // while the detail panel is open, and hand it back when the panel closes —
+  // but only if we were the ones who collapsed it.
+  const autoCollapsed = useRef(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!window.matchMedia("(min-width: 1024px)").matches) return;
+    if (panelVisible && isSubNavExpanded && !autoCollapsed.current) {
+      autoCollapsed.current = true;
+      toggleSideNav();
+    } else if (!panelVisible && autoCollapsed.current) {
+      autoCollapsed.current = false;
+      if (!isSubNavExpanded) toggleSideNav();
+    }
+  }, [panelVisible, isSubNavExpanded, toggleSideNav]);
+
+  useEffect(() => {
+    const t = setTimeout(() => { setDebounced(search); setOffset(0); }, 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const load = useCallback(async () => {
+    setLoading(true);
     try {
-      const query = new URLSearchParams();
-      if (statusFilter !== "All") query.set("status", statusFilter);
-      if (sourceFilter !== "All") query.set("source", sourceFilter);
-      const data = await apiFetch<Lead[]>(`/leads?${query.toString()}`);
-      setLeads(data);
-      if (!selectedLead && data.length > 0) {
-        setSelectedLead(data[0]);
-      }
+      const q = new URLSearchParams({ limit: String(LIMIT), offset: String(offset) });
+      if (debounced) q.set("search", debounced);
+      if (lifecycleFilter !== "All") q.set("lifecycleStage", lifecycleFilter);
+      if (sourceFilter !== "All") q.set("source", sourceFilter);
+      if (ownerFilter !== "All") q.set("ownerId", ownerFilter);
+      const data = await apiFetch<{ rows: Lead[]; count: number }>(`/leads?${q}`);
+      setLeads(data.rows);
+      setCount(data.count);
+      setError(null);
     } catch (err) {
-      console.error("Failed to fetch leads", err);
+      setError(err instanceof Error ? err.message : "Failed to load leads");
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, sourceFilter, selectedLead]);
+  }, [debounced, lifecycleFilter, sourceFilter, ownerFilter, offset]);
 
-  useEffect(() => {
-    fetchLeads();
-  }, [fetchLeads]);
+  useEffect(() => { load(); }, [load]);
 
   useEffect(() => {
     apiFetch<string[]>("/leads/sources").then(setSources).catch(() => {});
+    apiFetch<UserRef[]>("/crm/users").then(setOwners).catch(() => {});
   }, []);
 
-  const filteredLeads = useMemo(() => {
-    const q = search.toLowerCase();
-    return leads.filter(l =>
-      l.name.toLowerCase().includes(q) ||
-      l.company.toLowerCase().includes(q) ||
-      l.email.toLowerCase().includes(q) ||
-      (l.title?.toLowerCase().includes(q))
-    );
-  }, [leads, search]);
-
-  const handleEnrich = async (leadId: string) => {
-    setEnriching(true);
-    setEnrichment(null);
+  const openLead = async (lead: Lead) => {
+    setSelected(lead);
+    setPanelMode("view");
+    setPanelOpen(true);
     try {
-      const data = await apiFetch<any>(`/leads/${leadId}/enrich`, { method: "POST" });
-      setEnrichment(data);
-      fetchLeads();
+      setSelected(await apiFetch<Lead>(`/leads/${lead.id}`));
+    } catch { /* fall back to the row we already have */ }
+  };
+
+  /** Inline field edit from the row — patches locally, then persists. */
+  const patchLead = async (id: string, patch: Partial<Lead>) => {
+    const snapshot = leads;
+    setLeads((cur) => cur.map((l) => (l.id === id ? { ...l, ...patch } : l)));
+    if (selected?.id === id) setSelected((s) => (s ? { ...s, ...patch } : s));
+    try {
+      const updated = await apiFetch<Lead>(`/leads/${id}`, { method: "PUT", body: JSON.stringify(patch) });
+      setLeads((cur) => cur.map((l) => (l.id === id ? { ...l, ...updated } : l)));
     } catch (err) {
-      alert("AI Enrichment failed");
+      setLeads(snapshot);
+      setError(err instanceof Error ? err.message : "Update failed");
+    }
+  };
+
+  const enrich = async (id: string) => {
+    setEnriching(true);
+    try {
+      const data = await apiFetch<Record<string, unknown>>(`/leads/${id}/enrich`, { method: "POST" });
+      setSelected((s) => (s && s.id === id ? { ...s, enrichment: data } : s));
+      load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Enrichment failed");
     } finally {
       setEnriching(false);
     }
   };
 
-  const startCreate = () => {
-    setForm({ name: "", company: "", email: "", title: "", linkedinUrl: "", notes: "" });
-    setPanelMode("create");
-    setIsPreviewExpanded(true);
-  };
-
-  const startEdit = () => {
-    if (!selectedLead) return;
-    setForm({
-      name: selectedLead.name,
-      company: selectedLead.company,
-      email: selectedLead.email,
-      title: selectedLead.title || "",
-      linkedinUrl: selectedLead.linkedinUrl || "",
-      notes: selectedLead.notes || ""
-    });
-    setPanelMode("edit");
-    setIsPreviewExpanded(true);
-  };
-
-  const handleSave = async (e: React.FormEvent) => {
+  const save = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
       if (panelMode === "create") {
         await apiFetch("/leads", { method: "POST", body: JSON.stringify(form) });
-      } else {
-        await apiFetch(`/leads/${selectedLead?.id}`, { method: "PUT", body: JSON.stringify(form) });
+      } else if (selected) {
+        await apiFetch(`/leads/${selected.id}`, { method: "PUT", body: JSON.stringify(form) });
       }
       setPanelMode("view");
-      fetchLeads();
-    } catch (err: any) {
-      alert(err.message);
+      load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Save failed");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDeleteLead = async (id: string) => {
-    if (!confirm("Are you sure?")) return;
+  const remove = async (id: string) => {
+    if (!confirm("Delete this lead?")) return;
     try {
       await apiFetch(`/leads/${id}`, { method: "DELETE" });
-      if (selectedLead?.id === id) setSelectedLead(null);
-      fetchLeads();
+      if (selected?.id === id) setSelected(null);
+      load();
     } catch (err) {
-      alert("Delete failed");
+      setError(err instanceof Error ? err.message : "Delete failed");
     }
   };
 
-  const toggleSelect = (id: string) => {
-    setSelectedIds(prev => {
+  const bulkDelete = async () => {
+    if (!confirm(`Delete ${selectedIds.size} lead(s)? This cannot be undone.`)) return;
+    try {
+      await apiFetch("/leads/bulk-delete", { method: "POST", body: JSON.stringify({ ids: [...selectedIds] }) });
+      setSelectedIds(new Set());
+      setSelected(null);
+      load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Bulk delete failed");
+    }
+  };
+
+  const bulkAssign = async (ownerId: string) => {
+    if (!ownerId) return;
+    try {
+      await Promise.all(
+        [...selectedIds].map((id) => apiFetch(`/leads/${id}`, { method: "PUT", body: JSON.stringify({ ownerId }) }))
+      );
+      setSelectedIds(new Set());
+      load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Assign failed");
+    }
+  };
+
+  const allSelected = leads.length > 0 && leads.every((l) => selectedIds.has(l.id));
+  const toggleAll = () => setSelectedIds(allSelected ? new Set() : new Set(leads.map((l) => l.id)));
+  const toggle = (id: string) =>
+    setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
+
+  const startCreate = () => {
+    setForm({ name: "", company: "", email: "", title: "", linkedinUrl: "", notes: "" });
+    setPanelMode("create");
+    setPanelOpen(true);
   };
 
-  const allSelected = filteredLeads.length > 0 && filteredLeads.every(l => selectedIds.has(l.id));
-
-  const toggleSelectAll = () => {
-    setSelectedIds(allSelected ? new Set() : new Set(filteredLeads.map(l => l.id)));
-  };
-
-  const handleBulkDelete = async () => {
-    if (selectedIds.size === 0) return;
-    if (!confirm(`Delete ${selectedIds.size} lead(s)? This cannot be undone.`)) return;
-    setBulkDeleting(true);
-    try {
-      await apiFetch("/leads/bulk-delete", { method: "POST", body: JSON.stringify({ ids: Array.from(selectedIds) }) });
-      if (selectedLead && selectedIds.has(selectedLead.id)) setSelectedLead(null);
-      setSelectedIds(new Set());
-      fetchLeads();
-    } catch (err: any) {
-      alert(err.message || "Bulk delete failed");
-    } finally {
-      setBulkDeleting(false);
-    }
-  };
-
-  const selectLead = (lead: Lead) => {
-    setSelectedLead(lead);
-    setEnrichment(lead.enrichment ?? null);
-    setPanelMode("view");
-    setIsPreviewExpanded(true);
+  const startEdit = () => {
+    if (!selected) return;
+    setForm({
+      name: selected.name, company: selected.company, email: selected.email,
+      title: selected.title || "", linkedinUrl: selected.linkedinUrl || "", notes: selected.notes || "",
+    });
+    setPanelMode("edit");
   };
 
   return (
     <div className="relative flex h-full min-h-0 w-full overflow-hidden">
       <main className={cn("flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden glass-panel", isSubNavExpanded ? "lg:rounded-r-xl" : "rounded-xl")}>
-        {/* Single row: the title block absorbs the slack and truncates, so the actions stay
-            pinned right instead of wrapping onto a second line when the detail panel is open. */}
-        <div className="flex min-h-16 flex-nowrap items-center justify-between gap-3 border-b px-3 sm:px-4 py-2.5 sm:py-0">
-          <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+        <div className="flex min-h-14 shrink-0 items-center justify-between gap-3 border-b border-stone-200/70 px-3 py-2">
+          <div className="flex min-w-0 items-center gap-2.5">
             <SubNavToggle />
-            <div className="min-w-0 flex-1">
-              <h1 className="truncate text-base font-semibold tracking-tight text-gray-900">Leads</h1>
-              <p className="hidden truncate text-xs text-gray-500 lg:block">Every lead across the business — website, platforms, imports and manual entries.</p>
+            <div className="min-w-0">
+              <h1 className="text-sm font-semibold tracking-tight text-stone-900">Leads</h1>
+              <p className="text-[11px] tabular-nums text-stone-500">{count.toLocaleString("en-IN")} contacts</p>
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            <button onClick={() => setShowImport(true)} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-2.5 sm:px-3 py-1.5 text-xs font-medium hover:bg-stone-100">
-              <TbUpload size={14} />
-              <span className="hidden xs:inline sm:inline">Import CSV</span>
-            </button>
-            <button onClick={startCreate} className="inline-flex items-center gap-1.5 rounded-lg bg-stone-900 text-white px-2.5 sm:px-3 py-1.5 text-xs font-medium hover:bg-stone-800">
-              <TbPlus size={14} />
-              <span>Add Lead</span>
-            </button>
-            {(!isPreviewExpanded || (filteredLeads.length === 0 && panelMode !== "create")) && (
-              <button onClick={() => setIsPreviewExpanded(true)} className="rounded-lg p-2 text-gray-600 hover:bg-stone-100" title="Open details">
-                <TbLayoutSidebarFilled size={20} />
-              </button>
-            )}
+          <div className="flex shrink-0 items-center gap-2">
+            <TBtn onClick={() => setShowImport(true)}><TbUpload size={14} /> Import</TBtn>
+            <TBtn variant="solid" onClick={startCreate}><TbPlus size={14} /> New</TBtn>
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto p-3 sm:p-4">
-          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3">
-            <div className="relative flex-1 sm:max-w-xs md:max-w-sm">
-              <TbSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={16} />
+        <div className="flex-1 overflow-auto p-3">
+          {/* Filters */}
+          <div className="mb-2.5 flex flex-wrap items-center gap-2">
+            <div className="relative min-w-[180px] flex-1 sm:max-w-xs">
+              <TbSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-stone-400" size={14} />
               <input
-                type="text"
-                placeholder="Search leads..."
                 value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 text-sm rounded-lg border border-stone-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search name, company, email…"
+                className="w-full rounded-md border border-stone-200 bg-white/70 py-1.5 pl-8 pr-3 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40"
               />
             </div>
-            <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-              <select
-                value={statusFilter}
-                onChange={e => setStatusFilter(e.target.value as any)}
-                className="flex-1 sm:w-[150px] md:w-[180px] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="All">All Statuses</option>
-                <option value="New">New</option>
-                <option value="Enriched">Enriched</option>
-                <option value="Enrolled">Enrolled</option>
-                <option value="Interested">Interested</option>
-                <option value="Emailed">Emailed</option>
-                <option value="Replied">Replied</option>
-                <option value="Bounced">Bounced</option>
-                <option value="Unsubscribed">Unsubscribed</option>
-              </select>
-              <select
-                value={sourceFilter}
-                onChange={e => setSourceFilter(e.target.value)}
-                className="flex-1 sm:w-[150px] md:w-[180px] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="All">All Sources</option>
-                {sources.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
+            <Select value={lifecycleFilter} onChange={(v) => { setLifecycleFilter(v); setOffset(0); }}>
+              <option value="All">All stages</option>
+              {LIFECYCLE_STAGES.map((s) => <option key={s} value={s}>{s}</option>)}
+            </Select>
+            <Select value={ownerFilter} onChange={(v) => { setOwnerFilter(v); setOffset(0); }}>
+              <option value="All">All owners</option>
+              <option value="unassigned">Unassigned</option>
+              {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}
+            </Select>
+            <Select value={sourceFilter} onChange={(v) => { setSourceFilter(v); setOffset(0); }}>
+              <option value="All">All sources</option>
+              {sources.map((s) => <option key={s} value={s}>{s}</option>)}
+            </Select>
           </div>
 
+          {error && (
+            <div className="mb-2.5 flex items-center justify-between gap-2 rounded-md border border-rose-200 bg-rose-50 px-2.5 py-1.5">
+              <p className="text-[11px] text-rose-700">{error}</p>
+              <button onClick={() => setError(null)} className="text-rose-400 hover:text-rose-700"><TbX size={13} /></button>
+            </div>
+          )}
+
+          {/* Bulk bar */}
           {selectedIds.size > 0 && (
-            <div className="mt-3 sm:mt-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-blue-100 bg-blue-50 px-3 sm:px-4 py-2 sm:py-2.5">
-              <span className="text-sm font-medium text-blue-900">{selectedIds.size} selected</span>
-              <div className="flex flex-wrap items-center gap-2">
-                <button onClick={() => setSelectedIds(new Set())} className="rounded-lg px-2.5 sm:px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-white">
-                  Clear
-                </button>
-                <AddToGroupMenu leadIds={Array.from(selectedIds)} onDone={() => setSelectedIds(new Set())} />
-                <button
-                  onClick={handleBulkDelete}
-                  disabled={bulkDeleting}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-2.5 sm:px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-60"
-                >
-                  <TbTrash size={14} /> {bulkDeleting ? "Deleting..." : `Delete (${selectedIds.size})`}
-                </button>
+            <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1.5">
+              <span className="text-[12px] font-medium tabular-nums text-blue-900">{selectedIds.size} selected</span>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <Select value="" onChange={bulkAssign}>
+                  <option value="">Assign owner…</option>
+                  {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}
+                </Select>
+                <AddToGroupMenu leadIds={[...selectedIds]} onDone={() => setSelectedIds(new Set())} />
+                <TBtn onClick={() => setSelectedIds(new Set())}>Clear</TBtn>
+                <TBtn variant="danger" onClick={bulkDelete}><TbTrash size={13} /> Delete</TBtn>
               </div>
             </div>
           )}
 
-          <div className="mt-3 sm:mt-4 overflow-x-auto rounded-xl glass-card border border-stone-200/60">
-            <div className="grid min-w-[760px] sm:min-w-[900px] w-full grid-cols-[44px_minmax(220px,1.5fr)_minmax(130px,1fr)_minmax(100px,0.7fr)_minmax(110px,0.8fr)_40px] border-b bg-stone-100 text-xs font-semibold uppercase tracking-wide text-gray-500">
-              <span className="flex items-center justify-center px-2 py-3">
-                <input
-                  type="checkbox"
-                  checked={allSelected}
-                  onChange={toggleSelectAll}
-                  className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-blue-600"
-                  title="Select all"
-                />
+          <TableShell>
+            <HeaderRow cols={COLS}>
+              <span className="flex justify-center">
+                <input type="checkbox" checked={allSelected} onChange={toggleAll} className="h-3.5 w-3.5 cursor-pointer accent-blue-600" title="Select all" />
               </span>
-              <span className="px-3 sm:px-4 py-3">Lead</span>
-              <span className="px-3 sm:px-4 py-3">Company</span>
-              <span className="px-3 sm:px-4 py-3">Source</span>
-              <span className="px-3 sm:px-4 py-3">Status</span>
-              <span className="px-3 sm:px-4 py-3 text-right"></span>
-            </div>
+              <span>Lead</span>
+              {!compact && <span>Account</span>}
+              <span>Stage</span>
+              {compact ? <span /> : <span>Owner</span>}
+              {!compact && <span>Outreach</span>}
+              {!compact && <span>Last touch</span>}
+              <span />
+            </HeaderRow>
+
             {loading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="h-12 border-b animate-pulse bg-stone-50/50"></div>
-              ))
-            ) : filteredLeads.length === 0 ? (
-              <div className="px-4 py-10 text-center text-sm text-gray-400">No leads found.</div>
-            ) : filteredLeads.map(lead => (
-              <div
-                key={lead.id}
-                onClick={() => selectLead(lead)}
-                className={cn(
-                  "grid min-w-[760px] sm:min-w-[900px] w-full cursor-pointer grid-cols-[44px_minmax(220px,1.5fr)_minmax(130px,1fr)_minmax(100px,0.7fr)_minmax(110px,0.8fr)_40px] items-center border-b text-left text-sm hover:bg-stone-50 transition-colors",
-                  selectedLead?.id === lead.id && "bg-blue-50 hover:bg-blue-50"
-                )}
-              >
-                <span className="flex items-center justify-center px-2 py-3">
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.has(lead.id)}
-                    onClick={(e) => e.stopPropagation()}
-                    onChange={() => toggleSelect(lead.id)}
-                    className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-blue-600"
-                  />
-                </span>
-                <span className="px-3 sm:px-4 py-3 min-w-0">
-                  <div className="flex flex-col min-w-0">
-                    <span className="font-medium text-stone-900 truncate">{lead.name}</span>
-                    <span className="text-xs text-stone-500 truncate">{lead.email}</span>
-                  </div>
-                </span>
-                <span className="px-3 sm:px-4 py-3 text-gray-600 truncate">{lead.company}</span>
-                <span className="px-3 sm:px-4 py-3 text-xs text-gray-500 truncate">{lead.source}</span>
-                <span className="px-3 sm:px-4 py-3">
-                  <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider", STATUS_COLORS[lead.status])}>
-                    {lead.status}
+              <SkeletonRows cols={COLS} />
+            ) : leads.length === 0 ? (
+              <EmptyState
+                title="No leads match these filters"
+                hint="Try clearing the filters, or import a CSV to get started."
+              />
+            ) : (
+              leads.map((lead) => (
+                <DataRow key={lead.id} cols={COLS} selected={selected?.id === lead.id} onClick={() => openLead(lead)}>
+                  <span className="flex justify-center" onClick={(e) => e.stopPropagation()}>
+                    <input type="checkbox" checked={selectedIds.has(lead.id)} onChange={() => toggle(lead.id)} className="h-3.5 w-3.5 cursor-pointer accent-blue-600" />
                   </span>
-                </span>
-                <span className="px-3 sm:px-4 py-3 text-right">
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleDeleteLead(lead.id); }}
-                    className="p-1 text-stone-400 hover:text-red-600 rounded"
-                  >
-                    <TbTrash size={16} />
-                  </button>
-                </span>
-              </div>
-            ))}
-          </div>
+
+                  <span className="flex min-w-0 flex-col leading-tight">
+                    <span className="truncate font-medium text-stone-900">{lead.name}</span>
+                    <span className="truncate text-[11px] text-stone-400">{lead.email}</span>
+                  </span>
+
+                  {!compact && (
+                    <span className="flex min-w-0 items-center gap-1 text-[12px] text-stone-600">
+                      {lead.account ? (
+                        <>
+                          <TbBuilding size={11} className="shrink-0 text-stone-400" />
+                          <span className="truncate">{lead.account.name}</span>
+                        </>
+                      ) : (
+                        <span className="truncate text-stone-400">{lead.company}</span>
+                      )}
+                    </span>
+                  )}
+
+                  {/* Inline stage edit — the single most-changed field. */}
+                  <span onClick={(e) => e.stopPropagation()}>
+                    <select
+                      value={lead.lifecycleStage}
+                      onChange={(e) => patchLead(lead.id, { lifecycleStage: e.target.value as LifecycleStage })}
+                      className="w-full cursor-pointer appearance-none rounded bg-transparent text-[11px] outline-none"
+                    >
+                      {LIFECYCLE_STAGES.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </span>
+
+                  <span onClick={(e) => e.stopPropagation()} className="flex min-w-0 items-center gap-1.5">
+                    <Avatar name={lead.owner?.fullName} size={18} />
+                    {!compact && (
+                      <select
+                        value={lead.ownerId || ""}
+                        onChange={(e) => patchLead(lead.id, { ownerId: e.target.value || null })}
+                        // Unassigned reads as a quiet dash rather than the word
+                        // repeated down every row.
+                        className={cn(
+                          "min-w-0 flex-1 cursor-pointer truncate rounded bg-transparent text-[11px] outline-none",
+                          lead.ownerId ? "text-stone-600" : "text-stone-300"
+                        )}
+                      >
+                        <option value="">—</option>
+                        {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}
+                      </select>
+                    )}
+                  </span>
+
+                  {!compact && <span className="truncate"><OutreachStatus status={lead.status} /></span>}
+
+                  {!compact && (
+                    <span className="truncate text-[11px] tabular-nums text-stone-400">
+                      {relativeTime(lead.lastActivityAt || lead.addedAt)}
+                    </span>
+                  )}
+
+                  <span className="text-right">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); remove(lead.id); }}
+                      className="rounded p-1 text-stone-300 hover:bg-rose-50 hover:text-rose-600"
+                      title="Delete lead"
+                    >
+                      <TbTrash size={13} />
+                    </button>
+                  </span>
+                </DataRow>
+              ))
+            )}
+          </TableShell>
+
+          <Pagination offset={offset} limit={LIMIT} count={count} onChange={setOffset} />
         </div>
       </main>
 
-      {/* Mobile Drawer Backdrop */}
-      {isPreviewExpanded && (filteredLeads.length > 0 || panelMode === "create") && (
-        <div
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs lg:hidden"
-          onClick={() => setIsPreviewExpanded(false)}
-        />
-      )}
-
-      {/* Aside Detail & Edit Panel */}
-      <aside
-        className={cn(
-          "flex min-h-0 flex-col bg-white overflow-hidden transition-all duration-200 ease-in-out",
-          isPreviewExpanded && (filteredLeads.length > 0 || panelMode === "create")
-            ? "fixed inset-y-0 right-0 z-50 flex h-full w-full sm:w-[480px] max-w-full shadow-2xl lg:static lg:z-auto lg:h-full lg:w-[42%] lg:max-w-none lg:ml-2 lg:rounded-xl lg:shadow-none lg:border lg:border-black/5"
-            : "hidden lg:flex lg:h-full lg:w-0"
-        )}
-      >
-        {isPreviewExpanded && (filteredLeads.length > 0 || panelMode === "create") && (
-          <div className="flex h-full flex-1 flex-col overflow-hidden">
-            <div className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-white px-4 sm:px-5">
-              <p className="-mb-px flex self-stretch items-center border-b-2 border-blue-600 text-md font-medium tracking-tight text-black">
-                {panelMode === "create" ? "Add Lead" : panelMode === "edit" ? "Edit Lead" : "Details"}
+      {/* Detail panel */}
+      {(selected || panelMode === "create") && panelOpen && (
+        <>
+          <div className="fixed inset-0 z-40 glass-overlay lg:hidden" onClick={() => setPanelOpen(false)} />
+          <aside className="fixed inset-y-0 right-0 z-50 flex h-full w-full flex-col overflow-hidden bg-white shadow-2xl sm:w-[460px] lg:static lg:z-auto lg:ml-2 lg:w-[40%] lg:rounded-xl lg:border lg:border-black/5 lg:shadow-none">
+            <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-stone-200/70 px-3">
+              <p className="truncate text-sm font-semibold text-stone-900">
+                {panelMode === "create" ? "New lead" : panelMode === "edit" ? "Edit lead" : selected?.name}
               </p>
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                {panelMode === "view" && selectedLead && (
-                  <button onClick={startEdit} className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100">
-                    Edit
-                  </button>
+              <div className="flex shrink-0 items-center gap-1.5">
+                {panelMode === "view" && selected && (
+                  <>
+                    <TBtn onClick={() => setConverting(selected)} title="Create a deal from this lead">
+                      <TbTargetArrow size={13} /> Convert
+                    </TBtn>
+                    <TBtn onClick={startEdit}>Edit</TBtn>
+                  </>
                 )}
-                <button
-                  onClick={() => setIsPreviewExpanded(false)}
-                  className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-900"
-                  aria-label="Close details"
-                >
-                  <TbX size={18} className="lg:hidden" />
-                  <TbLayoutSidebarRightFilled size={20} className="hidden lg:block" />
+                <button onClick={() => { setPanelOpen(false); setPanelMode("view"); }} className="rounded p-1.5 text-stone-400 hover:bg-stone-100">
+                  <TbX size={16} />
                 </button>
               </div>
             </div>
 
-            <div className="flex-1 overflow-auto">
-              {panelMode === "view" && selectedLead ? (
-                <div className="p-4 sm:p-5 space-y-5 sm:space-y-6">
+            <div className="flex-1 overflow-auto p-3">
+              {panelMode === "view" && selected ? (
+                <div className="space-y-4">
                   <div>
-                    <h2 className="text-xl font-bold text-stone-900 leading-tight">{selectedLead.name}</h2>
-                    <p className="text-sm text-stone-500 font-medium">{selectedLead.title || "No title"} @ {selectedLead.company}</p>
-                    <div className="flex items-center gap-2 mt-3">
-                      <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider", STATUS_COLORS[selectedLead.status])}>
-                        {selectedLead.status}
-                      </span>
+                    <p className="text-[13px] text-stone-500">
+                      {selected.title || "No title"}
+                      {selected.account ? ` · ${selected.account.name}` : selected.company ? ` · ${selected.company}` : ""}
+                    </p>
+
+                    {/* The compact table hides the owner control, so the panel
+                        carries the real one. */}
+                    <div className="mt-2.5 grid grid-cols-2 gap-2">
+                      <label className="flex flex-col gap-1">
+                        <span className="text-[10px] uppercase tracking-wider text-stone-400">Stage</span>
+                        <select
+                          value={selected.lifecycleStage}
+                          onChange={(e) => patchLead(selected.id, { lifecycleStage: e.target.value as LifecycleStage })}
+                          className="w-full cursor-pointer rounded border border-stone-200 bg-white px-2 py-1 text-[12px] outline-none focus:ring-2 focus:ring-blue-500/40"
+                        >
+                          {LIFECYCLE_STAGES.map((st) => <option key={st} value={st}>{st}</option>)}
+                        </select>
+                      </label>
+                      <label className="flex flex-col gap-1">
+                        <span className="text-[10px] uppercase tracking-wider text-stone-400">Owner</span>
+                        <select
+                          value={selected.ownerId || ""}
+                          onChange={(e) => patchLead(selected.id, { ownerId: e.target.value || null })}
+                          className="w-full cursor-pointer rounded border border-stone-200 bg-white px-2 py-1 text-[12px] outline-none focus:ring-2 focus:ring-blue-500/40"
+                        >
+                          <option value="">Unassigned</option>
+                          {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}
+                        </select>
+                      </label>
+                    </div>
+
+                    <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-stone-400">
+                      <OutreachStatus status={selected.status} />
+                      <span>· {selected.source}</span>
+                      <span>· added {relativeTime(selected.addedAt)}</span>
                     </div>
                   </div>
 
-                  <div className="bg-indigo-50/50 rounded-xl border border-indigo-100 p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-indigo-600 font-bold uppercase tracking-wider text-[10px]">
-                        <TbBulb size={16} /> AI Intelligence
+                  {selected.deals && selected.deals.length > 0 && (
+                    <div>
+                      <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-stone-500">Deals</p>
+                      {selected.deals.map((d) => (
+                        <div key={d.id} className="flex items-center justify-between gap-2 border-b border-stone-100 py-1.5 last:border-0">
+                          <span className="truncate text-[13px] text-stone-700">{d.title}</span>
+                          <span className="shrink-0 text-[11px] text-stone-400">{d.stage?.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* AI enrichment. Collapses to one line until there's
+                      something to show — an empty card was pure chrome. */}
+                  {!selected.enrichment && !enriching ? (
+                    <button
+                      onClick={() => enrich(selected.id)}
+                      className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-indigo-200 py-1.5 text-[11px] font-medium text-indigo-500 hover:bg-indigo-50/60"
+                    >
+                      <TbBulb size={13} /> Run AI enrichment
+                    </button>
+                  ) : (
+                    <div className="rounded-lg border border-indigo-100 bg-indigo-50/50 p-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-indigo-600">
+                          <TbBulb size={13} /> AI intelligence
+                        </span>
+                        {!enriching && (
+                          <button onClick={() => enrich(selected.id)} className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-indigo-600 hover:underline">
+                            <TbRefresh size={11} /> Re-run
+                          </button>
+                        )}
                       </div>
-                      {!enriching && (
-                        <button onClick={() => handleEnrich(selectedLead.id)} className="text-[10px] font-bold text-indigo-600 hover:underline flex items-center gap-1 uppercase tracking-wider">
-                          <TbRefresh size={12} /> {enrichment ? "Re-run" : "Run Enrichment"}
-                        </button>
+                      {enriching ? (
+                        <div className="flex flex-col items-center py-3 text-indigo-400">
+                          <TbLoader className="mb-1 animate-spin" size={18} />
+                          <p className="text-[10px] uppercase tracking-widest">Analyzing…</p>
+                        </div>
+                      ) : (
+                        <div className="mt-2 space-y-2">
+                          {Object.entries(selected.enrichment as Record<string, unknown>)
+                            .filter(([, v]) => typeof v === "string" && v)
+                            .map(([k, v]) => (
+                              <div key={k}>
+                                <p className="text-[9px] font-bold uppercase tracking-widest text-indigo-400">
+                                  {k.replace(/([A-Z])/g, " $1").trim()}
+                                </p>
+                                <p className="text-[12px] leading-relaxed text-stone-700">{v as string}</p>
+                              </div>
+                            ))}
+                        </div>
                       )}
                     </div>
-                    {enriching ? (
-                      <div className="flex flex-col items-center py-4 text-indigo-400"><TbLoader className="animate-spin mb-1" size={20} /><p className="text-[10px] font-medium uppercase tracking-widest">Analyzing...</p></div>
-                    ) : enrichment ? (
-                      <div className="space-y-3">
-                        <div><p className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Context</p><p className="text-xs text-stone-700 leading-relaxed">{enrichment.companyDescription}</p></div>
-                        <div><p className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Pain Point</p><p className="text-xs text-stone-700 leading-relaxed font-medium">"{enrichment.potentialPainPoint}"</p></div>
-                        {enrichment.recentNews && <div><p className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Recent News</p><p className="text-xs text-stone-700 leading-relaxed">{enrichment.recentNews}</p></div>}
-                        {enrichment.linkedinDiscoveryHint && <div><p className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest mb-1">LinkedIn Hint</p><p className="text-xs text-stone-700 leading-relaxed">{enrichment.linkedinDiscoveryHint}</p></div>}
-                      </div>
-                    ) : (
-                      <p className="text-[10px] text-indigo-400 italic text-center py-2">No intelligence gathered yet.</p>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-3 sm:gap-4">
-                    <DetailCard label="Email" value={selectedLead.email} />
-                    {selectedLead.phone && <DetailCard label="Phone" value={selectedLead.phone} />}
-                    <DetailCard label="LinkedIn" value={selectedLead.linkedinUrl || "—"} isLink={!!selectedLead.linkedinUrl} />
-                    {selectedLead.seniority && <DetailCard label="Seniority" value={selectedLead.seniority} />}
-                    {selectedLead.department && <DetailCard label="Department" value={selectedLead.department} />}
-                    {selectedLead.industry && <DetailCard label="Industry" value={selectedLead.industry} />}
-                    {selectedLead.employeeCount != null && <DetailCard label="Company Size" value={`${selectedLead.employeeCount} employees`} />}
-                    {selectedLead.annualRevenue && <DetailCard label="Annual Revenue" value={formatRevenue(selectedLead.annualRevenue)} />}
-                    {selectedLead.location && <DetailCard label="Location" value={selectedLead.location} />}
-                    {selectedLead.website && <DetailCard label="Website" value={selectedLead.website} isLink />}
-                    {selectedLead.companyLinkedinUrl && <DetailCard label="Company LinkedIn" value={selectedLead.companyLinkedinUrl} isLink />}
-                    {selectedLead.technologies && <DetailCard label="Tech Stack" value={selectedLead.technologies} />}
-                    {selectedLead.emailStatus && <DetailCard label="Email Status" value={selectedLead.emailStatus} />}
-                    <DetailCard label="Source" value={selectedLead.source} />
-                    <DetailCard label="Notes" value={selectedLead.notes || "—"} />
-                  </div>
-
-                  {selectedLead.raw && Object.keys(selectedLead.raw).length > 0 && (
-                    <RawDataSection raw={selectedLead.raw} />
                   )}
+
+                  <DetailFields lead={selected} />
+
+                  {selected.notes && (
+                    <div>
+                      <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-stone-500">Notes</p>
+                      <p className="whitespace-pre-wrap rounded border border-stone-100 p-2 text-[12px] leading-relaxed text-stone-600">{selected.notes}</p>
+                    </div>
+                  )}
+
+                  {selected.raw && Object.keys(selected.raw).length > 0 && <RawData raw={selected.raw} />}
+
+                  <div>
+                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-stone-500">Activity</p>
+                    <Timeline leadId={selected.id} onLogged={load} />
+                  </div>
                 </div>
               ) : (
-                <form onSubmit={handleSave} className="flex flex-col h-full p-4 sm:p-5 space-y-4">
-                  <div className="space-y-4">
-                    <FormInput label="Full Name" value={form.name} onChange={v => setForm({ ...form, name: v })} required placeholder="John Doe" />
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                      <FormInput label="Company" value={form.company} onChange={v => setForm({ ...form, company: v })} required placeholder="Acme Inc" />
-                      <FormInput label="Job Title" value={form.title} onChange={v => setForm({ ...form, title: v })} placeholder="CEO" />
-                    </div>
-                    <FormInput label="Email Address" value={form.email} onChange={v => setForm({ ...form, email: v })} required type="email" placeholder="john@acme.com" />
-                    <FormInput label="LinkedIn URL" value={form.linkedinUrl} onChange={v => setForm({ ...form, linkedinUrl: v })} placeholder="https://linkedin.com/in/..." />
-                    <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
-                      Internal Notes
-                      <textarea
-                        value={form.notes}
-                        onChange={e => setForm({ ...form, notes: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg border border-gray-200 outline-none focus:ring-2 focus:ring-blue-500 bg-white resize-none h-32 text-sm"
-                        placeholder="Add details about this lead..."
-                      />
-                    </label>
+                <form onSubmit={save} className="space-y-2.5">
+                  <FormField label="Full name" value={form.name} onChange={(v) => setForm({ ...form, name: v })} required />
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <FormField label="Company" value={form.company} onChange={(v) => setForm({ ...form, company: v })} required />
+                    <FormField label="Job title" value={form.title} onChange={(v) => setForm({ ...form, title: v })} />
                   </div>
-                  <div className="flex items-center justify-end gap-3 border-t pt-4 mt-auto">
-                    <button type="button" onClick={() => setPanelMode("view")} className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">
-                      Cancel
-                    </button>
-                    <button type="submit" disabled={saving} className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-60 transition-colors">
-                      {saving ? "Saving..." : panelMode === "create" ? "Create Lead" : "Save Changes"}
-                    </button>
+                  <FormField label="Email" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} required />
+                  <FormField label="LinkedIn URL" value={form.linkedinUrl} onChange={(v) => setForm({ ...form, linkedinUrl: v })} />
+                  <label className="block">
+                    <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-stone-500">Notes</span>
+                    <textarea
+                      value={form.notes}
+                      onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                      className="h-24 w-full resize-none rounded border border-stone-200 bg-white px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40"
+                    />
+                  </label>
+                  <div className="flex justify-end gap-2 border-t border-stone-100 pt-3">
+                    <TBtn onClick={() => setPanelMode("view")}>Cancel</TBtn>
+                    <TBtn variant="solid" type="submit" disabled={saving}>{saving ? "Saving…" : "Save"}</TBtn>
                   </div>
                 </form>
               )}
             </div>
-          </div>
-        )}
-      </aside>
+          </aside>
+        </>
+      )}
 
-      {showImport && (
-        <LeadImportModal
-          onClose={(didImport) => {
-            setShowImport(false);
-            if (didImport) fetchLeads();
-          }}
+      {showImport && <LeadImportModal onClose={(did) => { setShowImport(false); if (did) load(); }} />}
+      {converting && (
+        <ConvertDealDialog
+          lead={converting}
+          onClose={(created) => { setConverting(null); if (created) { load(); if (selected) openLead(selected); } }}
         />
       )}
     </div>
   );
 }
 
-function DetailCard({ label, value, isLink }: { label: string; value: string; isLink?: boolean }) {
+function Select({ value, onChange, children }: { value: string; onChange: (v: string) => void; children: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-gray-100 p-3">
-      <p className="text-xs text-gray-400 mb-1">{label}</p>
-      {isLink ? (
-        <a href={value.startsWith('http') ? value : `https://${value}`} target="_blank" className="font-medium text-blue-600 hover:underline truncate block">{value}</a>
-      ) : (
-        <p className="font-medium text-gray-900 leading-relaxed">{value}</p>
-      )}
-    </div>
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="rounded-md border border-stone-200 bg-white/70 px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500/40"
+    >
+      {children}
+    </select>
   );
 }
 
-function formatRevenue(v: string): string {
-  const n = Number(String(v).replace(/[^0-9.]/g, ""));
-  if (!Number.isFinite(n) || n === 0) return v;
-  if (n >= 1e9) return `$${(n / 1e9).toFixed(1)}B`;
-  if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`;
-  if (n >= 1e3) return `$${(n / 1e3).toFixed(0)}K`;
-  return `$${n}`;
+/**
+ * Only fields that actually have a value. Rendering all eight as bordered boxes
+ * meant six empty "—" cards on a typical imported lead, which read as clutter
+ * rather than information.
+ */
+function DetailFields({ lead }: { lead: Lead }) {
+  const fields: { label: string; value?: string | null; link?: boolean }[] = [
+    { label: "Email", value: lead.email },
+    { label: "Phone", value: lead.phone },
+    { label: "LinkedIn", value: lead.linkedinUrl, link: true },
+    { label: "Website", value: lead.website, link: true },
+    { label: "Seniority", value: lead.seniority },
+    { label: "Department", value: lead.department },
+    { label: "Industry", value: lead.industry },
+    { label: "Location", value: lead.location },
+  ].filter((f) => f.value);
+
+  if (fields.length === 0) return null;
+
+  return (
+    <dl className="grid grid-cols-[76px_minmax(0,1fr)] items-baseline gap-x-3 gap-y-2">
+      {fields.map((f) => (
+        <Fragment key={f.label}>
+          <dt className="text-[11px] text-stone-400">{f.label}</dt>
+          <dd className="min-w-0 text-[13px] text-stone-800">
+            {f.link ? (
+              <a
+                href={f.value!.startsWith("http") ? f.value! : `https://${f.value}`}
+                target="_blank" rel="noreferrer"
+                className="flex items-center gap-1 truncate text-blue-600 hover:underline"
+              >
+                <span className="truncate">{f.value}</span>
+                <TbExternalLink size={11} className="shrink-0" />
+              </a>
+            ) : (
+              <span className="block truncate">{f.value}</span>
+            )}
+          </dd>
+        </Fragment>
+      ))}
+    </dl>
+  );
 }
 
-function RawDataSection({ raw }: { raw: Record<string, string> }) {
+function FormField({
+  label, value, onChange, required, type = "text",
+}: { label: string; value: string; onChange: (v: string) => void; required?: boolean; type?: string }) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-stone-500">{label}</span>
+      <input
+        required={required}
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded border border-stone-200 bg-white px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40"
+      />
+    </label>
+  );
+}
+
+function RawData({ raw }: { raw: Record<string, string> }) {
   const [open, setOpen] = useState(false);
   const entries = Object.entries(raw);
   return (
-    <div className="mt-4 rounded-xl border border-gray-100">
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-stone-50 rounded-xl"
-      >
-        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
-          All Apollo data ({entries.length} fields)
+    <div className="rounded-lg border border-stone-100">
+      <button onClick={() => setOpen((o) => !o)} className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left hover:bg-stone-50">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-stone-500">
+          All imported data ({entries.length} fields)
         </span>
-        <TbChevronDown className={cn("text-gray-400 transition-transform", open && "rotate-180")} size={16} />
+        <TbChevronDown size={14} className={cn("text-stone-400 transition-transform", open && "rotate-180")} />
       </button>
       {open && (
-        <div className="divide-y divide-gray-50 border-t">
+        <div className="divide-y divide-stone-50 border-t border-stone-100">
           {entries.map(([k, v]) => (
-            <div key={k} className="grid grid-cols-[38%_62%] gap-2 px-4 py-2 text-xs">
-              <span className="break-words text-gray-400">{k}</span>
-              <span className="break-words text-gray-800">{v}</span>
+            <div key={k} className="grid grid-cols-[38%_62%] gap-2 px-2.5 py-1.5 text-[11px]">
+              <span className="break-words text-stone-400">{k}</span>
+              <span className="break-words text-stone-700">{v}</span>
             </div>
           ))}
         </div>
       )}
     </div>
-  );
-}
-
-function FormInput({ label, value, onChange, required, type = "text", placeholder }: { label: string; value: string; onChange: (v: string) => void; required?: boolean; type?: string; placeholder?: string }) {
-  return (
-    <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
-      {label}
-      <input
-        required={required}
-        type={type}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full px-3 py-2 rounded-lg border border-stone-200 outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
-      />
-    </label>
   );
 }

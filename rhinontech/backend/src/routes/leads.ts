@@ -1,5 +1,6 @@
 import { Router, Response } from "express";
-import { Lead, Campaign, CampaignActivity, ContactGroup, ContactGroupMember } from "../models";
+import { Lead, Campaign, CampaignActivity, ContactGroup, ContactGroupMember, Account, Deal, PipelineStage, Activity, User, Task } from "../models";
+import { findOrCreateAccountForLead } from "./accounts";
 import { authenticate, authorizeAny, AuthRequest } from "../middleware/authenticate";
 import { enrichLeadWithAI } from "../services/gemini";
 import { fetchWebsiteText } from "../services/research";
@@ -11,6 +12,13 @@ const router = Router();
 
 router.use(authenticate);
 
+const OWNER_ATTRS = ["id", "fullName", "companyEmail"];
+const LIST_INCLUDES = [
+  { model: Campaign, as: "campaign", attributes: ["name"] },
+  { model: User, as: "owner", attributes: OWNER_ATTRS },
+  { model: Account, as: "account", attributes: ["id", "name", "domain"] },
+];
+
 const readAccess = authorizeAny("crm:read", "outreach:read");
 const writeAccess = authorizeAny("crm:write", "outreach:write");
 
@@ -18,12 +26,15 @@ const writeAccess = authorizeAny("crm:write", "outreach:write");
 // Pagination (limit/offset) is opt-in: pass `limit` to get `{ rows, count }`;
 // omit it to get the legacy plain-array shape used by existing Outreach callers.
 router.get("/", readAccess, async (req: AuthRequest, res: Response) => {
-  const { status, campaignId, source, search, limit, offset, idsOnly } = req.query;
+  const { status, campaignId, source, search, limit, offset, idsOnly, ownerId, lifecycleStage, accountId } = req.query;
   const where: any = {};
 
   if (status) where.status = status;
   if (campaignId) where.campaignId = campaignId;
   if (source) where.source = source;
+  if (ownerId) where.ownerId = ownerId === "unassigned" ? (null as any) : ownerId;
+  if (lifecycleStage) where.lifecycleStage = lifecycleStage;
+  if (accountId) where.accountId = accountId;
   if (search) {
     where[Op.or] = [
       { name: { [Op.iLike]: `%${search}%` } },
@@ -41,7 +52,7 @@ router.get("/", readAccess, async (req: AuthRequest, res: Response) => {
   if (limit) {
     const { rows, count } = await Lead.findAndCountAll({
       where,
-      include: [{ model: Campaign, as: "campaign", attributes: ["name"] }],
+      include: LIST_INCLUDES,
       order: [["addedAt", "DESC"]],
       limit: Math.min(parseInt(limit as string, 10) || 50, 200),
       offset: parseInt((offset as string) || "0", 10) || 0,
@@ -52,7 +63,7 @@ router.get("/", readAccess, async (req: AuthRequest, res: Response) => {
 
   const leads = await Lead.findAll({
     where,
-    include: [{ model: Campaign, as: "campaign", attributes: ["name"] }],
+    include: LIST_INCLUDES,
     order: [["addedAt", "DESC"]],
   });
 
@@ -73,8 +84,15 @@ router.get("/sources", readAccess, async (_req: AuthRequest, res: Response) => {
 // POST /leads - create lead manually
 router.post("/", writeAccess, async (req: AuthRequest, res: Response) => {
   try {
-    const lead = await Lead.create(req.body);
-    res.status(201).json(lead);
+    const lead = await Lead.create({ ...req.body, ownerId: req.body?.ownerId ?? req.user!.userId });
+
+    // Group the new contact under its company automatically.
+    if (!lead.accountId) {
+      const account = await findOrCreateAccountForLead(lead, req.user!.userId);
+      if (account) await lead.update({ accountId: account.id });
+    }
+
+    res.status(201).json(await Lead.findByPk(lead.id, { include: LIST_INCLUDES }));
   } catch (error: any) {
     res.status(400).json({ message: error.message });
   }
@@ -240,7 +258,11 @@ router.get("/:id", readAccess, async (req: AuthRequest, res: Response) => {
   const lead = await Lead.findByPk(req.params.id, {
     include: [
       { model: Campaign, as: "campaign" },
-      { model: CampaignActivity, as: "activities", order: [["timestamp", "DESC"]] }
+      { model: CampaignActivity, as: "activities", order: [["timestamp", "DESC"]] },
+      { model: User, as: "owner", attributes: OWNER_ATTRS },
+      { model: Account, as: "account" },
+      { model: Deal, as: "deals", include: [{ model: PipelineStage, as: "stage" }] },
+      { model: Task, as: "tasks" },
     ],
   });
 
@@ -260,8 +282,37 @@ router.put("/:id", writeAccess, async (req: AuthRequest, res: Response) => {
     return;
   }
 
+  const before = { lifecycleStage: lead.lifecycleStage, ownerId: lead.ownerId };
   await lead.update(req.body);
-  res.json(lead);
+
+  // Ownership and qualification changes are the two things a sales manager
+  // asks "who did that, and when" about, so both are written to the timeline.
+  if (req.body?.lifecycleStage && req.body.lifecycleStage !== before.lifecycleStage) {
+    await Activity.create({
+      leadId: lead.id,
+      accountId: lead.accountId,
+      userId: req.user!.userId,
+      type: "LifecycleChange",
+      subject: `${before.lifecycleStage} \u2192 ${lead.lifecycleStage}`,
+      metadata: { from: before.lifecycleStage, to: lead.lifecycleStage },
+    });
+  }
+  if (req.body?.ownerId !== undefined && req.body.ownerId !== before.ownerId) {
+    const [fromUser, toUser] = await Promise.all([
+      before.ownerId ? User.findByPk(before.ownerId, { attributes: OWNER_ATTRS }) : null,
+      lead.ownerId ? User.findByPk(lead.ownerId, { attributes: OWNER_ATTRS }) : null,
+    ]);
+    await Activity.create({
+      leadId: lead.id,
+      accountId: lead.accountId,
+      userId: req.user!.userId,
+      type: "OwnerChange",
+      subject: `${fromUser?.fullName || "Unassigned"} \u2192 ${toUser?.fullName || "Unassigned"}`,
+      metadata: { from: before.ownerId, to: lead.ownerId },
+    });
+  }
+
+  res.json(await Lead.findByPk(lead.id, { include: LIST_INCLUDES }));
 });
 
 // DELETE /leads/:id - delete lead
@@ -321,6 +372,79 @@ router.post("/:id/enrich", writeAccess, async (req: AuthRequest, res: Response) 
     res.json(enrichment);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+ * POST /leads/:id/convert - turn a qualified lead into a deal.
+ *
+ * This is the step the app previously had no way to express: a won lead was
+ * re-typed into a Project by hand. Creating the deal also ensures the lead has
+ * an account, and marks it Qualified.
+ */
+router.post("/:id/convert", writeAccess, async (req: AuthRequest, res: Response) => {
+  const lead = await Lead.findByPk(req.params.id);
+  if (!lead) {
+    res.status(404).json({ message: "Lead not found" });
+    return;
+  }
+
+  try {
+    let accountId = lead.accountId;
+    if (!accountId) {
+      const account = await findOrCreateAccountForLead(lead, req.user!.userId);
+      accountId = account?.id ?? null;
+      if (accountId) await lead.update({ accountId });
+    }
+
+    const stageId =
+      req.body?.stageId ||
+      (await PipelineStage.findOne({ where: { type: "Open" }, order: [["position", "ASC"]] }))?.id ||
+      null;
+    const stage = stageId ? await PipelineStage.findByPk(stageId) : null;
+
+    const deal = await Deal.create({
+      title: req.body?.title || `${lead.company} — ${lead.name}`,
+      accountId,
+      primaryLeadId: lead.id,
+      ownerId: req.body?.ownerId || lead.ownerId || req.user!.userId,
+      value: req.body?.value ?? 0,
+      currency: req.body?.currency || "INR",
+      stageId,
+      status: stage?.type || "Open",
+      expectedCloseDate: req.body?.expectedCloseDate || null,
+      source: lead.source,
+      notes: req.body?.notes || null,
+      createdById: req.user!.userId,
+    });
+
+    // Converting is itself a qualification decision, so record it.
+    if (lead.lifecycleStage !== "Customer") {
+      await lead.update({ lifecycleStage: "Qualified" });
+    }
+
+    await Activity.create({
+      leadId: lead.id,
+      dealId: deal.id,
+      accountId,
+      userId: req.user!.userId,
+      type: "System",
+      subject: `Converted to deal: ${deal.title}`,
+      metadata: { dealId: deal.id, value: Number(deal.value || 0), currency: deal.currency },
+    });
+
+    res.status(201).json(
+      await Deal.findByPk(deal.id, {
+        include: [
+          { model: PipelineStage, as: "stage" },
+          { model: Account, as: "account", attributes: ["id", "name", "domain"] },
+          { model: Lead, as: "primaryLead", attributes: ["id", "name", "email", "title"] },
+          { model: User, as: "owner", attributes: OWNER_ATTRS },
+        ],
+      })
+    );
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
   }
 });
 

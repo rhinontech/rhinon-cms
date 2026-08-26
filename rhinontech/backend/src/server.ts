@@ -7,6 +7,7 @@ import { Attendance } from "./models/Attendance";
 import { finalizeDueOffboardings } from "./services/offboarding";
 import { runWorkflowEngineCycle } from "./services/workflowEngine";
 import { syncPermissionCatalog } from "./config/permissions";
+import { seedPipelineStages } from "./config/pipeline";
 import { Op } from "sequelize";
 import cron from "node-cron";
 import axios from "axios";
@@ -54,6 +55,14 @@ async function start() {
     console.log(`[Permissions] Catalog synced (${total} permissions, ${created} new)`);
   } catch (err: any) {
     console.error("[Permissions] Catalog sync failed:", err.message);
+  }
+
+  // Create the default deal stages on a fresh database (no-op once any exist)
+  try {
+    const { total, created } = await seedPipelineStages();
+    console.log(`[CRM] Pipeline stages ready (${total} stages, ${created} new)`);
+  } catch (err: any) {
+    console.error("[CRM] Pipeline stage seed failed:", err.message);
   }
 
   // Catch up on exits whose last working day passed while the server was down

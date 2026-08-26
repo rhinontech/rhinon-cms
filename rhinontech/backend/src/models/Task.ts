@@ -19,12 +19,16 @@ interface TaskAttributes {
   estimatedHours?: number | null;
   recurrence?: TaskRecurrence | null;
   blockedById?: string | null;
+  // CRM linkage: lets a follow-up hang off a lead / deal / account.
+  leadId?: string | null;
+  dealId?: string | null;
+  accountId?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
 interface TaskCreationAttributes
-  extends Optional<TaskAttributes, "id" | "description" | "assigneeId" | "projectId" | "team" | "dueDate" | "status" | "priority" | "estimatedHours" | "recurrence" | "blockedById"> {}
+  extends Optional<TaskAttributes, "id" | "description" | "assigneeId" | "projectId" | "team" | "dueDate" | "status" | "priority" | "estimatedHours" | "recurrence" | "blockedById" | "leadId" | "dealId" | "accountId"> {}
 
 export class Task extends Model<TaskAttributes, TaskCreationAttributes> implements TaskAttributes {
   declare id: string;
@@ -40,6 +44,9 @@ export class Task extends Model<TaskAttributes, TaskCreationAttributes> implemen
   declare estimatedHours: number | null;
   declare recurrence: TaskRecurrence | null;
   declare blockedById: string | null;
+  declare leadId: string | null;
+  declare dealId: string | null;
+  declare accountId: string | null;
   declare createdAt: Date;
   declare updatedAt: Date;
 }
@@ -59,6 +66,9 @@ Task.init(
     estimatedHours: { type: DataTypes.FLOAT, allowNull: true },
     recurrence: { type: DataTypes.ENUM("Daily", "Weekly", "Monthly"), allowNull: true },
     blockedById: { type: DataTypes.UUID, allowNull: true },
+    leadId: { type: DataTypes.UUID, allowNull: true },
+    dealId: { type: DataTypes.UUID, allowNull: true },
+    accountId: { type: DataTypes.UUID, allowNull: true },
   },
   { sequelize, tableName: "tasks", timestamps: true }
 );
