@@ -583,11 +583,24 @@ router.get("/track/open", async (req: Request, res: Response) => {
           });
         }
 
+        // `n` names the email step that produced this pixel, so opens attribute
+        // to the right node instead of collapsing into one sequence-wide flag.
+        const nodeId = req.query.n as string | undefined;
+        const nodes = { ...(state.nodes || {}) };
+        if (nodeId) {
+          nodes[nodeId] = {
+            ...(nodes[nodeId] || {}),
+            openedAt: nodes[nodeId]?.openedAt || new Date().toISOString(),
+          };
+        }
+
         enrollment.changed("trackingState", true);
         enrollment.changed("executionLogs", true);
         await enrollment.update({
           trackingState: {
             ...state,
+            nodes,
+            // Kept for enrollments and reports that predate per-node tracking.
             emailOpened: true,
             openedAt: state.openedAt || new Date().toISOString(),
           },
@@ -645,11 +658,24 @@ router.get("/track/click", async (req: Request, res: Response) => {
           });
         }
 
+        const nodeId = req.query.n as string | undefined;
+        const nodes = { ...(state.nodes || {}) };
+        if (nodeId) {
+          const prev = nodes[nodeId] || {};
+          const prevUrls = Array.isArray(prev.clickedUrls) ? prev.clickedUrls : [];
+          nodes[nodeId] = {
+            ...prev,
+            clickedAt: prev.clickedAt || new Date().toISOString(),
+            clickedUrls: prevUrls.includes(targetUrl) ? prevUrls : [...prevUrls, targetUrl],
+          };
+        }
+
         enrollment.changed("trackingState", true);
         enrollment.changed("executionLogs", true);
         await enrollment.update({
           trackingState: {
             ...state,
+            nodes,
             linkClicked: true,
             clickedAt: state.clickedAt || new Date().toISOString(),
             clickedUrls,

@@ -13,6 +13,7 @@ import { LeadImportModal } from "./LeadImportModal";
 import { AddToGroupMenu } from "@/components/Admin/Outreach/contacts/AddToGroupMenu";
 import { ConvertDealDialog } from "./ConvertDealDialog";
 import { Timeline } from "./Timeline";
+import { SavedViews, type SavedView } from "./SavedViews";
 import { RelatedTasks } from "./RelatedTasks";
 import { LIFECYCLE_STAGES, type Lead, type LifecycleStage, type UserRef } from "./types";
 import {
@@ -47,6 +48,7 @@ export function LeadsPage() {
   const [ownerFilter, setOwnerFilter] = useState("All");
   const [sources, setSources] = useState<string[]>([]);
   const [owners, setOwners] = useState<UserRef[]>([]);
+  const [activeViewId, setActiveViewId] = useState<string | null>(null);
 
   const [selected, setSelected] = useState<Lead | null>(null);
   const [panelMode, setPanelMode] = useState<PanelMode>("view");
@@ -59,6 +61,26 @@ export function LeadsPage() {
   const [saving, setSaving] = useState(false);
 
   const [form, setForm] = useState({ name: "", company: "", email: "", title: "", linkedinUrl: "", notes: "" });
+
+  // A view is just the filter values the list endpoint already accepts, so
+  // applying one is a straight assignment rather than a separate query path.
+  const currentFilters = {
+    search: debounced,
+    lifecycleStage: lifecycleFilter === "All" ? "" : lifecycleFilter,
+    source: sourceFilter === "All" ? "" : sourceFilter,
+    ownerId: ownerFilter === "All" ? "" : ownerFilter,
+  };
+
+  const applyView = (view: SavedView | null) => {
+    const f = view?.filters || {};
+    setSearch(f.search || "");
+    setDebounced(f.search || "");
+    setLifecycleFilter(f.lifecycleStage || "All");
+    setSourceFilter(f.source || "All");
+    setOwnerFilter(f.ownerId || "All");
+    setActiveViewId(view?.id ?? null);
+    setOffset(0);
+  };
 
   const panelVisible = Boolean((selected || panelMode === "create") && panelOpen);
   const compact = panelVisible;
@@ -267,6 +289,13 @@ export function LeadsPage() {
               <option value="All">All sources</option>
               {sources.map((s) => <option key={s} value={s}>{s}</option>)}
             </Select>
+
+            <SavedViews
+              entity="lead"
+              currentFilters={currentFilters}
+              activeViewId={activeViewId}
+              onApply={applyView}
+            />
           </div>
 
           {error && (

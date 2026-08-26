@@ -4,6 +4,7 @@ import { WorkflowEnrollment } from "../models/WorkflowEnrollment";
 import { Lead, ContactGroup, ContactGroupMember, Unsubscribe, Task, Activity } from "../models";
 import { sendEmail } from "./mailer";
 import { toEmailHtml, stripHtml, BACKEND_URL } from "./emailTemplate";
+import { isRotationEnabled, pickMailbox } from "./mailboxes";
 
 const UUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 function isUuid(val: any): boolean {
@@ -378,7 +379,7 @@ async function executeEnrollmentSteps(
         // Rewrite links for click tracking
         richHtml = richHtml.replace(/<a\s+(?:[^>]*?\s+)?href=["']([^"']+)["']/gi, (match, url) => {
           if (url && url.startsWith("http") && !url.includes("/public/track/")) {
-            const trackedUrl = `${BACKEND_URL}/public/track/click?e=${enrollment.id}&url=${encodeURIComponent(url)}`;
+            const trackedUrl = `${BACKEND_URL}/public/track/click?e=${enrollment.id}&n=${encodeURIComponent(currNodeId)}&url=${encodeURIComponent(url)}`;
             return match.replace(url, trackedUrl);
           }
           return match;
@@ -388,14 +389,33 @@ async function executeEnrollmentSteps(
         // rich-text content (lists, bold, links, etc.) the CSS it actually
         // needs to render across email clients, instead of going out as bare
         // unstyled HTML. Also carries the open-tracking pixel.
-        const trackingPixelUrl = `${BACKEND_URL}/public/track/open?e=${enrollment.id}`;
+        const trackingPixelUrl = `${BACKEND_URL}/public/track/open?e=${enrollment.id}&n=${encodeURIComponent(currNodeId)}`;
         const htmlBody = toEmailHtml(richHtml, undefined, trackingPixelUrl, enrollment.leadEmail);
+
+        // An explicit From on the node always wins; rotation only fills the gap.
+        let fromEmail: string | undefined = config.fromEmail;
+        let fromName: string | undefined = config.fromName;
+
+        if (!fromEmail && isRotationEnabled()) {
+          const { mailbox, allCapped } = await pickMailbox();
+          if (allCapped) {
+            const tomorrow = new Date();
+            tomorrow.setHours(24, 5, 0, 0);
+            logs.push({ timestamp: new Date().toISOString(), step: `Every sending address hit its daily cap — deferred to ${tomorrow.toISOString()}.` });
+            await enrollment.update({ currentNodeId: currNodeId, nextStepAt: tomorrow, executionLogs: logs });
+            break;
+          }
+          if (mailbox) {
+            fromEmail = mailbox.email;
+            fromName = fromName || mailbox.name;
+          }
+        }
 
         try {
           await sendEmail({
             to: enrollment.leadEmail,
-            from: config.fromEmail,
-            fromName: config.fromName || "Rhinon Automation",
+            from: fromEmail,
+            fromName: fromName || "Rhinon Automation",
             subject,
             html: htmlBody,
             text: stripHtml(richHtml),
@@ -406,6 +426,19 @@ async function executeEnrollmentSteps(
             step: `Email sent to ${enrollment.leadEmail}: "${subject}"`,
           });
 
+          // Per-node send record. Without this, opens can only be known
+          // sequence-wide, which is both useless for step stats and wrong for
+          // any if_then that follows a later email.
+          {
+            const state = enrollment.trackingState || {};
+            const nodes = { ...(state.nodes || {}) };
+            nodes[currNodeId] = { ...(nodes[currNodeId] || {}), sentAt: new Date().toISOString() };
+            enrollment.changed("trackingState", true);
+            await enrollment.update({
+              trackingState: { ...state, nodes, lastEmailNodeId: currNodeId },
+            });
+          }
+
           // Doubles as the CRM timeline entry and as the unit the daily cap counts.
           if (enrollment.leadId) {
             await Activity.create({
@@ -414,7 +447,7 @@ async function executeEnrollmentSteps(
               direction: "Outbound",
               subject,
               body: stripHtml(richHtml).slice(0, 500),
-              metadata: { source: "workflow", workflowId: workflow.id, nodeId: currNodeId },
+              metadata: { source: "workflow", workflowId: workflow.id, nodeId: currNodeId, ...(fromEmail ? { from: fromEmail } : {}) },
             });
             await Lead.update({ lastActivityAt: new Date() }, { where: { id: enrollment.leadId } });
           }
@@ -518,11 +551,22 @@ async function executeEnrollmentSteps(
         const trackingState = enrollment.trackingState || {};
         let conditionResult = false;
 
+        // Scope the check to the email this branch actually follows. The old
+        // sequence-wide flags meant "opened step 1" satisfied a check placed
+        // after step 3. Enrollments that predate per-node tracking have no
+        // `nodes` entry, so they fall back to the old flags rather than
+        // silently evaluating false.
+        const lastEmailNodeId = trackingState.lastEmailNodeId;
+        const lastSend = lastEmailNodeId ? trackingState.nodes?.[lastEmailNodeId] : null;
+
         if (config.conditionType === "link_clicked") {
-          conditionResult = Boolean(trackingState.linkClicked);
+          conditionResult = lastSend
+            ? Boolean(lastSend.clickedAt)
+            : Boolean(trackingState.linkClicked);
         } else {
-          // Default to email_opened
-          conditionResult = Boolean(trackingState.emailOpened);
+          conditionResult = lastSend
+            ? Boolean(lastSend.openedAt)
+            : Boolean(trackingState.emailOpened);
         }
 
         logs.push({

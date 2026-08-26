@@ -1,6 +1,6 @@
 import { Router, Response } from "express";
 import { Op, fn, col, literal } from "sequelize";
-import { User, Deal, PipelineStage, Lead, Activity, PageView, Account } from "../models";
+import { User, Deal, PipelineStage, Lead, Activity, PageView, Account, SavedView } from "../models";
 import { isIpCompanyLookupEnabled } from "../services/ipCompany";
 import { sequelize } from "../config/database";
 import { authenticate, authorizeAny, AuthRequest } from "../middleware/authenticate";
@@ -9,6 +9,7 @@ const router = Router();
 router.use(authenticate);
 
 const readAccess = authorizeAny("crm:read", "outreach:read");
+const writeAccess = authorizeAny("crm:write", "outreach:write");
 
 /**
  * GET /crm/users - assignable record owners.
@@ -319,6 +320,77 @@ router.get("/intent", readAccess, async (req: AuthRequest, res: Response) => {
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
+});
+
+// ---------------------------------------------------------------------------
+// Saved views — named filter sets for the list screens
+// ---------------------------------------------------------------------------
+
+// GET /crm/views?entity=lead — shared views plus the caller's own private ones
+router.get("/views", readAccess, async (req: AuthRequest, res: Response) => {
+  const where: any = {
+    [Op.or]: [{ isShared: true }, { createdById: req.user!.userId }],
+  };
+  if (req.query.entity) where.entity = req.query.entity;
+
+  const views = await SavedView.findAll({
+    where,
+    include: [{ model: User, as: "creator", attributes: ["id", "fullName"] }],
+    order: [["name", "ASC"]],
+  });
+  res.json(views);
+});
+
+router.post("/views", writeAccess, async (req: AuthRequest, res: Response) => {
+  try {
+    const name = (req.body?.name || "").toString().trim();
+    if (!name) {
+      res.status(400).json({ message: "Name is required" });
+      return;
+    }
+    const view = await SavedView.create({
+      name,
+      entity: req.body?.entity || "lead",
+      filters: req.body?.filters && typeof req.body.filters === "object" ? req.body.filters : {},
+      isShared: req.body?.isShared !== false,
+      createdById: req.user!.userId,
+    });
+    res.status(201).json(view);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+router.put("/views/:id", writeAccess, async (req: AuthRequest, res: Response) => {
+  const view = await SavedView.findByPk(req.params.id);
+  if (!view) {
+    res.status(404).json({ message: "View not found" });
+    return;
+  }
+  if (view.createdById !== req.user!.userId) {
+    res.status(403).json({ message: "Only the author can change this view" });
+    return;
+  }
+  await view.update({
+    ...(req.body?.name !== undefined ? { name: String(req.body.name).trim() } : {}),
+    ...(req.body?.filters !== undefined ? { filters: req.body.filters } : {}),
+    ...(req.body?.isShared !== undefined ? { isShared: Boolean(req.body.isShared) } : {}),
+  });
+  res.json(view);
+});
+
+router.delete("/views/:id", writeAccess, async (req: AuthRequest, res: Response) => {
+  const view = await SavedView.findByPk(req.params.id);
+  if (!view) {
+    res.status(404).json({ message: "View not found" });
+    return;
+  }
+  if (view.createdById !== req.user!.userId) {
+    res.status(403).json({ message: "Only the author can delete this view" });
+    return;
+  }
+  await view.destroy();
+  res.json({ message: "View deleted" });
 });
 
 export default router;

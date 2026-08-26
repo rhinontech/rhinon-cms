@@ -47,6 +47,7 @@ import { Account } from "./Account";
 import { PipelineStage } from "./PipelineStage";
 import { Deal } from "./Deal";
 import { Activity } from "./Activity";
+import { SavedView } from "./SavedView";
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/database";
 
@@ -250,6 +251,9 @@ Deal.hasMany(Activity, { foreignKey: "dealId", as: "timeline" });
 Activity.belongsTo(User, { foreignKey: "userId", as: "user" });
 User.hasMany(Activity, { foreignKey: "userId", as: "activities" });
 
+SavedView.belongsTo(User, { foreignKey: "createdById", as: "creator" });
+User.hasMany(SavedView, { foreignKey: "createdById", as: "savedViews" });
+
 // Follow-up tasks hanging off CRM records
 Task.belongsTo(Lead, { foreignKey: "leadId", as: "lead" });
 Lead.hasMany(Task, { foreignKey: "leadId", as: "tasks" });
@@ -304,6 +308,7 @@ export {
   PipelineStage,
   Deal,
   Activity,
+  SavedView,
 };
 
 export async function syncDatabase(force = false) {
