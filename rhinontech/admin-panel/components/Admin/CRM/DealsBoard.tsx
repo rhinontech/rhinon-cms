@@ -6,13 +6,14 @@ import {
   useDroppable, useDraggable, type DragEndEvent, type DragStartEvent,
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { TbPlus, TbBuilding, TbCalendar, TbX } from "react-icons/tb";
+import { TbPlus, TbBuilding, TbCalendar, TbX, TbSettings } from "react-icons/tb";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { useSideNav } from "@/context/SideNavContext";
 import type { BoardStage, Deal, UserRef, AccountRef, PipelineStage } from "./types";
 import { DealDrawer } from "./DealDrawer";
+import { StageSettingsDialog } from "./StageSettingsDialog";
 import { Avatar, StageDot, TBtn, formatMoney, formatDate } from "./ui";
 
 interface BoardResponse {
@@ -30,6 +31,7 @@ export function DealsBoard() {
   const [showNew, setShowNew] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [openDealId, setOpenDealId] = useState<string | null>(null);
+  const [showStages, setShowStages] = useState(false);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
@@ -132,6 +134,7 @@ export function DealsBoard() {
             <option value="All">All owners</option>
             {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}
           </select>
+          <TBtn onClick={() => setShowStages(true)} title="Manage pipeline stages"><TbSettings size={14} /> Stages</TBtn>
           <TBtn variant="solid" onClick={() => setShowNew(true)}><TbPlus size={14} /> New deal</TBtn>
         </div>
       </div>
@@ -160,6 +163,10 @@ export function DealsBoard() {
           </DndContext>
         )}
       </div>
+
+      {showStages && (
+        <StageSettingsDialog onClose={(changed) => { setShowStages(false); if (changed) load(); }} />
+      )}
 
       {openDealId && (
         <DealDrawer

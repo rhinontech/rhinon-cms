@@ -1,7 +1,7 @@
 import { Op } from "sequelize";
 import { Workflow } from "../models/Workflow";
 import { WorkflowEnrollment } from "../models/WorkflowEnrollment";
-import { Lead, ContactGroup, ContactGroupMember, Unsubscribe } from "../models";
+import { Lead, ContactGroup, ContactGroupMember, Unsubscribe, Task, Activity } from "../models";
 import { sendEmail } from "./mailer";
 import { toEmailHtml, stripHtml, BACKEND_URL } from "./emailTemplate";
 
@@ -228,6 +228,66 @@ export async function runWorkflowEngineCycle() {
   }
 }
 
+/** Sequence sends made today, counted from the timeline rows each send writes. */
+async function sequenceSendsToday(): Promise<number> {
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+  return Activity.count({
+    where: {
+      type: "Email",
+      direction: "Outbound",
+      occurredAt: { [Op.gte]: startOfDay },
+      metadata: { [Op.contains]: { source: "workflow" } } as any,
+    },
+  });
+}
+
+/**
+ * Cancels a lead's in-flight sequence steps.
+ *
+ * The point of a reply is that the sequence has done its job — continuing to
+ * send scheduled follow-ups to someone who already wrote back is the single
+ * most visible way an outreach tool embarrasses its owner.
+ */
+export async function stopEnrollmentsForLead(
+  leadId: string,
+  reason = "Lead replied"
+): Promise<number> {
+  try {
+    const active = await WorkflowEnrollment.findAll({
+      where: { leadId, status: { [Op.in]: ["active", "pending"] } },
+    });
+    if (active.length === 0) return 0;
+
+    for (const enrollment of active) {
+      const logs = Array.isArray(enrollment.executionLogs) ? [...enrollment.executionLogs] : [];
+      logs.push({ timestamp: new Date().toISOString(), step: `Exited: ${reason}.` });
+      await enrollment.update({
+        status: "cancelled",
+        nextStepAt: null,
+        completedAt: new Date(),
+        executionLogs: logs,
+      });
+    }
+    return active.length;
+  } catch (err: any) {
+    console.error("[Workflow] Failed to stop enrollments for lead:", err.message);
+    return 0;
+  }
+}
+
+/**
+ * Resolves who should own a task a sequence creates: the lead's owner if it has
+ * one, otherwise whoever built the workflow.
+ */
+async function resolveTaskOwner(enrollment: WorkflowEnrollment, workflow: Workflow): Promise<string | null> {
+  if (enrollment.leadId) {
+    const lead = await Lead.findByPk(enrollment.leadId, { attributes: ["ownerId"] });
+    if (lead?.ownerId) return lead.ownerId;
+  }
+  return workflow.createdById || null;
+}
+
 /**
  * Step-by-step traversal for a single lead enrollment.
  */
@@ -272,6 +332,28 @@ async function executeEnrollmentSteps(
 
     if (nodeType === "send_email") {
       const recipientEmail = (enrollment.leadEmail || "").toLowerCase().trim();
+
+      // Belt-and-braces alongside the reply webhook: if the lead answered (or
+      // hard-bounced) since this step was scheduled, the sequence stops here.
+      if (enrollment.leadId) {
+        const lead = await Lead.findByPk(enrollment.leadId, { attributes: ["status"] });
+        if (lead && ["Replied", "Bounced", "Unsubscribed"].includes(lead.status)) {
+          logs.push({ timestamp: new Date().toISOString(), step: `Exited before send: lead is ${lead.status}.` });
+          await enrollment.update({ status: "cancelled", completedAt: new Date(), nextStepAt: null, executionLogs: logs });
+          break;
+        }
+      }
+
+      // Volume cap. Deferring rather than dropping means the cadence survives a
+      // busy day instead of silently losing a step.
+      const dailyCap = Number(workflow.triggerConfig?.dailySendCap ?? process.env.WORKFLOW_DAILY_SEND_CAP ?? 0);
+      if (dailyCap > 0 && (await sequenceSendsToday()) >= dailyCap) {
+        const tomorrow = new Date();
+        tomorrow.setHours(24, 5, 0, 0);
+        logs.push({ timestamp: new Date().toISOString(), step: `Daily send cap of ${dailyCap} reached — deferred to ${tomorrow.toISOString()}.` });
+        await enrollment.update({ currentNodeId: currNodeId, nextStepAt: tomorrow, executionLogs: logs });
+        break;
+      }
 
       // Check if user has unsubscribed
       const isUnsubscribed = recipientEmail
@@ -323,6 +405,19 @@ async function executeEnrollmentSteps(
             timestamp: new Date().toISOString(),
             step: `Email sent to ${enrollment.leadEmail}: "${subject}"`,
           });
+
+          // Doubles as the CRM timeline entry and as the unit the daily cap counts.
+          if (enrollment.leadId) {
+            await Activity.create({
+              leadId: enrollment.leadId,
+              type: "Email",
+              direction: "Outbound",
+              subject,
+              body: stripHtml(richHtml).slice(0, 500),
+              metadata: { source: "workflow", workflowId: workflow.id, nodeId: currNodeId },
+            });
+            await Lead.update({ lastActivityAt: new Date() }, { where: { id: enrollment.leadId } });
+          }
         } catch (err: any) {
           console.error(`[Workflow Engine] Email dispatch failed for ${enrollment.leadEmail}: `, err.message);
           logs.push({
@@ -450,6 +545,93 @@ async function executeEnrollmentSteps(
           break;
         }
       }
+    }
+
+    // ---- Manual touch steps ------------------------------------------------
+    // A sequence isn't only email. These create a real task for a human and
+    // advance immediately, so the cadence keeps its shape while a person makes
+    // the call or sends the LinkedIn note.
+    if (nodeType === "call_task" || nodeType === "linkedin_step" || nodeType === "manual_task") {
+      const isCall = nodeType === "call_task";
+      const isLinkedIn = nodeType === "linkedin_step";
+      const defaultTitle = isCall
+        ? `Call ${enrollment.leadName || enrollment.leadEmail}`
+        : isLinkedIn
+          ? `LinkedIn touch: ${enrollment.leadName || enrollment.leadEmail}`
+          : `Follow up with ${enrollment.leadName || enrollment.leadEmail}`;
+
+      try {
+        const assigneeId = await resolveTaskOwner(enrollment, workflow);
+        if (!assigneeId) {
+          logs.push({ timestamp: new Date().toISOString(), step: `${nodeType}: skipped — no owner to assign the task to.` });
+        } else {
+          const dueInDays = Number(config.dueInDays ?? 1);
+          const dueDate = new Date(Date.now() + Math.max(0, dueInDays) * 24 * 60 * 60 * 1000);
+
+          const task = await Task.create({
+            title: parseMergeTags(config.title || defaultTitle, enrollment),
+            description: config.notes ? parseMergeTags(config.notes, enrollment) : undefined,
+            assigneeId,
+            createdById: assigneeId,
+            dueDate,
+            priority: config.priority || "Medium",
+            status: "Pending",
+            leadId: enrollment.leadId || null,
+          });
+
+          if (enrollment.leadId) {
+            await Activity.create({
+              leadId: enrollment.leadId,
+              type: "Task",
+              subject: `Sequence created a task: ${task.title}`,
+              metadata: { taskId: task.id, workflowId: workflow.id, nodeId: currNodeId, nodeType },
+            });
+          }
+
+          logs.push({ timestamp: new Date().toISOString(), step: `${nodeType}: task "${task.title}" created, due ${dueDate.toISOString().slice(0, 10)}.` });
+        }
+      } catch (err: any) {
+        logs.push({ timestamp: new Date().toISOString(), step: `${nodeType}: failed to create task — ${err.message}` });
+      }
+
+      const nextEdge = edges.find((e) => e.source === currNodeId);
+      if (nextEdge) {
+        await enrollment.update({ currentNodeId: nextEdge.target, executionLogs: logs });
+        currNodeId = nextEdge.target;
+        continue;
+      }
+      await enrollment.update({ status: "completed", completedAt: new Date(), nextStepAt: null, executionLogs: logs });
+      break;
+    }
+
+    // ---- A/B split ---------------------------------------------------------
+    // The branch is chosen once and recorded in trackingState, so a re-run of
+    // this node can never re-roll and send a lead down both paths.
+    if (nodeType === "ab_split") {
+      const tracking = enrollment.trackingState || {};
+      const previous = tracking[`split_${currNodeId}`];
+      const splitPercent = Math.min(100, Math.max(0, Number(config.splitPercent ?? 50)));
+      const branch: string = previous || (Math.random() * 100 < splitPercent ? "a" : "b");
+
+      if (!previous) {
+        await enrollment.update({ trackingState: { ...tracking, [`split_${currNodeId}`]: branch } });
+      }
+
+      logs.push({
+        timestamp: new Date().toISOString(),
+        step: `A/B split: variant ${branch.toUpperCase()} (${splitPercent}% weighting to A)${previous ? " [replayed]" : ""}.`,
+      });
+
+      const matchingEdge =
+        edges.find((e) => e.source === currNodeId && String(e.sourceHandle || "").toLowerCase() === branch) ||
+        edges.find((e) => e.source === currNodeId);
+
+      if (matchingEdge) {
+        currNodeId = matchingEdge.target;
+        continue;
+      }
+      await enrollment.update({ status: "completed", completedAt: new Date(), nextStepAt: null, executionLogs: logs });
+      break;
     }
 
     if (nodeType === "exit") {

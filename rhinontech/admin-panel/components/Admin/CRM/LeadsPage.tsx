@@ -13,6 +13,7 @@ import { LeadImportModal } from "./LeadImportModal";
 import { AddToGroupMenu } from "@/components/Admin/Outreach/contacts/AddToGroupMenu";
 import { ConvertDealDialog } from "./ConvertDealDialog";
 import { Timeline } from "./Timeline";
+import { RelatedTasks } from "./RelatedTasks";
 import { LIFECYCLE_STAGES, type Lead, type LifecycleStage, type UserRef } from "./types";
 import {
   Avatar, DataRow, EmptyState, HeaderRow, OutreachStatus,
@@ -524,6 +525,8 @@ export function LeadsPage() {
                   )}
 
                   {selected.raw && Object.keys(selected.raw).length > 0 && <RawData raw={selected.raw} />}
+
+                  <RelatedTasks leadId={selected.id} owners={owners} />
 
                   <div>
                     <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-stone-500">Activity</p>

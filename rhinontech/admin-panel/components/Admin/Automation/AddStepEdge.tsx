@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { BaseEdge, EdgeLabelRenderer, EdgeProps, getSmoothStepPath } from "@xyflow/react";
-import { TbPlus, TbMail, TbClock, TbGitFork, TbLogout } from "react-icons/tb";
+import { TbPlus, TbMail, TbClock, TbGitFork, TbLogout, TbPhone, TbBrandLinkedin, TbArrowsSplit2 } from "react-icons/tb";
 import { NodeType } from "@/types/automation";
 
 import { useWorkflowCanvasContext } from "./WorkflowCanvasContext";
@@ -89,6 +89,27 @@ export function AddStepEdge({
               >
                 <TbGitFork size={18} className="text-purple-500" />
                 <span className="font-medium">If / then</span>
+              </button>
+              <button
+                onClick={() => handleSelectType("call_task")}
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+              >
+                <TbPhone size={18} className="text-emerald-500" />
+                <span className="font-medium">Call task</span>
+              </button>
+              <button
+                onClick={() => handleSelectType("linkedin_step")}
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+              >
+                <TbBrandLinkedin size={18} className="text-sky-500" />
+                <span className="font-medium">LinkedIn touch</span>
+              </button>
+              <button
+                onClick={() => handleSelectType("ab_split")}
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+              >
+                <TbArrowsSplit2 size={18} className="text-fuchsia-500" />
+                <span className="font-medium">A/B split</span>
               </button>
               {/* <button
                 onClick={() => handleSelectType("exit")}

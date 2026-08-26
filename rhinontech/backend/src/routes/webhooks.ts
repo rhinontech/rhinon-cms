@@ -2,7 +2,8 @@ import { Router, Request, Response } from "express";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { simpleParser } from "mailparser";
 import { Op } from "sequelize";
-import { InboxEmail, Lead, CampaignActivity } from "../models";
+import { InboxEmail, Lead, CampaignActivity, Activity } from "../models";
+import { stopEnrollmentsForLead } from "../services/workflowEngine";
 import { uploadBuffer } from "../services/storage";
 import { env } from "../config/env";
 
@@ -173,6 +174,25 @@ router.post("/ses-inbound", async (req: Request, res: Response) => {
             type: "ReplyReceived",
             content: snippet || `${fromName} replied to your outreach email.`,
             generatedContent: htmlBody,
+          });
+
+          // A reply ends the sequence. Without this, scheduled follow-ups keep
+          // firing at someone who has already written back.
+          const stopped = await stopEnrollmentsForLead(repliedLead.id, "Lead replied");
+          if (stopped > 0) {
+            console.log(`[Webhook] Reply from ${repliedLead.email} exited ${stopped} sequence(s).`);
+          }
+
+          // Mirror it onto the CRM timeline so the reply is visible next to
+          // calls and notes, not only inside the campaign view.
+          await Activity.create({
+            leadId: repliedLead.id,
+            accountId: repliedLead.accountId,
+            type: "Email",
+            direction: "Inbound",
+            subject: subject || `Reply from ${fromName}`,
+            body: snippet || null,
+            metadata: { source: "reply-webhook", campaignId: repliedLead.campaignId },
           });
         }
       }

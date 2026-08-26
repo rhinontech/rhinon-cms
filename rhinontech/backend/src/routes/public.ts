@@ -1,6 +1,7 @@
 import express, { Router, Response, Request } from "express";
 import { ClientRequest, Project, User, Lead, Blog, CaseStudy, Event, PageView, DocsAccess, WorkflowEnrollment, CampaignActivity, Visitor, Unsubscribe } from "../models";
 import type { BlogDomain } from "../models/Blog";
+import { clientIpFrom, isIpCompanyLookupEnabled, lookupCompanyByIp } from "../services/ipCompany";
 import { sendEmail } from "../services/mailer";
 import { env } from "../config/env";
 import { classifyChannel, parseHost, isBotUserAgent } from "../services/analytics";
@@ -348,10 +349,25 @@ router.post("/track", express.text({ type: ["text/plain"] }), async (req: Reques
     const channel = classifyChannel({ referrerHost, utmMedium, selfHosts });
     const isBot = isBotUserAgent(userAgent);
 
+    // Resolve the visiting organisation from the request IP, then let the IP go.
+    // Bots are skipped — they'd burn lookup quota for no signal.
+    let companyName: string | null = null;
+    let companyDomain: string | null = null;
+    if (!isBot && isIpCompanyLookupEnabled()) {
+      const ip = clientIpFrom(req.headers as any, req.socket?.remoteAddress);
+      const hit = await lookupCompanyByIp(ip);
+      if (hit) {
+        companyName = hit.name;
+        companyDomain = hit.domain;
+      }
+    }
+
     await PageView.create({
       visitorId,
       sessionId,
       path,
+      companyName,
+      companyDomain,
       title: str(b.title, 512),
       referrer,
       referrerHost,

@@ -11,6 +11,7 @@ import {
   type MeetingEvent,
 } from "../services/googleCalendar";
 import { sendMeetingInvite, type InviteKind } from "../services/meetingInvite";
+import { logMeetingOnLeads } from "../services/crmActivity";
 
 const router = Router();
 
@@ -119,6 +120,20 @@ router.post("/", authenticate, authorize("meetings:write"), async (req: AuthRequ
     });
 
     const invited = await notifyAttendees(event, "request", req);
+
+    // Surface the booking on any attendee who is a lead. Fire-and-forget —
+    // the meeting is already created and must not fail on CRM bookkeeping.
+    void logMeetingOnLeads({
+      attendees,
+      summary,
+      startTime,
+      endTime,
+      description: str(req.body?.description, 5000),
+      meetingLink: (event as any).hangoutLink || null,
+      eventId: (event as any).id || null,
+      userId: req.user!.userId,
+    });
+
     res.status(201).json({ ...event, inviteSent: invited });
   } catch (error: any) {
     handleError(error, res, "Failed to create meeting");

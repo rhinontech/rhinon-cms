@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import type { Deal, PipelineStage, UserRef } from "./types";
 import { Timeline } from "./Timeline";
+import { RelatedTasks } from "./RelatedTasks";
 import { StageDot, TBtn, formatDate, formatMoney, relativeTime } from "./ui";
 
 const INPUT =
@@ -271,6 +272,8 @@ export function DealDrawer({
                 <TBtn variant="solid" type="submit" disabled={saving}>{saving ? "Saving…" : "Save changes"}</TBtn>
               </div>
             </form>
+
+            <RelatedTasks dealId={dealId} owners={owners} />
 
             <div>
               <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-stone-500">Activity</p>
