@@ -49,6 +49,32 @@ const VARIABLES = [
   { label: "Title", token: "{{title}}" },
 ];
 
+/**
+ * Every campaign button carries the recipient's address through to the landing
+ * page, so the form on the other side can pre-fill it and the click can be
+ * attributed to a lead. `{{email}}` is substituted per-recipient at send time by
+ * the backend's fillPlaceholders().
+ *
+ * Assembled by hand rather than with `new URL()`, which would percent-encode the
+ * braces into %7B%7Bemail%7D%7D and stop that substitution from ever matching.
+ */
+const EMAIL_QUERY_PARAM = "email={{email}}";
+
+export function withEmailParam(rawUrl: string): string {
+  const url = rawUrl.trim();
+  if (!url || url === "#") return "#";
+  // Don't stack a second one onto a URL that already carries an email param.
+  if (/[?&]email=/i.test(url)) return url;
+
+  // A query has to go before the fragment, not after it.
+  const hashAt = url.indexOf("#");
+  const base = hashAt === -1 ? url : url.slice(0, hashAt);
+  const hash = hashAt === -1 ? "" : url.slice(hashAt);
+
+  const separator = !base.includes("?") ? "?" : /[?&]$/.test(base) ? "" : "&";
+  return `${base}${separator}${EMAIL_QUERY_PARAM}${hash}`;
+}
+
 const CustomLink = Link.extend({
   addAttributes() {
     return {
@@ -170,7 +196,7 @@ export function EmailBodyEditor({
     borderRadius: string;
     padding: string;
   }) => {
-    const href = data.url.trim() || "#";
+    const href = withEmailParam(data.url);
     const label = data.text.trim() || "Click Here";
     const buttonHtml = `<a href="${href}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: ${data.bgColor}; color: ${data.textColor}; border-radius: ${data.borderRadius}; padding: ${data.padding}; text-decoration: none; font-weight: 600; font-size: 14px; text-align: center; margin: 4px 0;">${label}</a>&nbsp;`;
 
@@ -365,6 +391,14 @@ function InsertButtonModal({
               placeholder="https://example.com"
               className="h-10 rounded-xl border-stone-200 text-sm focus-visible:ring-stone-400"
             />
+            <p className="text-[11px] leading-relaxed text-stone-500">
+              Inserted as{" "}
+              <span className="font-mono break-all text-stone-700">
+                {withEmailParam(url.trim() || "https://example.com")}
+              </span>
+              <br />
+              The recipient&apos;s address is appended automatically so the landing page can pre-fill it.
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
