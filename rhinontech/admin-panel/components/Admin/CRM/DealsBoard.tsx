@@ -6,7 +6,9 @@ import {
   useDroppable, useDraggable, type DragEndEvent, type DragStartEvent,
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { TbPlus, TbBuilding, TbCalendar, TbX, TbSettings } from "react-icons/tb";
+import { TbPlus, TbBuilding, TbCalendar, TbX, TbSettings, TbUsers, TbArrowRight } from "react-icons/tb";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
@@ -59,6 +61,10 @@ export function DealsBoard() {
     () => (board?.stages || []).map(({ deals: _deals, dealCount: _c, totalValue: _t, weightedValue: _w, ...stage }) => stage),
     [board]
   );
+
+  const pathname = usePathname();
+  const leadsHref = `/${pathname.split("/")[1]}/crm`;
+  const isEmpty = Boolean(board) && board!.stages.every((s) => s.dealCount === 0) && board!.unstaged.length === 0;
 
   const totals = useMemo(() => {
     if (!board) return { open: 0, weighted: 0, count: 0 };
@@ -151,6 +157,34 @@ export function DealsBoard() {
             ))}
           </div>
         ) : (
+          isEmpty ? (
+          // Six empty columns explain nothing. A pipeline starts empty by
+          // design — deals are the few things being actively worked, not the
+          // whole lead list — so say that and point at the way in.
+          <div className="flex h-full items-center justify-center p-6">
+            <div className="max-w-md text-center">
+              <p className="text-sm font-semibold text-stone-800">No deals yet</p>
+              <p className="mt-1.5 text-[13px] leading-relaxed text-stone-500">
+                The pipeline holds deals, not leads. A lead becomes a deal once it is
+                qualified and has money attached — so this board stays small and
+                workable while your lead list grows.
+              </p>
+              <p className="mt-2 text-[12px] leading-relaxed text-stone-400">
+                Select the leads worth pursuing and use <span className="font-medium text-stone-600">Convert to deals</span>,
+                or add one directly here.
+              </p>
+              <div className="mt-4 flex items-center justify-center gap-2">
+                <Link
+                  href={leadsHref}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-stone-200 bg-white/70 px-2.5 py-1.5 text-xs font-medium text-stone-700 hover:bg-stone-100"
+                >
+                  <TbUsers size={14} /> Go to leads <TbArrowRight size={13} />
+                </Link>
+                <TBtn variant="solid" onClick={() => setShowNew(true)}><TbPlus size={14} /> New deal</TBtn>
+              </div>
+            </div>
+          </div>
+          ) : (
           <DndContext
             sensors={sensors}
             onDragStart={(e: DragStartEvent) => setActiveId(e.active.id as string)}
@@ -161,6 +195,7 @@ export function DealsBoard() {
             </div>
             <DragOverlay>{activeDeal ? <DealCard deal={activeDeal} overlay /> : null}</DragOverlay>
           </DndContext>
+          )
         )}
       </div>
 
@@ -235,6 +270,11 @@ function StageColumn({ stage, onOpen }: { stage: BoardStage; onOpen: (id: string
           <div className="rounded border border-dashed border-stone-200 py-5 text-center text-[10px] text-stone-300">
             Drop here
           </div>
+        )}
+        {Boolean(stage.hiddenCount) && (
+          <p className="py-1.5 text-center text-[10px] text-stone-400">
+            +{stage.hiddenCount} more — filter by owner to narrow
+          </p>
         )}
       </div>
     </div>

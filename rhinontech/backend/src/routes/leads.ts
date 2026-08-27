@@ -474,4 +474,100 @@ router.post("/:id/convert", writeAccess, async (req: AuthRequest, res: Response)
   }
 });
 
+/**
+ * POST /leads/bulk-convert - promote several qualified leads to deals at once.
+ *
+ * This is the bridge between a lead list of thousands and a pipeline of dozens:
+ * a board is only useful when it holds the handful of things actually being
+ * worked, so leads earn their way onto it rather than all arriving by default.
+ *
+ * Set-based deliberately — the per-lead findOrCreate loop this replaces would
+ * be several round trips per row. Accounts are taken from whatever the lead is
+ * already linked to (run Backfill first for that); this never creates them.
+ */
+router.post("/bulk-convert", writeAccess, async (req: AuthRequest, res: Response) => {
+  const ids: string[] = Array.isArray(req.body?.ids) ? req.body.ids : [];
+  if (ids.length === 0) {
+    res.status(400).json({ message: "No leads selected" });
+    return;
+  }
+  if (ids.length > 200) {
+    res.status(400).json({ message: "Convert at most 200 leads at a time" });
+    return;
+  }
+
+  try {
+    const stageId =
+      req.body?.stageId ||
+      (await PipelineStage.findOne({ where: { type: "Open" }, order: [["position", "ASC"]] }))?.id ||
+      null;
+    const stage = stageId ? await PipelineStage.findByPk(stageId) : null;
+
+    const leads = await Lead.findAll({ where: { id: { [Op.in]: ids } } });
+    if (leads.length === 0) {
+      res.status(404).json({ message: "No matching leads" });
+      return;
+    }
+
+    // A lead that already has an open deal shouldn't get a second one.
+    const existing = await Deal.findAll({
+      where: { primaryLeadId: { [Op.in]: leads.map((l) => l.id) }, status: "Open" },
+      attributes: ["primaryLeadId"],
+      raw: true,
+    });
+    const alreadyOpen = new Set((existing as any[]).map((d) => d.primaryLeadId));
+
+    const toConvert = leads.filter((l) => !alreadyOpen.has(l.id));
+    const value = Number(req.body?.value ?? 0) || 0;
+    const currency = req.body?.currency || "INR";
+    const ownerFallback = req.body?.ownerId || null;
+
+    const deals = await Deal.bulkCreate(
+      toConvert.map((lead) => ({
+        title: `${lead.company} — ${lead.name}`,
+        accountId: lead.accountId,
+        primaryLeadId: lead.id,
+        ownerId: ownerFallback || lead.ownerId || req.user!.userId,
+        value,
+        currency,
+        stageId,
+        status: (stage?.type || "Open") as "Open" | "Won" | "Lost",
+        expectedCloseDate: req.body?.expectedCloseDate || null,
+        source: lead.source,
+        createdById: req.user!.userId,
+      })),
+      { returning: true }
+    );
+
+    // Converting is a qualification decision; record it on each lead's timeline.
+    await Activity.bulkCreate(
+      deals.map((deal) => ({
+        leadId: deal.primaryLeadId,
+        dealId: deal.id,
+        accountId: deal.accountId,
+        userId: req.user!.userId,
+        type: "System" as const,
+        subject: `Converted to deal: ${deal.title}`,
+        metadata: { dealId: deal.id, bulk: true },
+      }))
+    );
+
+    const promotable = toConvert
+      .filter((l) => l.lifecycleStage !== "Customer")
+      .map((l) => l.id);
+    if (promotable.length) {
+      await Lead.update({ lifecycleStage: "Qualified" }, { where: { id: { [Op.in]: promotable } } });
+    }
+
+    res.status(201).json({
+      requested: ids.length,
+      converted: deals.length,
+      skipped: leads.length - toConvert.length,
+      notFound: ids.length - leads.length,
+    });
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
 export default router;

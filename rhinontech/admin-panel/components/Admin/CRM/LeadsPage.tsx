@@ -12,6 +12,7 @@ import { useSideNav } from "@/context/SideNavContext";
 import { LeadImportModal } from "./LeadImportModal";
 import { AddToGroupMenu } from "@/components/Admin/Outreach/contacts/AddToGroupMenu";
 import { ConvertDealDialog } from "./ConvertDealDialog";
+import { BulkConvertDialog } from "./BulkConvertDialog";
 import { Timeline } from "./Timeline";
 import { SavedViews, type SavedView } from "./SavedViews";
 import { RelatedTasks } from "./RelatedTasks";
@@ -58,6 +59,7 @@ export function LeadsPage() {
   const [enriching, setEnriching] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [converting, setConverting] = useState<Lead | null>(null);
+  const [bulkConverting, setBulkConverting] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const [form, setForm] = useState({ name: "", company: "", email: "", title: "", linkedinUrl: "", notes: "" });
@@ -314,6 +316,9 @@ export function LeadsPage() {
                   <option value="">Assign owner…</option>
                   {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}
                 </Select>
+                <TBtn onClick={() => setBulkConverting(true)} title="Create a deal for each selected lead">
+                  <TbTargetArrow size={13} /> Convert to deals
+                </TBtn>
                 <AddToGroupMenu leadIds={[...selectedIds]} onDone={() => setSelectedIds(new Set())} />
                 <TBtn onClick={() => setSelectedIds(new Set())}>Clear</TBtn>
                 <TBtn variant="danger" onClick={bulkDelete}><TbTrash size={13} /> Delete</TBtn>
@@ -591,6 +596,16 @@ export function LeadsPage() {
       )}
 
       {showImport && <LeadImportModal onClose={(did) => { setShowImport(false); if (did) load(); }} />}
+      {bulkConverting && (
+        <BulkConvertDialog
+          leadIds={[...selectedIds]}
+          onClose={(converted) => {
+            setBulkConverting(false);
+            if (converted) { setSelectedIds(new Set()); load(); }
+          }}
+        />
+      )}
+
       {converting && (
         <ConvertDealDialog
           lead={converting}

@@ -115,9 +115,11 @@ export interface Deal {
 
 export interface BoardStage extends PipelineStage {
   deals: Deal[];
+  /** Every matching deal, not just the cards returned — the column is capped. */
   dealCount: number;
   totalValue: number;
   weightedValue: number;
+  hiddenCount?: number;
 }
 
 export type TimelineKind = "activity" | "campaign" | "email";

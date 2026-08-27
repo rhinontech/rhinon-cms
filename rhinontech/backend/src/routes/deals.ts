@@ -1,5 +1,5 @@
 import { Router, Response } from "express";
-import { Op } from "sequelize";
+import { Op, fn, col } from "sequelize";
 import { Deal, PipelineStage, Account, Lead, User, Activity, Task } from "../models";
 import { authenticate, authorizeAny, AuthRequest } from "../middleware/authenticate";
 
@@ -112,41 +112,80 @@ router.delete("/stages/:id", writeAccess, async (req: AuthRequest, res: Response
 // Board + deals
 // ---------------------------------------------------------------------------
 
+/** Cards rendered per column. Counts and totals are never capped — see below. */
+const BOARD_COLUMN_LIMIT = 50;
+
 // GET /deals/board - stages, each with its open deals and a value subtotal
+//
+// Counts and money come from one grouped aggregate over *every* matching deal,
+// while the cards are fetched per stage with a limit. A column that says
+// "120 · ₹4.2Cr" is therefore telling the truth even though it only rendered 50
+// cards — capping the query would have quietly understated the pipeline.
 router.get("/board", readAccess, async (req: AuthRequest, res: Response) => {
   const { ownerId, includeClosed } = req.query;
-  const where: any = {};
-  if (ownerId) where.ownerId = ownerId;
-  if (!includeClosed) where.status = "Open";
+  const baseWhere: any = {};
+  if (ownerId) baseWhere.ownerId = ownerId;
+  if (!includeClosed) baseWhere.status = "Open";
 
-  const [stages, deals] = await Promise.all([
+  const limit = Math.min(
+    parseInt(String(req.query.limit || BOARD_COLUMN_LIMIT), 10) || BOARD_COLUMN_LIMIT,
+    200
+  );
+
+  const [stages, totals] = await Promise.all([
     PipelineStage.findAll({ order: [["position", "ASC"]] }),
-    Deal.findAll({ where, include: DEAL_INCLUDES, order: [["updatedAt", "DESC"]] }),
+    Deal.findAll({
+      where: baseWhere,
+      attributes: [
+        "stageId",
+        [fn("COUNT", col("id")), "count"],
+        [fn("COALESCE", fn("SUM", col("value")), 0), "value"],
+      ],
+      group: ["stageId"],
+      raw: true,
+    }),
   ]);
 
-  const byStage = new Map<string, Deal[]>();
-  for (const d of deals) {
-    if (!d.stageId) continue;
-    if (!byStage.has(d.stageId)) byStage.set(d.stageId, []);
-    byStage.get(d.stageId)!.push(d);
-  }
+  const totalByStage = new Map(
+    (totals as any[]).map((r) => [r.stageId, { count: Number(r.count), value: Number(r.value) }])
+  );
+
+  const cardsByStage = await Promise.all(
+    stages.map((stage) =>
+      Deal.findAll({
+        where: { ...baseWhere, stageId: stage.id },
+        include: DEAL_INCLUDES,
+        order: [["updatedAt", "DESC"]],
+        limit,
+      })
+    )
+  );
+
+  const unstaged = await Deal.findAll({
+    where: { ...baseWhere, stageId: null as any },
+    include: DEAL_INCLUDES,
+    order: [["updatedAt", "DESC"]],
+    limit,
+  });
 
   res.json({
-    stages: stages.map((s) => {
-      const list = byStage.get(s.id) || [];
-      const value = list.reduce((sum, d) => sum + Number(d.value || 0), 0);
+    limit,
+    stages: stages.map((stage, i) => {
+      const agg = totalByStage.get(stage.id) || { count: 0, value: 0 };
+      const deals = cardsByStage[i];
       return {
-        ...s.toJSON(),
-        deals: list,
-        dealCount: list.length,
-        totalValue: value,
+        ...stage.toJSON(),
+        deals,
+        dealCount: agg.count,
+        totalValue: agg.value,
         // Value discounted by the stage's probability — a crude forecast, but
         // the same one every CRM shows.
-        weightedValue: Math.round((value * s.probability) / 100),
+        weightedValue: Math.round((agg.value * stage.probability) / 100),
+        hiddenCount: Math.max(0, agg.count - deals.length),
       };
     }),
     // Deals with no stage yet would otherwise be invisible on the board.
-    unstaged: deals.filter((d) => !d.stageId),
+    unstaged,
   });
 });
 
