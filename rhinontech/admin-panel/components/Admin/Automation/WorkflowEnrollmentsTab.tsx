@@ -3,17 +3,20 @@
 import React, { useState } from "react";
 import { TbRefresh, TbBan } from "react-icons/tb";
 import { WorkflowEnrollment } from "@/types/automation";
+import { SequenceStats } from "./SequenceStats";
 
 interface WorkflowEnrollmentsTabProps {
   enrollments: WorkflowEnrollment[];
   onRefresh: () => void;
   onCancelAll: () => void;
+  workflowId?: string;
 }
 
 export function WorkflowEnrollmentsTab({
   enrollments,
   onRefresh,
   onCancelAll,
+  workflowId,
 }: WorkflowEnrollmentsTabProps) {
   const [filter, setFilter] = useState<string>("All");
 
@@ -24,6 +27,8 @@ export function WorkflowEnrollmentsTab({
 
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-6">
+      {workflowId && <SequenceStats workflowId={workflowId} />}
+
       {/* Top Filter and Actions Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

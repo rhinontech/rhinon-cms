@@ -20,7 +20,9 @@ interface PageViewAttributes {
   utmTerm?: string | null;
   utmContent?: string | null;
   userAgent?: string | null; // kept for bot filtering + future device/browser views
-  isBot: boolean; // excluded from all dashboard counts so organic numbers stay honest
+  isBot: boolean;
+  companyName?: string | null;
+  companyDomain?: string | null; // excluded from all dashboard counts so organic numbers stay honest
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -30,6 +32,7 @@ interface PageViewCreationAttributes
     PageViewAttributes,
     | "id" | "title" | "referrer" | "referrerHost" | "utmSource" | "utmMedium"
     | "utmCampaign" | "utmTerm" | "utmContent" | "userAgent" | "isBot"
+    | "companyName" | "companyDomain"
   > {}
 
 export class PageView extends Model<PageViewAttributes, PageViewCreationAttributes> implements PageViewAttributes {
@@ -48,6 +51,8 @@ export class PageView extends Model<PageViewAttributes, PageViewCreationAttribut
   declare utmContent: string | null;
   declare userAgent: string | null;
   declare isBot: boolean;
+  declare companyName: string | null;
+  declare companyDomain: string | null;
   declare readonly createdAt: Date;
   declare readonly updatedAt: Date;
 }
@@ -72,6 +77,11 @@ PageView.init(
     utmTerm: { type: DataTypes.STRING, allowNull: true },
     utmContent: { type: DataTypes.STRING, allowNull: true },
     userAgent: { type: DataTypes.TEXT, allowNull: true },
+    // Derived from the request IP at ingest and then discarded — the raw address
+    // is never stored, so the tracker stays cookieless and consent-free while
+    // still yielding a company-level intent signal.
+    companyName: { type: DataTypes.STRING, allowNull: true },
+    companyDomain: { type: DataTypes.STRING, allowNull: true },
     isBot: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
   },
   {

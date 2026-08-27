@@ -12,7 +12,8 @@
     "db:seed:comms": "ts-node src/config/seed_comms.ts",
     "db:seed:letters": "ts-node src/config/seedLetterTemplates.ts",
     "db:backfill:letters": "ts-node src/config/backfillLetterContentBlocks.ts",
-    "db:seed:leadership-template": "ts-node src/config/seedLeadershipTemplate.ts"
+    "db:seed:leadership-template": "ts-node src/config/seedLeadershipTemplate.ts",
+    "grant:crm": "ts-node src/config/grantCrm.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1043.0",

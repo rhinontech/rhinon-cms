@@ -262,6 +262,92 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
           </div>
         )}
 
+        {/* Manual touch steps — both create a task and advance immediately */}
+        {(node.type === "call_task" || node.type === "linkedin_step") && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1">Task title</label>
+              <input
+                value={config.title || ""}
+                onChange={(e) => setConfig({ ...config, title: e.target.value })}
+                placeholder={node.type === "call_task" ? "Call {{name}} about pricing" : "Connect with {{name}} on LinkedIn"}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none bg-white font-medium text-gray-800"
+              />
+              <p className="text-[11px] text-gray-400 mt-1.5">
+                Merge tags like <code>{"{{name}}"}</code> and <code>{"{{company}}"}</code> work here.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1">Notes</label>
+              <textarea
+                value={config.notes || ""}
+                onChange={(e) => setConfig({ ...config, notes: e.target.value })}
+                placeholder="What should the rep cover?"
+                className="w-full h-20 resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none bg-white text-gray-800"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Due in (days)</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={config.dueInDays ?? 1}
+                  onChange={(e) => setConfig({ ...config, dueInDays: Number(e.target.value) })}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none bg-white font-medium text-gray-800"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Priority</label>
+                <select
+                  value={config.priority || "Medium"}
+                  onChange={(e) => setConfig({ ...config, priority: e.target.value as NodeConfig["priority"] })}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none bg-white font-medium text-gray-800"
+                >
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                </select>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-gray-400">
+              Assigned to the lead&apos;s owner, or to whoever created this workflow if the lead has none.
+              The sequence moves to the next step straight away — it does not wait for the task to be done.
+            </p>
+          </div>
+        )}
+
+        {/* A/B split */}
+        {node.type === "ab_split" && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1">
+                Share taking variant A — {config.splitPercent ?? 50}%
+              </label>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={5}
+                value={config.splitPercent ?? 50}
+                onChange={(e) => setConfig({ ...config, splitPercent: Number(e.target.value) })}
+                className="w-full accent-fuchsia-600"
+              />
+              <div className="flex justify-between text-[11px] font-semibold text-gray-500 mt-1">
+                <span className="text-fuchsia-600">A · {config.splitPercent ?? 50}%</span>
+                <span className="text-indigo-600">B · {100 - (config.splitPercent ?? 50)}%</span>
+              </div>
+            </div>
+            <p className="text-[11px] text-gray-400">
+              The branch is picked once per lead and remembered, so a retry can never send the same
+              lead down both paths. Connect the A and B handles to the two variants you want to compare.
+            </p>
+          </div>
+        )}
+
         {/* If / Then Node Specific Fields */}
         {node.type === "if_then" && (
           <div className="space-y-4">

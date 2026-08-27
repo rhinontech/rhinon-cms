@@ -1,6 +1,7 @@
 import express, { Router, Response, Request } from "express";
 import { ClientRequest, Project, User, Lead, Blog, CaseStudy, Event, PageView, DocsAccess, WorkflowEnrollment, CampaignActivity, Visitor, Unsubscribe } from "../models";
 import type { BlogDomain } from "../models/Blog";
+import { clientIpFrom, isIpCompanyLookupEnabled, lookupCompanyByIp } from "../services/ipCompany";
 import { sendEmail } from "../services/mailer";
 import { env } from "../config/env";
 import { classifyChannel, parseHost, isBotUserAgent } from "../services/analytics";
@@ -348,10 +349,25 @@ router.post("/track", express.text({ type: ["text/plain"] }), async (req: Reques
     const channel = classifyChannel({ referrerHost, utmMedium, selfHosts });
     const isBot = isBotUserAgent(userAgent);
 
+    // Resolve the visiting organisation from the request IP, then let the IP go.
+    // Bots are skipped — they'd burn lookup quota for no signal.
+    let companyName: string | null = null;
+    let companyDomain: string | null = null;
+    if (!isBot && isIpCompanyLookupEnabled()) {
+      const ip = clientIpFrom(req.headers as any, req.socket?.remoteAddress);
+      const hit = await lookupCompanyByIp(ip);
+      if (hit) {
+        companyName = hit.name;
+        companyDomain = hit.domain;
+      }
+    }
+
     await PageView.create({
       visitorId,
       sessionId,
       path,
+      companyName,
+      companyDomain,
       title: str(b.title, 512),
       referrer,
       referrerHost,
@@ -567,11 +583,24 @@ router.get("/track/open", async (req: Request, res: Response) => {
           });
         }
 
+        // `n` names the email step that produced this pixel, so opens attribute
+        // to the right node instead of collapsing into one sequence-wide flag.
+        const nodeId = req.query.n as string | undefined;
+        const nodes = { ...(state.nodes || {}) };
+        if (nodeId) {
+          nodes[nodeId] = {
+            ...(nodes[nodeId] || {}),
+            openedAt: nodes[nodeId]?.openedAt || new Date().toISOString(),
+          };
+        }
+
         enrollment.changed("trackingState", true);
         enrollment.changed("executionLogs", true);
         await enrollment.update({
           trackingState: {
             ...state,
+            nodes,
+            // Kept for enrollments and reports that predate per-node tracking.
             emailOpened: true,
             openedAt: state.openedAt || new Date().toISOString(),
           },
@@ -629,11 +658,24 @@ router.get("/track/click", async (req: Request, res: Response) => {
           });
         }
 
+        const nodeId = req.query.n as string | undefined;
+        const nodes = { ...(state.nodes || {}) };
+        if (nodeId) {
+          const prev = nodes[nodeId] || {};
+          const prevUrls = Array.isArray(prev.clickedUrls) ? prev.clickedUrls : [];
+          nodes[nodeId] = {
+            ...prev,
+            clickedAt: prev.clickedAt || new Date().toISOString(),
+            clickedUrls: prevUrls.includes(targetUrl) ? prevUrls : [...prevUrls, targetUrl],
+          };
+        }
+
         enrollment.changed("trackingState", true);
         enrollment.changed("executionLogs", true);
         await enrollment.update({
           trackingState: {
             ...state,
+            nodes,
             linkClicked: true,
             clickedAt: state.clickedAt || new Date().toISOString(),
             clickedUrls,

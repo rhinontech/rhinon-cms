@@ -1,5 +1,5 @@
-import { PipelinePage } from "@/components/Admin/CRM/PipelinePage";
+import { DealsBoard } from "@/components/Admin/CRM/DealsBoard";
 
 export default function CrmPipelinePage() {
-  return <PipelinePage />;
+  return <DealsBoard />;
 }

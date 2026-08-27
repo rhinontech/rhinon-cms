@@ -7,6 +7,8 @@ import { Attendance } from "./models/Attendance";
 import { finalizeDueOffboardings } from "./services/offboarding";
 import { runWorkflowEngineCycle } from "./services/workflowEngine";
 import { syncPermissionCatalog } from "./config/permissions";
+import { seedPipelineStages } from "./config/pipeline";
+import { isReEnrichmentEnabled, runReEnrichmentCycle } from "./services/reEnrichment";
 import { Op } from "sequelize";
 import cron from "node-cron";
 import axios from "axios";
@@ -56,6 +58,14 @@ async function start() {
     console.error("[Permissions] Catalog sync failed:", err.message);
   }
 
+  // Create the default deal stages on a fresh database (no-op once any exist)
+  try {
+    const { total, created } = await seedPipelineStages();
+    console.log(`[CRM] Pipeline stages ready (${total} stages, ${created} new)`);
+  } catch (err: any) {
+    console.error("[CRM] Pipeline stage seed failed:", err.message);
+  }
+
   // Catch up on exits whose last working day passed while the server was down
   try {
     await finalizeDueOffboardings();
@@ -65,6 +75,22 @@ async function start() {
 
   app.listen(env.port, () => {
     console.log(`Server running on http://localhost:${env.port}`);
+
+    // Stale-intel refresh: nightly at 3:30 AM IST, well clear of the outreach
+    // scheduler. No-ops unless LEAD_REENRICH_ENABLED=true.
+    if (isReEnrichmentEnabled()) {
+      cron.schedule("30 3 * * *", async () => {
+        try {
+          const { scanned, refreshed, failed } = await runReEnrichmentCycle();
+          if (scanned > 0) {
+            console.log(`[Re-enrichment] Scanned ${scanned}, refreshed ${refreshed}, failed ${failed}.`);
+          }
+        } catch (err: any) {
+          console.error("[Re-enrichment] Cycle failed:", err.message);
+        }
+      }, { timezone: "Asia/Kolkata" });
+      console.log("[Re-enrichment] Nightly refresh scheduled for 3:30 AM IST.");
+    }
 
     // Auto clock-out: runs every day at 4:00 AM IST, closing out anyone still
     // clocked in (covers late/overnight shifts) without disturbing which day's

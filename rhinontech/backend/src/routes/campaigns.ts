@@ -289,7 +289,7 @@ export async function dispatchLeadEmail(
     sentAt: new Date(),
   });
 
-  await lead.update({ status: "Emailed" });
+  await lead.update({ status: "Emailed", lastActivityAt: new Date() });
   await CampaignActivity.create({
     leadId: lead.id,
     campaignId: campaign.id,
@@ -472,6 +472,7 @@ router.post("/:id/send", authorize("outreach:write"), async (req: AuthRequest, r
         else {
           failures.push({ email: lead.email, reason: outcome.reason || "unknown error" });
           console.error(`Send error for lead ${lead.id} (${lead.email}):`, outcome.reason);
+
         }
       }
 
@@ -628,6 +629,7 @@ router.get("/cron/run", async (req, res) => {
           `   [Email Failed] ${lead.email} — ${outcome.reason}` +
           (outcome.permanent ? " (marked Bounced)" : " (will retry next run)")
         );
+
       }
 
       await syncCampaignCounts(campaign);

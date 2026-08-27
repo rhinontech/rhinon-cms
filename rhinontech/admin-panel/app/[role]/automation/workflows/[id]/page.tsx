@@ -346,6 +346,7 @@ export default function SingleWorkflowPage({ params }: { params: Promise<{ id: s
             enrollments={enrollments}
             onRefresh={fetchWorkflowAndEnrollments}
             onCancelAll={handleCancelAllEnrollments}
+            workflowId={resolvedParams.id}
           />
         )}
       </div>

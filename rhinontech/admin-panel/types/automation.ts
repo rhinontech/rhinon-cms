@@ -1,7 +1,15 @@
 export type WorkflowStatus = "draft" | "active" | "paused" | "archived";
 export type WorkflowTriggerType = "static_list" | "realtime_lead";
 
-export type NodeType = "trigger" | "send_email" | "wait" | "if_then" | "exit";
+export type NodeType =
+  | "trigger"
+  | "send_email"
+  | "wait"
+  | "if_then"
+  | "call_task"
+  | "linkedin_step"
+  | "ab_split"
+  | "exit";
 
 export interface NodeConfig {
   fromEmail?: string;
@@ -19,6 +27,16 @@ export interface NodeConfig {
   checkDelayMinutes?: number;
   checkDelayHours?: number;
   checkDelayDays?: number;
+
+  // Manual touch steps (call_task / linkedin_step): the sequence creates a real
+  // task for a person, then advances immediately.
+  title?: string;
+  notes?: string;
+  dueInDays?: number;
+  priority?: "Low" | "Medium" | "High";
+
+  // A/B split: share of leads routed down the "a" handle.
+  splitPercent?: number;
 }
 
 export interface WorkflowNodeData extends Record<string, unknown> {

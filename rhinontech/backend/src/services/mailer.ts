@@ -20,6 +20,8 @@ type SendEmailPayload = {
   // (what makes Gmail/Outlook/Apple Mail show RSVP buttons) plus a .ics attachment
   // for clients that only understand the file.
   icalEvent?: { method: string; content: string; filename?: string };
+  /** Send through this specific mailbox instead of the shared transport. */
+  smtpAuth?: { user: string; pass: string; host?: string; port?: number };
 };
 
 const sesRegion = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION;
@@ -43,6 +45,33 @@ const smtpTransporter = hasGmailConfig
   })
   : null;
 
+/**
+ * Per-mailbox SMTP transports for outreach rotation.
+ *
+ * Swapping only the From header still sends every message down one connection,
+ * which is not what rotation is for — reputation is per mailbox. Passing
+ * `smtpAuth` opens (and reuses) a real transport for that address, so the
+ * messages genuinely originate from separate mailboxes.
+ */
+const extraTransports = new Map<string, nodemailer.Transporter>();
+
+function transportFor(auth: { user: string; pass: string; host?: string; port?: number }) {
+  const key = `${auth.host || "gmail"}:${auth.user}`;
+  let transport = extraTransports.get(key);
+  if (!transport) {
+    transport = auth.host
+      ? nodemailer.createTransport({
+          host: auth.host,
+          port: auth.port || 587,
+          secure: (auth.port || 587) === 465,
+          auth: { user: auth.user, pass: auth.pass },
+        })
+      : nodemailer.createTransport({ service: "gmail", auth: { user: auth.user, pass: auth.pass } });
+    extraTransports.set(key, transport);
+  }
+  return transport;
+}
+
 function toArray(value: string | string[]) {
   return Array.isArray(value) ? value : [value];
 }
@@ -59,10 +88,29 @@ export async function sendEmail({
   text,
   attachments,
   icalEvent,
+  smtpAuth,
 }: SendEmailPayload) {
   const toAddresses = toArray(to);
   const fromAddress = from || sesFromEmail;
   const displayName = customFromName || fromName;
+  // A dedicated mailbox is the whole point of rotation, so it overrides the
+  // usual SES/SMTP selection rather than being folded into it.
+  if (smtpAuth?.user && smtpAuth?.pass) {
+    const transport = transportFor(smtpAuth);
+    await transport.sendMail({
+      from: `"${displayName}" <${fromAddress || smtpAuth.user}>`,
+      to: toAddresses.join(", "),
+      cc: cc.length ? toArray(cc).join(", ") : undefined,
+      replyTo,
+      subject,
+      html,
+      text,
+      attachments,
+      icalEvent,
+    } as any);
+    return;
+  }
+
   const useSes = via === "ses" ? true : via === "gmail" ? false : Boolean(sesClient);
   if (via === "ses" && !sesClient) throw new Error("SES transport requested but not configured (set AWS_SES_FROM_EMAIL).");
   if (via === "gmail" && !smtpTransporter) throw new Error("Gmail transport requested but not configured.");

@@ -23,6 +23,9 @@ import {
   SendEmailNode,
   WaitNode,
   IfThenNode,
+  CallTaskNode,
+  LinkedInStepNode,
+  AbSplitNode,
   ExitNode,
 } from "./CustomNodes";
 import { AddStepEdge } from "./AddStepEdge";
@@ -38,6 +41,9 @@ const NODE_TYPES = {
   send_email: SendEmailNode,
   wait: WaitNode,
   if_then: IfThenNode,
+  call_task: CallTaskNode,
+  linkedin_step: LinkedInStepNode,
+  ab_split: AbSplitNode,
   exit: ExitNode,
 };
 

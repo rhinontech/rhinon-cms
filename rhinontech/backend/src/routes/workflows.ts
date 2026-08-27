@@ -197,6 +197,79 @@ router.delete("/:id", async (req, res) => {
 });
 
 // GET /workflows/:id/enrollments - list all enrollments for a workflow
+/**
+ * GET /workflows/:id/stats — per-step performance.
+ *
+ * Counts live in each enrollment's trackingState rather than a separate events
+ * table, so this walks enrollments in one read and folds them up in memory.
+ * Fine at this scale; if enrollment volume ever makes it slow, the fix is an
+ * events table, not a smarter query here.
+ */
+router.get("/:id/stats", async (req, res) => {
+  try {
+    const workflow = await Workflow.findByPk(req.params.id);
+    if (!workflow) {
+      res.status(404).json({ message: "Workflow not found" });
+      return;
+    }
+
+    const enrollments = await WorkflowEnrollment.findAll({
+      where: { workflowId: workflow.id },
+      attributes: ["id", "status", "currentNodeId", "trackingState"],
+    });
+
+    const emailNodes = (workflow.nodes || []).filter(
+      (n: any) => (n.type || n.data?.nodeType) === "send_email"
+    );
+
+    const perNode = new Map<string, { sent: number; opened: number; clicked: number }>();
+    for (const node of emailNodes) perNode.set(node.id, { sent: 0, opened: 0, clicked: 0 });
+
+    for (const enrollment of enrollments) {
+      const nodes = (enrollment.trackingState || {}).nodes || {};
+      for (const [nodeId, state] of Object.entries<any>(nodes)) {
+        if (!perNode.has(nodeId)) perNode.set(nodeId, { sent: 0, opened: 0, clicked: 0 });
+        const bucket = perNode.get(nodeId)!;
+        if (state?.sentAt) bucket.sent++;
+        if (state?.openedAt) bucket.opened++;
+        if (state?.clickedAt) bucket.clicked++;
+      }
+    }
+
+    const steps = emailNodes.map((node: any, i: number) => {
+      const bucket = perNode.get(node.id) || { sent: 0, opened: 0, clicked: 0 };
+      return {
+        nodeId: node.id,
+        step: i + 1,
+        label: node.data?.label || `Email ${i + 1}`,
+        subject: node.data?.config?.subject || null,
+        ...bucket,
+        // Rates against sends, not against enrollment count — a step nobody
+        // reached yet should read as "no data", not as 0% performance.
+        openRate: bucket.sent ? Math.round((bucket.opened / bucket.sent) * 100) : null,
+        clickRate: bucket.sent ? Math.round((bucket.clicked / bucket.sent) * 100) : null,
+      };
+    });
+
+    const byStatus: Record<string, number> = {};
+    for (const e of enrollments) byStatus[e.status] = (byStatus[e.status] || 0) + 1;
+
+    res.json({
+      workflowId: workflow.id,
+      totals: {
+        enrollments: enrollments.length,
+        ...byStatus,
+        sent: steps.reduce((sum, st) => sum + st.sent, 0),
+        opened: steps.reduce((sum, st) => sum + st.opened, 0),
+        clicked: steps.reduce((sum, st) => sum + st.clicked, 0),
+      },
+      steps,
+    });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 router.get("/:id/enrollments", async (req, res) => {
   try {
     const enrollments = await WorkflowEnrollment.findAll({

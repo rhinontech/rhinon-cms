@@ -1,6 +1,7 @@
 import { Router, Response } from "express";
 import { Op } from "sequelize";
-import { User, Role, Task, Attendance } from "../models";
+import { User, Role, Task, Attendance, Deal, PipelineStage } from "../models";
+import { fn, col } from "sequelize";
 import { authenticate, AuthRequest } from "../middleware/authenticate";
 
 const router = Router();
@@ -138,6 +139,42 @@ router.get("/stats", async (req: AuthRequest, res: Response) => {
         joiningDate: e.joiningDate,
       }));
 
+    // CRM snapshot — only for people who can see the module at all, and never
+    // fatal: the dashboard predates the CRM and must still render without it.
+    let crm: any = null;
+    const canSeeCrm = (req.user?.permissions || []).some(
+      (p: string) => p === "crm:read" || p === "outreach:read"
+    );
+    if (canSeeCrm) {
+      try {
+        const [stages, openAgg, myOpen] = await Promise.all([
+          PipelineStage.findAll({ attributes: ["id", "probability", "type"] }),
+          Deal.findAll({
+            where: { status: "Open" },
+            attributes: ["stageId", [fn("COUNT", col("id")), "count"], [fn("COALESCE", fn("SUM", col("value")), 0), "value"]],
+            group: ["stageId"],
+            raw: true,
+          }),
+          Deal.count({ where: { status: "Open", ownerId: req.user!.userId } }),
+        ]);
+
+        const probabilityByStage = new Map(stages.map((st) => [st.id, st.probability]));
+        let openValue = 0;
+        let weightedValue = 0;
+        let openCount = 0;
+        for (const row of openAgg as any[]) {
+          const value = Number(row.value);
+          openValue += value;
+          openCount += Number(row.count);
+          weightedValue += (value * (probabilityByStage.get(row.stageId) ?? 0)) / 100;
+        }
+
+        crm = { openCount, openValue, weightedValue: Math.round(weightedValue), myOpenCount: myOpen };
+      } catch (err: any) {
+        console.error("[Dashboard] CRM snapshot failed:", err.message);
+      }
+    }
+
     // Current user info
     const currentUserRecord = await User.findByPk(req.user!.userId, {
       attributes: ["fullName", "department"],
@@ -162,6 +199,7 @@ router.get("/stats", async (req: AuthRequest, res: Response) => {
       anniversaries,
       recentHires,
       pendingTasksList: pendingTasksList.map((t) => t.toJSON()),
+      crm,
     });
   } catch (err) {
     console.error(err);

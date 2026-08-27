@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { CalendarNotConnectedError, createEvent, getBusyIntervals } from "../services/googleCalendar";
 import { sendMeetingInvite } from "../services/meetingInvite";
 import { findOrMergeLead, str } from "../services/leadCapture";
+import { logMeetingOnLeads } from "../services/crmActivity";
 import { enrollRealtimeLead } from "../services/workflowEngine";
 import { notifyNewLead } from "./public";
 import {
@@ -165,6 +166,18 @@ router.post("/schedule-call", async (req: Request, res: Response) => {
       });
       booked = true;
       meetLink = event.meetLink;
+
+      // Public bookings have no signed-in user, so the timeline entry is
+      // authored by the system (userId null).
+      void logMeetingOnLeads({
+        attendees: [email],
+        summary: `Discovery call booked: ${name}`,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        description: summary || "Booked via rhinonlabs.com/schedule-call",
+        meetingLink: event.meetLink,
+        eventId: (event as any).id || null,
+      });
 
       try {
         inviteSent = await sendMeetingInvite(event, "request", publicSender());

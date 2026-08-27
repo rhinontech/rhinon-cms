@@ -43,6 +43,11 @@ import { WorkflowEnrollment } from "./WorkflowEnrollment";
 import { Visitor } from "./Visitor";
 import { GoogleCalendarToken } from "./GoogleCalendarToken";
 import { Unsubscribe } from "./Unsubscribe";
+import { Account } from "./Account";
+import { PipelineStage } from "./PipelineStage";
+import { Deal } from "./Deal";
+import { Activity } from "./Activity";
+import { SavedView } from "./SavedView";
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/database";
 
@@ -210,6 +215,59 @@ PageAttachment.belongsTo(User, { foreignKey: "uploadedById", as: "uploadedBy" })
 Workflow.hasMany(WorkflowEnrollment, { foreignKey: "workflowId", as: "enrollments", onDelete: "CASCADE" });
 WorkflowEnrollment.belongsTo(Workflow, { foreignKey: "workflowId", as: "workflow" });
 
+// ---------------------------------------------------------------------------
+// CRM (Phase 1): Accounts, Deals, Activities
+// ---------------------------------------------------------------------------
+Account.belongsTo(User, { foreignKey: "ownerId", as: "owner" });
+User.hasMany(Account, { foreignKey: "ownerId", as: "ownedAccounts" });
+
+Lead.belongsTo(Account, { foreignKey: "accountId", as: "account" });
+Account.hasMany(Lead, { foreignKey: "accountId", as: "contacts" });
+
+Lead.belongsTo(User, { foreignKey: "ownerId", as: "owner" });
+User.hasMany(Lead, { foreignKey: "ownerId", as: "ownedLeads" });
+
+Deal.belongsTo(Account, { foreignKey: "accountId", as: "account" });
+Account.hasMany(Deal, { foreignKey: "accountId", as: "deals" });
+
+Deal.belongsTo(Lead, { foreignKey: "primaryLeadId", as: "primaryLead" });
+Lead.hasMany(Deal, { foreignKey: "primaryLeadId", as: "deals" });
+
+Deal.belongsTo(User, { foreignKey: "ownerId", as: "owner" });
+User.hasMany(Deal, { foreignKey: "ownerId", as: "ownedDeals" });
+
+Deal.belongsTo(PipelineStage, { foreignKey: "stageId", as: "stage" });
+PipelineStage.hasMany(Deal, { foreignKey: "stageId", as: "deals" });
+
+Activity.belongsTo(Lead, { foreignKey: "leadId", as: "lead" });
+Lead.hasMany(Activity, { foreignKey: "leadId", as: "timeline" });
+
+Activity.belongsTo(Account, { foreignKey: "accountId", as: "account" });
+Account.hasMany(Activity, { foreignKey: "accountId", as: "timeline" });
+
+Activity.belongsTo(Deal, { foreignKey: "dealId", as: "deal" });
+Deal.hasMany(Activity, { foreignKey: "dealId", as: "timeline" });
+
+Activity.belongsTo(User, { foreignKey: "userId", as: "user" });
+User.hasMany(Activity, { foreignKey: "userId", as: "activities" });
+
+SavedView.belongsTo(User, { foreignKey: "createdById", as: "creator" });
+User.hasMany(SavedView, { foreignKey: "createdById", as: "savedViews" });
+
+// Won deals handed to delivery
+Project.belongsTo(Deal, { foreignKey: "dealId", as: "deal" });
+Deal.hasOne(Project, { foreignKey: "dealId", as: "project" });
+Project.belongsTo(Account, { foreignKey: "accountId", as: "account" });
+Account.hasMany(Project, { foreignKey: "accountId", as: "projects" });
+
+// Follow-up tasks hanging off CRM records
+Task.belongsTo(Lead, { foreignKey: "leadId", as: "lead" });
+Lead.hasMany(Task, { foreignKey: "leadId", as: "tasks" });
+Task.belongsTo(Deal, { foreignKey: "dealId", as: "deal" });
+Deal.hasMany(Task, { foreignKey: "dealId", as: "tasks" });
+Task.belongsTo(Account, { foreignKey: "accountId", as: "account" });
+Account.hasMany(Task, { foreignKey: "accountId", as: "tasks" });
+
 export {
   Role, Permission, RolePermission,
   User,
@@ -252,6 +310,11 @@ export {
   Visitor,
   GoogleCalendarToken,
   Unsubscribe,
+  Account,
+  PipelineStage,
+  Deal,
+  Activity,
+  SavedView,
 };
 
 export async function syncDatabase(force = false) {

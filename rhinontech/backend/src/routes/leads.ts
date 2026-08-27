@@ -1,30 +1,68 @@
 import { Router, Response } from "express";
-import { Lead, Campaign, CampaignActivity, ContactGroup, ContactGroupMember } from "../models";
+import { Lead, Campaign, CampaignActivity, ContactGroup, ContactGroupMember, Account, Deal, PipelineStage, Activity, User, Task, InboxEmail, WorkflowEnrollment } from "../models";
+import { findOrCreateAccountForLead } from "./accounts";
 import { authenticate, authorizeAny, AuthRequest } from "../middleware/authenticate";
 import { enrichLeadWithAI } from "../services/gemini";
 import { fetchWebsiteText } from "../services/research";
 import { sequelize } from "../config/database";
 import { Op } from "sequelize";
 import { runWorkflowEngineCycle } from "../services/workflowEngine";
+import { toCsv, csvFilename } from "../utils/csv";
 import { normalizeEmail, isValidEmail } from "../utils/email";
 
 const router = Router();
 
 router.use(authenticate);
 
+const OWNER_ATTRS = ["id", "fullName", "companyEmail"];
+const LIST_INCLUDES = [
+  { model: Campaign, as: "campaign", attributes: ["name"] },
+  { model: User, as: "owner", attributes: OWNER_ATTRS },
+  { model: Account, as: "account", attributes: ["id", "name", "domain"] },
+];
+
 const readAccess = authorizeAny("crm:read", "outreach:read");
 const writeAccess = authorizeAny("crm:write", "outreach:write");
+
+/**
+ * Clears everything that points at a set of leads, before they're destroyed.
+ *
+ * Split by intent rather than blanket-deleting: history that only makes sense
+ * against the lead goes away with it, while records that stand on their own —
+ * a deal worth real money, a task someone still has to do, an email already in
+ * the inbox — survive with the link nulled out.
+ */
+async function detachLeadReferences(ids: string[], transaction: any) {
+  const where = { leadId: { [Op.in]: ids } };
+
+  // Sequential, not Promise.all: a transaction is pinned to one connection, so
+  // firing these concurrently would interleave statements on it.
+
+  // Lead-scoped history: meaningless once the lead is gone.
+  await Activity.destroy({ where, transaction });
+  await CampaignActivity.destroy({ where, transaction });
+  await ContactGroupMember.destroy({ where, transaction });
+
+  // Independently meaningful: keep the record, drop the pointer.
+  await Deal.update({ primaryLeadId: null }, { where: { primaryLeadId: { [Op.in]: ids } }, transaction });
+  await Task.update({ leadId: null }, { where, transaction });
+  await InboxEmail.update({ leadId: null }, { where, transaction });
+  await WorkflowEnrollment.update({ leadId: null }, { where, transaction });
+}
 
 // GET /leads - list leads. Supports status/campaignId/source/search filters.
 // Pagination (limit/offset) is opt-in: pass `limit` to get `{ rows, count }`;
 // omit it to get the legacy plain-array shape used by existing Outreach callers.
 router.get("/", readAccess, async (req: AuthRequest, res: Response) => {
-  const { status, campaignId, source, search, limit, offset, idsOnly } = req.query;
+  const { status, campaignId, source, search, limit, offset, idsOnly, ownerId, lifecycleStage, accountId } = req.query;
   const where: any = {};
 
   if (status) where.status = status;
   if (campaignId) where.campaignId = campaignId;
   if (source) where.source = source;
+  if (ownerId) where.ownerId = ownerId === "unassigned" ? (null as any) : ownerId;
+  if (lifecycleStage) where.lifecycleStage = lifecycleStage;
+  if (accountId) where.accountId = accountId;
   if (search) {
     where[Op.or] = [
       { name: { [Op.iLike]: `%${search}%` } },
@@ -42,7 +80,7 @@ router.get("/", readAccess, async (req: AuthRequest, res: Response) => {
   if (limit) {
     const { rows, count } = await Lead.findAndCountAll({
       where,
-      include: [{ model: Campaign, as: "campaign", attributes: ["name"] }],
+      include: LIST_INCLUDES,
       order: [["addedAt", "DESC"]],
       limit: Math.min(parseInt(limit as string, 10) || 50, 200),
       offset: parseInt((offset as string) || "0", 10) || 0,
@@ -53,7 +91,7 @@ router.get("/", readAccess, async (req: AuthRequest, res: Response) => {
 
   const leads = await Lead.findAll({
     where,
-    include: [{ model: Campaign, as: "campaign", attributes: ["name"] }],
+    include: LIST_INCLUDES,
     order: [["addedAt", "DESC"]],
   });
 
@@ -79,8 +117,20 @@ router.post("/", writeAccess, async (req: AuthRequest, res: Response) => {
       res.status(400).json({ message: `"${req.body?.email}" is not a valid email address.` });
       return;
     }
-    const lead = await Lead.create({ ...req.body, email });
-    res.status(201).json(lead);
+
+    const lead = await Lead.create({
+      ...req.body,
+      email,
+      ownerId: req.body?.ownerId ?? req.user!.userId,
+    });
+
+    // Group the new contact under its company automatically.
+    if (!lead.accountId) {
+      const account = await findOrCreateAccountForLead(lead, req.user!.userId);
+      if (account) await lead.update({ accountId: account.id });
+    }
+
+    res.status(201).json(await Lead.findByPk(lead.id, { include: LIST_INCLUDES }));
   } catch (error: any) {
     res.status(400).json({ message: error.message });
   }
@@ -223,6 +273,308 @@ router.post("/import", writeAccess, async (req: AuthRequest, res: Response) => {
   }
 });
 
+/**
+ * GET /leads/duplicates - likely duplicate people.
+ *
+ * `email` is already unique, so duplicates here mean the same person captured
+ * twice under different addresses (work vs personal, a typo, a job change).
+ * Grouping is on normalised name + company, which is conservative: it will miss
+ * "Bob"/"Robert", and that is the right trade — a merge destroys data, so the
+ * suggestion list should under-report rather than over-report.
+ */
+router.get("/duplicates", readAccess, async (_req: AuthRequest, res: Response) => {
+  const leads = await Lead.findAll({
+    attributes: ["id", "name", "company", "email", "title", "phone", "status", "lifecycleStage", "addedAt", "lastActivityAt"],
+    order: [["addedAt", "ASC"]],
+    limit: 20000,
+  });
+
+  const norm = (v: string | null | undefined) =>
+    (v || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+
+  const groups = new Map<string, any[]>();
+  for (const lead of leads) {
+    const key = `${norm(lead.name)}|${norm(lead.company)}`;
+    if (key === "|") continue;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(lead.toJSON());
+  }
+
+  const duplicates = [...groups.values()]
+    .filter((group) => group.length > 1)
+    .sort((a, b) => b.length - a.length)
+    .slice(0, 200)
+    .map((group) => ({
+      name: group[0].name,
+      company: group[0].company,
+      count: group.length,
+      leads: group,
+    }));
+
+  res.json({ groups: duplicates.length, duplicates });
+});
+
+/**
+ * POST /leads/merge - fold duplicates into one survivor.
+ *
+ * The survivor keeps its own non-empty fields and only inherits what it is
+ * missing, so a merge can never blank out data that was already there. All
+ * history (timeline, campaign log, list membership, deals, tasks, inbox mail)
+ * is repointed at the survivor before the losers are deleted — merging must not
+ * be a quiet way to lose a conversation.
+ */
+router.post("/merge", writeAccess, async (req: AuthRequest, res: Response) => {
+  const survivorId: string = req.body?.survivorId;
+  const mergeIds: string[] = Array.isArray(req.body?.mergeIds) ? req.body.mergeIds : [];
+
+  if (!survivorId || mergeIds.length === 0) {
+    res.status(400).json({ message: "Provide survivorId and at least one mergeId" });
+    return;
+  }
+  if (mergeIds.includes(survivorId)) {
+    res.status(400).json({ message: "The survivor cannot also be merged away" });
+    return;
+  }
+
+  try {
+    const survivor = await Lead.findByPk(survivorId);
+    if (!survivor) {
+      res.status(404).json({ message: "Survivor lead not found" });
+      return;
+    }
+    const losers = await Lead.findAll({ where: { id: { [Op.in]: mergeIds } } });
+    if (losers.length === 0) {
+      res.status(404).json({ message: "No leads to merge" });
+      return;
+    }
+
+    // Fill only the gaps on the survivor.
+    const fillable = [
+      "title", "phone", "linkedinUrl", "seniority", "department", "industry",
+      "location", "website", "companyLinkedinUrl", "annualRevenue", "technologies",
+      "keywords", "accountId", "ownerId",
+    ] as const;
+    const patch: any = {};
+    for (const field of fillable) {
+      if (survivor[field] == null || survivor[field] === "") {
+        const donor = losers.find((l) => l[field] != null && l[field] !== "");
+        if (donor) patch[field] = donor[field];
+      }
+    }
+    if (survivor.employeeCount == null) {
+      const donor = losers.find((l) => l.employeeCount != null);
+      if (donor) patch.employeeCount = donor.employeeCount;
+    }
+
+    // Notes are appended, never replaced — they're the human record.
+    const extraNotes = losers
+      .map((l) => (l.notes || "").trim())
+      .filter(Boolean)
+      .map((n, i) => `[merged from ${losers[i]?.email}] ${n}`);
+    if (extraNotes.length) {
+      patch.notes = [survivor.notes, ...extraNotes].filter(Boolean).join("\n");
+    }
+
+    const loserIds = losers.map((l) => l.id);
+
+    await sequelize.transaction(async (t) => {
+      if (Object.keys(patch).length) await survivor.update(patch, { transaction: t });
+
+      // Repoint history. Sequential on purpose — one connection per transaction.
+      await Activity.update({ leadId: survivor.id }, { where: { leadId: { [Op.in]: loserIds } }, transaction: t });
+      await CampaignActivity.update({ leadId: survivor.id }, { where: { leadId: { [Op.in]: loserIds } }, transaction: t });
+      await InboxEmail.update({ leadId: survivor.id }, { where: { leadId: { [Op.in]: loserIds } }, transaction: t });
+      await Task.update({ leadId: survivor.id }, { where: { leadId: { [Op.in]: loserIds } }, transaction: t });
+      await Deal.update({ primaryLeadId: survivor.id }, { where: { primaryLeadId: { [Op.in]: loserIds } }, transaction: t });
+      await WorkflowEnrollment.update({ leadId: survivor.id }, { where: { leadId: { [Op.in]: loserIds } }, transaction: t });
+
+      // Group membership is a unique (group, lead) pair, so moving it blindly
+      // would collide wherever both records were already in the same list.
+      const memberships = await ContactGroupMember.findAll({
+        where: { leadId: { [Op.in]: loserIds } },
+        transaction: t,
+      });
+      const survivorGroups = new Set(
+        (await ContactGroupMember.findAll({ where: { leadId: survivor.id }, transaction: t }))
+          .map((m) => m.contactGroupId)
+      );
+      for (const membership of memberships) {
+        if (survivorGroups.has(membership.contactGroupId)) {
+          await membership.destroy({ transaction: t });
+        } else {
+          await membership.update({ leadId: survivor.id }, { transaction: t });
+          survivorGroups.add(membership.contactGroupId);
+        }
+      }
+
+      await Lead.destroy({ where: { id: { [Op.in]: loserIds } }, transaction: t });
+    });
+
+    await Activity.create({
+      leadId: survivor.id,
+      accountId: survivor.accountId,
+      userId: req.user!.userId,
+      type: "System",
+      subject: `Merged ${losers.length} duplicate${losers.length === 1 ? "" : "s"} into this lead`,
+      body: losers.map((l) => l.email).join(", "),
+      metadata: { mergedEmails: losers.map((l) => l.email) },
+    });
+
+    res.json({
+      survivorId: survivor.id,
+      merged: losers.length,
+      fieldsFilled: Object.keys(patch),
+    });
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// GET /leads/export.csv - the same filters as the list, as a download.
+// Declared before /:id so "export.csv" is never read as a lead id.
+router.get("/export.csv", readAccess, async (req: AuthRequest, res: Response) => {
+  const { status, source, search, ownerId, lifecycleStage, accountId } = req.query;
+  const where: any = {};
+  if (status) where.status = status;
+  if (source) where.source = source;
+  if (ownerId) where.ownerId = ownerId === "unassigned" ? (null as any) : ownerId;
+  if (lifecycleStage) where.lifecycleStage = lifecycleStage;
+  if (accountId) where.accountId = accountId;
+  if (search) {
+    where[Op.or] = [
+      { name: { [Op.iLike]: `%${search}%` } },
+      { company: { [Op.iLike]: `%${search}%` } },
+      { email: { [Op.iLike]: `%${search}%` } },
+    ];
+  }
+
+  // Hard ceiling — an unbounded export would happily try to buffer the table.
+  const leads = await Lead.findAll({
+    where,
+    include: [
+      { model: User, as: "owner", attributes: OWNER_ATTRS },
+      { model: Account, as: "account", attributes: ["name", "domain"] },
+    ],
+    order: [["addedAt", "DESC"]],
+    limit: 10000,
+  });
+
+  const csv = toCsv(
+    [
+      { key: "name", label: "Name" },
+      { key: "email", label: "Email" },
+      { key: "title", label: "Title" },
+      { key: "company", label: "Company" },
+      { key: "accountName", label: "Account" },
+      { key: "phone", label: "Phone" },
+      { key: "lifecycleStage", label: "Stage" },
+      { key: "status", label: "Outreach status" },
+      { key: "ownerName", label: "Owner" },
+      { key: "source", label: "Source" },
+      { key: "industry", label: "Industry" },
+      { key: "location", label: "Location" },
+      { key: "website", label: "Website" },
+      { key: "linkedinUrl", label: "LinkedIn" },
+      { key: "lastActivityAt", label: "Last activity" },
+      { key: "addedAt", label: "Added" },
+    ],
+    leads.map((l) => {
+      const j: any = l.toJSON();
+      return {
+        ...j,
+        accountName: j.account?.name || "",
+        ownerName: j.owner?.fullName || "",
+        lastActivityAt: j.lastActivityAt ? new Date(j.lastActivityAt).toISOString().slice(0, 10) : "",
+        addedAt: j.addedAt ? new Date(j.addedAt).toISOString().slice(0, 10) : "",
+      };
+    })
+  );
+
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader("Content-Disposition", `attachment; filename="${csvFilename("leads")}"`);
+  res.send(csv);
+});
+
+/**
+ * POST /leads/bulk-update - apply one change to many leads.
+ *
+ * Replaces a client-side loop of individual PUTs: assigning 200 leads was 200
+ * requests, each also running the owner-change audit lookup. This is three
+ * queries regardless of selection size, and still writes the same timeline
+ * entries so the audit trail doesn't get a hole in it.
+ */
+router.post("/bulk-update", writeAccess, async (req: AuthRequest, res: Response) => {
+  const ids: string[] = Array.isArray(req.body?.ids) ? req.body.ids : [];
+  const patch = req.body?.patch || {};
+  if (ids.length === 0) {
+    res.status(400).json({ message: "No leads selected" });
+    return;
+  }
+
+  // Only fields a bulk action should ever touch — never a free-form patch.
+  const allowed: any = {};
+  if (patch.ownerId !== undefined) allowed.ownerId = patch.ownerId || null;
+  if (patch.lifecycleStage !== undefined) allowed.lifecycleStage = patch.lifecycleStage;
+  if (Object.keys(allowed).length === 0) {
+    res.status(400).json({ message: "Nothing to update" });
+    return;
+  }
+
+  try {
+    const leads = await Lead.findAll({
+      where: { id: { [Op.in]: ids } },
+      attributes: ["id", "accountId", "ownerId", "lifecycleStage"],
+    });
+    if (leads.length === 0) {
+      res.status(404).json({ message: "No matching leads" });
+      return;
+    }
+
+    // Resolve owner names once, not per lead.
+    let nameById: Map<string, string> | null = null;
+    let toLabel = "Unassigned";
+    if (allowed.ownerId !== undefined) {
+      const involved = [...new Set([...leads.map((l) => l.ownerId), allowed.ownerId].filter(Boolean))] as string[];
+      const users = involved.length
+        ? await User.findAll({ where: { id: { [Op.in]: involved } }, attributes: OWNER_ATTRS })
+        : [];
+      nameById = new Map(users.map((u) => [u.id, u.fullName]));
+      toLabel = allowed.ownerId ? nameById.get(allowed.ownerId) || "Unknown" : "Unassigned";
+    }
+
+    await Lead.update(allowed, { where: { id: { [Op.in]: leads.map((l) => l.id) } } });
+
+    const activities: any[] = [];
+    for (const lead of leads) {
+      if (allowed.lifecycleStage !== undefined && allowed.lifecycleStage !== lead.lifecycleStage) {
+        activities.push({
+          leadId: lead.id,
+          accountId: lead.accountId,
+          userId: req.user!.userId,
+          type: "LifecycleChange",
+          subject: `${lead.lifecycleStage} \u2192 ${allowed.lifecycleStage}`,
+          metadata: { from: lead.lifecycleStage, to: allowed.lifecycleStage, bulk: true },
+        });
+      }
+      if (allowed.ownerId !== undefined && allowed.ownerId !== lead.ownerId) {
+        activities.push({
+          leadId: lead.id,
+          accountId: lead.accountId,
+          userId: req.user!.userId,
+          type: "OwnerChange",
+          subject: `${(lead.ownerId && nameById?.get(lead.ownerId)) || "Unassigned"} \u2192 ${toLabel}`,
+          metadata: { from: lead.ownerId, to: allowed.ownerId, bulk: true },
+        });
+      }
+    }
+    if (activities.length) await Activity.bulkCreate(activities);
+
+    res.json({ requested: ids.length, updated: leads.length, logged: activities.length });
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
 // POST /leads/bulk-delete - delete many leads by id
 router.post("/bulk-delete", writeAccess, async (req: AuthRequest, res: Response) => {
   const ids: string[] = Array.isArray(req.body?.ids) ? req.body.ids : [];
@@ -232,8 +584,8 @@ router.post("/bulk-delete", writeAccess, async (req: AuthRequest, res: Response)
   }
   try {
     const deleted = await sequelize.transaction(async (t) => {
-      // Remove dependent activities first (FK has no cascade)
-      await CampaignActivity.destroy({ where: { leadId: { [Op.in]: ids } }, transaction: t });
+      // Dependents first — the FKs have no cascade.
+      await detachLeadReferences(ids, t);
       return Lead.destroy({ where: { id: { [Op.in]: ids } }, transaction: t });
     });
     res.json({ deleted });
@@ -247,7 +599,11 @@ router.get("/:id", readAccess, async (req: AuthRequest, res: Response) => {
   const lead = await Lead.findByPk(req.params.id, {
     include: [
       { model: Campaign, as: "campaign" },
-      { model: CampaignActivity, as: "activities", order: [["timestamp", "DESC"]] }
+      { model: CampaignActivity, as: "activities", order: [["timestamp", "DESC"]] },
+      { model: User, as: "owner", attributes: OWNER_ATTRS },
+      { model: Account, as: "account" },
+      { model: Deal, as: "deals", include: [{ model: PipelineStage, as: "stage" }] },
+      { model: Task, as: "tasks" },
     ],
   });
 
@@ -279,8 +635,37 @@ router.put("/:id", writeAccess, async (req: AuthRequest, res: Response) => {
     patch.email = email;
   }
 
+  const before = { lifecycleStage: lead.lifecycleStage, ownerId: lead.ownerId };
   await lead.update(patch);
-  res.json(lead);
+
+  // Ownership and qualification changes are the two things a sales manager
+  // asks "who did that, and when" about, so both are written to the timeline.
+  if (patch.lifecycleStage && patch.lifecycleStage !== before.lifecycleStage) {
+    await Activity.create({
+      leadId: lead.id,
+      accountId: lead.accountId,
+      userId: req.user!.userId,
+      type: "LifecycleChange",
+      subject: `${before.lifecycleStage} \u2192 ${lead.lifecycleStage}`,
+      metadata: { from: before.lifecycleStage, to: lead.lifecycleStage },
+    });
+  }
+  if (patch.ownerId !== undefined && patch.ownerId !== before.ownerId) {
+    const [fromUser, toUser] = await Promise.all([
+      before.ownerId ? User.findByPk(before.ownerId, { attributes: OWNER_ATTRS }) : null,
+      lead.ownerId ? User.findByPk(lead.ownerId, { attributes: OWNER_ATTRS }) : null,
+    ]);
+    await Activity.create({
+      leadId: lead.id,
+      accountId: lead.accountId,
+      userId: req.user!.userId,
+      type: "OwnerChange",
+      subject: `${fromUser?.fullName || "Unassigned"} \u2192 ${toUser?.fullName || "Unassigned"}`,
+      metadata: { from: before.ownerId, to: lead.ownerId },
+    });
+  }
+
+  res.json(await Lead.findByPk(lead.id, { include: LIST_INCLUDES }));
 });
 
 // DELETE /leads/:id - delete lead
@@ -292,7 +677,7 @@ router.delete("/:id", writeAccess, async (req: AuthRequest, res: Response) => {
   }
 
   await sequelize.transaction(async (t) => {
-    await CampaignActivity.destroy({ where: { leadId: lead.id }, transaction: t });
+    await detachLeadReferences([lead.id], t);
     await lead.destroy({ transaction: t });
   });
   res.json({ message: "Lead deleted" });
@@ -340,6 +725,175 @@ router.post("/:id/enrich", writeAccess, async (req: AuthRequest, res: Response) 
     res.json(enrichment);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+ * POST /leads/:id/convert - turn a qualified lead into a deal.
+ *
+ * This is the step the app previously had no way to express: a won lead was
+ * re-typed into a Project by hand. Creating the deal also ensures the lead has
+ * an account, and marks it Qualified.
+ */
+router.post("/:id/convert", writeAccess, async (req: AuthRequest, res: Response) => {
+  const lead = await Lead.findByPk(req.params.id);
+  if (!lead) {
+    res.status(404).json({ message: "Lead not found" });
+    return;
+  }
+
+  try {
+    let accountId = lead.accountId;
+    if (!accountId) {
+      const account = await findOrCreateAccountForLead(lead, req.user!.userId);
+      accountId = account?.id ?? null;
+      if (accountId) await lead.update({ accountId });
+    }
+
+    const stageId =
+      req.body?.stageId ||
+      (await PipelineStage.findOne({ where: { type: "Open" }, order: [["position", "ASC"]] }))?.id ||
+      null;
+    const stage = stageId ? await PipelineStage.findByPk(stageId) : null;
+
+    const deal = await Deal.create({
+      title: req.body?.title || `${lead.company} — ${lead.name}`,
+      accountId,
+      primaryLeadId: lead.id,
+      ownerId: req.body?.ownerId || lead.ownerId || req.user!.userId,
+      value: req.body?.value ?? 0,
+      currency: req.body?.currency || "INR",
+      stageId,
+      status: stage?.type || "Open",
+      expectedCloseDate: req.body?.expectedCloseDate || null,
+      source: lead.source,
+      notes: req.body?.notes || null,
+      createdById: req.user!.userId,
+    });
+
+    // Converting is itself a qualification decision, so record it.
+    if (lead.lifecycleStage !== "Customer") {
+      await lead.update({ lifecycleStage: "Qualified" });
+    }
+
+    await Activity.create({
+      leadId: lead.id,
+      dealId: deal.id,
+      accountId,
+      userId: req.user!.userId,
+      type: "System",
+      subject: `Converted to deal: ${deal.title}`,
+      metadata: { dealId: deal.id, value: Number(deal.value || 0), currency: deal.currency },
+    });
+
+    res.status(201).json(
+      await Deal.findByPk(deal.id, {
+        include: [
+          { model: PipelineStage, as: "stage" },
+          { model: Account, as: "account", attributes: ["id", "name", "domain"] },
+          { model: Lead, as: "primaryLead", attributes: ["id", "name", "email", "title"] },
+          { model: User, as: "owner", attributes: OWNER_ATTRS },
+        ],
+      })
+    );
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+/**
+ * POST /leads/bulk-convert - promote several qualified leads to deals at once.
+ *
+ * This is the bridge between a lead list of thousands and a pipeline of dozens:
+ * a board is only useful when it holds the handful of things actually being
+ * worked, so leads earn their way onto it rather than all arriving by default.
+ *
+ * Set-based deliberately — the per-lead findOrCreate loop this replaces would
+ * be several round trips per row. Accounts are taken from whatever the lead is
+ * already linked to (run Backfill first for that); this never creates them.
+ */
+router.post("/bulk-convert", writeAccess, async (req: AuthRequest, res: Response) => {
+  const ids: string[] = Array.isArray(req.body?.ids) ? req.body.ids : [];
+  if (ids.length === 0) {
+    res.status(400).json({ message: "No leads selected" });
+    return;
+  }
+  if (ids.length > 200) {
+    res.status(400).json({ message: "Convert at most 200 leads at a time" });
+    return;
+  }
+
+  try {
+    const stageId =
+      req.body?.stageId ||
+      (await PipelineStage.findOne({ where: { type: "Open" }, order: [["position", "ASC"]] }))?.id ||
+      null;
+    const stage = stageId ? await PipelineStage.findByPk(stageId) : null;
+
+    const leads = await Lead.findAll({ where: { id: { [Op.in]: ids } } });
+    if (leads.length === 0) {
+      res.status(404).json({ message: "No matching leads" });
+      return;
+    }
+
+    // A lead that already has an open deal shouldn't get a second one.
+    const existing = await Deal.findAll({
+      where: { primaryLeadId: { [Op.in]: leads.map((l) => l.id) }, status: "Open" },
+      attributes: ["primaryLeadId"],
+      raw: true,
+    });
+    const alreadyOpen = new Set((existing as any[]).map((d) => d.primaryLeadId));
+
+    const toConvert = leads.filter((l) => !alreadyOpen.has(l.id));
+    const value = Number(req.body?.value ?? 0) || 0;
+    const currency = req.body?.currency || "INR";
+    const ownerFallback = req.body?.ownerId || null;
+
+    const deals = await Deal.bulkCreate(
+      toConvert.map((lead) => ({
+        title: `${lead.company} — ${lead.name}`,
+        accountId: lead.accountId,
+        primaryLeadId: lead.id,
+        ownerId: ownerFallback || lead.ownerId || req.user!.userId,
+        value,
+        currency,
+        stageId,
+        status: (stage?.type || "Open") as "Open" | "Won" | "Lost",
+        expectedCloseDate: req.body?.expectedCloseDate || null,
+        source: lead.source,
+        createdById: req.user!.userId,
+      })),
+      { returning: true }
+    );
+
+    // Converting is a qualification decision; record it on each lead's timeline.
+    await Activity.bulkCreate(
+      deals.map((deal) => ({
+        leadId: deal.primaryLeadId,
+        dealId: deal.id,
+        accountId: deal.accountId,
+        userId: req.user!.userId,
+        type: "System" as const,
+        subject: `Converted to deal: ${deal.title}`,
+        metadata: { dealId: deal.id, bulk: true },
+      }))
+    );
+
+    const promotable = toConvert
+      .filter((l) => l.lifecycleStage !== "Customer")
+      .map((l) => l.id);
+    if (promotable.length) {
+      await Lead.update({ lifecycleStage: "Qualified" }, { where: { id: { [Op.in]: promotable } } });
+    }
+
+    res.status(201).json({
+      requested: ids.length,
+      converted: deals.length,
+      skipped: leads.length - toConvert.length,
+      notFound: ids.length - leads.length,
+    });
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
   }
 });
 

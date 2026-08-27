@@ -22,6 +22,36 @@ export async function apiFetch<T = unknown>(path: string, init?: RequestInit): P
   return res.json() as Promise<T>;
 }
 
+/**
+ * Downloads an authenticated endpoint as a file.
+ *
+ * A plain <a href> can't carry the Authorization header, so the response is
+ * fetched, turned into a blob and handed to a synthetic link. The object URL is
+ * revoked afterwards so the blob isn't pinned in memory.
+ */
+export async function apiDownload(path: string, fallbackName: string): Promise<void> {
+  const res = await fetch(`${API_URL}${path}`, { headers: authHeaders() });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: "Download failed" }));
+    throw new Error(err.message || "Download failed");
+  }
+
+  // Prefer the server's filename when it sent one.
+  const disposition = res.headers.get("Content-Disposition") || "";
+  const match = disposition.match(/filename="?([^"]+)"?/);
+  const filename = match?.[1] || fallbackName;
+
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 // Multipart upload — don't set Content-Type so the browser adds the multipart boundary.
 export async function apiUpload<T = unknown>(path: string, file: File, field = "image"): Promise<T> {
   const token = Cookies.get("authToken");

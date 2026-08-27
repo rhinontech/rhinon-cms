@@ -3,6 +3,14 @@ import { sequelize } from "../config/database";
 
 export type LeadStatus = "New" | "Enriched" | "Enrolled" | "Emailed" | "Replied" | "Bounced" | "Unsubscribed" | "Interested";
 
+/**
+ * Human-owned qualification funnel. Kept separate from `status`, which the
+ * campaign cron overwrites (Enrolled -> Interested -> Emailed ...). Sales owns
+ * this column; the outreach engine never writes it.
+ */
+export type LeadLifecycleStage =
+  | "New" | "Contacted" | "Engaged" | "Qualified" | "Unqualified" | "Customer";
+
 interface LeadAttributes {
   id: string;
   name: string;
@@ -38,6 +46,11 @@ interface LeadAttributes {
   openedAt?: Date | null;
   source: string;
   notes?: string | null;
+  // CRM ownership / linkage (Phase 1)
+  ownerId?: string | null;
+  accountId?: string | null;
+  lifecycleStage: LeadLifecycleStage;
+  lastActivityAt?: Date | null;
   addedAt: Date;
   createdAt?: Date;
   updatedAt?: Date;
@@ -51,6 +64,7 @@ interface LeadCreationAttributes
     | "website" | "companyLinkedinUrl" | "emailStatus" | "emailConfidence" | "keywords" | "apolloContactId"
     | "technologies" | "annualRevenue" | "raw" | "enrichment" | "draftSubject" | "draftApproved"
     | "emailOpened" | "openedAt"
+    | "ownerId" | "accountId" | "lifecycleStage" | "lastActivityAt"
   > {}
 
 export class Lead extends Model<LeadAttributes, LeadCreationAttributes> implements LeadAttributes {
@@ -85,6 +99,10 @@ export class Lead extends Model<LeadAttributes, LeadCreationAttributes> implemen
   declare openedAt: Date | null;
   declare source: string;
   declare notes: string | null;
+  declare ownerId: string | null;
+  declare accountId: string | null;
+  declare lifecycleStage: LeadLifecycleStage;
+  declare lastActivityAt: Date | null;
   declare addedAt: Date;
   declare readonly createdAt: Date;
   declare readonly updatedAt: Date;
@@ -127,6 +145,14 @@ Lead.init(
     openedAt: { type: DataTypes.DATE, allowNull: true },
     source: { type: DataTypes.STRING, defaultValue: "Manual", allowNull: false },
     notes: { type: DataTypes.TEXT, allowNull: true },
+    ownerId: { type: DataTypes.UUID, allowNull: true },
+    accountId: { type: DataTypes.UUID, allowNull: true },
+    lifecycleStage: {
+      type: DataTypes.ENUM("New", "Contacted", "Engaged", "Qualified", "Unqualified", "Customer"),
+      allowNull: false,
+      defaultValue: "New",
+    },
+    lastActivityAt: { type: DataTypes.DATE, allowNull: true },
     addedAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW, allowNull: false },
   },
   { sequelize, tableName: "leads", timestamps: true }

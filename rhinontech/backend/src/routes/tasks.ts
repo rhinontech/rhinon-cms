@@ -28,11 +28,20 @@ function canEdit(task: Task, req: AuthRequest): boolean {
 // GET /tasks
 router.get("/", async (req: AuthRequest, res: Response) => {
   try {
-    const { scope = "my", status, projectId, priority, tag } = req.query;
+    const { scope = "my", status, projectId, priority, tag, leadId, dealId, accountId } = req.query;
     const where: Record<string, unknown> = {};
     const include = [...taskIncludes];
 
-    if (scope === "my") {
+    // Asking for a record's tasks is its own scope: return every task attached
+    // to it regardless of assignee, and skip the my/team narrowing below.
+    const crmScoped = Boolean(leadId || dealId || accountId);
+    if (leadId && typeof leadId === "string") where.leadId = leadId;
+    if (dealId && typeof dealId === "string") where.dealId = dealId;
+    if (accountId && typeof accountId === "string") where.accountId = accountId;
+
+    if (crmScoped) {
+      // Deliberately no assignee narrowing.
+    } else if (scope === "my") {
       where.assigneeId = req.user!.userId;
     } else if (scope === "focus") {
       const now = new Date();
@@ -73,7 +82,7 @@ router.get("/", async (req: AuthRequest, res: Response) => {
 // POST /tasks
 router.post("/", async (req: AuthRequest, res: Response) => {
   try {
-    const { title, description, assigneeId, projectId, team, dueDate, status, priority, estimatedHours, recurrence, blockedById } = req.body;
+    const { title, description, assigneeId, projectId, team, dueDate, status, priority, estimatedHours, recurrence, blockedById, leadId, dealId, accountId } = req.body;
     if (!title?.trim()) { res.status(400).json({ message: "title is required" }); return; }
 
     const task = await Task.create({
@@ -89,6 +98,9 @@ router.post("/", async (req: AuthRequest, res: Response) => {
       estimatedHours: estimatedHours || null,
       recurrence: recurrence || null,
       blockedById: blockedById || null,
+      leadId: leadId || null,
+      dealId: dealId || null,
+      accountId: accountId || null,
     });
 
     const full = await Task.findByPk(task.id, { include: taskIncludes });
@@ -107,7 +119,7 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
       res.status(403).json({ message: "You can only edit tasks assigned to or created by you" }); return;
     }
 
-    const { title, description, assigneeId, projectId, team, dueDate, status, priority, estimatedHours, recurrence, blockedById } = req.body;
+    const { title, description, assigneeId, projectId, team, dueDate, status, priority, estimatedHours, recurrence, blockedById, leadId, dealId, accountId } = req.body;
     const prevStatus = task.status;
 
     await task.update({
@@ -122,6 +134,9 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
       ...(estimatedHours !== undefined && { estimatedHours }),
       ...(recurrence !== undefined && { recurrence: recurrence || null }),
       ...(blockedById !== undefined && { blockedById: blockedById || null }),
+      ...(leadId !== undefined && { leadId: leadId || null }),
+      ...(dealId !== undefined && { dealId: dealId || null }),
+      ...(accountId !== undefined && { accountId: accountId || null }),
     });
 
     // Sync ClientRequest status

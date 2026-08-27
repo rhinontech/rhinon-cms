@@ -20,6 +20,7 @@ import {
   TbSunHigh,
   TbSunrise,
   TbUsers,
+  TbTargetArrow,
 } from "react-icons/tb";
 import { apiFetch } from "@/lib/api";
 
@@ -55,6 +56,21 @@ interface RecentHire {
   joiningDate: string;
 }
 
+/** Indian grouping, compact past a lakh — matches the CRM's own formatting. */
+function formatPipelineValue(value: number): string {
+  if (!Number.isFinite(value)) return "—";
+  try {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      notation: Math.abs(value) >= 1_00_000 ? "compact" : "standard",
+      maximumFractionDigits: Math.abs(value) >= 1_00_000 ? 1 : 0,
+    }).format(value);
+  } catch {
+    return `₹${value.toLocaleString("en-IN")}`;
+  }
+}
+
 interface DashboardStats {
   currentUser: { fullName: string; department: string; role: string };
   totalEmployees: number;
@@ -73,6 +89,13 @@ interface DashboardStats {
   anniversaries: AnniversaryPerson[];
   recentHires: RecentHire[];
   pendingTasksList: PendingTask[];
+  /** Null when the viewer can't see the CRM, or when the snapshot failed. */
+  crm: {
+    openCount: number;
+    openValue: number;
+    weightedValue: number;
+    myOpenCount: number;
+  } | null;
 }
 
 interface InvestmentSummary {
@@ -283,6 +306,16 @@ export default function DashboardPage() {
               value={stats?.newThisMonth ?? "—"}
               sub="Joined recently"
             />
+            {/* Only rendered for people who can see the CRM — the API returns
+                null otherwise, so no permission check is needed here. */}
+            {stats?.crm && (
+              <StatCard
+                icon={<TbTargetArrow size={20} />}
+                label="Open pipeline"
+                value={formatPipelineValue(stats.crm.openValue)}
+                sub={`${stats.crm.openCount} deals · ${formatPipelineValue(stats.crm.weightedValue)} weighted`}
+              />
+            )}
           </div>
 
           {/* ── Row 2: Attendance + Upcoming ── */}

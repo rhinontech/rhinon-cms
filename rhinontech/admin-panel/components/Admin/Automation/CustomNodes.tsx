@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Handle, Position } from "@xyflow/react";
-import { TbBolt, TbMail, TbClock, TbGitFork, TbLogout, TbTrash } from "react-icons/tb";
+import { TbBolt, TbMail, TbClock, TbGitFork, TbLogout, TbTrash, TbPhone, TbBrandLinkedin, TbArrowsSplit2 } from "react-icons/tb";
 import { WorkflowNodeData } from "@/types/automation";
 
 interface CustomNodeProps {
@@ -146,6 +146,107 @@ export function IfThenNode({ data, selected }: CustomNodeProps) {
 
       <Handle type="source" position={Position.Bottom} id="yes" className="!bg-emerald-500 !w-3 !h-3 !left-[30%]" />
       <Handle type="source" position={Position.Bottom} id="no" className="!bg-rose-500 !w-3 !h-3 !left-[70%]" />
+    </div>
+  );
+}
+
+/**
+ * Manual touch steps. Both create a real task for a person and then advance
+ * immediately — the sequence keeps its cadence while a human does the work.
+ */
+function ManualTouchNode({
+  data,
+  selected,
+  icon,
+  tint,
+  border,
+  fallbackLabel,
+  fallbackSubtitle,
+}: CustomNodeProps & {
+  icon: React.ReactNode;
+  tint: string;
+  border: string;
+  fallbackLabel: string;
+  fallbackSubtitle: string;
+}) {
+  const due = Number(data.config?.dueInDays ?? 1);
+  return (
+    <div
+      className={`relative min-w-[240px] rounded-xl bg-white p-3.5 shadow-sm transition-all border-2 ${
+        selected ? "border-indigo-600 shadow-md" : border
+      }`}
+    >
+      <Handle type="target" position={Position.Top} className="!bg-indigo-600 !w-3 !h-3" />
+      <div className="flex items-center gap-3">
+        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${tint}`}>{icon}</div>
+        <div className="flex-1 min-w-0">
+          <h4 className="text-sm font-semibold text-gray-900 truncate">{data.label || fallbackLabel}</h4>
+          <p className="text-xs text-gray-500 truncate">
+            {data.config?.title
+              ? `${data.config.title} · due in ${due}d`
+              : data.subtitle || fallbackSubtitle}
+          </p>
+        </div>
+      </div>
+      <Handle type="source" position={Position.Bottom} className="!bg-indigo-600 !w-3 !h-3" />
+    </div>
+  );
+}
+
+export function CallTaskNode(props: CustomNodeProps) {
+  return (
+    <ManualTouchNode
+      {...props}
+      icon={<TbPhone size={20} />}
+      tint="bg-emerald-50 text-emerald-600"
+      border="border-emerald-100 hover:border-emerald-300"
+      fallbackLabel="Call"
+      fallbackSubtitle="Create a call task"
+    />
+  );
+}
+
+export function LinkedInStepNode(props: CustomNodeProps) {
+  return (
+    <ManualTouchNode
+      {...props}
+      icon={<TbBrandLinkedin size={20} />}
+      tint="bg-sky-50 text-sky-600"
+      border="border-sky-100 hover:border-sky-300"
+      fallbackLabel="LinkedIn touch"
+      fallbackSubtitle="Create a LinkedIn task"
+    />
+  );
+}
+
+export function AbSplitNode({ data, selected }: CustomNodeProps) {
+  const split = Number(data.config?.splitPercent ?? 50);
+  return (
+    <div
+      className={`relative min-w-[260px] rounded-xl bg-white p-4 shadow-sm transition-all border-2 ${
+        selected ? "border-indigo-600 shadow-md" : "border-fuchsia-100 hover:border-fuchsia-300"
+      }`}
+    >
+      <Handle type="target" position={Position.Top} className="!bg-indigo-600 !w-3 !h-3" />
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-fuchsia-50 text-fuchsia-600">
+          <TbArrowsSplit2 size={22} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h4 className="text-sm font-semibold text-gray-900 truncate">{data.label || "A/B split"}</h4>
+          <p className="text-xs text-gray-500 truncate mt-0.5">
+            {data.subtitle || `${split}% take variant A`}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex justify-between items-center mt-3 pt-2 border-t border-gray-100 text-[11px] font-bold">
+        <span className="text-fuchsia-600">A · {split}%</span>
+        <span className="text-indigo-600">B · {100 - split}%</span>
+      </div>
+
+      <Handle type="source" position={Position.Bottom} id="a" className="!bg-fuchsia-500 !w-3 !h-3 !left-[30%]" />
+      <Handle type="source" position={Position.Bottom} id="b" className="!bg-indigo-500 !w-3 !h-3 !left-[70%]" />
     </div>
   );
 }
