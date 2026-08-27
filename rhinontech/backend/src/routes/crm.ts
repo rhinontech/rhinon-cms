@@ -1,6 +1,6 @@
 import { Router, Response } from "express";
 import { Op, fn, col, literal } from "sequelize";
-import { User, Deal, PipelineStage, Lead, Activity, PageView, Account, SavedView } from "../models";
+import { User, Deal, PipelineStage, Lead, Activity, PageView, Account, SavedView, WorkflowEnrollment } from "../models";
 import { isIpCompanyLookupEnabled } from "../services/ipCompany";
 import { sequelize } from "../config/database";
 import { authenticate, authorizeAny, AuthRequest } from "../middleware/authenticate";
@@ -179,6 +179,41 @@ router.get("/reports", readAccess, async (req: AuthRequest, res: Response) => {
       activityByType[row.type] = (activityByType[row.type] || 0) + Number(row.count);
     }
 
+    // Sequence attribution: did outreach touch the deals that closed?
+    // Any enrollment at all counts, with no attribution window — a longer sales
+    // cycle shouldn't erase the sequence that started the conversation. That's
+    // generous by design, so read it as influence, not as sole credit.
+    const closedDealRows = await Deal.findAll({
+      where: { status: { [Op.in]: ["Won", "Lost"] }, ...closedInRange },
+      attributes: ["id", "status", "value", "primaryLeadId"],
+      raw: true,
+    });
+    const closedLeadIds = [...new Set((closedDealRows as any[]).map((d) => d.primaryLeadId).filter(Boolean))];
+    const enrolledLeadIds = closedLeadIds.length
+      ? new Set(
+          (
+            await WorkflowEnrollment.findAll({
+              where: { leadId: { [Op.in]: closedLeadIds } },
+              attributes: ["leadId"],
+              group: ["leadId"],
+              raw: true,
+            })
+          ).map((r: any) => r.leadId)
+        )
+      : new Set<string>();
+
+    const sequenced = { wonCount: 0, wonValue: 0, lostCount: 0 };
+    const organic = { wonCount: 0, wonValue: 0, lostCount: 0 };
+    for (const deal of closedDealRows as any[]) {
+      const bucket = deal.primaryLeadId && enrolledLeadIds.has(deal.primaryLeadId) ? sequenced : organic;
+      if (deal.status === "Won") {
+        bucket.wonCount += 1;
+        bucket.wonValue += Number(deal.value || 0);
+      } else {
+        bucket.lostCount += 1;
+      }
+    }
+
     const decided = wonCount + lostCount;
 
     res.json({
@@ -198,6 +233,20 @@ router.get("/reports", readAccess, async (req: AuthRequest, res: Response) => {
         avgDealValue: wonCount > 0 ? Math.round(wonValue / wonCount) : null,
       },
       sources: [...sourceMap.values()].sort((a, b) => b.wonValue - a.wonValue),
+      attribution: {
+        sequenced: {
+          ...sequenced,
+          winRate: sequenced.wonCount + sequenced.lostCount > 0
+            ? Math.round((sequenced.wonCount / (sequenced.wonCount + sequenced.lostCount)) * 100)
+            : null,
+        },
+        organic: {
+          ...organic,
+          winRate: organic.wonCount + organic.lostCount > 0
+            ? Math.round((organic.wonCount / (organic.wonCount + organic.lostCount)) * 100)
+            : null,
+        },
+      },
       reps: [...reps.values()].sort((a, b) => b.wonValue - a.wonValue || b.openValue - a.openValue),
       activityByType,
       monthly: (monthlyRows as any[]).map((r) => ({

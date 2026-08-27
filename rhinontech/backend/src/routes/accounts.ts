@@ -1,6 +1,6 @@
 import { Router, Response } from "express";
 import { Op, fn, col } from "sequelize";
-import { Account, Lead, Deal, User, Activity } from "../models";
+import { Account, Lead, Deal, User, Activity, Task } from "../models";
 import { normalizeDomain, domainFromEmail } from "../models/Account";
 import { authenticate, authorizeAny, AuthRequest } from "../middleware/authenticate";
 import { sequelize } from "../config/database";
@@ -171,9 +171,12 @@ router.delete("/:id", writeAccess, async (req: AuthRequest, res: Response) => {
     res.status(404).json({ message: "Account not found" });
     return;
   }
+  // Everything that points at the account is detached, not deleted — the
+  // contacts, deals and open tasks all outlive the company record.
   await Lead.update({ accountId: null }, { where: { accountId: account.id } });
   await Deal.update({ accountId: null }, { where: { accountId: account.id } });
   await Activity.update({ accountId: null }, { where: { accountId: account.id } });
+  await Task.update({ accountId: null }, { where: { accountId: account.id } });
   await account.destroy();
   res.json({ message: "Account deleted" });
 });

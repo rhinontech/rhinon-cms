@@ -1,6 +1,6 @@
 import { Router, Response } from "express";
 import { Op, fn, col } from "sequelize";
-import { Deal, PipelineStage, Account, Lead, User, Activity, Task } from "../models";
+import { Deal, PipelineStage, Account, Lead, User, Activity, Task, Project } from "../models";
 import { authenticate, authorizeAny, AuthRequest } from "../middleware/authenticate";
 
 const router = Router();
@@ -291,6 +291,71 @@ router.put("/:id", writeAccess, async (req: AuthRequest, res: Response) => {
     }
 
     res.json(await Deal.findByPk(deal.id, { include: DEAL_INCLUDES }));
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+/**
+ * POST /deals/:id/convert-to-project - hand a won deal to delivery.
+ *
+ * Closes the last gap in the funnel: until now a won deal was re-typed into a
+ * Project by hand, so nothing connected revenue to the work that followed it.
+ * The project keeps `dealId`, which is what makes "what did this client sign
+ * for" answerable later.
+ */
+router.post("/:id/convert-to-project", writeAccess, async (req: AuthRequest, res: Response) => {
+  const deal = await Deal.findByPk(req.params.id, {
+    include: [
+      { model: Account, as: "account", attributes: ["id", "name"] },
+      { model: Lead, as: "primaryLead", attributes: ["id", "name", "email"] },
+    ],
+  });
+  if (!deal) {
+    res.status(404).json({ message: "Deal not found" });
+    return;
+  }
+  if (deal.status !== "Won") {
+    res.status(400).json({ message: "Only won deals can be handed to delivery." });
+    return;
+  }
+
+  const existing = await Project.findOne({ where: { dealId: deal.id } });
+  if (existing) {
+    res.status(409).json({ message: `This deal is already delivered as "${existing.name}".`, projectId: existing.id });
+    return;
+  }
+
+  try {
+    const account = (deal as any).account;
+    const lead = (deal as any).primaryLead;
+
+    const project = await Project.create({
+      name: req.body?.name || account?.name || deal.title,
+      status: req.body?.status || "Active",
+      pointOfContact: req.body?.pointOfContact || lead?.name || undefined,
+      notes: req.body?.notes || deal.notes || undefined,
+      dealId: deal.id,
+      accountId: deal.accountId,
+      createdById: req.user!.userId,
+    });
+
+    await Activity.create({
+      dealId: deal.id,
+      leadId: deal.primaryLeadId,
+      accountId: deal.accountId,
+      userId: req.user!.userId,
+      type: "System",
+      subject: `Handed to delivery as project: ${project.name}`,
+      metadata: { projectId: project.id },
+    });
+
+    // The buyer is a customer now, not a prospect.
+    if (deal.primaryLeadId) {
+      await Lead.update({ lifecycleStage: "Customer" }, { where: { id: deal.primaryLeadId } });
+    }
+
+    res.status(201).json(project);
   } catch (error: any) {
     res.status(400).json({ message: error.message });
   }

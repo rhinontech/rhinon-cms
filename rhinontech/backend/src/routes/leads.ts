@@ -7,6 +7,7 @@ import { fetchWebsiteText } from "../services/research";
 import { sequelize } from "../config/database";
 import { Op } from "sequelize";
 import { runWorkflowEngineCycle } from "../services/workflowEngine";
+import { toCsv, csvFilename } from "../utils/csv";
 import { normalizeEmail, isValidEmail } from "../utils/email";
 
 const router = Router();
@@ -267,6 +268,308 @@ router.post("/import", writeAccess, async (req: AuthRequest, res: Response) => {
       errors: errors.slice(0, 50),
       ...(targetGroup ? { contactGroupId: targetGroup.id, addedToGroup } : {}),
     });
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+/**
+ * GET /leads/duplicates - likely duplicate people.
+ *
+ * `email` is already unique, so duplicates here mean the same person captured
+ * twice under different addresses (work vs personal, a typo, a job change).
+ * Grouping is on normalised name + company, which is conservative: it will miss
+ * "Bob"/"Robert", and that is the right trade — a merge destroys data, so the
+ * suggestion list should under-report rather than over-report.
+ */
+router.get("/duplicates", readAccess, async (_req: AuthRequest, res: Response) => {
+  const leads = await Lead.findAll({
+    attributes: ["id", "name", "company", "email", "title", "phone", "status", "lifecycleStage", "addedAt", "lastActivityAt"],
+    order: [["addedAt", "ASC"]],
+    limit: 20000,
+  });
+
+  const norm = (v: string | null | undefined) =>
+    (v || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+
+  const groups = new Map<string, any[]>();
+  for (const lead of leads) {
+    const key = `${norm(lead.name)}|${norm(lead.company)}`;
+    if (key === "|") continue;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(lead.toJSON());
+  }
+
+  const duplicates = [...groups.values()]
+    .filter((group) => group.length > 1)
+    .sort((a, b) => b.length - a.length)
+    .slice(0, 200)
+    .map((group) => ({
+      name: group[0].name,
+      company: group[0].company,
+      count: group.length,
+      leads: group,
+    }));
+
+  res.json({ groups: duplicates.length, duplicates });
+});
+
+/**
+ * POST /leads/merge - fold duplicates into one survivor.
+ *
+ * The survivor keeps its own non-empty fields and only inherits what it is
+ * missing, so a merge can never blank out data that was already there. All
+ * history (timeline, campaign log, list membership, deals, tasks, inbox mail)
+ * is repointed at the survivor before the losers are deleted — merging must not
+ * be a quiet way to lose a conversation.
+ */
+router.post("/merge", writeAccess, async (req: AuthRequest, res: Response) => {
+  const survivorId: string = req.body?.survivorId;
+  const mergeIds: string[] = Array.isArray(req.body?.mergeIds) ? req.body.mergeIds : [];
+
+  if (!survivorId || mergeIds.length === 0) {
+    res.status(400).json({ message: "Provide survivorId and at least one mergeId" });
+    return;
+  }
+  if (mergeIds.includes(survivorId)) {
+    res.status(400).json({ message: "The survivor cannot also be merged away" });
+    return;
+  }
+
+  try {
+    const survivor = await Lead.findByPk(survivorId);
+    if (!survivor) {
+      res.status(404).json({ message: "Survivor lead not found" });
+      return;
+    }
+    const losers = await Lead.findAll({ where: { id: { [Op.in]: mergeIds } } });
+    if (losers.length === 0) {
+      res.status(404).json({ message: "No leads to merge" });
+      return;
+    }
+
+    // Fill only the gaps on the survivor.
+    const fillable = [
+      "title", "phone", "linkedinUrl", "seniority", "department", "industry",
+      "location", "website", "companyLinkedinUrl", "annualRevenue", "technologies",
+      "keywords", "accountId", "ownerId",
+    ] as const;
+    const patch: any = {};
+    for (const field of fillable) {
+      if (survivor[field] == null || survivor[field] === "") {
+        const donor = losers.find((l) => l[field] != null && l[field] !== "");
+        if (donor) patch[field] = donor[field];
+      }
+    }
+    if (survivor.employeeCount == null) {
+      const donor = losers.find((l) => l.employeeCount != null);
+      if (donor) patch.employeeCount = donor.employeeCount;
+    }
+
+    // Notes are appended, never replaced — they're the human record.
+    const extraNotes = losers
+      .map((l) => (l.notes || "").trim())
+      .filter(Boolean)
+      .map((n, i) => `[merged from ${losers[i]?.email}] ${n}`);
+    if (extraNotes.length) {
+      patch.notes = [survivor.notes, ...extraNotes].filter(Boolean).join("\n");
+    }
+
+    const loserIds = losers.map((l) => l.id);
+
+    await sequelize.transaction(async (t) => {
+      if (Object.keys(patch).length) await survivor.update(patch, { transaction: t });
+
+      // Repoint history. Sequential on purpose — one connection per transaction.
+      await Activity.update({ leadId: survivor.id }, { where: { leadId: { [Op.in]: loserIds } }, transaction: t });
+      await CampaignActivity.update({ leadId: survivor.id }, { where: { leadId: { [Op.in]: loserIds } }, transaction: t });
+      await InboxEmail.update({ leadId: survivor.id }, { where: { leadId: { [Op.in]: loserIds } }, transaction: t });
+      await Task.update({ leadId: survivor.id }, { where: { leadId: { [Op.in]: loserIds } }, transaction: t });
+      await Deal.update({ primaryLeadId: survivor.id }, { where: { primaryLeadId: { [Op.in]: loserIds } }, transaction: t });
+      await WorkflowEnrollment.update({ leadId: survivor.id }, { where: { leadId: { [Op.in]: loserIds } }, transaction: t });
+
+      // Group membership is a unique (group, lead) pair, so moving it blindly
+      // would collide wherever both records were already in the same list.
+      const memberships = await ContactGroupMember.findAll({
+        where: { leadId: { [Op.in]: loserIds } },
+        transaction: t,
+      });
+      const survivorGroups = new Set(
+        (await ContactGroupMember.findAll({ where: { leadId: survivor.id }, transaction: t }))
+          .map((m) => m.contactGroupId)
+      );
+      for (const membership of memberships) {
+        if (survivorGroups.has(membership.contactGroupId)) {
+          await membership.destroy({ transaction: t });
+        } else {
+          await membership.update({ leadId: survivor.id }, { transaction: t });
+          survivorGroups.add(membership.contactGroupId);
+        }
+      }
+
+      await Lead.destroy({ where: { id: { [Op.in]: loserIds } }, transaction: t });
+    });
+
+    await Activity.create({
+      leadId: survivor.id,
+      accountId: survivor.accountId,
+      userId: req.user!.userId,
+      type: "System",
+      subject: `Merged ${losers.length} duplicate${losers.length === 1 ? "" : "s"} into this lead`,
+      body: losers.map((l) => l.email).join(", "),
+      metadata: { mergedEmails: losers.map((l) => l.email) },
+    });
+
+    res.json({
+      survivorId: survivor.id,
+      merged: losers.length,
+      fieldsFilled: Object.keys(patch),
+    });
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// GET /leads/export.csv - the same filters as the list, as a download.
+// Declared before /:id so "export.csv" is never read as a lead id.
+router.get("/export.csv", readAccess, async (req: AuthRequest, res: Response) => {
+  const { status, source, search, ownerId, lifecycleStage, accountId } = req.query;
+  const where: any = {};
+  if (status) where.status = status;
+  if (source) where.source = source;
+  if (ownerId) where.ownerId = ownerId === "unassigned" ? (null as any) : ownerId;
+  if (lifecycleStage) where.lifecycleStage = lifecycleStage;
+  if (accountId) where.accountId = accountId;
+  if (search) {
+    where[Op.or] = [
+      { name: { [Op.iLike]: `%${search}%` } },
+      { company: { [Op.iLike]: `%${search}%` } },
+      { email: { [Op.iLike]: `%${search}%` } },
+    ];
+  }
+
+  // Hard ceiling — an unbounded export would happily try to buffer the table.
+  const leads = await Lead.findAll({
+    where,
+    include: [
+      { model: User, as: "owner", attributes: OWNER_ATTRS },
+      { model: Account, as: "account", attributes: ["name", "domain"] },
+    ],
+    order: [["addedAt", "DESC"]],
+    limit: 10000,
+  });
+
+  const csv = toCsv(
+    [
+      { key: "name", label: "Name" },
+      { key: "email", label: "Email" },
+      { key: "title", label: "Title" },
+      { key: "company", label: "Company" },
+      { key: "accountName", label: "Account" },
+      { key: "phone", label: "Phone" },
+      { key: "lifecycleStage", label: "Stage" },
+      { key: "status", label: "Outreach status" },
+      { key: "ownerName", label: "Owner" },
+      { key: "source", label: "Source" },
+      { key: "industry", label: "Industry" },
+      { key: "location", label: "Location" },
+      { key: "website", label: "Website" },
+      { key: "linkedinUrl", label: "LinkedIn" },
+      { key: "lastActivityAt", label: "Last activity" },
+      { key: "addedAt", label: "Added" },
+    ],
+    leads.map((l) => {
+      const j: any = l.toJSON();
+      return {
+        ...j,
+        accountName: j.account?.name || "",
+        ownerName: j.owner?.fullName || "",
+        lastActivityAt: j.lastActivityAt ? new Date(j.lastActivityAt).toISOString().slice(0, 10) : "",
+        addedAt: j.addedAt ? new Date(j.addedAt).toISOString().slice(0, 10) : "",
+      };
+    })
+  );
+
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader("Content-Disposition", `attachment; filename="${csvFilename("leads")}"`);
+  res.send(csv);
+});
+
+/**
+ * POST /leads/bulk-update - apply one change to many leads.
+ *
+ * Replaces a client-side loop of individual PUTs: assigning 200 leads was 200
+ * requests, each also running the owner-change audit lookup. This is three
+ * queries regardless of selection size, and still writes the same timeline
+ * entries so the audit trail doesn't get a hole in it.
+ */
+router.post("/bulk-update", writeAccess, async (req: AuthRequest, res: Response) => {
+  const ids: string[] = Array.isArray(req.body?.ids) ? req.body.ids : [];
+  const patch = req.body?.patch || {};
+  if (ids.length === 0) {
+    res.status(400).json({ message: "No leads selected" });
+    return;
+  }
+
+  // Only fields a bulk action should ever touch — never a free-form patch.
+  const allowed: any = {};
+  if (patch.ownerId !== undefined) allowed.ownerId = patch.ownerId || null;
+  if (patch.lifecycleStage !== undefined) allowed.lifecycleStage = patch.lifecycleStage;
+  if (Object.keys(allowed).length === 0) {
+    res.status(400).json({ message: "Nothing to update" });
+    return;
+  }
+
+  try {
+    const leads = await Lead.findAll({
+      where: { id: { [Op.in]: ids } },
+      attributes: ["id", "accountId", "ownerId", "lifecycleStage"],
+    });
+    if (leads.length === 0) {
+      res.status(404).json({ message: "No matching leads" });
+      return;
+    }
+
+    // Resolve owner names once, not per lead.
+    let nameById: Map<string, string> | null = null;
+    let toLabel = "Unassigned";
+    if (allowed.ownerId !== undefined) {
+      const involved = [...new Set([...leads.map((l) => l.ownerId), allowed.ownerId].filter(Boolean))] as string[];
+      const users = involved.length
+        ? await User.findAll({ where: { id: { [Op.in]: involved } }, attributes: OWNER_ATTRS })
+        : [];
+      nameById = new Map(users.map((u) => [u.id, u.fullName]));
+      toLabel = allowed.ownerId ? nameById.get(allowed.ownerId) || "Unknown" : "Unassigned";
+    }
+
+    await Lead.update(allowed, { where: { id: { [Op.in]: leads.map((l) => l.id) } } });
+
+    const activities: any[] = [];
+    for (const lead of leads) {
+      if (allowed.lifecycleStage !== undefined && allowed.lifecycleStage !== lead.lifecycleStage) {
+        activities.push({
+          leadId: lead.id,
+          accountId: lead.accountId,
+          userId: req.user!.userId,
+          type: "LifecycleChange",
+          subject: `${lead.lifecycleStage} \u2192 ${allowed.lifecycleStage}`,
+          metadata: { from: lead.lifecycleStage, to: allowed.lifecycleStage, bulk: true },
+        });
+      }
+      if (allowed.ownerId !== undefined && allowed.ownerId !== lead.ownerId) {
+        activities.push({
+          leadId: lead.id,
+          accountId: lead.accountId,
+          userId: req.user!.userId,
+          type: "OwnerChange",
+          subject: `${(lead.ownerId && nameById?.get(lead.ownerId)) || "Unassigned"} \u2192 ${toLabel}`,
+          metadata: { from: lead.ownerId, to: allowed.ownerId, bulk: true },
+        });
+      }
+    }
+    if (activities.length) await Activity.bulkCreate(activities);
+
+    res.json({ requested: ids.length, updated: leads.length, logged: activities.length });
   } catch (error: any) {
     res.status(400).json({ message: error.message });
   }

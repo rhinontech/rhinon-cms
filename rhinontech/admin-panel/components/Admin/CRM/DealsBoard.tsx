@@ -8,7 +8,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { TbPlus, TbBuilding, TbCalendar, TbX, TbSettings, TbUsers, TbArrowRight } from "react-icons/tb";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
@@ -63,7 +63,15 @@ export function DealsBoard() {
   );
 
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const leadsHref = `/${pathname.split("/")[1]}/crm`;
+
+  // ?dealId=… opens the drawer straight away, so leads and accounts can link
+  // to a specific deal rather than just to the board.
+  const deepLinkId = searchParams.get("dealId");
+  useEffect(() => {
+    if (deepLinkId) setOpenDealId(deepLinkId);
+  }, [deepLinkId]);
   const isEmpty = Boolean(board) && board!.stages.every((s) => s.dealCount === 0) && board!.unstaged.length === 0;
 
   const totals = useMemo(() => {
@@ -89,13 +97,19 @@ export function DealsBoard() {
         });
         return { ...s, deals: keep };
       });
+      // A card dragged out of the "No stage" column lives there, not in stages.
+      if (!moving) moving = prev.unstaged.find((d) => d.id === dealId);
       if (!moving) return prev;
       const next = stripped.map((s) => {
         if (s.id !== stageId) return s;
         const deals = [{ ...moving!, stageId }, ...s.deals];
         return { ...s, deals };
       });
-      return { ...prev, stages: recount(next), unstaged: prev.unstaged.filter((d) => d.id !== dealId) };
+      return {
+        ...prev,
+        stages: applyMoveDelta(next, moving.stageId ?? null, stageId, Number(moving.value || 0)),
+        unstaged: prev.unstaged.filter((d) => d.id !== dealId),
+      };
     });
 
     try {
@@ -118,7 +132,7 @@ export function DealsBoard() {
 
   return (
     <main className={cn("flex h-full min-h-0 w-full flex-col overflow-hidden glass-panel", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
-      <div className="flex min-h-14 shrink-0 flex-wrap items-center justify-between gap-3 border-b border-stone-200/70 px-3 py-2">
+      <div className="flex min-h-16 shrink-0 flex-wrap items-center justify-between gap-3 border-b border-stone-200/70 px-3 py-2">
         <div className="flex min-w-0 items-center gap-2.5">
           <SubNavToggle />
           <div className="min-w-0">
@@ -191,6 +205,9 @@ export function DealsBoard() {
             onDragEnd={handleDragEnd}
           >
             <div className="flex h-full gap-2.5">
+              {board && board.unstaged.length > 0 && (
+                <UnstagedColumn deals={board.unstaged} onOpen={setOpenDealId} />
+              )}
               {board?.stages.map((stage) => <StageColumn key={stage.id} stage={stage} onOpen={setOpenDealId} />)}
             </div>
             <DragOverlay>{activeDeal ? <DealCard deal={activeDeal} overlay /> : null}</DragOverlay>
@@ -225,16 +242,62 @@ export function DealsBoard() {
 }
 
 /** Recompute per-column subtotals after an optimistic move. */
-function recount(stages: BoardStage[]): BoardStage[] {
+/**
+ * Adjusts a column's headline numbers after an optimistic move.
+ *
+ * Counts and totals come from a server-side aggregate over *all* deals while
+ * only the first page of cards is rendered, so these can't be recomputed from
+ * `deals.length` — that would wipe the hidden remainder out of the total. The
+ * delta from the move is applied instead, and the next load() re-syncs.
+ */
+function applyMoveDelta(
+  stages: BoardStage[],
+  fromStageId: string | null,
+  toStageId: string,
+  value: number
+): BoardStage[] {
   return stages.map((s) => {
-    const totalValue = s.deals.reduce((sum, d) => sum + Number(d.value || 0), 0);
+    let dealCount = s.dealCount;
+    let totalValue = s.totalValue;
+    if (s.id === fromStageId) { dealCount -= 1; totalValue -= value; }
+    if (s.id === toStageId) { dealCount += 1; totalValue += value; }
+    if (dealCount === s.dealCount && totalValue === s.totalValue) return s;
     return {
       ...s,
-      dealCount: s.deals.length,
-      totalValue,
-      weightedValue: Math.round((totalValue * s.probability) / 100),
+      dealCount: Math.max(0, dealCount),
+      totalValue: Math.max(0, totalValue),
+      weightedValue: Math.round((Math.max(0, totalValue) * s.probability) / 100),
     };
   });
+}
+
+/**
+ * Deals that ended up with no stage — possible if the pipeline had no Open
+ * stage when they were created. They were being fetched but never drawn, which
+ * made them invisible and unrecoverable. Cards drag out into a real stage; the
+ * column itself is not a drop target, so nothing can be put back here.
+ */
+function UnstagedColumn({ deals, onOpen }: { deals: Deal[]; onOpen: (id: string) => void }) {
+  const total = deals.reduce((sum, d) => sum + Number(d.value || 0), 0);
+  return (
+    <div className="flex h-full w-[248px] shrink-0 flex-col rounded-lg border border-dashed border-amber-300 bg-amber-50/40">
+      <div className="shrink-0 border-b border-amber-200/70 px-2.5 py-2">
+        <div className="flex items-center justify-between gap-2">
+          <span className="truncate text-[11px] font-semibold uppercase tracking-wide text-amber-700">No stage</span>
+          <span className="shrink-0 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-amber-700">
+            {deals.length}
+          </span>
+        </div>
+        <p className="mt-1 text-[11px] font-medium tabular-nums text-amber-600">{formatMoney(total)}</p>
+      </div>
+      <div className="flex-1 space-y-1.5 overflow-y-auto p-1.5">
+        {deals.map((deal) => <DealCard key={deal.id} deal={deal} onOpen={onOpen} />)}
+        <p className="px-1 py-1 text-[10px] leading-relaxed text-amber-600/80">
+          Drag these into a stage to bring them onto the pipeline.
+        </p>
+      </div>
+    </div>
+  );
 }
 
 function StageColumn({ stage, onOpen }: { stage: BoardStage; onOpen: (id: string) => void }) {

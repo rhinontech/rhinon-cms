@@ -9,19 +9,24 @@ import { Activity } from "../models";
  * with nothing configured this returns null and the caller falls back to the
  * single default sender, which is exactly today's behaviour.
  *
- * Config — OUTREACH_MAILBOXES, comma-separated, each `email|Display Name|cap`
- * with the last two optional:
- *   sales@rhinon.tech|Rhinon Sales|80, hello@rhinon.tech|Rhinon|50
+ * Config — OUTREACH_MAILBOXES, comma-separated. Everything after the address
+ * is optional:
+ *   email|Display Name|dailyCap|smtpPassword|smtpHost|smtpPort
  *
- * Note this rotates the *From address only*. Every message still leaves through
- * the one configured transport (SES or SMTP), so each address must be verified
- * on it — this is not the same as sending from genuinely separate mailboxes,
- * and it does not multiply your provider's own sending limits.
+ *   sales@rhinon.tech|Rhinon Sales|80|app-password-here
+ *   hello@rhinon.tech|Rhinon|50
+ *
+ * Supply a password and the message goes out through that mailbox's own SMTP
+ * transport, which is what actually distributes sending reputation. Leave it
+ * out and only the From header changes, still over the shared transport — that
+ * address must then be verified on it, and provider limits stay shared.
  */
 export interface Mailbox {
   email: string;
   name?: string;
   dailyCap: number;
+  /** Present only when this mailbox has its own credentials. */
+  smtpAuth?: { user: string; pass: string; host?: string; port?: number };
 }
 
 const DEFAULT_CAP = Number(process.env.OUTREACH_MAILBOX_DAILY_CAP || 100);
@@ -42,11 +47,14 @@ export function getMailboxPool(): Mailbox[] {
     .map((entry) => entry.trim())
     .filter(Boolean)
     .map((entry) => {
-      const [email, name, cap] = entry.split("|").map((part) => (part || "").trim());
+      const [email, name, cap, pass, host, port] = entry.split("|").map((part) => (part || "").trim());
       return {
         email,
         name: name || undefined,
         dailyCap: Number(cap) > 0 ? Number(cap) : DEFAULT_CAP,
+        smtpAuth: pass
+          ? { user: email, pass, host: host || undefined, port: port ? Number(port) : undefined }
+          : undefined,
       };
     })
     .filter((m) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(m.email));

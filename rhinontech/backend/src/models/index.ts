@@ -254,6 +254,12 @@ User.hasMany(Activity, { foreignKey: "userId", as: "activities" });
 SavedView.belongsTo(User, { foreignKey: "createdById", as: "creator" });
 User.hasMany(SavedView, { foreignKey: "createdById", as: "savedViews" });
 
+// Won deals handed to delivery
+Project.belongsTo(Deal, { foreignKey: "dealId", as: "deal" });
+Deal.hasOne(Project, { foreignKey: "dealId", as: "project" });
+Project.belongsTo(Account, { foreignKey: "accountId", as: "account" });
+Account.hasMany(Project, { foreignKey: "accountId", as: "projects" });
+
 // Follow-up tasks hanging off CRM records
 Task.belongsTo(Lead, { foreignKey: "leadId", as: "lead" });
 Lead.hasMany(Task, { foreignKey: "leadId", as: "tasks" });

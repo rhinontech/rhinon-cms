@@ -3,16 +3,19 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import {
   TbSearch, TbPlus, TbUpload, TbTrash, TbX, TbBulb, TbRefresh, TbLoader,
-  TbExternalLink, TbTargetArrow, TbChevronDown, TbBuilding,
+  TbExternalLink, TbTargetArrow, TbChevronDown, TbBuilding, TbDownload, TbCopyCheck,
 } from "react-icons/tb";
+import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, apiDownload } from "@/lib/api";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { useSideNav } from "@/context/SideNavContext";
 import { LeadImportModal } from "./LeadImportModal";
 import { AddToGroupMenu } from "@/components/Admin/Outreach/contacts/AddToGroupMenu";
 import { ConvertDealDialog } from "./ConvertDealDialog";
 import { BulkConvertDialog } from "./BulkConvertDialog";
+import { DuplicatesDialog } from "./DuplicatesDialog";
 import { Timeline } from "./Timeline";
 import { SavedViews, type SavedView } from "./SavedViews";
 import { RelatedTasks } from "./RelatedTasks";
@@ -36,6 +39,12 @@ type PanelMode = "view" | "create" | "edit";
 
 export function LeadsPage() {
   const { isExpanded: isSubNavExpanded, toggleSideNav } = useSideNav();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const roleSlug = pathname.split("/")[1];
+  const crmBase = `/${roleSlug}/crm`;
+  // Scoped from an account row: /crm?accountId=… lists just that company.
+  const accountFilter = searchParams.get("accountId");
   const [leads, setLeads] = useState<Lead[]>([]);
   const [count, setCount] = useState(0);
   const [offset, setOffset] = useState(0);
@@ -60,6 +69,8 @@ export function LeadsPage() {
   const [showImport, setShowImport] = useState(false);
   const [converting, setConverting] = useState<Lead | null>(null);
   const [bulkConverting, setBulkConverting] = useState(false);
+  const [showDuplicates, setShowDuplicates] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const [form, setForm] = useState({ name: "", company: "", email: "", title: "", linkedinUrl: "", notes: "" });
@@ -117,6 +128,7 @@ export function LeadsPage() {
       if (lifecycleFilter !== "All") q.set("lifecycleStage", lifecycleFilter);
       if (sourceFilter !== "All") q.set("source", sourceFilter);
       if (ownerFilter !== "All") q.set("ownerId", ownerFilter);
+      if (accountFilter) q.set("accountId", accountFilter);
       const data = await apiFetch<{ rows: Lead[]; count: number }>(`/leads?${q}`);
       setLeads(data.rows);
       setCount(data.count);
@@ -126,7 +138,7 @@ export function LeadsPage() {
     } finally {
       setLoading(false);
     }
-  }, [debounced, lifecycleFilter, sourceFilter, ownerFilter, offset]);
+  }, [debounced, lifecycleFilter, sourceFilter, ownerFilter, accountFilter, offset]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -134,6 +146,18 @@ export function LeadsPage() {
     apiFetch<string[]>("/leads/sources").then(setSources).catch(() => {});
     apiFetch<UserRef[]>("/crm/users").then(setOwners).catch(() => {});
   }, []);
+
+  // Deep link from an account or deal: ?leadId=… opens that record directly,
+  // so records can address each other instead of being dead ends.
+  const deepLinkId = searchParams.get("leadId");
+  const deepLinked = useRef<string | null>(null);
+  useEffect(() => {
+    if (!deepLinkId || deepLinked.current === deepLinkId) return;
+    deepLinked.current = deepLinkId;
+    apiFetch<Lead>(`/leads/${deepLinkId}`)
+      .then((lead) => { setSelected(lead); setPanelMode("view"); setPanelOpen(true); })
+      .catch(() => {});
+  }, [deepLinkId]);
 
   const openLead = async (lead: Lead) => {
     setSelected(lead);
@@ -212,16 +236,17 @@ export function LeadsPage() {
     }
   };
 
-  const bulkAssign = async (ownerId: string) => {
-    if (!ownerId) return;
+  /** One request for the whole selection — see POST /leads/bulk-update. */
+  const bulkPatch = async (patch: { ownerId?: string | null; lifecycleStage?: LifecycleStage }) => {
     try {
-      await Promise.all(
-        [...selectedIds].map((id) => apiFetch(`/leads/${id}`, { method: "PUT", body: JSON.stringify({ ownerId }) }))
-      );
+      await apiFetch("/leads/bulk-update", {
+        method: "POST",
+        body: JSON.stringify({ ids: [...selectedIds], patch }),
+      });
       setSelectedIds(new Set());
       load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Assign failed");
+      setError(err instanceof Error ? err.message : "Bulk update failed");
     }
   };
 
@@ -233,6 +258,24 @@ export function LeadsPage() {
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
+
+  /** Exports exactly what the current filters describe, not the whole table. */
+  const exportCsv = async () => {
+    setExporting(true);
+    try {
+      const q = new URLSearchParams();
+      if (debounced) q.set("search", debounced);
+      if (lifecycleFilter !== "All") q.set("lifecycleStage", lifecycleFilter);
+      if (sourceFilter !== "All") q.set("source", sourceFilter);
+      if (ownerFilter !== "All") q.set("ownerId", ownerFilter);
+      if (accountFilter) q.set("accountId", accountFilter);
+      await apiDownload(`/leads/export.csv?${q}`, "leads.csv");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Export failed");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const startCreate = () => {
     setForm({ name: "", company: "", email: "", title: "", linkedinUrl: "", notes: "" });
@@ -252,7 +295,7 @@ export function LeadsPage() {
   return (
     <div className="relative flex h-full min-h-0 w-full overflow-hidden">
       <main className={cn("flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden glass-panel", isSubNavExpanded ? "lg:rounded-r-xl" : "rounded-xl")}>
-        <div className="flex min-h-14 shrink-0 items-center justify-between gap-3 border-b border-stone-200/70 px-3 py-2">
+        <div className="flex min-h-16 shrink-0 items-center justify-between gap-3 border-b border-stone-200/70 px-3 py-2">
           <div className="flex min-w-0 items-center gap-2.5">
             <SubNavToggle />
             <div className="min-w-0">
@@ -261,6 +304,12 @@ export function LeadsPage() {
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
+            <TBtn onClick={() => setShowDuplicates(true)} title="Find and merge duplicate people">
+              <TbCopyCheck size={14} /> <span className="hidden sm:inline">Duplicates</span>
+            </TBtn>
+            <TBtn onClick={exportCsv} disabled={exporting} title="Export the current filter as CSV">
+              <TbDownload size={14} /> <span className="hidden sm:inline">{exporting ? "Exporting…" : "Export"}</span>
+            </TBtn>
             <TBtn onClick={() => setShowImport(true)}><TbUpload size={14} /> Import</TBtn>
             <TBtn variant="solid" onClick={startCreate}><TbPlus size={14} /> New</TBtn>
           </div>
@@ -292,6 +341,16 @@ export function LeadsPage() {
               {sources.map((s) => <option key={s} value={s}>{s}</option>)}
             </Select>
 
+            {accountFilter && (
+              <Link
+                href={crmBase}
+                className="inline-flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
+                title="Clear the account filter"
+              >
+                <TbBuilding size={13} /> Filtered by account <TbX size={12} />
+              </Link>
+            )}
+
             <SavedViews
               entity="lead"
               currentFilters={currentFilters}
@@ -312,9 +371,14 @@ export function LeadsPage() {
             <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1.5">
               <span className="text-[12px] font-medium tabular-nums text-blue-900">{selectedIds.size} selected</span>
               <div className="flex flex-wrap items-center gap-1.5">
-                <Select value="" onChange={bulkAssign}>
+                <Select value="" onChange={(v) => v && bulkPatch({ ownerId: v === "none" ? null : v })}>
                   <option value="">Assign owner…</option>
+                  <option value="none">Unassigned</option>
                   {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}
+                </Select>
+                <Select value="" onChange={(v) => v && bulkPatch({ lifecycleStage: v as LifecycleStage })}>
+                  <option value="">Set stage…</option>
+                  {LIFECYCLE_STAGES.map((st) => <option key={st} value={st}>{st}</option>)}
                 </Select>
                 <TBtn onClick={() => setBulkConverting(true)} title="Create a deal for each selected lead">
                   <TbTargetArrow size={13} /> Convert to deals
@@ -364,7 +428,13 @@ export function LeadsPage() {
                       {lead.account ? (
                         <>
                           <TbBuilding size={11} className="shrink-0 text-stone-400" />
-                          <span className="truncate">{lead.account.name}</span>
+                          <Link
+                            href={`${crmBase}/accounts?accountId=${lead.account.id}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="truncate hover:text-blue-600 hover:underline"
+                          >
+                            {lead.account.name}
+                          </Link>
                         </>
                       ) : (
                         <span className="truncate text-stone-400">{lead.company}</span>
@@ -458,7 +528,14 @@ export function LeadsPage() {
                   <div>
                     <p className="text-[13px] text-stone-500">
                       {selected.title || "No title"}
-                      {selected.account ? ` · ${selected.account.name}` : selected.company ? ` · ${selected.company}` : ""}
+                      {selected.account ? (
+                        <>
+                          {" · "}
+                          <Link href={`${crmBase}/accounts?accountId=${selected.account.id}`} className="text-blue-600 hover:underline">
+                            {selected.account.name}
+                          </Link>
+                        </>
+                      ) : selected.company ? ` · ${selected.company}` : ""}
                     </p>
 
                     {/* The compact table hides the owner control, so the panel
@@ -499,7 +576,9 @@ export function LeadsPage() {
                       <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-stone-500">Deals</p>
                       {selected.deals.map((d) => (
                         <div key={d.id} className="flex items-center justify-between gap-2 border-b border-stone-100 py-1.5 last:border-0">
-                          <span className="truncate text-[13px] text-stone-700">{d.title}</span>
+                          <Link href={`${crmBase}/pipeline?dealId=${d.id}`} className="truncate text-[13px] text-blue-600 hover:underline">
+                            {d.title}
+                          </Link>
                           <span className="shrink-0 text-[11px] text-stone-400">{d.stage?.name}</span>
                         </div>
                       ))}
@@ -596,6 +675,10 @@ export function LeadsPage() {
       )}
 
       {showImport && <LeadImportModal onClose={(did) => { setShowImport(false); if (did) load(); }} />}
+      {showDuplicates && (
+        <DuplicatesDialog onClose={(merged) => { setShowDuplicates(false); if (merged) load(); }} />
+      )}
+
       {bulkConverting && (
         <BulkConvertDialog
           leadIds={[...selectedIds]}

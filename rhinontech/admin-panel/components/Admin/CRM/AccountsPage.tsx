@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   TbSearch, TbPlus, TbBuilding, TbExternalLink, TbUsers, TbWand, TbX, TbTrash,
 } from "react-icons/tb";
+import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
@@ -21,6 +23,9 @@ const LIMIT = 50;
 
 export function AccountsPage() {
   const { isExpanded: isSubNavExpanded } = useSideNav();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const crmBase = `/${pathname.split("/")[1]}/crm`;
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [count, setCount] = useState(0);
   const [offset, setOffset] = useState(0);
@@ -61,6 +66,15 @@ export function AccountsPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  // ?accountId=… opens that company directly, so a lead can link into it.
+  const deepLinkId = searchParams.get("accountId");
+  const deepLinked = useRef<string | null>(null);
+  useEffect(() => {
+    if (!deepLinkId || deepLinked.current === deepLinkId) return;
+    deepLinked.current = deepLinkId;
+    apiFetch<Account>(`/accounts/${deepLinkId}`).then(setSelected).catch(() => {});
+  }, [deepLinkId]);
+
   const openAccount = async (account: Account) => {
     setSelected(account);
     setEditing(false);
@@ -100,7 +114,7 @@ export function AccountsPage() {
   return (
     <div className="relative flex h-full min-h-0 w-full overflow-hidden">
       <main className={cn("flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden glass-panel", isSubNavExpanded ? "lg:rounded-r-xl" : "rounded-xl")}>
-        <div className="flex min-h-14 shrink-0 items-center justify-between gap-3 border-b border-stone-200/70 px-3 py-2">
+        <div className="flex min-h-16 shrink-0 items-center justify-between gap-3 border-b border-stone-200/70 px-3 py-2">
           <div className="flex min-w-0 items-center gap-2.5">
             <SubNavToggle />
             <div className="min-w-0">
@@ -165,7 +179,15 @@ export function AccountsPage() {
                   <span className="text-right font-medium tabular-nums text-stone-800">
                     {a.openDealValue ? formatMoney(a.openDealValue) : "—"}
                   </span>
-                  <span className="text-right">
+                  <span className="flex items-center justify-end gap-0.5">
+                    <Link
+                      href={`${crmBase}?accountId=${a.id}`}
+                      onClick={(e) => e.stopPropagation()}
+                      title="View this account's leads"
+                      className="rounded p-1 text-stone-300 hover:bg-stone-100 hover:text-stone-600"
+                    >
+                      <TbUsers size={13} />
+                    </Link>
                     <button
                       onClick={(e) => { e.stopPropagation(); remove(a.id); }}
                       className="rounded p-1 text-stone-300 hover:bg-rose-50 hover:text-rose-600"
@@ -222,7 +244,9 @@ export function AccountsPage() {
                 <Section title={`Deals (${selected.deals.length})`}>
                   {selected.deals.map((d) => (
                     <div key={d.id} className="flex items-center justify-between gap-2 border-b border-stone-100 py-1.5 last:border-0">
-                      <span className="truncate text-[13px] text-stone-700">{d.title}</span>
+                      <Link href={`${crmBase}/pipeline?dealId=${d.id}`} className="truncate text-[13px] text-blue-600 hover:underline">
+                        {d.title}
+                      </Link>
                       <span className="shrink-0 text-[12px] font-medium tabular-nums text-stone-800">
                         {formatMoney(d.value, d.currency)}
                       </span>
@@ -234,7 +258,11 @@ export function AccountsPage() {
               {selected.contacts && selected.contacts.length > 0 && (
                 <Section title={`Contacts (${selected.contacts.length})`}>
                   {selected.contacts.map((c) => (
-                    <div key={c.id} className="flex items-center justify-between gap-2 border-b border-stone-100 py-1.5 last:border-0">
+                    <Link
+                      key={c.id}
+                      href={`${crmBase}?leadId=${c.id}`}
+                      className="flex items-center justify-between gap-2 border-b border-stone-100 py-1.5 last:border-0 hover:bg-stone-50"
+                    >
                       <span className="flex min-w-0 items-center gap-1.5">
                         <Avatar name={c.name} size={18} />
                         <span className="min-w-0">
@@ -243,7 +271,7 @@ export function AccountsPage() {
                         </span>
                       </span>
                       <LifecycleBadge stage={c.lifecycleStage} />
-                    </div>
+                    </Link>
                   ))}
                 </Section>
               )}

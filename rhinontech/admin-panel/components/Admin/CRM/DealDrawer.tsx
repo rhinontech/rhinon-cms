@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
-  TbX, TbTrash, TbTrophy, TbCircleX, TbRotateClockwise, TbBuilding, TbUser,
+  TbX, TbTrash, TbTrophy, TbCircleX, TbRotateClockwise, TbBuilding, TbUser, TbBriefcase,
 } from "react-icons/tb";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import type { Deal, PipelineStage, UserRef } from "./types";
@@ -32,7 +34,11 @@ export function DealDrawer({
   onClose: () => void;
   onChanged: () => void;
 }) {
+  const pathname = usePathname();
+  const crmBase = `/${pathname.split("/")[1]}/crm`;
   const [deal, setDeal] = useState<Deal | null>(null);
+  const [handingOff, setHandingOff] = useState(false);
+  const [project, setProject] = useState<{ id: string; name: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -110,6 +116,22 @@ export function DealDrawer({
     if (ok) {
       setAskLost(false);
       await load();
+    }
+  };
+
+  const handOffToDelivery = async () => {
+    setHandingOff(true);
+    setError(null);
+    try {
+      const created = await apiFetch<{ id: string; name: string }>(`/deals/${dealId}/convert-to-project`, {
+        method: "POST",
+      });
+      setProject(created);
+      onChanged();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not create the project");
+    } finally {
+      setHandingOff(false);
     }
   };
 
@@ -203,6 +225,26 @@ export function DealDrawer({
                 </div>
               )}
 
+              {/* The last step of the funnel: a won deal becomes real work,
+                  carrying its dealId so revenue stays traceable to delivery. */}
+              {deal.status === "Won" && (
+                <div className="mt-2">
+                  {project ? (
+                    <p className="rounded border border-emerald-200 bg-emerald-50 px-2 py-1.5 text-[11px] text-emerald-700">
+                      Handed to delivery as “{project.name}”.
+                    </p>
+                  ) : (
+                    <button
+                      onClick={handOffToDelivery}
+                      disabled={handingOff}
+                      className="inline-flex items-center gap-1.5 rounded-md border border-stone-200 bg-white px-2.5 py-1.5 text-xs font-medium text-stone-700 hover:bg-stone-100 disabled:opacity-50"
+                    >
+                      <TbBriefcase size={13} /> {handingOff ? "Creating…" : "Hand to delivery"}
+                    </button>
+                  )}
+                </div>
+              )}
+
               {deal.status === "Lost" && deal.lostReason && (
                 <p className="mt-2 rounded border border-rose-200 bg-rose-50 px-2 py-1.5 text-[11px] text-rose-700">
                   Lost: {deal.lostReason}
@@ -213,10 +255,14 @@ export function DealDrawer({
             {/* Linked records */}
             <div className="flex flex-wrap gap-3 text-[12px] text-stone-600">
               {deal.account && (
-                <span className="flex items-center gap-1"><TbBuilding size={12} className="text-stone-400" /> {deal.account.name}</span>
+                <Link href={`${crmBase}/accounts?accountId=${deal.account.id}`} className="flex items-center gap-1 text-blue-600 hover:underline">
+                  <TbBuilding size={12} /> {deal.account.name}
+                </Link>
               )}
               {deal.primaryLead && (
-                <span className="flex items-center gap-1"><TbUser size={12} className="text-stone-400" /> {deal.primaryLead.name}</span>
+                <Link href={`${crmBase}?leadId=${deal.primaryLead.id}`} className="flex items-center gap-1 text-blue-600 hover:underline">
+                  <TbUser size={12} /> {deal.primaryLead.name}
+                </Link>
               )}
               {deal.expectedCloseDate && (
                 <span className="text-stone-400">Expected {formatDate(deal.expectedCloseDate)}</span>

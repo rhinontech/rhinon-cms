@@ -395,6 +395,7 @@ async function executeEnrollmentSteps(
         // An explicit From on the node always wins; rotation only fills the gap.
         let fromEmail: string | undefined = config.fromEmail;
         let fromName: string | undefined = config.fromName;
+        let smtpAuth: { user: string; pass: string; host?: string; port?: number } | undefined;
 
         if (!fromEmail && isRotationEnabled()) {
           const { mailbox, allCapped } = await pickMailbox();
@@ -408,6 +409,7 @@ async function executeEnrollmentSteps(
           if (mailbox) {
             fromEmail = mailbox.email;
             fromName = fromName || mailbox.name;
+            smtpAuth = mailbox.smtpAuth;
           }
         }
 
@@ -416,6 +418,7 @@ async function executeEnrollmentSteps(
             to: enrollment.leadEmail,
             from: fromEmail,
             fromName: fromName || "Rhinon Automation",
+            smtpAuth,
             subject,
             html: htmlBody,
             text: stripHtml(richHtml),

@@ -2,7 +2,7 @@
 
 import { CollapsibleSubNav } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { usePathname } from "next/navigation";
-import { TbUsers, TbLayoutKanban, TbBuilding, TbChartBar } from "react-icons/tb";
+import { TbUsers, TbLayoutKanban, TbBuilding, TbChartBar, TbCurrencyRupee } from "react-icons/tb";
 
 import { AdminDashboardShell } from "@/components/Admin/Common/AdminDashboardShell/AdminDashboardShell";
 import { SideNavProvider } from "@/context/SideNavContext";
@@ -16,6 +16,7 @@ function CrmLayoutContent({ children }: { children: React.ReactNode }) {
     { label: "Leads", href: base, icon: <TbUsers size={18} />, exact: true },
     { label: "Accounts", href: `${base}/accounts`, icon: <TbBuilding size={18} /> },
     { label: "Pipeline", href: `${base}/pipeline`, icon: <TbLayoutKanban size={18} /> },
+    { label: "Deals", href: `${base}/deals`, icon: <TbCurrencyRupee size={18} /> },
     { label: "Reports", href: `${base}/reports`, icon: <TbChartBar size={18} /> },
   ];
 

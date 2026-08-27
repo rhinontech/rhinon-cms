@@ -17,6 +17,10 @@ interface ReportRep {
   ownerId: string | null; name: string;
   openCount: number; openValue: number; wonCount: number; wonValue: number; lostCount: number; activities: number;
 }
+interface AttributionSide {
+  wonCount: number; wonValue: number; lostCount: number; winRate: number | null;
+}
+
 interface Reports {
   range: { from: string; to: string };
   pipeline: { stages: ReportStage[]; totalValue: number; weightedValue: number; totalCount: number };
@@ -26,6 +30,7 @@ interface Reports {
   };
   sources: ReportSource[];
   reps: ReportRep[];
+  attribution: { sequenced: AttributionSide; organic: AttributionSide };
   activityByType: Record<string, number>;
   monthly: { month: string; count: number; value: number }[];
 }
@@ -90,7 +95,7 @@ export function ReportsPage() {
         .viz-col { border-radius: 4px 4px 0 0; background: var(--viz-series); }
       `}</style>
 
-      <div className="flex min-h-14 shrink-0 flex-wrap items-center justify-between gap-3 border-b border-stone-200/70 px-3 py-2">
+      <div className="flex min-h-16 shrink-0 flex-wrap items-center justify-between gap-3 border-b border-stone-200/70 px-3 py-2">
         <div className="flex min-w-0 items-center gap-2.5">
           <SubNavToggle />
           <div className="min-w-0">
@@ -245,6 +250,20 @@ export function ReportsPage() {
             </div>
 
             <Panel
+              title="Did outreach touch these wins?"
+              hint="Any sequence enrolment counts, with no attribution window — read it as influence, not sole credit."
+            >
+              {!data.attribution ? (
+                <p className="py-6 text-center text-xs text-stone-400">No attribution data.</p>
+              ) : (
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                  <AttributionCard label="Touched by a sequence" side={data.attribution.sequenced} />
+                  <AttributionCard label="Never sequenced" side={data.attribution.organic} />
+                </div>
+              )}
+            </Panel>
+
+            <Panel
               title="Companies on your website"
               hint="Resolved from the visiting network at pageview time. The IP itself is never stored."
             >
@@ -314,6 +333,23 @@ export function ReportsPage() {
         )}
       </div>
     </main>
+  );
+}
+
+function AttributionCard({ label, side }: { label: string; side: AttributionSide }) {
+  const decided = side.wonCount + side.lostCount;
+  return (
+    <div className="rounded-lg border border-stone-200 bg-white/60 px-3 py-2.5">
+      <p className="text-[10px] uppercase tracking-wider text-stone-500">{label}</p>
+      <p className="mt-0.5 text-lg font-semibold tabular-nums leading-tight text-stone-900">
+        {formatMoney(side.wonValue)}
+      </p>
+      <p className="mt-0.5 text-[11px] tabular-nums text-stone-400">
+        {side.wonCount} won · {side.lostCount} lost ·{" "}
+        {side.winRate == null ? "no data" : `${side.winRate}% win rate`}
+        {decided === 0 && " (nothing closed)"}
+      </p>
+    </div>
   );
 }
 
