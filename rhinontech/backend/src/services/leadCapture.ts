@@ -1,4 +1,5 @@
 import { Lead } from "../models";
+import { normalizeEmail } from "../utils/email";
 
 export function str(v: unknown, max = 500): string | null {
   const s = (v ?? "").toString().trim();
@@ -23,7 +24,10 @@ export interface LeadCaptureInput {
  * insert or wiping earlier data.
  */
 export async function findOrMergeLead(input: LeadCaptureInput): Promise<Lead> {
-  const email = input.email.toLowerCase();
+  // Website forms are the other way addresses get into `leads`, so they get the
+  // same hygiene as CSV imports — a stray trailing dot or space here would only
+  // surface much later, as an undeliverable address mid-campaign.
+  const email = normalizeEmail(input.email) ?? input.email.toLowerCase();
   const existing = await Lead.findOne({ where: { email } });
 
   if (existing) {

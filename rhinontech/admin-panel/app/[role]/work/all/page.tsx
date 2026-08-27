@@ -1,5 +1,5 @@
-import { TasksPage } from "@/components/Admin/Work/TasksPage";
+import { redirect } from "next/navigation";
 
-export default function AllTasksPage() {
-  return <TasksPage scope="All tasks" />;
+export default function AllTasksRedirect() {
+  redirect("../tasks");
 }

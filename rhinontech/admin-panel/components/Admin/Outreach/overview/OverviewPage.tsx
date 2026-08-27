@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { TbBrandLinkedin, TbMailOpened, TbMessageCircle, TbPlus, TbTarget, TbUsers } from "react-icons/tb";
+import { TbBrandLinkedin, TbMailOpened, TbMessageCircle, TbPlus, TbTarget, TbUsers, TbSpeakerphone } from "react-icons/tb";
 import { apiFetch } from "@/lib/api";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { Button } from "@/components/ui/button";
@@ -15,9 +15,17 @@ import type { Campaign } from "../shared/types";
 
 interface Stats {
   totalLeads: number;
+  totalCampaigns: number;
   activeCampaigns: number;
   emailsSent: number;
   repliesReceived: number;
+}
+
+interface ChartPoint {
+  date: string;
+  drafted: number;
+  sent: number;
+  replied: number;
 }
 
 interface Activity {
@@ -28,60 +36,39 @@ interface Activity {
   lead?: { name: string; company: string } | null;
 }
 
-function ymd(d: Date): string {
-  return d.toISOString().slice(0, 10);
-}
-
 export function OverviewPage() {
   const pathname = usePathname();
   const roleSlug = pathname.split("/")[1];
 
   const [stats, setStats] = useState<Stats | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [chartData, setChartData] = useState<ChartPoint[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
       apiFetch<Stats>("/outreach/stats"),
-      apiFetch<Activity[]>("/outreach/activities?limit=200"),
+      // Feeds the "Recent Activity" list only — it is a capped feed, never a
+      // data source for the chart (see /outreach/timeseries).
+      apiFetch<Activity[]>("/outreach/activities?limit=20"),
+      apiFetch<ChartPoint[]>("/outreach/timeseries?days=14"),
       apiFetch<Campaign[]>("/campaigns"),
     ])
-      .then(([s, a, c]) => {
+      .then(([s, a, t, c]) => {
         setStats(s);
         setActivities(a);
+        setChartData(t);
         setCampaigns(c);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
 
-  // Bucket the last 14 days of activity for the trend chart.
-  const chartData = useMemo(() => {
-    const since = new Date();
-    since.setDate(since.getDate() - 13);
-    since.setHours(0, 0, 0, 0);
-
-    const byDay = new Map<string, { date: string; drafted: number; sent: number; replied: number }>();
-    for (let i = 0; i < 14; i++) {
-      const d = new Date(since);
-      d.setDate(d.getDate() + i);
-      byDay.set(ymd(d), { date: ymd(d), drafted: 0, sent: 0, replied: 0 });
-    }
-    for (const a of activities) {
-      const key = ymd(new Date(a.timestamp));
-      const row = byDay.get(key);
-      if (!row) continue;
-      if (a.type === "DraftGenerated") row.drafted++;
-      else if (a.type === "OutreachSent") row.sent++;
-      else if (a.type === "ReplyReceived") row.replied++;
-    }
-    return Array.from(byDay.values());
-  }, [activities]);
-
   const cards = stats
     ? [
         { label: "Total Leads", value: stats.totalLeads, icon: <TbUsers size={16} /> },
+        { label: "Total Campaigns", value: stats.totalCampaigns, icon: <TbSpeakerphone size={16} /> },
         { label: "Active Campaigns", value: stats.activeCampaigns, icon: <TbTarget size={16} /> },
         { label: "Emails Sent", value: stats.emailsSent, icon: <TbMailOpened size={16} /> },
         { label: "Replies", value: stats.repliesReceived, icon: <TbMessageCircle size={16} /> },
@@ -115,8 +102,8 @@ export function OverviewPage() {
       </div>
 
       <div className="flex-1 space-y-3 sm:space-y-4 overflow-auto p-3 sm:p-4">
-        <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {(loading && !stats ? Array.from({ length: 4 }) : cards).map((c: any, i) => (
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          {(loading && !stats ? Array.from({ length: 5 }) : cards).map((c: any, i) => (
             <StatCard key={i} label={c?.label} value={c?.value} icon={c?.icon} loading={loading && !stats} />
           ))}
         </div>

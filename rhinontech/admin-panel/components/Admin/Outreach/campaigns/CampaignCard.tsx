@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { TbCalendar, TbClock, TbDotsVertical, TbPlayerPause, TbPlayerPlay, TbRefresh, TbTrash } from "react-icons/tb";
+import { TbCalendar, TbClock, TbDotsVertical, TbPlayerPause, TbPlayerPlay, TbRefresh, TbSend, TbTrash } from "react-icons/tb";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -83,12 +83,22 @@ export function CampaignCard({
       </div>
 
       <div className={cn("flex items-center gap-4 border-t border-stone-100 pt-3 text-xs text-stone-400")}>
-        <span className="inline-flex items-center gap-1">
-          <TbCalendar size={13} /> {new Date(campaign.startDate).toLocaleDateString()}
-        </span>
-        <span className="inline-flex items-center gap-1">
-          <TbClock size={13} /> {campaign.runTime || "09:00"}
-        </span>
+        {/* Date/time only mean something on a scheduled campaign — a manual-send
+            campaign never consults them, so showing them just misleads. */}
+        {campaign.autoSend ? (
+          <>
+            <span className="inline-flex items-center gap-1">
+              <TbCalendar size={13} /> {new Date(campaign.startDate).toLocaleDateString()}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <TbClock size={13} /> {campaign.runTime || "09:00"}
+            </span>
+          </>
+        ) : (
+          <span className="inline-flex items-center gap-1">
+            <TbSend size={13} /> Manual send
+          </span>
+        )}
         <span className="ml-auto truncate">{campaign.subject || "No subject set"}</span>
       </div>
     </div>

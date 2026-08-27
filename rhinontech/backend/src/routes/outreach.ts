@@ -2,6 +2,7 @@ import { Router, Response } from "express";
 import { Lead, Campaign, CampaignActivity, InboxEmail, Unsubscribe } from "../models";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 import { sendEmail } from "../services/mailer";
+import { sequelize } from "../config/database";
 
 const router = Router();
 
@@ -79,13 +80,67 @@ router.post("/send", authorize("outreach:write"), async (req: AuthRequest, res: 
 // GET /outreach/stats - aggregate outreach metrics
 router.get("/stats", authorize("outreach:read"), async (_req: AuthRequest, res: Response) => {
   try {
-    const [totalLeads, activeCampaigns, emailsSent, repliesReceived] = await Promise.all([
+    const [totalLeads, totalCampaigns, activeCampaigns, emailsSent, repliesReceived] = await Promise.all([
       Lead.count(),
+      Campaign.count(),
       Campaign.count({ where: { stage: "Active" } }),
       CampaignActivity.count({ where: { type: "OutreachSent" } }),
       CampaignActivity.count({ where: { type: "ReplyReceived" } }),
     ]);
-    res.json({ totalLeads, activeCampaigns, emailsSent, repliesReceived });
+    res.json({ totalLeads, totalCampaigns, activeCampaigns, emailsSent, repliesReceived });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
+/**
+ * GET /outreach/timeseries?days=14 — daily drafted/sent/replied totals.
+ *
+ * Aggregated in SQL rather than by counting rows from /outreach/activities:
+ * that endpoint is the capped "recent activity" feed, and a single busy day can
+ * run to thousands of rows, so a client-side bucket of the latest N silently
+ * reported a fraction of one day and zero for every day before it.
+ *
+ * Days are bucketed in IST so they line up with the business dates the team
+ * actually works to, and the series is gap-filled server-side.
+ */
+router.get("/timeseries", authorize("outreach:read"), async (req: AuthRequest, res: Response) => {
+  const days = Math.min(Math.max(parseInt(req.query.days as string, 10) || 14, 1), 90);
+  try {
+    const rows = (await sequelize.query(
+      `
+      WITH day_range AS (
+        SELECT generate_series(
+          (now() AT TIME ZONE 'Asia/Kolkata')::date - make_interval(days => :days - 1),
+          (now() AT TIME ZONE 'Asia/Kolkata')::date,
+          '1 day'
+        )::date AS date
+      )
+      SELECT
+        d.date::text AS date,
+        COUNT(a.id) FILTER (WHERE a.type = 'DraftGenerated') AS drafted,
+        COUNT(a.id) FILTER (WHERE a.type = 'OutreachSent')   AS sent,
+        COUNT(a.id) FILTER (WHERE a.type = 'ReplyReceived')  AS replied
+      FROM day_range d
+      LEFT JOIN campaign_activities a
+        ON a."timestamp" >= (d.date::text || ' 00:00:00')::timestamp AT TIME ZONE 'Asia/Kolkata'
+       AND a."timestamp" <  ((d.date + 1)::text || ' 00:00:00')::timestamp AT TIME ZONE 'Asia/Kolkata'
+      GROUP BY d.date
+      ORDER BY d.date
+      `,
+      { replacements: { days }, type: (sequelize as any).QueryTypes?.SELECT ?? "SELECT" }
+    )) as any[];
+
+    // pg returns COUNT() as a bigint string.
+    res.json(
+      rows.map((r) => ({
+        date: r.date,
+        drafted: parseInt(r.drafted, 10) || 0,
+        sent: parseInt(r.sent, 10) || 0,
+        replied: parseInt(r.replied, 10) || 0,
+      }))
+    );
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

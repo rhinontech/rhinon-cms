@@ -16,6 +16,12 @@ type PermissionsContextType = {
   permissions: string[];
   /** The signed-in user's own role. */
   roleSlug: string;
+  /** The signed-in user's id — null until /auth/me lands. Comes from the same
+   *  request as the permissions rather than the JWT, because the JWT is a frozen
+   *  snapshot and doesn't carry `department` at all. */
+  userId: string | null;
+  fullName: string;
+  department: string | null;
   /** True while previewing another role's URL as superadmin. */
   isPreviewing: boolean;
   /** The role currently in effect for gating decisions — the previewed role's
@@ -49,6 +55,9 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
   // replaces it with the live DB state.
   const [permissions, setPermissions] = useState<string[]>([]);
   const [roleSlug, setRoleSlug] = useState("");
+  const [userId, setUserId] = useState<string | null>(null);
+  const [fullName, setFullName] = useState("");
+  const [department, setDepartment] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [tick, setTick] = useState(0);
   const [previewRolePermissions, setPreviewRolePermissions] = useState<string[] | null>(null);
@@ -62,11 +71,22 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     let cancelled = false;
-    apiFetch<{ permissions: string[]; roleSlug: string }>("/auth/me")
+    // /auth/me returns the whole user row (minus passwordHash), so identity comes
+    // along for free with the permissions — no second request.
+    apiFetch<{
+      permissions: string[];
+      roleSlug: string;
+      id?: string;
+      fullName?: string;
+      department?: string | null;
+    }>("/auth/me")
       .then((data) => {
         if (cancelled) return;
         setPermissions(data.permissions || []);
         setRoleSlug(data.roleSlug || "");
+        setUserId(data.id ?? null);
+        setFullName(data.fullName || "");
+        setDepartment(data.department ?? null);
         setReady(true);
         // Keep the cookie warm as the fast-path hint for the next page load.
         Cookies.set("permissions", JSON.stringify(data.permissions || []), { expires: 7 });
@@ -105,7 +125,7 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
 
   return (
     <PermissionsContext.Provider
-      value={{ permissions, roleSlug, isPreviewing, effectiveRoleSlug, ready, has, refresh: () => setTick((t) => t + 1) }}
+      value={{ permissions, roleSlug, userId, fullName, department, isPreviewing, effectiveRoleSlug, ready, has, refresh: () => setTick((t) => t + 1) }}
     >
       {children}
     </PermissionsContext.Provider>

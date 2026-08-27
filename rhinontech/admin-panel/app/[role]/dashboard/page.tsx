@@ -26,7 +26,6 @@ import { apiFetch } from "@/lib/api";
 interface PendingTask {
   id: string;
   title: string;
-  team: string | null;
   dueDate: string | null;
   status: string;
 }
@@ -507,9 +506,6 @@ export default function DashboardPage() {
                   <div key={task.id} className="flex items-center gap-4 px-5 py-3.5">
                     <span className="h-4 w-4 shrink-0 rounded border border-gray-300" />
                     <p className="flex-1 text-sm font-medium text-gray-800">{task.title}</p>
-                    {task.team && (
-                      <span className="shrink-0 rounded-md bg-stone-100 px-2.5 py-0.5 text-xs text-gray-500">{task.team}</span>
-                    )}
                     {task.dueDate && (
                       <span className="shrink-0 text-xs text-gray-400">Due {ordinalDate(task.dueDate)}</span>
                     )}
