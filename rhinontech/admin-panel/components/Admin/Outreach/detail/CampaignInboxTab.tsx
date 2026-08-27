@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { TbInbox, TbLoader, TbSend, TbArrowLeft, TbEye, TbMailOpened, TbMessageCheck, TbMail } from "react-icons/tb";
+import { TbInbox, TbLoader, TbSend, TbArrowLeft, TbEye, TbMessageCheck, TbMail, TbUsersPlus } from "react-icons/tb";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from "../shared/EmptyState";
 import { EmailBodyView } from "../shared/EmailBodyView";
 import type { CampaignLead } from "../shared/types";
+import { SaveSegmentToGroupDialog, type GroupSegment } from "./SaveSegmentToGroupDialog";
 
 interface ThreadEmail {
   id: string;
@@ -51,14 +52,34 @@ interface Conversation {
   latestSentAt: string;
 }
 
-type FilterTab = "all" | "opened" | "reply";
+// The four tabs partition the inbox: every conversation falls in exactly one of
+// unopened / opened / reply. "opened" therefore means "opened but has not
+// replied" — a lead who replied lives under "reply" only, which is both how the
+// row badges already read and what makes the counts add up to "all".
+type FilterTab = "all" | "unopened" | "opened" | "reply";
+
+const TAB_DEFS: {
+  key: FilterTab;
+  label: string;
+  icon: React.ReactNode | null;
+  activeText: string;
+  activeIcon: string;
+  activeBadge: string;
+}[] = [
+  { key: "all", label: "All", icon: null, activeText: "text-stone-900", activeIcon: "", activeBadge: "bg-stone-100 text-stone-700" },
+  { key: "unopened", label: "Unopened", icon: <TbMail size={13} />, activeText: "text-stone-900", activeIcon: "text-stone-600", activeBadge: "bg-stone-100 text-stone-700" },
+  { key: "opened", label: "Opened", icon: <TbEye size={13} />, activeText: "text-blue-900", activeIcon: "text-blue-600", activeBadge: "bg-blue-100 text-blue-800" },
+  { key: "reply", label: "Replied", icon: <TbMessageCheck size={13} />, activeText: "text-emerald-900", activeIcon: "text-emerald-600", activeBadge: "bg-emerald-100 text-emerald-800" },
+];
 
 export function CampaignInboxTab({
   campaignId,
   leads = [],
+  campaignName,
 }: {
   campaignId: string;
   leads?: CampaignLead[];
+  campaignName?: string;
 }) {
   const [emails, setEmails] = useState<ThreadEmail[] | null>(null);
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
@@ -66,6 +87,7 @@ export function CampaignInboxTab({
   const [replyBody, setReplyBody] = useState("");
   const [sending, setSending] = useState(false);
   const [filter, setFilter] = useState<FilterTab>("all");
+  const [groupDialogOpen, setGroupDialogOpen] = useState(false);
 
   const fetchInbox = () => {
     apiFetch<ThreadEmail[]>(`/campaigns/${campaignId}/inbox`)
@@ -138,24 +160,65 @@ export function CampaignInboxTab({
       });
   }, [emails, leadMap]);
 
-  // Counts for each filter tab
-  const counts = useMemo(() => {
-    const all = conversations.length;
-    const opened = conversations.filter((c) => c.hasOpened).length;
-    const reply = conversations.filter((c) => c.hasReply).length;
-    return { all, opened, reply };
+  // Mutually exclusive engagement buckets — the basis for both the tabs and the
+  // "save to group" segments, so what you filter to is exactly what you save.
+  const buckets = useMemo(() => {
+    const replied = conversations.filter((c) => c.hasReply);
+    const opened = conversations.filter((c) => !c.hasReply && c.hasOpened);
+    const unopened = conversations.filter((c) => !c.hasReply && !c.hasOpened);
+    return { replied, opened, unopened };
   }, [conversations]);
+
+  const counts = useMemo(
+    () => ({
+      all: conversations.length,
+      unopened: buckets.unopened.length,
+      opened: buckets.opened.length,
+      reply: buckets.replied.length,
+    }),
+    [conversations, buckets]
+  );
 
   // Filtered conversations
   const filteredConversations = useMemo(() => {
-    if (filter === "opened") {
-      return conversations.filter((c) => c.hasOpened);
-    }
-    if (filter === "reply") {
-      return conversations.filter((c) => c.hasReply);
-    }
+    if (filter === "unopened") return buckets.unopened;
+    if (filter === "opened") return buckets.opened;
+    if (filter === "reply") return buckets.replied;
     return conversations;
-  }, [conversations, filter]);
+  }, [conversations, buckets, filter]);
+
+  const segments = useMemo<GroupSegment[]>(
+    () => [
+      {
+        key: "unopened",
+        label: "Not opened",
+        hint: "Received the email but never opened it",
+        leadIds: buckets.unopened.map((c) => c.leadId),
+      },
+      {
+        key: "opened",
+        label: "Opened, no reply",
+        hint: "Engaged but hasn't written back",
+        leadIds: buckets.opened.map((c) => c.leadId),
+      },
+      {
+        key: "replied",
+        label: "Replied",
+        hint: "Wrote back — warmest of the three",
+        leadIds: buckets.replied.map((c) => c.leadId),
+      },
+      {
+        key: "all",
+        label: "Everyone in this inbox",
+        hint: "Every contact this campaign emailed",
+        leadIds: conversations.map((c) => c.leadId),
+      },
+    ],
+    [buckets, conversations]
+  );
+
+  // Opening the dialog from a tab pre-selects that tab's segment.
+  const defaultSegmentKey = filter === "reply" ? "replied" : filter;
 
   // Maintain selected conversation within active filter
   useEffect(() => {
@@ -240,70 +303,47 @@ export function CampaignInboxTab({
         )}
       >
         {/* Filter Navigation Tabs */}
-        <div className="border-b border-stone-100 p-2.5 bg-stone-50/60 shrink-0">
-          <div className="flex items-center gap-1 rounded-lg bg-stone-200/60 p-1">
-            <button
-              onClick={() => setFilter("all")}
-              className={cn(
-                "flex-1 flex items-center justify-center gap-1.5 rounded-md py-1.5 px-2 text-xs font-medium transition-all",
-                filter === "all"
-                  ? "bg-white text-stone-900 shadow-sm font-semibold"
-                  : "text-stone-600 hover:text-stone-900"
-              )}
-            >
-              <span>All</span>
-              <span
-                className={cn(
-                  "rounded-full px-1.5 py-0.2 text-[10px] font-bold leading-tight",
-                  filter === "all" ? "bg-stone-100 text-stone-700" : "text-stone-500"
-                )}
-              >
-                {counts.all}
-              </span>
-            </button>
-
-            <button
-              onClick={() => setFilter("opened")}
-              className={cn(
-                "flex-1 flex items-center justify-center gap-1.5 rounded-md py-1.5 px-2 text-xs font-medium transition-all",
-                filter === "opened"
-                  ? "bg-white text-blue-900 shadow-sm font-semibold"
-                  : "text-stone-600 hover:text-stone-900"
-              )}
-            >
-              <TbEye size={13} className={filter === "opened" ? "text-blue-600" : "text-stone-400"} />
-              <span>Opened</span>
-              <span
-                className={cn(
-                  "rounded-full px-1.5 py-0.2 text-[10px] font-bold leading-tight",
-                  filter === "opened" ? "bg-blue-100 text-blue-800" : "text-stone-500"
-                )}
-              >
-                {counts.opened}
-              </span>
-            </button>
-
-            <button
-              onClick={() => setFilter("reply")}
-              className={cn(
-                "flex-1 flex items-center justify-center gap-1.5 rounded-md py-1.5 px-2 text-xs font-medium transition-all",
-                filter === "reply"
-                  ? "bg-white text-emerald-900 shadow-sm font-semibold"
-                  : "text-stone-600 hover:text-stone-900"
-              )}
-            >
-              <TbMessageCheck size={13} className={filter === "reply" ? "text-emerald-600" : "text-stone-400"} />
-              <span>Reply</span>
-              <span
-                className={cn(
-                  "rounded-full px-1.5 py-0.2 text-[10px] font-bold leading-tight",
-                  filter === "reply" ? "bg-emerald-100 text-emerald-800" : "text-stone-500"
-                )}
-              >
-                {counts.reply}
-              </span>
-            </button>
+        <div className="border-b border-stone-100 p-2.5 bg-stone-50/60 shrink-0 space-y-2">
+          {/* Four tabs in a 2x2 grid — a single row can't hold "Unopened" plus a
+              count inside the 288px sidebar without truncating. */}
+          <div className="grid grid-cols-2 gap-1 rounded-lg bg-stone-200/60 p-1">
+            {TAB_DEFS.map((tab) => {
+              const active = filter === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setFilter(tab.key)}
+                  className={cn(
+                    "flex items-center justify-center gap-1.5 rounded-md py-1.5 px-2 text-xs font-medium transition-all",
+                    active ? `bg-white shadow-sm font-semibold ${tab.activeText}` : "text-stone-600 hover:text-stone-900"
+                  )}
+                >
+                  {tab.icon ? (
+                    <span className={active ? tab.activeIcon : "text-stone-400"}>{tab.icon}</span>
+                  ) : null}
+                  <span>{tab.label}</span>
+                  <span
+                    className={cn(
+                      "rounded-full px-1.5 py-0.2 text-[10px] font-bold leading-tight",
+                      active ? tab.activeBadge : "text-stone-500"
+                    )}
+                  >
+                    {counts[tab.key]}
+                  </span>
+                </button>
+              );
+            })}
           </div>
+
+          <Button
+            size="sm"
+            variant="outline"
+            className="w-full"
+            onClick={() => setGroupDialogOpen(true)}
+            disabled={conversations.length === 0}
+          >
+            <TbUsersPlus size={14} /> Save to contact group
+          </Button>
         </div>
 
         {/* Conversation Items */}
@@ -312,15 +352,19 @@ export function CampaignInboxTab({
             <div className="p-6 text-center text-xs text-stone-400 flex flex-col items-center gap-2 mt-4">
               <TbInbox size={28} className="text-stone-300" />
               <p className="font-medium text-stone-500">
-                {filter === "opened"
+                {filter === "unopened"
+                  ? "Everyone has opened their email"
+                  : filter === "opened"
                   ? "No opened emails found"
                   : filter === "reply"
                   ? "No replied leads found"
                   : "No conversations found"}
               </p>
               <p className="text-[11px] text-stone-400">
-                {filter === "opened"
-                  ? "When recipients open campaign emails, they'll show here."
+                {filter === "unopened"
+                  ? "Recipients who haven't opened yet will show here."
+                  : filter === "opened"
+                  ? "Recipients who open but don't reply will show here."
                   : filter === "reply"
                   ? "When leads reply to this campaign, they'll show here."
                   : ""}
@@ -487,6 +531,14 @@ export function CampaignInboxTab({
           </div>
         )}
       </div>
+
+      <SaveSegmentToGroupDialog
+        open={groupDialogOpen}
+        onOpenChange={setGroupDialogOpen}
+        segments={segments}
+        defaultSegmentKey={defaultSegmentKey}
+        campaignName={campaignName}
+      />
     </div>
   );
 }

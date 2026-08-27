@@ -7,6 +7,7 @@ import { postToLinkedIn } from "../services/linkedin";
 import { sendEmail } from "../services/mailer";
 import { stripHtml, toEmailHtml, BACKEND_URL } from "../services/emailTemplate";
 import { Op } from "sequelize";
+import { normalizeEmail, isValidEmail } from "../utils/email";
 
 const router = Router();
 
@@ -138,8 +139,7 @@ router.post("/:id/enroll", authorize("outreach:write"), async (req: AuthRequest,
     { where: { id: { [Op.in]: leadIds } } }
   );
 
-  const newTotal = await Lead.count({ where: { campaignId: campaign.id } });
-  await campaign.update({ leadsTotal: newTotal });
+  await syncCampaignCounts(campaign);
 
   res.json({ message: `${leadIds.length} leads enrolled` });
 });
@@ -161,8 +161,7 @@ router.delete("/:id/leads/:leadId", authorize("outreach:write"), async (req: Aut
 
   await lead.update({ campaignId: null, status: "New", aiDraft: null, emailOpened: false, openedAt: null });
 
-  const newTotal = await Lead.count({ where: { campaignId: campaign.id } });
-  await campaign.update({ leadsTotal: newTotal });
+  await syncCampaignCounts(campaign);
 
   res.json({ message: "Lead removed from campaign" });
 });
@@ -178,6 +177,142 @@ function fillPlaceholders(text: string, lead: any, senderName: string): string {
     .replace(/\[your name\]/gi, senderName)
     .replace(/\[Sender Name\]/gi, senderName)
     .replace(/\[AI to fill[^\]]*\]/gi, "");
+}
+
+// Statuses that mean "this lead is done with" — nothing further will be sent to
+// them, so they no longer hold a campaign open.
+const TERMINAL_LEAD_STATUSES = ["Emailed", "Replied", "Bounced", "Unsubscribed"] as const;
+
+// The exact complement of the above: a lead in any of these still owes the
+// campaign a send. These two sets must stay in step with the statuses the draft
+// and dispatch queries actually select, or a lead can end up pending forever
+// while being invisible to every send path ("Enriched" used to do exactly that).
+const PENDING_LEAD_STATUSES = ["New", "Enriched", "Enrolled", "Interested"] as const;
+// Pending-but-not-yet-drafted — these are what a send turns into "Interested".
+const NEEDS_DRAFT_STATUSES = ["New", "Enriched", "Enrolled"] as const;
+
+type DispatchOutcome = { result: "sent" | "skipped" | "failed"; reason?: string; permanent?: boolean };
+
+/**
+ * Whether a transport error means "this address will never work" as opposed to
+ * "try again later". Getting this wrong in the permanent direction discards a
+ * real lead over a throttle or a network blip, so the match stays narrow and
+ * anything unrecognised is treated as retryable.
+ */
+function isPermanentSendError(err: any): boolean {
+  const text = `${err?.name || ""} ${err?.message || ""}`.toLowerCase();
+  return /invalid|not a valid|malformed|illegal address|does not exist|rejected|blacklist|suppress/.test(text);
+}
+
+/**
+ * Sends one lead's email and records the outcome.
+ *
+ * The important guarantee is that this NEVER leaves a lead parked in a pending
+ * status. A permanently undeliverable address (a typo'd domain, a trailing dot)
+ * used to be swallowed into a console.error, leaving the lead on "Interested"
+ * forever — which silently pinned its campaign short of "Completed" with nothing
+ * shown anywhere in the UI. Every failure path here now marks the lead terminal
+ * and writes an activity row explaining why.
+ *
+ * "Bounced" is reused as the terminal failure status rather than adding a new
+ * enum value: it already means undeliverable, is already excluded from resends,
+ * and avoids a Postgres enum migration. The activity row carries the real reason.
+ */
+export async function dispatchLeadEmail(
+  campaign: Campaign,
+  lead: Lead,
+  senderName: string,
+  fromEmail: string,
+  activityNote: string
+): Promise<DispatchOutcome> {
+  // permanent -> the lead goes terminal ("Bounced") so it can never pin the
+  // campaign open again. transient -> it stays sendable and will be retried,
+  // but the failure is recorded and reported rather than swallowed.
+  const fail = async (reason: string, permanent: boolean): Promise<DispatchOutcome> => {
+    if (permanent) await lead.update({ status: "Bounced" });
+    await CampaignActivity.create({
+      leadId: lead.id,
+      campaignId: campaign.id,
+      type: "Other",
+      content: permanent
+        ? `Outreach email failed permanently for ${lead.email} (marked Bounced): ${reason}`
+        : `Outreach email failed for ${lead.email} — will retry on the next send: ${reason}`,
+    });
+    return { result: "failed", reason, permanent };
+  };
+
+  if (!lead.aiDraft) return fail("no draft was generated for this lead", true);
+
+  const email = normalizeEmail(lead.email);
+  if (!isValidEmail(email)) return fail(`"${lead.email}" is not a valid email address`, true);
+  // A recoverable typo (trailing dot, stray case) is repaired in place so the
+  // lead is clean for any future campaign, not just this send.
+  if (email !== lead.email) await lead.update({ email: email! });
+
+  const isUnsubscribed = await Unsubscribe.findOne({ where: { email: email! } });
+  if (isUnsubscribed) {
+    await lead.update({ status: "Unsubscribed" });
+    await CampaignActivity.create({
+      leadId: lead.id,
+      campaignId: campaign.id,
+      type: "Other",
+      content: `Outreach email skipped: ${email} has unsubscribed.`,
+    });
+    return { result: "skipped", reason: "unsubscribed" };
+  }
+
+  const subject = campaign.subject
+    ? fillPlaceholders(campaign.subject, lead, senderName)
+    : `Optimizing ${lead.company}'s potential`;
+  const htmlBody = toEmailHtml(lead.aiDraft, undefined, openTrackingPixelUrl(lead.id, campaign.id), email!);
+  const plainText = stripHtml(lead.aiDraft);
+
+  try {
+    await sendEmail({ to: email!, from: fromEmail, fromName: senderName, via: "ses", subject, html: htmlBody, text: plainText });
+  } catch (err: any) {
+    return fail(err.message || "send failed", isPermanentSendError(err));
+  }
+
+  await InboxEmail.create({
+    threadKey: `outreach-${campaign.id}-${lead.id}`,
+    folder: "sent",
+    fromName: senderName,
+    fromEmail,
+    toEmails: [email!],
+    subject,
+    body: lead.aiDraft,
+    snippet: plainText.slice(0, 160),
+    ownerEmail: fromEmail,
+    isRead: true,
+    campaignId: campaign.id,
+    leadId: lead.id,
+    sentAt: new Date(),
+  });
+
+  await lead.update({ status: "Emailed" });
+  await CampaignActivity.create({
+    leadId: lead.id,
+    campaignId: campaign.id,
+    type: "OutreachSent",
+    content: activityNote,
+  });
+
+  return { result: "sent" };
+}
+
+/**
+ * Recomputes leadsTotal/leadsProcessed from the leads themselves.
+ *
+ * These were previously maintained by incrementing a counter, which drifted out
+ * of step with reality whenever a lead was removed or a send partly failed.
+ * Deriving them is cheap and self-healing.
+ */
+export async function syncCampaignCounts(campaign: Campaign): Promise<void> {
+  const [leadsTotal, leadsProcessed] = await Promise.all([
+    Lead.count({ where: { campaignId: campaign.id } }),
+    Lead.count({ where: { campaignId: campaign.id, status: { [Op.in]: [...TERMINAL_LEAD_STATUSES] } } }),
+  ]);
+  await campaign.update({ leadsTotal, leadsProcessed });
 }
 
 // 1x1 open-tracking pixel URL for a given lead's send — hits GET /public/track/open,
@@ -265,7 +400,7 @@ router.post("/:id/send", authorize("outreach:write"), async (req: AuthRequest, r
       const enrolledLeads = await Lead.findAll({
         where: {
           campaignId: campaign.id,
-          status: ["Enrolled", "New"],
+          status: [...NEEDS_DRAFT_STATUSES],
         },
       });
 
@@ -321,68 +456,37 @@ router.post("/:id/send", authorize("outreach:write"), async (req: AuthRequest, r
       });
 
       let sentCount = 0;
+      let skippedCount = 0;
+      const failures: { email: string; reason: string }[] = [];
 
       for (const lead of leads) {
-        try {
-          if (!lead.aiDraft) continue;
-
-          // Check if user has unsubscribed
-          const isUnsubscribed = await Unsubscribe.findOne({
-            where: { email: lead.email.toLowerCase().trim() },
-          });
-          if (isUnsubscribed) {
-            await lead.update({ status: "Unsubscribed" });
-            await CampaignActivity.create({
-              leadId: lead.id,
-              campaignId: campaign.id,
-              type: "Other",
-              content: `Outreach email skipped: ${lead.email} has unsubscribed.`,
-            });
-            continue;
-          }
-
-          const subject = campaign.subject
-            ? fillPlaceholders(campaign.subject, lead, senderName)
-            : `Optimizing ${lead.company}'s potential`;
-          const htmlBody = toEmailHtml(lead.aiDraft, undefined, openTrackingPixelUrl(lead.id, campaign.id), lead.email);
-          const plainText = stripHtml(lead.aiDraft);
-          await sendEmail({ to: lead.email, from: fromEmail, fromName: senderName, via: "ses", subject, html: htmlBody, text: plainText });
-
-          await InboxEmail.create({
-            threadKey: `outreach-${campaign.id}-${lead.id}`,
-            folder: "sent",
-            fromName: senderName,
-            fromEmail,
-            toEmails: [lead.email],
-            subject,
-            body: lead.aiDraft,
-            snippet: plainText.slice(0, 160),
-            ownerEmail: fromEmail,
-            isRead: true,
-            campaignId: campaign.id,
-            leadId: lead.id,
-            sentAt: new Date(),
-          });
-
-          await lead.update({ status: "Emailed" });
-          await CampaignActivity.create({
-            leadId: lead.id,
-            campaignId: campaign.id,
-            type: "OutreachSent",
-            content: "Campaign outreach email delivered via Rhinon Engine.",
-          });
-          sentCount++;
-        } catch (err: any) {
-          console.error(`Send error for lead ${lead.id}:`, err.message);
+        const outcome = await dispatchLeadEmail(
+          campaign,
+          lead,
+          senderName,
+          fromEmail,
+          "Campaign outreach email delivered via Rhinon Engine."
+        );
+        if (outcome.result === "sent") sentCount++;
+        else if (outcome.result === "skipped") skippedCount++;
+        else {
+          failures.push({ email: lead.email, reason: outcome.reason || "unknown error" });
+          console.error(`Send error for lead ${lead.id} (${lead.email}):`, outcome.reason);
         }
       }
 
-      if (campaign.leadsProcessed < campaign.leadsTotal) {
-        await campaign.increment("leadsProcessed", { by: sentCount });
-      }
+      await syncCampaignCounts(campaign);
       const completed = await maybeCompleteCampaign(campaign);
 
-      res.json({ success: true, sent: sentCount, total: leads.length, completed });
+      res.json({
+        success: true,
+        sent: sentCount,
+        skipped: skippedCount,
+        failed: failures.length,
+        failures,
+        total: leads.length,
+        completed,
+      });
     } else {
       // Social / LinkedIn broadcast
       let postContent = campaign.aiDraft;
@@ -438,16 +542,15 @@ router.post("/:id/send", authorize("outreach:write"), async (req: AuthRequest, r
 
 // When every enrolled lead has been dealt with (sent/replied/bounced/…), an email
 // campaign is finished — flip it to Completed so it stops showing as Active.
-async function maybeCompleteCampaign(campaign: Campaign): Promise<boolean> {
+export async function maybeCompleteCampaign(campaign: Campaign): Promise<boolean> {
   if (campaign.stage === "Completed" || !isEmailChannel(campaign.channel)) return false;
-  if (campaign.leadsTotal === 0) return false;
-  const pending = await Lead.count({
-    where: {
-      campaignId: campaign.id,
-      status: { [Op.in]: ["New", "Enriched", "Enrolled", "Interested"] },
-    },
-  });
-  if (pending > 0) return false;
+  // Counted off the leads themselves rather than campaign.leadsTotal, which can
+  // lag behind if a lead was removed after the counter was last written.
+  const [total, pending] = await Promise.all([
+    Lead.count({ where: { campaignId: campaign.id } }),
+    Lead.count({ where: { campaignId: campaign.id, status: { [Op.in]: [...PENDING_LEAD_STATUSES] } } }),
+  ]);
+  if (total === 0 || pending > 0) return false;
   await campaign.update({ stage: "Completed" });
   return true;
 }
@@ -471,7 +574,7 @@ router.get("/cron/run", async (req, res) => {
       const enrolledLeads = await Lead.findAll({
         where: {
           campaignId: campaign.id,
-          status: "Enrolled",
+          status: [...NEEDS_DRAFT_STATUSES],
           aiDraft: { [Op.or]: [null, ""] } as any,
         },
       });
@@ -512,72 +615,22 @@ router.get("/cron/run", async (req, res) => {
       const fromEmail = campaign.senderEmail || campaignCreator?.companyEmail || "admin@rhinontech.in";
 
       for (const lead of leadsReadyToSend) {
-        try {
-          if (!lead.aiDraft) continue;
-
-          // Check if user has unsubscribed
-          const isUnsubscribed = await Unsubscribe.findOne({
-            where: { email: lead.email.toLowerCase().trim() },
-          });
-          if (isUnsubscribed) {
-            await lead.update({ status: "Unsubscribed" });
-            if (campaign.leadsProcessed < campaign.leadsTotal) {
-              await campaign.increment("leadsProcessed");
-            }
-            logs.push(`   [Email Skipped] ${lead.email} is in the unsubscribe list.`);
-            continue;
-          }
-
-          const subject = campaign.subject
-            ? fillPlaceholders(campaign.subject, lead, senderName)
-            : `Optimizing ${lead.company}'s potential`;
-          const htmlBody = toEmailHtml(lead.aiDraft, undefined, openTrackingPixelUrl(lead.id, campaign.id), lead.email);
-          const plainText = stripHtml(lead.aiDraft);
-          await sendEmail({
-            to: lead.email,
-            from: fromEmail,
-            fromName: senderName,
-            via: "ses",
-            subject,
-            html: htmlBody,
-            text: plainText,
-          });
-
-          // Archive to InboxEmail so it shows in "Sent" folder
-          await InboxEmail.create({
-            threadKey: `outreach-${campaign.id}-${lead.id}`,
-            folder: "sent",
-            fromName: campaign.senderName || campaignCreator?.fullName || "Rhinon Tech",
-            fromEmail,
-            toEmails: [lead.email],
-            subject,
-            body: lead.aiDraft,
-            snippet: plainText.slice(0, 160),
-            ownerEmail: fromEmail,
-            isRead: true,
-            campaignId: campaign.id,
-            leadId: lead.id,
-            sentAt: new Date(),
-          });
-
-          await lead.update({ status: "Emailed" });
-          if (campaign.leadsProcessed < campaign.leadsTotal) {
-            await campaign.increment("leadsProcessed");
-          }
-
-          await CampaignActivity.create({
-            leadId: lead.id,
-            campaignId: campaign.id,
-            type: "OutreachSent",
-            content: `Automated campaign outreach email delivered.`,
-          });
-
-          logs.push(`   [Email Sent] Delivered to ${lead.email}`);
-        } catch (sendError: any) {
-          logs.push(`   [Email Error] Failed to send to ${lead.email}: ${sendError.message}`);
-        }
+        const outcome = await dispatchLeadEmail(
+          campaign,
+          lead,
+          senderName,
+          fromEmail,
+          "Automated campaign outreach email delivered."
+        );
+        if (outcome.result === "sent") logs.push(`   [Email Sent] Delivered to ${lead.email}`);
+        else if (outcome.result === "skipped") logs.push(`   [Email Skipped] ${lead.email} is in the unsubscribe list.`);
+        else logs.push(
+          `   [Email Failed] ${lead.email} — ${outcome.reason}` +
+          (outcome.permanent ? " (marked Bounced)" : " (will retry next run)")
+        );
       }
 
+      await syncCampaignCounts(campaign);
       const completed = await maybeCompleteCampaign(campaign);
       logs.push(
         completed
@@ -665,7 +718,9 @@ router.get("/:id/stats", authorize("outreach:read"), async (req: AuthRequest, re
 router.get("/:id/inbox", authorize("outreach:read"), async (req: AuthRequest, res: Response) => {
   const emails = await InboxEmail.findAll({
     where: { campaignId: req.params.id },
-    include: [{ model: Lead, as: "lead", attributes: ["id", "name", "company", "email"] }],
+    // emailOpened/openedAt/status drive the inbox's engagement tabs — without
+    // them the tab is dependent on whatever lead list the caller happens to hold.
+    include: [{ model: Lead, as: "lead", attributes: ["id", "name", "company", "email", "emailOpened", "openedAt", "status"] }],
     order: [["sentAt", "ASC"]],
   });
   res.json(emails);

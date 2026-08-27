@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { TbLoader, TbSend, TbTrash, TbUserPlus, TbEye } from "react-icons/tb";
+import { TbClock, TbLoader, TbSend, TbTrash, TbUserPlus, TbEye } from "react-icons/tb";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 import { useConfirm } from "@/components/Admin/Common/ConfirmDialog";
@@ -37,7 +37,7 @@ export function LeadsTab({
   // the status sets /campaigns/:id/send actually queries (Enrolled+New for
   // drafting, Interested for dispatch), so this count matches what a plain send
   // will really do.
-  const sendableLeads = leads.filter((l) => ["Enrolled", "New", "Interested"].includes(l.status));
+  const sendableLeads = leads.filter((l) => ["Enrolled", "New", "Enriched", "Interested"].includes(l.status));
   // Already-emailed leads are the only ones eligible for an explicit resend —
   // never Bounced/Unsubscribed/Replied, regardless of what's clicked.
   const alreadyEmailedLeads = leads.filter((l) => l.status === "Emailed");
@@ -67,27 +67,31 @@ export function LeadsTab({
       title = `Send emails to ${sendableLeads.length} lead${sendableLeads.length > 1 ? "s" : ""} now?`;
       description = "This will generate drafts and send emails immediately to all pending leads.";
       confirmLabel = "Send now";
-      if (campaign.autoSend && campaign.startDate) {
-        const dateObj = new Date(campaign.startDate);
-        const dateStr = !isNaN(dateObj.getTime())
-          ? dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-          : campaign.startDate;
-        const timeStr = campaign.runTime ? ` at ${campaign.runTime}` : "";
-        description = `This campaign is scheduled for ${dateStr}${timeStr}. Do you want to send it immediately instead?`;
-      }
     }
 
     const ok = await confirm({ title, description, confirmLabel, destructive: isResend });
     if (!ok) return;
     setSending(true);
     try {
-      const r = await apiFetch<{ sent: number }>(`/campaigns/${campaign.id}/send`, {
-        method: "POST",
-        body: isResend ? JSON.stringify({ resend: true }) : undefined,
-      });
+      const r = await apiFetch<{ sent: number; failed?: number; failures?: { email: string; reason: string }[] }>(
+        `/campaigns/${campaign.id}/send`,
+        { method: "POST", body: isResend ? JSON.stringify({ resend: true }) : undefined }
+      );
       onRefresh();
-      if (r.sent === 0) {
+
+      const failed = r.failed ?? 0;
+      if (r.sent === 0 && failed === 0) {
         toast.warning("No emails were sent — those leads were already handled by the time this ran (possibly by the campaign's scheduled auto-send).");
+      } else if (failed > 0) {
+        // Never report a partial send as a clean success — an undeliverable
+        // address here is exactly what used to go unnoticed.
+        const first = r.failures?.[0];
+        toast.warning(
+          `Sent ${r.sent}, ${failed} failed.` +
+            (first ? ` e.g. ${first.email} — ${first.reason}` : "") +
+            " See the Activity tab for each failure.",
+          { duration: 10000 }
+        );
       } else {
         toast.success(`Sent ${r.sent} email${r.sent === 1 ? "" : "s"}.`);
       }
@@ -141,11 +145,20 @@ export function LeadsTab({
         <p className="text-[11px] font-medium text-stone-500">
           {draftedCount} drafted · {leads.length} enrolled
         </p>
-        <div className="flex gap-2">
-          <Button size="sm" onClick={handleSendNow} disabled={sending}>
-            {sending ? <TbLoader className="animate-spin" size={14} /> : <TbSend size={14} />}
-            Send Now
-          </Button>
+        <div className="flex items-center gap-2">
+          {/* A scheduled campaign is driven only by Activate + the cron. Offering
+              "Send Now" alongside it is the one way to double-send a list. */}
+          {campaign.autoSend ? (
+            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-stone-500">
+              <TbClock size={13} />
+              Scheduled — sends on activation
+            </span>
+          ) : (
+            <Button size="sm" onClick={handleSendNow} disabled={sending}>
+              {sending ? <TbLoader className="animate-spin" size={14} /> : <TbSend size={14} />}
+              Send Now
+            </Button>
+          )}
         </div>
       </div>
 

@@ -6,6 +6,7 @@ import { fetchWebsiteText } from "../services/research";
 import { sequelize } from "../config/database";
 import { Op } from "sequelize";
 import { runWorkflowEngineCycle } from "../services/workflowEngine";
+import { normalizeEmail, isValidEmail } from "../utils/email";
 
 const router = Router();
 
@@ -73,7 +74,12 @@ router.get("/sources", readAccess, async (_req: AuthRequest, res: Response) => {
 // POST /leads - create lead manually
 router.post("/", writeAccess, async (req: AuthRequest, res: Response) => {
   try {
-    const lead = await Lead.create(req.body);
+    const email = normalizeEmail(req.body?.email);
+    if (!isValidEmail(email)) {
+      res.status(400).json({ message: `"${req.body?.email}" is not a valid email address.` });
+      return;
+    }
+    const lead = await Lead.create({ ...req.body, email });
     res.status(201).json(lead);
   } catch (error: any) {
     res.status(400).json({ message: error.message });
@@ -119,11 +125,12 @@ router.post("/import", writeAccess, async (req: AuthRequest, res: Response) => {
 
     incoming.forEach((raw, i) => {
       const name = str(raw.name);
-      const email = str(raw.email);
+      const email = normalizeEmail(raw.email);
       if (!email) { errors.push({ row: i + 1, reason: "Missing email" }); return; }
+      if (!isValidEmail(email)) { errors.push({ row: i + 1, reason: `Invalid email "${str(raw.email)}"` }); return; }
       if (!name) { errors.push({ row: i + 1, reason: "Missing name" }); return; }
 
-      const key = email.toLowerCase();
+      const key = email;
       if (seenEmails.has(key)) return; // duplicate within the uploaded file
       seenEmails.add(key);
 
@@ -260,7 +267,19 @@ router.put("/:id", writeAccess, async (req: AuthRequest, res: Response) => {
     return;
   }
 
-  await lead.update(req.body);
+  // Only re-validate when the caller actually sends an email; partial updates
+  // (status, notes, …) must not trip over an address they never touched.
+  const patch = { ...req.body };
+  if (patch.email !== undefined) {
+    const email = normalizeEmail(patch.email);
+    if (!isValidEmail(email)) {
+      res.status(400).json({ message: `"${patch.email}" is not a valid email address.` });
+      return;
+    }
+    patch.email = email;
+  }
+
+  await lead.update(patch);
   res.json(lead);
 });
 
