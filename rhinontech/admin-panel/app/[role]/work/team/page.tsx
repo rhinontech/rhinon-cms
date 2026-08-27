@@ -1,5 +1,5 @@
-import { TasksPage } from "@/components/Admin/Work/TasksPage";
+import { redirect } from "next/navigation";
 
-export default function TeamTasksPage() {
-  return <TasksPage scope="Team tasks" />;
+export default function TeamTasksRedirect() {
+  redirect("../tasks?scope=team");
 }

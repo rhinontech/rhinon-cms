@@ -4,7 +4,7 @@ import { AdminDashboardShell } from "@/components/Admin/Common/AdminDashboardShe
 import { CollapsibleSubNav } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { SideNavProvider } from "@/context/SideNavContext";
 import { usePathname } from "next/navigation";
-import { TbCheckbox, TbFolders, TbLayoutDashboard, TbLayoutKanban, TbUsers, TbWorld, TbCalendarStats } from "react-icons/tb";
+import { TbCheckbox, TbFolders, TbLayoutDashboard, TbLayoutKanban } from "react-icons/tb";
 
 function WorkLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -14,9 +14,7 @@ function WorkLayoutContent({ children }: { children: React.ReactNode }) {
   const items = [
     { label: "Overview", href: base, icon: <TbLayoutDashboard size={18} />, exact: true },
     { label: "Projects", href: `${base}/clients`, icon: <TbFolders size={18} /> },
-    { label: "My tasks", href: `${base}/my`, icon: <TbCheckbox size={18} /> },
-    { label: "Team tasks", href: `${base}/team`, icon: <TbUsers size={18} /> },
-    { label: "All tasks", href: `${base}/all`, icon: <TbWorld size={18} /> },
+    { label: "Tasks", href: `${base}/tasks`, icon: <TbCheckbox size={18} /> },
     { label: "Changes & Bugs", href: `${base}/changes`, icon: <TbLayoutKanban size={18} /> },
   ];
 
