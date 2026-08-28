@@ -40,11 +40,12 @@ export function TasksPage() {
 
   const prefs = useTaskPrefs(initialScope);
   const {
-    tasks, projects, people, rosterAvailable, loading,
+    tasks, projects, teams, people, rosterAvailable, loading,
     refetch, refetchQuiet, patchTask, removeTask,
   } = useTasksData({
     scope: prefs.scope,
     projectId: prefs.filters.project,
+    teamId: prefs.filters.team,
     priority: prefs.filters.priority,
     tag: prefs.filters.tag,
   });
@@ -265,6 +266,7 @@ export function TasksPage() {
           filters={prefs.filters} setFilter={prefs.setFilter}
           search={prefs.search} setSearch={prefs.setSearch}
           projects={projects}
+          teams={teams}
           allTags={allTags}
           rosterAvailable={rosterAvailable}
           onExpandAll={() => prefs.setAllSections(sections.map((s) => s.key), true)}

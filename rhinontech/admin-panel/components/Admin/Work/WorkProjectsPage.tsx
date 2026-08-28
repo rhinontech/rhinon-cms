@@ -1,13 +1,15 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { useSideNav } from "@/context/SideNavContext";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
-import { TbLayoutSidebarFilled, TbLayoutSidebarRightFilled, TbPlus, TbSearch, TbExternalLink } from "react-icons/tb";
+import { TbLayoutSidebarFilled, TbLayoutSidebarRightFilled, TbPlus, TbSearch, TbExternalLink, TbLock, TbUsers } from "react-icons/tb";
 
 type ProjectStatus = "Active" | "Paused" | "Completed" | "Pipeline";
+type ProjectVisibility = "workspace" | "team" | "private";
 type PanelMode = "view" | "create" | "edit";
 
 interface Project {
@@ -18,6 +20,10 @@ interface Project {
   notes: string | null;
   taskCount: number;
   requestCount: number;
+  visibility: ProjectVisibility;
+  teamId: string | null;
+  team?: { id: string; name: string } | null;
+  owner?: { id: string; fullName: string } | null;
 }
 
 interface EmployeeOption {
@@ -26,17 +32,31 @@ interface EmployeeOption {
   companyEmail: string;
 }
 
+interface TeamOption {
+  id: string;
+  name: string;
+}
+
+const VISIBILITY_LABELS: Record<ProjectVisibility, string> = {
+  workspace: "Everyone at the company",
+  team: "A specific team",
+  private: "Only me",
+};
+
 const emptyForm = {
   name: "",
   status: "Active" as ProjectStatus,
   pointOfContact: "",
   notes: "",
+  visibility: "workspace" as ProjectVisibility,
+  teamId: "",
 };
 
 export function WorkProjectsPage() {
   const { isExpanded: isSubNavExpanded } = useSideNav();
   const [projects, setProjects] = useState<Project[]>([]);
   const [employees, setEmployees] = useState<EmployeeOption[]>([]);
+  const [teams, setTeams] = useState<TeamOption[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ProjectStatus | "All">("All");
@@ -70,6 +90,10 @@ export function WorkProjectsPage() {
         companyEmail: employee.companyEmail,
       }))))
       .catch(() => { });
+    apiFetch<TeamOption[]>("/teams")
+      .then((data) => setTeams(data.map((team) => ({ id: team.id, name: team.name }))))
+      // No teams, or no access to them — the picker just stays empty.
+      .catch(() => setTeams([]));
   }, []);
 
   const visibleProjects = useMemo(() => {
@@ -97,6 +121,8 @@ export function WorkProjectsPage() {
       status: selectedProject.status,
       pointOfContact: selectedProject.pointOfContact ?? "",
       notes: selectedProject.notes ?? "",
+      visibility: selectedProject.visibility ?? "workspace",
+      teamId: selectedProject.teamId ?? "",
     });
     setMode("edit");
     (setIsPreviewExpanded(true), setMobileDetail(true));
@@ -105,22 +131,25 @@ export function WorkProjectsPage() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSaving(true);
+    // teamId is only meaningful for team visibility; sending a stale one would be
+    // rejected by the server's visibility check.
+    const payload = { ...form, teamId: form.visibility === "team" ? form.teamId : null };
     try {
       if (mode === "create") {
         await apiFetch("/work/projects", {
           method: "POST",
-          body: JSON.stringify(form),
+          body: JSON.stringify(payload),
         });
       } else if (mode === "edit" && selectedProject) {
         await apiFetch(`/work/projects/${selectedProject.id}`, {
           method: "PUT",
-          body: JSON.stringify(form),
+          body: JSON.stringify(payload),
         });
       }
       await fetchProjects();
       setMode("view");
-    } catch {
-      // silently fail
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save project");
     } finally {
       setSaving(false);
     }
@@ -195,7 +224,10 @@ export function WorkProjectsPage() {
                   selectedProject?.id === project.id && "bg-blue-50 hover:bg-blue-50"
                 )}
               >
-                <span className="font-medium text-gray-900">{project.name}</span>
+                <span className="flex min-w-0 items-center gap-2 font-medium text-gray-900">
+                  <span className="truncate">{project.name}</span>
+                  <VisibilityBadge visibility={project.visibility} teamName={project.team?.name} />
+                </span>
                 <span className="text-gray-600">{project.status}</span>
                 <span className="truncate text-gray-600">{project.pointOfContact || "—"}</span>
                 <span className="text-gray-600">{project.taskCount}</span>
@@ -241,16 +273,34 @@ export function WorkProjectsPage() {
                       <Detail label="Point of contact" value={selectedProject.pointOfContact || "—"} />
                       <Detail label="Total tasks" value={String(selectedProject.taskCount)} />
                       <Detail label="Changes / bugs" value={String(selectedProject.requestCount)} />
+                      <Detail
+                        label="Visible to"
+                        value={
+                          selectedProject.visibility === "team"
+                            ? `Team · ${selectedProject.team?.name ?? "Unknown team"}`
+                            : VISIBILITY_LABELS[selectedProject.visibility ?? "workspace"]
+                        }
+                      />
+                      <Detail label="Owner" value={selectedProject.owner?.fullName || "—"} />
                     </div>
-                    <a
-                      href={`/p/${selectedProject.id}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex w-full items-center justify-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100"
-                    >
-                      <TbExternalLink size={16} />
-                      Open Public Portal
-                    </a>
+                    {selectedProject.visibility === "workspace" ? (
+                      <a
+                        href={`/p/${selectedProject.id}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex w-full items-center justify-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100"
+                      >
+                        <TbExternalLink size={16} />
+                        Open Public Portal
+                      </a>
+                    ) : (
+                      // The portal is unauthenticated, so it only ever serves
+                      // workspace projects — offering the link here would 404.
+                      <p className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 bg-stone-50 px-4 py-2 text-xs text-gray-500">
+                        <TbLock size={14} />
+                        Restricted projects have no public client portal.
+                      </p>
+                    )}
                   </div>
                 ) : (
                   <div className="flex h-full items-center justify-center text-sm text-gray-400">Select a project.</div>
@@ -288,6 +338,48 @@ export function WorkProjectsPage() {
                   </select>
                 </label>
                 <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                  Who can see this
+                  <select
+                    value={form.visibility}
+                    onChange={(event) => setForm((current) => ({ ...current, visibility: event.target.value as ProjectVisibility }))}
+                    className="rounded-lg border border-gray-200 bg-white px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="workspace">Everyone at the company</option>
+                    <option value="team">A specific team</option>
+                    <option value="private">Only me</option>
+                  </select>
+                </label>
+                {form.visibility === "team" && (
+                  <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                    Team
+                    <select
+                      value={form.teamId}
+                      onChange={(event) => setForm((current) => ({ ...current, teamId: event.target.value }))}
+                      required
+                      className="rounded-lg border border-gray-200 bg-white px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select a team…</option>
+                      {teams.map((team) => (
+                        <option key={team.id} value={team.id}>{team.name}</option>
+                      ))}
+                    </select>
+                    {!teams.length && (
+                      <span className="text-xs font-normal text-gray-500">
+                        You&apos;re not in a team yet — create one under Work → Teams first.
+                      </span>
+                    )}
+                  </label>
+                )}
+                {form.visibility !== "workspace" && (
+                  <p className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
+                    <TbLock size={14} className="mt-0.5 shrink-0" />
+                    <span>
+                      Its tasks and change requests are hidden too, and it loses its public client portal.
+                      The superadmin (CEO) panel can still see it.
+                    </span>
+                  </p>
+                )}
+                <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
                   Notes
                   <textarea
                     value={form.notes}
@@ -309,6 +401,24 @@ export function WorkProjectsPage() {
         )}
       </aside>
     </div>
+  );
+}
+
+/** Small marker so restricted work is obvious at a glance — people leak things they can't tell apart. */
+function VisibilityBadge({ visibility, teamName }: { visibility: ProjectVisibility; teamName?: string }) {
+  if (!visibility || visibility === "workspace") return null;
+  const isTeam = visibility === "team";
+  return (
+    <span
+      title={isTeam ? `Visible to the ${teamName ?? "team"} team only` : "Visible only to you"}
+      className={cn(
+        "inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium",
+        isTeam ? "bg-indigo-50 text-indigo-700" : "bg-amber-50 text-amber-700"
+      )}
+    >
+      {isTeam ? <TbUsers size={11} /> : <TbLock size={11} />}
+      {isTeam ? (teamName ?? "Team") : "Private"}
+    </span>
   );
 }
 

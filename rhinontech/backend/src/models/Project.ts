@@ -3,6 +3,13 @@ import { sequelize } from "../config/database";
 
 export type ProjectStatus = "Active" | "Paused" | "Completed" | "Pipeline";
 
+/**
+ * Who can see this project — and, by inheritance, every task and client request
+ * hanging off it. "workspace" is the historical behaviour (everyone in the
+ * company) and stays the default so existing projects are unaffected.
+ */
+export type ProjectVisibility = "workspace" | "team" | "private";
+
 interface ProjectAttributes {
   id: string;
   name: string;
@@ -10,6 +17,12 @@ interface ProjectAttributes {
   pointOfContact?: string;
   notes?: string;
   createdById?: string;
+  // The person accountable for the project. Backfilled from createdById; the
+  // owner is the one identity that can always reach a "private" project.
+  ownerId?: string | null;
+  visibility: ProjectVisibility;
+  // Only meaningful when visibility === "team".
+  teamId?: string | null;
   // Where this work came from. Set when a won deal is handed to delivery, so
   // revenue can be traced back to the deal that produced it.
   dealId?: string | null;
@@ -19,7 +32,7 @@ interface ProjectAttributes {
 }
 
 interface ProjectCreationAttributes
-  extends Optional<ProjectAttributes, "id" | "status" | "pointOfContact" | "notes" | "createdById" | "dealId" | "accountId"> {}
+  extends Optional<ProjectAttributes, "id" | "status" | "pointOfContact" | "notes" | "createdById" | "ownerId" | "visibility" | "teamId" | "dealId" | "accountId"> {}
 
 export class Project
   extends Model<ProjectAttributes, ProjectCreationAttributes>
@@ -31,6 +44,9 @@ export class Project
   declare pointOfContact?: string;
   declare notes?: string;
   declare createdById?: string;
+  declare ownerId: string | null;
+  declare visibility: ProjectVisibility;
+  declare teamId: string | null;
   declare dealId: string | null;
   declare accountId: string | null;
   declare createdAt: Date;
@@ -49,6 +65,13 @@ Project.init(
     pointOfContact: { type: DataTypes.STRING, allowNull: true },
     notes: { type: DataTypes.TEXT, allowNull: true },
     createdById: { type: DataTypes.UUID, allowNull: true },
+    ownerId: { type: DataTypes.UUID, allowNull: true },
+    visibility: {
+      type: DataTypes.ENUM("workspace", "team", "private"),
+      allowNull: false,
+      defaultValue: "workspace",
+    },
+    teamId: { type: DataTypes.UUID, allowNull: true },
     dealId: { type: DataTypes.UUID, allowNull: true },
     accountId: { type: DataTypes.UUID, allowNull: true },
   },

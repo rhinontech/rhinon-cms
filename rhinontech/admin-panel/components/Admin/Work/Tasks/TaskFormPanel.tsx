@@ -96,7 +96,7 @@ export function TaskFormPanel({
           </SelectField>
 
           <SelectField label="Project" value={form.projectId} onChange={(v) => set("projectId", v)}>
-            <option value="">Internal</option>
+            <option value="">No project</option>
             {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </SelectField>
 

@@ -338,6 +338,9 @@ router.post("/:id/convert-to-project", writeAccess, async (req: AuthRequest, res
       dealId: deal.id,
       accountId: deal.accountId,
       createdById: req.user!.userId,
+      ownerId: req.user!.userId,
+      // Delivery work is company-wide by default; re-scope it from the project page.
+      visibility: "workspace",
     });
 
     await Activity.create({

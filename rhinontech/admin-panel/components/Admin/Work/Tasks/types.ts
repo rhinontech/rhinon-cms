@@ -46,7 +46,7 @@ export interface ApiTask {
   blockedById: string | null;
   assignee: { id: string; fullName: string; companyEmail: string } | null;
   creator: { id: string; fullName: string } | null;
-  project: { id: string; name: string; status: string } | null;
+  project: { id: string; name: string; status: string; visibility?: "workspace" | "team" | "private"; teamId?: string | null } | null;
   blocker: { id: string; title: string; status: TaskStatus } | null;
   subtasks: Subtask[];
   tags: TaskTagItem[];
@@ -56,6 +56,11 @@ export interface ProjectOption {
   id: string;
   name: string;
   status?: string;
+}
+
+export interface TeamOption {
+  id: string;
+  name: string;
 }
 
 export interface PersonOption {

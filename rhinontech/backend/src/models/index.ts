@@ -48,6 +48,8 @@ import { PipelineStage } from "./PipelineStage";
 import { Deal } from "./Deal";
 import { Activity } from "./Activity";
 import { SavedView } from "./SavedView";
+import { Team } from "./Team";
+import { TeamMember } from "./TeamMember";
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/database";
 
@@ -115,6 +117,21 @@ ClientRequest.belongsTo(Project, { foreignKey: "projectId", as: "project" });
 Project.hasMany(ClientRequest, { foreignKey: "projectId", as: "clientRequests" });
 ClientRequest.belongsTo(User, { foreignKey: "createdById", as: "creator" });
 User.hasMany(ClientRequest, { foreignKey: "createdById", as: "createdClientRequests" });
+
+// Teams — the membership unit behind private/team-scoped projects
+Team.belongsTo(User, { foreignKey: "createdById", as: "creator" });
+User.hasMany(Team, { foreignKey: "createdById", as: "createdTeams" });
+Team.hasMany(TeamMember, { foreignKey: "teamId", as: "members", onDelete: "CASCADE" });
+TeamMember.belongsTo(Team, { foreignKey: "teamId", as: "team" });
+TeamMember.belongsTo(User, { foreignKey: "userId", as: "user" });
+User.hasMany(TeamMember, { foreignKey: "userId", as: "teamMemberships" });
+Team.belongsToMany(User, { through: TeamMember, foreignKey: "teamId", otherKey: "userId", as: "users" });
+User.belongsToMany(Team, { through: TeamMember, foreignKey: "userId", otherKey: "teamId", as: "teams" });
+
+Project.belongsTo(Team, { foreignKey: "teamId", as: "team" });
+Team.hasMany(Project, { foreignKey: "teamId", as: "projects" });
+Project.belongsTo(User, { foreignKey: "ownerId", as: "owner" });
+User.hasMany(Project, { foreignKey: "ownerId", as: "ownedProjects" });
 
 // Attendance
 Attendance.belongsTo(User, { foreignKey: "userId", as: "user" });
@@ -315,6 +332,8 @@ export {
   Deal,
   Activity,
   SavedView,
+  Team,
+  TeamMember,
 };
 
 export async function syncDatabase(force = false) {

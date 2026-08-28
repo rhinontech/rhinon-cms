@@ -71,7 +71,7 @@ export function useTaskSections({
         sections.push(make(key, "project", list[0]?.project?.name ?? "Unknown project"));
       }
 
-      sections.push(make(NO_PROJECT_KEY, "no-project", "Internal / No project"));
+      sections.push(make(NO_PROJECT_KEY, "no-project", "No project"));
       return sections;
     }
 

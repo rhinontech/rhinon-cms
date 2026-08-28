@@ -6,6 +6,7 @@ import type { GroupMode, TaskScope, ViewMode } from "./types";
 
 export interface TaskFilters {
   project: string;
+  team: string;
   status: string;
   priority: string;
   tag: string;
@@ -13,7 +14,7 @@ export interface TaskFilters {
 }
 
 const DEFAULT_FILTERS: TaskFilters = {
-  project: "all", status: "all", priority: "all", tag: "",
+  project: "all", team: "all", status: "all", priority: "all", tag: "",
   // 74 of 113 live tasks are Done — showing them by default buries everything else.
   hideDone: true,
 };

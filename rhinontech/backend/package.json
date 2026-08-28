@@ -12,6 +12,7 @@
     "db:seed:comms": "ts-node src/config/seed_comms.ts",
     "db:seed:letters": "ts-node src/config/seedLetterTemplates.ts",
     "db:backfill:letters": "ts-node src/config/backfillLetterContentBlocks.ts",
+    "db:backfill:project-owners": "ts-node src/config/backfillProjectOwners.ts",
     "db:seed:leadership-template": "ts-node src/config/seedLeadershipTemplate.ts",
     "grant:crm": "ts-node src/config/grantCrm.ts"
   },

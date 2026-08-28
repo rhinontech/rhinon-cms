@@ -3,6 +3,7 @@ import { Op } from "sequelize";
 import { User, Role, Task, Attendance, Deal, PipelineStage } from "../models";
 import { fn, col } from "sequelize";
 import { authenticate, AuthRequest } from "../middleware/authenticate";
+import { mergeWhere, projectScopedWhere } from "../services/workAccess";
 
 const router = Router();
 router.use(authenticate);
@@ -64,12 +65,16 @@ router.get("/stats", async (req: AuthRequest, res: Response) => {
       totalMinutesThisMonth += durationMinutes(r.clockIn, r.clockOut, r.breaks);
     }
 
-    // Pending tasks count + list
-    const pendingTasks = await Task.count({
-      where: { assigneeId: req.user!.userId, status: "Pending" },
-    });
+    // Pending tasks count + list. Assignment alone is not access: you can hold a
+    // task inside a private project you were later removed from, and the title
+    // would otherwise surface here.
+    const taskWhere = mergeWhere(
+      { assigneeId: req.user!.userId, status: "Pending" },
+      await projectScopedWhere(req)
+    );
+    const pendingTasks = await Task.count({ where: taskWhere });
     const pendingTasksList = await Task.findAll({
-      where: { assigneeId: req.user!.userId, status: "Pending" },
+      where: taskWhere,
       order: [["dueDate", "ASC"]],
       limit: 5,
       attributes: ["id", "title", "team", "dueDate", "status"],

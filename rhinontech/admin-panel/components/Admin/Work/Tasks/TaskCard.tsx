@@ -40,7 +40,14 @@ function CardBody({ task, groupMode }: { task: ApiTask; groupMode: GroupMode }) 
         {task.dueDate && <span className={cn(isOverdue(task.dueDate, task.status) && "font-semibold text-red-500")}>{ordinalDate(task.dueDate)}</span>}
         <DueBadge dueDate={task.dueDate} status={task.status} />
         {/* Show whichever dimension is NOT the section it already sits in. */}
-        {groupMode === "person" && task.project && <span className="truncate">· {task.project.name}</span>}
+        {groupMode === "person" && task.project && (
+          <span className="flex min-w-0 items-center gap-1">
+            <span className="truncate">· {task.project.name}</span>
+            {task.project.visibility && task.project.visibility !== "workspace" && (
+              <TbLock size={11} className="shrink-0 text-amber-600" title="Restricted project" />
+            )}
+          </span>
+        )}
         {groupMode === "project" && task.assignee && (
           <span className="inline-flex items-center gap-1">
             <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-stone-200 text-[7px] font-bold text-stone-600">
@@ -139,7 +146,7 @@ export function TaskCard({
               onChange={(e) => onPatch(task.id, { projectId: e.target.value || null })}
               className="min-w-0 flex-1 rounded border border-stone-200 bg-white px-1 py-0.5 text-[10px]"
             >
-              <option value="">Internal</option>
+              <option value="">No project</option>
               {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           )}

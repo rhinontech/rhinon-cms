@@ -1,13 +1,24 @@
 import { Router, Response } from "express";
 import { Op, fn, col } from "sequelize";
-import { authenticate, AuthRequest } from "../middleware/authenticate";
-import { ClientRequest, Project, Task, User } from "../models";
+import { authenticate, authorizeAny, AuthRequest } from "../middleware/authenticate";
+import { ClientRequest, Project, Task, Team, User } from "../models";
+import {
+  canAccessProject,
+  canUseVisibility,
+  mergeWhere,
+  projectScopedWhere,
+  projectVisibilityWhere,
+} from "../services/workAccess";
 
 const router = Router();
-router.use(authenticate);
+// Projects are created from won deals, so CRM reads them too — hence authorizeAny
+// rather than a straight work:read gate.
+router.use(authenticate, authorizeAny("work:read", "crm:read"));
 
 const projectIncludes = [
   { model: User, as: "creator", attributes: ["id", "fullName"] },
+  { model: User, as: "owner", attributes: ["id", "fullName"] },
+  { model: Team, as: "team", attributes: ["id", "name"] },
 ];
 
 const requestIncludes = [
@@ -15,14 +26,24 @@ const requestIncludes = [
   { model: User, as: "creator", attributes: ["id", "fullName"] },
 ];
 
-router.get("/overview", async (_req: AuthRequest, res: Response) => {
+router.get("/overview", async (req: AuthRequest, res: Response) => {
   try {
+    // Counts leak the *existence* of private work if they're taken raw, so they
+    // run through the same visibility filter as the lists below.
+    const [projectWhere, scopedWhere] = await Promise.all([
+      projectVisibilityWhere(req),
+      projectScopedWhere(req),
+    ]);
+
     const [totalTasks, totalProjects, openRequests, activeProjects, recentRequests] = await Promise.all([
-      Task.count(),
-      Project.count(),
-      ClientRequest.count({ where: { status: { [Op.in]: ["Open", "In review", "In progress"] } } }),
-      Project.count({ where: { status: "Active" } }),
+      Task.count({ where: scopedWhere }),
+      Project.count({ where: projectWhere }),
+      ClientRequest.count({
+        where: mergeWhere({ status: { [Op.in]: ["Open", "In review", "In progress"] } }, scopedWhere),
+      }),
+      Project.count({ where: mergeWhere({ status: "Active" }, projectWhere) }),
       ClientRequest.findAll({
+        where: scopedWhere,
         include: requestIncludes,
         order: [["createdAt", "DESC"]],
         limit: 5,
@@ -41,9 +62,10 @@ router.get("/overview", async (_req: AuthRequest, res: Response) => {
   }
 });
 
-router.get("/projects", async (_req: AuthRequest, res: Response) => {
+router.get("/projects", async (req: AuthRequest, res: Response) => {
   try {
     const projects = await Project.findAll({
+      where: await projectVisibilityWhere(req),
       include: projectIncludes,
       order: [["updatedAt", "DESC"]],
     });
@@ -81,10 +103,17 @@ router.get("/projects", async (_req: AuthRequest, res: Response) => {
 
 router.post("/projects", async (req: AuthRequest, res: Response) => {
   try {
-    const { name, status, pointOfContact, notes } = req.body;
+    const { name, status, pointOfContact, notes, visibility, teamId } = req.body;
 
     if (!name) {
       res.status(400).json({ message: "Name is required" });
+      return;
+    }
+
+    const nextVisibility = visibility || "workspace";
+    const check = await canUseVisibility(nextVisibility, teamId, req);
+    if (!check.ok) {
+      res.status(403).json({ message: check.message });
       return;
     }
 
@@ -94,6 +123,9 @@ router.post("/projects", async (req: AuthRequest, res: Response) => {
       pointOfContact: pointOfContact || undefined,
       notes: notes || undefined,
       createdById: req.user!.userId,
+      ownerId: req.user!.userId,
+      visibility: nextVisibility,
+      teamId: nextVisibility === "team" ? teamId : null,
     });
 
     const full = await Project.findByPk(project.id, { include: projectIncludes });
@@ -106,17 +138,47 @@ router.post("/projects", async (req: AuthRequest, res: Response) => {
 router.put("/projects/:id", async (req: AuthRequest, res: Response) => {
   try {
     const project = await Project.findByPk(req.params.id);
-    if (!project) {
+    // 404 rather than 403 for a project you cannot see — a 403 would confirm it exists.
+    if (!project || !(await canAccessProject(project.id, req))) {
       res.status(404).json({ message: "Project not found" });
       return;
     }
 
-    const { name, status, pointOfContact, notes } = req.body;
+    const { name, status, pointOfContact, notes, visibility, teamId } = req.body;
+
+    // Only the owner (or superadmin) may re-scope a project; members can edit its
+    // contents but must not be able to widen or narrow who else can see it.
+    const isOwner = (project.ownerId ?? project.createdById) === req.user!.userId;
+    const isSuperadmin = req.user?.roleSlug === "superadmin";
+    const reScoping =
+      (visibility !== undefined && visibility !== project.visibility) ||
+      (teamId !== undefined && teamId !== project.teamId);
+
+    if (reScoping) {
+      if (!isOwner && !isSuperadmin) {
+        res.status(403).json({ message: "Only the project owner can change who can see this project" });
+        return;
+      }
+      const nextVisibility = visibility ?? project.visibility;
+      const nextTeamId = teamId !== undefined ? teamId : project.teamId;
+      const check = await canUseVisibility(nextVisibility, nextTeamId, req);
+      if (!check.ok) {
+        res.status(403).json({ message: check.message });
+        return;
+      }
+    }
+
     await project.update({
       ...(name !== undefined && { name: String(name).trim() }),
       ...(status !== undefined && { status }),
       ...(pointOfContact !== undefined && { pointOfContact }),
       ...(notes !== undefined && { notes }),
+      ...(reScoping && {
+        visibility: visibility ?? project.visibility,
+        teamId: (visibility ?? project.visibility) === "team"
+          ? (teamId !== undefined ? teamId : project.teamId)
+          : null,
+      }),
     });
 
     const full = await Project.findByPk(project.id, { include: projectIncludes });
@@ -135,7 +197,7 @@ router.get("/requests", async (req: AuthRequest, res: Response) => {
     }
 
     const requests = await ClientRequest.findAll({
-      where,
+      where: mergeWhere(where, await projectScopedWhere(req)),
       include: requestIncludes,
       order: [["createdAt", "DESC"]],
     });
@@ -152,6 +214,11 @@ router.post("/requests", async (req: AuthRequest, res: Response) => {
 
     if (!title || !description) {
       res.status(400).json({ message: "Title and description are required" });
+      return;
+    }
+
+    if (projectId && !(await canAccessProject(projectId, req))) {
+      res.status(404).json({ message: "Project not found" });
       return;
     }
 
@@ -176,12 +243,19 @@ router.post("/requests", async (req: AuthRequest, res: Response) => {
 router.put("/requests/:id", async (req: AuthRequest, res: Response) => {
   try {
     const request = await ClientRequest.findByPk(req.params.id);
-    if (!request) {
+    if (!request || !(await canAccessProject(request.projectId, req))) {
       res.status(404).json({ message: "Client request not found" });
       return;
     }
 
     const { title, description, type, status, priority, projectId, reportedBy } = req.body;
+
+    // Moving a request into a project you cannot see would smuggle it out of view.
+    if (projectId !== undefined && projectId && !(await canAccessProject(projectId, req))) {
+      res.status(404).json({ message: "Project not found" });
+      return;
+    }
+
     await request.update({
       ...(title !== undefined && { title: String(title).trim() }),
       ...(description !== undefined && { description: String(description).trim() }),
@@ -209,7 +283,7 @@ router.post("/requests/convert-to-tasks", async (req: AuthRequest, res: Response
     }
 
     const requests = await ClientRequest.findAll({
-      where: { id: requestIds },
+      where: mergeWhere({ id: requestIds }, await projectScopedWhere(req)),
     });
 
     if (requests.length === 0) {

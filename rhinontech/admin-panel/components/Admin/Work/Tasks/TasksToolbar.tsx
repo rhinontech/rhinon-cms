@@ -6,13 +6,15 @@ import {
 } from "react-icons/tb";
 import { cn } from "@/lib/utils";
 import { PRIORITIES, STATUSES } from "./constants";
-import type { GroupMode, ProjectOption, TaskScope, ViewMode } from "./types";
+import type { GroupMode, ProjectOption, TaskScope, TeamOption, ViewMode } from "./types";
 import type { TaskFilters } from "./useTaskPrefs";
 
 const SCOPES: { key: TaskScope; label: string }[] = [
   { key: "all", label: "Everyone" },
   { key: "my", label: "My tasks" },
-  { key: "team", label: "My team" },
+  // Department-based, and unrelated to Work → Teams. Named accordingly so the
+  // two concepts stop being mistaken for each other.
+  { key: "team", label: "My department" },
 ];
 
 function Segmented<T extends string>({
@@ -42,7 +44,7 @@ function Segmented<T extends string>({
 }
 
 export function TasksToolbar({
-  scope, setScope, view, setView, group, setGroup, filters, setFilter,
+  scope, setScope, view, setView, group, setGroup, filters, setFilter, teams,
   search, setSearch, projects, allTags, rosterAvailable,
   onExpandAll, onCollapseAll, onAdd,
 }: {
@@ -57,6 +59,7 @@ export function TasksToolbar({
   search: string;
   setSearch: (s: string) => void;
   projects: ProjectOption[];
+  teams: TeamOption[];
   allTags: string[];
   rosterAvailable: boolean;
   onExpandAll: () => void;
@@ -128,6 +131,13 @@ export function TasksToolbar({
           <select value={filters.project} onChange={(e) => setFilter("project", e.target.value)} className={selectClass}>
             <option value="all">All projects</option>
             {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+        )}
+
+        {teams.length > 0 && (
+          <select value={filters.team} onChange={(e) => setFilter("team", e.target.value)} className={selectClass}>
+            <option value="all">All teams</option>
+            {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
         )}
 

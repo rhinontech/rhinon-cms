@@ -154,7 +154,7 @@ export function TaskListRows({
                   onChange={(v) => onPatch(task.id, { projectId: v || null })}
                   className="border-stone-200 bg-white text-stone-600"
                 >
-                  <option value="">Internal</option>
+                  <option value="">No project</option>
                   {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </InlineSelect>
               ) : (

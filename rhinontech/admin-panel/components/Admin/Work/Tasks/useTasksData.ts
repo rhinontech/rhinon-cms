@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
-import type { ApiTask, PersonOption, ProjectOption, TaskPatch, TaskScope } from "./types";
+import type { ApiTask, PersonOption, ProjectOption, TaskPatch, TaskScope, TeamOption } from "./types";
 
 interface ServerFilters {
   scope: TaskScope;
   projectId: string;
+  teamId: string;
   priority: string;
   tag: string;
 }
@@ -20,6 +21,7 @@ interface ServerFilters {
 export function useTasksData(filters: ServerFilters) {
   const [tasks, setTasks] = useState<ApiTask[]>([]);
   const [projects, setProjects] = useState<ProjectOption[]>([]);
+  const [teams, setTeams] = useState<TeamOption[]>([]);
   const [people, setPeople] = useState<PersonOption[]>([]);
   /** False when /people 403s — the board then derives sections from tasks alone. */
   const [rosterAvailable, setRosterAvailable] = useState(true);
@@ -33,10 +35,11 @@ export function useTasksData(filters: ServerFilters) {
   const buildQuery = useCallback(() => {
     const q = new URLSearchParams({ scope: filters.scope });
     if (filters.projectId !== "all") q.set("projectId", filters.projectId);
+    if (filters.teamId !== "all") q.set("teamId", filters.teamId);
     if (filters.priority !== "all") q.set("priority", filters.priority);
     if (filters.tag) q.set("tag", filters.tag);
     return q.toString();
-  }, [filters.scope, filters.projectId, filters.priority, filters.tag]);
+  }, [filters.scope, filters.projectId, filters.teamId, filters.priority, filters.tag]);
 
   const load = useCallback(async (quiet: boolean) => {
     if (!quiet) setLoading(true);
@@ -65,6 +68,12 @@ export function useTasksData(filters: ServerFilters) {
     apiFetch<ProjectOption[]>("/work/projects")
       .then(setProjects)
       .catch(() => setProjects([]));
+
+    // Only the teams you belong to come back, so an empty list just means the
+    // filter has nothing to offer — not an error.
+    apiFetch<TeamOption[]>("/teams")
+      .then((d) => setTeams(d.map((t) => ({ id: t.id, name: t.name }))))
+      .catch(() => setTeams([]));
 
     apiFetch<any[]>("/people")
       .then((d) => {
@@ -128,5 +137,5 @@ export function useTasksData(filters: ServerFilters) {
     }
   }, []);
 
-  return { tasks, projects, people, rosterAvailable, loading, refetch, refetchQuiet, patchTask, removeTask, setTasks };
+  return { tasks, projects, teams, people, rosterAvailable, loading, refetch, refetchQuiet, patchTask, removeTask, setTasks };
 }

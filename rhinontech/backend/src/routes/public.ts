@@ -87,10 +87,13 @@ router.get("/projects/:projectId/requests", async (req: Request, res: Response) 
     const { projectId } = req.params;
 
     const project = await Project.findByPk(projectId, {
-      attributes: ["id", "name", "status"],
+      attributes: ["id", "name", "status", "visibility"],
     });
 
-    if (!project) {
+    // The client portal is unauthenticated — anyone holding the id can read it.
+    // Team-scoped and private projects are internal by definition and must never
+    // be served here, or the whole visibility model is bypassed by a URL.
+    if (!project || project.visibility !== "workspace") {
       res.status(404).json({ message: "Project not found" });
       return;
     }
@@ -112,8 +115,9 @@ router.get("/projects/:projectId/requests", async (req: Request, res: Response) 
       ],
     });
 
+    const { visibility, ...publicProject } = project.toJSON() as any;
     res.json({
-      project,
+      project: publicProject,
       requests,
     });
   } catch (err) {

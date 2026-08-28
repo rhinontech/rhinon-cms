@@ -1,7 +1,14 @@
 import { Router, Response } from "express";
 import { Op } from "sequelize";
 import { ClientRequest, Project, Subtask, Task, TaskComment, TaskTag, User } from "../models";
-import { authenticate, hasPermission, AuthRequest } from "../middleware/authenticate";
+import { authenticate, authorizeAny, hasPermission, AuthRequest } from "../middleware/authenticate";
+import {
+  canAccessProject,
+  canAccessTaskId,
+  getHiddenProjectIds,
+  mergeWhere,
+  projectScopedWhere,
+} from "../services/workAccess";
 
 const taskStatusToRequestStatus: Record<string, string> = {
   Pending: "In review",
@@ -10,25 +17,72 @@ const taskStatusToRequestStatus: Record<string, string> = {
 };
 
 const router = Router();
-router.use(authenticate);
+// Tasks hang off CRM records as well as projects, so either module's read grant opens them.
+router.use(authenticate, authorizeAny("work:read", "crm:read"));
 
 const taskIncludes: any[] = [
   { model: User, as: "assignee", attributes: ["id", "fullName", "companyEmail"] },
   { model: User, as: "creator", attributes: ["id", "fullName"] },
-  { model: Project, as: "project", attributes: ["id", "name", "status"] },
-  { model: Task, as: "blocker", attributes: ["id", "title", "status"] },
+  { model: Project, as: "project", attributes: ["id", "name", "status", "visibility", "teamId"] },
+  // projectId is selected purely so redactBlockers can tell whether the blocking
+  // task sits in a project this user cannot see.
+  { model: Task, as: "blocker", attributes: ["id", "title", "status", "projectId"] },
   { model: Subtask, as: "subtasks", attributes: ["id", "title", "done", "order"], separate: true, order: [["order", "ASC"]] },
   { model: TaskTag, as: "tags", attributes: ["id", "label", "color"] },
 ];
 
-function canEdit(task: Task, req: AuthRequest): boolean {
+/**
+ * A visible task can point at a blocker inside a private project, and the
+ * `blocker` include would hand over its title. Replace it with a placeholder so
+ * the dependency still reads as "blocked" without disclosing what by.
+ */
+function redactBlockers(tasks: any[], hidden: string[]): any[] {
+  if (hidden.length === 0) return tasks;
+  const hiddenSet = new Set(hidden);
+  return tasks.map((task) => {
+    const json = typeof task.toJSON === "function" ? task.toJSON() : task;
+    if (json.blocker?.projectId && hiddenSet.has(json.blocker.projectId)) {
+      json.blocker = { id: json.blocker.id, title: "Private task", status: json.blocker.status, restricted: true };
+    }
+    return json;
+  });
+}
+
+async function loadVisibleTask(id: string, req: AuthRequest): Promise<Task | null> {
+  const task = await Task.findByPk(id);
+  if (!task) return null;
+  return (await canAccessProject(task.projectId, req)) ? task : null;
+}
+
+async function canEdit(task: Task, req: AuthRequest): Promise<boolean> {
+  // work:write is a management grant, not a bypass — it never reaches into a
+  // project the holder cannot see.
+  if (!(await canAccessProject(task.projectId, req))) return false;
   return task.assigneeId === req.user!.userId || task.createdById === req.user!.userId || hasPermission(req, "work:write");
 }
+
+/**
+ * Every /tasks/:id/* route used to trust the id in the URL — the subtask,
+ * comment and tag sub-routes never checked anything at all. Once a task can be
+ * private that is an open door straight past the list filter, so the whole
+ * `:id` family is gated here in one place.
+ */
+router.param("id", async (req: AuthRequest, res: Response, next, id: string) => {
+  try {
+    if (!(await canAccessTaskId(id, req))) {
+      res.status(404).json({ message: "Task not found" });
+      return;
+    }
+    next();
+  } catch {
+    res.status(500).json({ message: "Failed to verify task access" });
+  }
+});
 
 // GET /tasks
 router.get("/", async (req: AuthRequest, res: Response) => {
   try {
-    const { scope = "my", status, projectId, priority, tag, leadId, dealId, accountId } = req.query;
+    const { scope = "my", status, projectId, priority, tag, teamId, leadId, dealId, accountId } = req.query;
     const where: Record<string, unknown> = {};
     const include = [...taskIncludes];
 
@@ -67,7 +121,29 @@ router.get("/", async (req: AuthRequest, res: Response) => {
     if (projectId && typeof projectId === "string") where.projectId = projectId;
     if (priority && typeof priority === "string") where.priority = priority;
 
-    let tasks = await Task.findAll({ where, include, order: [["createdAt", "DESC"]] });
+    // ?teamId= narrows to work filed under one team's projects. An empty id list
+    // is left in place deliberately: a team with no projects must return nothing,
+    // not fall back to everything.
+    if (teamId && typeof teamId === "string") {
+      const teamProjects = await Project.findAll({ where: { teamId }, attributes: ["id"], raw: true });
+      const ids = (teamProjects as any[]).map((p) => p.id);
+      where.projectId = typeof projectId === "string" && projectId
+        ? ids.filter((id) => id === projectId)
+        : ids;
+    }
+
+    // Project visibility is applied last and on every scope — including the CRM
+    // one, which otherwise returns a private project's tasks through a deal.
+    const hidden = await getHiddenProjectIds(req);
+    const scoped = await projectScopedWhere(req);
+
+    let rows = await Task.findAll({
+      where: mergeWhere(where, scoped),
+      include,
+      order: [["createdAt", "DESC"]],
+    });
+
+    let tasks = redactBlockers(rows, hidden);
 
     if (tag && typeof tag === "string") {
       tasks = tasks.filter((t: any) => t.tags?.some((tg: any) => tg.label === tag));
@@ -84,6 +160,13 @@ router.post("/", async (req: AuthRequest, res: Response) => {
   try {
     const { title, description, assigneeId, projectId, team, dueDate, status, priority, estimatedHours, recurrence, blockedById, leadId, dealId, accountId } = req.body;
     if (!title?.trim()) { res.status(400).json({ message: "title is required" }); return; }
+
+    if (projectId && !(await canAccessProject(projectId, req))) {
+      res.status(404).json({ message: "Project not found" }); return;
+    }
+    if (blockedById && !(await canAccessTaskId(blockedById, req))) {
+      res.status(404).json({ message: "Blocking task not found" }); return;
+    }
 
     const task = await Task.create({
       title: title.trim(),
@@ -113,14 +196,23 @@ router.post("/", async (req: AuthRequest, res: Response) => {
 // PUT /tasks/:id
 router.put("/:id", async (req: AuthRequest, res: Response) => {
   try {
-    const task = await Task.findByPk(req.params.id);
+    const task = await loadVisibleTask(req.params.id, req);
     if (!task) { res.status(404).json({ message: "Task not found" }); return; }
-    if (!canEdit(task, req)) {
+    if (!(await canEdit(task, req))) {
       res.status(403).json({ message: "You can only edit tasks assigned to or created by you" }); return;
     }
 
     const { title, description, assigneeId, projectId, team, dueDate, status, priority, estimatedHours, recurrence, blockedById, leadId, dealId, accountId } = req.body;
     const prevStatus = task.status;
+
+    // Re-filing a task into a project you cannot see would hide it from yourself
+    // and, worse, expose it to that project's members.
+    if (projectId !== undefined && projectId && !(await canAccessProject(projectId, req))) {
+      res.status(404).json({ message: "Project not found" }); return;
+    }
+    if (blockedById !== undefined && blockedById && !(await canAccessTaskId(blockedById, req))) {
+      res.status(404).json({ message: "Blocking task not found" }); return;
+    }
 
     await task.update({
       ...(title !== undefined && { title }),
@@ -179,9 +271,9 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
 // DELETE /tasks/:id
 router.delete("/:id", async (req: AuthRequest, res: Response) => {
   try {
-    const task = await Task.findByPk(req.params.id);
+    const task = await loadVisibleTask(req.params.id, req);
     if (!task) { res.status(404).json({ message: "Task not found" }); return; }
-    if (!canEdit(task, req)) {
+    if (!(await canEdit(task, req))) {
       res.status(403).json({ message: "You can only delete tasks assigned to or created by you" }); return;
     }
     await ClientRequest.update({ convertedTaskId: undefined, status: "Open" } as any, { where: { convertedTaskId: task.id } });
