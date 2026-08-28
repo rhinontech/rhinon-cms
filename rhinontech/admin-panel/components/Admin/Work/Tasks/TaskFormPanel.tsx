@@ -2,6 +2,7 @@
 
 import { TbLoader } from "react-icons/tb";
 import { PRIORITIES, STATUSES } from "./constants";
+import { DatePicker } from "@/components/ui/date-picker";
 import type { ApiTask, PersonOption, ProjectOption, TaskFormState } from "./types";
 
 function Field({
@@ -100,7 +101,14 @@ export function TaskFormPanel({
             {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </SelectField>
 
-          <Field label="Due date" type="date" value={form.dueDate} onChange={(v) => set("dueDate", v)} />
+          <label className="block">
+            <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-gray-400">Due date</span>
+            <DatePicker
+              ariaLabel="Due date"
+              value={form.dueDate || null}
+              onChange={(v) => set("dueDate", v ?? "")}
+            />
+          </label>
           <Field label="Estimate (h)" type="number" step="0.5" min="0" value={form.estimatedHours} onChange={(v) => set("estimatedHours", v)} />
 
           <SelectField label="Recurrence" value={form.recurrence} onChange={(v) => set("recurrence", v)}>

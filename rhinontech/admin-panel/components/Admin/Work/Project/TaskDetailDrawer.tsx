@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import Cookies from "js-cookie";
 import { apiFetch, API_URL } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   TbClock, TbFolder, TbHistory, TbLoader, TbPaperclip, TbPlayerPlay, TbPlayerStop, TbSend,
   TbSubtask, TbTrash, TbUnlink, TbUpload, TbX,
@@ -290,21 +291,23 @@ export function TaskDetailDrawer({
           </label>
           <label className="block">
             <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Start</span>
-            <input
-              type="date"
-              value={task.startDate ? task.startDate.slice(0, 10) : ""}
-              onChange={(e) => patchAndRefresh(task.id, { startDate: e.target.value || null })}
-              className="mt-1 w-full rounded-lg border border-stone-200 px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <div className="mt-1">
+              <DatePicker
+                ariaLabel="Start date"
+                value={task.startDate}
+                onChange={(v) => patchAndRefresh(task.id, { startDate: v })}
+              />
+            </div>
           </label>
           <label className="block">
             <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Due</span>
-            <input
-              type="date"
-              value={task.dueDate ? task.dueDate.slice(0, 10) : ""}
-              onChange={(e) => patchAndRefresh(task.id, { dueDate: e.target.value || null })}
-              className="mt-1 w-full rounded-lg border border-stone-200 px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <div className="mt-1">
+              <DatePicker
+                ariaLabel="Due date"
+                value={task.dueDate}
+                onChange={(v) => patchAndRefresh(task.id, { dueDate: v })}
+              />
+            </div>
           </label>
         </div>
 

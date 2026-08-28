@@ -5,7 +5,8 @@ import { cn } from "@/lib/utils";
 import {
   TbAlertTriangle, TbChevronDown, TbChevronRight, TbFile, TbPaperclip, TbPlus, TbSubtask, TbTrash, TbX,
 } from "react-icons/tb";
-import { CustomFieldCell, SelectCell, TextCell, TitleCell } from "./CellEditors";
+import { CustomFieldCell, SelectCell, TitleCell } from "./CellEditors";
+import { DatePicker } from "@/components/ui/date-picker";
 import { STATUS_CHIP } from "./constants";
 import type { FieldDefinition, FieldType, PersonOption, ProjectTask, TaskRow, WorkflowStatus } from "./types";
 import type { GroupKey } from "./WorkspaceToolbar";
@@ -247,10 +248,11 @@ export function TableView({
                   </select>
                 </span>
 
-                <TextCell
-                  type="date"
-                  value={task.dueDate ? task.dueDate.slice(0, 10) : ""}
-                  onCommit={(v) => onPatch(task.id, { dueDate: v || null })}
+                <DatePicker
+                  variant="cell"
+                  ariaLabel={`Due date for ${task.title}`}
+                  value={task.dueDate}
+                  onChange={(v) => onPatch(task.id, { dueDate: v })}
                   className={isOverdue(task) ? "text-red-600" : undefined}
                 />
 

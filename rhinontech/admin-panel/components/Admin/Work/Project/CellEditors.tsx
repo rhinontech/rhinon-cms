@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { TbPencil } from "react-icons/tb";
 import { cn } from "@/lib/utils";
+import { DatePicker } from "@/components/ui/date-picker";
 import type { FieldDefinition, PersonOption } from "./types";
 
 /** Commits on blur or Enter, reverts on Escape — the spreadsheet convention. */
@@ -177,10 +178,11 @@ export function CustomFieldCell({
 
   if (field.type === "date") {
     return (
-      <TextCell
-        type="date"
-        value={value ? String(value).slice(0, 10) : ""}
-        onCommit={(v) => onCommit(v || null)}
+      <DatePicker
+        variant="cell"
+        ariaLabel={field.name}
+        value={value ? String(value) : null}
+        onChange={(v) => onCommit(v)}
       />
     );
   }
