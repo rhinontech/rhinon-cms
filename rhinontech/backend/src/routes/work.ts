@@ -7,6 +7,7 @@ import { ClientRequest, Project, ProjectMember, Role, Task, TaskAttachment, Team
 import { getPresignedReadUrl } from "../services/storage";
 import { sendEmail } from "../services/mailer";
 import { collaboratorInviteEmail } from "../services/emailTemplates";
+import { ensureCollaboratorRole } from "../services/collaboratorRole";
 import { env } from "../config/env";
 import {
   canAccessProject,
@@ -328,14 +329,6 @@ router.post("/requests/convert-to-tasks", requireInternal, async (req: AuthReque
 
 const GUEST_DEPARTMENT = "External";
 
-/** The locked, minimal role every guest gets. Created on first use. */
-async function getCollaboratorRole(): Promise<Role> {
-  const [role] = await Role.findOrCreate({
-    where: { slug: "collaborator" },
-    defaults: { name: "Collaborator", slug: "collaborator" } as any,
-  });
-  return role;
-}
 
 router.get("/projects/:id/collaborators", async (req: AuthRequest, res: Response) => {
   try {
@@ -399,7 +392,7 @@ router.post("/projects/:id/collaborators", requireInternal, async (req: AuthRequ
     if (guest) {
       await guest.update({ onboardingToken, onboardingTokenExpiry });
     } else {
-      const role = await getCollaboratorRole();
+      const role = await ensureCollaboratorRole();
       guest = await User.unscoped().create({
         userType: "guest",
         fullName: String(fullName).trim(),

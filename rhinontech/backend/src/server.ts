@@ -13,6 +13,7 @@ import { Op } from "sequelize";
 import cron from "node-cron";
 import axios from "axios";
 import { seedDefaultWorkflow } from "./config/seedWorkflow";
+import { ensureCollaboratorRole } from "./services/collaboratorRole";
 
 async function autoClockOut() {
   const now = new Date();
@@ -57,6 +58,14 @@ async function start() {
     console.log(`[Permissions] Catalog synced (${total} permissions, ${created} new)`);
   } catch (err: any) {
     console.error("[Permissions] Catalog sync failed:", err.message);
+  }
+
+  // Collaborator role must carry work:read or every portal request 403s at the
+  // route guard. Idempotent; also repairs a role created before this shipped.
+  try {
+    await ensureCollaboratorRole();
+  } catch (err: any) {
+    console.error("[Collaborator] Role check failed:", err.message);
   }
 
   // Default task workflow + backfill of tasks onto it. Additive and idempotent,

@@ -25,11 +25,15 @@ export function accentFor(id: string) {
  * out to a list. Mirrors the "Projects and folders" rail in the reference UI.
  */
 export function ProjectRail({
-  activeId, roleSlug,
+  activeId, roleSlug, hrefFor, showAllProjectsLink = true,
 }: {
   activeId: string;
   roleSlug: string;
+  /** Where a project row links. Lets the collaborator shell reuse this rail. */
+  hrefFor?: (projectId: string) => string;
+  showAllProjectsLink?: boolean;
 }) {
+  const linkTo = hrefFor ?? ((id: string) => `/${roleSlug}/work/projects/${id}`);
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [search, setSearch] = useState("");
   const [collapsed, setCollapsed] = useState(false);
@@ -57,7 +61,7 @@ export function ProjectRail({
         {visible.slice(0, 12).map((p) => (
           <Link
             key={p.id}
-            href={`/${roleSlug}/work/projects/${p.id}`}
+            href={linkTo(p.id)}
             title={p.name}
             className={cn(
               "flex h-7 w-7 items-center justify-center rounded-lg text-[10px] font-bold text-white transition",
@@ -78,13 +82,15 @@ export function ProjectRail({
         <span className="flex-1 text-[10px] font-bold uppercase tracking-widest text-stone-400">
           Projects
         </span>
-        <Link
-          href={`/${roleSlug}/work/clients`}
-          title="All projects"
-          className="rounded p-1 text-stone-400 hover:bg-white hover:text-stone-700"
-        >
-          <TbPlus size={14} />
-        </Link>
+        {showAllProjectsLink && (
+          <Link
+            href={`/${roleSlug}/work/clients`}
+            title="All projects"
+            className="rounded p-1 text-stone-400 hover:bg-white hover:text-stone-700"
+          >
+            <TbPlus size={14} />
+          </Link>
+        )}
         <button
           onClick={() => setCollapsed(true)}
           title="Collapse"
@@ -112,7 +118,7 @@ export function ProjectRail({
           return (
             <Link
               key={p.id}
-              href={`/${roleSlug}/work/projects/${p.id}`}
+              href={linkTo(p.id)}
               className={cn(
                 "flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition",
                 active ? "bg-stone-900 text-white shadow-sm" : "text-stone-700 hover:bg-white"

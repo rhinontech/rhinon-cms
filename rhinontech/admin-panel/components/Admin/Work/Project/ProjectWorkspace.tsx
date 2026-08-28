@@ -38,7 +38,21 @@ const TABS: { key: Tab; label: string; icon: React.ReactNode; accent: string; ti
  * Tabs that aren't built yet are shown but disabled rather than hidden, so the
  * shape of the finished thing is visible and nobody wonders where a view went.
  */
-export function ProjectWorkspace({ projectId, roleSlug }: { projectId: string; roleSlug: string }) {
+export function ProjectWorkspace({
+  projectId, roleSlug, mode = "internal", hrefFor, onSignOut,
+}: {
+  projectId: string;
+  roleSlug: string;
+  /**
+   * "collaborator" renders the same six tabs against the same hooks, with the
+   * internal-only affordances hidden. The API already refuses those actions for
+   * a guest — hiding them keeps the UI from offering buttons that 403.
+   */
+  mode?: "internal" | "collaborator";
+  hrefFor?: (projectId: string) => string;
+  onSignOut?: () => void;
+}) {
+  const isCollab = mode === "collaborator";
   const { setSideNav } = useSideNav();
   const [tab, setTab] = useState<Tab>("table");
 
@@ -69,9 +83,11 @@ export function ProjectWorkspace({ projectId, roleSlug }: { projectId: string; r
         <p className="max-w-sm text-xs text-stone-500">
           It may have been deleted, or its visibility changed so it is no longer shared with you.
         </p>
-        <Link href={`/${roleSlug}/work/clients`} className="mt-1 text-xs font-medium text-blue-600 underline">
-          Back to projects
-        </Link>
+        {!isCollab && (
+          <Link href={`/${roleSlug}/work/clients`} className="mt-1 text-xs font-medium text-blue-600 underline">
+            Back to projects
+          </Link>
+        )}
       </div>
     );
   }
@@ -83,16 +99,38 @@ export function ProjectWorkspace({ projectId, roleSlug }: { projectId: string; r
 
   return (
     <div className="flex h-full min-h-0 overflow-hidden rounded-xl glass-panel">
-      <ProjectRail activeId={projectId} roleSlug={roleSlug} />
+      <ProjectRail
+        activeId={projectId}
+        roleSlug={roleSlug}
+        hrefFor={hrefFor}
+        showAllProjectsLink={!isCollab}
+      />
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <div className="shrink-0 border-b glass-header px-4 pt-3">
         <div className="flex items-center gap-1.5 text-xs text-stone-500">
-          <Link href={`/${roleSlug}/work/clients`} className="flex items-center gap-1 hover:text-stone-800">
-            <TbArrowLeft size={13} /> Projects
-          </Link>
-          <TbChevronRight size={12} />
-          <span className="truncate text-stone-700">{p.name}</span>
+          {isCollab ? (
+            <>
+              <span className="rounded bg-stone-100 px-1.5 py-0.5 text-[10px] font-medium text-stone-600">
+                Collaborator
+              </span>
+              <TbChevronRight size={12} />
+              <span className="truncate text-stone-700">{p.name}</span>
+              {onSignOut && (
+                <button onClick={onSignOut} className="ml-auto text-xs text-stone-500 hover:text-stone-800">
+                  Sign out
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              <Link href={`/${roleSlug}/work/clients`} className="flex items-center gap-1 hover:text-stone-800">
+                <TbArrowLeft size={13} /> Projects
+              </Link>
+              <TbChevronRight size={12} />
+              <span className="truncate text-stone-700">{p.name}</span>
+            </>
+          )}
         </div>
 
         <div className="mt-1 flex items-center gap-2">
@@ -156,6 +194,7 @@ export function ProjectWorkspace({ projectId, roleSlug }: { projectId: string; r
             collapsed={ws.collapsed}
             rosterAvailable={ws.rosterAvailable}
             group={ws.group}
+            readOnlyColumns={isCollab}
             onToggleCollapsed={ws.toggleCollapsed}
             onPatch={ws.patchTask}
             onCreate={ws.createTask}
@@ -224,6 +263,7 @@ export function ProjectWorkspace({ projectId, roleSlug }: { projectId: string; r
           statuses={ws.statuses}
           people={ws.people}
           projectName={p.name}
+          canShareWithGuests={!isCollab}
           onClose={() => setOpenTask(null)}
           onPatch={ws.patchTask}
           onDelete={ws.deleteTask}

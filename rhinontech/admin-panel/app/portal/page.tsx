@@ -1,5 +1,11 @@
-import { CollaboratorPortal } from "@/components/Portal/CollaboratorPortal";
+import { Suspense } from "react";
+import { CollaboratorWorkspace } from "@/components/Portal/CollaboratorWorkspace";
 
 export default function PortalPage() {
-  return <CollaboratorPortal />;
+  // useSearchParams needs a Suspense boundary in the App Router.
+  return (
+    <Suspense fallback={null}>
+      <CollaboratorWorkspace />
+    </Suspense>
+  );
 }

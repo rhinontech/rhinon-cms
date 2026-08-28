@@ -28,7 +28,7 @@ function isOverdue(task: ProjectTask) {
 }
 
 export function TableView({
-  rows, statuses, fields, people, collapsed, rosterAvailable, group,
+  rows, statuses, fields, people, collapsed, rosterAvailable, group, readOnlyColumns = false,
   onToggleCollapsed, onPatch, onCreate, onDelete, onAddField, onRemoveField, onOpenTask,
 }: {
   rows: TaskRow[];
@@ -38,6 +38,8 @@ export function TableView({
   collapsed: Set<string>;
   rosterAvailable: boolean;
   group: GroupKey;
+  /** Hides column add/remove — /workflow/fields writes are requireInternal. */
+  readOnlyColumns?: boolean;
   onToggleCollapsed: (id: string) => void;
   onPatch: (id: string, patch: Record<string, unknown>) => void;
   onCreate: (title: string, parentTaskId?: string | null) => void;
@@ -118,27 +120,31 @@ export function TableView({
             {fields.map((f) => (
               <span key={f.id} className="group flex items-center gap-1 px-1.5">
                 <span className="truncate">{f.name}</span>
-                <button
-                  onClick={() => {
-                    if (window.confirm(`Remove the "${f.name}" column? Existing values are kept but hidden.`)) {
-                      onRemoveField(f.id);
-                    }
-                  }}
-                  className="opacity-0 transition group-hover:opacity-100"
-                  title="Remove column"
-                >
-                  <TbX size={11} className="text-stone-400 hover:text-red-600" />
-                </button>
+                {!readOnlyColumns && (
+                  <button
+                    onClick={() => {
+                      if (window.confirm(`Remove the "${f.name}" column? Existing values are kept but hidden.`)) {
+                        onRemoveField(f.id);
+                      }
+                    }}
+                    className="opacity-0 transition group-hover:opacity-100"
+                    title="Remove column"
+                  >
+                    <TbX size={11} className="text-stone-400 hover:text-red-600" />
+                  </button>
+                )}
               </span>
             ))}
             <span className="px-1.5">Files</span>
-            <button
-              onClick={() => setAddingField((a) => !a)}
-              title="Add a column"
-              className="flex items-center justify-center rounded p-1 text-stone-400 hover:bg-stone-200 hover:text-stone-700"
-            >
-              <TbPlus size={14} />
-            </button>
+            {readOnlyColumns ? <span /> : (
+              <button
+                onClick={() => setAddingField((a) => !a)}
+                title="Add a column"
+                className="flex items-center justify-center rounded p-1 text-stone-400 hover:bg-stone-200 hover:text-stone-700"
+              >
+                <TbPlus size={14} />
+              </button>
+            )}
           </div>
 
           {addingField && (

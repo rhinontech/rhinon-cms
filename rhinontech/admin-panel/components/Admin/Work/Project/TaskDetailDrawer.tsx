@@ -51,10 +51,12 @@ function hhmm(minutes: number) {
 }
 
 export function TaskDetailDrawer({
-  task, rows, statuses, people, projectName, onClose, onPatch, onDelete, onCreateChild, onRemoveDependency, onChanged,
+  task, rows, statuses, people, projectName, canShareWithGuests = true, onClose, onPatch, onDelete, onCreateChild, onRemoveDependency, onChanged,
 }: {
   task: ProjectTask;
   projectName?: string;
+  /** False for collaborators — they must not control their own visibility. */
+  canShareWithGuests?: boolean;
   rows: TaskRow[];
   statuses: WorkflowStatus[];
   people: PersonOption[];
