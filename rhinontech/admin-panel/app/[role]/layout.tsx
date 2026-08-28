@@ -21,7 +21,12 @@ export default async function RoleLayout({ children }: { children: React.ReactNo
   const token = (await cookies()).get("authToken")?.value;
   const payload = token ? decodeToken(token) : null;
 
-  if (payload?.userType === "guest") redirect("/portal");
+  // Keyed on BOTH signals on purpose. `userType` is a new JWT claim, so a token
+  // issued before it shipped carries only `roleSlug` — and relying on the new
+  // claim alone left those sessions sitting on the internal dashboard, which is
+  // exactly what happened in production.
+  const isCollaborator = payload?.userType === "guest" || payload?.roleSlug === "collaborator";
+  if (isCollaborator) redirect("/portal");
 
   return (
     <main className="flex min-h-screen w-full flex-col">
