@@ -33,8 +33,9 @@ export function proxy(request: NextRequest) {
     if (authToken) {
       const payload = decodeJWTPayload(authToken);
       if (payload?.roleSlug) {
+        const guest = payload.userType === "guest" || payload.roleSlug === "collaborator";
         return NextResponse.redirect(
-          new URL(`/${payload.roleSlug}/dashboard`, request.url)
+          new URL(guest ? "/portal" : `/${payload.roleSlug}/dashboard`, request.url)
         );
       }
     }
@@ -62,6 +63,20 @@ export function proxy(request: NextRequest) {
 
   const roleSlug = payload.roleSlug as string;
   const urlRole = pathname.split("/")[1];
+
+  // External collaborators live at /portal and nowhere else.
+  //
+  // This has to be handled BEFORE the role-matching rule below, which would
+  // otherwise read "portal" as a role that does not match "collaborator" and
+  // bounce them to /collaborator/dashboard — where the layout guard sends them
+  // straight back here. That pair was an infinite redirect loop.
+  const isCollaborator = payload.userType === "guest" || roleSlug === "collaborator";
+  if (isCollaborator) {
+    if (pathname === "/portal" || pathname.startsWith("/portal/")) {
+      return NextResponse.next();
+    }
+    return NextResponse.redirect(new URL("/portal", request.url));
+  }
 
   // Superadmin (the CEO) may preview any role's URL, including custom roles
   // created dynamically from Settings — everyone else may only browse their own.
