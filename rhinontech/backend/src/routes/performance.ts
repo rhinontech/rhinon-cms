@@ -11,7 +11,7 @@ function isAdmin(req: AuthRequest) {
 
 async function getActiveEmployees() {
   const users = await User.findAll({
-    where: { status: "active" },
+    where: { userType: "internal", status: "active" },
     include: [{ model: Role, as: "role" }],
     attributes: ["id", "fullName", "companyEmail", "department"],
   });

@@ -12,5 +12,8 @@ export default async function Home() {
 
   if (!payload) redirect("/auth/login");
 
+  // The internal dashboard 403s for guests, so send them to their own workspace.
+  if (payload.userType === "guest") redirect("/portal");
+
   redirect(`/${payload.roleSlug}/dashboard`); 
 }

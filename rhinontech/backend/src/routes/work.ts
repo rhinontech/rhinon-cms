@@ -1,7 +1,13 @@
 import { Router, Response } from "express";
 import { Op, fn, col } from "sequelize";
-import { authenticate, authorizeAny, AuthRequest } from "../middleware/authenticate";
-import { ClientRequest, Project, Task, Team, User } from "../models";
+import crypto from "crypto";
+import bcrypt from "bcryptjs";
+import { authenticate, authorizeAny, requireInternal, AuthRequest } from "../middleware/authenticate";
+import { ClientRequest, Project, ProjectMember, Role, Task, TaskAttachment, Team, User } from "../models";
+import { getPresignedReadUrl } from "../services/storage";
+import { sendEmail } from "../services/mailer";
+import { collaboratorInviteEmail } from "../services/emailTemplates";
+import { env } from "../config/env";
 import {
   canAccessProject,
   canUseVisibility,
@@ -101,7 +107,7 @@ router.get("/projects", async (req: AuthRequest, res: Response) => {
   }
 });
 
-router.post("/projects", async (req: AuthRequest, res: Response) => {
+router.post("/projects", requireInternal, async (req: AuthRequest, res: Response) => {
   try {
     const { name, status, pointOfContact, notes, visibility, teamId } = req.body;
 
@@ -135,7 +141,7 @@ router.post("/projects", async (req: AuthRequest, res: Response) => {
   }
 });
 
-router.put("/projects/:id", async (req: AuthRequest, res: Response) => {
+router.put("/projects/:id", requireInternal, async (req: AuthRequest, res: Response) => {
   try {
     const project = await Project.findByPk(req.params.id);
     // 404 rather than 403 for a project you cannot see — a 403 would confirm it exists.
@@ -273,7 +279,7 @@ router.put("/requests/:id", async (req: AuthRequest, res: Response) => {
   }
 });
 
-router.post("/requests/convert-to-tasks", async (req: AuthRequest, res: Response) => {
+router.post("/requests/convert-to-tasks", requireInternal, async (req: AuthRequest, res: Response) => {
   try {
     const { requestIds } = req.body;
 
@@ -309,6 +315,209 @@ router.post("/requests/convert-to-tasks", async (req: AuthRequest, res: Response
   } catch (err) {
     console.error("Failed to convert requests to tasks:", err);
     res.status(500).json({ message: "Failed to convert requests to tasks" });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// External collaborators
+//
+// A collaborator is a User with userType "guest", reachable only through the
+// ProjectMember grants created here. Guests are invited per project and see
+// nothing else in the system — see GUEST_ALLOWED_MOUNTS in the auth middleware.
+// ---------------------------------------------------------------------------
+
+const GUEST_DEPARTMENT = "External";
+
+/** The locked, minimal role every guest gets. Created on first use. */
+async function getCollaboratorRole(): Promise<Role> {
+  const [role] = await Role.findOrCreate({
+    where: { slug: "collaborator" },
+    defaults: { name: "Collaborator", slug: "collaborator" } as any,
+  });
+  return role;
+}
+
+router.get("/projects/:id/collaborators", async (req: AuthRequest, res: Response) => {
+  try {
+    if (!(await canAccessProject(req.params.id, req))) {
+      res.status(404).json({ message: "Project not found" });
+      return;
+    }
+    const members = await ProjectMember.findAll({
+      where: { projectId: req.params.id },
+      include: [
+        { model: User.unscoped(), as: "user", attributes: ["id", "fullName", "companyEmail", "userType", "onboarded"] },
+        { model: User.unscoped(), as: "invitedBy", attributes: ["id", "fullName"] },
+      ],
+      order: [["createdAt", "ASC"]],
+    });
+    res.json(members);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch collaborators" });
+  }
+});
+
+router.post("/projects/:id/collaborators", requireInternal, async (req: AuthRequest, res: Response) => {
+  try {
+    const project = await Project.findByPk(req.params.id);
+    if (!project || !(await canAccessProject(project.id, req))) {
+      res.status(404).json({ message: "Project not found" });
+      return;
+    }
+
+    const { email, fullName, access, shareExistingTasks } = req.body;
+    const cleanEmail = String(email || "").trim().toLowerCase();
+    if (!cleanEmail || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(cleanEmail)) {
+      res.status(400).json({ message: "A valid email is required" });
+      return;
+    }
+    if (!fullName?.trim()) {
+      res.status(400).json({ message: "fullName is required" });
+      return;
+    }
+
+    // An existing internal employee must never be downgraded into a guest.
+    const existing = await User.unscoped().findOne({
+      where: { companyEmail: cleanEmail },
+    });
+    if (existing && existing.userType === "internal") {
+      res.status(409).json({
+        message: "That email belongs to an internal team member — add them to a team instead.",
+      });
+      return;
+    }
+
+    const onboardingToken = crypto.randomUUID();
+    const onboardingTokenExpiry = new Date(Date.now() + 48 * 60 * 60 * 1000);
+    let guest = existing;
+
+    if (guest) {
+      await guest.update({ onboardingToken, onboardingTokenExpiry });
+    } else {
+      const role = await getCollaboratorRole();
+      guest = await User.unscoped().create({
+        userType: "guest",
+        fullName: String(fullName).trim(),
+        personalEmail: cleanEmail,
+        companyEmail: cleanEmail,
+        // Replaced the moment they complete onboarding; never a usable secret.
+        passwordHash: await bcrypt.hash(crypto.randomUUID(), 10),
+        roleId: role.id,
+        department: GUEST_DEPARTMENT,
+        joiningDate: new Date(),
+        status: "active",
+        onboarded: false,
+        onboardingToken,
+        onboardingTokenExpiry,
+      } as any);
+    }
+
+    const [member] = await ProjectMember.findOrCreate({
+      where: { projectId: project.id, userId: guest.id },
+      defaults: {
+        projectId: project.id,
+        userId: guest.id,
+        access: access === "view" ? "view" : "collaborate",
+        invitedById: req.user!.userId,
+      },
+    });
+
+    // Opt-in by default. Offered explicitly at invite time so sharing the back
+    // catalogue is a decision, not a side effect of adding someone.
+    if (shareExistingTasks) {
+      await Task.update({ guestVisible: true }, { where: { projectId: project.id } });
+    }
+
+    try {
+      const frontendUrl = env.frontendUrls[0];
+      const { subject, html, text } = collaboratorInviteEmail({
+        fullName: guest.fullName,
+        projectName: project.name,
+        invitedByName: req.user!.fullName,
+        loginEmail: guest.companyEmail,
+        onboardingUrl: `${frontendUrl}/onboard?token=${onboardingToken}`,
+      });
+      await sendEmail({ to: guest.personalEmail, subject, html, text });
+    } catch (err) {
+      // The grant is already real; a failed send is recoverable by resending.
+      console.error("Failed to send collaborator invite:", err);
+      res.status(201).json({ member, warning: "Collaborator added, but the invite email could not be sent." });
+      return;
+    }
+
+    res.status(201).json({ member });
+  } catch (err) {
+    console.error("Failed to invite collaborator:", err);
+    res.status(500).json({ message: "Failed to invite collaborator" });
+  }
+});
+
+router.delete("/projects/:id/collaborators/:userId", requireInternal, async (req: AuthRequest, res: Response) => {
+  try {
+    if (!(await canAccessProject(req.params.id, req))) {
+      res.status(404).json({ message: "Project not found" });
+      return;
+    }
+    const member = await ProjectMember.findOne({
+      where: { projectId: req.params.id, userId: req.params.userId },
+    });
+    if (!member) {
+      res.status(404).json({ message: "Collaborator not found" });
+      return;
+    }
+    await member.destroy();
+
+    // A guest with no grants left has no way into anything — deactivate rather
+    // than leaving a live login pointing at nothing.
+    const remaining = await ProjectMember.count({ where: { userId: req.params.userId } });
+    if (remaining === 0) {
+      const guest = await User.unscoped().findByPk(req.params.userId);
+      if (guest?.userType === "guest") await guest.update({ status: "inactive" });
+    }
+
+    res.json({ message: "Collaborator removed" });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to remove collaborator" });
+  }
+});
+
+/**
+ * Every file in a project, across all its tasks — what the Files tab lists.
+ *
+ * Aggregated server-side rather than fanning out one request per task, and each
+ * key is presigned per request so nothing is publicly reachable.
+ */
+router.get("/projects/:id/attachments", async (req: AuthRequest, res: Response) => {
+  try {
+    if (!(await canAccessProject(req.params.id, req))) {
+      res.status(404).json({ message: "Project not found" });
+      return;
+    }
+
+    const taskIds = (await Task.findAll({
+      where: { projectId: req.params.id },
+      attributes: ["id"],
+      raw: true,
+    }) as unknown as { id: string }[]).map((t) => t.id);
+
+    if (!taskIds.length) { res.json([]); return; }
+
+    const rows = await TaskAttachment.findAll({
+      where: { taskId: taskIds },
+      include: [
+        { model: User, as: "uploadedBy", attributes: ["id", "fullName"] },
+        { model: Task, as: "task", attributes: ["id", "title"] },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    res.json(await Promise.all(rows.map(async (r) => ({
+      ...r.toJSON(),
+      url: await getPresignedReadUrl(r.key).catch(() => null),
+    }))));
+  } catch (err) {
+    console.error("Failed to fetch project attachments:", err);
+    res.status(500).json({ message: "Failed to fetch files" });
   }
 });
 

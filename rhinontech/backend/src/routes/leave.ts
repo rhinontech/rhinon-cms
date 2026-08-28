@@ -119,7 +119,7 @@ router.get("/team/balance", async (req: AuthRequest, res: Response) => {
     const year = new Date().getFullYear();
     const types = await LeaveType.findAll({ order: [["name", "ASC"]] });
     const employees = await User.findAll({
-      where: { status: "active" },
+      where: { userType: "internal", status: "active" },
       attributes: ["id", "fullName", "department"],
       order: [["fullName", "ASC"]],
     });

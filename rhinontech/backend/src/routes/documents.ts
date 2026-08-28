@@ -55,7 +55,7 @@ router.get("/employees", async (req: AuthRequest, res: Response) => {
     }
 
     const employees = await User.findAll({
-      where: { status: "active" },
+      where: { userType: "internal", status: "active" },
       attributes: ["id", "fullName", "companyEmail", "department"],
       order: [["fullName", "ASC"]],
     });

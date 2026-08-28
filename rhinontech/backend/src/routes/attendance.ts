@@ -55,7 +55,7 @@ function blockSuperadminClock(req: AuthRequest, res: Response) {
 
 async function activeNonSuperadminUsers() {
   const employees = await User.findAll({
-    where: { status: "active" },
+    where: { userType: "internal", status: "active" },
     include: [{ model: Role, as: "role" }],
     attributes: ["id", "fullName", "companyEmail", "department", "roleId"],
     order: [["fullName", "ASC"]],

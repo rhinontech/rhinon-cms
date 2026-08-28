@@ -1,6 +1,14 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../config/database";
 
+/**
+ * "guest" is an external collaborator — a client or contractor reachable only
+ * through an explicit ProjectMember grant. Guests are Users so that task
+ * assignment and comments work unchanged, which means every internal listing
+ * has to exclude them deliberately.
+ */
+export type UserType = "internal" | "guest";
+
 export type UserStatus = "active" | "inactive";
 
 export type ExitReason =
@@ -12,6 +20,7 @@ export type ExitReason =
 
 interface UserAttributes {
   id: string;
+  userType: UserType;
   fullName: string;
   personalEmail: string;
   companyEmail: string;
@@ -76,6 +85,7 @@ interface UserCreationAttributes
   extends Optional<
     UserAttributes,
     | "id"
+    | "userType"
     | "companyEmail"
     | "status"
     | "dateOfBirth"
@@ -126,6 +136,7 @@ export class User
   implements UserAttributes
 {
   declare id: string;
+  declare userType: UserType;
   declare fullName: string;
   declare personalEmail: string;
   declare companyEmail: string;
@@ -182,6 +193,7 @@ export class User
 User.init(
   {
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    userType: { type: DataTypes.ENUM("internal", "guest"), allowNull: false, defaultValue: "internal" },
     fullName: { type: DataTypes.STRING, allowNull: false },
     personalEmail: { type: DataTypes.STRING, allowNull: false, unique: true },
     companyEmail: { type: DataTypes.STRING, unique: true },
@@ -232,5 +244,22 @@ User.init(
     resetToken:            { type: DataTypes.STRING,  allowNull: true, defaultValue: null },
     resetTokenExpiry:      { type: DataTypes.DATE,    allowNull: true, defaultValue: null },
   },
-  { sequelize, tableName: "users", timestamps: true }
+  {
+    sequelize,
+    tableName: "users",
+    timestamps: true,
+    /**
+     * NO defaultScope here, deliberately.
+     *
+     * An earlier version excluded guests with `defaultScope: { where: { userType:
+     * "internal" } }`. Sequelize promotes any include carrying a `where` to
+     * `required: true`, so that scope silently turned all 38 `User` includes in
+     * the app into INNER JOINs — and every row with a nullable user FK (a project
+     * with no owner, an unassigned task) vanished from its list with no error.
+     *
+     * Guests are excluded explicitly at the listing endpoints instead. That can
+     * only ever leak a guest into a roster; the scope could delete real data from
+     * any query in the system.
+     */
+  }
 );

@@ -51,7 +51,7 @@ router.get("/me/payslips/:id", authorize("payslips:read"), async (req: AuthReque
 // List all employees with their salary structure
 router.get("/admin/employees", authorize("payroll:write"), async (_req: AuthRequest, res: Response) => {
   const employees = await User.findAll({
-    where: { status: "active" },
+    where: { userType: "internal", status: "active" },
     attributes: [
       "id", "fullName", "companyEmail", "department", "joiningDate", "exitDate",
       "employmentType", "workLocation",
@@ -119,7 +119,7 @@ router.get("/admin/investment", authorize("payroll:write"), async (_req: AuthReq
   });
 
   const activeEmployees = await User.findAll({
-    where: { status: "active" },
+    where: { userType: "internal", status: "active" },
     attributes: ["id", "basicSalary", "hra", "ta", "medicalAllowance", "otherAllowances"],
   });
 
@@ -224,7 +224,7 @@ router.post("/admin/run", authorize("payroll:write"), async (req: AuthRequest, r
   const lastDay = new Date(year, month, 0).getDate();
   const endOfMonth = `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
   const employees = await User.findAll({
-    where: {
+    where: { userType: "internal",
       status: "active",
       [Op.or]: [{ exitDate: null }, { exitDate: { [Op.gt]: endOfMonth } }],
     },
@@ -434,7 +434,7 @@ function computeFnfPreview(user: User) {
 // Everyone with an exit on record + whether their exit month is settled
 router.get("/admin/settlements", authorize("payroll:write"), async (_req: AuthRequest, res: Response) => {
   const leavers = await User.findAll({
-    where: { exitDate: { [Op.ne]: null } },
+    where: { userType: "internal", exitDate: { [Op.ne]: null } },
     attributes: ["id", "fullName", "companyEmail", "department", "status", "exitDate", "exitReason", "basicSalary"],
     include: [{ model: Role, as: "role", attributes: ["name", "slug"] }],
     order: [["exitDate", "DESC"]],

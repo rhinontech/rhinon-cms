@@ -1,11 +1,13 @@
 // Create a new context file (e.g., src/context/SideNavContext.tsx)
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useCallback, useContext, useState } from "react";
 
 type SideNavContextType = {
   isExpanded: boolean;
   toggleSideNav: () => void;
+  /** Explicit set, for pages that want the sub-nav out of the way on entry. */
+  setSideNav: (open: boolean) => void;
 };
 
 const SideNavContext = createContext<SideNavContextType | undefined>(undefined);
@@ -18,9 +20,10 @@ export function SideNavProvider({ children }: { children: React.ReactNode }) {
   );
 
   const toggleSideNav = () => setIsExpanded((prev) => !prev);
+  const setSideNav = useCallback((open: boolean) => setIsExpanded(open), []);
 
   return (
-    <SideNavContext.Provider value={{ isExpanded, toggleSideNav }}>
+    <SideNavContext.Provider value={{ isExpanded, toggleSideNav, setSideNav }}>
       {children}
     </SideNavContext.Provider>
   );

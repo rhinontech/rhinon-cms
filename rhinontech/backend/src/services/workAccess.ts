@@ -1,5 +1,5 @@
 import { Op } from "sequelize";
-import { Project, Task, TeamMember } from "../models";
+import { Project, ProjectMember, Task, TeamMember } from "../models";
 import { AuthRequest } from "../middleware/authenticate";
 
 /**
@@ -19,6 +19,47 @@ import { AuthRequest } from "../middleware/authenticate";
 /** Superadmin (the CEO panel) retains full authority here, as it does everywhere else. */
 function isSuperadmin(req: AuthRequest): boolean {
   return req.user?.roleSlug === "superadmin";
+}
+
+/** External collaborators reach projects ONLY through an explicit ProjectMember grant. */
+export function isGuest(req: AuthRequest): boolean {
+  return req.user?.userType === "guest";
+}
+
+const GUEST_PROJECTS_CACHE = Symbol("workAccess.guestProjectIds");
+
+/** The only projects a guest can reach. Memoised per request like the hidden set. */
+export async function getGuestProjectIds(req: AuthRequest): Promise<string[]> {
+  const cached = (req as any)[GUEST_PROJECTS_CACHE] as Promise<string[]> | undefined;
+  if (cached) return cached;
+  const pending = ProjectMember.findAll({
+    where: { userId: req.user!.userId },
+    attributes: ["projectId"],
+    raw: true,
+  }).then((rows) => (rows as any[]).map((r) => r.projectId));
+  (req as any)[GUEST_PROJECTS_CACHE] = pending;
+  return pending;
+}
+
+/**
+ * Extra `where` for guests reading tasks. Sharing a project does NOT share its
+ * back catalogue — each task is exposed deliberately via guestVisible.
+ */
+export async function guestTaskWhere(req: AuthRequest): Promise<Record<string, unknown>> {
+  return isGuest(req) ? { guestVisible: true } : {};
+}
+
+/**
+ * Whether a guest may write in this project ("collaborate" grants, "view" does not).
+ * Always true for internal users — their limits come from the normal rules.
+ */
+export async function canGuestCollaborate(projectId: string, req: AuthRequest): Promise<boolean> {
+  if (!isGuest(req)) return true;
+  const row = await ProjectMember.findOne({
+    where: { projectId, userId: req.user!.userId },
+    attributes: ["access"],
+  });
+  return row?.access === "collaborate";
 }
 
 /** Team ids the user belongs to. */
@@ -86,6 +127,9 @@ async function computeHiddenProjectIds(req: AuthRequest): Promise<string[]> {
  * Returns {} when nothing is hidden, so the common case adds no SQL at all.
  */
 export async function projectVisibilityWhere(req: AuthRequest): Promise<Record<string, unknown>> {
+  // Guests are an allowlist, not a denylist: an empty grant list must mean
+  // "nothing", which is exactly what IN () yields.
+  if (isGuest(req)) return { id: { [Op.in]: await getGuestProjectIds(req) } };
   const hidden = await getHiddenProjectIds(req);
   return hidden.length === 0 ? {} : { id: { [Op.notIn]: hidden } };
 }
@@ -96,6 +140,9 @@ export async function projectVisibilityWhere(req: AuthRequest): Promise<Record<s
  * is NULL, not true, for a NULL projectId, so it has to be spelled out.
  */
 export async function projectScopedWhere(req: AuthRequest): Promise<Record<string, unknown>> {
+  // Note the absence of a `projectId: null` branch — work with no project is
+  // internal by definition and must never fall to a guest.
+  if (isGuest(req)) return { projectId: { [Op.in]: await getGuestProjectIds(req) } };
   const hidden = await getHiddenProjectIds(req);
   if (hidden.length === 0) return {};
   return {
@@ -117,6 +164,11 @@ export function mergeWhere(
 }
 
 export async function canAccessProject(projectId: string | null | undefined, req: AuthRequest): Promise<boolean> {
+  if (isGuest(req)) {
+    // Unattached work has no project to grant access through, so it is never reachable.
+    if (!projectId) return false;
+    return (await getGuestProjectIds(req)).includes(projectId);
+  }
   if (!projectId) return true;
   if (isSuperadmin(req)) return true;
   const hidden = await getHiddenProjectIds(req);
@@ -125,14 +177,15 @@ export async function canAccessProject(projectId: string | null | undefined, req
 
 /** Whether the user may see a task at all — i.e. whether its project is reachable. */
 export async function canAccessTask(task: Task, req: AuthRequest): Promise<boolean> {
+  if (isGuest(req) && !task.guestVisible) return false;
   return canAccessProject(task.projectId, req);
 }
 
 /** Same check starting from a task id, for the /tasks/:id/* sub-routes. */
 export async function canAccessTaskId(taskId: string, req: AuthRequest): Promise<boolean> {
-  const task = await Task.findByPk(taskId, { attributes: ["id", "projectId"] });
+  const task = await Task.findByPk(taskId, { attributes: ["id", "projectId", "guestVisible"] });
   if (!task) return false;
-  return canAccessProject(task.projectId, req);
+  return canAccessTask(task, req);
 }
 
 /**
@@ -145,6 +198,7 @@ export async function canUseVisibility(
   teamId: string | null | undefined,
   req: AuthRequest
 ): Promise<{ ok: true } | { ok: false; message: string }> {
+  if (isGuest(req)) return { ok: false, message: "Collaborators cannot change project visibility" };
   if (visibility === "workspace" || visibility === "private") return { ok: true };
   if (visibility !== "team") return { ok: false, message: "Unknown visibility" };
   if (!teamId) return { ok: false, message: "A team is required for team visibility" };

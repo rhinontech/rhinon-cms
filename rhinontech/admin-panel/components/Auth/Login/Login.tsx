@@ -50,7 +50,7 @@ export function Login({
 
       Cookies.set("authToken", data.token, { expires: 7 });
       Cookies.set("permissions", JSON.stringify(data.permissions), { expires: 7 });
-      window.location.href = `/${data.roleSlug}/dashboard`;
+      window.location.href = data.userType === "guest" ? "/portal" : `/${data.roleSlug}/dashboard`;
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {

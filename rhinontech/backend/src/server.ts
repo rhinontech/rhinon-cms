@@ -12,6 +12,7 @@ import { isReEnrichmentEnabled, runReEnrichmentCycle } from "./services/reEnrich
 import { Op } from "sequelize";
 import cron from "node-cron";
 import axios from "axios";
+import { seedDefaultWorkflow } from "./config/seedWorkflow";
 
 async function autoClockOut() {
   const now = new Date();
@@ -56,6 +57,17 @@ async function start() {
     console.log(`[Permissions] Catalog synced (${total} permissions, ${created} new)`);
   } catch (err: any) {
     console.error("[Permissions] Catalog sync failed:", err.message);
+  }
+
+  // Default task workflow + backfill of tasks onto it. Additive and idempotent,
+  // so it is safe on every boot.
+  try {
+    const { created, backfilled } = await seedDefaultWorkflow();
+    if (created.length || backfilled) {
+      console.log(`[Workflow] ${created.length} status(es) created, ${backfilled} task(s) backfilled`);
+    }
+  } catch (err: any) {
+    console.error("[Workflow] Seed failed:", err.message);
   }
 
   // Create the default deal stages on a fresh database (no-op once any exist)

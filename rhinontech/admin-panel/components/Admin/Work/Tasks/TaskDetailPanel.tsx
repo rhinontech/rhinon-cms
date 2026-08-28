@@ -29,6 +29,25 @@ export function TaskDetailPanel({
   onStatusChange: (id: string, status: TaskStatus) => void;
   onTaskChanged: () => void;
 }) {
+  const [sharingGuest, setSharingGuest] = useState(false);
+
+  /** Sharing is an internal decision — the API refuses this field from a guest. */
+  const toggleGuestVisible = async (next: boolean) => {
+    setSharingGuest(true);
+    try {
+      await apiFetch(`/tasks/${task.id}`, {
+        method: "PUT",
+        body: JSON.stringify({ guestVisible: next }),
+      });
+      onTaskChanged();
+      toast.success(next ? "Shared with collaborators" : "Hidden from collaborators");
+    } catch (err: any) {
+      toast.error(err.message || "Could not change sharing");
+    } finally {
+      setSharingGuest(false);
+    }
+  };
+
   const [tab, setTab] = useState<"details" | "subtasks" | "comments">("details");
   const [subtasks, setSubtasks] = useState<Subtask[]>([]);
   const [comments, setComments] = useState<TaskComment[]>([]);
@@ -200,6 +219,27 @@ export function TaskDetailPanel({
             <Detail label="Status" value={task.status} />
             <Detail label="Priority" value={task.priority} />
             {task.estimatedHours != null && <Detail label="Estimate" value={`${task.estimatedHours}h`} />}
+            {task.project && (
+              <div className="col-span-2">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Collaborators</p>
+                <label className="mt-1 flex cursor-pointer items-start gap-2 text-sm text-gray-800">
+                  <input
+                    type="checkbox"
+                    disabled={!canEdit || sharingGuest}
+                    checked={Boolean(task.guestVisible)}
+                    onChange={(e) => toggleGuestVisible(e.target.checked)}
+                    className="mt-0.5 h-3.5 w-3.5 disabled:opacity-50"
+                  />
+                  <span>
+                    Visible to external collaborators
+                    <span className="block text-[11px] text-gray-400">
+                      Off by default. Turning this on shares the task and its comments with
+                      everyone invited to {task.project.name}.
+                    </span>
+                  </span>
+                </label>
+              </div>
+            )}
           </div>
         </div>
       )}

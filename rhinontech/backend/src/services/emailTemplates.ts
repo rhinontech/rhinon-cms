@@ -55,6 +55,59 @@ function emailWrapper(headerContent: string, bodyContent: string) {
 </html>`;
 }
 
+// ─── Collaborator invite ─────────────────────────────────────────────────────
+
+interface CollaboratorInviteOptions {
+  fullName: string;
+  projectName: string;
+  invitedByName: string;
+  loginEmail: string;
+  onboardingUrl: string;
+}
+
+export function collaboratorInviteEmail({
+  fullName, projectName, invitedByName, loginEmail, onboardingUrl,
+}: CollaboratorInviteOptions) {
+  const firstName = fullName.split(" ")[0];
+  const subject = `${invitedByName} invited you to collaborate on ${projectName}`;
+
+  const headerContent = `<p style="margin:16px 0 0;font-size:13px;color:#a8a29e;">Project collaboration</p>`;
+  const bodyContent = `
+    <h1 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#1c1917;">Hi ${firstName},</h1>
+    <p style="margin:0 0 16px;font-size:14px;line-height:22px;color:#44403c;">
+      <strong>${invitedByName}</strong> has invited you to collaborate on
+      <strong>${projectName}</strong>. You'll be able to see the tasks shared with you,
+      track their progress, and comment.
+    </p>
+    <p style="margin:0 0 24px;font-size:14px;line-height:22px;color:#44403c;">
+      Sign in with <strong>${loginEmail}</strong> after setting your password.
+    </p>
+    <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+      <tr>
+        <td style="background:#1c1917;border-radius:8px;">
+          <a href="${onboardingUrl}" style="display:inline-block;padding:12px 24px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;">
+            Set your password
+          </a>
+        </td>
+      </tr>
+    </table>
+    <p style="margin:0;font-size:12px;line-height:18px;color:#a8a29e;">
+      This link expires in 48 hours. You'll only ever see the projects and tasks
+      that have been shared with you.
+    </p>`;
+
+  const text = `Hi ${firstName},
+
+${invitedByName} has invited you to collaborate on ${projectName}.
+
+Set your password: ${onboardingUrl}
+Sign in with: ${loginEmail}
+
+This link expires in 48 hours.`;
+
+  return { subject, html: emailWrapper(headerContent, bodyContent), text };
+}
+
 // ─── Welcome / Onboarding ────────────────────────────────────────────────────
 
 interface WelcomeEmailOptions {

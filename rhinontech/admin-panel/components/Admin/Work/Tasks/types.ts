@@ -38,6 +38,8 @@ export interface ApiTask {
   // `projectId` is returned by the API but was missing from the old interface,
   // which is why grouping code has to fall back to `project?.id`.
   projectId: string | null;
+  /** Whether external collaborators on the project can see this task. */
+  guestVisible?: boolean;
   dueDate: string | null;
   status: TaskStatus;
   priority: TaskPriority;

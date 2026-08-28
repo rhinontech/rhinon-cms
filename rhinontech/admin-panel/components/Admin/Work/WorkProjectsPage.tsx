@@ -1,12 +1,15 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { useSideNav } from "@/context/SideNavContext";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
-import { TbLayoutSidebarFilled, TbLayoutSidebarRightFilled, TbPlus, TbSearch, TbExternalLink, TbLock, TbUsers } from "react-icons/tb";
+import { ProjectCollaborators } from "./ProjectCollaborators";
+import { TbLayoutSidebarFilled, TbLayoutSidebarRightFilled, TbPlus, TbSearch, TbExternalLink, TbLock, TbUsers, TbLayoutGrid } from "react-icons/tb";
 
 type ProjectStatus = "Active" | "Paused" | "Completed" | "Pipeline";
 type ProjectVisibility = "workspace" | "team" | "private";
@@ -54,6 +57,7 @@ const emptyForm = {
 
 export function WorkProjectsPage() {
   const { isExpanded: isSubNavExpanded } = useSideNav();
+  const roleSlug = usePathname().split("/")[1];
   const [projects, setProjects] = useState<Project[]>([]);
   const [employees, setEmployees] = useState<EmployeeOption[]>([]);
   const [teams, setTeams] = useState<TeamOption[]>([]);
@@ -283,6 +287,14 @@ export function WorkProjectsPage() {
                       />
                       <Detail label="Owner" value={selectedProject.owner?.fullName || "—"} />
                     </div>
+                    <Link
+                      href={`/${roleSlug}/work/projects/${selectedProject.id}`}
+                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-stone-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-stone-800"
+                    >
+                      <TbLayoutGrid size={16} />
+                      Open workspace
+                    </Link>
+                    <ProjectCollaborators projectId={selectedProject.id} />
                     {selectedProject.visibility === "workspace" ? (
                       <a
                         href={`/p/${selectedProject.id}`}

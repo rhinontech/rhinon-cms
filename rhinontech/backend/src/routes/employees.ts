@@ -21,6 +21,9 @@ router.use(authenticate);
 
 router.get("/", authorize("employees:read"), async (_req: AuthRequest, res: Response) => {
   const employees = await User.findAll({
+    // External collaborators are not employees and must never reach this list —
+    // it returns the full HR record, PAN and bank details included.
+    where: { userType: "internal" },
     include: [{ model: Role, as: "role" }],
     attributes: { exclude: ["passwordHash"] },
   });

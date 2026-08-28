@@ -19,7 +19,7 @@ router.post("/login", async (req: Request, res: Response) => {
     return;
   }
 
-  const user = await User.findOne({
+  const user = await User.unscoped().findOne({
     where: { [Op.or]: [{ companyEmail: email }, { personalEmail: email }], status: "active" },
     include: [{ model: Role, as: "role", include: [{ model: Permission }] }],
   });
@@ -44,6 +44,7 @@ router.post("/login", async (req: Request, res: Response) => {
     {
       userId: user.id,
       roleSlug: role.slug,
+      userType: user.userType,
       permissions,
       fullName: user.fullName,
       companyEmail: user.companyEmail,
@@ -52,7 +53,9 @@ router.post("/login", async (req: Request, res: Response) => {
     { expiresIn: env.jwtExpiresIn as jwt.SignOptions["expiresIn"] }
   );
 
-  res.json({ token, roleSlug: role.slug, permissions, fullName: user.fullName });
+  // userType lets the client route external collaborators to the portal rather
+  // than the internal admin shell, which the API would refuse anyway.
+  res.json({ token, roleSlug: role.slug, userType: user.userType, permissions, fullName: user.fullName });
 });
 
 router.post("/logout", (_req: Request, res: Response) => {
@@ -60,7 +63,7 @@ router.post("/logout", (_req: Request, res: Response) => {
 });
 
 router.get("/me", authenticate, async (req: AuthRequest, res: Response) => {
-  const user = await User.findByPk(req.user!.userId, {
+  const user = await User.unscoped().findByPk(req.user!.userId, {
     include: [{ model: Role, as: "role" }],
     attributes: { exclude: ["passwordHash"] },
   });
@@ -86,10 +89,10 @@ router.put("/me", authenticate, async (req: AuthRequest, res: Response) => {
     res.status(400).json({ message: "No valid fields to update" });
     return;
   }
-  const user = await User.findByPk(req.user!.userId);
+  const user = await User.unscoped().findByPk(req.user!.userId);
   if (!user) { res.status(404).json({ message: "User not found" }); return; }
   await user.update(update);
-  const fresh = await User.findByPk(req.user!.userId, {
+  const fresh = await User.unscoped().findByPk(req.user!.userId, {
     include: [{ model: Role, as: "role" }],
     attributes: { exclude: ["passwordHash"] },
   });
@@ -107,7 +110,7 @@ router.put("/me/password", authenticate, async (req: AuthRequest, res: Response)
     res.status(400).json({ message: "New password must be at least 8 characters" });
     return;
   }
-  const user = await User.findByPk(req.user!.userId);
+  const user = await User.unscoped().findByPk(req.user!.userId);
   if (!user) { res.status(404).json({ message: "User not found" }); return; }
   const valid = await bcrypt.compare(currentPassword, user.passwordHash);
   if (!valid) { res.status(401).json({ message: "Current password is incorrect" }); return; }
@@ -124,7 +127,7 @@ router.post("/forgot-password", async (req: Request, res: Response) => {
     return;
   }
 
-  const user = await User.findOne({
+  const user = await User.unscoped().findOne({
     where: { [Op.or]: [{ companyEmail: email }, { personalEmail: email }], status: "active" },
   });
 
@@ -164,7 +167,7 @@ router.post("/reset-password", async (req: Request, res: Response) => {
     return;
   }
 
-  const user = await User.findOne({
+  const user = await User.unscoped().findOne({
     where: {
       resetToken: token,
       resetTokenExpiry: { [Op.gt]: new Date() },
@@ -182,7 +185,7 @@ router.post("/reset-password", async (req: Request, res: Response) => {
 
 // Validate onboarding token — returns name + company email (public, no auth)
 router.get("/onboard/:token", async (req: Request, res: Response) => {
-  const user = await User.findOne({
+  const user = await User.unscoped().findOne({
     where: {
       onboardingToken: req.params.token,
       onboardingTokenExpiry: { [Op.gt]: new Date() },
@@ -215,7 +218,7 @@ router.post("/onboard", async (req: Request, res: Response) => {
     res.status(400).json({ message: "Password must contain at least one number" });
     return;
   }
-  const user = await User.findOne({
+  const user = await User.unscoped().findOne({
     where: {
       onboardingToken: token,
       onboardingTokenExpiry: { [Op.gt]: new Date() },

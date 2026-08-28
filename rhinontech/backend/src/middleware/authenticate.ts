@@ -6,12 +6,26 @@ import { User, Role, Permission } from "../models";
 export interface AuthRequest extends Request {
   user?: {
     userId: string;
+    userType: "internal" | "guest";
     roleSlug: string;
     permissions: string[];
     fullName: string;
     companyEmail: string;
   };
 }
+
+/**
+ * Router mount paths an external collaborator may touch AT ALL. Everything else
+ * is refused before the route runs.
+ *
+ * Deliberately an allowlist keyed on the mount path: a module added later is
+ * closed to guests until someone opts it in, rather than open until someone
+ * remembers to close it. This is the structural guard that stops a
+ * misconfigured role from ever handing a client the HR module — /people alone
+ * returns PAN, bank account and salary for every employee.
+ */
+// /workflow is read-only for guests — every write there is behind requireInternal.
+const GUEST_ALLOWED_MOUNTS = new Set(["/auth", "/tasks", "/work", "/workflow"]);
 
 export async function authenticate(req: AuthRequest, res: Response, next: NextFunction) {
   const token = req.headers.authorization?.split(" ")[1];
@@ -33,8 +47,9 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
   // offboarding, role changes, and permission grants/revocations take effect
   // immediately instead of waiting for the token to expire or a re-login.
   try {
-    const account = await User.findByPk(payload.userId, {
-      attributes: ["id", "status", "fullName", "companyEmail"],
+    // unscoped: the default scope hides guests, who must still be able to authenticate.
+    const account = await User.unscoped().findByPk(payload.userId, {
+      attributes: ["id", "status", "fullName", "companyEmail", "userType"],
       include: [{ model: Role, as: "role", include: [{ model: Permission }] }],
     });
     if (!account || account.status !== "active") {
@@ -47,11 +62,18 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
 
     req.user = {
       userId: account.id,
+      userType: (account as any).userType === "guest" ? "guest" : "internal",
       roleSlug: role?.slug ?? "",
       permissions,
       fullName: account.fullName,
       companyEmail: account.companyEmail,
     };
+
+    // req.baseUrl is the router's mount path ("/tasks", "/payroll", …).
+    if (req.user.userType === "guest" && !GUEST_ALLOWED_MOUNTS.has(req.baseUrl)) {
+      res.status(403).json({ message: "This area is not available to collaborator accounts." });
+      return;
+    }
   } catch (err: any) {
     console.error("Auth lookup failed:", err.message);
     res.status(500).json({ message: "Could not verify account" });
@@ -61,8 +83,21 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
   next();
 }
 
+/** Route guard for internal-only endpoints inside an otherwise guest-reachable router. */
+export function requireInternal(req: AuthRequest, res: Response, next: NextFunction) {
+  if (req.user?.userType === "guest") {
+    res.status(403).json({ message: "Collaborators cannot perform this action." });
+    return;
+  }
+  next();
+}
+
 // For imperative in-handler checks (as opposed to the authorize() route guard below).
 export function hasPermission(req: AuthRequest, ...anyOf: string[]): boolean {
+  if (req.user?.userType === "guest") {
+    // A guest must never inherit a management bypass, whatever role it carries.
+    return false;
+  }
   if (req.user?.roleSlug === "superadmin") return true;
   const granted = req.user?.permissions || [];
   return anyOf.some((p) => granted.includes(p));

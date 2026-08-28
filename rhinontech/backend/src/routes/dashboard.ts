@@ -41,7 +41,7 @@ router.get("/stats", async (req: AuthRequest, res: Response) => {
     const today = now.toISOString().split("T")[0];
 
     // Employee counts
-    const totalEmployees = await User.count({ where: { status: "active" } });
+    const totalEmployees = await User.count({ where: { status: "active", userType: "internal" } });
     const newThisMonth = await User.count({
       where: { status: "active", joiningDate: { [Op.between]: [startOfMonth, endOfMonth] } },
     });
@@ -82,7 +82,7 @@ router.get("/stats", async (req: AuthRequest, res: Response) => {
 
     // All active employees for birthday/anniversary computation
     const allEmployees = await User.findAll({
-      where: { status: "active" },
+      where: { status: "active", userType: "internal" },
       attributes: ["id", "fullName", "joiningDate", "dateOfBirth", "department"],
       include: [{ model: Role, as: "role", attributes: ["name"] }],
     });

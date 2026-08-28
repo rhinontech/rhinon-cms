@@ -50,6 +50,13 @@ import { Activity } from "./Activity";
 import { SavedView } from "./SavedView";
 import { Team } from "./Team";
 import { TeamMember } from "./TeamMember";
+import { ProjectMember } from "./ProjectMember";
+import { WorkflowStatus } from "./WorkflowStatus";
+import { TaskDependency } from "./TaskDependency";
+import { TaskAttachment } from "./TaskAttachment";
+import { FieldDefinition } from "./FieldDefinition";
+import { TimeEntry } from "./TimeEntry";
+import { TaskActivity } from "./TaskActivity";
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/database";
 
@@ -104,6 +111,45 @@ Task.hasMany(TaskComment, { foreignKey: "taskId", as: "comments", onDelete: "CAS
 TaskComment.belongsTo(User, { foreignKey: "userId", as: "author" });
 User.hasMany(TaskComment, { foreignKey: "userId", as: "taskComments" });
 
+// --- Wrike-parity task graph -------------------------------------------------
+
+// Custom statuses (Board columns). projectId null = the company default set.
+Task.belongsTo(WorkflowStatus, { foreignKey: "statusId", as: "workflowStatus" });
+WorkflowStatus.hasMany(Task, { foreignKey: "statusId", as: "tasks" });
+WorkflowStatus.belongsTo(Project, { foreignKey: "projectId", as: "project" });
+Project.hasMany(WorkflowStatus, { foreignKey: "projectId", as: "workflowStatuses" });
+
+// Real subitems: a child Task, not a checklist row.
+Task.belongsTo(Task, { foreignKey: "parentTaskId", as: "parent" });
+Task.hasMany(Task, { foreignKey: "parentTaskId", as: "children" });
+
+// Gantt dependency graph (supersedes the single blockedById edge).
+Task.hasMany(TaskDependency, { foreignKey: "successorId", as: "dependsOn", onDelete: "CASCADE" });
+Task.hasMany(TaskDependency, { foreignKey: "predecessorId", as: "blocks", onDelete: "CASCADE" });
+TaskDependency.belongsTo(Task, { foreignKey: "predecessorId", as: "predecessor" });
+TaskDependency.belongsTo(Task, { foreignKey: "successorId", as: "successor" });
+
+// Files tab
+Task.hasMany(TaskAttachment, { foreignKey: "taskId", as: "attachments", onDelete: "CASCADE" });
+TaskAttachment.belongsTo(Task, { foreignKey: "taskId", as: "task" });
+TaskAttachment.belongsTo(User, { foreignKey: "uploadedById", as: "uploadedBy" });
+
+// Custom field columns
+FieldDefinition.belongsTo(Project, { foreignKey: "projectId", as: "project" });
+Project.hasMany(FieldDefinition, { foreignKey: "projectId", as: "fieldDefinitions" });
+FieldDefinition.belongsTo(User, { foreignKey: "createdById", as: "creator" });
+
+// Task activity feed
+Task.hasMany(TaskActivity, { foreignKey: "taskId", as: "activity", onDelete: "CASCADE" });
+TaskActivity.belongsTo(Task, { foreignKey: "taskId", as: "task" });
+TaskActivity.belongsTo(User, { foreignKey: "userId", as: "actor" });
+
+// Time tracking
+Task.hasMany(TimeEntry, { foreignKey: "taskId", as: "timeEntries", onDelete: "CASCADE" });
+TimeEntry.belongsTo(Task, { foreignKey: "taskId", as: "task" });
+TimeEntry.belongsTo(User, { foreignKey: "userId", as: "user" });
+User.hasMany(TimeEntry, { foreignKey: "userId", as: "timeEntries" });
+
 // Task Tags
 TaskTag.belongsTo(Task, { foreignKey: "taskId", as: "task" });
 Task.hasMany(TaskTag, { foreignKey: "taskId", as: "tags", onDelete: "CASCADE" });
@@ -132,6 +178,13 @@ Project.belongsTo(Team, { foreignKey: "teamId", as: "team" });
 Team.hasMany(Project, { foreignKey: "teamId", as: "projects" });
 Project.belongsTo(User, { foreignKey: "ownerId", as: "owner" });
 User.hasMany(Project, { foreignKey: "ownerId", as: "ownedProjects" });
+
+// External collaborators / explicit per-project grants
+Project.hasMany(ProjectMember, { foreignKey: "projectId", as: "collaborators", onDelete: "CASCADE" });
+ProjectMember.belongsTo(Project, { foreignKey: "projectId", as: "project" });
+ProjectMember.belongsTo(User, { foreignKey: "userId", as: "user" });
+ProjectMember.belongsTo(User, { foreignKey: "invitedById", as: "invitedBy" });
+User.hasMany(ProjectMember, { foreignKey: "userId", as: "projectMemberships" });
 
 // Attendance
 Attendance.belongsTo(User, { foreignKey: "userId", as: "user" });
@@ -334,6 +387,13 @@ export {
   SavedView,
   Team,
   TeamMember,
+  ProjectMember,
+  WorkflowStatus,
+  TaskDependency,
+  TaskAttachment,
+  FieldDefinition,
+  TimeEntry,
+  TaskActivity,
 };
 
 export async function syncDatabase(force = false) {

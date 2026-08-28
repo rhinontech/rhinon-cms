@@ -3,6 +3,8 @@ import { decodeJwt } from "jose";
 export interface JWTPayload {
   userId: string;
   roleSlug: string;
+  /** External collaborators belong in /portal, not the internal admin shell. */
+  userType?: "internal" | "guest";
   permissions: string[];
   fullName: string;
   companyEmail: string;
