@@ -53,7 +53,7 @@ export function Sidebar() {
       className={cn(
         "flex h-full flex-col transition-all duration-300 ease-in-out",
         // Mobile: fixed overlay drawer slid in from the left; desktop: static column.
-        "fixed inset-y-0 left-0 z-50 w-64 max-lg:bg-white! shadow-xl lg:static lg:z-auto lg:shadow-none",
+        "fixed inset-y-0 left-0 z-50 w-64 max-lg:bg-card! shadow-xl lg:static lg:z-auto lg:shadow-none",
         mobileNavOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
         expanded ? "lg:w-56" : "lg:w-14"
       )}
@@ -61,22 +61,26 @@ export function Sidebar() {
       onMouseLeave={() => setIsHovering(false)}
     >
       {/* Logo */}
-      <div className="flex h-14 items-center justify-center border-black/5 w-full">
+      <div className="flex h-14 items-center justify-center border-border w-full">
         {expanded ? (
           <div className="flex items-center justify-between w-full px-3">
             <Link href="/">
-              <Image src={adminImages.Logo_Rhinon_Tech_Dark} alt="Rhinon Tech" priority className="h-10 w-full object-cover" />
+              {/* Both marks render; CSS picks one. Swapping via useTheme()
+                  would flash the wrong logo before hydration resolves. */}
+              <Image src={adminImages.Logo_Rhinon_Tech_Dark} alt="Rhinon Tech" priority className="h-10 w-full object-cover dark:hidden" />
+              <Image src={adminImages.Logo_Rhinon_Tech_White} alt="Rhinon Tech" priority className="hidden h-10 w-full object-cover dark:block" />
             </Link>
             <button
               onClick={() => setSidebarExpanded(!sidebarExpanded)}
-              className="p-1 rounded bg-white/50 hover:bg-white/70 transition-all shrink-0"
+              className="p-1 rounded bg-card/50 hover:bg-card/70 transition-all shrink-0"
             >
               {sidebarExpanded ? <BsPinAngleFill size={14} /> : <BsPinAngle size={14} />}
             </button>
           </div>
         ) : (
           <Link href="/">
-            <Image src={adminImages.blueLogo} alt="Rhinon Tech" priority className="h-8 w-8 object-cover" />
+            <Image src={adminImages.blueLogo} alt="Rhinon Tech" priority className="h-8 w-8 object-cover dark:hidden" />
+            <Image src={adminImages.whiteLogo} alt="Rhinon Tech" priority className="hidden h-8 w-8 object-cover dark:block" />
           </Link>
         )}
       </div>
@@ -91,8 +95,8 @@ export function Sidebar() {
               className={cn(
                 "group flex items-center justify-center gap-x-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                 pathname.startsWith(item.href)
-                  ? "bg-white/70 text-gray-900"
-                  : "text-gray-700 hover:bg-white/40 hover:text-gray-900"
+                  ? "bg-card/70 text-foreground"
+                  : "text-foreground/85 hover:bg-card/40 hover:text-foreground"
               )}
             >
               {item.icon}

@@ -148,14 +148,14 @@ export function CampaignDetailPage({ id }: { id: string }) {
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <TbLoader className="animate-spin text-stone-300" size={44} />
+        <TbLoader className="animate-spin text-muted-foreground/70" size={44} />
       </div>
     );
   }
 
   if (!campaign) {
     return (
-      <div className="flex h-full flex-col items-center justify-center text-stone-400">
+      <div className="flex h-full flex-col items-center justify-center text-muted-foreground">
         <TbTarget size={64} className="mb-4 opacity-20" />
         <p>Campaign not found</p>
       </div>
@@ -185,7 +185,7 @@ export function CampaignDetailPage({ id }: { id: string }) {
         <FunnelStrip funnel={stats?.funnel ?? null} leads={leads} />
 
         <div className="flex min-h-0 flex-1 flex-col md:flex-row gap-3 sm:gap-4">
-          <nav className="flex shrink-0 flex-row overflow-x-auto gap-1 border-b border-black/5 pb-2.5 pt-0.5 md:pb-0 md:pt-0 md:w-44 md:flex-col md:border-b-0 md:space-y-0.5">
+          <nav className="flex shrink-0 flex-row overflow-x-auto gap-1 border-b border-border pb-2.5 pt-0.5 md:pb-0 md:pt-0 md:w-44 md:flex-col md:border-b-0 md:space-y-0.5">
             {NAV_ITEMS.map((item) => (
               <button
                 key={item.key}
@@ -193,8 +193,8 @@ export function CampaignDetailPage({ id }: { id: string }) {
                 className={cn(
                   "flex shrink-0 items-center justify-center md:justify-start gap-2 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors whitespace-nowrap",
                   activeTab === item.key
-                    ? "bg-blue-50 text-blue-900 font-semibold"
-                    : "text-stone-600 hover:bg-stone-100"
+                    ? "bg-blue-50 dark:bg-blue-400/10 text-blue-900 dark:text-blue-200 font-semibold"
+                    : "text-foreground/70 hover:bg-muted"
                 )}
               >
                 {item.icon}

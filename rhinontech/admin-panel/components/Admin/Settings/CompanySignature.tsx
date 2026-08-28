@@ -57,21 +57,21 @@ export function CompanySignature() {
 
   return (
     <div className="rounded-xl glass-card p-5 max-w-xl">
-      <h3 className="text-sm font-semibold text-gray-900">Company signature</h3>
-      <p className="mt-1 text-xs text-gray-500">
+      <h3 className="text-sm font-semibold text-foreground">Company signature</h3>
+      <p className="mt-1 text-xs text-muted-foreground">
         Used to sign relieving and experience letters generated from the Team panel.
         Upload a PNG with a transparent background for the cleanest result.
       </p>
 
       <div className="mt-4 flex items-center gap-4">
-        <div className="flex h-16 w-40 items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50">
+        <div className="flex h-16 w-40 items-center justify-center rounded-lg border border-dashed border-border bg-muted/40">
           {loading ? (
-            <span className="text-xs text-gray-400">Loading…</span>
+            <span className="text-xs text-muted-foreground">Loading…</span>
           ) : url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={url} alt="Company signature" className="max-h-14 max-w-36 object-contain" />
           ) : (
-            <span className="text-xs text-gray-400">No signature set</span>
+            <span className="text-xs text-muted-foreground">No signature set</span>
           )}
         </div>
 
@@ -81,7 +81,7 @@ export function CompanySignature() {
               type="button"
               onClick={() => inputRef.current?.click()}
               disabled={busy}
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground/85 hover:bg-muted disabled:opacity-50"
             >
               <TbUpload size={14} /> {url ? "Replace" : "Upload"} signature
             </button>
@@ -90,7 +90,7 @@ export function CompanySignature() {
                 type="button"
                 onClick={remove}
                 disabled={busy}
-                className="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-400/10 disabled:opacity-50"
               >
                 <TbTrash size={14} /> Remove
               </button>

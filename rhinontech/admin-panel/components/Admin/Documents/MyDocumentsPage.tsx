@@ -57,20 +57,20 @@ function formatFileSize(bytes: number | null): string {
 }
 
 function FileIcon({ mimeType, size = 28 }: { mimeType: string | null; size?: number }) {
-  if (!mimeType) return <TbFile size={size} className="text-gray-400" />;
-  if (mimeType === "application/pdf") return <TbFileTypePdf size={size} className="text-red-500" />;
-  if (mimeType.startsWith("image/")) return <TbPhoto size={size} className="text-blue-500" />;
-  return <TbFile size={size} className="text-gray-400" />;
+  if (!mimeType) return <TbFile size={size} className="text-muted-foreground" />;
+  if (mimeType === "application/pdf") return <TbFileTypePdf size={size} className="text-red-500 dark:text-red-400" />;
+  if (mimeType.startsWith("image/")) return <TbPhoto size={size} className="text-blue-500 dark:text-blue-400" />;
+  return <TbFile size={size} className="text-muted-foreground" />;
 }
 
 function CategoryBadge({ category }: { category: Category }) {
   const colors: Record<Category, string> = {
-    offer_letter: "bg-blue-50 text-blue-700 border-blue-100",
-    contract: "bg-purple-50 text-purple-700 border-purple-100",
-    id_proof: "bg-green-50 text-green-700 border-green-100",
-    appraisal: "bg-orange-50 text-orange-700 border-orange-100",
-    nda: "bg-red-50 text-red-700 border-red-100",
-    other: "bg-gray-50 text-gray-600 border-gray-100",
+    offer_letter: "bg-blue-50 dark:bg-blue-400/10 text-blue-700 dark:text-blue-300 border-blue-100 dark:border-blue-400/20",
+    contract: "bg-purple-50 dark:bg-purple-400/10 text-purple-700 dark:text-purple-300 border-purple-100 dark:border-purple-400/20",
+    id_proof: "bg-green-50 dark:bg-green-400/10 text-green-700 dark:text-green-300 border-green-100 dark:border-green-400/20",
+    appraisal: "bg-orange-50 dark:bg-orange-400/10 text-orange-700 dark:text-orange-300 border-orange-100 dark:border-orange-400/20",
+    nda: "bg-red-50 dark:bg-red-400/10 text-red-700 dark:text-red-300 border-red-100 dark:border-red-400/20",
+    other: "bg-muted/40 text-foreground/70 border-border",
   };
   return (
     <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full border", colors[category])}>
@@ -142,12 +142,12 @@ function UploadModal({ onClose, onSuccess, prefillDocId, prefillTitle, prefillCa
       <div className="glass-modal rounded-xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between h-14 px-4 sm:px-5 border-b shrink-0">
           <p className="font-semibold tracking-tight text-sm sm:text-base">{isFullfilling ? "Upload Requested Document" : "Upload Document"}</p>
-          <button onClick={onClose} className="p-1 rounded hover:bg-gray-100"><TbX size={18} /></button>
+          <button onClick={onClose} className="p-1 rounded hover:bg-muted"><TbX size={18} /></button>
         </div>
         <form onSubmit={handleSubmit} className="p-4 sm:p-5 flex flex-col gap-3.5 sm:gap-4 overflow-y-auto">
           {!isFullfilling && (
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs text-gray-400">Title</label>
+              <label className="text-xs text-muted-foreground">Title</label>
               <input
                 className="border rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={title}
@@ -159,7 +159,7 @@ function UploadModal({ onClose, onSuccess, prefillDocId, prefillTitle, prefillCa
           )}
           {!isFullfilling && (
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs text-gray-400">Category</label>
+              <label className="text-xs text-muted-foreground">Category</label>
               <select
                 className="border rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-full"
                 value={category}
@@ -172,27 +172,27 @@ function UploadModal({ onClose, onSuccess, prefillDocId, prefillTitle, prefillCa
             </div>
           )}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs text-gray-400">File</label>
+            <label className="text-xs text-muted-foreground">File</label>
             <div
               className="border-2 border-dashed rounded-lg p-5 sm:p-6 text-center cursor-pointer hover:border-blue-400 transition-colors"
               onClick={() => fileRef.current?.click()}
             >
-              <TbUpload size={24} className="mx-auto text-gray-400 mb-2" />
+              <TbUpload size={24} className="mx-auto text-muted-foreground mb-2" />
               {file ? (
-                <p className="text-xs sm:text-sm text-gray-700 font-medium truncate max-w-full">{file.name}</p>
+                <p className="text-xs sm:text-sm text-foreground/85 font-medium truncate max-w-full">{file.name}</p>
               ) : (
-                <p className="text-xs sm:text-sm text-gray-400">Click to select file</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Click to select file</p>
               )}
               <input ref={fileRef} type="file" className="hidden" onChange={e => setFile(e.target.files?.[0] || null)} />
             </div>
           </div>
-          {error && <p className="text-xs text-red-500">{error}</p>}
+          {error && <p className="text-xs text-red-500 dark:text-red-400">{error}</p>}
           <div className="flex gap-2 justify-end pt-1">
-            <button type="button" onClick={onClose} className="px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg border hover:bg-gray-50">Cancel</button>
+            <button type="button" onClick={onClose} className="px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg border hover:bg-muted/40">Cancel</button>
             <button
               type="submit"
               disabled={loading}
-              className="px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg bg-stone-900 text-white hover:bg-stone-800 disabled:opacity-50"
+              className="px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
               {loading ? "Uploading..." : "Upload"}
             </button>
@@ -217,12 +217,12 @@ function PreviewModal({ title, url, onClose }: { title: string; url: string; onC
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b px-5 py-3">
-          <p className="text-sm font-semibold text-gray-900 truncate">{title}</p>
-          <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+          <p className="text-sm font-semibold text-foreground truncate">{title}</p>
+          <button onClick={onClose} className="p-1.5 text-muted-foreground hover:text-foreground/85 rounded-lg hover:bg-muted">
             <TbX size={18} />
           </button>
         </div>
-        <div className="flex-1 overflow-hidden bg-gray-100">
+        <div className="flex-1 overflow-hidden bg-muted">
           <iframe src={url} className="h-full w-full" title={title} />
         </div>
       </div>
@@ -259,38 +259,38 @@ function DocAside({ doc, onClose }: { doc: Doc; onClose: () => void }) {
 
   return (
     <div className="flex min-h-0 h-full w-full flex-col overflow-hidden">
-      <div className="sticky top-0 w-full flex items-center justify-between min-h-16 px-4 sm:px-5 py-2 sm:py-0 border-b bg-white z-10 shrink-0">
-        <p className="flex self-stretch items-center text-sm sm:text-md font-medium tracking-tight border-b-2 border-blue-600 text-black -mb-px">
+      <div className="sticky top-0 w-full flex items-center justify-between min-h-16 px-4 sm:px-5 py-2 sm:py-0 border-b bg-card z-10 shrink-0">
+        <p className="flex self-stretch items-center text-sm sm:text-md font-medium tracking-tight border-b-2 border-blue-600 text-foreground -mb-px">
           Document Details
         </p>
-        <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors"><TbX size={18} /></button>
+        <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors"><TbX size={18} /></button>
       </div>
       <div className="flex-1 overflow-y-auto p-4 sm:p-5 flex flex-col gap-4 sm:gap-5">
         <div className="flex items-start gap-3 sm:gap-4">
-          <div className="p-2.5 sm:p-3 rounded-xl bg-gray-50 border shrink-0">
+          <div className="p-2.5 sm:p-3 rounded-xl bg-muted/40 border shrink-0">
             <FileIcon mimeType={doc.mimeType} size={30} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">{doc.title}</p>
+            <p className="font-semibold text-foreground text-sm sm:text-base truncate">{doc.title}</p>
             <CategoryBadge category={doc.category} />
           </div>
         </div>
-        <div className="rounded-xl glass-card divide-y divide-gray-50">
+        <div className="rounded-xl glass-card divide-y divide-border">
           <div className="px-3.5 sm:px-4 py-2.5 sm:py-3 flex justify-between gap-2">
-            <span className="text-xs text-gray-400">File name</span>
-            <span className="font-semibold text-gray-900 text-xs sm:text-sm truncate max-w-[200px]">{doc.fileName || "—"}</span>
+            <span className="text-xs text-muted-foreground">File name</span>
+            <span className="font-semibold text-foreground text-xs sm:text-sm truncate max-w-[200px]">{doc.fileName || "—"}</span>
           </div>
           <div className="px-3.5 sm:px-4 py-2.5 sm:py-3 flex justify-between gap-2">
-            <span className="text-xs text-gray-400">File size</span>
-            <span className="font-semibold text-gray-900 text-xs sm:text-sm">{formatFileSize(doc.fileSize)}</span>
+            <span className="text-xs text-muted-foreground">File size</span>
+            <span className="font-semibold text-foreground text-xs sm:text-sm">{formatFileSize(doc.fileSize)}</span>
           </div>
           <div className="px-3.5 sm:px-4 py-2.5 sm:py-3 flex justify-between gap-2">
-            <span className="text-xs text-gray-400">Uploaded by</span>
-            <span className="font-semibold text-gray-900 text-xs sm:text-sm">{doc.uploader?.fullName || "—"}</span>
+            <span className="text-xs text-muted-foreground">Uploaded by</span>
+            <span className="font-semibold text-foreground text-xs sm:text-sm">{doc.uploader?.fullName || "—"}</span>
           </div>
           <div className="px-3.5 sm:px-4 py-2.5 sm:py-3 flex justify-between gap-2">
-            <span className="text-xs text-gray-400">Date</span>
-            <span className="font-semibold text-gray-900 text-xs sm:text-sm">
+            <span className="text-xs text-muted-foreground">Date</span>
+            <span className="font-semibold text-foreground text-xs sm:text-sm">
               {new Date(doc.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
             </span>
           </div>
@@ -301,7 +301,7 @@ function DocAside({ doc, onClose }: { doc: Doc; onClose: () => void }) {
               <button
                 onClick={handlePreview}
                 disabled={previewing}
-                className="flex items-center gap-2 justify-center w-full py-2.5 rounded-lg border text-gray-700 text-xs sm:text-sm font-medium hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                className="flex items-center gap-2 justify-center w-full py-2.5 rounded-lg border text-foreground/85 text-xs sm:text-sm font-medium hover:bg-muted/40 disabled:opacity-50 transition-colors"
               >
                 <TbEye size={16} />
                 {previewing ? "Opening..." : "Preview"}
@@ -310,7 +310,7 @@ function DocAside({ doc, onClose }: { doc: Doc; onClose: () => void }) {
             <button
               onClick={handleDownload}
               disabled={downloading}
-              className="flex items-center gap-2 justify-center w-full py-2.5 rounded-lg bg-stone-900 text-white text-xs sm:text-sm font-medium hover:bg-stone-800 disabled:opacity-50 transition-colors"
+              className="flex items-center gap-2 justify-center w-full py-2.5 rounded-lg bg-primary text-primary-foreground text-xs sm:text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
             >
               <TbDownload size={16} />
               {downloading ? "Getting link..." : "Download"}
@@ -362,14 +362,14 @@ export function MyDocumentsPage() {
     <div className="flex min-h-0 min-w-0 gap-2 h-full overflow-hidden w-full">
       <main className={cn("flex min-h-0 min-w-0 flex-col h-full w-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl max-sm:rounded-xl" : "rounded-xl")}>
         {/* Header */}
-        <div className="sticky top-0 z-10 flex min-h-16 flex-wrap items-center justify-between gap-2 px-4 sm:px-5 py-2 sm:py-0 border-b border-black/5 glass-header">
+        <div className="sticky top-0 z-10 flex min-h-16 flex-wrap items-center justify-between gap-2 px-4 sm:px-5 py-2 sm:py-0 border-b border-border glass-header">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <SubNavToggle />
             <p className="text-base sm:text-lg font-semibold tracking-tight truncate">My Documents</p>
           </div>
           <button
             onClick={() => setShowUpload(true)}
-            className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-stone-900 text-white text-xs sm:text-sm font-medium hover:bg-stone-800 transition-colors whitespace-nowrap shrink-0"
+            className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-primary text-primary-foreground text-xs sm:text-sm font-medium hover:bg-primary/90 transition-colors whitespace-nowrap shrink-0"
           >
             <TbUpload size={15} />
             <span>Upload Document</span>
@@ -386,8 +386,8 @@ export function MyDocumentsPage() {
                 className={cn(
                   "px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors shrink-0",
                   categoryFilter === c
-                    ? "bg-stone-900 text-white"
-                    : "bg-white border text-gray-600 hover:bg-gray-50"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-card border text-foreground/70 hover:bg-muted/40"
                 )}
               >
                 {c === "all" ? "All" : CATEGORY_LABELS[c]}
@@ -398,19 +398,19 @@ export function MyDocumentsPage() {
           {/* Pending Requests */}
           {pendingRequests.length > 0 && (
             <div className="flex flex-col gap-3">
-              <p className="text-sm font-semibold text-gray-700">Pending Requests</p>
+              <p className="text-sm font-semibold text-foreground/85">Pending Requests</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {pendingRequests.map(doc => (
-                  <div key={doc.id} className="rounded-xl border border-amber-200 bg-amber-50 p-3.5 sm:p-4 flex flex-col gap-2">
+                  <div key={doc.id} className="rounded-xl border border-amber-200 dark:border-amber-400/25 bg-amber-50 dark:bg-amber-400/10 p-3.5 sm:p-4 flex flex-col gap-2">
                     <div className="flex items-start gap-3">
-                      <TbAlertCircle size={20} className="text-amber-500 mt-0.5 shrink-0" />
+                      <TbAlertCircle size={20} className="text-amber-500 dark:text-amber-400 mt-0.5 shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 truncate">Document Requested: {doc.title}</p>
+                        <p className="text-sm font-semibold text-foreground truncate">Document Requested: {doc.title}</p>
                         <CategoryBadge category={doc.category} />
                       </div>
                     </div>
                     {doc.requestNote && (
-                      <p className="text-xs text-amber-700 bg-amber-100 rounded p-2">{doc.requestNote}</p>
+                      <p className="text-xs text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-400/15 rounded p-2">{doc.requestNote}</p>
                     )}
                     <button
                       onClick={() => setFulfillDoc(doc)}
@@ -427,10 +427,10 @@ export function MyDocumentsPage() {
 
           {/* Documents Grid */}
           {loading ? (
-            <div className="flex items-center justify-center py-20 text-gray-400 text-sm">Loading...</div>
+            <div className="flex items-center justify-center py-20 text-muted-foreground text-sm">Loading...</div>
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-gray-400 gap-2">
-              <TbFile size={40} className="text-gray-200" />
+            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-2">
+              <TbFile size={40} className="text-muted-foreground/50" />
               <p className="text-xs sm:text-sm">No documents found</p>
             </div>
           ) : (
@@ -439,18 +439,18 @@ export function MyDocumentsPage() {
                 <button
                   key={doc.id}
                   onClick={() => { setSelectedDoc(doc); setMobileDetail(true); }}
-                  className="rounded-xl glass-card p-3.5 sm:p-4 flex flex-col gap-3 text-left hover:border-blue-200 hover:shadow-sm transition-all"
+                  className="rounded-xl glass-card p-3.5 sm:p-4 flex flex-col gap-3 text-left hover:border-blue-200 dark:hover:border-blue-400/25 hover:shadow-sm transition-all"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-gray-50 border shrink-0">
+                    <div className="p-2 rounded-lg bg-muted/40 border shrink-0">
                       <FileIcon mimeType={doc.mimeType} size={22} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 truncate">{doc.title}</p>
+                      <p className="text-sm font-semibold text-foreground truncate">{doc.title}</p>
                       <CategoryBadge category={doc.category} />
                     </div>
                   </div>
-                  <div className="flex items-center justify-between text-xs text-gray-400">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>{new Date(doc.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>
                     <span>{formatFileSize(doc.fileSize)}</span>
                   </div>
@@ -462,7 +462,7 @@ export function MyDocumentsPage() {
       </main>
 
       <aside className={cn(
-        "min-h-0 flex-col bg-white overflow-hidden transition-all duration-200 ease-in-out",
+        "min-h-0 flex-col bg-card overflow-hidden transition-all duration-200 ease-in-out",
         mobileDetail && selectedDoc ? "fixed inset-0 z-50 flex w-full max-w-full" : "hidden",
         "lg:static lg:z-auto lg:flex lg:h-full lg:rounded-xl",
         selectedDoc ? "lg:w-[42%]" : "lg:w-0"

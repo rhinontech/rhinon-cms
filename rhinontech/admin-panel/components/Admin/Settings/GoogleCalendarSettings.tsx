@@ -101,7 +101,7 @@ export function GoogleCalendarSettings() {
       </div>
 
       {!status?.configured && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <div className="rounded-lg border border-amber-200 dark:border-amber-400/25 bg-amber-50 dark:bg-amber-400/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-200">
           <span className="font-semibold">Server not configured.</span> Set <code>GOOGLE_CLIENT_ID</code> and{" "}
           <code>GOOGLE_CLIENT_SECRET</code> in the backend environment, then reload this page.
         </div>
@@ -116,11 +116,11 @@ export function GoogleCalendarSettings() {
           <div
             className={cn(
               "flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 text-sm",
-              connected ? "border-emerald-100 bg-emerald-50 text-emerald-800" : "border-stone-200 bg-stone-50 text-stone-500"
+              connected ? "border-emerald-100 dark:border-emerald-400/20 bg-emerald-50 dark:bg-emerald-400/10 text-emerald-800 dark:text-emerald-200" : "border-border bg-muted/40 text-muted-foreground"
             )}
           >
             <div className="flex items-center gap-3">
-              <TbCalendarEvent size={20} className={connected ? "text-emerald-600" : "text-stone-400"} />
+              <TbCalendarEvent size={20} className={connected ? "text-emerald-600 dark:text-emerald-300" : "text-muted-foreground"} />
               <div>
                 <p className="text-xs font-semibold">
                   {connected ? `Connected${status?.connectedEmail ? ` · ${status.connectedEmail}` : ""}` : "Not connected"}
@@ -138,7 +138,7 @@ export function GoogleCalendarSettings() {
             {connected ? (
               <button
                 onClick={handleDisconnect}
-                className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-stone-400 hover:text-red-600"
+                className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-red-600 dark:hover:text-red-300"
               >
                 <TbUnlink size={12} /> Disconnect
               </button>

@@ -99,7 +99,7 @@ export function LeadPicker({
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
       <div className="relative">
-        <TbSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={15} />
+        <TbSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={15} />
         <Input
           type="text"
           placeholder="Search leads..."
@@ -134,7 +134,7 @@ export function LeadPicker({
         </Select>
       </div>
 
-      <div className="flex items-center justify-between text-xs text-stone-500">
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>
           {count} matching · {selectedIds.size} selected
         </span>
@@ -142,33 +142,33 @@ export function LeadPicker({
           type="button"
           onClick={selectAllFiltered}
           disabled={selectingAll || count === 0}
-          className="font-semibold text-blue-600 hover:underline disabled:opacity-50"
+          className="font-semibold text-blue-600 dark:text-blue-300 hover:underline disabled:opacity-50"
         >
           {selectingAll ? "Selecting…" : `Select all ${count} filtered`}
         </button>
       </div>
 
-      <div className="min-h-0 flex-1 divide-y divide-stone-50 overflow-auto rounded-lg border border-stone-100">
+      <div className="min-h-0 flex-1 divide-y divide-border overflow-auto rounded-lg border border-border">
         {leads.length === 0 && !loading ? (
-          <div className="py-8 text-center text-sm text-stone-400">No leads found</div>
+          <div className="py-8 text-center text-sm text-muted-foreground">No leads found</div>
         ) : (
           <>
             {leads.map((lead) => (
-              <label key={lead.id} className="flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-stone-50">
+              <label key={lead.id} className="flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-muted/40">
                 <input
                   type="checkbox"
                   checked={selectedIds.has(lead.id)}
                   onChange={() => toggle(lead.id)}
-                  className="rounded border-stone-300 text-blue-600 focus:ring-blue-500"
+                  className="rounded border-border text-blue-600 dark:text-blue-300 focus:ring-blue-500"
                 />
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-stone-900">{lead.name}</p>
-                  <p className="truncate text-xs text-stone-400">
+                  <p className="truncate text-sm font-medium text-foreground">{lead.name}</p>
+                  <p className="truncate text-xs text-muted-foreground">
                     {lead.company} · {lead.email}
                     {lead.source ? ` · ${lead.source}` : ""}
                   </p>
                 </div>
-                <span className="ml-auto shrink-0 text-[10px] font-bold uppercase text-stone-400">{lead.status}</span>
+                <span className="ml-auto shrink-0 text-[10px] font-bold uppercase text-muted-foreground">{lead.status}</span>
               </label>
             ))}
             {leads.length < count && (
@@ -176,7 +176,7 @@ export function LeadPicker({
                 type="button"
                 onClick={() => fetchLeads(leads.length)}
                 disabled={loading}
-                className="w-full py-3 text-xs font-semibold text-blue-600 hover:bg-stone-50 disabled:opacity-50"
+                className="w-full py-3 text-xs font-semibold text-blue-600 dark:text-blue-300 hover:bg-muted/40 disabled:opacity-50"
               >
                 {loading ? "Loading…" : `Load more (${count - leads.length} remaining)`}
               </button>
@@ -187,7 +187,7 @@ export function LeadPicker({
 
       <Link
         href={`/${roleSlug}/crm`}
-        className="inline-flex items-center gap-1 text-xs font-semibold text-stone-500 hover:text-stone-900"
+        className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground"
       >
         Manage leads in CRM <TbExternalLink size={12} />
       </Link>

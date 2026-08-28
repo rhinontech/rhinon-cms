@@ -54,58 +54,58 @@ export function TaskSection({
         ref={setNodeRef}
         className={cn(
           "rounded-xl border transition-colors",
-          isOver ? "border-blue-300 bg-blue-50/60" : "border-stone-200 bg-white"
+          isOver ? "border-blue-300 dark:border-blue-400/30 bg-blue-50/60 dark:bg-blue-400/10" : "border-border bg-card"
         )}
       >
         <div className="flex items-center gap-2 px-3 py-2">
           <CollapsibleTrigger className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
-            <TbChevronRight size={15} className={cn("shrink-0 text-stone-400 transition-transform", isOpen && "rotate-90")} />
+            <TbChevronRight size={15} className={cn("shrink-0 text-muted-foreground transition-transform", isOpen && "rotate-90")} />
 
             {isPerson ? (
               <span className={cn(
                 "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold",
-                isFormer ? "bg-stone-100 text-stone-400" : avatarTint(section.key)
+                isFormer ? "bg-muted text-muted-foreground" : avatarTint(section.key)
               )}>
                 {isFormer ? <TbUserOff size={13} /> : initials(section.label)}
               </span>
             ) : (
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-stone-100 text-[10px] font-bold text-stone-500">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground">
                 {section.kind === "unassigned" ? "?" : initials(section.label)}
               </span>
             )}
 
             <span className="min-w-0">
               <span className="flex items-center gap-1.5">
-                <span className={cn("truncate text-sm font-semibold", isFormer ? "text-stone-500" : "text-stone-800")}>
+                <span className={cn("truncate text-sm font-semibold", isFormer ? "text-muted-foreground" : "text-foreground")}>
                   {section.label}
                 </span>
                 {section.isMe && (
-                  <span className="shrink-0 rounded bg-blue-100 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-blue-700">You</span>
+                  <span className="shrink-0 rounded bg-blue-100 dark:bg-blue-400/15 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-blue-700 dark:text-blue-300">You</span>
                 )}
               </span>
-              {section.sublabel && <span className="block truncate text-[10px] text-stone-400">{section.sublabel}</span>}
+              {section.sublabel && <span className="block truncate text-[10px] text-muted-foreground">{section.sublabel}</span>}
             </span>
           </CollapsibleTrigger>
 
           <div className="flex shrink-0 items-center gap-1.5">
             {counts.overdue > 0 && (
-              <span className="rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-600">{counts.overdue} overdue</span>
+              <span className="rounded-full bg-red-50 dark:bg-red-400/10 px-2 py-0.5 text-[10px] font-bold text-red-600 dark:text-red-300">{counts.overdue} overdue</span>
             )}
             {counts.pending + counts.inProgress > 0 ? (
-              <span className="rounded-full bg-stone-100 px-2 py-0.5 text-[10px] font-bold text-stone-600">
+              <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold text-foreground/70">
                 {counts.pending + counts.inProgress} open
               </span>
             ) : (
-              <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-600">
+              <span className="rounded-full bg-emerald-50 dark:bg-emerald-400/10 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-300">
                 {counts.total === 0 ? "Free" : "All done"}
               </span>
             )}
-            <span className="hidden text-[10px] text-stone-400 sm:inline">{counts.total}</span>
+            <span className="hidden text-[10px] text-muted-foreground sm:inline">{counts.total}</span>
 
             {!isFormer && (
               <button
                 onClick={() => onAdd(section)}
-                className="rounded-md p-1 text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-700"
+                className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground/85"
                 aria-label={`Add a task for ${section.label}`}
                 title={`Add a task for ${section.label}`}
               >
@@ -116,7 +116,7 @@ export function TaskSection({
         </div>
 
         <CollapsibleContent>
-          <div className="border-t border-stone-100 p-2.5">
+          <div className="border-t border-border p-2.5">
             {view === "kanban" ? (
               <TaskKanbanRow
                 sectionKey={section.key}

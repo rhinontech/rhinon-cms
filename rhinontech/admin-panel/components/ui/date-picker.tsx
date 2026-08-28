@@ -42,13 +42,13 @@ export function DatePicker({
           className={cn(
             "group flex w-full min-w-0 items-center gap-1.5 text-left text-sm outline-none transition disabled:opacity-50",
             variant === "cell"
-              ? "rounded border border-transparent px-1.5 py-1 hover:border-stone-200 focus:border-blue-500 focus:bg-white"
-              : "rounded-lg border border-stone-200 bg-white/80 px-2 py-1.5 focus:ring-2 focus:ring-blue-500",
+              ? "rounded border border-transparent px-1.5 py-1 hover:border-border focus:border-blue-500 focus:bg-card"
+              : "rounded-lg border border-border bg-card/80 px-2 py-1.5 focus:ring-2 focus:ring-blue-500",
             className
           )}
         >
-          <TbCalendar size={13} className="shrink-0 text-stone-400" />
-          <span className={cn("min-w-0 flex-1 truncate", !selected && "text-stone-400")}>
+          <TbCalendar size={13} className="shrink-0 text-muted-foreground" />
+          <span className={cn("min-w-0 flex-1 truncate", !selected && "text-muted-foreground")}>
             {selected ? format(selected, "dd/MM/yyyy") : placeholder}
           </span>
           {selected && !disabled && (
@@ -58,7 +58,7 @@ export function DatePicker({
               tabIndex={-1}
               aria-label="Clear date"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onChange(null); }}
-              className="shrink-0 rounded p-0.5 text-stone-300 opacity-0 hover:bg-stone-200 hover:text-stone-600 group-hover:opacity-100"
+              className="shrink-0 rounded p-0.5 text-muted-foreground/70 opacity-0 hover:bg-muted hover:text-foreground/70 group-hover:opacity-100"
             >
               <TbX size={11} />
             </span>
@@ -82,14 +82,14 @@ export function DatePicker({
           <button
             type="button"
             onClick={() => { onChange(format(new Date(), "yyyy-MM-dd")); setOpen(false); }}
-            className="rounded px-2 py-1 text-xs font-medium text-stone-600 hover:bg-stone-100"
+            className="rounded px-2 py-1 text-xs font-medium text-foreground/70 hover:bg-muted"
           >
             Today
           </button>
           <button
             type="button"
             onClick={() => { onChange(null); setOpen(false); }}
-            className="rounded px-2 py-1 text-xs text-stone-500 hover:bg-stone-100"
+            className="rounded px-2 py-1 text-xs text-muted-foreground hover:bg-muted"
           >
             Clear
           </button>

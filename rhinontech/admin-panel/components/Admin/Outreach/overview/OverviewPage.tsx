@@ -81,8 +81,8 @@ export function OverviewPage() {
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <SubNavToggle />
           <div className="min-w-0">
-            <h1 className="text-base font-semibold tracking-tight text-gray-900 truncate">Outreach Overview</h1>
-            <p className="hidden text-xs text-gray-500 sm:block truncate">Cold email, AI-drafted outreach, and LinkedIn publishing at a glance.</p>
+            <h1 className="text-base font-semibold tracking-tight text-foreground truncate">Outreach Overview</h1>
+            <p className="hidden text-xs text-muted-foreground sm:block truncate">Cold email, AI-drafted outreach, and LinkedIn publishing at a glance.</p>
           </div>
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
@@ -110,19 +110,19 @@ export function OverviewPage() {
 
         <div className="rounded-xl glass-panel p-3 sm:p-4">
           <div className="mb-3">
-            <h2 className="text-sm font-semibold text-stone-900">Activity, last 14 days</h2>
-            <p className="text-xs text-stone-400">Drafts, sends, and replies across every campaign.</p>
+            <h2 className="text-sm font-semibold text-foreground">Activity, last 14 days</h2>
+            <p className="text-xs text-muted-foreground">Drafts, sends, and replies across every campaign.</p>
           </div>
           <OutreachChart data={chartData} loading={loading} />
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-2">
           <div className="rounded-xl glass-panel p-3 sm:p-4">
-            <h2 className="mb-3 text-sm font-semibold text-stone-900">Needs Attention</h2>
+            <h2 className="mb-3 text-sm font-semibold text-foreground">Needs Attention</h2>
             <NeedsAttention campaigns={campaigns} loading={loading} />
           </div>
           <div className="rounded-xl glass-panel p-3 sm:p-4">
-            <h2 className="mb-3 text-sm font-semibold text-stone-900">Recent Activity</h2>
+            <h2 className="mb-3 text-sm font-semibold text-foreground">Recent Activity</h2>
             <ActivityFeed activities={activities.slice(0, 12)} loading={loading} />
           </div>
         </div>

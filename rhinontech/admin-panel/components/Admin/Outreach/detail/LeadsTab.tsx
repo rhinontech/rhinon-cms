@@ -142,14 +142,14 @@ export function LeadsTab({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-[11px] font-medium text-stone-500">
+        <p className="text-[11px] font-medium text-muted-foreground">
           {draftedCount} drafted · {leads.length} enrolled
         </p>
         <div className="flex items-center gap-2">
           {/* A scheduled campaign is driven only by Activate + the cron. Offering
               "Send Now" alongside it is the one way to double-send a list. */}
           {campaign.autoSend ? (
-            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-stone-500">
+            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
               <TbClock size={13} />
               Scheduled — sends on activation
             </span>
@@ -162,7 +162,7 @@ export function LeadsTab({
         </div>
       </div>
 
-      <div className="overflow-auto rounded-lg border border-stone-100 bg-white">
+      <div className="overflow-auto rounded-lg border border-border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -177,11 +177,11 @@ export function LeadsTab({
             {leads.map((lead) => (
               <TableRow key={lead.id}>
                 <TableCell>
-                  <p className="font-bold text-stone-900">{lead.name}</p>
-                  <p className="text-[10px] font-medium uppercase text-stone-400">{lead.company}</p>
+                  <p className="font-bold text-foreground">{lead.name}</p>
+                  <p className="text-[10px] font-medium uppercase text-muted-foreground">{lead.company}</p>
                 </TableCell>
                 <TableCell>
-                  <span className="rounded border border-stone-200 bg-stone-100 px-2 py-0.5 text-[10px] font-bold text-stone-600">
+                  <span className="rounded border border-border bg-muted px-2 py-0.5 text-[10px] font-bold text-foreground/70">
                     {lead.status}
                   </span>
                 </TableCell>
@@ -189,24 +189,24 @@ export function LeadsTab({
                   {lead.aiDraft ? (
                     <button
                       onClick={() => setDraftLead(lead)}
-                      className="text-[10px] font-bold text-blue-600 hover:underline"
+                      className="text-[10px] font-bold text-blue-600 dark:text-blue-300 hover:underline"
                     >
                       View draft
                     </button>
                   ) : (
-                    <span className="text-[10px] font-bold italic uppercase text-stone-300">Pending</span>
+                    <span className="text-[10px] font-bold italic uppercase text-muted-foreground/70">Pending</span>
                   )}
                 </TableCell>
                 <TableCell>
                   {lead.emailOpened ? (
                     <span
                       title={lead.openedAt ? new Date(lead.openedAt).toLocaleString() : undefined}
-                      className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600"
+                      className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-300"
                     >
                       <TbEye size={13} /> Opened
                     </span>
                   ) : (
-                    <span className="text-[10px] font-bold italic uppercase text-stone-300">—</span>
+                    <span className="text-[10px] font-bold italic uppercase text-muted-foreground/70">—</span>
                   )}
                 </TableCell>
                 <TableCell>
@@ -214,7 +214,7 @@ export function LeadsTab({
                     onClick={() => handleRemoveLead(lead)}
                     disabled={removingId === lead.id}
                     title="Remove from campaign"
-                    className="rounded p-1 text-stone-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                    className="rounded p-1 text-muted-foreground hover:bg-red-50 dark:hover:bg-red-400/10 hover:text-red-600 dark:hover:text-red-300 disabled:opacity-50"
                   >
                     {removingId === lead.id ? <TbLoader className="animate-spin" size={14} /> : <TbTrash size={14} />}
                   </button>

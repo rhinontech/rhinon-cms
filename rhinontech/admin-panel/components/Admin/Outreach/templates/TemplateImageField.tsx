@@ -27,13 +27,13 @@ export function TemplateImageField({
   onManualUrl?: (v: string) => void;
 }) {
   return (
-    <div className="space-y-3 rounded-xl border border-stone-200 bg-stone-50/50 p-3">
-      <Label className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-stone-500">
-        <TbPhoto size={12} /> Image <span className="font-normal normal-case tracking-normal text-stone-300">optional</span>
+    <div className="space-y-3 rounded-xl border border-border bg-muted/40 p-3">
+      <Label className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+        <TbPhoto size={12} /> Image <span className="font-normal normal-case tracking-normal text-muted-foreground/70">optional</span>
       </Label>
 
       {currentUrl ? (
-        <div className="group relative overflow-hidden rounded-lg border border-stone-200">
+        <div className="group relative overflow-hidden rounded-lg border border-border">
           <img src={currentUrl} alt="Preview" className="max-h-44 w-full object-cover" />
           <button
             type="button"
@@ -65,7 +65,7 @@ export function TemplateImageField({
               Generate
             </Button>
           </div>
-          {error && <p className="text-[10px] font-medium text-red-500">{error}</p>}
+          {error && <p className="text-[10px] font-medium text-red-500 dark:text-red-400">{error}</p>}
           {manualUrl && onManualUrl && (
             <Input
               type="url"

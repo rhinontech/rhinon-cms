@@ -98,8 +98,8 @@ export function SavedViews({
         className={cn(
           "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors",
           active
-            ? "border-blue-200 bg-blue-50 text-blue-700"
-            : "border-stone-200 bg-white/70 text-stone-700 hover:bg-stone-100"
+            ? "border-blue-200 dark:border-blue-400/25 bg-blue-50 dark:bg-blue-400/10 text-blue-700 dark:text-blue-300"
+            : "border-border bg-card/70 text-foreground/85 hover:bg-muted"
         )}
       >
         <TbBookmark size={13} />
@@ -108,39 +108,39 @@ export function SavedViews({
       </button>
 
       {open && (
-        <div className="absolute left-0 z-50 mt-1 w-64 rounded-lg border border-stone-200 bg-white p-1 shadow-lg">
+        <div className="absolute left-0 z-50 mt-1 w-64 rounded-lg border border-border bg-card p-1 shadow-lg">
           {views.length === 0 && !naming && (
-            <p className="px-2 py-3 text-center text-[11px] text-stone-400">No saved views yet.</p>
+            <p className="px-2 py-3 text-center text-[11px] text-muted-foreground">No saved views yet.</p>
           )}
 
           {active && (
             <button
               onClick={() => { onApply(null); setOpen(false); }}
-              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-stone-500 hover:bg-stone-50"
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-muted-foreground hover:bg-muted/40"
             >
               Clear view
             </button>
           )}
 
           {views.map((view) => (
-            <div key={view.id} className="group flex items-center gap-1 rounded hover:bg-stone-50">
+            <div key={view.id} className="group flex items-center gap-1 rounded hover:bg-muted/40">
               <button
                 onClick={() => { onApply(view); setOpen(false); }}
                 className="flex min-w-0 flex-1 items-center gap-2 px-2 py-1.5 text-left"
               >
                 <span className="w-3 shrink-0">
-                  {activeViewId === view.id && <TbCheck size={12} className="text-blue-600" />}
+                  {activeViewId === view.id && <TbCheck size={12} className="text-blue-600 dark:text-blue-300" />}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[12px] text-stone-800">{view.name}</span>
+                  <span className="block truncate text-[12px] text-foreground">{view.name}</span>
                   {view.creator && (
-                    <span className="block truncate text-[10px] text-stone-400">{view.creator.fullName}</span>
+                    <span className="block truncate text-[10px] text-muted-foreground">{view.creator.fullName}</span>
                   )}
                 </span>
               </button>
               <button
                 onClick={() => remove(view)}
-                className="mr-1 rounded p-1 text-stone-300 opacity-0 transition-opacity hover:bg-rose-50 hover:text-rose-600 group-hover:opacity-100"
+                className="mr-1 rounded p-1 text-muted-foreground/70 opacity-0 transition-opacity hover:bg-rose-50 dark:hover:bg-rose-400/10 hover:text-rose-600 dark:hover:text-rose-300 group-hover:opacity-100"
                 title="Delete view"
               >
                 <TbTrash size={12} />
@@ -148,7 +148,7 @@ export function SavedViews({
             </div>
           ))}
 
-          <div className="mt-1 border-t border-stone-100 pt-1">
+          <div className="mt-1 border-t border-border pt-1">
             {naming ? (
               <div className="flex items-center gap-1 p-1">
                 <input
@@ -160,12 +160,12 @@ export function SavedViews({
                     if (e.key === "Escape") setNaming(false);
                   }}
                   placeholder="View name"
-                  className="min-w-0 flex-1 rounded border border-stone-200 px-2 py-1 text-[12px] outline-none focus:ring-2 focus:ring-blue-500/40"
+                  className="min-w-0 flex-1 rounded border border-border px-2 py-1 text-[12px] outline-none focus:ring-2 focus:ring-blue-500/40"
                 />
                 <button
                   onClick={save}
                   disabled={busy || !name.trim()}
-                  className="rounded bg-stone-900 px-2 py-1 text-[11px] font-medium text-white disabled:opacity-50"
+                  className="rounded bg-primary px-2 py-1 text-[11px] font-medium text-primary-foreground disabled:opacity-50"
                 >
                   Save
                 </button>
@@ -175,7 +175,7 @@ export function SavedViews({
                 onClick={() => setNaming(true)}
                 disabled={!hasFilters}
                 title={hasFilters ? undefined : "Set a filter first"}
-                className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-stone-700 hover:bg-stone-50 disabled:cursor-not-allowed disabled:text-stone-300 disabled:hover:bg-transparent"
+                className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-foreground/85 hover:bg-muted/40 disabled:cursor-not-allowed disabled:text-muted-foreground/70 disabled:hover:bg-transparent"
               >
                 <TbPlus size={12} /> Save current filters
               </button>

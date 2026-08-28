@@ -39,15 +39,15 @@ function entryIcon(entry: TimelineEntry) {
 
 /** Machine events stay visually quieter than things a person did. */
 function entryTint(entry: TimelineEntry) {
-  if (entry.kind === "campaign") return "bg-stone-100 text-stone-400";
-  if (entry.kind === "email") return "bg-blue-50 text-blue-500";
+  if (entry.kind === "campaign") return "bg-muted text-muted-foreground";
+  if (entry.kind === "email") return "bg-blue-50 dark:bg-blue-400/10 text-blue-500 dark:text-blue-400";
   switch (entry.type) {
-    case "Call": return "bg-emerald-50 text-emerald-600";
-    case "Meeting": return "bg-violet-50 text-violet-600";
+    case "Call": return "bg-emerald-50 dark:bg-emerald-400/10 text-emerald-600 dark:text-emerald-300";
+    case "Meeting": return "bg-violet-50 dark:bg-violet-400/10 text-violet-600 dark:text-violet-300";
     case "StageChange":
-    case "LifecycleChange": return "bg-amber-50 text-amber-600";
-    case "OwnerChange": return "bg-cyan-50 text-cyan-600";
-    default: return "bg-stone-100 text-stone-500";
+    case "LifecycleChange": return "bg-amber-50 dark:bg-amber-400/10 text-amber-600 dark:text-amber-300";
+    case "OwnerChange": return "bg-cyan-50 dark:bg-cyan-400/10 text-cyan-600 dark:text-cyan-300";
+    default: return "bg-muted text-muted-foreground";
   }
 }
 
@@ -117,7 +117,7 @@ export function Timeline({
   return (
     <div className="flex flex-col gap-3">
       {/* Composer */}
-      <div className="rounded-lg border border-stone-200 bg-white/70 p-2">
+      <div className="rounded-lg border border-border bg-card/70 p-2">
         <div className="mb-2 flex items-center gap-1">
           {LOG_TYPES.map((t) => (
             <button
@@ -125,7 +125,7 @@ export function Timeline({
               onClick={() => setLogType(t.value)}
               className={cn(
                 "inline-flex items-center gap-1 rounded px-2 py-1 text-[11px] font-medium transition-colors",
-                logType === t.value ? "bg-stone-900 text-white" : "text-stone-500 hover:bg-stone-100"
+                logType === t.value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
               )}
             >
               {t.icon} {t.label}
@@ -145,7 +145,7 @@ export function Timeline({
             : logType === "Email" ? "Summary of the email…"
             : "Add a note…"
           }
-          className="h-16 w-full resize-none rounded border border-stone-200 bg-white px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40"
+          className="h-16 w-full resize-none rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40"
         />
         <div className="mt-1.5 flex items-center justify-between gap-2">
           {logType === "Call" ? (
@@ -155,56 +155,56 @@ export function Timeline({
               value={duration}
               onChange={(e) => setDuration(e.target.value)}
               placeholder="Duration (min)"
-              className="w-32 rounded border border-stone-200 bg-white px-2 py-1 text-[11px] tabular-nums outline-none focus:ring-2 focus:ring-blue-500/40"
+              className="w-32 rounded border border-border bg-card px-2 py-1 text-[11px] tabular-nums outline-none focus:ring-2 focus:ring-blue-500/40"
             />
-          ) : <span className="text-[10px] text-stone-400">⌘↵ to save</span>}
+          ) : <span className="text-[10px] text-muted-foreground">⌘↵ to save</span>}
           <TBtn variant="solid" onClick={submit} disabled={saving || !body.trim()}>
             {saving ? "Saving…" : `Log ${logType.toLowerCase()}`}
           </TBtn>
         </div>
       </div>
 
-      {error && <p className="rounded border border-rose-200 bg-rose-50 px-2 py-1.5 text-[11px] text-rose-700">{error}</p>}
+      {error && <p className="rounded border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2 py-1.5 text-[11px] text-rose-700 dark:text-rose-300">{error}</p>}
 
       {/* Feed */}
       {loading ? (
         <div className="space-y-2">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-9 animate-pulse rounded bg-stone-100" />
+            <div key={i} className="h-9 animate-pulse rounded bg-muted" />
           ))}
         </div>
       ) : entries.length === 0 ? (
-        <p className="py-6 text-center text-xs text-stone-400">No activity yet.</p>
+        <p className="py-6 text-center text-xs text-muted-foreground">No activity yet.</p>
       ) : (
         <ol className="relative space-y-0.5">
           {entries.map((entry, i) => (
             <li key={`${entry.kind}-${entry.id}`} className="relative flex gap-2.5 pb-2">
               {/* Connector: skipped on the last row so the line doesn't dangle. */}
               {i < entries.length - 1 && (
-                <span className="absolute left-[11px] top-6 h-full w-px bg-stone-200" aria-hidden />
+                <span className="absolute left-[11px] top-6 h-full w-px bg-muted" aria-hidden />
               )}
               <span className={cn("z-10 mt-0.5 flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full", entryTint(entry))}>
                 {entryIcon(entry)}
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline justify-between gap-2">
-                  <p className={cn("truncate text-[13px]", entry.kind === "activity" ? "text-stone-800" : "text-stone-500")}>
+                  <p className={cn("truncate text-[13px]", entry.kind === "activity" ? "text-foreground" : "text-muted-foreground")}>
                     {entry.subject || entry.type}
                     {entry.durationMinutes ? (
-                      <span className="ml-1.5 text-[11px] tabular-nums text-stone-400">{entry.durationMinutes}m</span>
+                      <span className="ml-1.5 text-[11px] tabular-nums text-muted-foreground">{entry.durationMinutes}m</span>
                     ) : null}
                   </p>
-                  <span className="shrink-0 text-[10px] tabular-nums text-stone-400">{relativeTime(entry.occurredAt)}</span>
+                  <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">{relativeTime(entry.occurredAt)}</span>
                 </div>
                 {entry.body && (
-                  <p className="mt-0.5 whitespace-pre-wrap break-words text-[12px] leading-relaxed text-stone-500 line-clamp-4">
+                  <p className="mt-0.5 whitespace-pre-wrap break-words text-[12px] leading-relaxed text-muted-foreground line-clamp-4">
                     {entry.body}
                   </p>
                 )}
                 {entry.user && (
                   <div className="mt-1 flex items-center gap-1.5">
                     <Avatar name={entry.user.fullName} size={14} />
-                    <span className="text-[10px] text-stone-400">{entry.user.fullName}</span>
+                    <span className="text-[10px] text-muted-foreground">{entry.user.fullName}</span>
                   </div>
                 )}
               </div>

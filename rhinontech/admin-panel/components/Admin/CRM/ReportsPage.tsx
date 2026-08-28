@@ -95,12 +95,12 @@ export function ReportsPage() {
         .viz-col { border-radius: 4px 4px 0 0; background: var(--viz-series); }
       `}</style>
 
-      <div className="flex min-h-16 shrink-0 flex-wrap items-center justify-between gap-3 border-b border-stone-200/70 px-3 py-2">
+      <div className="flex min-h-16 shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border/70 px-3 py-2">
         <div className="flex min-w-0 items-center gap-2.5">
           <SubNavToggle />
           <div className="min-w-0">
-            <h1 className="text-sm font-semibold tracking-tight text-stone-900">Reports</h1>
-            <p className="text-[11px] text-stone-500">Pipeline is as of today; everything closed is within the selected range.</p>
+            <h1 className="text-sm font-semibold tracking-tight text-foreground">Reports</h1>
+            <p className="text-[11px] text-muted-foreground">Pipeline is as of today; everything closed is within the selected range.</p>
           </div>
         </div>
         <div className="flex items-center gap-1.5">
@@ -110,7 +110,7 @@ export function ReportsPage() {
               onClick={() => setDays(r.days)}
               className={cn(
                 "rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors",
-                days === r.days ? "bg-stone-900 text-white" : "border border-stone-200 bg-white/70 text-stone-700 hover:bg-stone-100"
+                days === r.days ? "bg-primary text-primary-foreground" : "border border-border bg-card/70 text-foreground/85 hover:bg-muted"
               )}
             >
               {r.label}
@@ -121,14 +121,14 @@ export function ReportsPage() {
       </div>
 
       <div className="flex-1 overflow-auto p-3">
-        {error && <p className="mb-2.5 rounded-md border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-[11px] text-rose-700">{error}</p>}
+        {error && <p className="mb-2.5 rounded-md border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2.5 py-1.5 text-[11px] text-rose-700 dark:text-rose-300">{error}</p>}
 
         {loading ? (
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-5">
-              {Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-20 animate-pulse rounded-lg bg-stone-100" />)}
+              {Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-20 animate-pulse rounded-lg bg-muted" />)}
             </div>
-            <div className="h-56 animate-pulse rounded-lg bg-stone-100" />
+            <div className="h-56 animate-pulse rounded-lg bg-muted" />
           </div>
         ) : !data ? (
           <EmptyState title="No report data" />
@@ -169,7 +169,7 @@ export function ReportsPage() {
             <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
               <Panel title="Open pipeline by stage" hint="Bar length is deal value; the stage names carry identity, so one hue is enough.">
                 {data.pipeline.stages.length === 0 ? (
-                  <p className="py-6 text-center text-xs text-stone-400">No open deals.</p>
+                  <p className="py-6 text-center text-xs text-muted-foreground">No open deals.</p>
                 ) : (
                   <HBars
                     rows={data.pipeline.stages.map((s) => ({
@@ -191,11 +191,11 @@ export function ReportsPage() {
             <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
               <Panel title="Where the wins come from" hint="Deal source, carried over from the lead.">
                 {data.sources.length === 0 ? (
-                  <p className="py-6 text-center text-xs text-stone-400">Nothing closed in this range.</p>
+                  <p className="py-6 text-center text-xs text-muted-foreground">Nothing closed in this range.</p>
                 ) : (
                   <table className="w-full text-[12px]">
                     <thead>
-                      <tr className="border-b border-stone-200 text-[10px] uppercase tracking-wider text-stone-500">
+                      <tr className="border-b border-border text-[10px] uppercase tracking-wider text-muted-foreground">
                         <th className="py-1.5 text-left font-semibold">Source</th>
                         <th className="py-1.5 text-right font-semibold">Won</th>
                         <th className="py-1.5 text-right font-semibold">Value</th>
@@ -206,11 +206,11 @@ export function ReportsPage() {
                       {data.sources.map((s) => {
                         const decided = s.wonCount + s.lostCount;
                         return (
-                          <tr key={s.source} className="border-b border-stone-100 last:border-0">
-                            <td className="py-1.5 pr-2 text-stone-800">{s.source}</td>
-                            <td className="py-1.5 text-right tabular-nums text-stone-600">{s.wonCount}</td>
-                            <td className="py-1.5 text-right font-medium tabular-nums text-stone-900">{formatMoney(s.wonValue)}</td>
-                            <td className="py-1.5 text-right tabular-nums text-stone-600">
+                          <tr key={s.source} className="border-b border-border last:border-0">
+                            <td className="py-1.5 pr-2 text-foreground">{s.source}</td>
+                            <td className="py-1.5 text-right tabular-nums text-foreground/70">{s.wonCount}</td>
+                            <td className="py-1.5 text-right font-medium tabular-nums text-foreground">{formatMoney(s.wonValue)}</td>
+                            <td className="py-1.5 text-right tabular-nums text-foreground/70">
                               {decided ? `${Math.round((s.wonCount / decided) * 100)}%` : "—"}
                             </td>
                           </tr>
@@ -223,11 +223,11 @@ export function ReportsPage() {
 
               <Panel title="By rep" hint="Open pipeline now, plus what they closed and logged in range.">
                 {data.reps.length === 0 ? (
-                  <p className="py-6 text-center text-xs text-stone-400">No deals assigned yet.</p>
+                  <p className="py-6 text-center text-xs text-muted-foreground">No deals assigned yet.</p>
                 ) : (
                   <table className="w-full text-[12px]">
                     <thead>
-                      <tr className="border-b border-stone-200 text-[10px] uppercase tracking-wider text-stone-500">
+                      <tr className="border-b border-border text-[10px] uppercase tracking-wider text-muted-foreground">
                         <th className="py-1.5 text-left font-semibold">Rep</th>
                         <th className="py-1.5 text-right font-semibold">Open</th>
                         <th className="py-1.5 text-right font-semibold">Won</th>
@@ -236,11 +236,11 @@ export function ReportsPage() {
                     </thead>
                     <tbody>
                       {data.reps.map((r) => (
-                        <tr key={r.ownerId || "unassigned"} className="border-b border-stone-100 last:border-0">
-                          <td className={cn("py-1.5 pr-2", r.ownerId ? "text-stone-800" : "text-stone-400 italic")}>{r.name}</td>
-                          <td className="py-1.5 text-right tabular-nums text-stone-600">{formatMoney(r.openValue)}</td>
-                          <td className="py-1.5 text-right font-medium tabular-nums text-stone-900">{formatMoney(r.wonValue)}</td>
-                          <td className="py-1.5 text-right tabular-nums text-stone-600">{r.activities}</td>
+                        <tr key={r.ownerId || "unassigned"} className="border-b border-border last:border-0">
+                          <td className={cn("py-1.5 pr-2", r.ownerId ? "text-foreground" : "text-muted-foreground italic")}>{r.name}</td>
+                          <td className="py-1.5 text-right tabular-nums text-foreground/70">{formatMoney(r.openValue)}</td>
+                          <td className="py-1.5 text-right font-medium tabular-nums text-foreground">{formatMoney(r.wonValue)}</td>
+                          <td className="py-1.5 text-right tabular-nums text-foreground/70">{r.activities}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -254,7 +254,7 @@ export function ReportsPage() {
               hint="Any sequence enrolment counts, with no attribution window — read it as influence, not sole credit."
             >
               {!data.attribution ? (
-                <p className="py-6 text-center text-xs text-stone-400">No attribution data.</p>
+                <p className="py-6 text-center text-xs text-muted-foreground">No attribution data.</p>
               ) : (
                 <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                   <AttributionCard label="Touched by a sequence" side={data.attribution.sequenced} />
@@ -268,23 +268,23 @@ export function ReportsPage() {
               hint="Resolved from the visiting network at pageview time. The IP itself is never stored."
             >
               {!intent ? (
-                <div className="h-16 animate-pulse rounded bg-stone-100" />
+                <div className="h-16 animate-pulse rounded bg-muted" />
               ) : !intent.enabled ? (
-                <div className="flex items-start gap-2 rounded-md border border-dashed border-stone-200 px-3 py-3">
-                  <TbWorld size={16} className="mt-0.5 shrink-0 text-stone-400" />
+                <div className="flex items-start gap-2 rounded-md border border-dashed border-border px-3 py-3">
+                  <TbWorld size={16} className="mt-0.5 shrink-0 text-muted-foreground" />
                   <div>
-                    <p className="text-[12px] font-medium text-stone-700">Not switched on yet</p>
-                    <p className="mt-0.5 text-[11px] leading-relaxed text-stone-500">{intent.message}</p>
+                    <p className="text-[12px] font-medium text-foreground/85">Not switched on yet</p>
+                    <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">{intent.message}</p>
                   </div>
                 </div>
               ) : intent.companies.length === 0 ? (
-                <p className="py-6 text-center text-xs text-stone-400">
+                <p className="py-6 text-center text-xs text-muted-foreground">
                   No companies resolved yet — signal starts accumulating once the site sees traffic.
                 </p>
               ) : (
                 <table className="w-full text-[12px]">
                   <thead>
-                    <tr className="border-b border-stone-200 text-[10px] uppercase tracking-wider text-stone-500">
+                    <tr className="border-b border-border text-[10px] uppercase tracking-wider text-muted-foreground">
                       <th className="py-1.5 text-left font-semibold">Company</th>
                       <th className="py-1.5 text-left font-semibold">Reading</th>
                       <th className="py-1.5 text-right font-semibold">Visits</th>
@@ -293,24 +293,24 @@ export function ReportsPage() {
                   </thead>
                   <tbody>
                     {intent.companies.slice(0, 15).map((c) => (
-                      <tr key={`${c.name}-${c.domain ?? ""}`} className="border-b border-stone-100 last:border-0">
+                      <tr key={`${c.name}-${c.domain ?? ""}`} className="border-b border-border last:border-0">
                         <td className="py-1.5 pr-2">
-                          <span className="block truncate font-medium text-stone-900">{c.name}</span>
-                          <span className="block truncate text-[10px] text-stone-400">
+                          <span className="block truncate font-medium text-foreground">{c.name}</span>
+                          <span className="block truncate text-[10px] text-muted-foreground">
                             {c.domain || "—"}
-                            {c.accountId && <span className="ml-1 text-emerald-600">· known account</span>}
+                            {c.accountId && <span className="ml-1 text-emerald-600 dark:text-emerald-300">· known account</span>}
                           </span>
                         </td>
                         <td className="py-1.5 pr-2">
-                          <span className="block truncate text-[11px] text-stone-600">
+                          <span className="block truncate text-[11px] text-foreground/70">
                             {c.topPages.map((p) => p.path).join(", ") || "—"}
                           </span>
                         </td>
-                        <td className="py-1.5 text-right tabular-nums text-stone-600">
+                        <td className="py-1.5 text-right tabular-nums text-foreground/70">
                           {c.views}
-                          <span className="ml-1 text-[10px] text-stone-400">/ {c.sessions}s</span>
+                          <span className="ml-1 text-[10px] text-muted-foreground">/ {c.sessions}s</span>
                         </td>
-                        <td className="py-1.5 text-right text-[11px] tabular-nums text-stone-400">{relativeTime(c.lastSeen)}</td>
+                        <td className="py-1.5 text-right text-[11px] tabular-nums text-muted-foreground">{relativeTime(c.lastSeen)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -320,7 +320,7 @@ export function ReportsPage() {
 
             <Panel title="Activity mix" hint="What the team actually logged in this range.">
               {Object.keys(data.activityByType).length === 0 ? (
-                <p className="py-6 text-center text-xs text-stone-400">No activity logged yet.</p>
+                <p className="py-6 text-center text-xs text-muted-foreground">No activity logged yet.</p>
               ) : (
                 <HBars
                   rows={Object.entries(data.activityByType)
@@ -339,12 +339,12 @@ export function ReportsPage() {
 function AttributionCard({ label, side }: { label: string; side: AttributionSide }) {
   const decided = side.wonCount + side.lostCount;
   return (
-    <div className="rounded-lg border border-stone-200 bg-white/60 px-3 py-2.5">
-      <p className="text-[10px] uppercase tracking-wider text-stone-500">{label}</p>
-      <p className="mt-0.5 text-lg font-semibold tabular-nums leading-tight text-stone-900">
+    <div className="rounded-lg border border-border bg-card/60 px-3 py-2.5">
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="mt-0.5 text-lg font-semibold tabular-nums leading-tight text-foreground">
         {formatMoney(side.wonValue)}
       </p>
-      <p className="mt-0.5 text-[11px] tabular-nums text-stone-400">
+      <p className="mt-0.5 text-[11px] tabular-nums text-muted-foreground">
         {side.wonCount} won · {side.lostCount} lost ·{" "}
         {side.winRate == null ? "no data" : `${side.winRate}% win rate`}
         {decided === 0 && " (nothing closed)"}
@@ -356,9 +356,9 @@ function AttributionCard({ label, side }: { label: string; side: AttributionSide
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div className="rounded-lg glass-card px-3 py-2.5">
-      <p className="text-[10px] uppercase tracking-wider text-stone-500">{label}</p>
-      <p className="mt-0.5 text-xl font-semibold tabular-nums leading-tight text-stone-900">{value}</p>
-      {sub && <p className="mt-0.5 text-[11px] text-stone-400">{sub}</p>}
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="mt-0.5 text-xl font-semibold tabular-nums leading-tight text-foreground">{value}</p>
+      {sub && <p className="mt-0.5 text-[11px] text-muted-foreground">{sub}</p>}
     </div>
   );
 }
@@ -373,8 +373,8 @@ function Outcome({
       </span>
       <div className="min-w-0">
         <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: tone }}>{label}</p>
-        <p className="text-sm font-semibold tabular-nums text-stone-900">
-          {value} <span className="font-normal text-stone-400">· {count} deal{count === 1 ? "" : "s"}</span>
+        <p className="text-sm font-semibold tabular-nums text-foreground">
+          {value} <span className="font-normal text-muted-foreground">· {count} deal{count === 1 ? "" : "s"}</span>
         </p>
       </div>
     </div>
@@ -384,8 +384,8 @@ function Outcome({
 function Panel({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
     <section className="rounded-lg glass-card p-3">
-      <h2 className="text-[12px] font-semibold text-stone-900">{title}</h2>
-      {hint && <p className="mb-2.5 mt-0.5 text-[11px] text-stone-400">{hint}</p>}
+      <h2 className="text-[12px] font-semibold text-foreground">{title}</h2>
+      {hint && <p className="mb-2.5 mt-0.5 text-[11px] text-muted-foreground">{hint}</p>}
       {children}
     </section>
   );
@@ -398,17 +398,17 @@ function HBars({ rows }: { rows: { key: string; label: string; value: number; me
     <ul className="space-y-1.5">
       {rows.map((r) => (
         <li key={r.key} className="grid grid-cols-[minmax(72px,26%)_minmax(0,1fr)_auto] items-center gap-2">
-          <span className="truncate text-[11px] text-stone-600" title={r.label}>{r.label}</span>
-          <span className="relative h-4 rounded bg-stone-100">
+          <span className="truncate text-[11px] text-foreground/70" title={r.label}>{r.label}</span>
+          <span className="relative h-4 rounded bg-muted">
             <span
               className="viz-bar absolute inset-y-0 left-0 min-w-[3px]"
               style={{ width: `${Math.max(1, (r.value / max) * 100)}%` }}
               title={`${r.label}: ${r.display}${r.meta ? ` (${r.meta})` : ""}`}
             />
           </span>
-          <span className="whitespace-nowrap text-[11px] font-medium tabular-nums text-stone-800">
+          <span className="whitespace-nowrap text-[11px] font-medium tabular-nums text-foreground">
             {r.display}
-            {r.meta && <span className="ml-1 font-normal text-stone-400">{r.meta}</span>}
+            {r.meta && <span className="ml-1 font-normal text-muted-foreground">{r.meta}</span>}
           </span>
         </li>
       ))}
@@ -418,17 +418,17 @@ function HBars({ rows }: { rows: { key: string; label: string; value: number; me
 
 /** Columns anchored to a baseline, with only the peak month directly labelled. */
 function MonthlyBars({ rows }: { rows: { month: string; count: number; value: number }[] }) {
-  if (rows.length === 0) return <p className="py-6 text-center text-xs text-stone-400">Nothing won in this range.</p>;
+  if (rows.length === 0) return <p className="py-6 text-center text-xs text-muted-foreground">Nothing won in this range.</p>;
   const max = Math.max(...rows.map((r) => r.value), 1);
   const peak = rows.reduce((best, r) => (r.value > best.value ? r : best), rows[0]);
 
   return (
     <div>
-      <div className="flex h-32 items-end gap-1 border-b border-stone-200">
+      <div className="flex h-32 items-end gap-1 border-b border-border">
         {rows.map((r) => (
           <div key={r.month} className="group relative flex min-w-0 flex-1 flex-col items-center justify-end">
             {r.month === peak.month && (
-              <span className="mb-1 whitespace-nowrap text-[10px] font-medium tabular-nums text-stone-700">
+              <span className="mb-1 whitespace-nowrap text-[10px] font-medium tabular-nums text-foreground/85">
                 {formatMoney(r.value)}
               </span>
             )}
@@ -442,7 +442,7 @@ function MonthlyBars({ rows }: { rows: { month: string; count: number; value: nu
       </div>
       <div className="mt-1 flex gap-1">
         {rows.map((r) => (
-          <span key={r.month} className="min-w-0 flex-1 truncate text-center text-[9px] tabular-nums text-stone-400">
+          <span key={r.month} className="min-w-0 flex-1 truncate text-center text-[9px] tabular-nums text-muted-foreground">
             {r.month.slice(2)}
           </span>
         ))}

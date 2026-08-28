@@ -143,21 +143,21 @@ export function MeetingsPage() {
         </div>
 
         {notConnected ? (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-6 text-center">
-            <TbCalendarEvent size={28} className="mx-auto mb-2 text-amber-500" />
-            <p className="text-sm font-semibold text-amber-900">The shared calendar isn&apos;t connected yet</p>
-            <p className="mt-1 text-xs text-amber-700">
+          <div className="rounded-xl border border-amber-200 dark:border-amber-400/25 bg-amber-50 dark:bg-amber-400/10 px-4 py-6 text-center">
+            <TbCalendarEvent size={28} className="mx-auto mb-2 text-amber-500 dark:text-amber-400" />
+            <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">The shared calendar isn&apos;t connected yet</p>
+            <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
               An admin needs to connect support@rhinon.tech under Settings → Google Calendar.
             </p>
           </div>
         ) : (
           <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
             {/* Month grid */}
-            <div className="flex min-h-0 flex-col rounded-xl border bg-white p-4">
+            <div className="flex min-h-0 flex-col rounded-xl border bg-card p-4">
               <div className="mb-4 flex shrink-0 items-center justify-between">
                 <span className="text-sm font-semibold">{format(month, "MMMM yyyy")}</span>
                 <div className="flex items-center gap-1">
-                  <button onClick={() => setMonth(subMonths(month, 1))} className="rounded-md border p-1.5 hover:bg-stone-100">
+                  <button onClick={() => setMonth(subMonths(month, 1))} className="rounded-md border p-1.5 hover:bg-muted">
                     <TbChevronLeft size={16} />
                   </button>
                   <button
@@ -166,17 +166,17 @@ export function MeetingsPage() {
                       setMonth(startOfMonth(now));
                       setSelectedDay(now);
                     }}
-                    className="rounded-md border px-2 py-1 text-xs font-medium hover:bg-stone-100"
+                    className="rounded-md border px-2 py-1 text-xs font-medium hover:bg-muted"
                   >
                     Today
                   </button>
-                  <button onClick={() => setMonth(addMonths(month, 1))} className="rounded-md border p-1.5 hover:bg-stone-100">
+                  <button onClick={() => setMonth(addMonths(month, 1))} className="rounded-md border p-1.5 hover:bg-muted">
                     <TbChevronRight size={16} />
                   </button>
                 </div>
               </div>
 
-              <div className="mb-1 grid shrink-0 grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase tracking-widest text-stone-400">
+              <div className="mb-1 grid shrink-0 grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                 {WEEKDAYS.map((d) => (
                   <span key={d}>{d}</span>
                 ))}
@@ -197,21 +197,21 @@ export function MeetingsPage() {
                       onClick={() => setSelectedDay(day)}
                       className={cn(
                         "flex min-h-[64px] flex-col items-start gap-1 overflow-hidden rounded-lg border p-1.5 text-left transition-colors",
-                        selected ? "border-blue-400 bg-blue-50" : "border-stone-100 hover:bg-stone-50",
+                        selected ? "border-blue-400 bg-blue-50 dark:bg-blue-400/10" : "border-border hover:bg-muted/40",
                         !inMonth && "opacity-40"
                       )}
                     >
-                      <span className={cn("shrink-0 text-xs font-semibold", isToday(day) && "text-blue-600")}>
+                      <span className={cn("shrink-0 text-xs font-semibold", isToday(day) && "text-blue-600 dark:text-blue-300")}>
                         {format(day, "d")}
                       </span>
                       <div className="min-h-0 w-full flex-1 space-y-0.5 overflow-hidden">
                         {shown.map((e) => (
-                          <span key={e.id} className="block truncate rounded bg-blue-600/10 px-1 text-[10px] text-blue-800">
+                          <span key={e.id} className="block truncate rounded bg-blue-600/10 px-1 text-[10px] text-blue-800 dark:text-blue-200">
                             {e.summary}
                           </span>
                         ))}
                         {dayEvents.length > shown.length && (
-                          <span className="block text-[10px] text-stone-500">+{dayEvents.length - shown.length} more</span>
+                          <span className="block text-[10px] text-muted-foreground">+{dayEvents.length - shown.length} more</span>
                         )}
                       </div>
                     </button>
@@ -221,7 +221,7 @@ export function MeetingsPage() {
             </div>
 
             {/* Selected-day agenda — scrolls on its own so a busy day never stretches the page */}
-            <div className="flex min-h-0 flex-col rounded-xl border bg-white p-4">
+            <div className="flex min-h-0 flex-col rounded-xl border bg-card p-4">
               <h2 className="mb-3 shrink-0 text-sm font-semibold">{format(selectedDay, "EEEE, d MMMM")}</h2>
 
               <div className="min-h-0 flex-1 overflow-y-auto">
@@ -231,7 +231,7 @@ export function MeetingsPage() {
                 <div className="py-8 text-center">
                   <p className="text-xs text-muted-foreground">Nothing scheduled.</p>
                   {canWrite && (
-                    <button onClick={openCreate} className="mt-2 text-xs font-semibold text-blue-600 hover:underline">
+                    <button onClick={openCreate} className="mt-2 text-xs font-semibold text-blue-600 dark:text-blue-300 hover:underline">
                       Add a meeting
                     </button>
                   )}
@@ -239,7 +239,7 @@ export function MeetingsPage() {
               ) : (
                 <div className="space-y-2">
                   {selectedEvents.map((event) => (
-                    <div key={event.id} className="rounded-lg border border-stone-200 p-3">
+                    <div key={event.id} className="rounded-lg border border-border p-3">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold">{event.summary}</p>
@@ -251,7 +251,7 @@ export function MeetingsPage() {
                             target="_blank"
                             rel="noreferrer"
                             title="Join Google Meet"
-                            className="shrink-0 text-emerald-600 hover:text-emerald-700"
+                            className="shrink-0 text-emerald-600 dark:text-emerald-300 hover:text-emerald-700 dark:hover:text-emerald-300"
                           >
                             <TbVideo size={16} />
                           </a>
@@ -259,7 +259,7 @@ export function MeetingsPage() {
                       </div>
 
                       {event.attendees.length > 0 && (
-                        <p className="mt-1.5 truncate text-[11px] text-stone-500">
+                        <p className="mt-1.5 truncate text-[11px] text-muted-foreground">
                           {event.attendees.map((a) => a.email).join(", ")}
                         </p>
                       )}
@@ -267,12 +267,12 @@ export function MeetingsPage() {
                       <div className="mt-2 flex items-center gap-3 text-[11px]">
                         {canWrite && (
                           <>
-                            <button onClick={() => openEdit(event)} className="font-semibold text-blue-600 hover:underline">
+                            <button onClick={() => openEdit(event)} className="font-semibold text-blue-600 dark:text-blue-300 hover:underline">
                               Edit / reschedule
                             </button>
                             <button
                               onClick={() => handleDelete(event)}
-                              className="flex items-center gap-1 font-semibold text-stone-400 hover:text-red-600"
+                              className="flex items-center gap-1 font-semibold text-muted-foreground hover:text-red-600 dark:hover:text-red-300"
                             >
                               <TbTrash size={12} /> Delete
                             </button>
@@ -283,7 +283,7 @@ export function MeetingsPage() {
                             href={event.htmlLink}
                             target="_blank"
                             rel="noreferrer"
-                            className="ml-auto flex items-center gap-1 text-stone-400 hover:text-stone-700"
+                            className="ml-auto flex items-center gap-1 text-muted-foreground hover:text-foreground/85"
                           >
                             Google <TbExternalLink size={11} />
                           </a>

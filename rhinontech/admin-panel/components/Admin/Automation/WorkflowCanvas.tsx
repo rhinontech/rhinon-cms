@@ -188,7 +188,7 @@ export function WorkflowCanvas({
 
   return (
     <WorkflowCanvasContext.Provider value={{ onAddNode: handleAddNodeInEdge }}>
-      <div className="h-full w-full relative bg-gray-50/50">
+      <div className="h-full w-full relative bg-muted/40">
         <ReactFlow
           nodes={nodes}
           edges={edges}

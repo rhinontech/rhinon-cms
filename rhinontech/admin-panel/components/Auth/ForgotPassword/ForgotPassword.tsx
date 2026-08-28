@@ -50,7 +50,7 @@ export function ForgotPassword() {
               <div className="mb-5 flex h-14 w-full items-center justify-center">
                 <Image src={adminImages.Logo_Rhinon_Tech_Dark} alt="Rhinon Tech" priority className="h-12 w-auto object-contain" />
               </div>
-              <h1 className="text-2xl font-semibold text-slate-950">Forgot password?</h1>
+              <h1 className="text-2xl font-semibold text-foreground">Forgot password?</h1>
               <p className="text-muted-foreground mt-1 text-sm">
                 Enter your email and we'll send you a reset link
               </p>
@@ -58,7 +58,7 @@ export function ForgotPassword() {
 
             {sent ? (
               <div className="flex flex-col gap-4">
-                <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm text-emerald-700">
+                <p className="rounded-md border border-emerald-200 dark:border-emerald-400/25 bg-emerald-50 dark:bg-emerald-400/10 px-3 py-3 text-sm text-emerald-700 dark:text-emerald-300">
                   If an account exists for <span className="font-semibold">{email}</span>, a password reset link has been sent to the personal email on file. The link expires in 1 hour.
                 </p>
                 <Link href="/auth/login" className="text-center text-sm text-muted-foreground underline-offset-4 hover:text-primary hover:underline">
@@ -80,7 +80,7 @@ export function ForgotPassword() {
                   />
                 </div>
                 {error && (
-                  <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+                  <p className="rounded-md border border-red-200 dark:border-red-400/25 bg-red-50 dark:bg-red-400/10 px-3 py-2 text-sm text-red-600 dark:text-red-300">{error}</p>
                 )}
                 <Button type="submit" className="mt-1 w-full" disabled={loading}>
                   {loading ? "Sending..." : "Send reset link"}

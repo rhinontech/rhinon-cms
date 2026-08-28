@@ -57,17 +57,17 @@ export function GroupPicker({
       </Select>
 
       {groups.length === 0 ? (
-        <p className="text-sm text-stone-400">
+        <p className="text-sm text-muted-foreground">
           Create a group under Outreach → Contacts, then come back to target it here.
         </p>
       ) : resolving ? (
-        <p className="text-sm text-stone-400">Loading group members…</p>
+        <p className="text-sm text-muted-foreground">Loading group members…</p>
       ) : groupId ? (
-        <p className="text-sm text-stone-500">
+        <p className="text-sm text-muted-foreground">
           {selectedGroup?.name} — {selectedIds.size} contact{selectedIds.size === 1 ? "" : "s"} selected
         </p>
       ) : (
-        <p className="text-sm text-stone-400">Pick a group to select all of its contacts at once.</p>
+        <p className="text-sm text-muted-foreground">Pick a group to select all of its contacts at once.</p>
       )}
     </div>
   );

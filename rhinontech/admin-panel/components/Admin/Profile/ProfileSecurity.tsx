@@ -19,23 +19,23 @@ function PasswordField({ label, value, onChange, show, onToggle, hint }: {
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-xs font-medium text-gray-500">{label}</label>
+      <label className="text-xs font-medium text-muted-foreground">{label}</label>
       <div className="relative">
         <input
           type={show ? "text" : "password"}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full px-3 py-2 pr-10 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 pr-10 text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <button
           type="button"
           onClick={onToggle}
-          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground/70"
         >
           {show ? <TbEyeOff size={15} /> : <TbEye size={15} />}
         </button>
       </div>
-      {hint && <p className="text-xs text-gray-400">{hint}</p>}
+      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
 }
@@ -43,8 +43,8 @@ function PasswordField({ label, value, onChange, show, onToggle, hint }: {
 function Field({ label, value }: { label: string; value?: string | null }) {
   return (
     <div>
-      <p className="text-xs text-gray-400 mb-0.5">{label}</p>
-      <p className="text-sm font-medium text-gray-900">{value ?? <span className="text-gray-300 font-normal">—</span>}</p>
+      <p className="text-xs text-muted-foreground mb-0.5">{label}</p>
+      <p className="text-sm font-medium text-foreground">{value ?? <span className="text-muted-foreground/70 font-normal">—</span>}</p>
     </div>
   );
 }
@@ -84,7 +84,7 @@ export function ProfileSecurity() {
 
   return (
     <div className="flex flex-col h-full glass-panel rounded-r-xl overflow-hidden">
-      <div className="sticky top-0 z-10 flex items-center gap-4 h-16 px-5 border-b border-black/5 glass-header">
+      <div className="sticky top-0 z-10 flex items-center gap-4 h-16 px-5 border-b border-border glass-header">
         <SubNavToggle />
         <h1 className="text-xl font-bold tracking-tight">Security</h1>
       </div>
@@ -93,19 +93,19 @@ export function ProfileSecurity() {
         <div className="max-w-2xl space-y-5">
 
           {/* Change password */}
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="bg-card rounded-xl border border-border overflow-hidden">
             <div className="px-6 py-4 border-b">
-              <p className="font-semibold text-gray-900">Change Password</p>
-              <p className="text-xs text-gray-400 mt-0.5">Use a strong password you don't use elsewhere.</p>
+              <p className="font-semibold text-foreground">Change Password</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Use a strong password you don't use elsewhere.</p>
             </div>
             <div className="p-6 space-y-4">
               {error && (
-                <div className="flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                <div className="flex items-center gap-2 px-4 py-3 bg-red-50 dark:bg-red-400/10 border border-red-200 dark:border-red-400/25 rounded-lg text-sm text-red-700 dark:text-red-300">
                   <TbAlertCircle size={15} /> {error}
                 </div>
               )}
               {success && (
-                <div className="flex items-center gap-2 px-4 py-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
+                <div className="flex items-center gap-2 px-4 py-3 bg-green-50 dark:bg-green-400/10 border border-green-200 dark:border-green-400/25 rounded-lg text-sm text-green-700 dark:text-green-300">
                   <TbCheck size={15} /> Password changed successfully.
                 </div>
               )}
@@ -134,7 +134,7 @@ export function ProfileSecurity() {
               <button
                 onClick={changePassword}
                 disabled={saving}
-                className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 mt-2"
+                className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/80 transition-colors disabled:opacity-50 mt-2"
               >
                 {saving ? <TbLoader2 size={15} className="animate-spin" /> : <TbLock size={15} />}
                 {saving ? "Changing…" : "Change Password"}
@@ -143,9 +143,9 @@ export function ProfileSecurity() {
           </div>
 
           {/* Account information (read-only) */}
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="bg-card rounded-xl border border-border overflow-hidden">
             <div className="px-6 py-4 border-b">
-              <p className="font-semibold text-gray-900">Account Information</p>
+              <p className="font-semibold text-foreground">Account Information</p>
             </div>
             <div className="p-6 grid grid-cols-2 gap-x-10 gap-y-5">
               <Field label="Full Name"     value={profile?.fullName} />

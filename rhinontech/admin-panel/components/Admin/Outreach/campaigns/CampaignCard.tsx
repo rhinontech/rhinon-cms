@@ -36,14 +36,14 @@ export function CampaignCard({
     <div className="group relative flex flex-col gap-3 rounded-xl glass-panel p-4 transition-shadow hover:shadow-md">
       <div className="flex items-start justify-between gap-2">
         <Link href={detailHref} className="min-w-0 flex-1">
-          <p className="truncate text-sm font-bold text-stone-900 group-hover:underline">{campaign.name}</p>
-          <p className="mt-0.5 flex items-center gap-1.5 text-xs text-stone-500">
+          <p className="truncate text-sm font-bold text-foreground group-hover:underline">{campaign.name}</p>
+          <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
             <ChannelIcon channel={campaign.channel} size={13} />
             {campaign.channel}
           </p>
         </Link>
         <DropdownMenu>
-          <DropdownMenuTrigger className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100 hover:text-stone-700">
+          <DropdownMenuTrigger className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground/85">
             <TbDotsVertical size={16} />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -74,15 +74,15 @@ export function CampaignCard({
 
       <div className="space-y-1.5">
         <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider">
-          <span className="text-stone-400">Processed</span>
-          <span className="text-stone-900 tabular-nums">
+          <span className="text-muted-foreground">Processed</span>
+          <span className="text-foreground tabular-nums">
             {campaign.leadsProcessed} / {campaign.leadsTotal}
           </span>
         </div>
         <Progress value={pct} className="h-1.5" />
       </div>
 
-      <div className={cn("flex items-center gap-4 border-t border-stone-100 pt-3 text-xs text-stone-400")}>
+      <div className={cn("flex items-center gap-4 border-t border-border pt-3 text-xs text-muted-foreground")}>
         {/* Date/time only mean something on a scheduled campaign — a manual-send
             campaign never consults them, so showing them just misleads. */}
         {campaign.autoSend ? (

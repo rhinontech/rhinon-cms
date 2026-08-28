@@ -11,8 +11,8 @@ export default function EnrollmentsGlobalPage() {
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Global Workflow Enrollments</h1>
-        <p className="text-sm text-gray-500 mt-1">Live tracking log of all lead enrollments across all workflows.</p>
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">Global Workflow Enrollments</h1>
+        <p className="text-sm text-muted-foreground mt-1">Live tracking log of all lead enrollments across all workflows.</p>
       </div>
 
       <WorkflowEnrollmentsTab

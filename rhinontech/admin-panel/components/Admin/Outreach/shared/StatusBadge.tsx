@@ -3,16 +3,16 @@ import { cn } from "@/lib/utils";
 export type CampaignStage = "Draft" | "Active" | "Paused" | "Completed";
 
 const STAGE_STYLES: Record<CampaignStage, string> = {
-  Draft: "border-amber-200 bg-amber-50 text-amber-700",
-  Active: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  Paused: "border-stone-200 bg-stone-100 text-stone-600",
-  Completed: "border-sky-200 bg-sky-50 text-sky-700",
+  Draft: "border-amber-200 dark:border-amber-400/25 bg-amber-50 dark:bg-amber-400/10 text-amber-700 dark:text-amber-300",
+  Active: "border-emerald-200 dark:border-emerald-400/25 bg-emerald-50 dark:bg-emerald-400/10 text-emerald-700 dark:text-emerald-300",
+  Paused: "border-border bg-muted text-foreground/70",
+  Completed: "border-sky-200 dark:border-sky-400/25 bg-sky-50 dark:bg-sky-400/10 text-sky-700 dark:text-sky-300",
 };
 
 const STAGE_DOTS: Record<CampaignStage, string> = {
   Draft: "bg-amber-500",
   Active: "bg-emerald-500",
-  Paused: "bg-stone-400",
+  Paused: "bg-muted-foreground/40",
   Completed: "bg-sky-500",
 };
 

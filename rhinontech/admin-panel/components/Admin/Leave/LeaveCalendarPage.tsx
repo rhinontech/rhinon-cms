@@ -73,17 +73,17 @@ export function LeaveCalendarPage() {
 
   return (
     <div className={cn("flex flex-col h-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl max-sm:rounded-xl" : "rounded-xl")}>
-      <div className="sticky top-0 z-10 flex min-h-16 flex-wrap items-center justify-between gap-2 px-3 sm:px-5 py-2 sm:py-0 border-b border-black/5 glass-header">
+      <div className="sticky top-0 z-10 flex min-h-16 flex-wrap items-center justify-between gap-2 px-3 sm:px-5 py-2 sm:py-0 border-b border-border glass-header">
         <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
           <SubNavToggle />
           <h1 className="text-sm sm:text-lg font-semibold tracking-tight truncate">Team Leave Calendar</h1>
         </div>
         <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-          <button onClick={prevMonth} className="p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors">
+          <button onClick={prevMonth} className="p-1.5 sm:p-2 rounded-lg hover:bg-muted text-foreground/70 transition-colors">
             <TbChevronLeft size={18} />
           </button>
-          <span className="text-xs sm:text-sm font-semibold text-gray-900 min-w-[100px] sm:min-w-[130px] text-center">{monthLabel}</span>
-          <button onClick={nextMonth} className="p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors">
+          <span className="text-xs sm:text-sm font-semibold text-foreground min-w-[100px] sm:min-w-[130px] text-center">{monthLabel}</span>
+          <button onClick={nextMonth} className="p-1.5 sm:p-2 rounded-lg hover:bg-muted text-foreground/70 transition-colors">
             <TbChevronRight size={18} />
           </button>
         </div>
@@ -91,7 +91,7 @@ export function LeaveCalendarPage() {
 
       <div className="flex-1 overflow-auto p-3 sm:p-6">
         {loading ? (
-          <div className="flex items-center justify-center py-20 text-gray-400">
+          <div className="flex items-center justify-center py-20 text-muted-foreground">
             <TbLoader size={32} className="animate-spin" />
           </div>
         ) : (
@@ -99,7 +99,7 @@ export function LeaveCalendarPage() {
             {/* Day headers */}
             <div className="grid grid-cols-7 border-b">
               {DAYS_OF_WEEK.map(d => (
-                <div key={d} className="py-3 text-center text-xs font-bold text-gray-400 uppercase tracking-wider">
+                <div key={d} className="py-3 text-center text-xs font-bold text-muted-foreground uppercase tracking-wider">
                   {d}
                 </div>
               ))}
@@ -109,7 +109,7 @@ export function LeaveCalendarPage() {
             <div className="grid grid-cols-7">
               {cells.map((day, idx) => {
                 if (day === null) {
-                  return <div key={`blank-${idx}`} className="border-b border-r border-gray-50 min-h-[120px] bg-gray-50/50" />;
+                  return <div key={`blank-${idx}`} className="border-b border-r border-border min-h-[120px] bg-muted/40" />;
                 }
 
                 const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
@@ -123,14 +123,14 @@ export function LeaveCalendarPage() {
                   <div
                     key={day}
                     className={cn(
-                      "min-h-[120px] p-2 border-b border-r border-gray-100 flex flex-col gap-1",
+                      "min-h-[120px] p-2 border-b border-r border-border flex flex-col gap-1",
                       isLastCol && "border-r-0",
                       !rowEnd && "border-b",
                     )}
                   >
                     <div className={cn(
                       "self-start h-7 w-7 flex items-center justify-center rounded-full text-sm font-semibold",
-                      isToday ? "bg-gray-900 text-white" : "text-gray-700"
+                      isToday ? "bg-primary text-primary-foreground" : "text-foreground/85"
                     )}>
                       {day}
                     </div>
@@ -146,7 +146,7 @@ export function LeaveCalendarPage() {
                         </div>
                       ))}
                       {dayLeaves.length > 3 && (
-                        <p className="text-[10px] text-gray-400 font-semibold pl-1">+{dayLeaves.length - 3} more</p>
+                        <p className="text-[10px] text-muted-foreground font-semibold pl-1">+{dayLeaves.length - 3} more</p>
                       )}
                     </div>
                   </div>
@@ -159,8 +159,8 @@ export function LeaveCalendarPage() {
         {/* Legend */}
         {leaves.length === 0 && !loading && (
           <div className="mt-6 flex flex-col items-center gap-3 py-8 text-center">
-            <TbCalendarStats size={48} className="text-gray-200" />
-            <p className="text-sm text-gray-400">No approved leaves for {monthLabel}.</p>
+            <TbCalendarStats size={48} className="text-muted-foreground/50" />
+            <p className="text-sm text-muted-foreground">No approved leaves for {monthLabel}.</p>
           </div>
         )}
 
@@ -169,7 +169,7 @@ export function LeaveCalendarPage() {
             {Array.from(new Map(leaves.map(l => [l.leaveTypeName, l.leaveTypeColor])).entries()).map(([name, color]) => (
               <div key={name} className="flex items-center gap-1.5">
                 <span className="h-3 w-3 rounded-full" style={{ backgroundColor: color }} />
-                <span className="text-xs text-gray-500">{name}</span>
+                <span className="text-xs text-muted-foreground">{name}</span>
               </div>
             ))}
           </div>

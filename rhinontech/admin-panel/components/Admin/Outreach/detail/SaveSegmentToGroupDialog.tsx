@@ -133,18 +133,18 @@ export function SaveSegmentToGroupDialog({
                     className={cn(
                       "flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors",
                       active
-                        ? "border-blue-300 bg-blue-50/70"
-                        : "border-stone-200 hover:bg-stone-50",
+                        ? "border-blue-300 dark:border-blue-400/30 bg-blue-50/70 dark:bg-blue-400/10"
+                        : "border-border hover:bg-muted/40",
                       empty && "cursor-not-allowed opacity-40 hover:bg-transparent"
                     )}
                   >
                     <span className="min-w-0">
-                      <span className="block text-sm font-semibold text-stone-900">{s.label}</span>
-                      <span className="block text-[11px] text-stone-500">{s.hint}</span>
+                      <span className="block text-sm font-semibold text-foreground">{s.label}</span>
+                      <span className="block text-[11px] text-muted-foreground">{s.hint}</span>
                     </span>
                     <span className="flex shrink-0 items-center gap-2">
-                      <span className="text-sm font-bold tabular-nums text-stone-700">{s.leadIds.length}</span>
-                      {active && <TbCheck size={15} className="text-blue-600" />}
+                      <span className="text-sm font-bold tabular-nums text-foreground/85">{s.leadIds.length}</span>
+                      {active && <TbCheck size={15} className="text-blue-600 dark:text-blue-300" />}
                     </span>
                   </button>
                 );
@@ -154,7 +154,7 @@ export function SaveSegmentToGroupDialog({
 
           <div className="space-y-2">
             <Label>Save into</Label>
-            <div className="flex items-center gap-1 rounded-lg bg-stone-100 p-1">
+            <div className="flex items-center gap-1 rounded-lg bg-muted p-1">
               {(["new", "existing"] as const).map((m) => (
                 <button
                   key={m}
@@ -162,7 +162,7 @@ export function SaveSegmentToGroupDialog({
                   onClick={() => setMode(m)}
                   className={cn(
                     "flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition-colors",
-                    mode === m ? "bg-white font-semibold text-stone-900 shadow-sm" : "text-stone-600 hover:text-stone-900"
+                    mode === m ? "bg-card font-semibold text-foreground shadow-sm" : "text-foreground/70 hover:text-foreground"
                   )}
                 >
                   {m === "new" ? "New group" : "Existing group"}
@@ -193,7 +193,7 @@ export function SaveSegmentToGroupDialog({
                 {/* Adding members runs the workflow engine, which auto-enrolls
                     into any active workflow watching that group — worth knowing
                     before it starts emailing people. */}
-                <p className="flex items-start gap-1.5 text-[11px] text-amber-700">
+                <p className="flex items-start gap-1.5 text-[11px] text-amber-700 dark:text-amber-300">
                   <TbAlertTriangle size={13} className="mt-px shrink-0" />
                   Contacts added to an existing group are auto-enrolled in any active workflow watching it.
                 </p>

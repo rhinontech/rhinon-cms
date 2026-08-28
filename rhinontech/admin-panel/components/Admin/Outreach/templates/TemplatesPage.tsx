@@ -101,8 +101,8 @@ export function TemplatesPage() {
         <div className="flex items-center gap-3">
           <SubNavToggle />
           <div>
-            <h1 className="text-base font-semibold tracking-tight text-gray-900">Templates</h1>
-            <p className="text-xs text-gray-500">Reusable content for email & LinkedIn campaigns.</p>
+            <h1 className="text-base font-semibold tracking-tight text-foreground">Templates</h1>
+            <p className="text-xs text-muted-foreground">Reusable content for email & LinkedIn campaigns.</p>
           </div>
         </div>
         <Button size="sm" onClick={openCreate}>
@@ -114,17 +114,17 @@ export function TemplatesPage() {
         <Tabs value={channelFilter} onValueChange={(v) => setChannelFilter(v as ChannelFilter)}>
           <TabsList>
             <TabsTrigger value="All">
-              All <span className="text-[10px] text-stone-400 tabular-nums">{templates.length}</span>
+              All <span className="text-[10px] text-muted-foreground tabular-nums">{templates.length}</span>
             </TabsTrigger>
             <TabsTrigger value="Email">
               <TbMail size={13} /> Email
-              <span className="text-[10px] text-stone-400 tabular-nums">
+              <span className="text-[10px] text-muted-foreground tabular-nums">
                 {templates.filter((t) => EMAIL_CHANNELS.includes(t.channel)).length}
               </span>
             </TabsTrigger>
             <TabsTrigger value="LinkedIn">
               <TbBrandLinkedin size={13} /> LinkedIn
-              <span className="text-[10px] text-stone-400 tabular-nums">
+              <span className="text-[10px] text-muted-foreground tabular-nums">
                 {templates.filter((t) => SOCIAL_CHANNELS.includes(t.channel)).length}
               </span>
             </TabsTrigger>

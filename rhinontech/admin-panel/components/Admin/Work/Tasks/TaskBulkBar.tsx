@@ -54,11 +54,11 @@ export function TaskBulkBar({
     else toast.warning(`${ids.length - failed} of ${ids.length} deleted — ${failed} failed.`);
   };
 
-  const selectClass = "rounded-md border border-stone-300 bg-white px-2 py-1 text-xs outline-none";
+  const selectClass = "rounded-md border border-border bg-card px-2 py-1 text-xs outline-none";
 
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b bg-blue-50/70 px-3 py-2 sm:px-4">
-      <span className="text-xs font-semibold text-blue-900">{ids.length} selected</span>
+    <div className="flex flex-wrap items-center gap-2 border-b bg-blue-50/70 dark:bg-blue-400/10 px-3 py-2 sm:px-4">
+      <span className="text-xs font-semibold text-blue-900 dark:text-blue-200">{ids.length} selected</span>
 
       <select
         value={status}
@@ -95,9 +95,9 @@ export function TaskBulkBar({
         Delete
       </button>
 
-      {busy && <TbLoader size={14} className="animate-spin text-blue-700" />}
+      {busy && <TbLoader size={14} className="animate-spin text-blue-700 dark:text-blue-300" />}
 
-      <button onClick={onClear} className="ml-auto rounded p-1 text-blue-900/60 hover:bg-blue-100" aria-label="Clear selection">
+      <button onClick={onClear} className="ml-auto rounded p-1 text-blue-900/60 dark:text-blue-200 hover:bg-blue-100 dark:hover:bg-blue-400/15" aria-label="Clear selection">
         <TbX size={14} />
       </button>
     </div>

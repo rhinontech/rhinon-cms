@@ -32,8 +32,8 @@ const INR = (v: number) => `₹${Number(v).toLocaleString("en-IN")}`;
 function Field({ label, value }: { label: string; value?: string | null }) {
   return (
     <div>
-      <p className="text-xs text-gray-400 mb-0.5">{label}</p>
-      <p className="text-sm font-medium text-gray-900">{value ?? <span className="text-gray-300 font-normal">—</span>}</p>
+      <p className="text-xs text-muted-foreground mb-0.5">{label}</p>
+      <p className="text-sm font-medium text-foreground">{value ?? <span className="text-muted-foreground/70 font-normal">—</span>}</p>
     </div>
   );
 }
@@ -73,14 +73,14 @@ export function EmployeeSalaryDetails() {
 
   return (
     <div className="flex flex-col h-full glass-panel rounded-r-xl overflow-hidden">
-      <div className="sticky top-0 z-10 flex items-center gap-4 h-16 px-5 border-b border-black/5 glass-header">
+      <div className="sticky top-0 z-10 flex items-center gap-4 h-16 px-5 border-b border-border glass-header">
         <SubNavToggle />
         <h1 className="text-base font-semibold tracking-tight">Salary Details</h1>
       </div>
 
       <div className="flex-1 overflow-auto p-6">
         {loading ? (
-          <div className="text-sm text-gray-400">Loading…</div>
+          <div className="text-sm text-muted-foreground">Loading…</div>
         ) : (
           <div className="max-w-3xl flex flex-col gap-5">
 
@@ -91,8 +91,8 @@ export function EmployeeSalaryDetails() {
                   {profile?.fullName?.charAt(0) ?? "?"}
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900">{profile?.fullName}</p>
-                  <p className="text-sm text-gray-400">{profile?.companyEmail}</p>
+                  <p className="font-semibold text-foreground">{profile?.fullName}</p>
+                  <p className="text-sm text-muted-foreground">{profile?.companyEmail}</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 xl:grid-cols-4 gap-x-8 gap-y-4">
@@ -111,18 +111,18 @@ export function EmployeeSalaryDetails() {
             {/* Salary breakdown */}
             {!hasSalary ? (
               <div className="glass-card-solid rounded-xl p-10 text-center">
-                <p className="text-sm font-medium text-gray-500">Salary structure not configured</p>
-                <p className="text-xs text-gray-400 mt-1">Please contact HR to set up your salary.</p>
+                <p className="text-sm font-medium text-muted-foreground">Salary structure not configured</p>
+                <p className="text-xs text-muted-foreground mt-1">Please contact HR to set up your salary.</p>
               </div>
             ) : (
               <>
                 {/* Earnings */}
                 <div className="glass-card-solid rounded-xl overflow-hidden">
                   <div className="px-5 py-4 border-b">
-                    <p className="font-semibold text-gray-900">Earnings (Monthly)</p>
+                    <p className="font-semibold text-foreground">Earnings (Monthly)</p>
                   </div>
                   <table className="w-full text-sm">
-                    <tbody className="divide-y divide-gray-50">
+                    <tbody className="divide-y divide-border">
                       {[
                         { label: "Basic Salary",       value: basic   },
                         { label: "HRA",                value: hra     },
@@ -130,18 +130,18 @@ export function EmployeeSalaryDetails() {
                         { label: "Medical Allowance",  value: medical },
                         { label: "Other Allowances",   value: other   },
                       ].map((row) => (
-                        <tr key={row.label} className="hover:bg-gray-50">
-                          <td className="px-5 py-3 text-gray-600">{row.label}</td>
+                        <tr key={row.label} className="hover:bg-muted/40">
+                          <td className="px-5 py-3 text-foreground/70">{row.label}</td>
                           <td className="px-5 py-3 text-right font-medium">{INR(row.value)}</td>
-                          <td className="px-5 py-3 text-right text-xs text-gray-400">{INR(row.value * 12)} / yr</td>
+                          <td className="px-5 py-3 text-right text-xs text-muted-foreground">{INR(row.value * 12)} / yr</td>
                         </tr>
                       ))}
                     </tbody>
-                    <tfoot className="border-t border-gray-200 bg-gray-50 font-semibold text-gray-900">
+                    <tfoot className="border-t border-border bg-muted/40 font-semibold text-foreground">
                       <tr>
                         <td className="px-5 py-3">Gross</td>
                         <td className="px-5 py-3 text-right">{INR(gross)}</td>
-                        <td className="px-5 py-3 text-right text-xs text-gray-500">{INR(annual)} / yr</td>
+                        <td className="px-5 py-3 text-right text-xs text-muted-foreground">{INR(annual)} / yr</td>
                       </tr>
                     </tfoot>
                   </table>
@@ -150,27 +150,27 @@ export function EmployeeSalaryDetails() {
                 {/* Deductions */}
                 <div className="glass-card-solid rounded-xl overflow-hidden">
                   <div className="px-5 py-4 border-b">
-                    <p className="font-semibold text-gray-900">Deductions (Monthly)</p>
+                    <p className="font-semibold text-foreground">Deductions (Monthly)</p>
                   </div>
                   <table className="w-full text-sm">
-                    <tbody className="divide-y divide-gray-50">
+                    <tbody className="divide-y divide-border">
                       {[
                         { label: pf > 0 ? "PF (Employee 12% of Basic)" : "PF (Not applicable)", value: pf  },
                         { label: "Professional Tax",                                              value: pt  },
                         { label: "TDS",                                                           value: tds },
                       ].map((row) => (
-                        <tr key={row.label} className="hover:bg-gray-50">
-                          <td className="px-5 py-3 text-gray-600">{row.label}</td>
-                          <td className="px-5 py-3 text-right font-medium text-red-600">−{INR(row.value)}</td>
-                          <td className="px-5 py-3 text-right text-xs text-gray-400">−{INR(row.value * 12)} / yr</td>
+                        <tr key={row.label} className="hover:bg-muted/40">
+                          <td className="px-5 py-3 text-foreground/70">{row.label}</td>
+                          <td className="px-5 py-3 text-right font-medium text-red-600 dark:text-red-300">−{INR(row.value)}</td>
+                          <td className="px-5 py-3 text-right text-xs text-muted-foreground">−{INR(row.value * 12)} / yr</td>
                         </tr>
                       ))}
                     </tbody>
-                    <tfoot className="border-t border-gray-200 bg-gray-50 font-semibold text-gray-900">
+                    <tfoot className="border-t border-border bg-muted/40 font-semibold text-foreground">
                       <tr>
                         <td className="px-5 py-3">Total Deductions</td>
-                        <td className="px-5 py-3 text-right text-red-600">−{INR(pf + pt + tds)}</td>
-                        <td className="px-5 py-3 text-right text-xs text-gray-400">−{INR((pf + pt + tds) * 12)} / yr</td>
+                        <td className="px-5 py-3 text-right text-red-600 dark:text-red-300">−{INR(pf + pt + tds)}</td>
+                        <td className="px-5 py-3 text-right text-xs text-muted-foreground">−{INR((pf + pt + tds) * 12)} / yr</td>
                       </tr>
                     </tfoot>
                   </table>

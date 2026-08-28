@@ -245,14 +245,14 @@ export default function SingleWorkflowPage({ params }: { params: Promise<{ id: s
 
   if (loading || !workflow) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-500 font-medium">
+      <div className="flex items-center justify-center h-full text-muted-foreground font-medium">
         Loading workflow...
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full w-full overflow-hidden bg-gray-50/50">
+    <div className="flex flex-col h-full w-full overflow-hidden bg-muted/40">
       {/* Fixed Top Header */}
       <WorkflowHeader
         workflow={workflow}

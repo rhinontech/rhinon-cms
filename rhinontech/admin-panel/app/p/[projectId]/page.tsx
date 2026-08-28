@@ -24,16 +24,16 @@ interface PublicRequest {
 }
 
 const statusStyles: Record<PublicRequest["status"], string> = {
-  Open: "border-blue-100 bg-blue-50 text-blue-700",
-  "In review": "border-violet-100 bg-violet-50 text-violet-700",
-  "In progress": "border-amber-100 bg-amber-50 text-amber-700",
-  Done: "border-green-100 bg-green-50 text-green-700",
+  Open: "border-blue-100 dark:border-blue-400/20 bg-blue-50 dark:bg-blue-400/10 text-blue-700 dark:text-blue-300",
+  "In review": "border-violet-100 dark:border-violet-400/20 bg-violet-50 dark:bg-violet-400/10 text-violet-700 dark:text-violet-300",
+  "In progress": "border-amber-100 dark:border-amber-400/20 bg-amber-50 dark:bg-amber-400/10 text-amber-700 dark:text-amber-300",
+  Done: "border-green-100 dark:border-green-400/20 bg-green-50 dark:bg-green-400/10 text-green-700 dark:text-green-300",
 };
 
 const priorityStyles: Record<PublicRequest["priority"], string> = {
-  Low: "border-gray-100 bg-gray-50 text-gray-600",
-  Medium: "border-amber-100 bg-amber-50 text-amber-700",
-  High: "border-red-100 bg-red-50 text-red-700",
+  Low: "border-border bg-muted/40 text-foreground/70",
+  Medium: "border-amber-100 dark:border-amber-400/20 bg-amber-50 dark:bg-amber-400/10 text-amber-700 dark:text-amber-300",
+  High: "border-red-100 dark:border-red-400/20 bg-red-50 dark:bg-red-400/10 text-red-700 dark:text-red-300",
 };
 
 export default function PublicProjectPage() {
@@ -65,18 +65,18 @@ export default function PublicProjectPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-stone-50">
-        <TbLoader2 className="animate-spin text-blue-600" size={32} />
+      <div className="flex min-h-screen items-center justify-center bg-muted/40">
+        <TbLoader2 className="animate-spin text-blue-600 dark:text-blue-300" size={32} />
       </div>
     );
   }
 
   if (error || !project) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-stone-50 p-6">
-        <div className="max-w-md rounded-xl bg-white p-8 text-center shadow-sm">
-          <h1 className="text-xl font-semibold text-gray-900">Project Not Found</h1>
-          <p className="mt-2 text-sm text-gray-500">
+      <div className="flex min-h-screen items-center justify-center bg-muted/40 p-6">
+        <div className="max-w-md rounded-xl bg-card p-8 text-center shadow-sm">
+          <h1 className="text-xl font-semibold text-foreground">Project Not Found</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
             The project you are looking for does not exist or you do not have the correct link.
           </p>
         </div>
@@ -90,35 +90,35 @@ export default function PublicProjectPage() {
   const changesCount = requests.filter(r => r.type === "Change request" && r.status !== "Done").length;
 
   return (
-    <div className="min-h-screen bg-stone-50 text-gray-900">
-      <header className="border-b bg-white">
+    <div className="min-h-screen bg-muted/40 text-foreground">
+      <header className="border-b bg-card">
         <div className="mx-auto max-w-5xl px-6 py-8 md:py-12">
           <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
             <div>
               <div className="flex items-center gap-3">
-                <span className="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold tracking-wide text-blue-800">
+                <span className="rounded-full bg-blue-100 dark:bg-blue-400/15 px-2.5 py-1 text-xs font-semibold tracking-wide text-blue-800 dark:text-blue-200">
                   Public Portal
                 </span>
-                <span className="text-sm font-medium text-gray-500">Status: {project.status}</span>
+                <span className="text-sm font-medium text-muted-foreground">Status: {project.status}</span>
               </div>
               <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">{project.name}</h1>
-              <p className="mt-2 text-gray-500">Track open issues and requested changes for this project.</p>
+              <p className="mt-2 text-muted-foreground">Track open issues and requested changes for this project.</p>
             </div>
             
             <div className="flex gap-4">
-              <div className="rounded-xl border border-gray-100 bg-stone-50 p-4 min-w-[120px]">
-                <div className="flex items-center gap-2 text-sm font-medium text-gray-500">
-                  <TbBug className="text-red-500" />
+              <div className="rounded-xl border border-border bg-muted/40 p-4 min-w-[120px]">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <TbBug className="text-red-500 dark:text-red-400" />
                   Open Bugs
                 </div>
-                <p className="mt-1 text-2xl font-bold text-gray-900">{bugsCount}</p>
+                <p className="mt-1 text-2xl font-bold text-foreground">{bugsCount}</p>
               </div>
-              <div className="rounded-xl border border-gray-100 bg-stone-50 p-4 min-w-[120px]">
-                <div className="flex items-center gap-2 text-sm font-medium text-gray-500">
-                  <TbExchange className="text-blue-500" />
+              <div className="rounded-xl border border-border bg-muted/40 p-4 min-w-[120px]">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <TbExchange className="text-blue-500 dark:text-blue-400" />
                   Open Changes
                 </div>
-                <p className="mt-1 text-2xl font-bold text-gray-900">{changesCount}</p>
+                <p className="mt-1 text-2xl font-bold text-foreground">{changesCount}</p>
               </div>
             </div>
           </div>
@@ -126,40 +126,40 @@ export default function PublicProjectPage() {
       </header>
 
       <main className="mx-auto max-w-5xl px-6 py-10">
-        <div className="mb-6 flex items-center gap-2 border-b border-gray-200 pb-4">
+        <div className="mb-6 flex items-center gap-2 border-b border-border pb-4">
           <button
             onClick={() => setFilter("All")}
-            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${filter === "All" ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-100"}`}
+            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${filter === "All" ? "bg-primary text-primary-foreground" : "text-foreground/70 hover:bg-muted"}`}
           >
             All Items
           </button>
           <button
             onClick={() => setFilter("Bug")}
-            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${filter === "Bug" ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-100"}`}
+            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${filter === "Bug" ? "bg-primary text-primary-foreground" : "text-foreground/70 hover:bg-muted"}`}
           >
             Bugs
           </button>
           <button
             onClick={() => setFilter("Change request")}
-            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${filter === "Change request" ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-100"}`}
+            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${filter === "Change request" ? "bg-primary text-primary-foreground" : "text-foreground/70 hover:bg-muted"}`}
           >
             Changes
           </button>
         </div>
 
         {visibleRequests.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-12 text-center">
-            <h3 className="text-lg font-medium text-gray-900">No items found</h3>
-            <p className="mt-1 text-gray-500">There are currently no active {filter !== "All" ? filter.toLowerCase() + "s" : "items"} for this project.</p>
+          <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
+            <h3 className="text-lg font-medium text-foreground">No items found</h3>
+            <p className="mt-1 text-muted-foreground">There are currently no active {filter !== "All" ? filter.toLowerCase() + "s" : "items"} for this project.</p>
           </div>
         ) : (
           <div className="space-y-4">
             {visibleRequests.map((request) => (
-              <div key={request.id} className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
+              <div key={request.id} className="rounded-2xl border border-border bg-card p-6 shadow-sm transition-shadow hover:shadow-md">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3">
-                      <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${request.type === 'Bug' ? 'bg-red-50 text-red-700 border border-red-100' : 'bg-blue-50 text-blue-700 border border-blue-100'}`}>
+                      <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${request.type === 'Bug' ? 'bg-red-50 dark:bg-red-400/10 text-red-700 dark:text-red-300 border border-red-100 dark:border-red-400/20' : 'bg-blue-50 dark:bg-blue-400/10 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-400/20'}`}>
                         {request.type === 'Bug' ? <TbBug size={14} /> : <TbExchange size={14} />}
                         {request.type}
                       </span>
@@ -170,12 +170,12 @@ export default function PublicProjectPage() {
                         {request.priority} Priority
                       </span>
                     </div>
-                    <h3 className="mt-3 text-lg font-semibold text-gray-900">{request.title}</h3>
-                    <p className="mt-2 whitespace-pre-wrap text-sm text-gray-600">{request.description}</p>
+                    <h3 className="mt-3 text-lg font-semibold text-foreground">{request.title}</h3>
+                    <p className="mt-2 whitespace-pre-wrap text-sm text-foreground/70">{request.description}</p>
                   </div>
-                  <div className="flex flex-col gap-2 text-right text-xs text-gray-500 sm:min-w-[140px]">
+                  <div className="flex flex-col gap-2 text-right text-xs text-muted-foreground sm:min-w-[140px]">
                     {request.reportedBy && (
-                      <p>Reported by: <span className="font-medium text-gray-900">{request.reportedBy}</span></p>
+                      <p>Reported by: <span className="font-medium text-foreground">{request.reportedBy}</span></p>
                     )}
                     <p>Updated: {new Date(request.updatedAt).toLocaleDateString()}</p>
                   </div>

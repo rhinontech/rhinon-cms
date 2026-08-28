@@ -36,14 +36,14 @@ export function FunnelStrip({
         label="Replied"
         value={counts.replied}
         icon={<TbMessageCircle size={16} />}
-        className={counts.replied > 0 ? "ring-1 ring-emerald-200 bg-emerald-50/40" : undefined}
+        className={counts.replied > 0 ? "ring-1 ring-emerald-200 bg-emerald-50/40 dark:bg-emerald-400/10" : undefined}
       />
       {counts.bounced > 0 && (
         <StatCard
           label="Bounced"
           value={counts.bounced}
           icon={<TbBan size={16} />}
-          className="ring-1 ring-red-200 bg-red-50/40 sm:col-span-5"
+          className="ring-1 ring-red-200 bg-red-50/40 dark:bg-red-400/10 sm:col-span-5"
         />
       )}
     </div>

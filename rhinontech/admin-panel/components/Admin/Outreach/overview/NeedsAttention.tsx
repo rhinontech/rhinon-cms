@@ -18,14 +18,14 @@ export function NeedsAttention({ campaigns, loading }: { campaigns: Campaign[]; 
     ...paused.map((c) => ({
       key: `paused-${c.id}`,
       href: `/${roleSlug}/outreach/campaigns/${c.id}`,
-      icon: <TbClockPause size={15} className="text-stone-400" />,
+      icon: <TbClockPause size={15} className="text-muted-foreground" />,
       title: c.name,
       hint: "Paused — resume when ready",
     })),
     ...unpublished.map((c) => ({
       key: `unpub-${c.id}`,
       href: `/${roleSlug}/outreach/publishing/${c.id}`,
-      icon: <TbSparkles size={15} className="text-blue-500" />,
+      icon: <TbSparkles size={15} className="text-blue-500 dark:text-blue-400" />,
       title: c.name,
       hint: "Draft ready — publish to LinkedIn",
     })),
@@ -50,11 +50,11 @@ export function NeedsAttention({ campaigns, loading }: { campaigns: Campaign[]; 
         <Link
           key={item.key}
           href={item.href}
-          className="flex items-center gap-3 rounded-lg px-2 py-2 text-sm hover:bg-stone-50"
+          className="flex items-center gap-3 rounded-lg px-2 py-2 text-sm hover:bg-muted/40"
         >
           {item.icon}
-          <span className="min-w-0 flex-1 truncate font-medium text-stone-800">{item.title}</span>
-          <span className="shrink-0 text-[11px] text-stone-400">{item.hint}</span>
+          <span className="min-w-0 flex-1 truncate font-medium text-foreground">{item.title}</span>
+          <span className="shrink-0 text-[11px] text-muted-foreground">{item.hint}</span>
         </Link>
       ))}
     </div>

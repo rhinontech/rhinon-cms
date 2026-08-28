@@ -107,8 +107,8 @@ export function CampaignsPage() {
         <div className="flex items-center gap-3">
           <SubNavToggle />
           <div>
-            <h1 className="text-base font-semibold tracking-tight text-gray-900">Email Campaigns</h1>
-            <p className="text-xs text-gray-500">Scheduled outreach to leads from your CRM.</p>
+            <h1 className="text-base font-semibold tracking-tight text-foreground">Email Campaigns</h1>
+            <p className="text-xs text-muted-foreground">Scheduled outreach to leads from your CRM.</p>
           </div>
         </div>
         <Button size="sm" onClick={() => setWizardOpen(true)}>
@@ -123,7 +123,7 @@ export function CampaignsPage() {
               <TabsTrigger key={s} value={s}>
                 {s}
                 {s !== "All" && (
-                  <span className="text-[10px] text-stone-400 tabular-nums">
+                  <span className="text-[10px] text-muted-foreground tabular-nums">
                     {campaigns.filter((c) => c.stage === s).length}
                   </span>
                 )}

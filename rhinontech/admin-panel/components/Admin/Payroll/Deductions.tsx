@@ -20,10 +20,10 @@ function Bar({ label, value, max }: { label: string; value: number; max: number 
   return (
     <div className="mb-4">
       <div className="flex justify-between text-sm mb-1">
-        <span className="text-gray-600">{label}</span>
+        <span className="text-foreground/70">{label}</span>
         <span className="font-medium">₹{Number(value).toLocaleString("en-IN")}</span>
       </div>
-      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+      <div className="h-2 bg-muted rounded-full overflow-hidden">
         <div className="h-full bg-red-400 rounded-full transition-all" style={{ width: `${pct}%` }} />
       </div>
     </div>
@@ -49,34 +49,34 @@ export function Deductions() {
   const maxDeduction = latest ? Number(latest.totalDeductions) : 1;
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-stone-100 rounded-r-xl">
-      <div className="sticky top-0 z-10 flex items-center gap-4 h-16 px-5 border-b bg-stone-100">
+    <div className="flex flex-col h-full overflow-hidden bg-muted rounded-r-xl">
+      <div className="sticky top-0 z-10 flex items-center gap-4 h-16 px-5 border-b bg-muted">
         <SubNavToggle />
         <h1 className="text-base font-semibold tracking-tight">Deductions</h1>
       </div>
 
       <div className="flex-1 overflow-auto p-5">
         {loading ? (
-          <p className="text-sm text-gray-400">Loading...</p>
+          <p className="text-sm text-muted-foreground">Loading...</p>
         ) : !latest ? (
-          <div className="glass-card-solid rounded-xl p-12 text-center text-gray-400 text-sm">No deduction data yet.</div>
+          <div className="glass-card-solid rounded-xl p-12 text-center text-muted-foreground text-sm">No deduction data yet.</div>
         ) : (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <div className="glass-card-solid rounded-xl p-6">
-              <p className="font-medium text-gray-900 mb-4">{MONTHS[latest.payroll.month - 1]} {latest.payroll.year} — Breakdown</p>
+              <p className="font-medium text-foreground mb-4">{MONTHS[latest.payroll.month - 1]} {latest.payroll.year} — Breakdown</p>
               <Bar label="PF (Employee 12%)" value={Number(latest.pfEmployee)} max={maxDeduction} />
               <Bar label="TDS" value={Number(latest.tds)} max={maxDeduction} />
               <Bar label="Professional Tax" value={Number(latest.professionalTax)} max={maxDeduction} />
               {Number(latest.otherDeductions) > 0 && <Bar label="Other Deductions" value={Number(latest.otherDeductions)} max={maxDeduction} />}
-              <div className="border-t pt-4 flex justify-between font-semibold text-gray-900">
+              <div className="border-t pt-4 flex justify-between font-semibold text-foreground">
                 <span>Total</span>
                 <span>₹{Number(latest.totalDeductions).toLocaleString("en-IN")}</span>
               </div>
             </div>
             <div className="glass-card-solid rounded-xl overflow-hidden">
-              <div className="px-5 py-4 border-b"><p className="font-medium text-gray-900">History</p></div>
+              <div className="px-5 py-4 border-b"><p className="font-medium text-foreground">History</p></div>
               <table className="w-full min-w-[640px] text-sm">
-                <thead className="glass-thead text-gray-600 text-xs uppercase">
+                <thead className="glass-thead text-foreground/70 text-xs uppercase">
                   <tr>
                     <th className="px-4 py-3 text-left">Period</th>
                     <th className="px-4 py-3 text-right">PF</th>
@@ -84,13 +84,13 @@ export function Deductions() {
                     <th className="px-4 py-3 text-right">Total</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-border">
                   {payslips.map((s, i) => (
-                    <tr key={i} className="hover:bg-gray-50">
+                    <tr key={i} className="hover:bg-muted/40">
                       <td className="px-4 py-3">{MONTHS[s.payroll.month - 1]} {s.payroll.year}</td>
                       <td className="px-4 py-3 text-right">₹{Number(s.pfEmployee).toLocaleString("en-IN")}</td>
                       <td className="px-4 py-3 text-right">₹{Number(s.tds).toLocaleString("en-IN")}</td>
-                      <td className="px-4 py-3 text-right font-medium text-red-600">₹{Number(s.totalDeductions).toLocaleString("en-IN")}</td>
+                      <td className="px-4 py-3 text-right font-medium text-red-600 dark:text-red-300">₹{Number(s.totalDeductions).toLocaleString("en-IN")}</td>
                     </tr>
                   ))}
                 </tbody>

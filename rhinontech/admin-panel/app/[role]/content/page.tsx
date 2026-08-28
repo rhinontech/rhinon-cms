@@ -19,11 +19,11 @@ export default function ContentRootPage() {
     <div className="flex h-full w-full items-center justify-center">
       <DomainPickerModal open={open} onOpenChange={setOpen} onSelect={handleSelect} />
       {!open && (
-        <div className="flex flex-col items-center gap-3 text-sm text-gray-500">
+        <div className="flex flex-col items-center gap-3 text-sm text-muted-foreground">
           <p>Choose which website's content you want to manage.</p>
           <button
             onClick={() => setOpen(true)}
-            className="rounded-lg bg-stone-900 px-4 py-2 text-xs font-medium text-white hover:bg-stone-800"
+            className="rounded-lg bg-primary px-4 py-2 text-xs font-medium text-primary-foreground hover:bg-primary/90"
           >
             Choose a site
           </button>

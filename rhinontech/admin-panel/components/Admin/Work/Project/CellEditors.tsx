@@ -35,7 +35,7 @@ export function TextCell({
       }}
       className={cn(
         "w-full min-w-0 truncate rounded border border-transparent bg-transparent px-1.5 py-1 text-sm outline-none",
-        "hover:border-stone-200 focus:border-blue-500 focus:bg-white",
+        "hover:border-border focus:border-blue-500 focus:bg-card",
         className
       )}
     />
@@ -82,7 +82,7 @@ export function TitleCell({
           if (e.key === "Escape") { setDraft(title); setEditing(false); }
         }}
         className={cn(
-          "w-full min-w-0 rounded border border-blue-500 bg-white px-1.5 py-1 text-sm outline-none",
+          "w-full min-w-0 rounded border border-blue-500 bg-card px-1.5 py-1 text-sm outline-none",
           className
         )}
       />
@@ -106,7 +106,7 @@ export function TitleCell({
       <button
         onClick={(e) => { e.stopPropagation(); setEditing(true); }}
         title="Rename"
-        className="shrink-0 rounded p-1 text-stone-400 opacity-0 transition hover:bg-stone-200 hover:text-stone-700 group-hover:opacity-100"
+        className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition hover:bg-muted hover:text-foreground/85 group-hover:opacity-100"
       >
         <TbPencil size={12} />
       </button>
@@ -126,7 +126,7 @@ export function SelectCell({
     <select
       value={value}
       onChange={(e) => onCommit(e.target.value)}
-      className="w-full min-w-0 truncate rounded border border-transparent bg-transparent px-1 py-1 text-sm outline-none hover:border-stone-200 focus:border-blue-500 focus:bg-white"
+      className="w-full min-w-0 truncate rounded border border-transparent bg-transparent px-1 py-1 text-sm outline-none hover:border-border focus:border-blue-500 focus:bg-card"
     >
       <option value="">{placeholder}</option>
       {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}

@@ -73,16 +73,16 @@ export function PageAttachments({ pageId, canEdit }: { pageId: string; canEdit: 
   if (loading || (!canEdit && attachments.length === 0)) return null;
 
   return (
-    <div className="mt-10 border-t border-stone-100 pt-5">
+    <div className="mt-10 border-t border-border pt-5">
       <div className="mb-2 flex items-center justify-between">
-        <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-stone-400">
+        <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-muted-foreground">
           <TbPaperclip size={13} /> Attachments{attachments.length > 0 ? ` (${attachments.length})` : ""}
         </p>
         {canEdit && (
           <button
             onClick={() => inputRef.current?.click()}
             disabled={uploading}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-stone-400 hover:text-stone-700 disabled:opacity-50"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground/85 disabled:opacity-50"
           >
             {uploading ? <TbLoader size={13} className="animate-spin" /> : <TbPlus size={13} />}
             {uploading ? "Uploading…" : "Add file"}
@@ -92,7 +92,7 @@ export function PageAttachments({ pageId, canEdit }: { pageId: string; canEdit: 
       </div>
 
       {attachments.length === 0 ? (
-        <p className="text-xs text-stone-300">No attachments yet.</p>
+        <p className="text-xs text-muted-foreground/70">No attachments yet.</p>
       ) : (
         <div className="space-y-1">
           {attachments.map((a) => {
@@ -100,9 +100,9 @@ export function PageAttachments({ pageId, canEdit }: { pageId: string; canEdit: 
             return (
               <div
                 key={a.id}
-                className="group flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-stone-50"
+                className="group flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-muted/40"
               >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-md bg-stone-100 text-stone-400">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted text-muted-foreground">
                   {isImage ? (
                     <img src={a.url} alt="" className="h-full w-full object-cover" />
                   ) : (
@@ -112,7 +112,7 @@ export function PageAttachments({ pageId, canEdit }: { pageId: string; canEdit: 
                 {isImage ? (
                   <button
                     onClick={() => setPreview(a)}
-                    className="min-w-0 flex-1 truncate text-left text-sm font-medium text-stone-700 hover:underline"
+                    className="min-w-0 flex-1 truncate text-left text-sm font-medium text-foreground/85 hover:underline"
                     title={a.name}
                   >
                     {a.name}
@@ -122,13 +122,13 @@ export function PageAttachments({ pageId, canEdit }: { pageId: string; canEdit: 
                     href={a.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="min-w-0 flex-1 truncate text-sm font-medium text-stone-700 hover:underline"
+                    className="min-w-0 flex-1 truncate text-sm font-medium text-foreground/85 hover:underline"
                     title={a.name}
                   >
                     {a.name}
                   </a>
                 )}
-                <span className="shrink-0 text-[10px] font-medium uppercase text-stone-400">
+                <span className="shrink-0 text-[10px] font-medium uppercase text-muted-foreground">
                   {formatSize(a.size)}
                   {a.uploadedBy?.fullName ? ` · ${a.uploadedBy.fullName}` : ""}
                 </span>
@@ -137,7 +137,7 @@ export function PageAttachments({ pageId, canEdit }: { pageId: string; canEdit: 
                     onClick={() => handleDelete(a.id)}
                     disabled={deletingId === a.id}
                     title="Remove attachment"
-                    className="shrink-0 rounded p-1 text-stone-300 opacity-0 hover:bg-red-50 hover:text-red-600 group-hover:opacity-100 disabled:opacity-50"
+                    className="shrink-0 rounded p-1 text-muted-foreground/70 opacity-0 hover:bg-red-50 dark:hover:bg-red-400/10 hover:text-red-600 dark:hover:text-red-300 group-hover:opacity-100 disabled:opacity-50"
                   >
                     {deletingId === a.id ? <TbLoader size={13} className="animate-spin" /> : <TbTrash size={13} />}
                   </button>

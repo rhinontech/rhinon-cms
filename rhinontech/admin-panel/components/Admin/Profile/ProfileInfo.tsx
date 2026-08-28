@@ -37,8 +37,8 @@ const initials = (name: string) => name.split(" ").map((n) => n[0]).join("").sli
 function Field({ label, value }: { label: string; value?: string | null }) {
   return (
     <div>
-      <p className="text-xs text-gray-400 mb-0.5">{label}</p>
-      <p className="text-sm font-medium text-gray-900 break-all">{value ?? <span className="text-gray-300 font-normal">—</span>}</p>
+      <p className="text-xs text-muted-foreground mb-0.5">{label}</p>
+      <p className="text-sm font-medium text-foreground break-all">{value ?? <span className="text-muted-foreground/70 font-normal">—</span>}</p>
     </div>
   );
 }
@@ -49,13 +49,13 @@ function InputField({ label, name, value, onChange, type = "text", disabled = fa
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-xs font-medium text-gray-500">{label}</label>
+      <label className="text-xs font-medium text-muted-foreground">{label}</label>
       <input
         type={type} name={name} value={value}
         onChange={(e) => onChange(e.target.value)} disabled={disabled}
-        className="px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
+        className="px-3 py-2 text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-muted/40 disabled:text-muted-foreground disabled:cursor-not-allowed"
       />
-      {hint && <p className="text-xs text-gray-400">{hint}</p>}
+      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
 }
@@ -109,22 +109,22 @@ export function ProfileInfo() {
   return (
     <div className="flex flex-col h-full glass-panel rounded-r-xl overflow-hidden">
       {/* Header */}
-      <div className="sticky top-0 z-10 flex items-center justify-between h-16 px-5 border-b border-black/5 glass-header">
+      <div className="sticky top-0 z-10 flex items-center justify-between h-16 px-5 border-b border-border glass-header">
         <div className="flex items-center gap-4">
           <SubNavToggle />
           <h1 className="text-xl font-bold tracking-tight">Personal Information</h1>
         </div>
         {!loading && profile && (
           !editing ? (
-            <button onClick={startEdit} className="flex items-center gap-1.5 text-sm text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors">
+            <button onClick={startEdit} className="flex items-center gap-1.5 text-sm text-blue-600 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-400/10 px-3 py-1.5 rounded-lg transition-colors">
               <TbPencil size={14} /> Edit
             </button>
           ) : (
             <div className="flex items-center gap-2">
-              <button onClick={save} disabled={saving} className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-stone-900 text-white rounded-lg hover:bg-stone-800 disabled:opacity-50">
+              <button onClick={save} disabled={saving} className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50">
                 {saving ? <TbLoader2 size={14} className="animate-spin" /> : <TbCheck size={14} />} Save
               </button>
-              <button onClick={cancelEdit} className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50">
+              <button onClick={cancelEdit} className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-border text-foreground/70 rounded-lg hover:bg-muted/40">
                 <TbX size={14} /> Cancel
               </button>
             </div>
@@ -134,13 +134,13 @@ export function ProfileInfo() {
 
       <div className="flex-1 overflow-auto p-6">
         {loading ? (
-          <p className="text-sm text-gray-400">Loading…</p>
+          <p className="text-sm text-muted-foreground">Loading…</p>
         ) : !profile ? (
-          <p className="text-sm text-gray-400">Failed to load profile.</p>
+          <p className="text-sm text-muted-foreground">Failed to load profile.</p>
         ) : (
           <div className="max-w-3xl space-y-5">
             {/* Profile card */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="bg-card rounded-xl border border-border p-6">
               <div className="flex items-start gap-5">
                 <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${avatarGradient(profile.fullName)} flex items-center justify-center text-white font-bold text-xl shrink-0`}>
                   {initials(profile.fullName)}
@@ -148,14 +148,14 @@ export function ProfileInfo() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h2 className="text-lg font-bold text-gray-900">{profile.fullName}</h2>
-                      <p className="text-sm text-gray-500">{profile.role?.name ?? "—"}</p>
+                      <h2 className="text-lg font-bold text-foreground">{profile.fullName}</h2>
+                      <p className="text-sm text-muted-foreground">{profile.role?.name ?? "—"}</p>
                     </div>
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase ${profile.status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase ${profile.status === "active" ? "bg-green-100 dark:bg-green-400/15 text-green-700 dark:text-green-300" : "bg-muted text-muted-foreground"}`}>
                       {profile.status}
                     </span>
                   </div>
-                  <div className="flex flex-wrap gap-x-5 gap-y-1.5 mt-3 text-xs text-gray-500">
+                  <div className="flex flex-wrap gap-x-5 gap-y-1.5 mt-3 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1.5"><TbMail size={12} /> {profile.companyEmail}</span>
                     <span className="flex items-center gap-1.5"><TbBuildingSkyscraper size={12} /> {profile.department}</span>
                     <span className="flex items-center gap-1.5"><TbCalendar size={12} /> Joined {joinDate}</span>
@@ -167,18 +167,18 @@ export function ProfileInfo() {
 
             {/* Alerts */}
             {error && (
-              <div className="flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+              <div className="flex items-center gap-2 px-4 py-3 bg-red-50 dark:bg-red-400/10 border border-red-200 dark:border-red-400/25 rounded-xl text-sm text-red-700 dark:text-red-300">
                 <TbAlertCircle size={15} /> {error}
               </div>
             )}
             {success && (
-              <div className="flex items-center gap-2 px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-sm text-green-700">
+              <div className="flex items-center gap-2 px-4 py-3 bg-green-50 dark:bg-green-400/10 border border-green-200 dark:border-green-400/25 rounded-xl text-sm text-green-700 dark:text-green-300">
                 <TbCheck size={15} /> Profile updated successfully.
               </div>
             )}
 
             {/* Details */}
-            <div className="bg-white rounded-xl border border-gray-200 w-full p-6">
+            <div className="bg-card rounded-xl border border-border w-full p-6">
               {!editing ? (
                 <div className="grid grid-cols-2 xl:grid-cols-3 gap-x-10 gap-y-5">
                   <Field label="Full Name"         value={profile.fullName} />
@@ -217,11 +217,11 @@ export function ProfileInfo() {
                     };
                     return (
                       <div key={key} className="flex flex-col gap-1">
-                        <label className="text-xs font-medium text-gray-500">{labels[key]}</label>
+                        <label className="text-xs font-medium text-muted-foreground">{labels[key]}</label>
                         <select
                           value={(form[key] as string) ?? opts[key][0]}
                           onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
-                          className="px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="px-3 py-2 text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           {opts[key].map((v) => <option key={v}>{v}</option>)}
                         </select>
@@ -230,7 +230,7 @@ export function ProfileInfo() {
                   })}
 
                   <div className="col-span-2 flex flex-col gap-1.5">
-                    <label className="text-xs font-medium text-gray-500">Work Schedule</label>
+                    <label className="text-xs font-medium text-muted-foreground">Work Schedule</label>
                     <WorkSchedulePicker
                       value={form.workSchedule ?? "11 AM – 8 PM (Mon–Sat)"}
                       onChange={(v) => setForm((f) => ({ ...f, workSchedule: v }))}
@@ -238,15 +238,15 @@ export function ProfileInfo() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <label className="text-xs font-medium text-gray-500">Remote Position</label>
+                    <label className="text-xs font-medium text-muted-foreground">Remote Position</label>
                     <button
                       type="button"
                       onClick={() => setForm((f) => ({ ...f, remotePosition: !f.remotePosition }))}
-                      className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors ${form.remotePosition ? "bg-stone-900" : "bg-gray-200"}`}
+                      className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors ${form.remotePosition ? "bg-primary" : "bg-muted"}`}
                     >
-                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${form.remotePosition ? "translate-x-4" : "translate-x-0"}`} />
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-card shadow transition-transform ${form.remotePosition ? "translate-x-4" : "translate-x-0"}`} />
                     </button>
-                    <span className="text-sm text-gray-500">{form.remotePosition ? "Yes" : "No"}</span>
+                    <span className="text-sm text-muted-foreground">{form.remotePosition ? "Yes" : "No"}</span>
                   </div>
                 </div>
               )}

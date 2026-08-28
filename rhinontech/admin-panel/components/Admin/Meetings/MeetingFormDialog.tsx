@@ -159,7 +159,7 @@ export function MeetingFormDialog({ event, defaultDate, onClose, onSaved }: Prop
                 type="checkbox"
                 checked={addMeet}
                 onChange={(e) => setAddMeet(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 accent-blue-600"
+                className="h-4 w-4 rounded border-border accent-blue-600"
               />
               Add a Google Meet link
             </label>

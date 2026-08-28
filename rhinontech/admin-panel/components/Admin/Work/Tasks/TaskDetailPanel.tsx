@@ -14,8 +14,8 @@ import type { ApiTask, Subtask, TaskComment, TaskStatus } from "./types";
 function Detail({ label, value, extra }: { label: string; value: string; extra?: React.ReactNode }) {
   return (
     <div>
-      <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{label}</p>
-      <p className="mt-0.5 flex items-center gap-1.5 text-sm text-gray-800">{value}{extra}</p>
+      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{label}</p>
+      <p className="mt-0.5 flex items-center gap-1.5 text-sm text-foreground">{value}{extra}</p>
     </div>
   );
 }
@@ -149,14 +149,14 @@ export function TaskDetailPanel({
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <div className="flex shrink-0 border-b border-gray-100">
+      <div className="flex shrink-0 border-b border-border">
         {TABS.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
             className={cn(
               "whitespace-nowrap border-b-2 px-4 py-2.5 text-xs font-semibold transition-all",
-              tab === t.id ? "border-blue-600 text-blue-600" : "border-transparent text-gray-400 hover:text-gray-600"
+              tab === t.id ? "border-blue-600 text-blue-600 dark:text-blue-300" : "border-transparent text-muted-foreground hover:text-foreground/70"
             )}
           >
             {t.label}
@@ -168,31 +168,31 @@ export function TaskDetailPanel({
         <div className="flex-1 space-y-4 overflow-auto p-5">
           <div>
             <div className="flex items-start gap-2">
-              <h2 className="flex-1 text-lg font-bold leading-tight text-gray-900">{task.title}</h2>
+              <h2 className="flex-1 text-lg font-bold leading-tight text-foreground">{task.title}</h2>
               <span className={cn("mt-0.5 shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold", PRIORITY_COLORS[task.priority])}>{task.priority}</span>
             </div>
             {task.recurrence && (
-              <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-violet-600"><TbRepeat size={12} /> Repeats {task.recurrence}</p>
+              <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-violet-600 dark:text-violet-300"><TbRepeat size={12} /> Repeats {task.recurrence}</p>
             )}
             {task.blocker && task.blocker.status !== "Done" && (
-              <div className="mt-2 flex items-center gap-1.5 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-xs font-medium text-red-500">
+              <div className="mt-2 flex items-center gap-1.5 rounded-lg border border-red-100 dark:border-red-400/20 bg-red-50 dark:bg-red-400/10 px-3 py-2 text-xs font-medium text-red-500 dark:text-red-400">
                 <TbLock size={12} /> Blocked by: <span className="font-semibold">{task.blocker.title}</span>
               </div>
             )}
-            <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-gray-600">{task.description || "No description."}</p>
+            <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-foreground/70">{task.description || "No description."}</p>
           </div>
 
           <div>
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">Tags</p>
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Tags</p>
             <div className="flex flex-wrap gap-1.5">
               {task.tags?.map((tg) => (
                 <span key={tg.id} className={cn("flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-semibold", TAG_COLOR_STYLES[tg.color] || TAG_COLOR_STYLES.blue)}>
                   {tg.label}
-                  {canEdit && <button onClick={() => removeTag(tg.id)} className="hover:text-red-500"><TbX size={10} /></button>}
+                  {canEdit && <button onClick={() => removeTag(tg.id)} className="hover:text-red-500 dark:hover:text-red-400"><TbX size={10} /></button>}
                 </span>
               ))}
               {canEdit && !showTagInput && (
-                <button onClick={() => setShowTagInput(true)} className="flex items-center gap-1 rounded-full border border-dashed border-gray-200 px-2 py-0.5 text-xs text-gray-400 transition-colors hover:border-blue-300 hover:text-blue-500">
+                <button onClick={() => setShowTagInput(true)} className="flex items-center gap-1 rounded-full border border-dashed border-border px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:border-blue-300 dark:hover:border-blue-400/30 hover:text-blue-500 dark:hover:text-blue-400">
                   <TbPlus size={10} /> Add
                 </button>
               )}
@@ -202,16 +202,16 @@ export function TaskDetailPanel({
                 <input value={newTag} onChange={(e) => setNewTag(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addTag()} placeholder="Label..." className="w-28 rounded-lg border px-2 py-1 text-xs focus:border-blue-500 focus:outline-none" autoFocus />
                 <div className="flex flex-wrap gap-1">
                   {TAG_COLORS.map((c) => (
-                    <button key={c} onClick={() => setNewTagColor(c)} className={cn("h-5 w-5 rounded-full border-2 transition-all", newTagColor === c ? "scale-110 border-gray-800" : "border-transparent")} style={{ backgroundColor: TAG_COLOR_HEX[c] }} title={c} />
+                    <button key={c} onClick={() => setNewTagColor(c)} className={cn("h-5 w-5 rounded-full border-2 transition-all", newTagColor === c ? "scale-110 border-primary" : "border-transparent")} style={{ backgroundColor: TAG_COLOR_HEX[c] }} title={c} />
                   ))}
                 </div>
-                <button onClick={addTag} className="text-xs font-semibold text-blue-600 hover:text-blue-800">Add</button>
-                <button onClick={() => setShowTagInput(false)} className="text-gray-400"><TbX size={12} /></button>
+                <button onClick={addTag} className="text-xs font-semibold text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-200">Add</button>
+                <button onClick={() => setShowTagInput(false)} className="text-muted-foreground"><TbX size={12} /></button>
               </div>
             )}
           </div>
 
-          <div className="h-px bg-gray-100" />
+          <div className="h-px bg-muted" />
           <div className="grid grid-cols-1 gap-x-4 gap-y-3 text-sm sm:grid-cols-2">
             <Detail label="Assignee" value={task.assignee?.fullName ?? "Unassigned"} />
             <Detail label="Project" value={task.project?.name ?? "—"} />
@@ -221,8 +221,8 @@ export function TaskDetailPanel({
             {task.estimatedHours != null && <Detail label="Estimate" value={`${task.estimatedHours}h`} />}
             {task.project && (
               <div className="col-span-2">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Collaborators</p>
-                <label className="mt-1 flex cursor-pointer items-start gap-2 text-sm text-gray-800">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Collaborators</p>
+                <label className="mt-1 flex cursor-pointer items-start gap-2 text-sm text-foreground">
                   <input
                     type="checkbox"
                     disabled={!canEdit || sharingGuest}
@@ -232,7 +232,7 @@ export function TaskDetailPanel({
                   />
                   <span>
                     Visible to external collaborators
-                    <span className="block text-[11px] text-gray-400">
+                    <span className="block text-[11px] text-muted-foreground">
                       Off by default. Turning this on shares the task and its comments with
                       everyone invited to {task.project.name}.
                     </span>
@@ -248,33 +248,33 @@ export function TaskDetailPanel({
         <div className="flex-1 space-y-3 overflow-auto p-5">
           {subtasks.length > 0 && (
             <div className="space-y-1">
-              <div className="flex justify-between text-xs text-gray-400">
+              <div className="flex justify-between text-xs text-muted-foreground">
                 <span>{doneCount}/{subtasks.length} done</span>
                 <span>{Math.round((doneCount / subtasks.length) * 100)}%</span>
               </div>
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
                 <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${(doneCount / subtasks.length) * 100}%` }} />
               </div>
             </div>
           )}
 
           {allSubtasksDone && task.status !== "Done" && (
-            <div className="flex items-center justify-between rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3">
-              <p className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700"><TbCheck size={13} /> All done!</p>
-              <button onClick={() => onStatusChange(task.id, "Done")} className="rounded-lg bg-emerald-100 px-3 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-200">Mark task Done</button>
+            <div className="flex items-center justify-between rounded-xl border border-emerald-100 dark:border-emerald-400/20 bg-emerald-50 dark:bg-emerald-400/10 px-4 py-3">
+              <p className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300"><TbCheck size={13} /> All done!</p>
+              <button onClick={() => onStatusChange(task.id, "Done")} className="rounded-lg bg-emerald-100 dark:bg-emerald-400/15 px-3 py-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200">Mark task Done</button>
             </div>
           )}
 
           <div className="space-y-0.5">
             {subtasks.map((sub, i) => (
-              <div key={sub.id} className="group flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-gray-50">
-                <input type="checkbox" checked={sub.done} onChange={() => toggleSubtask(sub)} className="shrink-0 rounded border-gray-300 text-emerald-600" />
-                <span className={cn("flex-1 text-sm", sub.done && "text-gray-400 line-through")}>{sub.title}</span>
+              <div key={sub.id} className="group flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-muted/40">
+                <input type="checkbox" checked={sub.done} onChange={() => toggleSubtask(sub)} className="shrink-0 rounded border-border text-emerald-600 dark:text-emerald-300" />
+                <span className={cn("flex-1 text-sm", sub.done && "text-muted-foreground line-through")}>{sub.title}</span>
                 {canEdit && (
                   <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-                    <button onClick={() => moveSubtask(i, -1)} disabled={i === 0} className="p-0.5 text-gray-400 hover:text-gray-600 disabled:opacity-20"><TbChevronUp size={12} /></button>
-                    <button onClick={() => moveSubtask(i, 1)} disabled={i === subtasks.length - 1} className="p-0.5 text-gray-400 hover:text-gray-600 disabled:opacity-20"><TbChevronDown size={12} /></button>
-                    <button onClick={() => deleteSubtask(sub.id)} className="p-0.5 text-gray-400 hover:text-red-500"><TbX size={12} /></button>
+                    <button onClick={() => moveSubtask(i, -1)} disabled={i === 0} className="p-0.5 text-muted-foreground hover:text-foreground/70 disabled:opacity-20"><TbChevronUp size={12} /></button>
+                    <button onClick={() => moveSubtask(i, 1)} disabled={i === subtasks.length - 1} className="p-0.5 text-muted-foreground hover:text-foreground/70 disabled:opacity-20"><TbChevronDown size={12} /></button>
+                    <button onClick={() => deleteSubtask(sub.id)} className="p-0.5 text-muted-foreground hover:text-red-500 dark:hover:text-red-400"><TbX size={12} /></button>
                   </div>
                 )}
               </div>
@@ -283,36 +283,36 @@ export function TaskDetailPanel({
 
           {canEdit && (
             <div className="flex items-center gap-2">
-              <input value={newSubtask} onChange={(e) => setNewSubtask(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addSubtask()} placeholder="Add subtask..." className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" />
-              <button onClick={addSubtask} disabled={addingSubtask || !newSubtask.trim()} className="rounded-lg bg-stone-900 px-3 py-2 text-xs font-semibold text-white hover:bg-stone-800 disabled:opacity-50">
+              <input value={newSubtask} onChange={(e) => setNewSubtask(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addSubtask()} placeholder="Add subtask..." className="flex-1 rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" />
+              <button onClick={addSubtask} disabled={addingSubtask || !newSubtask.trim()} className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
                 {addingSubtask ? <TbLoader className="animate-spin" size={13} /> : <TbPlus size={13} />}
               </button>
             </div>
           )}
-          {subtasks.length === 0 && <p className="py-8 text-center text-sm text-gray-400">No subtasks yet.</p>}
+          {subtasks.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">No subtasks yet.</p>}
         </div>
       )}
 
       {tab === "comments" && (
         <div className="flex flex-1 flex-col overflow-hidden">
           <div className="flex-1 space-y-3 overflow-auto p-5">
-            {comments.length === 0 && <p className="py-8 text-center text-sm text-gray-400">No comments yet.</p>}
+            {comments.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">No comments yet.</p>}
             {comments.map((c) => (
               <div key={c.id} className="group flex gap-2.5">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[10px] font-bold text-blue-700">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-400/15 text-[10px] font-bold text-blue-700 dark:text-blue-300">
                   {c.author?.fullName ? initials(c.author.fullName) : "?"}
                 </span>
-                <div className="flex-1 rounded-xl bg-gray-50 px-3 py-2">
+                <div className="flex-1 rounded-xl bg-muted/40 px-3 py-2">
                   <div className="mb-1 flex items-center justify-between">
-                    <span className="text-xs font-semibold text-gray-700">{c.author?.fullName ?? "Unknown"}</span>
+                    <span className="text-xs font-semibold text-foreground/85">{c.author?.fullName ?? "Unknown"}</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-gray-400">{new Date(c.createdAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+                      <span className="text-[10px] text-muted-foreground">{new Date(c.createdAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
                       {canDeleteComment(c) && (
-                        <button onClick={() => deleteComment(c.id)} className="text-gray-300 opacity-0 transition-all hover:text-red-500 group-hover:opacity-100"><TbX size={11} /></button>
+                        <button onClick={() => deleteComment(c.id)} className="text-muted-foreground/70 opacity-0 transition-all hover:text-red-500 dark:hover:text-red-400 group-hover:opacity-100"><TbX size={11} /></button>
                       )}
                     </div>
                   </div>
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700">{c.body}</p>
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/85">{c.body}</p>
                 </div>
               </div>
             ))}
@@ -324,9 +324,9 @@ export function TaskDetailPanel({
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); postComment(); } }}
               placeholder="Add a comment... (Enter to send)"
               rows={2}
-              className="flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              className="flex-1 resize-none rounded-xl border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
             />
-            <button onClick={postComment} disabled={postingComment || !newComment.trim()} className="self-end rounded-lg bg-stone-900 px-3 py-2 text-xs font-semibold text-white hover:bg-stone-800 disabled:opacity-50">
+            <button onClick={postComment} disabled={postingComment || !newComment.trim()} className="self-end rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
               {postingComment ? <TbLoader className="animate-spin" size={13} /> : "Send"}
             </button>
           </div>

@@ -16,13 +16,13 @@ function Field({
 } & Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "type">) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-gray-400">{label}</span>
+      <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{label}</span>
       <input
         type={type}
         value={value}
         required={required}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+        className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
         {...rest}
       />
     </label>
@@ -40,11 +40,11 @@ function SelectField({
 }) {
   return (
     <label className={className ? `block ${className}` : "block"}>
-      <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-gray-400">{label}</span>
+      <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+        className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
       >
         {children}
       </select>
@@ -73,12 +73,12 @@ export function TaskFormPanel({
         <Field label="Task Title" value={form.title} onChange={(v) => set("title", v)} required placeholder="What needs doing?" />
 
         <label className="block">
-          <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-gray-400">Description</span>
+          <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Description</span>
           <textarea
             value={form.description}
             onChange={(e) => set("description", e.target.value)}
             rows={3}
-            className="min-h-20 w-full resize-y rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+            className="min-h-20 w-full resize-y rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
           />
         </label>
 
@@ -102,7 +102,7 @@ export function TaskFormPanel({
           </SelectField>
 
           <label className="block">
-            <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-gray-400">Due date</span>
+            <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Due date</span>
             <DatePicker
               ariaLabel="Due date"
               value={form.dueDate || null}
@@ -126,10 +126,10 @@ export function TaskFormPanel({
       </div>
 
       <div className="flex shrink-0 justify-end gap-2 border-t p-4">
-        <button type="button" onClick={onCancel} className="rounded-lg border border-gray-200 px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-50">
+        <button type="button" onClick={onCancel} className="rounded-lg border border-border px-4 py-2 text-xs font-semibold text-foreground/70 hover:bg-muted/40">
           Cancel
         </button>
-        <button type="submit" disabled={saving} className="flex items-center gap-1.5 rounded-lg bg-stone-900 px-4 py-2 text-xs font-semibold text-white hover:bg-stone-800 disabled:opacity-50">
+        <button type="submit" disabled={saving} className="flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
           {saving && <TbLoader className="animate-spin" size={13} />} Save Task
         </button>
       </div>

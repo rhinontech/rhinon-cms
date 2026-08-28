@@ -44,7 +44,7 @@ export function CoverImage({
           <button
             onClick={() => inputRef.current?.click()}
             disabled={uploading}
-            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-stone-400 opacity-0 transition-opacity hover:bg-stone-100 hover:text-stone-700 group-hover:opacity-100"
+            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground/85 group-hover:opacity-100"
           >
             {uploading ? <TbLoader size={14} className="animate-spin" /> : <TbPhotoPlus size={14} />}
             {uploading ? "Uploading…" : "Add cover"}

@@ -214,7 +214,7 @@ export function SettingsRoles() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full text-sm text-gray-400">Loading...</div>
+      <div className="flex items-center justify-center h-full text-sm text-muted-foreground">Loading...</div>
     );
   }
 
@@ -226,25 +226,25 @@ export function SettingsRoles() {
       {/* Roles list */}
       <aside
         className={cn(
-          "flex flex-col bg-white shrink-0 h-full overflow-hidden w-full lg:w-64",
+          "flex flex-col bg-card shrink-0 h-full overflow-hidden w-full lg:w-64",
           isSubNavExpanded ? "rounded-r-xl max-sm:rounded-xl lg:rounded-l-none" : "rounded-xl"
         )}
       >
         <div className="flex items-center justify-between min-h-16 px-4 py-2 sm:py-0 border-b shrink-0">
           <div className="flex items-center gap-2 min-w-0">
             <SubNavToggle />
-            <span className="text-sm font-semibold text-gray-900 truncate">Roles</span>
+            <span className="text-sm font-semibold text-foreground truncate">Roles</span>
           </div>
           <button
             onClick={() => { setCreating(true); setMessage(""); }}
-            className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 shrink-0"
+            className="flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-300 hover:text-blue-700 dark:hover:text-blue-300 shrink-0"
           >
             <TbPlus size={14} /> New
           </button>
         </div>
 
         {creating && (
-          <div className="px-4 py-3 border-b space-y-2 bg-blue-50">
+          <div className="px-4 py-3 border-b space-y-2 bg-blue-50 dark:bg-blue-400/10">
             <input
               autoFocus
               placeholder="Role name"
@@ -253,25 +253,25 @@ export function SettingsRoles() {
                 setNewRoleName(e.target.value);
                 setNewRoleSlug(e.target.value.toLowerCase().replace(/\s+/g, "-"));
               }}
-              className="w-full text-xs border border-gray-200 rounded-md px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="w-full text-xs border border-border rounded-md px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card"
             />
             <input
               placeholder="slug (e.g. hr-manager)"
               value={newRoleSlug}
               onChange={(e) => setNewRoleSlug(e.target.value)}
-              className="w-full text-xs border border-gray-200 rounded-md px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="w-full text-xs border border-border rounded-md px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card"
             />
             <div className="flex gap-2">
               <button
                 onClick={createRole}
                 disabled={saving || !newRoleName.trim()}
-                className="flex-1 text-xs bg-stone-900 text-white rounded-md py-1.5 hover:bg-stone-800 disabled:opacity-50"
+                className="flex-1 text-xs bg-primary text-primary-foreground rounded-md py-1.5 hover:bg-primary/90 disabled:opacity-50"
               >
                 {saving ? "Creating..." : "Create"}
               </button>
               <button
                 onClick={() => { setCreating(false); setNewRoleName(""); setNewRoleSlug(""); }}
-                className="flex-1 text-xs border border-gray-200 rounded-md py-1.5 text-gray-600 hover:bg-gray-50"
+                className="flex-1 text-xs border border-border rounded-md py-1.5 text-foreground/70 hover:bg-muted/40"
               >
                 Cancel
               </button>
@@ -287,8 +287,8 @@ export function SettingsRoles() {
               className={cn(
                 "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm text-left transition-colors",
                 selectedRole?.id === role.id
-                  ? "bg-stone-900 text-white"
-                  : "text-gray-700 hover:bg-stone-100"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-foreground/85 hover:bg-muted"
               )}
             >
               <div className="flex items-center gap-2 min-w-0">
@@ -297,7 +297,7 @@ export function SettingsRoles() {
               </div>
               <span className={cn(
                 "flex shrink-0 items-center gap-1.5 text-xs ml-2",
-                selectedRole?.id === role.id ? "text-stone-300" : "text-gray-400"
+                selectedRole?.id === role.id ? "text-muted-foreground/70" : "text-muted-foreground"
               )}>
                 {typeof role.usersCount === "number" && <span>{role.usersCount} member{role.usersCount !== 1 ? "s" : ""}</span>}
                 <span>·</span>
@@ -311,7 +311,7 @@ export function SettingsRoles() {
       {/* Permissions editor */}
       <main
         className={cn(
-          "min-h-0 flex-col bg-white overflow-hidden transition-all duration-200 ease-in-out",
+          "min-h-0 flex-col bg-card overflow-hidden transition-all duration-200 ease-in-out",
           mobileDetail ? "fixed inset-0 z-50 flex w-full max-w-full" : "hidden",
           "lg:static lg:z-auto lg:flex lg:h-full lg:flex-1 lg:rounded-xl min-w-0"
         )}
@@ -322,14 +322,14 @@ export function SettingsRoles() {
               <div className="flex items-center gap-2 min-w-0">
                 <button
                   onClick={() => setMobileDetail(false)}
-                  className="lg:hidden p-1.5 -ml-1 rounded-lg text-gray-600 hover:bg-stone-100 transition-colors shrink-0"
+                  className="lg:hidden p-1.5 -ml-1 rounded-lg text-foreground/70 hover:bg-muted transition-colors shrink-0"
                   aria-label="Back to roles"
                 >
                   <TbChevronLeft size={20} />
                 </button>
                 <div className="min-w-0">
-                  <h2 className="text-sm sm:text-base font-semibold text-gray-900 truncate">{selectedRole.name}</h2>
-                  <p className="text-xs text-gray-400 truncate">
+                  <h2 className="text-sm sm:text-base font-semibold text-foreground truncate">{selectedRole.name}</h2>
+                  <p className="text-xs text-muted-foreground truncate">
                     /{selectedRole.slug} · {selectedPermIds.size} permissions
                     {typeof selectedRole.usersCount === "number" && ` · ${selectedRole.usersCount} member${selectedRole.usersCount !== 1 ? "s" : ""}`}
                   </p>
@@ -337,14 +337,14 @@ export function SettingsRoles() {
               </div>
               <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                 {message && (
-                  <span className={cn("text-xs hidden sm:inline", message.toLowerCase().includes("fail") ? "text-red-500" : "text-green-600")}>
+                  <span className={cn("text-xs hidden sm:inline", message.toLowerCase().includes("fail") ? "text-red-500 dark:text-red-400" : "text-green-600 dark:text-green-300")}>
                     {message}
                   </span>
                 )}
                 {!PROTECTED_SLUGS.includes(selectedRole.slug) && (
                   <button
                     onClick={() => deleteRole(selectedRole)}
-                    className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    className="p-1.5 text-muted-foreground hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-400/10 rounded-lg transition-colors"
                     title={(selectedRole.usersCount ?? 0) > 0 ? "Reassign members before deleting" : "Delete role"}
                   >
                     <TbTrash size={15} />
@@ -353,14 +353,14 @@ export function SettingsRoles() {
                 <button
                   onClick={savePermissions}
                   disabled={saving || LOCKED_SLUGS.includes(selectedRole.slug)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-stone-900 text-white rounded-lg hover:bg-stone-800 disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
                 >
                   <TbCheck size={13} />
                   <span>{saving ? "Saving..." : "Save"}</span>
                 </button>
                 <button
                   onClick={() => setMobileDetail(false)}
-                  className="lg:hidden p-1.5 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="lg:hidden p-1.5 text-muted-foreground hover:text-foreground/85 rounded-lg hover:bg-muted transition-colors"
                 >
                   <TbX size={18} />
                 </button>
@@ -368,14 +368,14 @@ export function SettingsRoles() {
             </div>
 
             {message && (
-              <div className={cn("sm:hidden px-4 py-1.5 text-xs border-b", message.toLowerCase().includes("fail") ? "bg-red-50 text-red-600 border-red-100" : "bg-green-50 text-green-700 border-green-100")}>
+              <div className={cn("sm:hidden px-4 py-1.5 text-xs border-b", message.toLowerCase().includes("fail") ? "bg-red-50 dark:bg-red-400/10 text-red-600 dark:text-red-300 border-red-100 dark:border-red-400/20" : "bg-green-50 dark:bg-green-400/10 text-green-700 dark:text-green-300 border-green-100 dark:border-green-400/20")}>
                 {message}
               </div>
             )}
 
             <div className="flex-1 min-h-0 min-w-0 overflow-y-auto p-4 sm:p-5 space-y-4 sm:space-y-5">
               {LOCKED_SLUGS.includes(selectedRole.slug) && (
-                <div className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3.5 sm:px-4 py-2.5 sm:py-3">
+                <div className="text-xs text-amber-600 dark:text-amber-300 bg-amber-50 dark:bg-amber-400/10 border border-amber-200 dark:border-amber-400/25 rounded-lg px-3.5 sm:px-4 py-2.5 sm:py-3">
                   Super Admin — the CEO panel — always has every permission and cannot be edited.
                 </div>
               )}
@@ -385,7 +385,7 @@ export function SettingsRoles() {
                 if (groupPerms.length === 0) return null;
                 return (
                   <section key={resource}>
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{resourceLabel(resource)}</h3>
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{resourceLabel(resource)}</h3>
                     <div className="space-y-1">
                       {groupPerms.map((perm) => {
                         const enabled = selectedPermIds.has(perm.id);
@@ -397,25 +397,25 @@ export function SettingsRoles() {
                               "flex items-center justify-between px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-lg border transition-colors gap-2",
                               locked ? "cursor-default" : "cursor-pointer",
                               enabled
-                                ? "border-blue-200 bg-blue-50"
-                                : "border-gray-100 bg-gray-50 hover:border-gray-200"
+                                ? "border-blue-200 dark:border-blue-400/25 bg-blue-50 dark:bg-blue-400/10"
+                                : "border-border bg-muted/40 hover:border-border"
                             )}
                           >
                             <div className="min-w-0">
-                              <p className="text-xs sm:text-sm font-medium text-gray-800 truncate">
+                              <p className="text-xs sm:text-sm font-medium text-foreground truncate">
                                 {PERMISSION_LABELS[perm.name] ?? perm.name}
                               </p>
-                              <p className="text-[11px] sm:text-xs text-gray-400 mt-0.5 truncate">{perm.name}</p>
+                              <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 truncate">{perm.name}</p>
                             </div>
                             <div
                               className={cn(
                                 "w-9 h-5 rounded-full transition-colors flex items-center px-0.5 shrink-0",
-                                enabled ? "bg-stone-900" : "bg-gray-200"
+                                enabled ? "bg-primary" : "bg-muted"
                               )}
                               onClick={() => !locked && togglePermission(perm.id)}
                             >
                               <div className={cn(
-                                "w-4 h-4 bg-white rounded-full shadow-sm transition-transform",
+                                "w-4 h-4 bg-card rounded-full shadow-sm transition-transform",
                                 enabled ? "translate-x-4" : "translate-x-0"
                               )} />
                             </div>
@@ -429,7 +429,7 @@ export function SettingsRoles() {
             </div>
           </>
         ) : (
-          <div className="flex items-center justify-center flex-1 text-sm text-gray-400">
+          <div className="flex items-center justify-center flex-1 text-sm text-muted-foreground">
             Select a role to manage permissions.
           </div>
         )}

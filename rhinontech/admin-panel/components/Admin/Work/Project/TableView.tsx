@@ -99,7 +99,7 @@ export function TableView({
   return (
     <div className="flex h-full min-h-0 flex-col">
       {!rosterAvailable && (
-        <p className="flex shrink-0 items-center gap-1.5 border-b bg-amber-50 px-4 py-1.5 text-[11px] text-amber-800">
+        <p className="flex shrink-0 items-center gap-1.5 border-b bg-amber-50 dark:bg-amber-400/10 px-4 py-1.5 text-[11px] text-amber-800 dark:text-amber-200">
           <TbAlertTriangle size={12} className="shrink-0" />
           Your role lacks <code className="font-mono">people:read</code>, so the assignee list only
           shows people already on this project. An admin can grant it in Settings → Roles.
@@ -109,7 +109,7 @@ export function TableView({
         <div className="min-w-max">
           {/* header */}
           <div
-            className="sticky top-0 z-10 grid items-center border-b glass-thead px-2 py-2 text-[11px] font-semibold uppercase tracking-wide text-stone-500"
+            className="sticky top-0 z-10 grid items-center border-b glass-thead px-2 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
             style={{ gridTemplateColumns: gridTemplate }}
           >
             <span />
@@ -130,7 +130,7 @@ export function TableView({
                     className="opacity-0 transition group-hover:opacity-100"
                     title="Remove column"
                   >
-                    <TbX size={11} className="text-stone-400 hover:text-red-600" />
+                    <TbX size={11} className="text-muted-foreground hover:text-red-600 dark:hover:text-red-300" />
                   </button>
                 )}
               </span>
@@ -140,7 +140,7 @@ export function TableView({
               <button
                 onClick={() => setAddingField((a) => !a)}
                 title="Add a column"
-                className="flex items-center justify-center rounded p-1 text-stone-400 hover:bg-stone-200 hover:text-stone-700"
+                className="flex items-center justify-center rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground/85"
               >
                 <TbPlus size={14} />
               </button>
@@ -148,18 +148,18 @@ export function TableView({
           </div>
 
           {addingField && (
-            <form onSubmit={submitField} className="flex flex-wrap items-center gap-2 border-b bg-blue-50/50 px-3 py-2">
+            <form onSubmit={submitField} className="flex flex-wrap items-center gap-2 border-b bg-blue-50/50 dark:bg-blue-400/10 px-3 py-2">
               <input
                 autoFocus
                 value={fieldForm.name}
                 onChange={(e) => setFieldForm((f) => ({ ...f, name: e.target.value }))}
                 placeholder="Column name (e.g. Budget)"
-                className="w-56 rounded-lg border border-stone-200 px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-56 rounded-lg border border-border px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
               />
               <select
                 value={fieldForm.type}
                 onChange={(e) => setFieldForm((f) => ({ ...f, type: e.target.value as FieldType }))}
-                className="rounded-lg border border-stone-200 bg-white px-2 py-1.5 text-sm outline-none"
+                className="rounded-lg border border-border bg-card px-2 py-1.5 text-sm outline-none"
               >
                 {FIELD_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
               </select>
@@ -168,13 +168,13 @@ export function TableView({
                   value={fieldForm.options}
                   onChange={(e) => setFieldForm((f) => ({ ...f, options: e.target.value }))}
                   placeholder="Low, Medium, High"
-                  className="w-56 rounded-lg border border-stone-200 px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-56 rounded-lg border border-border px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
                 />
               )}
-              <button type="submit" className="rounded-lg bg-stone-900 px-3 py-1.5 text-xs font-medium text-white">
+              <button type="submit" className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground">
                 Add column
               </button>
-              <button type="button" onClick={() => setAddingField(false)} className="rounded-lg px-2 py-1.5 text-xs text-stone-600 hover:bg-stone-100">
+              <button type="button" onClick={() => setAddingField(false)} className="rounded-lg px-2 py-1.5 text-xs text-foreground/70 hover:bg-muted">
                 Cancel
               </button>
             </form>
@@ -185,48 +185,48 @@ export function TableView({
             <div key={section.key}>
               {group !== "none" && (
                 <div className="sticky top-[37px] z-[5] flex items-center gap-2 border-b glass-thead px-3 py-1.5">
-                  <span className="text-xs font-semibold text-stone-700">{section.label}</span>
-                  <span className="text-[11px] text-stone-400">{section.rows.length}</span>
+                  <span className="text-xs font-semibold text-foreground/85">{section.label}</span>
+                  <span className="text-[11px] text-muted-foreground">{section.rows.length}</span>
                 </div>
               )}
               {section.rows.map(({ task, depth, hasChildren }, index) => (
             <div key={task.id}>
               <div
-                className="group grid items-center border-b px-2 py-1 hover:bg-stone-50"
+                className="group grid items-center border-b px-2 py-1 hover:bg-muted/40"
                 style={{ gridTemplateColumns: gridTemplate }}
               >
-                <span className="pl-1 text-[11px] text-stone-400">{index + 1}</span>
+                <span className="pl-1 text-[11px] text-muted-foreground">{index + 1}</span>
 
                 <span className="flex min-w-0 items-center gap-1" style={{ paddingLeft: depth * 18 }}>
                   {hasChildren ? (
                     <button
                       onClick={() => onToggleCollapsed(task.id)}
-                      className="shrink-0 rounded p-0.5 text-stone-400 hover:bg-stone-200"
+                      className="shrink-0 rounded p-0.5 text-muted-foreground hover:bg-muted"
                     >
                       {collapsed.has(task.id) ? <TbChevronRight size={13} /> : <TbChevronDown size={13} />}
                     </button>
                   ) : (
                     <span className="w-[18px] shrink-0" />
                   )}
-                  <TbFile size={13} className="shrink-0 text-stone-400" />
+                  <TbFile size={13} className="shrink-0 text-muted-foreground" />
                   <TitleCell
                     title={task.title}
                     onOpen={() => onOpenTask(task)}
                     onRename={(v) => onPatch(task.id, { title: v })}
-                    className="font-medium text-stone-900"
+                    className="font-medium text-foreground"
                   />
                   <span className="flex shrink-0 items-center gap-0.5 opacity-0 transition group-hover:opacity-100">
                     <button
                       onClick={() => { setSubtaskFor(task.id); setSubtaskTitle(""); }}
                       title="Add subitem"
-                      className="rounded p-1 text-stone-400 hover:bg-stone-200 hover:text-stone-700"
+                      className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground/85"
                     >
                       <TbSubtask size={13} />
                     </button>
                     <button
                       onClick={() => window.confirm(`Delete "${task.title}"?`) && onDelete(task.id)}
                       title="Delete"
-                      className="rounded p-1 text-stone-400 hover:bg-red-50 hover:text-red-600"
+                      className="rounded p-1 text-muted-foreground hover:bg-red-50 dark:hover:bg-red-400/10 hover:text-red-600 dark:hover:text-red-300"
                     >
                       <TbTrash size={13} />
                     </button>
@@ -259,7 +259,7 @@ export function TableView({
                   ariaLabel={`Due date for ${task.title}`}
                   value={task.dueDate}
                   onChange={(v) => onPatch(task.id, { dueDate: v })}
-                  className={isOverdue(task) ? "text-red-600" : undefined}
+                  className={isOverdue(task) ? "text-red-600 dark:text-red-300" : undefined}
                 />
 
                 {fields.map((f) => (
@@ -276,19 +276,19 @@ export function TableView({
                 <button
                   data-task-opener
                   onClick={() => onOpenTask(task)}
-                  className="flex items-center gap-1 px-1.5 text-xs text-stone-500 hover:text-stone-800"
+                  className="flex items-center gap-1 px-1.5 text-xs text-muted-foreground hover:text-foreground"
                 >
                   {task.attachments?.length ? (
                     <><TbPaperclip size={12} /> {task.attachments.length}</>
                   ) : (
-                    <span className="text-stone-300">—</span>
+                    <span className="text-muted-foreground/70">—</span>
                   )}
                 </button>
                 <span />
               </div>
 
               {subtaskFor === task.id && (
-                <div className="grid border-b bg-blue-50/40 px-2 py-1.5" style={{ gridTemplateColumns: gridTemplate }}>
+                <div className="grid border-b bg-blue-50/40 dark:bg-blue-400/10 px-2 py-1.5" style={{ gridTemplateColumns: gridTemplate }}>
                   <span />
                   <form
                     onSubmit={(e) => {
@@ -307,7 +307,7 @@ export function TableView({
                       onChange={(e) => setSubtaskTitle(e.target.value)}
                       onBlur={() => !subtaskTitle && setSubtaskFor(null)}
                       placeholder="Subitem name…"
-                      className="w-full rounded border border-stone-200 px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded border border-border px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </form>
                 </div>
@@ -323,17 +323,17 @@ export function TableView({
             className="grid items-center px-2 py-1.5"
             style={{ gridTemplateColumns: gridTemplate }}
           >
-            <span className="flex justify-center text-stone-400"><TbPlus size={13} /></span>
+            <span className="flex justify-center text-muted-foreground"><TbPlus size={13} /></span>
             <input
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               placeholder="Item"
-              className="w-full rounded border border-transparent px-1.5 py-1 text-sm outline-none placeholder:text-stone-400 hover:border-stone-200 focus:border-blue-500"
+              className="w-full rounded border border-transparent px-1.5 py-1 text-sm outline-none placeholder:text-muted-foreground hover:border-border focus:border-blue-500"
             />
           </form>
 
           {!rows.length && (
-            <p className="px-4 py-10 text-center text-sm text-stone-400">
+            <p className="px-4 py-10 text-center text-sm text-muted-foreground">
               No tasks in this project yet — add the first one above.
             </p>
           )}

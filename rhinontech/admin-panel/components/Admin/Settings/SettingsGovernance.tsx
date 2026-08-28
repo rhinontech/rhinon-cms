@@ -31,11 +31,11 @@ export function SettingsGovernance() {
 
   return (
     <div className="flex flex-col h-full glass-panel rounded-r-xl overflow-hidden">
-      <div className="sticky top-0 z-10 flex items-center gap-4 h-16 px-5 border-b border-black/5 glass-header">
+      <div className="sticky top-0 z-10 flex items-center gap-4 h-16 px-5 border-b border-border glass-header">
         <SubNavToggle />
         <div>
           <h1 className="text-base font-semibold tracking-tight">Governance</h1>
-          <p className="text-xs text-gray-500">Policies managed in their own modules</p>
+          <p className="text-xs text-muted-foreground">Policies managed in their own modules</p>
         </div>
       </div>
       <div className="flex-1 overflow-auto p-6">
@@ -44,16 +44,16 @@ export function SettingsGovernance() {
             <Link
               key={link.href}
               href={link.href}
-              className="flex items-center gap-4 rounded-xl glass-card p-5 hover:border-gray-200 hover:bg-stone-50 transition-colors"
+              className="flex items-center gap-4 rounded-xl glass-card p-5 hover:border-border hover:bg-muted/40 transition-colors"
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-stone-900 text-white">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 {link.icon}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900">{link.title}</p>
-                <p className="text-xs text-gray-500">{link.description}</p>
+                <p className="text-sm font-semibold text-foreground">{link.title}</p>
+                <p className="text-xs text-muted-foreground">{link.description}</p>
               </div>
-              <TbChevronRight size={18} className="shrink-0 text-gray-300" />
+              <TbChevronRight size={18} className="shrink-0 text-muted-foreground/70" />
             </Link>
           ))}
         </div>

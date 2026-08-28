@@ -32,11 +32,11 @@ export function EmailBodyView({
           type="button"
           onClick={() => setShowQuoted((prev) => !prev)}
           className={cn(
-            "mt-2 inline-flex items-center gap-1.5 rounded-md border border-stone-200 bg-stone-50/80 px-2 py-1 text-[11px] font-medium text-stone-500 hover:border-stone-300 hover:bg-stone-100 hover:text-stone-800 transition-colors"
+            "mt-2 inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/40 px-2 py-1 text-[11px] font-medium text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground transition-colors"
           )}
           title={showQuoted ? "Hide quoted text" : "Show quoted text"}
         >
-          <TbDots className="h-3.5 w-3.5 text-stone-400" />
+          <TbDots className="h-3.5 w-3.5 text-muted-foreground" />
           <span>{showQuoted ? "Hide quoted text" : "Show quoted text"}</span>
         </button>
       )}

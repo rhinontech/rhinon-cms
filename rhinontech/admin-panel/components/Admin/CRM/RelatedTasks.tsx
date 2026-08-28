@@ -96,37 +96,37 @@ export function RelatedTasks({
   return (
     <div>
       <div className="mb-1.5 flex items-center justify-between">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-stone-500">
-          Follow-ups{open.length > 0 && <span className="ml-1 text-stone-400">({open.length} open)</span>}
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Follow-ups{open.length > 0 && <span className="ml-1 text-muted-foreground">({open.length} open)</span>}
         </p>
         {!adding && (
-          <button onClick={() => setAdding(true)} className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-stone-500 hover:text-stone-800">
+          <button onClick={() => setAdding(true)} className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground">
             <TbPlus size={12} /> Add
           </button>
         )}
       </div>
 
       {adding && (
-        <div className="mb-2 rounded-lg border border-stone-200 bg-white/70 p-2">
+        <div className="mb-2 rounded-lg border border-border bg-card/70 p-2">
           <input
             autoFocus
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") create(); if (e.key === "Escape") setAdding(false); }}
             placeholder="Call back about pricing…"
-            className="w-full rounded border border-stone-200 bg-white px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40"
           />
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
             <input
               type="date"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
-              className="rounded border border-stone-200 bg-white px-2 py-1 text-[11px] outline-none focus:ring-2 focus:ring-blue-500/40"
+              className="rounded border border-border bg-card px-2 py-1 text-[11px] outline-none focus:ring-2 focus:ring-blue-500/40"
             />
             <select
               value={assigneeId}
               onChange={(e) => setAssigneeId(e.target.value)}
-              className="rounded border border-stone-200 bg-white px-2 py-1 text-[11px] outline-none focus:ring-2 focus:ring-blue-500/40"
+              className="rounded border border-border bg-card px-2 py-1 text-[11px] outline-none focus:ring-2 focus:ring-blue-500/40"
             >
               <option value="">Me</option>
               {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}
@@ -140,37 +140,37 @@ export function RelatedTasks({
         </div>
       )}
 
-      {error && <p className="mb-1.5 rounded border border-rose-200 bg-rose-50 px-2 py-1 text-[11px] text-rose-700">{error}</p>}
+      {error && <p className="mb-1.5 rounded border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2 py-1 text-[11px] text-rose-700 dark:text-rose-300">{error}</p>}
 
       {loading ? (
         <div className="space-y-1">
-          {Array.from({ length: 2 }).map((_, i) => <div key={i} className="h-6 animate-pulse rounded bg-stone-100" />)}
+          {Array.from({ length: 2 }).map((_, i) => <div key={i} className="h-6 animate-pulse rounded bg-muted" />)}
         </div>
       ) : tasks.length === 0 ? (
-        !adding && <p className="py-2 text-[11px] text-stone-400">No follow-ups yet.</p>
+        !adding && <p className="py-2 text-[11px] text-muted-foreground">No follow-ups yet.</p>
       ) : (
         <ul className="space-y-0.5">
           {[...open, ...done].map((task) => {
             const overdue = task.status !== "Done" && task.dueDate && new Date(task.dueDate) < new Date(new Date().toDateString());
             return (
-              <li key={task.id} className="flex items-center gap-2 rounded px-1 py-1 hover:bg-stone-50">
+              <li key={task.id} className="flex items-center gap-2 rounded px-1 py-1 hover:bg-muted/40">
                 <button
                   onClick={() => toggle(task)}
                   className={cn(
                     "flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors",
                     task.status === "Done"
                       ? "border-emerald-500 bg-emerald-500 text-white"
-                      : "border-stone-300 hover:border-stone-400"
+                      : "border-border hover:border-border"
                   )}
                   title={task.status === "Done" ? "Mark not done" : "Mark done"}
                 >
                   {task.status === "Done" && <TbCheck size={11} />}
                 </button>
-                <span className={cn("min-w-0 flex-1 truncate text-[13px]", task.status === "Done" ? "text-stone-400 line-through" : "text-stone-800")}>
+                <span className={cn("min-w-0 flex-1 truncate text-[13px]", task.status === "Done" ? "text-muted-foreground line-through" : "text-foreground")}>
                   {task.title}
                 </span>
                 {task.dueDate && (
-                  <span className={cn("flex shrink-0 items-center gap-1 text-[10px] tabular-nums", overdue ? "text-rose-500" : "text-stone-400")}>
+                  <span className={cn("flex shrink-0 items-center gap-1 text-[10px] tabular-nums", overdue ? "text-rose-500 dark:text-rose-400" : "text-muted-foreground")}>
                     <TbCalendar size={10} /> {formatDate(task.dueDate)}
                   </span>
                 )}

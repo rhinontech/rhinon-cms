@@ -30,9 +30,9 @@ function humanSize(bytes: number) {
 }
 
 function FileIcon({ mimeType }: { mimeType: string }) {
-  if (mimeType?.startsWith("image/")) return <TbPhoto size={16} className="text-blue-500" />;
-  if (mimeType?.includes("pdf") || mimeType?.startsWith("text/")) return <TbFileText size={16} className="text-red-500" />;
-  return <TbFile size={16} className="text-stone-400" />;
+  if (mimeType?.startsWith("image/")) return <TbPhoto size={16} className="text-blue-500 dark:text-blue-400" />;
+  if (mimeType?.includes("pdf") || mimeType?.startsWith("text/")) return <TbFileText size={16} className="text-red-500 dark:text-red-400" />;
+  return <TbFile size={16} className="text-muted-foreground" />;
 }
 
 export function FilesView({
@@ -110,7 +110,7 @@ export function FilesView({
         <select
           value={uploadTo}
           onChange={(e) => setUploadTo(e.target.value)}
-          className="rounded-lg border border-stone-200 bg-white px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500"
+          className="rounded-lg border border-border bg-card px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">Attach to which task…</option>
           {tasks.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
@@ -118,7 +118,7 @@ export function FilesView({
         <button
           onClick={() => inputRef.current?.click()}
           disabled={!uploadTo || uploading}
-          className="flex items-center gap-1.5 rounded-lg bg-stone-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-stone-800 disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
         >
           {uploading ? <TbLoader size={13} className="animate-spin" /> : <TbUpload size={13} />}
           {uploading ? "Uploading…" : "Upload file"}
@@ -129,12 +129,12 @@ export function FilesView({
           hidden
           onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); }}
         />
-        <span className="ml-auto text-[11px] text-stone-400">Max 25 MB per file</span>
+        <span className="ml-auto text-[11px] text-muted-foreground">Max 25 MB per file</span>
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto">
         <div className="min-w-[760px]">
-          <div className="sticky top-0 grid grid-cols-[2fr_1.2fr_90px_120px_1fr_44px] items-center border-b glass-thead px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-stone-500">
+          <div className="sticky top-0 grid grid-cols-[2fr_1.2fr_90px_120px_1fr_44px] items-center border-b glass-thead px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
             <span>File name</span>
             <span>Location</span>
             <span>Size</span>
@@ -144,38 +144,38 @@ export function FilesView({
           </div>
 
           {loading && (
-            <p className="flex items-center justify-center gap-2 py-10 text-sm text-stone-400">
+            <p className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
               <TbLoader className="animate-spin" size={15} /> Loading files…
             </p>
           )}
 
           {!loading && files.map((f) => (
-            <div key={f.id} className="grid grid-cols-[2fr_1.2fr_90px_120px_1fr_44px] items-center border-b px-4 py-2.5 text-sm hover:bg-stone-50">
+            <div key={f.id} className="grid grid-cols-[2fr_1.2fr_90px_120px_1fr_44px] items-center border-b px-4 py-2.5 text-sm hover:bg-muted/40">
               <span className="flex min-w-0 items-center gap-2">
                 <FileIcon mimeType={f.mimeType} />
                 {f.url ? (
-                  <a href={f.url} target="_blank" rel="noreferrer" className="truncate text-stone-900 hover:underline">
+                  <a href={f.url} target="_blank" rel="noreferrer" className="truncate text-foreground hover:underline">
                     {f.name}
                   </a>
                 ) : (
-                  <span className="truncate text-stone-900">{f.name}</span>
+                  <span className="truncate text-foreground">{f.name}</span>
                 )}
               </span>
               <span className="truncate">
-                <span className="rounded bg-stone-100 px-1.5 py-0.5 text-xs text-stone-600">
+                <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-foreground/70">
                   {f.task?.title ?? "—"}
                 </span>
               </span>
-              <span className="text-xs text-stone-500">{humanSize(f.size)}</span>
-              <span className="text-xs text-stone-500">{format(new Date(f.createdAt), "dd/MM/yyyy")}</span>
-              <span className="truncate text-xs text-stone-600">{f.uploadedBy?.fullName ?? "—"}</span>
+              <span className="text-xs text-muted-foreground">{humanSize(f.size)}</span>
+              <span className="text-xs text-muted-foreground">{format(new Date(f.createdAt), "dd/MM/yyyy")}</span>
+              <span className="truncate text-xs text-foreground/70">{f.uploadedBy?.fullName ?? "—"}</span>
               <span className="flex items-center gap-0.5">
                 {f.url && (
-                  <a href={f.url} download className="rounded p-1 text-stone-400 hover:bg-stone-200 hover:text-stone-700" title="Download">
+                  <a href={f.url} download className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground/85" title="Download">
                     <TbDownload size={14} />
                   </a>
                 )}
-                <button onClick={() => remove(f)} className="rounded p-1 text-stone-400 hover:bg-red-50 hover:text-red-600" title="Delete">
+                <button onClick={() => remove(f)} className="rounded p-1 text-muted-foreground hover:bg-red-50 dark:hover:bg-red-400/10 hover:text-red-600 dark:hover:text-red-300" title="Delete">
                   <TbTrash size={14} />
                 </button>
               </span>
@@ -183,7 +183,7 @@ export function FilesView({
           ))}
 
           {!loading && !files.length && (
-            <p className="px-4 py-12 text-center text-sm text-stone-400">
+            <p className="px-4 py-12 text-center text-sm text-muted-foreground">
               No files yet. Pick a task above and upload one.
             </p>
           )}

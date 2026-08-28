@@ -108,13 +108,13 @@ export function PublishComposer({
                   className={cn(
                     "flex flex-col items-center gap-1 rounded-xl border-2 p-3 text-center transition-colors",
                     channel === t.channel
-                      ? "border-blue-500 bg-blue-50/50 text-blue-600"
-                      : "border-stone-200 bg-white text-stone-500 hover:border-stone-300"
+                      ? "border-blue-500 bg-blue-50/50 dark:bg-blue-400/10 text-blue-600 dark:text-blue-300"
+                      : "border-border bg-card text-muted-foreground hover:border-border"
                   )}
                 >
                   {t.icon}
-                  <span className="text-xs font-bold text-stone-900">{t.title}</span>
-                  <span className="text-[10px] leading-tight text-stone-400">{t.description}</span>
+                  <span className="text-xs font-bold text-foreground">{t.title}</span>
+                  <span className="text-[10px] leading-tight text-muted-foreground">{t.description}</span>
                 </button>
               ))}
             </div>

@@ -24,14 +24,14 @@ function SetupSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-stone-200 bg-white p-4 sm:p-5">
+    <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
       <div className="mb-3.5 sm:mb-4 flex items-center gap-2.5">
         {complete ? (
-          <TbCircleCheck className="shrink-0 text-emerald-500" size={22} />
+          <TbCircleCheck className="shrink-0 text-emerald-500 dark:text-emerald-400" size={22} />
         ) : (
           <TbCircleX className="shrink-0 text-red-400" size={22} />
         )}
-        <h3 className="text-base font-bold text-stone-900">{title}</h3>
+        <h3 className="text-base font-bold text-foreground">{title}</h3>
       </div>
       {children}
     </div>
@@ -101,11 +101,11 @@ export function CampaignSetupTab({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div className="space-y-1.5">
             <Label>Sender Name</Label>
-            <Input value={senderName || "—"} disabled className="bg-stone-50/80 font-medium text-stone-800" />
+            <Input value={senderName || "—"} disabled className="bg-muted/40 font-medium text-foreground" />
           </div>
           <div className="space-y-1.5">
             <Label>Sender Email</Label>
-            <Input value={senderEmail || "—"} disabled className="bg-stone-50/80 font-medium text-stone-800" />
+            <Input value={senderEmail || "—"} disabled className="bg-muted/40 font-medium text-foreground" />
           </div>
         </div>
       </SetupSection>
@@ -113,8 +113,8 @@ export function CampaignSetupTab({
       <SetupSection title="Recipients" complete={leadsTotal > 0}>
         {leadsTotal > 0 ? (
           <div className="flex items-center justify-between">
-            <p className="flex items-center gap-2 text-sm font-medium text-stone-700">
-              <TbUsers size={16} className="text-stone-400" />
+            <p className="flex items-center gap-2 text-sm font-medium text-foreground/85">
+              <TbUsers size={16} className="text-muted-foreground" />
               {leadsTotal} contact{leadsTotal === 1 ? "" : "s"} enrolled
             </p>
             <Button size="sm" variant="outline" onClick={onOpenEnroll}>
@@ -124,7 +124,7 @@ export function CampaignSetupTab({
         ) : (
           <button
             onClick={onOpenEnroll}
-            className="flex w-full items-center gap-2 rounded-lg border border-dashed border-stone-300 px-4 py-3 text-sm font-medium text-stone-500 hover:border-stone-400 hover:text-stone-700"
+            className="flex w-full items-center gap-2 rounded-lg border border-dashed border-border px-4 py-3 text-sm font-medium text-muted-foreground hover:border-border hover:text-foreground/85"
           >
             <TbUsersGroup size={16} /> Click to select recipients
           </button>
@@ -138,7 +138,7 @@ export function CampaignSetupTab({
             onChange={(e) => setSubject(e.target.value)}
             placeholder="Email subject"
           />
-          <p className="text-xs text-stone-400">You can use variable: {"{{name}}"}</p>
+          <p className="text-xs text-muted-foreground">You can use variable: {"{{name}}"}</p>
           {subjectDirty && (
             <div className="flex gap-2 pt-1">
               <Button size="sm" onClick={handleSaveSubject} disabled={savingSubject}>
@@ -154,7 +154,7 @@ export function CampaignSetupTab({
 
       <SetupSection title="Email" complete={!!stripHtml(body)}>
         <div className="space-y-2">
-          <p className="text-xs text-stone-400">You can use variable: {"{{name}}"}</p>
+          <p className="text-xs text-muted-foreground">You can use variable: {"{{name}}"}</p>
           <EmailBodyEditor value={body} onChange={setBody} />
           {bodyDirty && (
             <div className="flex gap-2 pt-1">

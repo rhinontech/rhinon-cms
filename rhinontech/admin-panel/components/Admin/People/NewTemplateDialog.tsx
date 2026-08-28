@@ -41,21 +41,21 @@ export function NewTemplateDialog({
 
   return (
     <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/30 p-4" onClick={onClose}>
-      <div className="w-full max-w-sm rounded-xl bg-white p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-sm rounded-xl bg-card p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <h2 className="mb-3 text-sm font-semibold">New offer letter template</h2>
-        <label className="mb-1 block text-[11px] font-medium text-stone-500">Name</label>
+        <label className="mb-1 block text-[11px] font-medium text-muted-foreground">Name</label>
         <input
           autoFocus
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="e.g. Offer Letter — Contractor"
-          className="mb-3 w-full rounded-md border border-stone-200 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
+          className="mb-3 w-full rounded-md border border-border p-2 text-sm focus:outline-none focus:ring-2 focus:ring-border"
         />
-        <label className="mb-1 block text-[11px] font-medium text-stone-500">Start from</label>
+        <label className="mb-1 block text-[11px] font-medium text-muted-foreground">Start from</label>
         <select
           value={cloneFromKey}
           onChange={(e) => setCloneFromKey(e.target.value)}
-          className="mb-4 w-full rounded-md border border-stone-200 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
+          className="mb-4 w-full rounded-md border border-border p-2 text-sm focus:outline-none focus:ring-2 focus:ring-border"
         >
           <option value="">Blank template</option>
           {existing.map((s) => (
@@ -64,16 +64,16 @@ export function NewTemplateDialog({
             </option>
           ))}
         </select>
-        {error && <p className="mb-3 text-[11px] text-red-600">{error}</p>}
+        {error && <p className="mb-3 text-[11px] text-red-600 dark:text-red-300">{error}</p>}
         <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="rounded-md px-3 py-1.5 text-xs font-semibold text-stone-500 hover:bg-stone-100">
+          <button type="button" onClick={onClose} className="rounded-md px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-muted">
             Cancel
           </button>
           <button
             type="button"
             disabled={saving || !title.trim()}
             onClick={submit}
-            className="rounded-md bg-stone-900 px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
+            className="rounded-md bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-40"
           >
             {saving ? "Creating…" : "Create"}
           </button>

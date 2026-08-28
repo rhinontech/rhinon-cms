@@ -53,7 +53,7 @@ export function BubbleToolbar({ editor }: { editor: Editor }) {
 
   return (
     <div
-      className="fixed z-[100] flex items-center gap-0.5 rounded-lg border border-stone-200 bg-white p-1 shadow-lg"
+      className="fixed z-[100] flex items-center gap-0.5 rounded-lg border border-border bg-card p-1 shadow-lg"
       style={{ left: rect.left + rect.width / 2, top: rect.top - 44, transform: "translateX(-50%)" }}
     >
       <ToolbarBtn active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()}><TbBold size={15} /></ToolbarBtn>
@@ -76,7 +76,7 @@ function ToolbarBtn({ active, onClick, children }: { active?: boolean; onClick: 
       type="button"
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
-      className={cn("rounded-md p-1.5", active ? "bg-stone-900 text-white" : "text-stone-500 hover:bg-stone-100")}
+      className={cn("rounded-md p-1.5", active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")}
     >
       {children}
     </button>

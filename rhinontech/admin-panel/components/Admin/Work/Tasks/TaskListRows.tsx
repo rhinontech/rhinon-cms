@@ -58,13 +58,13 @@ export function TaskListRows({
   const visible = hideDone && !showDone ? tasks.filter((t) => t.status !== "Done") : tasks;
 
   if (tasks.length === 0) {
-    return <p className="px-3 py-4 text-center text-[11px] text-stone-300">No tasks</p>;
+    return <p className="px-3 py-4 text-center text-[11px] text-muted-foreground/70">No tasks</p>;
   }
 
   return (
     <div className="overflow-x-auto">
       <div className="min-w-[720px]">
-        <div className={cn("grid items-center gap-2 border-b border-stone-100 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-stone-400", LIST_GRID)}>
+        <div className={cn("grid items-center gap-2 border-b border-border px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground", LIST_GRID)}>
           {/* Select-all for this section — the fast path into the bulk bar when
               triaging a long Unassigned list. */}
           <input
@@ -95,11 +95,11 @@ export function TaskListRows({
               onClick={() => onSelect(task)}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(task); } }}
               className={cn(
-                "grid cursor-pointer items-center gap-2 border-b border-stone-50 px-3 py-2 transition-colors",
+                "grid cursor-pointer items-center gap-2 border-b border-border px-3 py-2 transition-colors",
                 LIST_GRID,
-                selectedId === task.id ? "bg-blue-50/70" : "hover:bg-stone-50",
-                isOverdue(task.dueDate, task.status) && selectedId !== task.id && "bg-red-50/30",
-                isDueToday(task.dueDate, task.status) && selectedId !== task.id && "bg-amber-50/30"
+                selectedId === task.id ? "bg-blue-50/70 dark:bg-blue-400/10" : "hover:bg-muted/40",
+                isOverdue(task.dueDate, task.status) && selectedId !== task.id && "bg-red-50/30 dark:bg-red-400/10",
+                isDueToday(task.dueDate, task.status) && selectedId !== task.id && "bg-amber-50/30 dark:bg-amber-400/10"
               )}
             >
               <input
@@ -112,13 +112,13 @@ export function TaskListRows({
 
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className={cn("truncate text-[13px] font-medium text-stone-800", task.status === "Done" && "text-stone-400 line-through")}>
+                  <span className={cn("truncate text-[13px] font-medium text-foreground", task.status === "Done" && "text-muted-foreground line-through")}>
                     {task.title}
                   </span>
-                  {task.recurrence && <TbRepeat size={12} className="shrink-0 text-stone-400" />}
-                  {task.blockedById && <TbLock size={12} className="shrink-0 text-amber-500" />}
+                  {task.recurrence && <TbRepeat size={12} className="shrink-0 text-muted-foreground" />}
+                  {task.blockedById && <TbLock size={12} className="shrink-0 text-amber-500 dark:text-amber-400" />}
                   {total > 0 && (
-                    <span className="inline-flex shrink-0 items-center gap-0.5 text-[10px] text-stone-400">
+                    <span className="inline-flex shrink-0 items-center gap-0.5 text-[10px] text-muted-foreground">
                       <TbSubtask size={11} />{done}/{total}
                     </span>
                   )}
@@ -142,7 +142,7 @@ export function TaskListRows({
                   value=""
                   disabled={!editable}
                   onChange={(v) => v && onPatch(task.id, { assigneeId: v })}
-                  className="border-blue-200 bg-blue-50 font-medium text-blue-700"
+                  className="border-blue-200 dark:border-blue-400/25 bg-blue-50 dark:bg-blue-400/10 font-medium text-blue-700 dark:text-blue-300"
                 >
                   <option value="">Assign to…</option>
                   {people.map((p) => <option key={p.id} value={p.id}>{p.fullName}</option>)}
@@ -152,7 +152,7 @@ export function TaskListRows({
                   value={task.project?.id ?? ""}
                   disabled={!editable}
                   onChange={(v) => onPatch(task.id, { projectId: v || null })}
-                  className="border-stone-200 bg-white text-stone-600"
+                  className="border-border bg-card text-foreground/70"
                 >
                   <option value="">No project</option>
                   {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -162,7 +162,7 @@ export function TaskListRows({
                   value={task.assigneeId ?? ""}
                   disabled={!editable}
                   onChange={(v) => onPatch(task.id, { assigneeId: v || null })}
-                  className="border-stone-200 bg-white text-stone-600"
+                  className="border-border bg-card text-foreground/70"
                 >
                   <option value="">Unassigned</option>
                   {people.map((p) => <option key={p.id} value={p.id}>{p.fullName}</option>)}
@@ -187,8 +187,8 @@ export function TaskListRows({
                 {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
               </InlineSelect>
 
-              <div className="flex items-center gap-1 text-[11px] text-stone-500">
-                <span className={cn(isOverdue(task.dueDate, task.status) && "font-semibold text-red-600")}>
+              <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                <span className={cn(isOverdue(task.dueDate, task.status) && "font-semibold text-red-600 dark:text-red-300")}>
                   {ordinalDate(task.dueDate)}
                 </span>
                 <DueBadge dueDate={task.dueDate} status={task.status} />
@@ -197,7 +197,7 @@ export function TaskListRows({
               <button
                 onClick={(e) => { e.stopPropagation(); onDelete(task.id); }}
                 disabled={!editable}
-                className="rounded p-1 text-stone-300 transition-colors hover:bg-red-50 hover:text-red-600 disabled:pointer-events-none disabled:opacity-30"
+                className="rounded p-1 text-muted-foreground/70 transition-colors hover:bg-red-50 dark:hover:bg-red-400/10 hover:text-red-600 dark:hover:text-red-300 disabled:pointer-events-none disabled:opacity-30"
                 aria-label="Delete task"
               >
                 <TbTrash size={14} />
@@ -209,7 +209,7 @@ export function TaskListRows({
         {hideDone && doneTasks.length > 0 && (
           <button
             onClick={() => setShowDone((v) => !v)}
-            className="w-full px-3 py-2 text-left text-[11px] text-stone-400 transition-colors hover:text-stone-600"
+            className="w-full px-3 py-2 text-left text-[11px] text-muted-foreground transition-colors hover:text-foreground/70"
           >
             {showDone ? "Hide" : `${doneTasks.length} completed — show`}
           </button>

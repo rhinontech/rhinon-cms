@@ -106,31 +106,31 @@ export function RewriteToolbar({
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => setOpen(true)}
-          className="rounded-lg border border-stone-700 bg-stone-900 px-3 py-1.5 text-xs font-semibold text-white shadow-lg hover:bg-stone-800"
+          className="rounded-lg border border-primary bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-lg hover:bg-primary/90"
         >
           ✦ Rewrite with AI
         </button>
       ) : (
-        <div className="w-72 rounded-xl border border-stone-200 bg-white p-3 shadow-xl">
-          <p className="mb-2 truncate text-[11px] font-medium text-stone-500">&ldquo;{target.selectedText}&rdquo;</p>
+        <div className="w-72 rounded-xl border border-border bg-card p-3 shadow-xl">
+          <p className="mb-2 truncate text-[11px] font-medium text-muted-foreground">&ldquo;{target.selectedText}&rdquo;</p>
           <textarea
             autoFocus
             value={instruction}
             onChange={(e) => setInstruction(e.target.value)}
             placeholder="How should this be reworded?"
             rows={2}
-            className="w-full resize-none rounded-md border border-stone-200 p-2 text-xs focus:outline-none focus:ring-2 focus:ring-stone-300"
+            className="w-full resize-none rounded-md border border-border p-2 text-xs focus:outline-none focus:ring-2 focus:ring-border"
           />
-          {error && <p className="mt-1 text-[11px] text-red-600">{error}</p>}
+          {error && <p className="mt-1 text-[11px] text-red-600 dark:text-red-300">{error}</p>}
           <div className="mt-2 flex justify-end gap-2">
-            <button type="button" onClick={close} className="text-xs text-stone-500 hover:text-stone-700">
+            <button type="button" onClick={close} className="text-xs text-muted-foreground hover:text-foreground/85">
               Cancel
             </button>
             <button
               type="button"
               disabled={busy || !instruction.trim()}
               onClick={submit}
-              className="rounded-md bg-stone-900 px-3 py-1 text-xs font-semibold text-white disabled:opacity-50"
+              className="rounded-md bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground disabled:opacity-50"
             >
               {busy ? "Rewriting…" : "Rewrite"}
             </button>

@@ -86,8 +86,8 @@ function ordinalLabel(iso: string, isToday: boolean): string {
 
 function AttendanceStatus({ value }: { value: string }) {
   const color =
-    value === "P" ? "border-green-600 bg-green-100 text-green-700" :
-    "border-red-500 bg-red-50 text-red-600";
+    value === "P" ? "border-green-600 bg-green-100 dark:bg-green-400/15 text-green-700 dark:text-green-300" :
+    "border-red-500 bg-red-50 dark:bg-red-400/10 text-red-600 dark:text-red-300";
   return (
     <span className={cn("inline-flex h-7 w-7 items-center justify-center rounded-full border text-sm font-semibold", color)}>
       {value}
@@ -204,7 +204,7 @@ function TeamAttendancePage() {
 
   return (
     <div className={cn("flex flex-col h-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl max-sm:rounded-xl" : "rounded-xl")}>
-      <div className="sticky top-0 z-10 flex min-h-16 items-center gap-3 border-b border-black/5 glass-header px-4 sm:px-5">
+      <div className="sticky top-0 z-10 flex min-h-16 items-center gap-3 border-b border-border glass-header px-4 sm:px-5">
         <SubNavToggle />
         <span className="text-base sm:text-lg font-semibold tracking-tight truncate">Team Attendance</span>
       </div>
@@ -216,17 +216,17 @@ function TeamAttendancePage() {
           {teamToday && (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-4">
               {[
-                { label: "Total Employees", value: teamToday.summary.total, icon: <TbUsers size={20} />, color: "text-stone-600 bg-stone-100" },
-                { label: "Present Today", value: teamToday.summary.present, icon: <TbUserCheck size={20} />, color: "text-green-700 bg-green-100" },
-                { label: "Absent Today", value: teamToday.summary.absent, icon: <TbUserX size={20} />, color: "text-red-600 bg-red-100" },
-                { label: "Currently Active", value: teamToday.summary.active, icon: <TbActivity size={20} />, color: "text-blue-600 bg-blue-100" },
-                { label: "On Break", value: teamToday.summary.onBreak, icon: <TbCoffee size={20} />, color: "text-amber-700 bg-amber-100" },
+                { label: "Total Employees", value: teamToday.summary.total, icon: <TbUsers size={20} />, color: "text-foreground/70 bg-muted" },
+                { label: "Present Today", value: teamToday.summary.present, icon: <TbUserCheck size={20} />, color: "text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-400/15" },
+                { label: "Absent Today", value: teamToday.summary.absent, icon: <TbUserX size={20} />, color: "text-red-600 dark:text-red-300 bg-red-100 dark:bg-red-400/15" },
+                { label: "Currently Active", value: teamToday.summary.active, icon: <TbActivity size={20} />, color: "text-blue-600 dark:text-blue-300 bg-blue-100 dark:bg-blue-400/15" },
+                { label: "On Break", value: teamToday.summary.onBreak, icon: <TbCoffee size={20} />, color: "text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-400/15" },
               ].map(card => (
                 <div key={card.label} className="rounded-xl glass-card p-3 sm:p-5 flex items-center gap-2.5 sm:gap-4 min-w-0">
                   <div className={cn("p-2 sm:p-3 rounded-xl shrink-0", card.color)}>{card.icon}</div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-lg sm:text-2xl font-bold text-stone-900 truncate">{card.value}</p>
-                    <p className="text-[9px] sm:text-[10px] font-bold text-stone-400 uppercase tracking-widest truncate">{card.label}</p>
+                    <p className="text-lg sm:text-2xl font-bold text-foreground truncate">{card.value}</p>
+                    <p className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest truncate">{card.label}</p>
                   </div>
                 </div>
               ))}
@@ -237,23 +237,23 @@ function TeamAttendancePage() {
           <div className="rounded-xl glass-card p-3 sm:p-4">
             <div className="flex items-center justify-between px-1 sm:px-2 pb-3 sm:pb-4 flex-wrap gap-2">
               <div className="flex items-center gap-2 sm:gap-3">
-                <button onClick={prevMonth} className="p-1 rounded hover:bg-gray-100">
-                  <TbChevronLeft size={20} className="text-gray-500" />
+                <button onClick={prevMonth} className="p-1 rounded hover:bg-muted">
+                  <TbChevronLeft size={20} className="text-muted-foreground" />
                 </button>
-                <h2 className="text-sm font-semibold text-gray-900">{monthLabel}</h2>
-                <button onClick={nextMonth} className="p-1 rounded hover:bg-gray-100">
-                  <TbChevronRight size={20} className="text-gray-500" />
+                <h2 className="text-sm font-semibold text-foreground">{monthLabel}</h2>
+                <button onClick={nextMonth} className="p-1 rounded hover:bg-muted">
+                  <TbChevronRight size={20} className="text-muted-foreground" />
                 </button>
               </div>
-              <button className="rounded-lg border border-gray-300 p-1.5 sm:p-2 text-gray-600 hover:bg-gray-50">
+              <button className="rounded-lg border border-border p-1.5 sm:p-2 text-foreground/70 hover:bg-muted/40">
                 <TbDownload size={18} />
               </button>
             </div>
 
             {loading ? (
-              <div className="p-8 text-center text-sm text-gray-400">Loading…</div>
+              <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>
             ) : !teamMonth || teamMonth.employees.length === 0 ? (
-              <div className="p-8 text-center text-sm text-gray-400">No employee records found.</div>
+              <div className="p-8 text-center text-sm text-muted-foreground">No employee records found.</div>
             ) : (
               <div className="space-y-4">
                 {/* Employee tabs — horizontal */}
@@ -265,14 +265,14 @@ function TeamAttendancePage() {
                       className={cn(
                         "shrink-0 rounded-xl px-4 py-2.5 text-left transition-all border",
                         selectedEmployee === emp.userId
-                          ? "bg-stone-900 text-white border-stone-900"
-                          : "bg-white hover:bg-stone-50 text-stone-700 border-stone-100"
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-card hover:bg-muted/40 text-foreground/85 border-border"
                       )}
                     >
                       <p className="text-sm font-bold whitespace-nowrap">{emp.fullName}</p>
                       <p className={cn(
                         "text-[10px] font-bold uppercase tracking-widest",
-                        selectedEmployee === emp.userId ? "text-stone-300" : "text-stone-400"
+                        selectedEmployee === emp.userId ? "text-muted-foreground/70" : "text-muted-foreground"
                       )}>
                         {emp.presentDays}d · {formatDuration(emp.totalMinutes)}
                       </p>
@@ -284,22 +284,22 @@ function TeamAttendancePage() {
                 {selected && (
                   <div>
                     <div className="mb-2 flex items-center gap-3">
-                      <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">{selected.department}</span>
-                      <span className="ml-auto text-[10px] font-bold text-stone-500 uppercase tracking-widest">
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{selected.department}</span>
+                      <span className="ml-auto text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                         {selected.presentDays} days present · {formatDuration(selected.totalMinutes)} total
                       </span>
                     </div>
                     <div className="overflow-x-auto">
-                      <div className="grid rounded-lg border border-gray-100 min-w-[900px]"
+                      <div className="grid rounded-lg border border-border min-w-[900px]"
                         style={{ gridTemplateColumns: "150px repeat(24, minmax(38px, 1fr)) 64px 80px" }}>
-                        <div className="bg-gray-50 p-3 text-sm text-gray-500">Date</div>
+                        <div className="bg-muted/40 p-3 text-sm text-muted-foreground">Date</div>
                         {hourColumns.map(h => (
-                          <div key={h} className="border-l bg-gray-50 p-2 text-center text-[10px] text-gray-400">
+                          <div key={h} className="border-l bg-muted/40 p-2 text-center text-[10px] text-muted-foreground">
                             {h === 0 ? "12A" : h < 12 ? `${h}A` : h === 12 ? "12P" : `${h - 12}P`}
                           </div>
                         ))}
-                        <div className="border-l bg-gray-50 p-3 text-center text-[10px] text-gray-500 font-bold uppercase tracking-wider">Status</div>
-                        <div className="border-l bg-gray-50 p-3 text-center text-[10px] text-gray-500 font-bold uppercase tracking-wider">Time</div>
+                        <div className="border-l bg-muted/40 p-3 text-center text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Status</div>
+                        <div className="border-l bg-muted/40 p-3 text-center text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Time</div>
 
                         {[...selected.attendance].reverse().map(day => {
                           const isToday = day.date === todayKey;
@@ -310,13 +310,13 @@ function TeamAttendancePage() {
 
                           return (
                             <div key={day.date} className="contents">
-                              <div className="border-t p-3 text-sm font-medium bg-gray-50 text-gray-800 whitespace-nowrap">{label}</div>
-                              <div className="relative border-l border-t bg-white" style={{ gridColumn: "span 24" }}>
+                              <div className="border-t p-3 text-sm font-medium bg-muted/40 text-foreground whitespace-nowrap">{label}</div>
+                              <div className="relative border-l border-t bg-card" style={{ gridColumn: "span 24" }}>
                                 <div className="absolute inset-0 grid" style={{ gridTemplateColumns: "repeat(24, minmax(0, 1fr))" }}>
-                                  {hourColumns.map(h => <div key={h} className="border-l border-gray-100" />)}
+                                  {hourColumns.map(h => <div key={h} className="border-l border-border" />)}
                                 </div>
                                 {note && (
-                                  <div className="absolute left-0 right-0 top-1/2 z-10 mx-auto h-7 -translate-y-1/2 rounded-full border bg-gray-100 text-center text-sm leading-7 text-gray-600">
+                                  <div className="absolute left-0 right-0 top-1/2 z-10 mx-auto h-7 -translate-y-1/2 rounded-full border bg-muted text-center text-sm leading-7 text-foreground/70">
                                     {note}
                                   </div>
                                 )}
@@ -328,8 +328,8 @@ function TeamAttendancePage() {
                                       i === 0 && "rounded-l-full",
                                       i === segments.length - 1 && "rounded-r-full",
                                       seg.type === "break"
-                                        ? "border-amber-400 bg-amber-100"
-                                        : isToday ? "border-blue-500 bg-blue-100" : "border-green-400 bg-green-100"
+                                        ? "border-amber-400 bg-amber-100 dark:bg-amber-400/15"
+                                        : isToday ? "border-blue-500 bg-blue-100 dark:bg-blue-400/15" : "border-green-400 bg-green-100 dark:bg-green-400/15"
                                     )}
                                     style={{
                                       left: `${(seg.startFrac / 24) * 100}%`,
@@ -340,7 +340,7 @@ function TeamAttendancePage() {
                                 ))}
                               </div>
                               <div className="border-l border-t p-3 text-center"><AttendanceStatus value={statusChar} /></div>
-                              <div className="border-l border-t p-3 text-center text-sm text-gray-500">{formatDuration(day.durationMinutes)}</div>
+                              <div className="border-l border-t p-3 text-center text-sm text-muted-foreground">{formatDuration(day.durationMinutes)}</div>
                             </div>
                           );
                         })}
@@ -457,7 +457,7 @@ function PersonalTimesheetPage() {
 
   return (
     <div className={cn("flex flex-col h-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl max-sm:rounded-xl" : "rounded-xl")}>
-      <div className="sticky top-0 z-10 flex min-h-16 items-center gap-3 border-b border-black/5 glass-header px-4 sm:px-5">
+      <div className="sticky top-0 z-10 flex min-h-16 items-center gap-3 border-b border-border glass-header px-4 sm:px-5">
         <SubNavToggle />
         <span className="text-base sm:text-lg font-semibold tracking-tight truncate">My Timesheet</span>
       </div>
@@ -467,29 +467,29 @@ function PersonalTimesheetPage() {
           <section className="rounded-xl glass-card p-4 sm:p-5">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-gray-900">
+                <p className="text-sm font-semibold text-foreground">
                   {now.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
                 </p>
                 {today?.clockIn ? (
                   <>
-                    <p className="mt-3 sm:mt-6 text-base sm:text-lg text-gray-500">You clocked in at {formatTime(today.clockIn)}</p>
+                    <p className="mt-3 sm:mt-6 text-base sm:text-lg text-muted-foreground">You clocked in at {formatTime(today.clockIn)}</p>
                     <div className="mt-3 flex items-center gap-2.5 flex-wrap">
-                      <span className="rounded-md bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-600">DEFAULT SHIFT</span>
-                      <span className="text-sm text-gray-600">11:00 AM – 8:00 PM</span>
+                      <span className="rounded-md bg-blue-100 dark:bg-blue-400/15 px-2 py-0.5 text-xs font-bold text-blue-600 dark:text-blue-300">DEFAULT SHIFT</span>
+                      <span className="text-sm text-foreground/70">11:00 AM – 8:00 PM</span>
                     </div>
-                    <p className="mt-2 text-sm text-gray-600">
+                    <p className="mt-2 text-sm text-foreground/70">
                       Duration: {formatDuration(today.durationMinutes)}
-                      {onBreak && <span className="ml-2 text-xs font-medium text-amber-600">On break since {formatTime(today.breaks![today.breaks!.length - 1].start)}</span>}
+                      {onBreak && <span className="ml-2 text-xs font-medium text-amber-600 dark:text-amber-300">On break since {formatTime(today.breaks![today.breaks!.length - 1].start)}</span>}
                     </p>
                   </>
                 ) : (
-                  <p className="mt-3 sm:mt-6 text-base sm:text-lg text-gray-500">You haven't clocked in yet today.</p>
+                  <p className="mt-3 sm:mt-6 text-base sm:text-lg text-muted-foreground">You haven't clocked in yet today.</p>
                 )}
               </div>
               <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto shrink-0">
                 <button
                   onClick={() => setShowRegModal(true)}
-                  className="rounded-lg border border-gray-300 px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-medium hover:bg-gray-50"
+                  className="rounded-lg border border-border px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-medium hover:bg-muted/40"
                 >
                   Add regularisation
                 </button>
@@ -500,7 +500,7 @@ function PersonalTimesheetPage() {
                       disabled={breakLoading}
                       className={cn(
                         "inline-flex items-center gap-1.5 sm:gap-2 rounded-lg border px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-medium disabled:opacity-60",
-                        onBreak ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100" : "border-gray-300 hover:bg-gray-50"
+                        onBreak ? "border-amber-300 dark:border-amber-400/30 bg-amber-50 dark:bg-amber-400/10 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-400/15" : "border-border hover:bg-muted/40"
                       )}
                     >
                       <TbCoffee size={16} />
@@ -509,7 +509,7 @@ function PersonalTimesheetPage() {
                     <button
                       onClick={handleClockOut}
                       disabled={clockingOut}
-                      className="inline-flex items-center gap-1.5 sm:gap-2 rounded-lg border border-gray-300 px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-medium hover:bg-gray-50 disabled:opacity-60"
+                      className="inline-flex items-center gap-1.5 sm:gap-2 rounded-lg border border-border px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-medium hover:bg-muted/40 disabled:opacity-60"
                     >
                       <TbStopwatch size={16} />
                       {clockingOut ? "Clocking out…" : "Clock out"}
@@ -518,12 +518,12 @@ function PersonalTimesheetPage() {
                 ) : !today?.clockIn ? (
                   <button
                     onClick={handleClockIn}
-                    className="inline-flex items-center gap-2 rounded-lg border border-gray-900 bg-stone-900 text-white px-4 py-2 text-xs sm:text-sm font-medium hover:bg-stone-800"
+                    className="inline-flex items-center gap-2 rounded-lg border border-primary bg-primary text-primary-foreground px-4 py-2 text-xs sm:text-sm font-medium hover:bg-primary/90"
                   >
                     Clock in
                   </button>
                 ) : (
-                  <span className="text-xs sm:text-sm text-gray-400">Clocked out at {formatTime(today.clockOut)}</span>
+                  <span className="text-xs sm:text-sm text-muted-foreground">Clocked out at {formatTime(today.clockOut)}</span>
                 )}
               </div>
             </div>
@@ -532,33 +532,33 @@ function PersonalTimesheetPage() {
           <section className="rounded-xl glass-card p-3 sm:p-4">
             <div className="flex items-center justify-between px-1 sm:px-2 pb-3 sm:pb-4 flex-wrap gap-2">
               <div className="flex items-center gap-2 sm:gap-3">
-                <button onClick={prevMonth} className="p-1 rounded hover:bg-gray-100">
-                  <TbChevronLeft size={20} className="text-gray-500" />
+                <button onClick={prevMonth} className="p-1 rounded hover:bg-muted">
+                  <TbChevronLeft size={20} className="text-muted-foreground" />
                 </button>
-                <h2 className="text-sm font-semibold text-gray-900">{monthLabel}</h2>
-                <button onClick={nextMonth} className="p-1 rounded hover:bg-gray-100">
-                  <TbChevronRight size={20} className="text-gray-500" />
+                <h2 className="text-sm font-semibold text-foreground">{monthLabel}</h2>
+                <button onClick={nextMonth} className="p-1 rounded hover:bg-muted">
+                  <TbChevronRight size={20} className="text-muted-foreground" />
                 </button>
               </div>
-              <button className="rounded-lg border border-gray-300 p-1.5 sm:p-2 text-gray-600 hover:bg-gray-50">
+              <button className="rounded-lg border border-border p-1.5 sm:p-2 text-foreground/70 hover:bg-muted/40">
                 <TbDownload size={18} />
               </button>
             </div>
 
             {loading ? (
-              <div className="p-8 text-center text-sm text-gray-400">Loading…</div>
+              <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>
             ) : (
               <div className="overflow-x-auto">
-                <div className="grid rounded-lg border border-gray-100 min-w-[900px]"
+                <div className="grid rounded-lg border border-border min-w-[900px]"
                   style={{ gridTemplateColumns: "150px repeat(24, minmax(38px, 1fr)) 72px 86px" }}>
-                <div className="bg-gray-50 p-3 text-sm text-gray-500">Date</div>
+                <div className="bg-muted/40 p-3 text-sm text-muted-foreground">Date</div>
                 {hourColumns.map(h => (
-                  <div key={h} className="border-l bg-gray-50 p-3 text-center text-sm text-gray-500">
+                  <div key={h} className="border-l bg-muted/40 p-3 text-center text-sm text-muted-foreground">
                     {h === 0 ? "12 AM" : h < 12 ? `${h} AM` : h === 12 ? "12 PM" : `${h - 12} PM`}
                   </div>
                 ))}
-                <div className="border-l bg-gray-50 p-3 text-center text-sm text-gray-500">Status</div>
-                <div className="border-l bg-gray-50 p-3 text-center text-sm text-gray-500">Time</div>
+                <div className="border-l bg-muted/40 p-3 text-center text-sm text-muted-foreground">Status</div>
+                <div className="border-l bg-muted/40 p-3 text-center text-sm text-muted-foreground">Time</div>
 
                 {days.map(day => {
                   const isToday = day.date === todayKey;
@@ -569,13 +569,13 @@ function PersonalTimesheetPage() {
 
                   return (
                     <div key={day.date} className="contents">
-                      <div className="border-t p-3 text-sm font-medium bg-gray-50 text-gray-800">{label}</div>
-                      <div className="relative border-l border-t bg-white" style={{ gridColumn: "span 24" }}>
+                      <div className="border-t p-3 text-sm font-medium bg-muted/40 text-foreground">{label}</div>
+                      <div className="relative border-l border-t bg-card" style={{ gridColumn: "span 24" }}>
                         <div className="absolute inset-0 grid" style={{ gridTemplateColumns: "repeat(24, minmax(0, 1fr))" }}>
-                          {hourColumns.map(h => <div key={h} className="border-l border-gray-100" />)}
+                          {hourColumns.map(h => <div key={h} className="border-l border-border" />)}
                         </div>
                         {note && (
-                          <div className="absolute left-0 right-0 top-1/2 z-10 mx-auto h-7 -translate-y-1/2 rounded-full border bg-gray-100 text-center text-sm leading-7 text-gray-600">
+                          <div className="absolute left-0 right-0 top-1/2 z-10 mx-auto h-7 -translate-y-1/2 rounded-full border bg-muted text-center text-sm leading-7 text-foreground/70">
                             {note}
                           </div>
                         )}
@@ -587,8 +587,8 @@ function PersonalTimesheetPage() {
                               i === 0 && "rounded-l-full",
                               i === segments.length - 1 && "rounded-r-full",
                               seg.type === "break"
-                                ? "border-amber-400 bg-amber-100"
-                                : isToday ? "border-blue-500 bg-blue-100" : "border-green-400 bg-green-100"
+                                ? "border-amber-400 bg-amber-100 dark:bg-amber-400/15"
+                                : isToday ? "border-blue-500 bg-blue-100 dark:bg-blue-400/15" : "border-green-400 bg-green-100 dark:bg-green-400/15"
                             )}
                             style={{
                               left: `${(seg.startFrac / 24) * 100}%`,
@@ -599,7 +599,7 @@ function PersonalTimesheetPage() {
                         ))}
                       </div>
                       <div className="border-l border-t p-3 text-center"><AttendanceStatus value={statusChar} /></div>
-                      <div className="border-l border-t p-3 text-center text-sm text-gray-500">{formatDuration(day.durationMinutes)}</div>
+                      <div className="border-l border-t p-3 text-center text-sm text-muted-foreground">{formatDuration(day.durationMinutes)}</div>
                     </div>
                   );
                 })}
@@ -615,34 +615,34 @@ function PersonalTimesheetPage() {
           <div className="glass-modal rounded-3xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
             <div className="p-6 border-b flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-bold text-stone-900">Request Regularization</h3>
-                <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest">Attendance Fix</p>
+                <h3 className="text-lg font-bold text-foreground">Request Regularization</h3>
+                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Attendance Fix</p>
               </div>
-              <button onClick={() => setShowRegModal(false)} className="p-2 rounded-xl hover:bg-stone-50 text-stone-400 hover:text-stone-900">
+              <button onClick={() => setShowRegModal(false)} className="p-2 rounded-xl hover:bg-muted/40 text-muted-foreground hover:text-foreground">
                 <TbX size={20} />
               </button>
             </div>
             <form onSubmit={handleRegularize} className="p-6 space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Date</label>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Date</label>
                 <input type="date" value={regDate} onChange={e => setRegDate(e.target.value)}
-                  className="w-full px-4 py-2 text-sm rounded-xl border border-stone-100 bg-stone-50 focus:ring-2 focus:ring-stone-900 outline-none" required />
+                  className="w-full px-4 py-2 text-sm rounded-xl border border-border bg-muted/40 focus:ring-2 focus:ring-ring outline-none" required />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Corrected Time / Type</label>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Corrected Time / Type</label>
                 <input type="text" placeholder="e.g. 09:30 AM or Full Day" value={regTime} onChange={e => setRegTime(e.target.value)}
-                  className="w-full px-4 py-2 text-sm rounded-xl border border-stone-100 bg-stone-50 focus:ring-2 focus:ring-stone-900 outline-none" required />
+                  className="w-full px-4 py-2 text-sm rounded-xl border border-border bg-muted/40 focus:ring-2 focus:ring-ring outline-none" required />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Reason</label>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Reason</label>
                 <textarea placeholder="Why is this fix needed?" value={regReason} onChange={e => setRegReason(e.target.value)}
-                  className="w-full px-4 py-2 text-sm rounded-xl border border-stone-100 bg-stone-50 focus:ring-2 focus:ring-stone-900 outline-none h-24 resize-none" required />
+                  className="w-full px-4 py-2 text-sm rounded-xl border border-border bg-muted/40 focus:ring-2 focus:ring-ring outline-none h-24 resize-none" required />
               </div>
               <div className="pt-4 flex gap-3">
-                <button type="submit" className="flex-1 py-3 bg-stone-900 text-white rounded-xl font-bold text-sm hover:bg-stone-800 transition-all shadow-lg active:scale-95">
+                <button type="submit" className="flex-1 py-3 bg-primary text-primary-foreground rounded-xl font-bold text-sm hover:bg-primary/90 transition-all shadow-lg active:scale-95">
                   Submit Request
                 </button>
-                <button type="button" onClick={() => setShowRegModal(false)} className="px-6 py-3 bg-stone-50 text-stone-400 rounded-xl font-bold text-sm hover:bg-stone-100 transition-all">
+                <button type="button" onClick={() => setShowRegModal(false)} className="px-6 py-3 bg-muted/40 text-muted-foreground rounded-xl font-bold text-sm hover:bg-muted transition-all">
                   Cancel
                 </button>
               </div>

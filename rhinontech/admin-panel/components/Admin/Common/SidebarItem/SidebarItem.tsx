@@ -47,7 +47,7 @@ export const SidebarItem = ({
             variant="ghost"
             className={cn(
               "w-full flex justify-between items-center py-2 h-auto font-normal text-sm cursor-pointer transition-all",
-              isOpen ? "" : "hover:bg-gray-50"
+              isOpen ? "" : "hover:bg-muted/40"
             )}
           >
             <div className="flex items-center">
@@ -73,7 +73,7 @@ export const SidebarItem = ({
       variant="ghost"
       className={cn(
         "w-full flex justify-between items-center font-normal text-sm transition-all",
-        isActive ? "bg-stone-200" : "hover:bg-stone-200/50"
+        isActive ? "bg-muted" : "hover:bg-muted/70"
       )}
       size="sm"
       asChild={!!href}

@@ -225,13 +225,13 @@ function formPayload(form: EmployeeForm, mode: PanelMode) {
 function StatusBadge({ status, exitDate }: { status: string; exitDate?: string | null }) {
   if (status === "active" && exitDate) {
     return (
-      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700" title={`Last working day: ${formatDate(exitDate)}`}>
+      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-400/15 text-amber-700 dark:text-amber-300" title={`Last working day: ${formatDate(exitDate)}`}>
         exiting
       </span>
     );
   }
   return (
-    <span className={cn("px-2 py-0.5 rounded-full text-xs font-medium", status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500")}>
+    <span className={cn("px-2 py-0.5 rounded-full text-xs font-medium", status === "active" ? "bg-green-100 dark:bg-green-400/15 text-green-700 dark:text-green-300" : "bg-muted text-muted-foreground")}>
       {status === "active" ? "active" : "relieved"}
     </span>
   );
@@ -271,44 +271,44 @@ function OffboardDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center glass-overlay p-4" onClick={onClose}>
       <div className="w-full max-w-md space-y-4 rounded-xl glass-modal p-5" onClick={(e) => e.stopPropagation()}>
         <div>
-          <h3 className="text-base font-semibold text-gray-900">Offboard {employee.fullName}</h3>
-          <p className="mt-1 text-xs text-gray-500">{employee.companyEmail}</p>
+          <h3 className="text-base font-semibold text-foreground">Offboard {employee.fullName}</h3>
+          <p className="mt-1 text-xs text-muted-foreground">{employee.companyEmail}</p>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+          <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
             Last working day
             <input
               type="date"
               value={exitDate}
               onChange={(e) => setExitDate(e.target.value)}
-              className="rounded-lg border border-gray-200 px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+          <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
             Reason
             <select
               value={exitReason}
               onChange={(e) => setExitReason(e.target.value)}
-              className="rounded-lg border border-gray-200 px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               {EXIT_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
             </select>
           </label>
-          <label className="col-span-2 flex flex-col gap-1 text-sm font-medium text-gray-700">
-            Notes <span className="font-normal text-gray-400">(optional)</span>
+          <label className="col-span-2 flex flex-col gap-1 text-sm font-medium text-foreground/85">
+            Notes <span className="font-normal text-muted-foreground">(optional)</span>
             <textarea
               value={exitNotes}
               onChange={(e) => setExitNotes(e.target.value)}
               rows={3}
               placeholder="Handover details, exit interview notes..."
-              className="rounded-lg border border-gray-200 px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </label>
         </div>
 
-        <div className="space-y-1 rounded-lg bg-red-50 p-3 text-xs text-red-700">
+        <div className="space-y-1 rounded-lg bg-red-50 dark:bg-red-400/10 p-3 text-xs text-red-700 dark:text-red-300">
           <p className="font-semibold">
             {immediate
               ? "Access is revoked immediately — any active session stops working."
@@ -321,7 +321,7 @@ function OffboardDialog({
         </div>
 
         <div className="flex items-center justify-end gap-3 border-t pt-4">
-          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">
+          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm font-medium text-foreground/85 hover:bg-muted">
             Cancel
           </button>
           <button
@@ -340,9 +340,9 @@ function OffboardDialog({
 
 function Detail({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-gray-100 p-3">
-      <p className="text-xs text-gray-400">{label}</p>
-      <div className="mt-1 font-medium text-gray-800">{value}</div>
+    <div className="rounded-lg border border-border p-3">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <div className="mt-1 font-medium text-foreground">{value}</div>
     </div>
   );
 }
@@ -376,33 +376,33 @@ function LetterPreviewDialog({
       >
         <div className="flex items-center justify-between border-b px-5 py-4">
           <div>
-            <h3 className="text-base font-semibold text-gray-900">{letterLabel} — {employeeName}</h3>
-            <p className="text-xs text-gray-500">Preview before sending. Nothing is saved or emailed yet.</p>
+            <h3 className="text-base font-semibold text-foreground">{letterLabel} — {employeeName}</h3>
+            <p className="text-xs text-muted-foreground">Preview before sending. Nothing is saved or emailed yet.</p>
           </div>
-          <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+          <button onClick={onClose} className="p-1.5 text-muted-foreground hover:text-foreground/85 rounded-lg hover:bg-muted">
             <TbX size={18} />
           </button>
         </div>
 
-        <div className="flex-1 overflow-hidden bg-gray-100">
+        <div className="flex-1 overflow-hidden bg-muted">
           {loading ? (
-            <div className="flex h-full items-center justify-center text-sm text-gray-400">Rendering preview...</div>
+            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Rendering preview...</div>
           ) : loadError ? (
-            <div className="flex h-full items-center justify-center px-6 text-center text-sm text-red-600">{loadError}</div>
+            <div className="flex h-full items-center justify-center px-6 text-center text-sm text-red-600 dark:text-red-300">{loadError}</div>
           ) : pdfUrl ? (
             <iframe src={pdfUrl} className="h-full w-full" title="Letter preview" />
           ) : null}
         </div>
 
         <div className="flex items-center justify-end gap-3 border-t px-5 py-4">
-          <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">
+          <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm font-medium text-foreground/85 hover:bg-muted">
             Cancel
           </button>
           <button
             type="button"
             disabled={sending || loading || !!loadError}
             onClick={onSend}
-            className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-60"
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
           >
             {sending ? "Sending..." : `Save & email to ${personalEmail || "member"}`}
           </button>
@@ -414,8 +414,8 @@ function LetterPreviewDialog({
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="space-y-3 rounded-lg border border-gray-100 p-3">
-      <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+    <section className="space-y-3 rounded-lg border border-border p-3">
+      <h3 className="text-sm font-semibold text-foreground">{title}</h3>
       <div className="grid grid-cols-2 gap-3 text-sm">{children}</div>
     </section>
   );
@@ -435,13 +435,13 @@ function FormInput({
   required?: boolean;
 }) {
   return (
-    <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+    <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
       {label}
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-lg border border-gray-200 px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
         required={required}
       />
     </label>
@@ -450,7 +450,7 @@ function FormInput({
 
 function Checkbox({ label, checked, onChange }: { label: string; checked: boolean; onChange: (value: boolean) => void }) {
   return (
-    <label className="flex items-center gap-2 rounded-lg border border-gray-100 px-3 py-2 text-sm font-medium text-gray-700">
+    <label className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground/85">
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
       {label}
     </label>
@@ -475,12 +475,12 @@ function FormSelect({
   required?: boolean;
 }) {
   return (
-    <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+    <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
       {label}
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-lg border border-gray-200 px-3 py-2 font-normal bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="rounded-lg border border-border px-3 py-2 font-normal bg-card focus:outline-none focus:ring-2 focus:ring-blue-500"
         required={required}
       >
         {options.map((opt) => (
@@ -999,23 +999,23 @@ export function PeopleDirectory() {
           (mode === "create" || mode === "edit") && "hidden"
         )}
       >
-        <div className="sticky top-0 glass-header z-10 flex min-h-16 flex-wrap items-center justify-between gap-2.5 px-3 sm:px-5 py-2.5 sm:py-0 border-b border-black/5">
+        <div className="sticky top-0 glass-header z-10 flex min-h-16 flex-wrap items-center justify-between gap-2.5 px-3 sm:px-5 py-2.5 sm:py-0 border-b border-border">
           <div className="flex items-center gap-2.5 min-w-0">
             <SubNavToggle />
             <div className="min-w-0">
               <h1 className="text-sm sm:text-base font-semibold tracking-tight truncate">Team</h1>
-              <p className="text-xs text-gray-500 truncate">
+              <p className="text-xs text-muted-foreground truncate">
                 {activeCount} active{alumniCount > 0 ? ` · ${alumniCount} alumni` : ""}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap">
-            <div className="flex items-center rounded-lg border border-gray-200 bg-white p-0.5 shrink-0">
+            <div className="flex items-center rounded-lg border border-border bg-card p-0.5 shrink-0">
               <button
                 onClick={() => switchTab("active")}
                 className={cn(
                   "rounded-md px-2.5 sm:px-3 py-1 text-xs font-medium transition-colors",
-                  tab === "active" ? "bg-stone-900 text-white" : "text-gray-500 hover:text-gray-900"
+                  tab === "active" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 Active
@@ -1024,25 +1024,25 @@ export function PeopleDirectory() {
                 onClick={() => switchTab("alumni")}
                 className={cn(
                   "rounded-md px-2.5 sm:px-3 py-1 text-xs font-medium transition-colors",
-                  tab === "alumni" ? "bg-stone-900 text-white" : "text-gray-500 hover:text-gray-900"
+                  tab === "alumni" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 Alumni{alumniCount > 0 ? ` (${alumniCount})` : ""}
               </button>
             </div>
             <div className="relative min-w-[120px] flex-1 sm:flex-initial">
-              <TbSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <TbSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search..."
-                className="w-full pl-8 sm:pl-9 pr-3 py-1.5 sm:py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:w-56 md:w-64 bg-white"
+                className="w-full pl-8 sm:pl-9 pr-3 py-1.5 sm:py-2 text-xs border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:w-56 md:w-64 bg-card"
               />
             </div>
             {canManage && (
               <button
                 onClick={openCreate}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-stone-900 px-2.5 sm:px-3 py-1.5 text-xs font-medium text-white hover:bg-stone-800 whitespace-nowrap shrink-0"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-2.5 sm:px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 whitespace-nowrap shrink-0"
               >
                 <TbPlus size={14} />
                 <span className="hidden sm:inline">Add member</span>
@@ -1052,7 +1052,7 @@ export function PeopleDirectory() {
             {!isPreviewExpanded && (
               <button
                 onClick={() => { setIsPreviewExpanded(true); setMobileDetail(true); }}
-                className="p-1.5 sm:p-2 text-gray-600 hover:bg-stone-100 rounded-lg shrink-0"
+                className="p-1.5 sm:p-2 text-foreground/70 hover:bg-muted rounded-lg shrink-0"
                 title="Open details"
               >
                 <TbLayoutSidebarFilled size={18} />
@@ -1063,15 +1063,15 @@ export function PeopleDirectory() {
 
         <div className="flex-1 overflow-auto p-3 sm:p-5">
           {loading ? (
-            <div className="flex items-center justify-center h-full text-gray-400 text-sm">Loading...</div>
+            <div className="flex items-center justify-center h-full text-muted-foreground text-sm">Loading...</div>
           ) : filtered.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+            <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
               {tab === "alumni" ? "No alumni yet." : "No employees found."}
             </div>
           ) : (
-            <div className="rounded-xl border border-gray-100 overflow-x-auto shadow-xs">
+            <div className="rounded-xl border border-border overflow-x-auto shadow-xs">
               <table className="w-full min-w-[640px] text-sm">
-                <thead className="glass-thead text-gray-600 text-xs uppercase">
+                <thead className="glass-thead text-foreground/70 text-xs uppercase">
                   <tr>
                     <th className="px-5 py-3 text-left">Employee</th>
                     <th className="px-5 py-3 text-left">Role</th>
@@ -1080,31 +1080,31 @@ export function PeopleDirectory() {
                     <th className="px-5 py-3 text-left">{tab === "alumni" ? "Left" : "Joined"}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 bg-white">
+                <tbody className="divide-y divide-border bg-card">
                   {filtered.map((emp) => (
                     <tr
                       key={emp.id}
                       onClick={() => selectEmployee(emp)}
                       className={cn(
-                        "cursor-pointer hover:bg-gray-50 transition-colors",
-                        selectedEmployee?.id === emp.id && "bg-blue-50 hover:bg-blue-50"
+                        "cursor-pointer hover:bg-muted/40 transition-colors",
+                        selectedEmployee?.id === emp.id && "bg-blue-50 dark:bg-blue-400/10 hover:bg-blue-50 dark:hover:bg-blue-400/10"
                       )}
                     >
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-stone-900 flex items-center justify-center text-white text-xs font-semibold shrink-0 overflow-hidden">
+                          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-semibold shrink-0 overflow-hidden">
                             {emp.avatarUrl ? <img src={emp.avatarUrl} alt={emp.fullName} className="w-full h-full object-cover" /> : initials(emp.fullName)}
                           </div>
                           <div>
-                            <p className="font-medium text-gray-900 text-sm">{emp.fullName}</p>
-                            <p className="text-xs text-gray-400">{emp.companyEmail}</p>
+                            <p className="font-medium text-foreground text-sm">{emp.fullName}</p>
+                            <p className="text-xs text-muted-foreground">{emp.companyEmail}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-5 py-3 text-sm text-gray-600">{emp.role?.name}</td>
-                      <td className="px-5 py-3 text-sm text-gray-600">{emp.department}</td>
+                      <td className="px-5 py-3 text-sm text-foreground/70">{emp.role?.name}</td>
+                      <td className="px-5 py-3 text-sm text-foreground/70">{emp.department}</td>
                       <td className="px-5 py-3"><StatusBadge status={emp.status} exitDate={emp.exitDate} /></td>
-                      <td className="px-5 py-3 text-sm text-gray-400">
+                      <td className="px-5 py-3 text-sm text-muted-foreground">
                         {formatDate(tab === "alumni" && emp.exitDate ? emp.exitDate : emp.joiningDate)}
                       </td>
                     </tr>
@@ -1124,7 +1124,7 @@ export function PeopleDirectory() {
         >
           <div className={cn(
             "mx-auto h-full w-0.5 rounded-full transition-colors",
-            isResizingDetail ? "bg-blue-500" : "bg-transparent group-hover:bg-gray-300"
+            isResizingDetail ? "bg-blue-500" : "bg-transparent group-hover:bg-muted"
           )} />
         </div>
       )}
@@ -1136,7 +1136,7 @@ export function PeopleDirectory() {
             : undefined
         }
         className={cn(
-          "min-h-0 flex-col bg-white overflow-hidden",
+          "min-h-0 flex-col bg-card overflow-hidden",
           isResizingDetail ? "transition-none" : "transition-all duration-200 ease-in-out",
           mobileDetail ? "fixed inset-0 z-50 flex w-full max-w-full" : "hidden",
           "lg:static lg:z-auto lg:flex lg:h-full lg:rounded-xl",
@@ -1145,9 +1145,9 @@ export function PeopleDirectory() {
       >
         {isPreviewExpanded && (
           <div className="flex flex-col w-full flex-1 h-full overflow-hidden relative">
-            <div className="sticky top-0 w-full flex min-h-16 items-center justify-between px-4 sm:px-5 py-2 sm:py-0 border-b bg-white z-10 shrink-0">
+            <div className="sticky top-0 w-full flex min-h-16 items-center justify-between px-4 sm:px-5 py-2 sm:py-0 border-b bg-card z-10 shrink-0">
               <div className="flex items-center gap-2 sm:gap-4 self-stretch min-w-0">
-                <p className="flex self-stretch items-center text-sm sm:text-md font-medium tracking-tight border-b-2 border-blue-600 text-black -mb-px truncate">
+                <p className="flex self-stretch items-center text-sm sm:text-md font-medium tracking-tight border-b-2 border-blue-600 text-foreground -mb-px truncate">
                   {mode === "create" ? "Add Member" : mode === "edit" ? "Edit Member" : "Member Details"}
                 </p>
               </div>
@@ -1157,7 +1157,7 @@ export function PeopleDirectory() {
                     <button
                       onClick={sendReset}
                       disabled={resending}
-                      className="inline-flex items-center gap-1.5 sm:gap-2 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 sm:gap-2 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium text-foreground/85 hover:bg-muted disabled:opacity-50"
                       title="Email a password reset link (doesn't change their current password)"
                     >
                       <TbKey size={15} />
@@ -1168,7 +1168,7 @@ export function PeopleDirectory() {
                     <button
                       onClick={resendInvite}
                       disabled={resending}
-                      className="inline-flex items-center gap-1.5 sm:gap-2 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 sm:gap-2 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium text-foreground/85 hover:bg-muted disabled:opacity-50"
                       title="Email a fresh temporary password + setup link"
                     >
                       <TbMailForward size={15} />
@@ -1180,14 +1180,14 @@ export function PeopleDirectory() {
                 {canManage && mode === "view" && selectedEmployee && (
                   <button
                     onClick={openEdit}
-                    className="inline-flex items-center gap-1.5 sm:gap-2 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-100"
+                    className="inline-flex items-center gap-1.5 sm:gap-2 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium text-foreground/85 hover:bg-muted"
                   >
                     <TbPencil size={15} />
                     <span>Edit</span>
                   </button>
                 )}
                 <button
-                  className="cursor-pointer text-gray-600 hover:text-gray-900 p-1.5 rounded-lg hover:bg-gray-100"
+                  className="cursor-pointer text-foreground/70 hover:text-foreground p-1.5 rounded-lg hover:bg-muted"
                   onClick={() => {
                     if (mode === "create" || mode === "edit") {
                       setMode("view");
@@ -1211,7 +1211,7 @@ export function PeopleDirectory() {
                     {/* Avatar + name — always visible */}
                     <div className="flex items-center gap-4">
                       <div className="relative group shrink-0">
-                        <div className="w-14 h-14 rounded-full bg-stone-900 flex items-center justify-center text-white text-lg font-semibold overflow-hidden">
+                        <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-lg font-semibold overflow-hidden">
                           {selectedEmployee.avatarUrl
                             ? <img src={selectedEmployee.avatarUrl} alt={selectedEmployee.fullName} className="w-full h-full object-cover" />
                             : initials(selectedEmployee.fullName)}
@@ -1236,9 +1236,9 @@ export function PeopleDirectory() {
                         )}
                       </div>
                       <div>
-                        <h2 className="text-lg font-semibold text-gray-900">{selectedEmployee.fullName}</h2>
-                        <p className="text-sm text-gray-500">{selectedEmployee.companyEmail}</p>
-                        <p className="text-xs text-gray-400">{selectedEmployee.role?.name} · {selectedEmployee.department}</p>
+                        <h2 className="text-lg font-semibold text-foreground">{selectedEmployee.fullName}</h2>
+                        <p className="text-sm text-muted-foreground">{selectedEmployee.companyEmail}</p>
+                        <p className="text-xs text-muted-foreground">{selectedEmployee.role?.name} · {selectedEmployee.department}</p>
                       </div>
                     </div>
 
@@ -1298,25 +1298,25 @@ export function PeopleDirectory() {
                           className={cn(
                             "space-y-3 rounded-lg border p-3",
                             selectedEmployee.status === "inactive"
-                              ? "border-gray-200 bg-gray-50"
+                              ? "border-border bg-muted/40"
                               : selectedEmployee.exitDate
-                                ? "border-amber-200 bg-amber-50"
-                                : "border-red-100"
+                                ? "border-amber-200 dark:border-amber-400/25 bg-amber-50 dark:bg-amber-400/10"
+                                : "border-red-100 dark:border-red-400/20"
                           )}
                         >
                           {selectedEmployee.status === "active" && !selectedEmployee.exitDate ? (
                             <>
-                              <h3 className="text-sm font-semibold text-gray-900">Offboarding</h3>
-                              <p className="text-xs text-gray-500">
+                              <h3 className="text-sm font-semibold text-foreground">Offboarding</h3>
+                              <p className="text-xs text-muted-foreground">
                                 Relieve this member — records their last working day, revokes access,
                                 and removes them from future payroll runs.
                               </p>
                               {selectedEmployee.role?.slug === "superadmin" ? (
-                                <p className="text-xs text-gray-400">The superadmin account cannot be offboarded.</p>
+                                <p className="text-xs text-muted-foreground">The superadmin account cannot be offboarded.</p>
                               ) : canWrite ? (
                                 <button
                                   onClick={() => setShowOffboard(true)}
-                                  className="rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50"
+                                  className="rounded-lg border border-red-200 dark:border-red-400/25 px-3 py-1.5 text-sm font-medium text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-400/10"
                                 >
                                   Offboard member
                                 </button>
@@ -1324,17 +1324,17 @@ export function PeopleDirectory() {
                             </>
                           ) : selectedEmployee.status === "active" ? (
                             <>
-                              <h3 className="text-sm font-semibold text-amber-800">Exit scheduled</h3>
-                              <p className="text-xs text-amber-700">
+                              <h3 className="text-sm font-semibold text-amber-800 dark:text-amber-200">Exit scheduled</h3>
+                              <p className="text-xs text-amber-700 dark:text-amber-300">
                                 Last working day <span className="font-semibold">{formatDate(selectedEmployee.exitDate!)}</span>
                                 {" · "}{selectedEmployee.exitReason || "—"}. Access is revoked automatically after that day ends.
                               </p>
-                              {selectedEmployee.exitNotes && <p className="text-xs text-amber-700/80">{selectedEmployee.exitNotes}</p>}
+                              {selectedEmployee.exitNotes && <p className="text-xs text-amber-700/80 dark:text-amber-300">{selectedEmployee.exitNotes}</p>}
                               {canWrite && (
                                 <button
                                   onClick={reactivate}
                                   disabled={offboardBusy}
-                                  className="rounded-lg border border-amber-300 px-3 py-1.5 text-sm font-medium text-amber-800 hover:bg-amber-100 disabled:opacity-50"
+                                  className="rounded-lg border border-amber-300 dark:border-amber-400/30 px-3 py-1.5 text-sm font-medium text-amber-800 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-400/15 disabled:opacity-50"
                                 >
                                   {offboardBusy ? "Working..." : "Cancel scheduled exit"}
                                 </button>
@@ -1342,20 +1342,20 @@ export function PeopleDirectory() {
                             </>
                           ) : (
                             <>
-                              <h3 className="text-sm font-semibold text-gray-900">Relieved</h3>
-                              <p className="text-xs text-gray-500">
+                              <h3 className="text-sm font-semibold text-foreground">Relieved</h3>
+                              <p className="text-xs text-muted-foreground">
                                 Last working day{" "}
                                 <span className="font-semibold">
                                   {selectedEmployee.exitDate ? formatDate(selectedEmployee.exitDate) : "not recorded"}
                                 </span>
                                 {" · "}{selectedEmployee.exitReason || "reason not recorded"}
                               </p>
-                              {selectedEmployee.exitNotes && <p className="text-xs text-gray-500">{selectedEmployee.exitNotes}</p>}
+                              {selectedEmployee.exitNotes && <p className="text-xs text-muted-foreground">{selectedEmployee.exitNotes}</p>}
                               {canWrite && (
                                 <button
                                   onClick={reactivate}
                                   disabled={offboardBusy}
-                                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                                  className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-foreground/85 hover:bg-muted disabled:opacity-50"
                                 >
                                   {offboardBusy ? "Working..." : "Reactivate member"}
                                 </button>
@@ -1364,12 +1364,12 @@ export function PeopleDirectory() {
                           )}
 
                           {selectedEmployee.exitDate && (
-                            <div className="space-y-3 border-t border-black/5 pt-3">
+                            <div className="space-y-3 border-t border-border pt-3">
                               <div>
-                                <p className="mb-2 text-xs font-semibold text-gray-700">Exit checklist</p>
+                                <p className="mb-2 text-xs font-semibold text-foreground/85">Exit checklist</p>
                                 <div className="grid grid-cols-1 gap-1.5">
                                   {EXIT_CHECKLIST_ITEMS.map((item) => (
-                                    <label key={item.key} className="flex items-center gap-2 text-xs text-gray-600">
+                                    <label key={item.key} className="flex items-center gap-2 text-xs text-foreground/70">
                                       <input
                                         type="checkbox"
                                         disabled={!canWrite}
@@ -1386,14 +1386,14 @@ export function PeopleDirectory() {
                                   <button
                                     onClick={() => openLetterPreview("relieving")}
                                     disabled={!!letterPreview}
-                                    className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                                    className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground/85 hover:bg-muted disabled:opacity-50"
                                   >
                                     Preview relieving letter
                                   </button>
                                   <button
                                     onClick={() => openLetterPreview("experience")}
                                     disabled={!!letterPreview}
-                                    className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                                    className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground/85 hover:bg-muted disabled:opacity-50"
                                   >
                                     Preview experience letter
                                   </button>
@@ -1405,23 +1405,23 @@ export function PeopleDirectory() {
                       </>
                     )}
 
-                    {message && <p className={cn("text-sm", message.includes("Unable") ? "text-red-600" : "text-green-600")}>{message}</p>}
+                    {message && <p className={cn("text-sm", message.includes("Unable") ? "text-red-600 dark:text-red-300" : "text-green-600 dark:text-green-300")}>{message}</p>}
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center h-full text-gray-400 text-sm">Select an employee.</div>
+                  <div className="flex items-center justify-center h-full text-muted-foreground text-sm">Select an employee.</div>
                 )}
               </div>
             ) : canManage ? (
-              <form onSubmit={submitEmployee} className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0 lg:divide-x bg-gray-50/50">
+              <form onSubmit={submitEmployee} className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0 lg:divide-x bg-muted/40">
                 {/* Mobile Tab Switcher */}
-                <div className="flex lg:hidden items-center justify-center p-2.5 bg-white border-b border-stone-200 shrink-0">
-                  <div className="flex bg-stone-100 rounded-lg p-0.5 w-full max-w-xs">
+                <div className="flex lg:hidden items-center justify-center p-2.5 bg-card border-b border-border shrink-0">
+                  <div className="flex bg-muted rounded-lg p-0.5 w-full max-w-xs">
                     <button
                       type="button"
                       onClick={() => setMobileFormTab("form")}
                       className={cn(
                         "flex-1 py-1.5 text-xs font-semibold rounded-md transition-all text-center",
-                        mobileFormTab === "form" ? "bg-white text-stone-900 shadow-xs" : "text-stone-500 hover:text-stone-900"
+                        mobileFormTab === "form" ? "bg-card text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
                       )}
                     >
                       Form Details
@@ -1431,7 +1431,7 @@ export function PeopleDirectory() {
                       onClick={() => setMobileFormTab("preview")}
                       className={cn(
                         "flex-1 py-1.5 text-xs font-semibold rounded-md transition-all text-center",
-                        mobileFormTab === "preview" ? "bg-white text-stone-900 shadow-xs" : "text-stone-500 hover:text-stone-900"
+                        mobileFormTab === "preview" ? "bg-card text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
                       )}
                     >
                       Live Preview
@@ -1441,28 +1441,28 @@ export function PeopleDirectory() {
 
                 {/* Left: Input fields */}
                 <div className={cn(
-                  "w-full lg:w-1/2 overflow-y-auto p-4 sm:p-6 bg-white space-y-4 flex-col justify-between",
+                  "w-full lg:w-1/2 overflow-y-auto p-4 sm:p-6 bg-card space-y-4 flex-col justify-between",
                   mobileFormTab === "form" ? "flex flex-1" : "hidden lg:flex"
                 )}>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                    <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                       Full name
-                      <input value={form.fullName} onChange={(e) => updateForm("fullName", e.target.value)} className="rounded-lg border border-gray-200 px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                      <input value={form.fullName} onChange={(e) => updateForm("fullName", e.target.value)} className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required />
                     </label>
-                    <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                    <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                       Personal email
-                      <input type="email" value={form.personalEmail} onChange={(e) => updateForm("personalEmail", e.target.value)} className="rounded-lg border border-gray-200 px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                      <input type="email" value={form.personalEmail} onChange={(e) => updateForm("personalEmail", e.target.value)} className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required />
                     </label>
-                    <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                    <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                       Role
-                      <select value={form.roleId} onChange={(e) => updateForm("roleId", e.target.value)} className="rounded-lg border border-gray-200 px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                      <select value={form.roleId} onChange={(e) => updateForm("roleId", e.target.value)} className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                         <option value="">Select role</option>
                         {roles.map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}
                       </select>
                     </label>
-                    <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                    <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                       Department
-                      <input value={form.department} onChange={(e) => updateForm("department", e.target.value)} className="rounded-lg border border-gray-200 px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                      <input value={form.department} onChange={(e) => updateForm("department", e.target.value)} className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required />
                     </label>
                     <FormInput label="Legal name" value={form.legalName} onChange={(value) => updateForm("legalName", value)} />
                     <FormInput label="PAN" value={form.pan} onChange={(value) => updateForm("pan", value)} />
@@ -1473,7 +1473,7 @@ export function PeopleDirectory() {
                     <FormSelect label="Employment type" value={form.employmentType} onChange={(value) => updateForm("employmentType", value)} options={EMPLOYMENT_TYPES} />
                     <FormSelect label="Compensation type" value={form.compensationType} onChange={(value) => updateForm("compensationType", value)} options={COMPENSATION_TYPES} />
                     <div className="col-span-2 flex flex-col gap-1.5">
-                      <label className="text-xs font-medium text-gray-500">Work Schedule</label>
+                      <label className="text-xs font-medium text-muted-foreground">Work Schedule</label>
                       <WorkSchedulePicker
                         value={form.workSchedule || "11 AM – 8 PM (Mon–Sat)"}
                         onChange={(v) => updateForm("workSchedule", v)}
@@ -1501,9 +1501,9 @@ export function PeopleDirectory() {
                     <Checkbox label="Professional Tax" checked={form.professionalTaxEnabled} onChange={(value) => updateForm("professionalTaxEnabled", value)} />
 
                     {mode === "create" && (
-                      <label className="col-span-2 flex flex-col gap-1 text-sm font-medium text-gray-700">
+                      <label className="col-span-2 flex flex-col gap-1 text-sm font-medium text-foreground/85">
                         Company Email
-                        <div className="flex items-center rounded-lg border border-gray-200 overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
+                        <div className="flex items-center rounded-lg border border-border overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
                           <input
                             type="text"
                             value={form.emailPrefix}
@@ -1512,27 +1512,27 @@ export function PeopleDirectory() {
                             className="flex-1 px-3 py-2 text-sm font-normal focus:outline-none"
                             required
                           />
-                          <span className="px-3 py-2 bg-gray-50 text-gray-500 text-sm border-l border-gray-200 select-none whitespace-nowrap">@rhinontech.in</span>
+                          <span className="px-3 py-2 bg-muted/40 text-muted-foreground text-sm border-l border-border select-none whitespace-nowrap">@rhinontech.in</span>
                         </div>
-                        <p className="text-xs text-gray-400 font-normal">A welcome email with login credentials will be sent to their personal email.</p>
+                        <p className="text-xs text-muted-foreground font-normal">A welcome email with login credentials will be sent to their personal email.</p>
                       </label>
                     )}
 
                     {mode === "create" && (
-                      <label className="col-span-2 flex items-center gap-2 rounded-lg border border-stone-200 bg-stone-50/30 px-3 py-2 text-sm font-medium text-gray-700 mt-2 cursor-pointer">
+                      <label className="col-span-2 flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm font-medium text-foreground/85 mt-2 cursor-pointer">
                         <input type="checkbox" checked={attachDocs} onChange={(e) => setAttachDocs(e.target.checked)} className="rounded" />
                         Generate Offer Letter & NDA for e-signing (credentials email is sent automatically after both are signed)
                       </label>
                     )}
                   </div>
 
-                  {message && <p className={cn("text-sm mt-4", message.includes("Unable") ? "text-red-600" : "text-green-600")}>{message}</p>}
+                  {message && <p className={cn("text-sm mt-4", message.includes("Unable") ? "text-red-600 dark:text-red-300" : "text-green-600 dark:text-green-300")}>{message}</p>}
 
                   <div className="flex items-center justify-end gap-3 border-t pt-4 mt-6">
-                    <button type="button" onClick={() => { setMode("view"); setMobileDetail(false); }} className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">
+                    <button type="button" onClick={() => { setMode("view"); setMobileDetail(false); }} className="rounded-lg px-4 py-2 text-sm font-medium text-foreground/85 hover:bg-muted">
                       Cancel
                     </button>
-                    <button type="submit" disabled={saving} className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-60">
+                    <button type="submit" disabled={saving} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
                       {saving ? "Saving..." : mode === "create" ? "Add member" : "Save changes"}
                     </button>
                   </div>
@@ -1540,19 +1540,19 @@ export function PeopleDirectory() {
 
                 {/* Right: Live Preview */}
                 <div className={cn(
-                  "w-full lg:w-1/2 overflow-y-auto flex-col p-4 sm:p-6 bg-stone-100/50",
+                  "w-full lg:w-1/2 overflow-y-auto flex-col p-4 sm:p-6 bg-muted/70",
                   mobileFormTab === "preview" ? "flex flex-1 min-h-[500px]" : "hidden lg:flex"
                 )}>
-                  <p className="text-xs font-semibold text-stone-500 uppercase tracking-widest mb-3">Live Document Preview</p>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">Live Document Preview</p>
 
                   {/* Tabs */}
-                  <div className="flex gap-2 mb-4 border-b border-stone-200">
+                  <div className="flex gap-2 mb-4 border-b border-border">
                     <button
                       type="button"
                       onClick={() => setPreviewTab("offer")}
                       className={cn(
                         "px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 -mb-px transition-all",
-                        previewTab === "offer" ? "border-stone-900 text-stone-900" : "border-transparent text-stone-400 hover:text-stone-600"
+                        previewTab === "offer" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground/70"
                       )}
                     >
                       Offer Letter
@@ -1562,7 +1562,7 @@ export function PeopleDirectory() {
                       onClick={() => setPreviewTab("nda")}
                       className={cn(
                         "px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 -mb-px transition-all",
-                        previewTab === "nda" ? "border-stone-900 text-stone-900" : "border-transparent text-stone-400 hover:text-stone-600"
+                        previewTab === "nda" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground/70"
                       )}
                     >
                       NDA
@@ -1578,10 +1578,10 @@ export function PeopleDirectory() {
 
                     return (
                       <div className="mb-3 space-y-2">
-                        <p className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-stone-500">
+                        <p className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
                           {rows.map((r) => (
                             <span key={r.label}>
-                              {r.label}: {r.signed ? <span className="font-medium text-emerald-600">✓ Signed</span> : <span className="text-amber-600">Pending signature</span>}
+                              {r.label}: {r.signed ? <span className="font-medium text-emerald-600 dark:text-emerald-300">✓ Signed</span> : <span className="text-amber-600 dark:text-amber-300">Pending signature</span>}
                             </span>
                           ))}
                         </p>
@@ -1590,7 +1590,7 @@ export function PeopleDirectory() {
                             type="button"
                             disabled={resendingDoc}
                             onClick={resendDocuments}
-                            className="w-full rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-xs font-semibold text-stone-700 hover:bg-stone-50 disabled:opacity-50"
+                            className="w-full rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground/85 hover:bg-muted/40 disabled:opacity-50"
                           >
                             {resendingDoc ? "Sending…" : "Resend for signing"}
                           </button>
@@ -1607,7 +1607,7 @@ export function PeopleDirectory() {
                           setOfferTemplateKey(e.target.value);
                           setOfferTemplateManuallySet(true);
                         }}
-                        className="flex-1 rounded-lg border border-stone-200 bg-white px-2 py-1.5 text-xs font-medium text-stone-700"
+                        className="flex-1 rounded-lg border border-border bg-card px-2 py-1.5 text-xs font-medium text-foreground/85"
                       >
                         {offerTemplates.map((t) => (
                           <option key={t.key} value={t.key}>
@@ -1618,14 +1618,14 @@ export function PeopleDirectory() {
                       <button
                         type="button"
                         onClick={() => setShowNewTemplateDialog(true)}
-                        className="rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-stone-500 hover:bg-stone-50 hover:text-stone-900"
+                        className="rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                       >
                         + New
                       </button>
                     </div>
                   )}
 
-                  <div className="flex-1 bg-white border border-stone-200 rounded-xl overflow-hidden w-full relative">
+                  <div className="flex-1 bg-card border border-border rounded-xl overflow-hidden w-full relative">
                     <LiveLetterPreview
                       form={form}
                       type={previewTab}
@@ -1658,7 +1658,7 @@ export function PeopleDirectory() {
                 )}
               </form>
             ) : (
-              <div className="flex items-center justify-center flex-1 text-sm text-gray-400">
+              <div className="flex items-center justify-center flex-1 text-sm text-muted-foreground">
                 Select a team member to view their profile.
               </div>
             )}
@@ -1802,7 +1802,7 @@ function LiveLetterPreview({
 
   if (!fullName) {
     return (
-      <div className="flex h-full items-center justify-center p-8 text-center text-sm text-stone-400">
+      <div className="flex h-full items-center justify-center p-8 text-center text-sm text-muted-foreground">
         Enter the member&apos;s name to preview the {type === "offer" ? "offer letter" : "NDA"}.
       </div>
     );
@@ -1810,7 +1810,7 @@ function LiveLetterPreview({
 
   if (error) {
     return (
-      <div className="flex h-full items-center justify-center p-8 text-center text-sm text-red-500">{error}</div>
+      <div className="flex h-full items-center justify-center p-8 text-center text-sm text-red-500 dark:text-red-400">{error}</div>
     );
   }
 
@@ -1832,7 +1832,7 @@ function LiveLetterPreview({
         </>
       )}
       {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white/70 text-xs text-stone-400">
+        <div className="absolute inset-0 flex items-center justify-center bg-card/70 text-xs text-muted-foreground">
           Rendering preview...
         </div>
       )}

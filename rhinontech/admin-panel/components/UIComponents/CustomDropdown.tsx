@@ -37,7 +37,7 @@ export default function CustomDropdown({
       <DropdownMenu>
         <DropdownMenuTrigger
           className={cn(
-            "flex items-center gap-1 hover:bg-gray-200 text-gray-900 font-medium rounded-full px-3 py-1 text-sm truncate max-w-[150px]",
+            "flex items-center gap-1 hover:bg-muted text-foreground font-medium rounded-full px-3 py-1 text-sm truncate max-w-[150px]",
             className
           )}
         >
@@ -49,7 +49,7 @@ export default function CustomDropdown({
               key={option.value}
               className={cn(
                 "flex items-center gap-3 py-3 px-4 cursor-pointer",
-                selectedValue === option.value && "bg-gray-100"
+                selectedValue === option.value && "bg-muted"
               )}
               onClick={() => onSelect(option.value)}
             >
@@ -60,10 +60,10 @@ export default function CustomDropdown({
                 {option.label}
               </span>
               {selectedValue === option.value && (
-                <Check className="h-5 w-5 text-orange-500" />
+                <Check className="h-5 w-5 text-orange-500 dark:text-orange-400" />
               )}
               {option.extraInfo && (
-                <span className="text-gray-500 text-sm truncate max-w-[60px]">
+                <span className="text-muted-foreground text-sm truncate max-w-[60px]">
                   {option.extraInfo}
                 </span>
               )}

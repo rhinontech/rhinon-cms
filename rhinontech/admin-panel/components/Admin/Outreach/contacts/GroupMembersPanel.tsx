@@ -215,7 +215,7 @@ export function GroupMembersPanel({
           {onBack && (
             <button
               onClick={onBack}
-              className="rounded-lg p-1.5 text-stone-500 hover:bg-stone-100 md:hidden shrink-0"
+              className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted md:hidden shrink-0"
               aria-label="Back to groups"
             >
               <TbArrowLeft size={18} />
@@ -229,18 +229,18 @@ export function GroupMembersPanel({
                 onChange={(e) => setNameDraft(e.target.value)}
                 onBlur={handleRename}
                 onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
-                className="w-full max-w-[200px] rounded-lg border border-stone-200 px-2 py-1 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full max-w-[200px] rounded-lg border border-border px-2 py-1 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
               />
             ) : (
               <h1
                 onClick={() => setRenaming(true)}
-                className="cursor-text truncate text-sm sm:text-base font-semibold tracking-tight text-gray-900 hover:underline"
+                className="cursor-text truncate text-sm sm:text-base font-semibold tracking-tight text-foreground hover:underline"
                 title="Click to rename"
               >
                 {group.name}
               </h1>
             )}
-            <p className="truncate text-xs text-gray-500">{group.memberCount} contact{group.memberCount === 1 ? "" : "s"} in this list</p>
+            <p className="truncate text-xs text-muted-foreground">{group.memberCount} contact{group.memberCount === 1 ? "" : "s"} in this list</p>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
@@ -250,7 +250,7 @@ export function GroupMembersPanel({
           <Button size="sm" variant="outline" className="px-2.5 sm:px-3 text-xs" onClick={() => setShowAddLeads(true)}>
             <TbUserPlus size={14} /> <span className="hidden sm:inline">Add Leads</span>
           </Button>
-          <Button size="sm" variant="outline" className="px-2 text-red-600 hover:text-red-700" onClick={handleDeleteGroup}>
+          <Button size="sm" variant="outline" className="px-2 text-red-600 dark:text-red-300 hover:text-red-700 dark:hover:text-red-300" onClick={handleDeleteGroup}>
             <TbTrash size={14} />
           </Button>
         </div>
@@ -260,9 +260,9 @@ export function GroupMembersPanel({
         {savedViews.length > 0 && (
           <div className="flex flex-wrap items-center gap-2">
             {savedViews.map((v) => (
-              <span key={v.id} className="group inline-flex items-center gap-1 rounded-full border border-stone-200 bg-stone-50 py-1 pl-3 pr-1 text-xs font-medium text-stone-600">
-                <button onClick={() => applyView(v)} className="hover:text-stone-900">{v.name}</button>
-                <button onClick={() => removeView(v.id)} className="rounded-full p-0.5 text-stone-400 hover:bg-stone-200 hover:text-stone-700">
+              <span key={v.id} className="group inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 py-1 pl-3 pr-1 text-xs font-medium text-foreground/70">
+                <button onClick={() => applyView(v)} className="hover:text-foreground">{v.name}</button>
+                <button onClick={() => removeView(v.id)} className="rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground/85">
                   <TbX size={12} />
                 </button>
               </span>
@@ -272,12 +272,12 @@ export function GroupMembersPanel({
 
         <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2">
           <div className="relative flex-1 sm:max-w-xs">
-            <TbSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={15} />
+            <TbSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={15} />
             <input
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Search contacts..."
-              className="w-full rounded-lg border border-stone-200 py-1.5 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="w-full rounded-lg border border-border py-1.5 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-card"
             />
           </div>
           <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
@@ -305,17 +305,17 @@ export function GroupMembersPanel({
             </Select>
           </div>
           {hasActiveFilters && (
-            <button onClick={saveCurrentAsView} className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline">
+            <button onClick={saveCurrentAsView} className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-300 hover:underline">
               <TbBookmark size={13} /> Save as view
             </button>
           )}
         </div>
 
         {selectedIds.size > 0 && (
-          <div className="flex items-center justify-between rounded-lg border border-blue-100 bg-blue-50 px-4 py-2.5">
-            <span className="text-sm font-medium text-blue-900">{selectedIds.size} selected</span>
+          <div className="flex items-center justify-between rounded-lg border border-blue-100 dark:border-blue-400/20 bg-blue-50 dark:bg-blue-400/10 px-4 py-2.5">
+            <span className="text-sm font-medium text-blue-900 dark:text-blue-200">{selectedIds.size} selected</span>
             <div className="flex items-center gap-2">
-              <button onClick={() => setSelectedIds(new Set())} className="rounded-lg px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-white">
+              <button onClick={() => setSelectedIds(new Set())} className="rounded-lg px-3 py-1.5 text-xs font-medium text-foreground/70 hover:bg-card">
                 Clear
               </button>
               <button
@@ -329,10 +329,10 @@ export function GroupMembersPanel({
           </div>
         )}
 
-        <div className="overflow-auto rounded-xl border border-stone-100">
-          <div className="grid min-w-[700px] w-full grid-cols-[44px_minmax(220px,1.5fr)_minmax(150px,1fr)_minmax(110px,0.7fr)_minmax(110px,0.7fr)] border-b bg-stone-100 text-xs font-semibold uppercase tracking-wide text-gray-500">
+        <div className="overflow-auto rounded-xl border border-border">
+          <div className="grid min-w-[700px] w-full grid-cols-[44px_minmax(220px,1.5fr)_minmax(150px,1fr)_minmax(110px,0.7fr)_minmax(110px,0.7fr)] border-b bg-muted text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             <span className="flex items-center justify-center px-2 py-3">
-              <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-blue-600" />
+              <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} className="h-4 w-4 cursor-pointer rounded border-border accent-blue-600" />
             </span>
             <span className="px-4 py-3">Contact</span>
             <span className="px-4 py-3">Company</span>
@@ -341,29 +341,29 @@ export function GroupMembersPanel({
           </div>
           {loading ? (
             <div className="flex flex-col items-center justify-center gap-2.5 py-16 text-center">
-              <TbLoader className="animate-spin text-stone-400" size={30} />
-              <p className="text-xs font-medium text-stone-400">Loading contacts...</p>
+              <TbLoader className="animate-spin text-muted-foreground" size={30} />
+              <p className="text-xs font-medium text-muted-foreground">Loading contacts...</p>
             </div>
           ) : members.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 px-4 py-12 text-center text-sm text-gray-400">
-              <TbUsers size={28} className="text-stone-300" />
+            <div className="flex flex-col items-center gap-2 px-4 py-12 text-center text-sm text-muted-foreground">
+              <TbUsers size={28} className="text-muted-foreground/70" />
               No contacts in this group yet — import a CSV or add leads above.
             </div>
           ) : (
             members.map((m) => (
-              <div key={m.id} className="grid min-w-[700px] w-full grid-cols-[44px_minmax(220px,1.5fr)_minmax(150px,1fr)_minmax(110px,0.7fr)_minmax(110px,0.7fr)] items-center border-b text-sm hover:bg-stone-50">
+              <div key={m.id} className="grid min-w-[700px] w-full grid-cols-[44px_minmax(220px,1.5fr)_minmax(150px,1fr)_minmax(110px,0.7fr)_minmax(110px,0.7fr)] items-center border-b text-sm hover:bg-muted/40">
                 <span className="flex items-center justify-center px-2 py-3">
-                  <input type="checkbox" checked={selectedIds.has(m.id)} onChange={() => toggleSelect(m.id)} className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-blue-600" />
+                  <input type="checkbox" checked={selectedIds.has(m.id)} onChange={() => toggleSelect(m.id)} className="h-4 w-4 cursor-pointer rounded border-border accent-blue-600" />
                 </span>
                 <span className="px-4 py-3">
                   <div className="flex flex-col">
-                    <span className="font-medium text-stone-900">{m.name}</span>
-                    <span className="text-xs text-stone-500">{m.email}</span>
+                    <span className="font-medium text-foreground">{m.name}</span>
+                    <span className="text-xs text-muted-foreground">{m.email}</span>
                   </div>
                 </span>
-                <span className="px-4 py-3 text-gray-600">{m.company}</span>
-                <span className="px-4 py-3 truncate text-xs text-gray-500">{m.source}</span>
-                <span className="px-4 py-3 text-xs font-semibold text-gray-500">{m.status}</span>
+                <span className="px-4 py-3 text-foreground/70">{m.company}</span>
+                <span className="px-4 py-3 truncate text-xs text-muted-foreground">{m.source}</span>
+                <span className="px-4 py-3 text-xs font-semibold text-muted-foreground">{m.status}</span>
               </div>
             ))
           )}

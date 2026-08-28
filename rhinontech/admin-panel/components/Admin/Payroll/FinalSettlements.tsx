@@ -187,11 +187,11 @@ export function FinalSettlements() {
 
   return (
     <div className="flex flex-col h-full glass-panel rounded-r-xl overflow-hidden">
-      <div className="sticky top-0 z-10 flex items-center gap-4 h-16 px-5 border-b border-black/5 glass-header">
+      <div className="sticky top-0 z-10 flex items-center gap-4 h-16 px-5 border-b border-border glass-header">
         <SubNavToggle />
         <div>
           <h1 className="text-base font-semibold tracking-tight">Final Settlements</h1>
-          <p className="text-xs text-gray-500">Pro-rated exit-month pay for offboarded members</p>
+          <p className="text-xs text-muted-foreground">Pro-rated exit-month pay for offboarded members</p>
         </div>
       </div>
 
@@ -199,19 +199,19 @@ export function FinalSettlements() {
         <div className="max-w-4xl space-y-5">
           <div className="glass-card-solid rounded-xl overflow-hidden">
             <div className="px-5 py-4 border-b flex items-center justify-between">
-              <p className="font-semibold text-gray-900">Members with an exit on record</p>
-              <span className="text-sm text-gray-500">{items.length}</span>
+              <p className="font-semibold text-foreground">Members with an exit on record</p>
+              <span className="text-sm text-muted-foreground">{items.length}</span>
             </div>
 
             {loading ? (
-              <div className="p-6 text-sm text-gray-400">Loading…</div>
+              <div className="p-6 text-sm text-muted-foreground">Loading…</div>
             ) : items.length === 0 ? (
-              <div className="p-8 text-center text-sm text-gray-500">
+              <div className="p-8 text-center text-sm text-muted-foreground">
                 No exits recorded yet. Offboard a member from the Team panel first.
               </div>
             ) : (
               <table className="w-full min-w-[640px] text-sm">
-                <thead className="glass-thead text-xs text-gray-600 uppercase">
+                <thead className="glass-thead text-xs text-foreground/70 uppercase">
                   <tr>
                     <th className="px-5 py-3 text-left">Employee</th>
                     <th className="px-5 py-3 text-left">Last working day</th>
@@ -219,40 +219,40 @@ export function FinalSettlements() {
                     <th className="px-5 py-3 text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-border">
                   {items.map((item) => (
-                    <tr key={item.id} className="hover:bg-gray-50">
+                    <tr key={item.id} className="hover:bg-muted/40">
                       <td className="px-5 py-3">
-                        <p className="font-medium text-gray-900">{item.fullName}</p>
-                        <p className="text-xs text-gray-400">
+                        <p className="font-medium text-foreground">{item.fullName}</p>
+                        <p className="text-xs text-muted-foreground">
                           {item.role?.name} · {item.department} · {item.status === "inactive" ? "relieved" : "exiting"}
                         </p>
                       </td>
-                      <td className="px-5 py-3 text-gray-600">
+                      <td className="px-5 py-3 text-foreground/70">
                         {formatDate(item.exitDate)}
-                        <p className="text-xs text-gray-400">{item.exitReason || "—"}</p>
+                        <p className="text-xs text-muted-foreground">{item.exitReason || "—"}</p>
                       </td>
                       <td className="px-5 py-3">
                         {item.settlement ? (
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${item.settlement.status === "paid" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${item.settlement.status === "paid" ? "bg-green-100 dark:bg-green-400/15 text-green-700 dark:text-green-300" : "bg-yellow-100 dark:bg-yellow-400/15 text-yellow-700 dark:text-yellow-300"}`}>
                             {item.settlement.status === "paid" ? "settled" : "draft"} · {INR(item.settlement.netPay)}
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-600">pending</span>
+                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 dark:bg-red-400/10 text-red-600 dark:text-red-300">pending</span>
                         )}
                       </td>
                       <td className="px-5 py-3 text-right">
                         {item.settlement ? (
                           <Link
                             href={`/${roleSlug}/payroll/payslips/${item.settlement.payslipId}`}
-                            className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:underline"
+                            className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-300 hover:underline"
                           >
                             View payslip <TbChevronRight size={12} />
                           </Link>
                         ) : (
                           <button
                             onClick={() => openEditor(item)}
-                            className="rounded-lg bg-stone-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-stone-800"
+                            className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
                           >
                             Run settlement
                           </button>
@@ -269,28 +269,28 @@ export function FinalSettlements() {
             <div className="glass-card-solid rounded-xl">
               <div className="px-5 py-4 border-b flex items-center justify-between">
                 <div>
-                  <p className="font-semibold text-gray-900">Final settlement — {selected.fullName}</p>
+                  <p className="font-semibold text-foreground">Final settlement — {selected.fullName}</p>
                   {preview && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       {MONTHS[preview.month - 1]} {preview.year} · {preview.daysWorked} of {preview.daysInMonth} days worked
                       (last working day {formatDate(selected.exitDate)})
                     </p>
                   )}
                 </div>
-                <button onClick={closeEditor} className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+                <button onClick={closeEditor} className="p-1.5 text-muted-foreground hover:text-foreground/85 rounded-lg hover:bg-muted">
                   <TbX size={16} />
                 </button>
               </div>
 
               {previewLoading ? (
-                <div className="p-6 text-sm text-gray-400">Computing pro-rated amounts…</div>
+                <div className="p-6 text-sm text-muted-foreground">Computing pro-rated amounts…</div>
               ) : form && preview ? (
                 <div className="p-5 space-y-5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-2">
                     <div className="space-y-3">
-                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Earnings</p>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Earnings</p>
                       {AMOUNT_FIELDS.filter((f) => f.group === "earning").map((f) => (
-                        <label key={f.key} className="flex items-center justify-between gap-3 text-sm text-gray-700">
+                        <label key={f.key} className="flex items-center justify-between gap-3 text-sm text-foreground/85">
                           {f.label}
                           <input
                             type="number"
@@ -298,11 +298,11 @@ export function FinalSettlements() {
                             step="0.01"
                             value={form[f.key]}
                             onChange={(e) => setAmount(f.key, e.target.value)}
-                            className="w-32 rounded-lg border border-gray-200 px-2.5 py-1.5 text-right text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-32 rounded-lg border border-border px-2.5 py-1.5 text-right text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
                         </label>
                       ))}
-                      <div className="flex items-center justify-end gap-2 text-xs text-gray-400">
+                      <div className="flex items-center justify-end gap-2 text-xs text-muted-foreground">
                         <span>Encash</span>
                         <input
                           type="number"
@@ -310,16 +310,16 @@ export function FinalSettlements() {
                           value={encashDays}
                           onChange={(e) => applyEncashDays(e.target.value)}
                           placeholder="0"
-                          className="w-14 rounded-lg border border-gray-200 px-2 py-1 text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-14 rounded-lg border border-border px-2 py-1 text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                         <span>days × {INR(preview.perDayBasic)}/day (basic ÷ 30)</span>
                       </div>
                     </div>
 
                     <div className="space-y-3">
-                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Deductions</p>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Deductions</p>
                       {AMOUNT_FIELDS.filter((f) => f.group === "deduction").map((f) => (
-                        <label key={f.key} className="flex items-center justify-between gap-3 text-sm text-gray-700">
+                        <label key={f.key} className="flex items-center justify-between gap-3 text-sm text-foreground/85">
                           {f.label}
                           <input
                             type="number"
@@ -327,23 +327,23 @@ export function FinalSettlements() {
                             step="0.01"
                             value={form[f.key]}
                             onChange={(e) => setAmount(f.key, e.target.value)}
-                            className="w-32 rounded-lg border border-gray-200 px-2.5 py-1.5 text-right text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-32 rounded-lg border border-border px-2.5 py-1.5 text-right text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
                         </label>
                       ))}
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-3 rounded-xl bg-gray-50 border border-gray-100 px-4 py-3 text-sm">
-                    <span className="text-gray-600">Gross <span className="font-semibold text-green-700">{INR(totals.gross)}</span></span>
-                    <span className="text-gray-300">·</span>
-                    <span className="text-gray-600">Deductions <span className="font-semibold text-red-600">−{INR(totals.deductions)}</span></span>
-                    <span className="text-gray-300">·</span>
-                    <span className="text-gray-900 font-semibold">Net payable {INR(totals.net)}</span>
+                  <div className="flex flex-wrap items-center gap-3 rounded-xl bg-muted/40 border border-border px-4 py-3 text-sm">
+                    <span className="text-foreground/70">Gross <span className="font-semibold text-green-700 dark:text-green-300">{INR(totals.gross)}</span></span>
+                    <span className="text-muted-foreground/70">·</span>
+                    <span className="text-foreground/70">Deductions <span className="font-semibold text-red-600 dark:text-red-300">−{INR(totals.deductions)}</span></span>
+                    <span className="text-muted-foreground/70">·</span>
+                    <span className="text-foreground font-semibold">Net payable {INR(totals.net)}</span>
                   </div>
 
                   {error && (
-                    <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-2.5 text-sm text-red-700">
+                    <div className="flex items-center gap-2 bg-red-50 dark:bg-red-400/10 border border-red-200 dark:border-red-400/25 rounded-xl px-4 py-2.5 text-sm text-red-700 dark:text-red-300">
                       <TbAlertCircle size={16} /> {error}
                     </div>
                   )}
@@ -352,14 +352,14 @@ export function FinalSettlements() {
                     <button
                       onClick={() => create(false)}
                       disabled={saving}
-                      className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                      className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground/85 hover:bg-muted/40 disabled:opacity-50"
                     >
                       Create draft
                     </button>
                     <button
                       onClick={() => create(true)}
                       disabled={saving}
-                      className="flex items-center gap-2 rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50"
+                      className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                     >
                       {saving && <TbLoader2 size={15} className="animate-spin" />}
                       Create &amp; mark paid
@@ -368,7 +368,7 @@ export function FinalSettlements() {
                 </div>
               ) : error ? (
                 <div className="p-5">
-                  <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-2.5 text-sm text-red-700">
+                  <div className="flex items-center gap-2 bg-red-50 dark:bg-red-400/10 border border-red-200 dark:border-red-400/25 rounded-xl px-4 py-2.5 text-sm text-red-700 dark:text-red-300">
                     <TbAlertCircle size={16} /> {error}
                   </div>
                 </div>

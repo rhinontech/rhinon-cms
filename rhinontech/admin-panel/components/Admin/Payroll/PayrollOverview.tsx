@@ -38,7 +38,7 @@ export function PayrollOverview() {
 
   return (
     <div className={cn("flex min-h-0 min-w-0 flex-col h-full w-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl max-sm:rounded-xl" : "rounded-xl")}>
-      <div className="sticky top-0 z-10 flex min-h-16 flex-wrap items-center gap-2.5 sm:gap-4 px-4 sm:px-5 py-2 sm:py-0 border-b border-black/5 glass-header">
+      <div className="sticky top-0 z-10 flex min-h-16 flex-wrap items-center gap-2.5 sm:gap-4 px-4 sm:px-5 py-2 sm:py-0 border-b border-border glass-header">
         <SubNavToggle />
         <h1 className="text-base sm:text-lg font-semibold tracking-tight truncate">Overview</h1>
       </div>
@@ -48,8 +48,8 @@ export function PayrollOverview() {
           {/* Recent Payslips */}
           <div className="xl:col-span-2 glass-card-solid rounded-xl overflow-hidden">
             <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b">
-              <p className="font-semibold text-xs sm:text-sm text-gray-900">Recent Payslips</p>
-              <Link href={`/${roleSlug}/payroll/payslips`} className="flex items-center gap-1 text-xs text-blue-600 hover:underline">
+              <p className="font-semibold text-xs sm:text-sm text-foreground">Recent Payslips</p>
+              <Link href={`/${roleSlug}/payroll/payslips`} className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-300 hover:underline">
                 View all <TbChevronRight size={14} />
               </Link>
             </div>
@@ -57,32 +57,32 @@ export function PayrollOverview() {
             {loading ? (
               <div className="p-4 sm:p-6 space-y-3">
                 {[1, 2, 3].map((n) => (
-                  <div key={n} className="h-16 bg-gray-100 rounded-lg animate-pulse" />
+                  <div key={n} className="h-16 bg-muted rounded-lg animate-pulse" />
                 ))}
               </div>
             ) : payslips.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 sm:py-16 text-center text-gray-400">
-                <TbFileInvoice size={36} className="mb-3 text-gray-300" />
-                <p className="text-xs sm:text-sm font-medium text-gray-500">No payslips yet</p>
+              <div className="flex flex-col items-center justify-center py-12 sm:py-16 text-center text-muted-foreground">
+                <TbFileInvoice size={36} className="mb-3 text-muted-foreground/70" />
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground">No payslips yet</p>
                 <p className="text-[11px] sm:text-xs mt-1">Your payslips will appear here once payroll is processed.</p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-50">
+              <div className="divide-y divide-border">
                 {payslips.slice(0, 6).map((slip) => (
                   <Link
                     key={slip.id}
                     href={`/${roleSlug}/payroll/payslips/${slip.id}`}
-                    className="flex items-center justify-between px-3.5 sm:px-5 py-3 sm:py-4 hover:bg-gray-50 transition-colors group gap-2"
+                    className="flex items-center justify-between px-3.5 sm:px-5 py-3 sm:py-4 hover:bg-muted/40 transition-colors group gap-2"
                   >
                     <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-blue-50 dark:bg-blue-400/10 flex items-center justify-center text-blue-600 dark:text-blue-300 shrink-0">
                         <TbFileInvoice size={18} />
                       </div>
                       <div className="min-w-0">
-                        <p className="font-medium text-gray-900 text-xs sm:text-sm truncate">
+                        <p className="font-medium text-foreground text-xs sm:text-sm truncate">
                           {MONTHS[slip.payroll.month - 1]} {slip.payroll.year}
                         </p>
-                        <p className="text-[11px] sm:text-xs text-gray-400 mt-0.5 truncate">
+                        <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 truncate">
                           Gross ₹{Number(slip.grossPay).toLocaleString("en-IN")}
                         </p>
                       </div>
@@ -91,21 +91,21 @@ export function PayrollOverview() {
                       <span
                         className={`px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold uppercase tracking-wide ${
                           slip.payroll.status === "paid"
-                            ? "bg-green-100 text-green-700"
+                            ? "bg-green-100 dark:bg-green-400/15 text-green-700 dark:text-green-300"
                             : slip.payroll.status === "processed"
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-amber-100 text-amber-700"
+                            ? "bg-blue-100 dark:bg-blue-400/15 text-blue-700 dark:text-blue-300"
+                            : "bg-amber-100 dark:bg-amber-400/15 text-amber-700 dark:text-amber-300"
                         }`}
                       >
                         {slip.payroll.status}
                       </span>
                       <div className="text-right">
-                        <p className="font-semibold text-gray-900 text-xs sm:text-sm">
+                        <p className="font-semibold text-foreground text-xs sm:text-sm">
                           ₹{Number(slip.netPay).toLocaleString("en-IN")}
                         </p>
-                        <p className="text-[10px] sm:text-xs text-gray-400">Net Pay</p>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground">Net Pay</p>
                       </div>
-                      <TbChevronRight size={16} className="text-gray-300 group-hover:text-gray-500 transition-colors hidden sm:block" />
+                      <TbChevronRight size={16} className="text-muted-foreground/70 group-hover:text-muted-foreground transition-colors hidden sm:block" />
                     </div>
                   </Link>
                 ))}
@@ -118,28 +118,28 @@ export function PayrollOverview() {
             {/* My Requests */}
             <div className="glass-card-solid rounded-xl overflow-hidden">
               <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b">
-                <p className="font-semibold text-xs sm:text-sm text-gray-900">My Requests</p>
-                <button className="inline-flex items-center gap-1 text-xs bg-stone-900 text-white px-2.5 py-1 sm:py-1.5 rounded-lg hover:bg-stone-800 transition-colors">
+                <p className="font-semibold text-xs sm:text-sm text-foreground">My Requests</p>
+                <button className="inline-flex items-center gap-1 text-xs bg-primary text-primary-foreground px-2.5 py-1 sm:py-1.5 rounded-lg hover:bg-primary/90 transition-colors">
                   <TbPlus size={13} /> New
                 </button>
               </div>
               <div className="flex flex-col items-center justify-center py-8 sm:py-10 text-center px-4">
-                <TbClockHour4 size={32} className="mb-2 text-gray-200" />
-                <p className="text-xs sm:text-sm text-gray-400">No pending requests</p>
+                <TbClockHour4 size={32} className="mb-2 text-muted-foreground/50" />
+                <p className="text-xs sm:text-sm text-muted-foreground">No pending requests</p>
               </div>
             </div>
 
             {/* Payroll Approvals */}
             <div className="glass-card-solid rounded-xl overflow-hidden">
               <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b">
-                <p className="font-semibold text-xs sm:text-sm text-gray-900">Payroll Approvals</p>
-                <button className="text-xs text-blue-600 hover:underline">View all</button>
+                <p className="font-semibold text-xs sm:text-sm text-foreground">Payroll Approvals</p>
+                <button className="text-xs text-blue-600 dark:text-blue-300 hover:underline">View all</button>
               </div>
               <div className="flex flex-col items-center justify-center py-8 sm:py-10 text-center px-4">
-                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center mb-2">
-                  <TbFileInvoice size={16} className="text-gray-300" />
+                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center mb-2">
+                  <TbFileInvoice size={16} className="text-muted-foreground/70" />
                 </div>
-                <p className="text-xs sm:text-sm text-gray-400">No approvals pending</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">No approvals pending</p>
               </div>
             </div>
           </div>

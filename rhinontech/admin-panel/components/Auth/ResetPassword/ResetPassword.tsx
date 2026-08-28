@@ -67,7 +67,7 @@ export function ResetPassword() {
               <div className="mb-5 flex h-14 w-full items-center justify-center">
                 <Image src={adminImages.Logo_Rhinon_Tech_Dark} alt="Rhinon Tech" priority className="h-12 w-auto object-contain" />
               </div>
-              <h1 className="text-2xl font-semibold text-slate-950">Set a new password</h1>
+              <h1 className="text-2xl font-semibold text-foreground">Set a new password</h1>
               <p className="text-muted-foreground mt-1 text-sm">
                 Choose a strong password for your account
               </p>
@@ -75,7 +75,7 @@ export function ResetPassword() {
 
             {!token ? (
               <div className="flex flex-col gap-4">
-                <p className="rounded-md border border-red-200 bg-red-50 px-3 py-3 text-sm text-red-600">
+                <p className="rounded-md border border-red-200 dark:border-red-400/25 bg-red-50 dark:bg-red-400/10 px-3 py-3 text-sm text-red-600 dark:text-red-300">
                   This reset link is missing or invalid. Please request a new one.
                 </p>
                 <Link href="/auth/forgot-password" className="text-center text-sm text-muted-foreground underline-offset-4 hover:text-primary hover:underline">
@@ -83,7 +83,7 @@ export function ResetPassword() {
                 </Link>
               </div>
             ) : done ? (
-              <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm text-emerald-700">
+              <p className="rounded-md border border-emerald-200 dark:border-emerald-400/25 bg-emerald-50 dark:bg-emerald-400/10 px-3 py-3 text-sm text-emerald-700 dark:text-emerald-300">
                 Your password has been reset. Redirecting you to sign in…
               </p>
             ) : (
@@ -116,7 +116,7 @@ export function ResetPassword() {
                   At least 8 characters, with one uppercase letter and one number.
                 </p>
                 {error && (
-                  <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+                  <p className="rounded-md border border-red-200 dark:border-red-400/25 bg-red-50 dark:bg-red-400/10 px-3 py-2 text-sm text-red-600 dark:text-red-300">{error}</p>
                 )}
                 <Button type="submit" className="mt-1 w-full" disabled={loading}>
                   {loading ? "Resetting..." : "Reset password"}

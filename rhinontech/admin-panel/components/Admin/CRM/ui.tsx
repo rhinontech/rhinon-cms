@@ -60,12 +60,12 @@ export function initials(name: string | null | undefined): string {
 
 /** Deterministic tint per name, so the same person is always the same colour. */
 const AVATAR_TINTS = [
-  "bg-blue-100 text-blue-700",
-  "bg-violet-100 text-violet-700",
-  "bg-emerald-100 text-emerald-700",
-  "bg-amber-100 text-amber-700",
-  "bg-rose-100 text-rose-700",
-  "bg-cyan-100 text-cyan-700",
+  "bg-blue-100 dark:bg-blue-400/15 text-blue-700 dark:text-blue-300",
+  "bg-violet-100 dark:bg-violet-400/15 text-violet-700 dark:text-violet-300",
+  "bg-emerald-100 dark:bg-emerald-400/15 text-emerald-700 dark:text-emerald-300",
+  "bg-amber-100 dark:bg-amber-400/15 text-amber-700 dark:text-amber-300",
+  "bg-rose-100 dark:bg-rose-400/15 text-rose-700 dark:text-rose-300",
+  "bg-cyan-100 dark:bg-cyan-400/15 text-cyan-700 dark:text-cyan-300",
 ];
 
 export function Avatar({ name, size = 20 }: { name: string | null | undefined; size?: number }) {
@@ -78,7 +78,7 @@ export function Avatar({ name, size = 20 }: { name: string | null | undefined; s
       style={{ width: size, height: size, fontSize: size * 0.42 }}
       className={cn(
         "inline-flex shrink-0 items-center justify-center rounded-full font-semibold tracking-tight",
-        name ? AVATAR_TINTS[hash] : "bg-stone-100 text-stone-400"
+        name ? AVATAR_TINTS[hash] : "bg-muted text-muted-foreground"
       )}
     >
       {label}
@@ -91,12 +91,12 @@ export function Avatar({ name, size = 20 }: { name: string | null | undefined; s
  * read differently on purpose: Customer wins, Unqualified recedes.
  */
 const LIFECYCLE_TINT: Record<LifecycleStage, string> = {
-  New: "bg-stone-100 text-stone-600 ring-stone-200",
-  Contacted: "bg-blue-50 text-blue-700 ring-blue-200",
-  Engaged: "bg-violet-50 text-violet-700 ring-violet-200",
-  Qualified: "bg-amber-50 text-amber-700 ring-amber-200",
-  Unqualified: "bg-stone-50 text-stone-400 ring-stone-200",
-  Customer: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  New: "bg-muted text-foreground/70 ring-border",
+  Contacted: "bg-blue-50 dark:bg-blue-400/10 text-blue-700 dark:text-blue-300 ring-blue-200",
+  Engaged: "bg-violet-50 dark:bg-violet-400/10 text-violet-700 dark:text-violet-300 ring-violet-200",
+  Qualified: "bg-amber-50 dark:bg-amber-400/10 text-amber-700 dark:text-amber-300 ring-amber-200",
+  Unqualified: "bg-muted/40 text-muted-foreground ring-border",
+  Customer: "bg-emerald-50 dark:bg-emerald-400/10 text-emerald-700 dark:text-emerald-300 ring-emerald-200",
 };
 
 export function LifecycleBadge({ stage, className }: { stage: LifecycleStage; className?: string }) {
@@ -122,7 +122,7 @@ export function OutreachStatus({ status }: { status: LeadStatus }) {
   return (
     <span
       title={`Outreach engine state: ${status}`}
-      className={cn("text-[11px] tabular-nums", muted ? "text-rose-400" : "text-stone-400")}
+      className={cn("text-[11px] tabular-nums", muted ? "text-rose-400" : "text-muted-foreground")}
     >
       {status}
     </span>
@@ -155,7 +155,7 @@ export function HeaderRow({ cols, children }: { cols: string; children: React.Re
   return (
     <div
       style={{ gridTemplateColumns: cols }}
-      className="sticky top-0 z-10 grid items-center gap-3 border-b border-stone-200/70 glass-thead px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-stone-500"
+      className="sticky top-0 z-10 grid items-center gap-3 border-b border-border/70 glass-thead px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
     >
       {children}
     </div>
@@ -180,9 +180,9 @@ export function DataRow({
       className={cn(
         // 36px: dense enough to scan a few hundred rows, tall enough that the
         // two-line lead cell isn't touching its own row borders.
-        "grid min-h-9 items-center gap-3 border-b border-stone-100 px-3 text-[13px] transition-colors",
+        "grid min-h-9 items-center gap-3 border-b border-border px-3 text-[13px] transition-colors",
         onClick && "cursor-pointer",
-        selected ? "bg-blue-50/70" : "hover:bg-stone-50/80"
+        selected ? "bg-blue-50/70 dark:bg-blue-400/10" : "hover:bg-muted/40"
       )}
     >
       {children}
@@ -193,8 +193,8 @@ export function DataRow({
 export function EmptyState({ title, hint, action }: { title: string; hint?: string; action?: React.ReactNode }) {
   return (
     <div className="flex flex-col items-center justify-center gap-2 px-4 py-14 text-center">
-      <p className="text-sm font-medium text-stone-500">{title}</p>
-      {hint && <p className="max-w-sm text-xs text-stone-400">{hint}</p>}
+      <p className="text-sm font-medium text-muted-foreground">{title}</p>
+      {hint && <p className="max-w-sm text-xs text-muted-foreground">{hint}</p>}
       {action}
     </div>
   );
@@ -207,9 +207,9 @@ export function SkeletonRows({ count = 8, cols }: { count?: number; cols: string
         <div
           key={i}
           style={{ gridTemplateColumns: cols }}
-          className="grid min-h-9 items-center gap-3 border-b border-stone-100 px-3"
+          className="grid min-h-9 items-center gap-3 border-b border-border px-3"
         >
-          <div className="h-2.5 w-full max-w-[70%] animate-pulse rounded bg-stone-100" />
+          <div className="h-2.5 w-full max-w-[70%] animate-pulse rounded bg-muted" />
         </div>
       ))}
     </>
@@ -240,8 +240,8 @@ export function TBtn({
       disabled={disabled}
       className={cn(
         "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors disabled:opacity-50",
-        variant === "solid" && "bg-stone-900 text-white hover:bg-stone-800",
-        variant === "ghost" && "border border-stone-200 bg-white/70 text-stone-700 hover:bg-stone-100",
+        variant === "solid" && "bg-primary text-primary-foreground hover:bg-primary/90",
+        variant === "ghost" && "border border-border bg-card/70 text-foreground/85 hover:bg-muted",
         variant === "danger" && "bg-rose-600 text-white hover:bg-rose-700"
       )}
     >
@@ -265,7 +265,7 @@ export function Pagination({
   const from = count === 0 ? 0 : offset + 1;
   const to = Math.min(offset + limit, count);
   return (
-    <div className="flex items-center justify-between px-1 py-2 text-xs text-stone-500">
+    <div className="flex items-center justify-between px-1 py-2 text-xs text-muted-foreground">
       <span className="tabular-nums">
         {from}–{to} of {count.toLocaleString("en-IN")}
       </span>

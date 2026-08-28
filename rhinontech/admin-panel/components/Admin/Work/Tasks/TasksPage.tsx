@@ -246,14 +246,14 @@ export function TasksPage() {
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <SubNavToggle />
             <div className="min-w-0">
-              <h1 className="truncate text-base font-semibold tracking-tight text-gray-900">Tasks</h1>
-              <p className="hidden truncate text-xs text-gray-500 sm:block">
+              <h1 className="truncate text-base font-semibold tracking-tight text-foreground">Tasks</h1>
+              <p className="hidden truncate text-xs text-muted-foreground sm:block">
                 {prefs.view === "kanban" ? "Drag a card between people and columns." : "Everything the team is working on, grouped."}
               </p>
             </div>
           </div>
           {!showAside && (
-            <button onClick={() => setAsideOpen(true)} className="hidden rounded-lg p-2 text-gray-400 hover:bg-stone-100 hover:text-gray-700 lg:block" title="Show details">
+            <button onClick={() => setAsideOpen(true)} className="hidden rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground/85 lg:block" title="Show details">
               <TbLayoutSidebarRightFilled size={18} />
             </button>
           )}
@@ -285,9 +285,9 @@ export function TasksPage() {
 
         <div className="min-h-0 flex-1 overflow-auto p-3 sm:p-4">
           {loading || !ready ? (
-            <div className="flex justify-center py-16"><TbLoader className="animate-spin text-stone-300" size={28} /></div>
+            <div className="flex justify-center py-16"><TbLoader className="animate-spin text-muted-foreground/70" size={28} /></div>
           ) : sections.length === 0 ? (
-            <p className="py-16 text-center text-sm text-stone-400">Nothing to show here yet.</p>
+            <p className="py-16 text-center text-sm text-muted-foreground">Nothing to show here yet.</p>
           ) : (
             <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
               <div className="space-y-2.5">
@@ -324,7 +324,7 @@ export function TasksPage() {
 
       <aside
         className={cn(
-          "min-h-0 flex-col overflow-hidden bg-white transition-all duration-200 ease-in-out",
+          "min-h-0 flex-col overflow-hidden bg-card transition-all duration-200 ease-in-out",
           mobileDetail && showAside ? "fixed inset-0 z-50 flex" : "hidden",
           "lg:static lg:z-auto lg:h-full lg:rounded-xl",
           // 34% rather than the 42% the other Work pages use: this one sits next
@@ -334,16 +334,16 @@ export function TasksPage() {
         )}
       >
         <div className="flex h-16 shrink-0 items-center justify-between gap-2 border-b px-4">
-          <h2 className="truncate text-sm font-semibold text-gray-900">
+          <h2 className="truncate text-sm font-semibold text-foreground">
             {mode === "create" ? "Add Task" : mode === "edit" ? "Edit Task" : "Task Details"}
           </h2>
           <div className="flex items-center gap-1">
             {mode === "view" && selectedTask && canEditTask(selectedTask) && (
-              <button onClick={startEdit} className="rounded-lg px-2.5 py-1 text-xs font-semibold text-blue-600 hover:bg-blue-50">Edit</button>
+              <button onClick={startEdit} className="rounded-lg px-2.5 py-1 text-xs font-semibold text-blue-600 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-400/10">Edit</button>
             )}
             <button
               onClick={() => { setMobileDetail(false); setAsideOpen(false); setMode("view"); }}
-              className="rounded-lg p-1.5 text-gray-400 hover:bg-stone-100 hover:text-gray-700"
+              className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground/85"
               aria-label="Close details"
             >
               <TbX size={17} className="lg:hidden" />
@@ -363,7 +363,7 @@ export function TasksPage() {
                 onTaskChanged={refetchQuiet}
               />
             ) : (
-              <div className="flex h-full items-center justify-center text-sm text-gray-400">Select a task to view details.</div>
+              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Select a task to view details.</div>
             )
           ) : (
             <TaskFormPanel

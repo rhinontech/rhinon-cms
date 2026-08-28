@@ -32,31 +32,31 @@ export function WorkflowHeader({
   ] as const;
 
   return (
-    <div className="bg-white border-b border-gray-200 px-6 pt-5 pb-0 shadow-2xs">
+    <div className="bg-card border-b border-border px-6 pt-5 pb-0 shadow-2xs">
       {/* Top Header Row */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4">
         {/* Left Title & Status */}
         <div className="flex items-center gap-3">
           <Link
             href={`/${roleSlug}/automation/workflows`}
-            className="p-2 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-lg text-muted-foreground hover:text-foreground/85 hover:bg-muted transition-colors"
           >
             <TbArrowLeft size={20} />
           </Link>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-gray-900 tracking-tight">{workflow.name}</h1>
+            <h1 className="text-xl font-bold text-foreground tracking-tight">{workflow.name}</h1>
             <span
               className={`px-2 py-0.5 text-xs font-semibold rounded-md uppercase tracking-wider ${
                 workflow.status === "active"
-                  ? "bg-emerald-100 text-emerald-700"
+                  ? "bg-emerald-100 dark:bg-emerald-400/15 text-emerald-700 dark:text-emerald-300"
                   : workflow.status === "paused"
-                  ? "bg-amber-100 text-amber-700"
-                  : "bg-gray-100 text-gray-600"
+                  ? "bg-amber-100 dark:bg-amber-400/15 text-amber-700 dark:text-amber-300"
+                  : "bg-muted text-foreground/70"
               }`}
             >
               {workflow.status}
             </span>
-            <span className="text-xs text-gray-400 font-mono">v{workflow.version}</span>
+            <span className="text-xs text-muted-foreground font-mono">v{workflow.version}</span>
           </div>
         </div>
 
@@ -74,16 +74,16 @@ export function WorkflowHeader({
 
           <button
             onClick={onEnrollTest}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-2xs transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-foreground/85 bg-card border border-border rounded-lg hover:bg-muted/40 shadow-2xs transition-all"
           >
-            <TbExclamationMark size={14} className="text-amber-500 font-bold" />
+            <TbExclamationMark size={14} className="text-amber-500 dark:text-amber-400 font-bold" />
             Enroll one (test)
           </button>
 
           {workflow.status === "active" ? (
             <button
               onClick={() => onStatusChange("paused")}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-2xs transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-foreground/85 bg-card border border-border rounded-lg hover:bg-muted/40 shadow-2xs transition-all"
             >
               <TbPlayerPause size={14} />
               Pause
@@ -91,7 +91,7 @@ export function WorkflowHeader({
           ) : (
             <button
               onClick={() => onStatusChange("active")}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-gray-900 rounded-lg hover:bg-gray-800 shadow-2xs transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-primary-foreground bg-primary rounded-lg hover:bg-primary/90 shadow-2xs transition-all"
             >
               <TbPlayerPlay size={14} />
               Publish
@@ -100,7 +100,7 @@ export function WorkflowHeader({
 
           <button
             onClick={() => onStatusChange("archived")}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-2xs transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-foreground/85 bg-card border border-border rounded-lg hover:bg-muted/40 shadow-2xs transition-all"
           >
             <TbArchive size={14} />
             Archive
@@ -109,36 +109,36 @@ export function WorkflowHeader({
       </div>
 
       {/* Metrics Row */}
-      <div className="flex items-center gap-6 text-xs text-gray-500 mb-4 pl-11">
+      <div className="flex items-center gap-6 text-xs text-muted-foreground mb-4 pl-11">
         <div>
-          <span className="font-bold text-gray-900 mr-1">{workflow.stats?.active || 0}</span> active
+          <span className="font-bold text-foreground mr-1">{workflow.stats?.active || 0}</span> active
         </div>
         <div>
-          <span className="font-bold text-emerald-600 mr-1">{workflow.stats?.completed || 0}</span> completed
+          <span className="font-bold text-emerald-600 dark:text-emerald-300 mr-1">{workflow.stats?.completed || 0}</span> completed
         </div>
         <div>
-          <span className="font-bold text-rose-600 mr-1">{workflow.stats?.failed || 0}</span> failed
+          <span className="font-bold text-rose-600 dark:text-rose-300 mr-1">{workflow.stats?.failed || 0}</span> failed
         </div>
         <div>
-          <span className="font-bold text-gray-500 mr-1">{workflow.stats?.cancelled || 0}</span> cancelled
+          <span className="font-bold text-muted-foreground mr-1">{workflow.stats?.cancelled || 0}</span> cancelled
         </div>
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex items-center gap-1 border-t border-gray-100 pt-1">
+      <div className="flex items-center gap-1 border-t border-border pt-1">
         {tabs.map((tab) => (
           <button
             key={tab.name}
             onClick={() => setActiveTab(tab.name)}
             className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-all flex items-center gap-1.5 ${
               activeTab === tab.name
-                ? "border-gray-900 text-gray-900"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground/85 hover:border-border"
             }`}
           >
             {tab.name}
             {tab.count !== null && tab.count > 0 && (
-              <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-gray-100 text-gray-600">
+              <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-muted text-foreground/70">
                 {tab.count}
               </span>
             )}

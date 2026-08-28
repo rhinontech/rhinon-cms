@@ -53,7 +53,7 @@ function Menu({
         onClick={() => setOpen((o) => !o)}
         className={cn(
           "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition",
-          active ? "bg-blue-50 text-blue-700" : "text-stone-600 hover:bg-stone-100"
+          active ? "bg-blue-50 dark:bg-blue-400/10 text-blue-700 dark:text-blue-300" : "text-foreground/70 hover:bg-muted"
         )}
       >
         {icon} {label}
@@ -77,7 +77,7 @@ function Row({ label, selected, onClick }: { label: string; selected: boolean; o
       onClick={onClick}
       className={cn(
         "flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm",
-        selected ? "bg-stone-900 text-white" : "text-stone-700 hover:bg-stone-100"
+        selected ? "bg-primary text-primary-foreground" : "text-foreground/85 hover:bg-muted"
       )}
     >
       <span className="w-3.5 shrink-0">{selected && <TbCheck size={13} />}</span>
@@ -108,12 +108,12 @@ export function WorkspaceToolbar({
   return (
     <div className="flex flex-wrap items-center gap-1.5 border-b glass-header px-4 py-2">
       <div className="relative">
-        <TbSearch size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-stone-400" />
+        <TbSearch size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <input
           value={filters.search}
           onChange={(e) => setFilters({ ...filters, search: e.target.value })}
           placeholder="Search tasks…"
-          className="w-52 rounded-lg border border-stone-200 py-1.5 pl-8 pr-2 text-xs outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-52 rounded-lg border border-border py-1.5 pl-8 pr-2 text-xs outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
@@ -121,7 +121,7 @@ export function WorkspaceToolbar({
         {() => (
           <div className="space-y-2">
             <div>
-              <p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-stone-400">Assignee</p>
+              <p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Assignee</p>
               <Row label="Anyone" selected={filters.assigneeId === "all"} onClick={() => setFilters({ ...filters, assigneeId: "all" })} />
               <Row label="Unassigned" selected={filters.assigneeId === "none"} onClick={() => setFilters({ ...filters, assigneeId: "none" })} />
               <div className="max-h-40 overflow-auto">
@@ -131,14 +131,14 @@ export function WorkspaceToolbar({
               </div>
             </div>
             <div className="border-t pt-1.5">
-              <p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-stone-400">Status</p>
+              <p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Status</p>
               <Row label="Any status" selected={filters.statusId === "all"} onClick={() => setFilters({ ...filters, statusId: "all" })} />
               {statuses.map((s) => (
                 <Row key={s.id} label={s.name} selected={filters.statusId === s.id} onClick={() => setFilters({ ...filters, statusId: s.id })} />
               ))}
             </div>
             <div className="border-t pt-1.5">
-              <p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-stone-400">Priority</p>
+              <p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Priority</p>
               {["all", "High", "Medium", "Low"].map((pr) => (
                 <Row key={pr} label={pr === "all" ? "Any priority" : pr} selected={filters.priority === pr} onClick={() => setFilters({ ...filters, priority: pr })} />
               ))}
@@ -173,13 +173,13 @@ export function WorkspaceToolbar({
       {filtersActive && (
         <button
           onClick={() => setFilters(EMPTY_FILTERS)}
-          className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs text-stone-500 hover:bg-stone-100"
+          className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted"
         >
           <TbX size={13} /> Clear
         </button>
       )}
 
-      <span className="ml-auto text-[11px] text-stone-400">
+      <span className="ml-auto text-[11px] text-muted-foreground">
         {resultCount === totalCount ? `${totalCount} tasks` : `${resultCount} of ${totalCount} tasks`}
       </span>
     </div>

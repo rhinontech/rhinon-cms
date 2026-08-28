@@ -189,14 +189,14 @@ export function PublishDetailPage({ id }: { id: string }) {
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <TbLoader className="animate-spin text-stone-300" size={44} />
+        <TbLoader className="animate-spin text-muted-foreground/70" size={44} />
       </div>
     );
   }
 
   if (!post) {
     return (
-      <div className="flex h-full flex-col items-center justify-center text-stone-400">
+      <div className="flex h-full flex-col items-center justify-center text-muted-foreground">
         <TbTarget size={64} className="mb-4 opacity-20" />
         <p>Post not found</p>
       </div>
@@ -210,24 +210,24 @@ export function PublishDetailPage({ id }: { id: string }) {
         <div className="flex min-w-0 items-center gap-3">
           <button
             onClick={() => router.push(`/${roleSlug}/outreach/publishing`)}
-            className="-ml-2 rounded-lg p-2 text-gray-500 transition-colors hover:bg-stone-100 hover:text-gray-900"
+            className="-ml-2 rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <TbArrowLeft size={20} />
           </button>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h1 className="truncate text-base font-semibold tracking-tight text-gray-900">{post.name}</h1>
+              <h1 className="truncate text-base font-semibold tracking-tight text-foreground">{post.name}</h1>
               {isLive ? (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 dark:border-emerald-400/25 bg-emerald-50 dark:bg-emerald-400/10 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Live
                 </span>
               ) : (
-                <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700">
+                <span className="inline-flex items-center rounded-full border border-amber-200 dark:border-amber-400/25 bg-amber-50 dark:bg-amber-400/10 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700 dark:text-amber-300">
                   Draft
                 </span>
               )}
             </div>
-            <p className="mt-0.5 flex items-center gap-1.5 text-xs text-gray-500">
+            <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
               <ChannelIcon channel={post.channel} size={13} /> {post.channel}
               {post.organizationId ? " · Company page" : " · Personal profile"} · {post.visibility === "CONNECTIONS" ? "Connections" : "Public"}
             </p>
@@ -250,7 +250,7 @@ export function PublishDetailPage({ id }: { id: string }) {
         {/* Content */}
         <div className="space-y-3 rounded-xl glass-panel p-4">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-bold uppercase tracking-widest text-stone-400">Post Content</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Post Content</p>
             {!isLive && (
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" onClick={handleGenerate} disabled={generating}>
@@ -267,7 +267,7 @@ export function PublishDetailPage({ id }: { id: string }) {
             )}
           </div>
           {isLive ? (
-            <p className="whitespace-pre-wrap rounded-lg border border-stone-100 bg-stone-50 p-4 text-sm leading-relaxed text-stone-700">
+            <p className="whitespace-pre-wrap rounded-lg border border-border bg-muted/40 p-4 text-sm leading-relaxed text-foreground/85">
               {post.aiDraft}
             </p>
           ) : (
@@ -283,7 +283,7 @@ export function PublishDetailPage({ id }: { id: string }) {
               href={post.articleUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-300 hover:underline"
             >
               Linked article <TbExternalLink size={12} />
             </a>
@@ -292,21 +292,21 @@ export function PublishDetailPage({ id }: { id: string }) {
 
         {/* Image */}
         <div className="space-y-3 rounded-xl glass-panel p-4">
-          <p className="text-xs font-bold uppercase tracking-widest text-stone-400">Post Image</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Post Image</p>
           {post.mediaUrl ? (
             <div className="group relative w-fit">
               <img src={post.mediaUrl} alt="Post media" className="max-h-56 rounded-lg object-cover" />
               {!isLive && (
                 <button
                   onClick={handleRemoveImage}
-                  className="absolute right-2 top-2 rounded-lg border border-stone-200 bg-white p-1.5 text-red-500 opacity-0 shadow transition-opacity hover:bg-red-50 group-hover:opacity-100"
+                  className="absolute right-2 top-2 rounded-lg border border-border bg-card p-1.5 text-red-500 dark:text-red-400 opacity-0 shadow transition-opacity hover:bg-red-50 dark:hover:bg-red-400/10 group-hover:opacity-100"
                 >
                   <TbPhotoX size={14} />
                 </button>
               )}
             </div>
           ) : isLive ? (
-            <p className="text-xs text-stone-400">No image was attached.</p>
+            <p className="text-xs text-muted-foreground">No image was attached.</p>
           ) : (
             <div className="space-y-2">
               <div className="flex gap-2">
@@ -335,8 +335,8 @@ export function PublishDetailPage({ id }: { id: string }) {
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-center rounded-lg border border-dashed border-stone-200 py-6">
-                  <div className="text-center text-stone-300">
+                <div className="flex items-center justify-center rounded-lg border border-dashed border-border py-6">
+                  <div className="text-center text-muted-foreground/70">
                     <TbPhoto size={28} className="mx-auto mb-1" />
                     <p className="text-[10px]">Optional image for your post</p>
                   </div>
@@ -350,7 +350,7 @@ export function PublishDetailPage({ id }: { id: string }) {
         {isLive && (
           <>
             <PostStatsCard stats={stats ?? null} loading={loadingStats} onRefresh={handleFetchStats} />
-            <p className="font-mono text-[10px] text-stone-400">Post ID: {post.platformPostId}</p>
+            <p className="font-mono text-[10px] text-muted-foreground">Post ID: {post.platformPostId}</p>
           </>
         )}
       </div>

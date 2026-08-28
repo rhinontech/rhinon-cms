@@ -29,10 +29,10 @@ function isOverdue(t: ProjectTask) {
  */
 const TILE_TINT = {
   neutral: "glass-card",
-  blue: "border-blue-200 bg-gradient-to-br from-blue-50/80 to-white/60",
-  amber: "border-amber-200 bg-gradient-to-br from-amber-50/80 to-white/60",
-  rose: "border-rose-200 bg-gradient-to-br from-rose-50/80 to-white/60",
-  emerald: "border-emerald-200 bg-gradient-to-br from-emerald-50/80 to-white/60",
+  blue: "border-blue-200 dark:border-blue-400/25 bg-gradient-to-br from-blue-50/80 to-white/60",
+  amber: "border-amber-200 dark:border-amber-400/25 bg-gradient-to-br from-amber-50/80 to-white/60",
+  rose: "border-rose-200 dark:border-rose-400/25 bg-gradient-to-br from-rose-50/80 to-white/60",
+  emerald: "border-emerald-200 dark:border-emerald-400/25 bg-gradient-to-br from-emerald-50/80 to-white/60",
 } as const;
 
 function StatTile({
@@ -45,9 +45,9 @@ function StatTile({
 }) {
   return (
     <div className={cn("rounded-xl border p-4", TILE_TINT[tint])}>
-      <p className="text-xs font-medium text-stone-500">{label}</p>
-      <p className="mt-1 text-3xl font-semibold tracking-tight text-stone-900">{value}</p>
-      {sub && <p className="mt-0.5 text-xs text-stone-400">{sub}</p>}
+      <p className="text-xs font-medium text-muted-foreground">{label}</p>
+      <p className="mt-1 text-3xl font-semibold tracking-tight text-foreground">{value}</p>
+      {sub && <p className="mt-0.5 text-xs text-muted-foreground">{sub}</p>}
     </div>
   );
 }
@@ -57,11 +57,11 @@ function ChartTooltip({ active, payload }: any) {
   const d = payload[0].payload as Datum;
   return (
     <div className="rounded-lg border glass-card-solid px-3 py-2 shadow-sm">
-      <p className="flex items-center gap-1.5 text-xs font-medium text-stone-900">
+      <p className="flex items-center gap-1.5 text-xs font-medium text-foreground">
         <span className="h-2 w-2 rounded-full" style={{ background: d.color }} />
         {d.label}
       </p>
-      <p className="mt-0.5 text-xs text-stone-500">
+      <p className="mt-0.5 text-xs text-muted-foreground">
         {d.value} task{d.value === 1 ? "" : "s"}
       </p>
     </div>
@@ -146,17 +146,17 @@ export function AnalyticsView({
       <div className="mt-4 rounded-xl glass-card">
         {/* Controls sit in one row above the chart. */}
         <div className="flex flex-wrap items-center gap-2 border-b px-4 py-2.5">
-          <h2 className="text-sm font-semibold text-stone-900">
+          <h2 className="text-sm font-semibold text-foreground">
             Tasks by {breakBy === "status" ? "status" : breakBy === "assignee" ? "assignee" : "priority"}
           </h2>
-          <div className="ml-auto flex items-center gap-1 rounded-lg bg-stone-100 p-0.5">
+          <div className="ml-auto flex items-center gap-1 rounded-lg bg-muted p-0.5">
             {(["status", "assignee", "priority"] as BreakBy[]).map((b) => (
               <button
                 key={b}
                 onClick={() => setBreakBy(b)}
                 className={cn(
                   "rounded-md px-2.5 py-1 text-xs font-medium capitalize transition",
-                  breakBy === b ? "bg-white text-stone-900 shadow-sm" : "text-stone-500 hover:text-stone-800"
+                  breakBy === b ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 {b}
@@ -199,7 +199,7 @@ export function AnalyticsView({
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <p className="py-12 text-center text-sm text-stone-400">Nothing to chart yet.</p>
+            <p className="py-12 text-center text-sm text-muted-foreground">Nothing to chart yet.</p>
           )}
         </div>
       </div>

@@ -238,7 +238,7 @@ export function BlogEditorPage({ id, resource = "blogs" }: { id?: string; resour
   if (loading) {
     return (
       <main className="flex h-full min-h-0 w-full items-center justify-center rounded-xl glass-panel">
-        <TbLoader size={22} className="animate-spin text-stone-400" />
+        <TbLoader size={22} className="animate-spin text-muted-foreground" />
       </main>
     );
   }
@@ -250,14 +250,14 @@ export function BlogEditorPage({ id, resource = "blogs" }: { id?: string; resour
         <div className="flex min-w-0 items-center gap-2">
           <button
             onClick={() => router.push(listPath)}
-            className="rounded-lg p-2 text-gray-600 hover:bg-stone-100"
+            className="rounded-lg p-2 text-foreground/70 hover:bg-muted"
             title={`Back to ${resourceLabel.toLowerCase()}s`}
           >
             <TbArrowLeft size={18} />
           </button>
           <SubNavToggle />
           <div className="min-w-0">
-            <h1 className="truncate text-base font-semibold tracking-tight text-gray-900">
+            <h1 className="truncate text-base font-semibold tracking-tight text-foreground">
               {id ? `Edit ${resourceLabel}` : `New ${resourceLabel}`}
             </h1>
           </div>
@@ -265,8 +265,8 @@ export function BlogEditorPage({ id, resource = "blogs" }: { id?: string; resour
             className={cn(
               "ml-2 shrink-0 rounded border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest",
               status === "Published"
-                ? "border-emerald-100 bg-emerald-50 text-emerald-600"
-                : "border-amber-100 bg-amber-50 text-amber-600"
+                ? "border-emerald-100 dark:border-emerald-400/20 bg-emerald-50 dark:bg-emerald-400/10 text-emerald-600 dark:text-emerald-300"
+                : "border-amber-100 dark:border-amber-400/20 bg-amber-50 dark:bg-amber-400/10 text-amber-600 dark:text-amber-300"
             )}
           >
             {status}
@@ -276,21 +276,21 @@ export function BlogEditorPage({ id, resource = "blogs" }: { id?: string; resour
         <div className="flex shrink-0 items-center gap-2">
           <button
             onClick={() => setPreviewOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium hover:bg-stone-100"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted"
           >
             <TbEye size={14} /> Preview
           </button>
           <button
             onClick={() => handleSave("Draft")}
             disabled={!!saving}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium hover:bg-stone-100 disabled:opacity-60"
+            className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted disabled:opacity-60"
           >
             {saving === "Draft" ? "Saving…" : "Save as Draft"}
           </button>
           <button
             onClick={() => handleSave("Published")}
             disabled={!!saving}
-            className="rounded-lg bg-stone-900 px-3.5 py-1.5 text-xs font-medium text-white hover:bg-stone-800 disabled:opacity-60"
+            className="rounded-lg bg-primary px-3.5 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
           >
             {saving === "Published" ? "Publishing…" : status === "Published" ? "Update" : "Publish"}
           </button>
@@ -298,10 +298,10 @@ export function BlogEditorPage({ id, resource = "blogs" }: { id?: string; resour
       </div>
 
       {error && (
-        <div className="border-b border-red-100 bg-red-50 px-4 py-2 text-xs font-medium text-red-600">{error}</div>
+        <div className="border-b border-red-100 dark:border-red-400/20 bg-red-50 dark:bg-red-400/10 px-4 py-2 text-xs font-medium text-red-600 dark:text-red-300">{error}</div>
       )}
       {legacyConverted && (
-        <div className="border-b border-cyan-100 bg-cyan-50 px-4 py-2 text-xs font-medium text-cyan-700">
+        <div className="border-b border-cyan-100 dark:border-cyan-400/20 bg-cyan-50 dark:bg-cyan-400/10 px-4 py-2 text-xs font-medium text-cyan-700 dark:text-cyan-300">
           This post was converted from legacy markdown into a paragraph block — review the formatting before saving.
         </div>
       )}
@@ -311,22 +311,22 @@ export function BlogEditorPage({ id, resource = "blogs" }: { id?: string; resour
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 p-4 sm:p-6 xl:grid-cols-[minmax(0,1fr)_340px]">
           {/* Left — content */}
           <div className="min-w-0 space-y-5">
-            <div className="space-y-4 rounded-xl border border-stone-200 bg-white p-4 sm:p-5">
-              <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+            <div className="space-y-4 rounded-xl border border-border bg-card p-4 sm:p-5">
+              <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                 Title
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="7 UI design principles every product manager should know"
-                  className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2.5 text-lg font-bold tracking-tight outline-none focus:ring-2 focus:ring-stone-900"
+                  className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-lg font-bold tracking-tight outline-none focus:ring-2 focus:ring-ring"
                 />
               </label>
 
-              <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+              <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                 {resourceLabel} URL
-                <div className="flex items-center overflow-hidden rounded-lg border border-stone-200 bg-white focus-within:ring-2 focus-within:ring-stone-900">
-                  <span className="shrink-0 border-r border-stone-100 bg-stone-50 px-3 py-2 text-sm text-stone-400">/{resource}/</span>
+                <div className="flex items-center overflow-hidden rounded-lg border border-border bg-card focus-within:ring-2 focus-within:ring-ring">
+                  <span className="shrink-0 border-r border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">/{resource}/</span>
                   <input
                     type="text"
                     value={slug}
@@ -336,26 +336,26 @@ export function BlogEditorPage({ id, resource = "blogs" }: { id?: string; resour
                   />
                 </div>
                 {slugChangedOnPublished && (
-                  <p className="text-xs font-normal text-amber-600">
+                  <p className="text-xs font-normal text-amber-600 dark:text-amber-300">
                     Changing the URL of a published post breaks existing links to it.
                   </p>
                 )}
               </label>
 
-              <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+              <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                 Excerpt
                 <textarea
                   value={excerpt}
                   onChange={(e) => setExcerpt(e.target.value)}
                   placeholder="One or two sentences shown on the blog card."
-                  className="h-20 w-full resize-none rounded-lg border border-stone-200 bg-white px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-stone-900"
+                  className="h-20 w-full resize-none rounded-lg border border-border bg-card px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
               </label>
             </div>
 
             <ParagraphBlock html={content} onChange={setContent} />
 
-            <div className="rounded-xl border border-stone-200 bg-white p-4 sm:p-5">
+            <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
               <FaqEditor faqs={faqs} onChange={setFaqs} />
             </div>
           </div>
@@ -363,23 +363,23 @@ export function BlogEditorPage({ id, resource = "blogs" }: { id?: string; resour
           {/* Right — settings rail */}
           <div className="space-y-4">
             <SettingsCard title="Publishing">
-              <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+              <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                 Published Date
                 <input
                   type="date"
                   value={publishedAt}
                   onChange={(e) => setPublishedAt(e.target.value)}
-                  className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-stone-900"
+                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
               </label>
-              <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+              <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                 <span className="flex items-center justify-between">
                   Read Time
                   {readTimeTouched && (
                     <button
                       type="button"
                       onClick={() => { setReadTimeTouched(false); setReadTime(computeReadTimeFromHtml(content)); }}
-                      className="inline-flex items-center gap-1 rounded-full border border-stone-200 px-2 py-0.5 text-[10px] font-semibold text-stone-500 hover:bg-stone-100"
+                      className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold text-muted-foreground hover:bg-muted"
                       title="Recalculate from content"
                     >
                       <TbSparkles size={11} /> auto
@@ -390,16 +390,16 @@ export function BlogEditorPage({ id, resource = "blogs" }: { id?: string; resour
                   type="text"
                   value={readTime}
                   onChange={(e) => { setReadTime(e.target.value); setReadTimeTouched(true); }}
-                  className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-stone-900"
+                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
                 {!readTimeTouched && (
-                  <span className="text-[10px] font-normal text-stone-400">Auto-calculated from your content.</span>
+                  <span className="text-[10px] font-normal text-muted-foreground">Auto-calculated from your content.</span>
                 )}
               </label>
             </SettingsCard>
 
             <SettingsCard title="Organize">
-              <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+              <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                 Category
                 <input
                   type="text"
@@ -407,7 +407,7 @@ export function BlogEditorPage({ id, resource = "blogs" }: { id?: string; resour
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   placeholder="e.g. Product Fundamentals"
-                  className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-stone-900"
+                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
                 <datalist id="blog-categories">
                   {categories.map((c) => (
@@ -415,20 +415,20 @@ export function BlogEditorPage({ id, resource = "blogs" }: { id?: string; resour
                   ))}
                 </datalist>
               </label>
-              <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+              <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                 Tags (comma separated)
                 <input
                   type="text"
                   value={tags}
                   onChange={(e) => setTags(e.target.value)}
                   placeholder="Operations, AI"
-                  className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-stone-900"
+                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
               </label>
             </SettingsCard>
 
             <SettingsCard title="SEO">
-              <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+              <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                 <span className="flex items-center justify-between">
                   Meta Title
                   <CharCounter value={metaTitle} limit={META_TITLE_LIMIT} />
@@ -438,10 +438,10 @@ export function BlogEditorPage({ id, resource = "blogs" }: { id?: string; resour
                   value={metaTitle}
                   onChange={(e) => setMetaTitle(e.target.value)}
                   placeholder={title || "Falls back to the blog title"}
-                  className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-stone-900"
+                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
               </label>
-              <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+              <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                 <span className="flex items-center justify-between">
                   Meta Description
                   <CharCounter value={metaDescription} limit={META_DESC_LIMIT} />
@@ -450,7 +450,7 @@ export function BlogEditorPage({ id, resource = "blogs" }: { id?: string; resour
                   value={metaDescription}
                   onChange={(e) => setMetaDescription(e.target.value)}
                   placeholder={excerpt || "Falls back to the excerpt"}
-                  className="h-24 w-full resize-none rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-stone-900"
+                  className="h-24 w-full resize-none rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
               </label>
             </SettingsCard>
@@ -460,22 +460,22 @@ export function BlogEditorPage({ id, resource = "blogs" }: { id?: string; resour
             </SettingsCard>
 
             <SettingsCard title="Author">
-              <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+              <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                 Name
                 <input
                   type="text"
                   value={authorName}
                   onChange={(e) => setAuthorName(e.target.value)}
-                  className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-stone-900"
+                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
               </label>
-              <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+              <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                 Designation
                 <input
                   type="text"
                   value={authorRole}
                   onChange={(e) => setAuthorRole(e.target.value)}
-                  className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-stone-900"
+                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
               </label>
               <ContentImageInput label="Avatar" value={authorAvatar} onChange={setAuthorAvatar} />
@@ -507,8 +507,8 @@ export function BlogEditorPage({ id, resource = "blogs" }: { id?: string; resour
 
 function SettingsCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="space-y-3 rounded-xl border border-stone-200 bg-white p-4">
-      <h2 className="text-xs font-bold uppercase tracking-widest text-stone-400">{title}</h2>
+    <div className="space-y-3 rounded-xl border border-border bg-card p-4">
+      <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{title}</h2>
       {children}
     </div>
   );
@@ -519,7 +519,7 @@ function CharCounter({ value, limit }: { value: string; limit: number }) {
     <span
       className={cn(
         "text-[10px] font-semibold tabular-nums",
-        value.length > limit ? "text-amber-600" : "text-stone-400"
+        value.length > limit ? "text-amber-600 dark:text-amber-300" : "text-muted-foreground"
       )}
     >
       {value.length}/{limit}

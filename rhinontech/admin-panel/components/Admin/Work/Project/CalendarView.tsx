@@ -129,19 +129,19 @@ export function CalendarView({
       <div className="flex shrink-0 items-center gap-2 border-b glass-header px-4 py-2">
         <button
           onClick={() => setCursor(startOfMonth(new Date()))}
-          className="rounded-lg border border-stone-200 px-2.5 py-1 text-xs font-medium text-stone-700 hover:bg-stone-100"
+          className="rounded-lg border border-border px-2.5 py-1 text-xs font-medium text-foreground/85 hover:bg-muted"
         >
           Today
         </button>
-        <button onClick={() => setCursor((c) => addMonths(c, -1))} className="rounded-lg p-1.5 text-stone-500 hover:bg-stone-100">
+        <button onClick={() => setCursor((c) => addMonths(c, -1))} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted">
           <TbChevronLeft size={16} />
         </button>
-        <button onClick={() => setCursor((c) => addMonths(c, 1))} className="rounded-lg p-1.5 text-stone-500 hover:bg-stone-100">
+        <button onClick={() => setCursor((c) => addMonths(c, 1))} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted">
           <TbChevronRight size={16} />
         </button>
-        <span className="ml-1 text-sm font-semibold text-stone-900">{format(cursor, "MMMM yyyy")}</span>
+        <span className="ml-1 text-sm font-semibold text-foreground">{format(cursor, "MMMM yyyy")}</span>
         {undated > 0 && (
-          <span className="ml-auto text-[11px] text-stone-400">
+          <span className="ml-auto text-[11px] text-muted-foreground">
             {undated} task{undated === 1 ? "" : "s"} with no dates aren&apos;t shown
           </span>
         )}
@@ -151,7 +151,7 @@ export function CalendarView({
         <div className="grid h-full min-w-[720px]" style={{ gridTemplateRows: rowTemplate }}>
           <div className="grid grid-cols-7 border-b glass-thead">
             {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((d) => (
-              <div key={d} className="px-2 py-1.5 text-[11px] font-semibold text-stone-500">{d}</div>
+              <div key={d} className="px-2 py-1.5 text-[11px] font-semibold text-muted-foreground">{d}</div>
             ))}
           </div>
 
@@ -169,20 +169,20 @@ export function CalendarView({
                         title="Double-click to add a task on this day"
                         className={cn(
                           "group h-full border-r px-2 pt-1.5 text-left align-top last:border-r-0",
-                          !inMonth && "bg-stone-50/60"
+                          !inMonth && "bg-muted/40"
                         )}
                       >
                         <span
                           className={cn(
                             "inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs",
-                            isToday ? "bg-blue-600 font-semibold text-white" : inMonth ? "text-stone-700" : "text-stone-400"
+                            isToday ? "bg-blue-600 font-semibold text-white" : inMonth ? "text-foreground/85" : "text-muted-foreground"
                           )}
                         >
                           {format(d, d.getDate() === 1 ? "d MMM" : "d")}
                         </span>
                         <TbCalendarPlus
                           size={12}
-                          className="ml-1 inline text-stone-300 opacity-0 transition group-hover:opacity-100"
+                          className="ml-1 inline text-muted-foreground/70 opacity-0 transition group-hover:opacity-100"
                         />
                       </button>
                     );

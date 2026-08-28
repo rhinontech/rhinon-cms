@@ -71,8 +71,8 @@ export function PublishingPage() {
         <div className="flex items-center gap-3">
           <SubNavToggle />
           <div>
-            <h1 className="text-base font-semibold tracking-tight text-gray-900">LinkedIn Publishing</h1>
-            <p className="text-xs text-gray-500">Draft with AI, publish to LinkedIn, track engagement.</p>
+            <h1 className="text-base font-semibold tracking-tight text-foreground">LinkedIn Publishing</h1>
+            <p className="text-xs text-muted-foreground">Draft with AI, publish to LinkedIn, track engagement.</p>
           </div>
         </div>
         <Button size="sm" onClick={() => setComposerOpen(true)}>
@@ -135,36 +135,36 @@ function PostGrid({
 }) {
   return (
     <div className="space-y-2">
-      <p className="text-xs font-bold uppercase tracking-widest text-stone-400">{title}</p>
+      <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{title}</p>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {posts.map((post) => (
           <div key={post.id} className="group relative flex flex-col overflow-hidden rounded-xl glass-panel transition-shadow hover:shadow-md">
             <Link href={`${pathname}/${post.id}`} className="flex flex-1 flex-col">
               {post.mediaUrl ? (
-                <div className="h-28 w-full overflow-hidden bg-stone-100">
+                <div className="h-28 w-full overflow-hidden bg-muted">
                   <img src={post.mediaUrl} alt="" className="h-full w-full object-cover" />
                 </div>
               ) : (
-                <div className="flex h-28 w-full items-center justify-center bg-stone-50 text-stone-200">
+                <div className="flex h-28 w-full items-center justify-center bg-muted/40 text-muted-foreground/50">
                   <ChannelIcon channel={post.channel} size={32} />
                 </div>
               )}
               <div className="flex flex-1 flex-col gap-1.5 p-4">
-                <p className="truncate text-sm font-bold text-stone-900 group-hover:underline">{post.name}</p>
-                <p className="flex items-center gap-1.5 text-xs text-stone-500">
+                <p className="truncate text-sm font-bold text-foreground group-hover:underline">{post.name}</p>
+                <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <ChannelIcon channel={post.channel} size={13} />
                   {post.channel.replace("LinkedIn ", "")}
                   {post.platformPostId ? (
-                    <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600">
+                    <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-300">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Live
                     </span>
                   ) : (
-                    <span className="ml-auto text-[10px] font-bold uppercase text-amber-600">Draft</span>
+                    <span className="ml-auto text-[10px] font-bold uppercase text-amber-600 dark:text-amber-300">Draft</span>
                   )}
                 </p>
-                {post.aiDraft && <p className="line-clamp-2 text-xs text-stone-400">{post.aiDraft}</p>}
+                {post.aiDraft && <p className="line-clamp-2 text-xs text-muted-foreground">{post.aiDraft}</p>}
                 {post.platformPostId && post.socialStats && (
-                  <p className="mt-auto pt-1 text-[11px] text-stone-400 tabular-nums">
+                  <p className="mt-auto pt-1 text-[11px] text-muted-foreground tabular-nums">
                     {post.socialStats.likes} likes · {post.socialStats.comments} comments · {post.socialStats.impressions} impressions
                   </p>
                 )}
@@ -172,7 +172,7 @@ function PostGrid({
             </Link>
             <button
               onClick={() => onDelete(post)}
-              className="absolute right-2 top-2 rounded-lg bg-white/80 p-1.5 text-stone-400 opacity-0 shadow transition-opacity hover:text-red-600 group-hover:opacity-100"
+              className="absolute right-2 top-2 rounded-lg bg-card/80 p-1.5 text-muted-foreground opacity-0 shadow transition-opacity hover:text-red-600 dark:hover:text-red-300 group-hover:opacity-100"
             >
               <TbTrash size={14} />
             </button>

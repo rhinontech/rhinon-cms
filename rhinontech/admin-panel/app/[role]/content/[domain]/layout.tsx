@@ -21,7 +21,7 @@ export default function ContentDomainLayout({ children }: { children: React.Reac
   if (!isContentDomain(domain)) {
     return (
       <main className="flex h-full w-full items-center justify-center">
-        <TbLoader size={22} className="animate-spin text-stone-400" />
+        <TbLoader size={22} className="animate-spin text-muted-foreground" />
       </main>
     );
   }

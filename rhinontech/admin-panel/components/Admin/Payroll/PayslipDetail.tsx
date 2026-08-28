@@ -57,20 +57,20 @@ function fmtDate(iso: string | undefined | null) {
 
 function TableRow({ label, amount, bold }: { label: string; amount: number; bold?: boolean }) {
   return (
-    <tr className={bold ? "bg-gray-50 font-semibold" : "hover:bg-gray-50/60"}>
-      <td className={`py-2.5 px-4 text-sm ${bold ? "text-gray-900" : "text-gray-600"}`}>{label}</td>
-      <td className={`py-2.5 px-4 text-sm text-right ${bold ? "text-gray-900" : "text-gray-800"}`}>{fmt(amount)}</td>
+    <tr className={bold ? "bg-muted/40 font-semibold" : "hover:bg-muted/40"}>
+      <td className={`py-2.5 px-4 text-sm ${bold ? "text-foreground" : "text-foreground/70"}`}>{label}</td>
+      <td className={`py-2.5 px-4 text-sm text-right ${bold ? "text-foreground" : "text-foreground"}`}>{fmt(amount)}</td>
     </tr>
   );
 }
 
 function TaxRow({ label, gross, exempted, taxable, bold }: { label: string; gross: number; exempted: number; taxable: number; bold?: boolean }) {
   return (
-    <tr className={bold ? "bg-gray-50 font-semibold" : "hover:bg-gray-50/60"}>
-      <td className={`py-2.5 px-4 text-sm ${bold ? "text-gray-900" : "text-gray-600"}`}>{label}</td>
-      <td className="py-2.5 px-4 text-sm text-right text-gray-800">{fmt(gross)}</td>
-      <td className="py-2.5 px-4 text-sm text-right text-gray-800">{fmt(exempted)}</td>
-      <td className={`py-2.5 px-4 text-sm text-right ${bold ? "text-gray-900 font-semibold" : "text-gray-800"}`}>{fmt(taxable)}</td>
+    <tr className={bold ? "bg-muted/40 font-semibold" : "hover:bg-muted/40"}>
+      <td className={`py-2.5 px-4 text-sm ${bold ? "text-foreground" : "text-foreground/70"}`}>{label}</td>
+      <td className="py-2.5 px-4 text-sm text-right text-foreground">{fmt(gross)}</td>
+      <td className="py-2.5 px-4 text-sm text-right text-foreground">{fmt(exempted)}</td>
+      <td className={`py-2.5 px-4 text-sm text-right ${bold ? "text-foreground font-semibold" : "text-foreground"}`}>{fmt(taxable)}</td>
     </tr>
   );
 }
@@ -97,8 +97,8 @@ export function PayslipDetail({ id }: { id: string }) {
       .finally(() => setLoading(false));
   }, [id, isAdminView]);
 
-  if (loading) return <div className="h-full flex items-center justify-center text-sm text-gray-400">Loading…</div>;
-  if (!slip) return <div className="h-full flex items-center justify-center text-sm text-gray-400">Payslip not found.</div>;
+  if (loading) return <div className="h-full flex items-center justify-center text-sm text-muted-foreground">Loading…</div>;
+  if (!slip) return <div className="h-full flex items-center justify-center text-sm text-muted-foreground">Payslip not found.</div>;
 
   const emp = slip.employee;
   const displayName = (emp.legalName || emp.fullName).toUpperCase();
@@ -150,23 +150,23 @@ export function PayslipDetail({ id }: { id: string }) {
       <div className="flex items-center justify-between mb-6 print:hidden">
         <button
           onClick={() => router.back()}
-          className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <TbArrowLeft size={18} /> Back
         </button>
         <button
           onClick={() => window.print()}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium border border-gray-200 rounded-lg hover:bg-gray-50 bg-white transition-colors"
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium border border-border rounded-lg hover:bg-muted/40 bg-card transition-colors"
         >
           <TbPrinter size={16} /> Print / Download
         </button>
       </div>
 
       {/* Payslip card */}
-      <div id="payslip-print" className="bg-white rounded-2xl border border-gray-100 max-w-3xl mx-auto overflow-hidden">
+      <div id="payslip-print" className="bg-card rounded-2xl border border-border max-w-3xl mx-auto overflow-hidden">
 
         {/* Company header */}
-        <div className="bg-gray-900 px-8 py-6 flex items-start justify-between">
+        <div className="bg-stone-900 px-8 py-6 flex items-start justify-between">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center shrink-0">
               {/* <span className="text-white font-bold text-lg tracking-tight">RT</span> */}
@@ -174,11 +174,11 @@ export function PayslipDetail({ id }: { id: string }) {
             </div>
             <div>
               <p className="text-white font-bold text-base leading-tight">Rhinon Tech</p>
-              <p className="text-gray-400 text-xs mt-0.5">Hyderabad, Telangana, India</p>
+              <p className="text-stone-400 text-xs mt-0.5">Hyderabad, Telangana, India</p>
             </div>
           </div>
           <div className="text-right">
-            <p className="text-gray-400 text-xs uppercase tracking-wider">{isFnf ? "Full & Final Settlement" : "Payslip"}</p>
+            <p className="text-stone-400 text-xs uppercase tracking-wider">{isFnf ? "Full & Final Settlement" : "Payslip"}</p>
             <p className="text-white font-semibold text-lg mt-0.5">{periodLabel}</p>
             <div className="mt-1.5 flex items-center justify-end gap-1.5">
               {isFnf && (
@@ -200,43 +200,43 @@ export function PayslipDetail({ id }: { id: string }) {
         </div>
 
         {/* Employee details grid */}
-        <div className="px-8 py-6 border-b border-gray-100">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Employee Details</p>
+        <div className="px-8 py-6 border-b border-border">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">Employee Details</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-4">
             {detailFields.map(({ label, value }) => (
               <div key={label}>
-                <p className="text-xs text-gray-400 mb-0.5">{label}</p>
-                <p className="text-sm font-medium text-gray-900 break-all">{value}</p>
+                <p className="text-xs text-muted-foreground mb-0.5">{label}</p>
+                <p className="text-sm font-medium text-foreground break-all">{value}</p>
               </div>
             ))}
           </div>
         </div>
 
         {/* Summary pills */}
-        <div className="px-8 py-5 border-b border-gray-100 flex flex-wrap gap-3">
-          <div className="flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 px-4 py-2.5">
-            <span className="text-xs font-semibold text-green-700 uppercase tracking-wide">Gross Pay (A)</span>
-            <span className="text-green-700 font-bold">+ ₹{fmt(slip.grossPay)}</span>
+        <div className="px-8 py-5 border-b border-border flex flex-wrap gap-3">
+          <div className="flex items-center gap-2 rounded-xl border border-green-200 dark:border-green-400/25 bg-green-50 dark:bg-green-400/10 px-4 py-2.5">
+            <span className="text-xs font-semibold text-green-700 dark:text-green-300 uppercase tracking-wide">Gross Pay (A)</span>
+            <span className="text-green-700 dark:text-green-300 font-bold">+ ₹{fmt(slip.grossPay)}</span>
           </div>
-          <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5">
-            <span className="text-xs font-semibold text-red-700 uppercase tracking-wide">Deductions (B)</span>
-            <span className="text-red-700 font-bold">− ₹{fmt(slip.totalDeductions)}</span>
+          <div className="flex items-center gap-2 rounded-xl border border-red-200 dark:border-red-400/25 bg-red-50 dark:bg-red-400/10 px-4 py-2.5">
+            <span className="text-xs font-semibold text-red-700 dark:text-red-300 uppercase tracking-wide">Deductions (B)</span>
+            <span className="text-red-700 dark:text-red-300 font-bold">− ₹{fmt(slip.totalDeductions)}</span>
           </div>
         </div>
 
         {/* Earnings */}
         <div className="px-8 pt-6 pb-4">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
-            Earnings (A) <span className="normal-case font-normal text-gray-400">— The total money you earned before deductions</span>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+            Earnings (A) <span className="normal-case font-normal text-muted-foreground">— The total money you earned before deductions</span>
           </p>
-          <table className="w-full mt-3 rounded-xl overflow-hidden border border-gray-100">
-            <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
+          <table className="w-full mt-3 rounded-xl overflow-hidden border border-border">
+            <thead className="bg-muted/40 text-xs text-muted-foreground uppercase">
               <tr>
                 <th className="py-2.5 px-4 text-left font-medium">Earnings</th>
                 <th className="py-2.5 px-4 text-right font-medium">Amount (₹)</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-border">
               <TableRow label="Basic Salary"         amount={Number(slip.basicSalary)} />
               <TableRow label="House Rent Allowance" amount={Number(slip.hra)} />
               <TableRow label="Transport Allowance"  amount={Number(slip.ta)} />
@@ -244,7 +244,7 @@ export function PayslipDetail({ id }: { id: string }) {
               {Number(slip.otherAllowances) > 0 && <TableRow label="Other Allowances" amount={Number(slip.otherAllowances)} />}
               {Number(slip.leaveEncashment ?? 0) > 0 && <TableRow label="Leave Encashment" amount={Number(slip.leaveEncashment)} />}
             </tbody>
-            <tfoot className="border-t-2 border-gray-200">
+            <tfoot className="border-t-2 border-border">
               <TableRow label="Gross Pay" amount={Number(slip.grossPay)} bold />
             </tfoot>
           </table>
@@ -252,24 +252,24 @@ export function PayslipDetail({ id }: { id: string }) {
 
         {/* Deductions */}
         <div className="px-8 pt-2 pb-4">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
-            Deductions (B) <span className="normal-case font-normal text-gray-400">— Amount deducted for taxes and other benefits</span>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+            Deductions (B) <span className="normal-case font-normal text-muted-foreground">— Amount deducted for taxes and other benefits</span>
           </p>
-          <table className="w-full mt-3 rounded-xl overflow-hidden border border-gray-100">
-            <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
+          <table className="w-full mt-3 rounded-xl overflow-hidden border border-border">
+            <thead className="bg-muted/40 text-xs text-muted-foreground uppercase">
               <tr>
                 <th className="py-2.5 px-4 text-left font-medium">Deductions</th>
                 <th className="py-2.5 px-4 text-right font-medium">Amount (₹)</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-border">
               <TableRow label="Provident Fund (Employee 12%)" amount={Number(slip.pfEmployee)} />
               <TableRow label="Professional Tax"              amount={Number(slip.professionalTax)} />
               <TableRow label="Tax Deducted at Source (TDS)"  amount={Number(slip.tds)} />
               {Number(slip.noticeRecovery ?? 0) > 0 && <TableRow label="Notice Period Recovery" amount={Number(slip.noticeRecovery)} />}
               {Number(slip.otherDeductions) > 0 && <TableRow label="Other Deductions" amount={Number(slip.otherDeductions)} />}
             </tbody>
-            <tfoot className="border-t-2 border-gray-200">
+            <tfoot className="border-t-2 border-border">
               <TableRow label="Total Deductions" amount={Number(slip.totalDeductions)} bold />
             </tfoot>
           </table>
@@ -278,7 +278,7 @@ export function PayslipDetail({ id }: { id: string }) {
         {/* Yearly projections don't apply to a pro-rated final-settlement month */}
         {isFnf ? (
           <div className="px-8 pt-2 pb-6">
-            <div className="rounded-xl border border-purple-100 bg-purple-50 px-4 py-3 text-xs text-purple-800">
+            <div className="rounded-xl border border-purple-100 dark:border-purple-400/20 bg-purple-50 dark:bg-purple-400/10 px-4 py-3 text-xs text-purple-800 dark:text-purple-200">
               This is a full &amp; final settlement for the employee&apos;s exit month — amounts are
               pro-rated to the last working day, so annual projections are not shown.
             </div>
@@ -287,11 +287,11 @@ export function PayslipDetail({ id }: { id: string }) {
         <>
         {/* Yearly Taxable Income */}
         <div className="px-8 pt-2 pb-4">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
-            Yearly Taxable Income (C) <span className="normal-case font-normal text-gray-400">— Annual earnings excluding exemptions</span>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+            Yearly Taxable Income (C) <span className="normal-case font-normal text-muted-foreground">— Annual earnings excluding exemptions</span>
           </p>
-          <table className="w-full mt-3 rounded-xl overflow-hidden border border-gray-100">
-            <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
+          <table className="w-full mt-3 rounded-xl overflow-hidden border border-border">
+            <thead className="bg-muted/40 text-xs text-muted-foreground uppercase">
               <tr>
                 <th className="py-2.5 px-4 text-left font-medium">Description</th>
                 <th className="py-2.5 px-4 text-right font-medium">Gross (₹)</th>
@@ -299,14 +299,14 @@ export function PayslipDetail({ id }: { id: string }) {
                 <th className="py-2.5 px-4 text-right font-medium">Taxable (₹)</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-border">
               <TaxRow label="Basic Salary"           gross={annualBasic}   exempted={0} taxable={annualBasic} />
               <TaxRow label="House Rent Allowance"   gross={annualHRA}     exempted={0} taxable={annualHRA} />
               <TaxRow label="Transport Allowance"    gross={annualTA}      exempted={0} taxable={annualTA} />
               <TaxRow label="Medical Allowance"      gross={annualMedical} exempted={0} taxable={annualMedical} />
               {annualOther > 0 && <TaxRow label="Other Allowances" gross={annualOther} exempted={0} taxable={annualOther} />}
             </tbody>
-            <tfoot className="border-t-2 border-gray-200">
+            <tfoot className="border-t-2 border-border">
               <TaxRow label="Annual Taxable Salary" gross={annualGross} exempted={0} taxable={annualTaxable} bold />
             </tfoot>
           </table>
@@ -314,17 +314,17 @@ export function PayslipDetail({ id }: { id: string }) {
 
         {/* Net Taxable Income */}
         <div className="px-8 pt-2 pb-6">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
-            Net Taxable Income (E) <span className="normal-case font-normal text-gray-400">— Taxes calculated on this amount</span>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+            Net Taxable Income (E) <span className="normal-case font-normal text-muted-foreground">— Taxes calculated on this amount</span>
           </p>
-          <div className="mt-3 rounded-xl border border-gray-100 overflow-hidden divide-y divide-gray-50 text-sm">
-            <div className="flex justify-between items-center py-2.5 px-4 hover:bg-gray-50/60">
-              <span className="text-gray-600">Annual Taxable Salary (C)</span>
-              <span className="text-gray-900">₹{fmt(annualTaxable)}</span>
+          <div className="mt-3 rounded-xl border border-border overflow-hidden divide-y divide-border text-sm">
+            <div className="flex justify-between items-center py-2.5 px-4 hover:bg-muted/40">
+              <span className="text-foreground/70">Annual Taxable Salary (C)</span>
+              <span className="text-foreground">₹{fmt(annualTaxable)}</span>
             </div>
-            <div className="flex justify-between items-center py-2.5 px-4 bg-gray-50 font-semibold">
-              <span className="text-gray-900">Net Taxable Income</span>
-              <span className="text-gray-900">₹{fmt(annualTaxable)}</span>
+            <div className="flex justify-between items-center py-2.5 px-4 bg-muted/40 font-semibold">
+              <span className="text-foreground">Net Taxable Income</span>
+              <span className="text-foreground">₹{fmt(annualTaxable)}</span>
             </div>
           </div>
         </div>
@@ -332,7 +332,7 @@ export function PayslipDetail({ id }: { id: string }) {
         )}
 
         {/* Footer */}
-        <div className="bg-gray-50 border-t border-gray-100 px-8 py-4 flex items-center justify-between text-xs text-gray-400">
+        <div className="bg-muted/40 border-t border-border px-8 py-4 flex items-center justify-between text-xs text-muted-foreground">
           <span>This is a system-generated payslip and does not require a signature.</span>
           {slip.paymentDate && <span>Paid on {fmtDate(slip.paymentDate)}</span>}
         </div>

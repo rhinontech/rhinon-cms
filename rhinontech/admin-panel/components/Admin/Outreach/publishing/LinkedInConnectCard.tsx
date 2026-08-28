@@ -53,11 +53,11 @@ export function LinkedInConnectCard({
     <div
       className={cn(
         "flex items-center justify-between rounded-xl border px-4 py-3 text-sm",
-        connected ? "border-emerald-100 bg-emerald-50 text-emerald-800" : "border-stone-200 bg-stone-50 text-stone-500"
+        connected ? "border-emerald-100 dark:border-emerald-400/20 bg-emerald-50 dark:bg-emerald-400/10 text-emerald-800 dark:text-emerald-200" : "border-border bg-muted/40 text-muted-foreground"
       )}
     >
       <div className="flex items-center gap-3">
-        <TbBrandLinkedin size={20} className={connected ? "text-emerald-600" : "text-stone-400"} />
+        <TbBrandLinkedin size={20} className={connected ? "text-emerald-600 dark:text-emerald-300" : "text-muted-foreground"} />
         <div>
           <p className="text-xs font-semibold">
             {connected
@@ -74,7 +74,7 @@ export function LinkedInConnectCard({
       {connected ? (
         <button
           onClick={handleDisconnect}
-          className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-stone-400 hover:text-red-600"
+          className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-red-600 dark:hover:text-red-300"
         >
           <TbUnlink size={12} /> Disconnect
         </button>

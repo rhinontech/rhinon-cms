@@ -51,29 +51,29 @@ function BoardCard({
     <div
       className={cn(
         "overflow-hidden rounded-xl shadow-sm glass-card",
-        dragging ? "rotate-1 shadow-lg" : "hover:border-stone-300"
+        dragging ? "rotate-1 shadow-lg" : "hover:border-border"
       )}
     >
       {cover && (
-        <div className="flex h-24 items-center justify-center border-b bg-stone-50 text-[10px] text-stone-400">
+        <div className="flex h-24 items-center justify-center border-b bg-muted/40 text-[10px] text-muted-foreground">
           <TbPaperclip size={13} className="mr-1" /> {cover.name}
         </div>
       )}
       <button data-task-opener onClick={() => onOpen?.(task)} className="block w-full px-3 py-2.5 text-left">
-        <p className="text-sm font-medium leading-snug text-stone-900">{task.title}</p>
+        <p className="text-sm font-medium leading-snug text-foreground">{task.title}</p>
         <div className="mt-2 flex items-center justify-between gap-2">
           {task.assignee ? (
             <span
               title={task.assignee.fullName}
-              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-100 text-[10px] font-semibold text-cyan-800"
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-100 dark:bg-cyan-400/15 text-[10px] font-semibold text-cyan-800 dark:text-cyan-200"
             >
               {initials(task.assignee.fullName)}
             </span>
           ) : (
-            <span className="h-6 w-6 shrink-0 rounded-full border border-dashed border-stone-300" />
+            <span className="h-6 w-6 shrink-0 rounded-full border border-dashed border-border" />
           )}
           {range && (
-            <span className={cn("truncate text-[11px]", isOverdue(task) ? "text-red-600" : "text-stone-500")}>
+            <span className={cn("truncate text-[11px]", isOverdue(task) ? "text-red-600 dark:text-red-300" : "text-muted-foreground")}>
               {range}
             </span>
           )}
@@ -82,7 +82,7 @@ function BoardCard({
       {/* Boolean(), not `||` on a number: `false || 0` is `0`, and React RENDERS
           a bare 0 — which is what put a stray "0" on every empty card. */}
       {Boolean(childCount > 0 || task.attachments?.length) && (
-        <div className="flex items-center gap-3 border-t px-3 py-1.5 text-[11px] text-stone-500">
+        <div className="flex items-center gap-3 border-t px-3 py-1.5 text-[11px] text-muted-foreground">
           {childCount > 0 && <span className="flex items-center gap-1"><TbSubtask size={12} /> {childCount}</span>}
           {Boolean(task.attachments?.length) && (
             <span className="flex items-center gap-1"><TbPaperclip size={12} /> {task.attachments!.length}</span>
@@ -126,7 +126,7 @@ function Column({
         <span className="text-xs opacity-70">{tasks.length}</span>
         <button
           onClick={() => setAdding(true)}
-          className="ml-auto rounded p-0.5 opacity-70 hover:bg-black/10 hover:opacity-100"
+          className="ml-auto rounded p-0.5 opacity-70 hover:bg-foreground/10 hover:opacity-100"
           title="Add a task here"
         >
           <TbPlus size={14} />
@@ -140,7 +140,7 @@ function Column({
         ref={setNodeRef}
         className={cn(
           "min-h-[120px] flex-1 space-y-2 rounded-b-xl border border-t-0 p-2 transition-colors",
-          isOver ? "border-blue-300 bg-blue-50/60" : COLUMN_TINT[status.color] ?? COLUMN_TINT.stone
+          isOver ? "border-blue-300 dark:border-blue-400/30 bg-blue-50/60 dark:bg-blue-400/10" : COLUMN_TINT[status.color] ?? COLUMN_TINT.stone
         )}
       >
         {adding && (
@@ -158,7 +158,7 @@ function Column({
               onChange={(e) => setTitle(e.target.value)}
               onBlur={() => { if (!title.trim()) setAdding(false); }}
               placeholder="Task name…"
-              className="w-full rounded-lg border border-stone-200 px-2.5 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg border border-border px-2.5 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
             />
           </form>
         )}
@@ -170,7 +170,7 @@ function Column({
         {!tasks.length && !adding && (
           <button
             onClick={() => setAdding(true)}
-            className="flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-stone-300 py-3 text-xs text-stone-400 hover:border-stone-400 hover:text-stone-600"
+            className="flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-border py-3 text-xs text-muted-foreground hover:border-border hover:text-foreground/70"
           >
             <TbPlus size={13} /> Item
           </button>
@@ -241,7 +241,7 @@ export function BoardView({
 
   if (!statuses.length) {
     return (
-      <div className="flex h-full items-center justify-center px-6 text-center text-sm text-stone-400">
+      <div className="flex h-full items-center justify-center px-6 text-center text-sm text-muted-foreground">
         This project has no workflow columns yet.
       </div>
     );

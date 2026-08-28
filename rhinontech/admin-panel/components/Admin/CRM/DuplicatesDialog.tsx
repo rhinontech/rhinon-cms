@@ -94,38 +94,38 @@ export function DuplicatesDialog({ onClose }: { onClose: (merged: boolean) => vo
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center glass-overlay p-4" onClick={() => onClose(mergedAny)}>
       <div onClick={(e) => e.stopPropagation()} className="flex max-h-[85vh] w-full max-w-3xl flex-col rounded-xl glass-modal">
-        <div className="flex shrink-0 items-center justify-between border-b border-stone-200/70 px-4 py-3">
+        <div className="flex shrink-0 items-center justify-between border-b border-border/70 px-4 py-3">
           <div>
-            <h2 className="flex items-center gap-1.5 text-sm font-semibold text-stone-900">
-              <TbCopyCheck size={16} className="text-stone-500" /> Possible duplicates
+            <h2 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+              <TbCopyCheck size={16} className="text-muted-foreground" /> Possible duplicates
             </h2>
-            <p className="text-[11px] text-stone-500">
+            <p className="text-[11px] text-muted-foreground">
               Same name and company under different email addresses. Pick which record survives.
             </p>
           </div>
-          <button onClick={() => onClose(mergedAny)} className="rounded p-1 text-stone-400 hover:bg-stone-100">
+          <button onClick={() => onClose(mergedAny)} className="rounded p-1 text-muted-foreground hover:bg-muted">
             <TbX size={16} />
           </button>
         </div>
 
         <div className="flex-1 overflow-auto p-3">
-          {error && <p className="mb-2 rounded border border-rose-200 bg-rose-50 px-2 py-1.5 text-[11px] text-rose-700">{error}</p>}
+          {error && <p className="mb-2 rounded border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2 py-1.5 text-[11px] text-rose-700 dark:text-rose-300">{error}</p>}
 
           {loading ? (
             <div className="space-y-2">
-              {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-20 animate-pulse rounded-lg bg-stone-100" />)}
+              {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-20 animate-pulse rounded-lg bg-muted" />)}
             </div>
           ) : groups.length === 0 ? (
-            <p className="py-10 text-center text-sm text-stone-400">No duplicates found.</p>
+            <p className="py-10 text-center text-sm text-muted-foreground">No duplicates found.</p>
           ) : (
             <div className="space-y-2.5">
               {groups.map((group) => {
                 const key = groupKey(group);
                 return (
-                  <div key={key} className="rounded-lg border border-stone-200 bg-white/70 p-2.5">
+                  <div key={key} className="rounded-lg border border-border bg-card/70 p-2.5">
                     <div className="mb-2 flex items-center justify-between gap-2">
-                      <p className="min-w-0 truncate text-[13px] font-medium text-stone-900">
-                        {group.name} <span className="font-normal text-stone-400">· {group.company}</span>
+                      <p className="min-w-0 truncate text-[13px] font-medium text-foreground">
+                        {group.name} <span className="font-normal text-muted-foreground">· {group.company}</span>
                       </p>
                       <TBtn
                         variant="solid"
@@ -142,7 +142,7 @@ export function DuplicatesDialog({ onClose }: { onClose: (merged: boolean) => vo
                           key={lead.id}
                           className={cn(
                             "flex items-center gap-2 rounded px-2 py-1.5",
-                            survivors[key] === lead.id ? "bg-emerald-50 ring-1 ring-inset ring-emerald-200" : "hover:bg-stone-50"
+                            survivors[key] === lead.id ? "bg-emerald-50 dark:bg-emerald-400/10 ring-1 ring-inset ring-emerald-200" : "hover:bg-muted/40"
                           )}
                         >
                           <input
@@ -153,15 +153,15 @@ export function DuplicatesDialog({ onClose }: { onClose: (merged: boolean) => vo
                             className="h-3.5 w-3.5 shrink-0 cursor-pointer accent-emerald-600"
                           />
                           <span className="min-w-0 flex-1">
-                            <span className="block truncate text-[12px] text-stone-800">{lead.email}</span>
-                            <span className="block truncate text-[10px] text-stone-400">
+                            <span className="block truncate text-[12px] text-foreground">{lead.email}</span>
+                            <span className="block truncate text-[10px] text-muted-foreground">
                               {lead.title || "No title"} · added {formatDate(lead.addedAt)}
                               {lead.lastActivityAt ? ` · active ${formatDate(lead.lastActivityAt)}` : ""}
                             </span>
                           </span>
                           <LifecycleBadge stage={lead.lifecycleStage} />
                           {survivors[key] === lead.id && (
-                            <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wider text-emerald-700">Keep</span>
+                            <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Keep</span>
                           )}
                         </li>
                       ))}
@@ -173,9 +173,9 @@ export function DuplicatesDialog({ onClose }: { onClose: (merged: boolean) => vo
           )}
         </div>
 
-        <div className="flex shrink-0 items-center gap-2 border-t border-stone-200/70 px-4 py-2.5">
-          <TbAlertTriangle size={14} className="shrink-0 text-amber-500" />
-          <p className="flex-1 text-[11px] text-stone-500">
+        <div className="flex shrink-0 items-center gap-2 border-t border-border/70 px-4 py-2.5">
+          <TbAlertTriangle size={14} className="shrink-0 text-amber-500 dark:text-amber-400" />
+          <p className="flex-1 text-[11px] text-muted-foreground">
             Merging moves timeline, tasks, deals, list membership and inbox mail onto the survivor,
             then deletes the rest. It cannot be undone.
           </p>

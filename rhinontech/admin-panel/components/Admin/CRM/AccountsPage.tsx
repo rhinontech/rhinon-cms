@@ -114,12 +114,12 @@ export function AccountsPage() {
   return (
     <div className="relative flex h-full min-h-0 w-full overflow-hidden">
       <main className={cn("flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden glass-panel", isSubNavExpanded ? "lg:rounded-r-xl" : "rounded-xl")}>
-        <div className="flex min-h-16 shrink-0 items-center justify-between gap-3 border-b border-stone-200/70 px-3 py-2">
+        <div className="flex min-h-16 shrink-0 items-center justify-between gap-3 border-b border-border/70 px-3 py-2">
           <div className="flex min-w-0 items-center gap-2.5">
             <SubNavToggle />
             <div className="min-w-0">
-              <h1 className="text-sm font-semibold tracking-tight text-stone-900">Accounts</h1>
-              <p className="text-[11px] tabular-nums text-stone-500">{count.toLocaleString("en-IN")} companies</p>
+              <h1 className="text-sm font-semibold tracking-tight text-foreground">Accounts</h1>
+              <p className="text-[11px] tabular-nums text-muted-foreground">{count.toLocaleString("en-IN")} companies</p>
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
@@ -132,20 +132,20 @@ export function AccountsPage() {
 
         <div className="flex-1 overflow-auto p-3">
           <div className="relative mb-2.5 max-w-sm">
-            <TbSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-stone-400" size={14} />
+            <TbSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search name, domain, industry…"
-              className="w-full rounded-md border border-stone-200 bg-white/70 py-1.5 pl-8 pr-3 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40"
+              className="w-full rounded-md border border-border bg-card/70 py-1.5 pl-8 pr-3 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40"
             />
           </div>
 
           {notice && (
-            <p className="mb-2.5 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-[11px] text-emerald-700">{notice}</p>
+            <p className="mb-2.5 rounded-md border border-emerald-200 dark:border-emerald-400/25 bg-emerald-50 dark:bg-emerald-400/10 px-2.5 py-1.5 text-[11px] text-emerald-700 dark:text-emerald-300">{notice}</p>
           )}
           {error && (
-            <p className="mb-2.5 rounded-md border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-[11px] text-rose-700">{error}</p>
+            <p className="mb-2.5 rounded-md border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2.5 py-1.5 text-[11px] text-rose-700 dark:text-rose-300">{error}</p>
           )}
 
           <TableShell>
@@ -170,13 +170,13 @@ export function AccountsPage() {
               accounts.map((a) => (
                 <DataRow key={a.id} cols={COLS} selected={selected?.id === a.id} onClick={() => openAccount(a)}>
                   <span className="flex min-w-0 items-center gap-1.5">
-                    <TbBuilding size={13} className="shrink-0 text-stone-400" />
-                    <span className="truncate font-medium text-stone-900">{a.name}</span>
+                    <TbBuilding size={13} className="shrink-0 text-muted-foreground" />
+                    <span className="truncate font-medium text-foreground">{a.name}</span>
                   </span>
-                  <span className="truncate text-[12px] text-stone-500">{a.domain || "—"}</span>
-                  <span className="text-right tabular-nums text-stone-600">{a.contactCount ?? 0}</span>
-                  <span className="text-right tabular-nums text-stone-600">{a.openDealCount ?? 0}</span>
-                  <span className="text-right font-medium tabular-nums text-stone-800">
+                  <span className="truncate text-[12px] text-muted-foreground">{a.domain || "—"}</span>
+                  <span className="text-right tabular-nums text-foreground/70">{a.contactCount ?? 0}</span>
+                  <span className="text-right tabular-nums text-foreground/70">{a.openDealCount ?? 0}</span>
+                  <span className="text-right font-medium tabular-nums text-foreground">
                     {a.openDealValue ? formatMoney(a.openDealValue) : "—"}
                   </span>
                   <span className="flex items-center justify-end gap-0.5">
@@ -184,13 +184,13 @@ export function AccountsPage() {
                       href={`${crmBase}?accountId=${a.id}`}
                       onClick={(e) => e.stopPropagation()}
                       title="View this account's leads"
-                      className="rounded p-1 text-stone-300 hover:bg-stone-100 hover:text-stone-600"
+                      className="rounded p-1 text-muted-foreground/70 hover:bg-muted hover:text-foreground/70"
                     >
                       <TbUsers size={13} />
                     </Link>
                     <button
                       onClick={(e) => { e.stopPropagation(); remove(a.id); }}
-                      className="rounded p-1 text-stone-300 hover:bg-rose-50 hover:text-rose-600"
+                      className="rounded p-1 text-muted-foreground/70 hover:bg-rose-50 dark:hover:bg-rose-400/10 hover:text-rose-600 dark:hover:text-rose-300"
                       title="Delete account"
                     >
                       <TbTrash size={13} />
@@ -208,12 +208,12 @@ export function AccountsPage() {
       {selected && (
         <>
           <div className="fixed inset-0 z-40 glass-overlay lg:hidden" onClick={() => setSelected(null)} />
-          <aside className="fixed inset-y-0 right-0 z-50 flex h-full w-full max-w-full flex-col overflow-hidden bg-white shadow-2xl sm:w-[440px] lg:static lg:z-auto lg:ml-2 lg:w-[38%] lg:rounded-xl lg:border lg:border-black/5 lg:shadow-none">
-            <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-stone-200/70 px-3">
-              <p className="truncate text-sm font-semibold text-stone-900">{selected.name}</p>
+          <aside className="fixed inset-y-0 right-0 z-50 flex h-full w-full max-w-full flex-col overflow-hidden bg-card shadow-2xl sm:w-[440px] lg:static lg:z-auto lg:ml-2 lg:w-[38%] lg:rounded-xl lg:border lg:border-border lg:shadow-none">
+            <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border/70 px-3">
+              <p className="truncate text-sm font-semibold text-foreground">{selected.name}</p>
               <div className="flex shrink-0 items-center gap-1.5">
                 {!editing && <TBtn onClick={() => setEditing(true)}>Edit</TBtn>}
-                <button onClick={() => setSelected(null)} className="rounded p-1.5 text-stone-400 hover:bg-stone-100">
+                <button onClick={() => setSelected(null)} className="rounded p-1.5 text-muted-foreground hover:bg-muted">
                   <TbX size={16} />
                 </button>
               </div>
@@ -243,11 +243,11 @@ export function AccountsPage() {
               {selected.deals && selected.deals.length > 0 && (
                 <Section title={`Deals (${selected.deals.length})`}>
                   {selected.deals.map((d) => (
-                    <div key={d.id} className="flex items-center justify-between gap-2 border-b border-stone-100 py-1.5 last:border-0">
-                      <Link href={`${crmBase}/pipeline?dealId=${d.id}`} className="truncate text-[13px] text-blue-600 hover:underline">
+                    <div key={d.id} className="flex items-center justify-between gap-2 border-b border-border py-1.5 last:border-0">
+                      <Link href={`${crmBase}/pipeline?dealId=${d.id}`} className="truncate text-[13px] text-blue-600 dark:text-blue-300 hover:underline">
                         {d.title}
                       </Link>
-                      <span className="shrink-0 text-[12px] font-medium tabular-nums text-stone-800">
+                      <span className="shrink-0 text-[12px] font-medium tabular-nums text-foreground">
                         {formatMoney(d.value, d.currency)}
                       </span>
                     </div>
@@ -261,13 +261,13 @@ export function AccountsPage() {
                     <Link
                       key={c.id}
                       href={`${crmBase}?leadId=${c.id}`}
-                      className="flex items-center justify-between gap-2 border-b border-stone-100 py-1.5 last:border-0 hover:bg-stone-50"
+                      className="flex items-center justify-between gap-2 border-b border-border py-1.5 last:border-0 hover:bg-muted/40"
                     >
                       <span className="flex min-w-0 items-center gap-1.5">
                         <Avatar name={c.name} size={18} />
                         <span className="min-w-0">
-                          <span className="block truncate text-[13px] text-stone-800">{c.name}</span>
-                          <span className="block truncate text-[11px] text-stone-400">{c.email}</span>
+                          <span className="block truncate text-[13px] text-foreground">{c.name}</span>
+                          <span className="block truncate text-[11px] text-muted-foreground">{c.email}</span>
                         </span>
                       </span>
                       <LifecycleBadge stage={c.lifecycleStage} />
@@ -294,7 +294,7 @@ export function AccountsPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-stone-500">{title}</p>
+      <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{title}</p>
       {children}
     </div>
   );
@@ -302,14 +302,14 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Meta({ label, value, link }: { label: string; value: string | null | undefined; link?: string | null }) {
   return (
-    <div className="rounded border border-stone-100 px-2 py-1.5">
-      <p className="text-[10px] uppercase tracking-wider text-stone-400">{label}</p>
+    <div className="rounded border border-border px-2 py-1.5">
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
       {link && value ? (
-        <a href={link} target="_blank" rel="noreferrer" className="flex items-center gap-1 truncate text-[13px] text-blue-600 hover:underline">
+        <a href={link} target="_blank" rel="noreferrer" className="flex items-center gap-1 truncate text-[13px] text-blue-600 dark:text-blue-300 hover:underline">
           {value} <TbExternalLink size={11} className="shrink-0" />
         </a>
       ) : (
-        <p className="truncate text-[13px] text-stone-800">{value || "—"}</p>
+        <p className="truncate text-[13px] text-foreground">{value || "—"}</p>
       )}
     </div>
   );
@@ -346,7 +346,7 @@ function EditAccountForm({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const INPUT = "w-full rounded border border-stone-200 bg-white px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40";
+  const INPUT = "w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40";
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -378,7 +378,7 @@ function EditAccountForm({
 
   const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
     <label className="block">
-      <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-stone-500">{label}</span>
+      <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
       {children}
     </label>
   );
@@ -425,13 +425,13 @@ function EditAccountForm({
         <textarea
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
-          className="h-20 w-full resize-none rounded border border-stone-200 bg-white px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40"
+          className="h-20 w-full resize-none rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40"
         />
       </Field>
 
-      {error && <p className="rounded border border-rose-200 bg-rose-50 px-2 py-1.5 text-[11px] text-rose-700">{error}</p>}
+      {error && <p className="rounded border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2 py-1.5 text-[11px] text-rose-700 dark:text-rose-300">{error}</p>}
 
-      <div className="flex justify-end gap-2 border-t border-stone-100 pt-3">
+      <div className="flex justify-end gap-2 border-t border-border pt-3">
         <TBtn onClick={onCancel}>Cancel</TBtn>
         <TBtn variant="solid" type="submit" disabled={saving || !form.name.trim()}>{saving ? "Saving…" : "Save"}</TBtn>
       </div>
@@ -467,42 +467,42 @@ function NewAccountDialog({ onClose }: { onClose: (created: boolean) => void }) 
     }
   };
 
-  const INPUT = "w-full rounded border border-stone-200 bg-white px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40";
+  const INPUT = "w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center glass-overlay p-4" onClick={() => onClose(false)}>
       <form onClick={(e) => e.stopPropagation()} onSubmit={submit} className="w-full max-w-sm rounded-xl glass-modal p-4">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-stone-900">New account</h2>
-          <button type="button" onClick={() => onClose(false)} className="rounded p-1 text-stone-400 hover:bg-stone-100">
+          <h2 className="text-sm font-semibold text-foreground">New account</h2>
+          <button type="button" onClick={() => onClose(false)} className="rounded p-1 text-muted-foreground hover:bg-muted">
             <TbX size={16} />
           </button>
         </div>
         <div className="space-y-2.5">
           <label className="block">
-            <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-stone-500">Name</span>
+            <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Name</span>
             <input required autoFocus value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={INPUT} placeholder="Acme Inc" />
           </label>
           <label className="block">
-            <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-stone-500">Website</span>
+            <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Website</span>
             <input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} className={INPUT} placeholder="acme.com" />
           </label>
           <div className="grid grid-cols-2 gap-2.5">
             <label className="block">
-              <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-stone-500">Industry</span>
+              <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Industry</span>
               <input value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} className={INPUT} />
             </label>
             <label className="block">
-              <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-stone-500">Employees</span>
+              <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Employees</span>
               <input type="number" min={0} value={form.employeeCount} onChange={(e) => setForm({ ...form, employeeCount: e.target.value })} className={cn(INPUT, "tabular-nums")} />
             </label>
           </div>
           <label className="block">
-            <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-stone-500">Location</span>
+            <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Location</span>
             <input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} className={INPUT} />
           </label>
         </div>
-        {error && <p className="mt-2.5 rounded border border-rose-200 bg-rose-50 px-2 py-1.5 text-[11px] text-rose-700">{error}</p>}
+        {error && <p className="mt-2.5 rounded border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2 py-1.5 text-[11px] text-rose-700 dark:text-rose-300">{error}</p>}
         <div className="mt-4 flex justify-end gap-2">
           <TBtn onClick={() => onClose(false)}>Cancel</TBtn>
           <TBtn variant="solid" type="submit" disabled={saving || !form.name.trim()}>{saving ? "Creating…" : "Create"}</TBtn>

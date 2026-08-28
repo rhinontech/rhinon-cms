@@ -13,6 +13,7 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import { apiFetch } from "@/lib/api";
+import { ThemeToggle } from "@/components/Common/ThemeProvider/ThemeToggle";
 
 function decodeJWT(token: string): { fullName?: string; companyEmail?: string; roleSlug?: string } {
   try {
@@ -79,7 +80,7 @@ export function SiteHeader() {
       {/* Hamburger — opens the sidebar drawer on mobile */}
       <button
         onClick={() => setMobileNavOpen(true)}
-        className="mr-auto rounded-lg p-2 text-gray-600 hover:bg-stone-100 lg:hidden"
+        className="mr-auto rounded-lg p-2 text-foreground/70 hover:bg-muted lg:hidden"
         aria-label="Open navigation"
       >
         <TbMenu2 size={20} />
@@ -87,51 +88,53 @@ export function SiteHeader() {
       {canPreviewRoles && (
         <Popover>
           <PopoverTrigger asChild>
-            <button className="inline-flex items-center gap-2 rounded-lg border border-stone-200 px-2.5 sm:px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-stone-50">
-              <TbEye size={16} className="text-gray-400" />
+            <button className="inline-flex items-center gap-2 rounded-lg border border-border px-2.5 sm:px-3 py-1.5 text-sm font-medium text-foreground/85 hover:bg-muted/40">
+              <TbEye size={16} className="text-muted-foreground" />
               <span className="hidden sm:inline">Viewing as {currentRoleView}</span>
-              <TbChevronDown size={13} className="text-gray-400" />
+              <TbChevronDown size={13} className="text-muted-foreground" />
             </button>
           </PopoverTrigger>
           <PopoverContent align="end" className="w-48 p-2">
-            <div className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-gray-400">
+            <div className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Preview interface
             </div>
             {roleViews.map((role) => (
               <button
                 key={role.slug}
                 onClick={() => switchRoleView(role.slug)}
-                className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-sm hover:bg-gray-100 ${
-                  role.slug === roleSlug ? "font-semibold text-gray-900" : "text-gray-700"
+                className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-sm hover:bg-muted ${
+                  role.slug === roleSlug ? "font-semibold text-foreground" : "text-foreground/85"
                 }`}
               >
                 {role.name}
-                {role.slug === roleSlug && <span className="text-xs text-blue-600">Active</span>}
+                {role.slug === roleSlug && <span className="text-xs text-blue-600 dark:text-blue-300">Active</span>}
               </button>
             ))}
-            <p className="mt-1 border-t px-2 pt-2 text-xs leading-5 text-gray-400">
+            <p className="mt-1 border-t px-2 pt-2 text-xs leading-5 text-muted-foreground">
               Permissions stay Super Admin.
             </p>
           </PopoverContent>
         </Popover>
       )}
 
+      <ThemeToggle />
+
       {/* Notifications */}
-      <button className="relative p-1.5 rounded-lg text-gray-400 hover:bg-stone-100 hover:text-gray-700 transition-colors">
+      <button className="relative p-1.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground/85 transition-colors">
         <TbBell size={18} />
       </button>
 
-      <div className="h-5 w-px bg-stone-200" />
+      <div className="h-5 w-px bg-muted" />
 
       {/* User menu */}
       <Popover>
         <PopoverTrigger asChild>
-          <button className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-stone-100 transition-colors group">
+          <button className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-muted transition-colors group">
             <div className={`w-7 h-7 rounded-full bg-gradient-to-br ${avatarGradient(name)} flex items-center justify-center text-white text-[11px] font-bold shrink-0`}>
               {initial}
             </div>
-            <span className="text-sm font-medium text-gray-700 max-w-[160px] truncate">{firstName}</span>
-            <TbChevronDown size={13} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
+            <span className="text-sm font-medium text-foreground/85 max-w-[160px] truncate">{firstName}</span>
+            <TbChevronDown size={13} className="text-muted-foreground group-hover:text-foreground/70 transition-colors" />
           </button>
         </PopoverTrigger>
 
@@ -141,20 +144,20 @@ export function SiteHeader() {
               {initial}
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-gray-900 truncate">{name}</p>
-              <p className="text-xs text-gray-500 truncate">{email}</p>
+              <p className="text-sm font-semibold text-foreground truncate">{name}</p>
+              <p className="text-xs text-muted-foreground truncate">{email}</p>
             </div>
           </div>
           <div className="border-t pt-1 space-y-0.5">
             <Link
               href={`/${roleSlug}/profile/info`}
-              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
+              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground/85 hover:bg-muted rounded-md"
             >
               <TbUser size={15} /> View Profile
             </Link>
             <button
               onClick={logOut}
-              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-gray-100 rounded-md"
+              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-500 dark:text-red-400 hover:bg-muted rounded-md"
             >
               <LogOut size={14} /> Log out
             </button>

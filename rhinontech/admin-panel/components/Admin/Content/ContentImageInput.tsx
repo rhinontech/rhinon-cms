@@ -37,11 +37,11 @@ export function ContentImageInput({
 
   return (
     <div className="flex flex-col gap-2">
-      {label && <label className="text-sm font-medium text-gray-700">{label}</label>}
+      {label && <label className="text-sm font-medium text-foreground/85">{label}</label>}
 
       {value && (
         <div className="relative">
-          <img src={value} alt="" className="w-full max-h-44 object-cover rounded-lg border border-stone-100" />
+          <img src={value} alt="" className="w-full max-h-44 object-cover rounded-lg border border-border" />
           <button
             type="button"
             onClick={() => onChange("")}
@@ -58,7 +58,7 @@ export function ContentImageInput({
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-stone-300 px-3 py-2 text-sm font-medium hover:bg-stone-100 disabled:opacity-50 shrink-0"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50 shrink-0"
         >
           {uploading ? <TbLoader className="animate-spin" size={15} /> : <TbUpload size={15} />}
           {uploading ? "Uploading..." : "Upload"}
@@ -68,12 +68,12 @@ export function ContentImageInput({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="flex-1 px-3 py-2 rounded-lg border border-stone-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-stone-900"
+          className="flex-1 px-3 py-2 rounded-lg border border-border text-sm bg-card focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 
       <input ref={inputRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
-      {error && <p className="text-xs text-red-500">{error}</p>}
+      {error && <p className="text-xs text-red-500 dark:text-red-400">{error}</p>}
     </div>
   );
 }

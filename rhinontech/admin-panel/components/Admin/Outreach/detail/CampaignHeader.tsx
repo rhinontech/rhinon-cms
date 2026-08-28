@@ -72,17 +72,17 @@ export function CampaignHeader({
       <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
         <button
           onClick={onBack}
-          className="-ml-1 sm:-ml-2 shrink-0 rounded-lg p-1.5 sm:p-2 text-gray-500 transition-colors hover:bg-stone-100 hover:text-gray-900"
+          className="-ml-1 sm:-ml-2 shrink-0 rounded-lg p-1.5 sm:p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           <TbArrowLeft size={20} />
         </button>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="truncate text-base sm:text-lg font-bold tracking-tight text-gray-900">{campaign.name}</h1>
+            <h1 className="truncate text-base sm:text-lg font-bold tracking-tight text-foreground">{campaign.name}</h1>
             <StatusBadge stage={campaign.stage} />
           </div>
           {action && (
-            <button onClick={handleActionClick} className="mt-0.5 text-xs font-medium text-blue-600 hover:underline truncate block max-w-full text-left">
+            <button onClick={handleActionClick} className="mt-0.5 text-xs font-medium text-blue-600 dark:text-blue-300 hover:underline truncate block max-w-full text-left">
               Next: {action.label} →
             </button>
           )}
@@ -106,7 +106,7 @@ export function CampaignHeader({
           </Button>
         )}
         <DropdownMenu>
-          <DropdownMenuTrigger className="rounded-lg p-2 text-stone-500 hover:bg-stone-100 hover:text-stone-800">
+          <DropdownMenuTrigger className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground">
             <TbDotsVertical size={17} />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">

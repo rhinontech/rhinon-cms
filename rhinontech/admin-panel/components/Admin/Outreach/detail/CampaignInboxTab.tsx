@@ -66,10 +66,10 @@ const TAB_DEFS: {
   activeIcon: string;
   activeBadge: string;
 }[] = [
-  { key: "all", label: "All", icon: null, activeText: "text-stone-900", activeIcon: "", activeBadge: "bg-stone-100 text-stone-700" },
-  { key: "unopened", label: "Unopened", icon: <TbMail size={13} />, activeText: "text-stone-900", activeIcon: "text-stone-600", activeBadge: "bg-stone-100 text-stone-700" },
-  { key: "opened", label: "Opened", icon: <TbEye size={13} />, activeText: "text-blue-900", activeIcon: "text-blue-600", activeBadge: "bg-blue-100 text-blue-800" },
-  { key: "reply", label: "Replied", icon: <TbMessageCheck size={13} />, activeText: "text-emerald-900", activeIcon: "text-emerald-600", activeBadge: "bg-emerald-100 text-emerald-800" },
+  { key: "all", label: "All", icon: null, activeText: "text-foreground", activeIcon: "", activeBadge: "bg-muted text-foreground/85" },
+  { key: "unopened", label: "Unopened", icon: <TbMail size={13} />, activeText: "text-foreground", activeIcon: "text-foreground/70", activeBadge: "bg-muted text-foreground/85" },
+  { key: "opened", label: "Opened", icon: <TbEye size={13} />, activeText: "text-blue-900 dark:text-blue-200", activeIcon: "text-blue-600 dark:text-blue-300", activeBadge: "bg-blue-100 dark:bg-blue-400/15 text-blue-800 dark:text-blue-200" },
+  { key: "reply", label: "Replied", icon: <TbMessageCheck size={13} />, activeText: "text-emerald-900 dark:text-emerald-200", activeIcon: "text-emerald-600 dark:text-emerald-300", activeBadge: "bg-emerald-100 dark:bg-emerald-400/15 text-emerald-800 dark:text-emerald-200" },
 ];
 
 export function CampaignInboxTab({
@@ -278,7 +278,7 @@ export function CampaignInboxTab({
   if (emails === null) {
     return (
       <div className="flex justify-center py-12">
-        <TbLoader className="animate-spin text-stone-300" size={28} />
+        <TbLoader className="animate-spin text-muted-foreground/70" size={28} />
       </div>
     );
   }
@@ -294,19 +294,19 @@ export function CampaignInboxTab({
   }
 
   return (
-    <div className="flex h-full min-h-[480px] overflow-hidden rounded-xl border border-stone-200/80 bg-white">
+    <div className="flex h-full min-h-[480px] overflow-hidden rounded-xl border border-border/80 bg-card">
       {/* Conversation List Sidebar */}
       <div
         className={cn(
-          "flex flex-col border-r border-stone-100 w-full md:w-72 lg:w-80 shrink-0 overflow-hidden",
+          "flex flex-col border-r border-border w-full md:w-72 lg:w-80 shrink-0 overflow-hidden",
           mobileThreadOpen ? "hidden md:flex" : "flex"
         )}
       >
         {/* Filter Navigation Tabs */}
-        <div className="border-b border-stone-100 p-2.5 bg-stone-50/60 shrink-0 space-y-2">
+        <div className="border-b border-border p-2.5 bg-muted/40 shrink-0 space-y-2">
           {/* Four tabs in a 2x2 grid — a single row can't hold "Unopened" plus a
               count inside the 288px sidebar without truncating. */}
-          <div className="grid grid-cols-2 gap-1 rounded-lg bg-stone-200/60 p-1">
+          <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted/70 p-1">
             {TAB_DEFS.map((tab) => {
               const active = filter === tab.key;
               return (
@@ -315,17 +315,17 @@ export function CampaignInboxTab({
                   onClick={() => setFilter(tab.key)}
                   className={cn(
                     "flex items-center justify-center gap-1.5 rounded-md py-1.5 px-2 text-xs font-medium transition-all",
-                    active ? `bg-white shadow-sm font-semibold ${tab.activeText}` : "text-stone-600 hover:text-stone-900"
+                    active ? `bg-card shadow-sm font-semibold ${tab.activeText}` : "text-foreground/70 hover:text-foreground"
                   )}
                 >
                   {tab.icon ? (
-                    <span className={active ? tab.activeIcon : "text-stone-400"}>{tab.icon}</span>
+                    <span className={active ? tab.activeIcon : "text-muted-foreground"}>{tab.icon}</span>
                   ) : null}
                   <span>{tab.label}</span>
                   <span
                     className={cn(
                       "rounded-full px-1.5 py-0.2 text-[10px] font-bold leading-tight",
-                      active ? tab.activeBadge : "text-stone-500"
+                      active ? tab.activeBadge : "text-muted-foreground"
                     )}
                   >
                     {counts[tab.key]}
@@ -349,9 +349,9 @@ export function CampaignInboxTab({
         {/* Conversation Items */}
         <div className="flex-1 overflow-y-auto">
           {filteredConversations.length === 0 ? (
-            <div className="p-6 text-center text-xs text-stone-400 flex flex-col items-center gap-2 mt-4">
-              <TbInbox size={28} className="text-stone-300" />
-              <p className="font-medium text-stone-500">
+            <div className="p-6 text-center text-xs text-muted-foreground flex flex-col items-center gap-2 mt-4">
+              <TbInbox size={28} className="text-muted-foreground/70" />
+              <p className="font-medium text-muted-foreground">
                 {filter === "unopened"
                   ? "Everyone has opened their email"
                   : filter === "opened"
@@ -360,7 +360,7 @@ export function CampaignInboxTab({
                   ? "No replied leads found"
                   : "No conversations found"}
               </p>
-              <p className="text-[11px] text-stone-400">
+              <p className="text-[11px] text-muted-foreground">
                 {filter === "unopened"
                   ? "Recipients who haven't opened yet will show here."
                   : filter === "opened"
@@ -383,36 +383,36 @@ export function CampaignInboxTab({
                     setMobileThreadOpen(true);
                   }}
                   className={cn(
-                    "flex w-full flex-col gap-1 border-b border-stone-50 px-4 py-3 text-left transition-colors relative",
+                    "flex w-full flex-col gap-1 border-b border-border px-4 py-3 text-left transition-colors relative",
                     isSelected
-                      ? "bg-blue-50/80 hover:bg-blue-50"
-                      : "hover:bg-stone-50/80"
+                      ? "bg-blue-50/80 dark:bg-blue-400/10 hover:bg-blue-50 dark:hover:bg-blue-400/10"
+                      : "hover:bg-muted/40"
                   )}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="truncate text-sm font-semibold text-stone-900">
+                    <span className="truncate text-sm font-semibold text-foreground">
                       {c.lead.name}
                     </span>
-                    <span className="shrink-0 text-[10px] text-stone-400">
+                    <span className="shrink-0 text-[10px] text-muted-foreground">
                       {lastEmail ? new Date(lastEmail.sentAt).toLocaleDateString([], { month: "short", day: "numeric" }) : ""}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between gap-2">
-                    <span className="truncate text-xs text-stone-500 font-normal">
+                    <span className="truncate text-xs text-muted-foreground font-normal">
                       {c.lead.company}
                     </span>
 
                     {/* Badges */}
                     <div className="flex items-center gap-1 shrink-0">
                       {c.hasReply && (
-                        <span className="inline-flex items-center gap-0.5 rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 border border-emerald-200/60">
+                        <span className="inline-flex items-center gap-0.5 rounded-md bg-emerald-50 dark:bg-emerald-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-400/25">
                           <TbMessageCheck size={11} />
                           <span>Replied</span>
                         </span>
                       )}
                       {!c.hasReply && c.hasOpened && (
-                        <span className="inline-flex items-center gap-0.5 rounded-md bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700 border border-blue-200/60">
+                        <span className="inline-flex items-center gap-0.5 rounded-md bg-blue-50 dark:bg-blue-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-400/25">
                           <TbEye size={11} />
                           <span>Opened</span>
                         </span>
@@ -425,7 +425,7 @@ export function CampaignInboxTab({
                     </div>
                   </div>
 
-                  <p className="line-clamp-1 text-xs text-stone-400 font-normal mt-0.5">
+                  <p className="line-clamp-1 text-xs text-muted-foreground font-normal mt-0.5">
                     {lastEmail ? lastEmail.snippet : ""}
                   </p>
                 </button>
@@ -438,36 +438,36 @@ export function CampaignInboxTab({
       {/* Conversation Thread Detail */}
       <div
         className={cn(
-          "flex min-w-0 flex-1 flex-col bg-stone-50/20",
+          "flex min-w-0 flex-1 flex-col bg-muted/40",
           !mobileThreadOpen ? "hidden md:flex" : "flex"
         )}
       >
         {selected ? (
           <>
             {/* Thread Header */}
-            <div className="flex items-center justify-between gap-2 border-b border-stone-100 bg-white px-4 py-3 shrink-0">
+            <div className="flex items-center justify-between gap-2 border-b border-border bg-card px-4 py-3 shrink-0">
               <div className="flex items-center gap-3 min-w-0">
                 <button
                   onClick={() => setMobileThreadOpen(false)}
-                  className="rounded-lg p-1.5 text-stone-500 hover:bg-stone-100 md:hidden shrink-0"
+                  className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted md:hidden shrink-0"
                   aria-label="Back to conversations"
                 >
                   <TbArrowLeft size={18} />
                 </button>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="truncate text-sm font-bold text-stone-900">{selected.lead.name}</p>
+                    <p className="truncate text-sm font-bold text-foreground">{selected.lead.name}</p>
                     {selected.hasReply ? (
-                      <span className="inline-flex items-center gap-1 rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 border border-emerald-200">
+                      <span className="inline-flex items-center gap-1 rounded bg-emerald-50 dark:bg-emerald-400/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-400/25">
                         <TbMessageCheck size={11} /> Replied
                       </span>
                     ) : selected.hasOpened ? (
-                      <span className="inline-flex items-center gap-1 rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-700 border border-blue-200">
+                      <span className="inline-flex items-center gap-1 rounded bg-blue-50 dark:bg-blue-400/10 px-1.5 py-0.5 text-[10px] font-medium text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-400/25">
                         <TbEye size={11} /> Opened
                       </span>
                     ) : null}
                   </div>
-                  <p className="truncate text-xs text-stone-400">
+                  <p className="truncate text-xs text-muted-foreground">
                     {selected.lead.company} · {selected.lead.email}
                   </p>
                 </div>
@@ -483,13 +483,13 @@ export function CampaignInboxTab({
                     "max-w-[92%] sm:max-w-[85%] rounded-xl px-4 py-3 text-sm break-words shadow-sm",
                     e.folder === "sent"
                       ? "ml-auto bg-blue-600 text-white"
-                      : "bg-white border border-stone-200/80 text-stone-800"
+                      : "bg-card border border-border/80 text-foreground"
                   )}
                 >
                   <div
                     className={cn(
                       "mb-1.5 flex items-center justify-between gap-3 text-[11px] font-semibold",
-                      e.folder === "sent" ? "text-blue-100" : "text-stone-400"
+                      e.folder === "sent" ? "text-blue-100" : "text-muted-foreground"
                     )}
                   >
                     <span>{e.folder === "sent" ? "You" : e.fromName}</span>
@@ -505,7 +505,7 @@ export function CampaignInboxTab({
             </div>
 
             {/* Reply Composer */}
-            <div className="border-t border-stone-100 bg-white p-3 sm:p-4 shrink-0">
+            <div className="border-t border-border bg-card p-3 sm:p-4 shrink-0">
               {lastInbound ? (
                 <div className="flex items-end gap-2">
                   <Textarea
@@ -519,14 +519,14 @@ export function CampaignInboxTab({
                   </Button>
                 </div>
               ) : (
-                <p className="text-center text-xs text-stone-400 py-1">
+                <p className="text-center text-xs text-muted-foreground py-1">
                   Waiting for a reply before you can respond here.
                 </p>
               )}
             </div>
           </>
         ) : (
-          <div className="flex flex-1 items-center justify-center text-sm text-stone-400 p-6 text-center">
+          <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground p-6 text-center">
             Pick a conversation from the list
           </div>
         )}

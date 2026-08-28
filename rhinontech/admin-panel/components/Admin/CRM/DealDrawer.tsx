@@ -14,7 +14,7 @@ import { RelatedTasks } from "./RelatedTasks";
 import { StageDot, TBtn, formatDate, formatMoney, relativeTime } from "./ui";
 
 const INPUT =
-  "w-full rounded border border-stone-200 bg-white px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40";
+  "w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40";
 
 /**
  * Deal detail. Won/Lost are done by moving to a stage of that type rather than
@@ -151,17 +151,17 @@ export function DealDrawer({
   return (
     <>
       <div className="fixed inset-0 z-40 glass-overlay" onClick={onClose} />
-      <aside className="fixed inset-y-0 right-0 z-50 flex h-full w-full max-w-full flex-col overflow-hidden bg-white shadow-2xl sm:w-[480px]">
-        <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-stone-200/70 px-3">
+      <aside className="fixed inset-y-0 right-0 z-50 flex h-full w-full max-w-full flex-col overflow-hidden bg-card shadow-2xl sm:w-[480px]">
+        <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border/70 px-3">
           <div className="flex min-w-0 items-center gap-2">
             {deal?.stage && <StageDot color={deal.stage.color} type={deal.stage.type} />}
-            <p className="truncate text-sm font-semibold text-stone-900">{deal?.title || "Deal"}</p>
+            <p className="truncate text-sm font-semibold text-foreground">{deal?.title || "Deal"}</p>
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
-            <button onClick={remove} className="rounded p-1.5 text-stone-400 hover:bg-rose-50 hover:text-rose-600" title="Delete deal">
+            <button onClick={remove} className="rounded p-1.5 text-muted-foreground hover:bg-rose-50 dark:hover:bg-rose-400/10 hover:text-rose-600 dark:hover:text-rose-300" title="Delete deal">
               <TbTrash size={15} />
             </button>
-            <button onClick={onClose} className="rounded p-1.5 text-stone-400 hover:bg-stone-100">
+            <button onClick={onClose} className="rounded p-1.5 text-muted-foreground hover:bg-muted">
               <TbX size={16} />
             </button>
           </div>
@@ -169,18 +169,18 @@ export function DealDrawer({
 
         {loading ? (
           <div className="space-y-2 p-3">
-            {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-8 animate-pulse rounded bg-stone-100" />)}
+            {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-8 animate-pulse rounded bg-muted" />)}
           </div>
         ) : !deal ? (
-          <p className="p-4 text-sm text-stone-500">{error || "Deal not found."}</p>
+          <p className="p-4 text-sm text-muted-foreground">{error || "Deal not found."}</p>
         ) : (
           <div className="flex-1 space-y-4 overflow-auto p-3">
             {/* Headline value + outcome controls */}
-            <div className="rounded-lg border border-stone-200 bg-stone-50/60 p-2.5">
-              <p className="text-lg font-semibold tabular-nums text-stone-900">
+            <div className="rounded-lg border border-border bg-muted/40 p-2.5">
+              <p className="text-lg font-semibold tabular-nums text-foreground">
                 {formatMoney(deal.value, deal.currency)}
               </p>
-              <p className="mt-0.5 text-[11px] text-stone-500">
+              <p className="mt-0.5 text-[11px] text-muted-foreground">
                 {deal.stage?.name || "No stage"}
                 {deal.status === "Open" && deal.stage ? ` · ${deal.stage.probability}% probability` : ""}
                 {closed && deal.closedAt ? ` · closed ${relativeTime(deal.closedAt)}` : ""}
@@ -203,7 +203,7 @@ export function DealDrawer({
                     <button
                       onClick={() => setAskLost((v) => !v)}
                       disabled={saving}
-                      className="inline-flex items-center gap-1.5 rounded-md border border-stone-200 bg-white px-2.5 py-1.5 text-xs font-medium text-stone-700 hover:bg-stone-100 disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground/85 hover:bg-muted disabled:opacity-50"
                     >
                       <TbCircleX size={13} /> Mark lost
                     </button>
@@ -230,14 +230,14 @@ export function DealDrawer({
               {deal.status === "Won" && (
                 <div className="mt-2">
                   {project ? (
-                    <p className="rounded border border-emerald-200 bg-emerald-50 px-2 py-1.5 text-[11px] text-emerald-700">
+                    <p className="rounded border border-emerald-200 dark:border-emerald-400/25 bg-emerald-50 dark:bg-emerald-400/10 px-2 py-1.5 text-[11px] text-emerald-700 dark:text-emerald-300">
                       Handed to delivery as “{project.name}”.
                     </p>
                   ) : (
                     <button
                       onClick={handOffToDelivery}
                       disabled={handingOff}
-                      className="inline-flex items-center gap-1.5 rounded-md border border-stone-200 bg-white px-2.5 py-1.5 text-xs font-medium text-stone-700 hover:bg-stone-100 disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground/85 hover:bg-muted disabled:opacity-50"
                     >
                       <TbBriefcase size={13} /> {handingOff ? "Creating…" : "Hand to delivery"}
                     </button>
@@ -246,30 +246,30 @@ export function DealDrawer({
               )}
 
               {deal.status === "Lost" && deal.lostReason && (
-                <p className="mt-2 rounded border border-rose-200 bg-rose-50 px-2 py-1.5 text-[11px] text-rose-700">
+                <p className="mt-2 rounded border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2 py-1.5 text-[11px] text-rose-700 dark:text-rose-300">
                   Lost: {deal.lostReason}
                 </p>
               )}
             </div>
 
             {/* Linked records */}
-            <div className="flex flex-wrap gap-3 text-[12px] text-stone-600">
+            <div className="flex flex-wrap gap-3 text-[12px] text-foreground/70">
               {deal.account && (
-                <Link href={`${crmBase}/accounts?accountId=${deal.account.id}`} className="flex items-center gap-1 text-blue-600 hover:underline">
+                <Link href={`${crmBase}/accounts?accountId=${deal.account.id}`} className="flex items-center gap-1 text-blue-600 dark:text-blue-300 hover:underline">
                   <TbBuilding size={12} /> {deal.account.name}
                 </Link>
               )}
               {deal.primaryLead && (
-                <Link href={`${crmBase}?leadId=${deal.primaryLead.id}`} className="flex items-center gap-1 text-blue-600 hover:underline">
+                <Link href={`${crmBase}?leadId=${deal.primaryLead.id}`} className="flex items-center gap-1 text-blue-600 dark:text-blue-300 hover:underline">
                   <TbUser size={12} /> {deal.primaryLead.name}
                 </Link>
               )}
               {deal.expectedCloseDate && (
-                <span className="text-stone-400">Expected {formatDate(deal.expectedCloseDate)}</span>
+                <span className="text-muted-foreground">Expected {formatDate(deal.expectedCloseDate)}</span>
               )}
             </div>
 
-            {error && <p className="rounded border border-rose-200 bg-rose-50 px-2 py-1.5 text-[11px] text-rose-700">{error}</p>}
+            {error && <p className="rounded border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2 py-1.5 text-[11px] text-rose-700 dark:text-rose-300">{error}</p>}
 
             {/* Editable fields */}
             <form onSubmit={save} className="space-y-2.5">
@@ -310,7 +310,7 @@ export function DealDrawer({
                 <textarea
                   value={form.notes}
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                  className="h-20 w-full resize-none rounded border border-stone-200 bg-white px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40"
+                  className="h-20 w-full resize-none rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40"
                 />
               </Field>
 
@@ -322,7 +322,7 @@ export function DealDrawer({
             <RelatedTasks dealId={dealId} owners={owners} />
 
             <div>
-              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-stone-500">Activity</p>
+              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Activity</p>
               <Timeline dealId={dealId} onLogged={onChanged} />
             </div>
           </div>
@@ -335,7 +335,7 @@ export function DealDrawer({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-stone-500">{label}</span>
+      <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
       {children}
     </label>
   );

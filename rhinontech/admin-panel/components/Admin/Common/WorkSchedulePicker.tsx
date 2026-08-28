@@ -103,8 +103,8 @@ export function WorkSchedulePicker({ value, onChange }: Props) {
               onClick={() => toggleDay(day)}
               className={`h-8 w-10 rounded-lg text-xs font-semibold border transition-colors ${
                 active
-                  ? "bg-stone-900 border-blue-600 text-white"
-                  : "bg-white border-gray-200 text-gray-400 hover:border-gray-300 hover:text-gray-600"
+                  ? "bg-primary border-blue-600 text-primary-foreground"
+                  : "bg-card border-border text-muted-foreground hover:border-border hover:text-foreground/70"
               }`}
             >
               {day}
@@ -120,9 +120,9 @@ export function WorkSchedulePicker({ value, onChange }: Props) {
             setStartTime(e.target.value);
             update(selectedDays, e.target.value, endTime);
           }}
-          className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-1.5 text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <span className="text-xs text-gray-400">to</span>
+        <span className="text-xs text-muted-foreground">to</span>
         <input
           type="time"
           value={endTime}
@@ -130,7 +130,7 @@ export function WorkSchedulePicker({ value, onChange }: Props) {
             setEndTime(e.target.value);
             update(selectedDays, startTime, e.target.value);
           }}
-          className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-1.5 text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
     </div>

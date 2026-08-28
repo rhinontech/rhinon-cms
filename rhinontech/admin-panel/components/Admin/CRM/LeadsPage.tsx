@@ -295,12 +295,12 @@ export function LeadsPage() {
   return (
     <div className="relative flex h-full min-h-0 w-full overflow-hidden">
       <main className={cn("flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden glass-panel", isSubNavExpanded ? "lg:rounded-r-xl" : "rounded-xl")}>
-        <div className="flex min-h-16 shrink-0 items-center justify-between gap-3 border-b border-stone-200/70 px-3 py-2">
+        <div className="flex min-h-16 shrink-0 items-center justify-between gap-3 border-b border-border/70 px-3 py-2">
           <div className="flex min-w-0 items-center gap-2.5">
             <SubNavToggle />
             <div className="min-w-0">
-              <h1 className="text-sm font-semibold tracking-tight text-stone-900">Leads</h1>
-              <p className="text-[11px] tabular-nums text-stone-500">{count.toLocaleString("en-IN")} contacts</p>
+              <h1 className="text-sm font-semibold tracking-tight text-foreground">Leads</h1>
+              <p className="text-[11px] tabular-nums text-muted-foreground">{count.toLocaleString("en-IN")} contacts</p>
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
@@ -319,12 +319,12 @@ export function LeadsPage() {
           {/* Filters */}
           <div className="mb-2.5 flex flex-wrap items-center gap-2">
             <div className="relative min-w-[180px] flex-1 sm:max-w-xs">
-              <TbSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-stone-400" size={14} />
+              <TbSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search name, company, email…"
-                className="w-full rounded-md border border-stone-200 bg-white/70 py-1.5 pl-8 pr-3 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40"
+                className="w-full rounded-md border border-border bg-card/70 py-1.5 pl-8 pr-3 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40"
               />
             </div>
             <Select value={lifecycleFilter} onChange={(v) => { setLifecycleFilter(v); setOffset(0); }}>
@@ -344,7 +344,7 @@ export function LeadsPage() {
             {accountFilter && (
               <Link
                 href={crmBase}
-                className="inline-flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
+                className="inline-flex items-center gap-1.5 rounded-md border border-blue-200 dark:border-blue-400/25 bg-blue-50 dark:bg-blue-400/10 px-2.5 py-1.5 text-xs font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-400/15"
                 title="Clear the account filter"
               >
                 <TbBuilding size={13} /> Filtered by account <TbX size={12} />
@@ -360,16 +360,16 @@ export function LeadsPage() {
           </div>
 
           {error && (
-            <div className="mb-2.5 flex items-center justify-between gap-2 rounded-md border border-rose-200 bg-rose-50 px-2.5 py-1.5">
-              <p className="text-[11px] text-rose-700">{error}</p>
-              <button onClick={() => setError(null)} className="text-rose-400 hover:text-rose-700"><TbX size={13} /></button>
+            <div className="mb-2.5 flex items-center justify-between gap-2 rounded-md border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2.5 py-1.5">
+              <p className="text-[11px] text-rose-700 dark:text-rose-300">{error}</p>
+              <button onClick={() => setError(null)} className="text-rose-400 hover:text-rose-700 dark:hover:text-rose-300"><TbX size={13} /></button>
             </div>
           )}
 
           {/* Bulk bar */}
           {selectedIds.size > 0 && (
-            <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1.5">
-              <span className="text-[12px] font-medium tabular-nums text-blue-900">{selectedIds.size} selected</span>
+            <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2 rounded-md border border-blue-200 dark:border-blue-400/25 bg-blue-50 dark:bg-blue-400/10 px-2.5 py-1.5">
+              <span className="text-[12px] font-medium tabular-nums text-blue-900 dark:text-blue-200">{selectedIds.size} selected</span>
               <div className="flex flex-wrap items-center gap-1.5">
                 <Select value="" onChange={(v) => v && bulkPatch({ ownerId: v === "none" ? null : v })}>
                   <option value="">Assign owner…</option>
@@ -419,25 +419,25 @@ export function LeadsPage() {
                   </span>
 
                   <span className="flex min-w-0 flex-col leading-tight">
-                    <span className="truncate font-medium text-stone-900">{lead.name}</span>
-                    <span className="truncate text-[11px] text-stone-400">{lead.email}</span>
+                    <span className="truncate font-medium text-foreground">{lead.name}</span>
+                    <span className="truncate text-[11px] text-muted-foreground">{lead.email}</span>
                   </span>
 
                   {!compact && (
-                    <span className="flex min-w-0 items-center gap-1 text-[12px] text-stone-600">
+                    <span className="flex min-w-0 items-center gap-1 text-[12px] text-foreground/70">
                       {lead.account ? (
                         <>
-                          <TbBuilding size={11} className="shrink-0 text-stone-400" />
+                          <TbBuilding size={11} className="shrink-0 text-muted-foreground" />
                           <Link
                             href={`${crmBase}/accounts?accountId=${lead.account.id}`}
                             onClick={(e) => e.stopPropagation()}
-                            className="truncate hover:text-blue-600 hover:underline"
+                            className="truncate hover:text-blue-600 dark:hover:text-blue-300 hover:underline"
                           >
                             {lead.account.name}
                           </Link>
                         </>
                       ) : (
-                        <span className="truncate text-stone-400">{lead.company}</span>
+                        <span className="truncate text-muted-foreground">{lead.company}</span>
                       )}
                     </span>
                   )}
@@ -463,7 +463,7 @@ export function LeadsPage() {
                         // repeated down every row.
                         className={cn(
                           "min-w-0 flex-1 cursor-pointer truncate rounded bg-transparent text-[11px] outline-none",
-                          lead.ownerId ? "text-stone-600" : "text-stone-300"
+                          lead.ownerId ? "text-foreground/70" : "text-muted-foreground/70"
                         )}
                       >
                         <option value="">—</option>
@@ -475,7 +475,7 @@ export function LeadsPage() {
                   {!compact && <span className="truncate"><OutreachStatus status={lead.status} /></span>}
 
                   {!compact && (
-                    <span className="truncate text-[11px] tabular-nums text-stone-400">
+                    <span className="truncate text-[11px] tabular-nums text-muted-foreground">
                       {relativeTime(lead.lastActivityAt || lead.addedAt)}
                     </span>
                   )}
@@ -483,7 +483,7 @@ export function LeadsPage() {
                   <span className="text-right">
                     <button
                       onClick={(e) => { e.stopPropagation(); remove(lead.id); }}
-                      className="rounded p-1 text-stone-300 hover:bg-rose-50 hover:text-rose-600"
+                      className="rounded p-1 text-muted-foreground/70 hover:bg-rose-50 dark:hover:bg-rose-400/10 hover:text-rose-600 dark:hover:text-rose-300"
                       title="Delete lead"
                     >
                       <TbTrash size={13} />
@@ -502,9 +502,9 @@ export function LeadsPage() {
       {(selected || panelMode === "create") && panelOpen && (
         <>
           <div className="fixed inset-0 z-40 glass-overlay lg:hidden" onClick={() => setPanelOpen(false)} />
-          <aside className="fixed inset-y-0 right-0 z-50 flex h-full w-full flex-col overflow-hidden bg-white shadow-2xl sm:w-[460px] lg:static lg:z-auto lg:ml-2 lg:w-[40%] lg:rounded-xl lg:border lg:border-black/5 lg:shadow-none">
-            <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-stone-200/70 px-3">
-              <p className="truncate text-sm font-semibold text-stone-900">
+          <aside className="fixed inset-y-0 right-0 z-50 flex h-full w-full flex-col overflow-hidden bg-card shadow-2xl sm:w-[460px] lg:static lg:z-auto lg:ml-2 lg:w-[40%] lg:rounded-xl lg:border lg:border-border lg:shadow-none">
+            <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border/70 px-3">
+              <p className="truncate text-sm font-semibold text-foreground">
                 {panelMode === "create" ? "New lead" : panelMode === "edit" ? "Edit lead" : selected?.name}
               </p>
               <div className="flex shrink-0 items-center gap-1.5">
@@ -516,7 +516,7 @@ export function LeadsPage() {
                     <TBtn onClick={startEdit}>Edit</TBtn>
                   </>
                 )}
-                <button onClick={() => { setPanelOpen(false); setPanelMode("view"); }} className="rounded p-1.5 text-stone-400 hover:bg-stone-100">
+                <button onClick={() => { setPanelOpen(false); setPanelMode("view"); }} className="rounded p-1.5 text-muted-foreground hover:bg-muted">
                   <TbX size={16} />
                 </button>
               </div>
@@ -526,12 +526,12 @@ export function LeadsPage() {
               {panelMode === "view" && selected ? (
                 <div className="space-y-4">
                   <div>
-                    <p className="text-[13px] text-stone-500">
+                    <p className="text-[13px] text-muted-foreground">
                       {selected.title || "No title"}
                       {selected.account ? (
                         <>
                           {" · "}
-                          <Link href={`${crmBase}/accounts?accountId=${selected.account.id}`} className="text-blue-600 hover:underline">
+                          <Link href={`${crmBase}/accounts?accountId=${selected.account.id}`} className="text-blue-600 dark:text-blue-300 hover:underline">
                             {selected.account.name}
                           </Link>
                         </>
@@ -542,21 +542,21 @@ export function LeadsPage() {
                         carries the real one. */}
                     <div className="mt-2.5 grid grid-cols-2 gap-2">
                       <label className="flex flex-col gap-1">
-                        <span className="text-[10px] uppercase tracking-wider text-stone-400">Stage</span>
+                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Stage</span>
                         <select
                           value={selected.lifecycleStage}
                           onChange={(e) => patchLead(selected.id, { lifecycleStage: e.target.value as LifecycleStage })}
-                          className="w-full cursor-pointer rounded border border-stone-200 bg-white px-2 py-1 text-[12px] outline-none focus:ring-2 focus:ring-blue-500/40"
+                          className="w-full cursor-pointer rounded border border-border bg-card px-2 py-1 text-[12px] outline-none focus:ring-2 focus:ring-blue-500/40"
                         >
                           {LIFECYCLE_STAGES.map((st) => <option key={st} value={st}>{st}</option>)}
                         </select>
                       </label>
                       <label className="flex flex-col gap-1">
-                        <span className="text-[10px] uppercase tracking-wider text-stone-400">Owner</span>
+                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Owner</span>
                         <select
                           value={selected.ownerId || ""}
                           onChange={(e) => patchLead(selected.id, { ownerId: e.target.value || null })}
-                          className="w-full cursor-pointer rounded border border-stone-200 bg-white px-2 py-1 text-[12px] outline-none focus:ring-2 focus:ring-blue-500/40"
+                          className="w-full cursor-pointer rounded border border-border bg-card px-2 py-1 text-[12px] outline-none focus:ring-2 focus:ring-blue-500/40"
                         >
                           <option value="">Unassigned</option>
                           {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}
@@ -564,7 +564,7 @@ export function LeadsPage() {
                       </label>
                     </div>
 
-                    <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-stone-400">
+                    <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
                       <OutreachStatus status={selected.status} />
                       <span>· {selected.source}</span>
                       <span>· added {relativeTime(selected.addedAt)}</span>
@@ -573,13 +573,13 @@ export function LeadsPage() {
 
                   {selected.deals && selected.deals.length > 0 && (
                     <div>
-                      <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-stone-500">Deals</p>
+                      <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Deals</p>
                       {selected.deals.map((d) => (
-                        <div key={d.id} className="flex items-center justify-between gap-2 border-b border-stone-100 py-1.5 last:border-0">
-                          <Link href={`${crmBase}/pipeline?dealId=${d.id}`} className="truncate text-[13px] text-blue-600 hover:underline">
+                        <div key={d.id} className="flex items-center justify-between gap-2 border-b border-border py-1.5 last:border-0">
+                          <Link href={`${crmBase}/pipeline?dealId=${d.id}`} className="truncate text-[13px] text-blue-600 dark:text-blue-300 hover:underline">
                             {d.title}
                           </Link>
-                          <span className="shrink-0 text-[11px] text-stone-400">{d.stage?.name}</span>
+                          <span className="shrink-0 text-[11px] text-muted-foreground">{d.stage?.name}</span>
                         </div>
                       ))}
                     </div>
@@ -590,18 +590,18 @@ export function LeadsPage() {
                   {!selected.enrichment && !enriching ? (
                     <button
                       onClick={() => enrich(selected.id)}
-                      className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-indigo-200 py-1.5 text-[11px] font-medium text-indigo-500 hover:bg-indigo-50/60"
+                      className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-indigo-200 dark:border-indigo-400/25 py-1.5 text-[11px] font-medium text-indigo-500 dark:text-indigo-400 hover:bg-indigo-50/60 dark:hover:bg-indigo-400/10"
                     >
                       <TbBulb size={13} /> Run AI enrichment
                     </button>
                   ) : (
-                    <div className="rounded-lg border border-indigo-100 bg-indigo-50/50 p-2.5">
+                    <div className="rounded-lg border border-indigo-100 dark:border-indigo-400/20 bg-indigo-50/50 dark:bg-indigo-400/10 p-2.5">
                       <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-indigo-600">
+                        <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-300">
                           <TbBulb size={13} /> AI intelligence
                         </span>
                         {!enriching && (
-                          <button onClick={() => enrich(selected.id)} className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-indigo-600 hover:underline">
+                          <button onClick={() => enrich(selected.id)} className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-300 hover:underline">
                             <TbRefresh size={11} /> Re-run
                           </button>
                         )}
@@ -620,7 +620,7 @@ export function LeadsPage() {
                                 <p className="text-[9px] font-bold uppercase tracking-widest text-indigo-400">
                                   {k.replace(/([A-Z])/g, " $1").trim()}
                                 </p>
-                                <p className="text-[12px] leading-relaxed text-stone-700">{v as string}</p>
+                                <p className="text-[12px] leading-relaxed text-foreground/85">{v as string}</p>
                               </div>
                             ))}
                         </div>
@@ -632,8 +632,8 @@ export function LeadsPage() {
 
                   {selected.notes && (
                     <div>
-                      <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-stone-500">Notes</p>
-                      <p className="whitespace-pre-wrap rounded border border-stone-100 p-2 text-[12px] leading-relaxed text-stone-600">{selected.notes}</p>
+                      <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Notes</p>
+                      <p className="whitespace-pre-wrap rounded border border-border p-2 text-[12px] leading-relaxed text-foreground/70">{selected.notes}</p>
                     </div>
                   )}
 
@@ -642,7 +642,7 @@ export function LeadsPage() {
                   <RelatedTasks leadId={selected.id} owners={owners} />
 
                   <div>
-                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-stone-500">Activity</p>
+                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Activity</p>
                     <Timeline leadId={selected.id} onLogged={load} />
                   </div>
                 </div>
@@ -656,14 +656,14 @@ export function LeadsPage() {
                   <FormField label="Email" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} required />
                   <FormField label="LinkedIn URL" value={form.linkedinUrl} onChange={(v) => setForm({ ...form, linkedinUrl: v })} />
                   <label className="block">
-                    <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-stone-500">Notes</span>
+                    <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Notes</span>
                     <textarea
                       value={form.notes}
                       onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                      className="h-24 w-full resize-none rounded border border-stone-200 bg-white px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40"
+                      className="h-24 w-full resize-none rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40"
                     />
                   </label>
-                  <div className="flex justify-end gap-2 border-t border-stone-100 pt-3">
+                  <div className="flex justify-end gap-2 border-t border-border pt-3">
                     <TBtn onClick={() => setPanelMode("view")}>Cancel</TBtn>
                     <TBtn variant="solid" type="submit" disabled={saving}>{saving ? "Saving…" : "Save"}</TBtn>
                   </div>
@@ -704,7 +704,7 @@ function Select({ value, onChange, children }: { value: string; onChange: (v: st
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="rounded-md border border-stone-200 bg-white/70 px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500/40"
+      className="rounded-md border border-border bg-card/70 px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500/40"
     >
       {children}
     </select>
@@ -734,13 +734,13 @@ function DetailFields({ lead }: { lead: Lead }) {
     <dl className="grid grid-cols-[76px_minmax(0,1fr)] items-baseline gap-x-3 gap-y-2">
       {fields.map((f) => (
         <Fragment key={f.label}>
-          <dt className="text-[11px] text-stone-400">{f.label}</dt>
-          <dd className="min-w-0 text-[13px] text-stone-800">
+          <dt className="text-[11px] text-muted-foreground">{f.label}</dt>
+          <dd className="min-w-0 text-[13px] text-foreground">
             {f.link ? (
               <a
                 href={f.value!.startsWith("http") ? f.value! : `https://${f.value}`}
                 target="_blank" rel="noreferrer"
-                className="flex items-center gap-1 truncate text-blue-600 hover:underline"
+                className="flex items-center gap-1 truncate text-blue-600 dark:text-blue-300 hover:underline"
               >
                 <span className="truncate">{f.value}</span>
                 <TbExternalLink size={11} className="shrink-0" />
@@ -760,13 +760,13 @@ function FormField({
 }: { label: string; value: string; onChange: (v: string) => void; required?: boolean; type?: string }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-stone-500">{label}</span>
+      <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
       <input
         required={required}
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded border border-stone-200 bg-white px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40"
+        className="w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40"
       />
     </label>
   );
@@ -776,19 +776,19 @@ function RawData({ raw }: { raw: Record<string, string> }) {
   const [open, setOpen] = useState(false);
   const entries = Object.entries(raw);
   return (
-    <div className="rounded-lg border border-stone-100">
-      <button onClick={() => setOpen((o) => !o)} className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left hover:bg-stone-50">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-stone-500">
+    <div className="rounded-lg border border-border">
+      <button onClick={() => setOpen((o) => !o)} className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left hover:bg-muted/40">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           All imported data ({entries.length} fields)
         </span>
-        <TbChevronDown size={14} className={cn("text-stone-400 transition-transform", open && "rotate-180")} />
+        <TbChevronDown size={14} className={cn("text-muted-foreground transition-transform", open && "rotate-180")} />
       </button>
       {open && (
-        <div className="divide-y divide-stone-50 border-t border-stone-100">
+        <div className="divide-y divide-border border-t border-border">
           {entries.map(([k, v]) => (
             <div key={k} className="grid grid-cols-[38%_62%] gap-2 px-2.5 py-1.5 text-[11px]">
-              <span className="break-words text-stone-400">{k}</span>
-              <span className="break-words text-stone-700">{v}</span>
+              <span className="break-words text-muted-foreground">{k}</span>
+              <span className="break-words text-foreground/85">{v}</span>
             </div>
           ))}
         </div>

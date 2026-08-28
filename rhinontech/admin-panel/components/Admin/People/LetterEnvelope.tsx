@@ -42,7 +42,7 @@ export function LetterEnvelope({
     );
 
   return (
-    <div className="mx-auto max-w-3xl bg-white text-[13px] text-stone-800">
+    <div className="mx-auto max-w-3xl bg-card text-[13px] text-foreground">
       <div className="px-6 pt-8 pb-3">
         <Image src={adminImages.Logo_Rhinon_Tech_Dark} alt="Rhinon Tech" className="h-14 w-auto object-contain" />
       </div>
@@ -84,7 +84,7 @@ export function LetterEnvelope({
               <SignatureBlock />
             </div>
             <p className="font-bold">Prabhat Patra (Founder)</p>
-            <p className="mt-6 text-[11px] text-stone-400">
+            <p className="mt-6 text-[11px] text-muted-foreground">
               (Followed by a signature/acknowledgment page — not shown in this preview.)
             </p>
           </>

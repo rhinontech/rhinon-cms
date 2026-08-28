@@ -195,42 +195,42 @@ export function TemplateSheet({
           <div className="flex flex-1 flex-col overflow-auto p-4">
             <div className="flex-1 space-y-4">
               {template.imageUrl && (
-                <div className="overflow-hidden rounded-xl border border-stone-100">
+                <div className="overflow-hidden rounded-xl border border-border">
                   <img src={template.imageUrl} alt="Template" className="max-h-52 w-full object-cover" />
                 </div>
               )}
               {!isSocialChannel(template.channel) && template.subject && (
-                <div className="rounded-lg border border-stone-100 p-3">
-                  <p className="mb-1 text-[10px] font-semibold uppercase text-stone-400">Subject Line</p>
-                  <p className="text-sm font-medium text-stone-900">{template.subject}</p>
+                <div className="rounded-lg border border-border p-3">
+                  <p className="mb-1 text-[10px] font-semibold uppercase text-muted-foreground">Subject Line</p>
+                  <p className="text-sm font-medium text-foreground">{template.subject}</p>
                 </div>
               )}
               {isSocialChannel(template.channel) && (
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded-lg border border-stone-100 p-3">
-                    <p className="mb-1 text-[10px] font-semibold uppercase text-stone-400">Visibility</p>
-                    <p className="text-sm font-medium text-stone-900">{template.visibility || "PUBLIC"}</p>
+                  <div className="rounded-lg border border-border p-3">
+                    <p className="mb-1 text-[10px] font-semibold uppercase text-muted-foreground">Visibility</p>
+                    <p className="text-sm font-medium text-foreground">{template.visibility || "PUBLIC"}</p>
                   </div>
                   {template.articleUrl && (
-                    <div className="rounded-lg border border-stone-100 p-3">
-                      <p className="mb-1 text-[10px] font-semibold uppercase text-stone-400">Article URL</p>
-                      <p className="truncate text-xs font-medium text-blue-600">{template.articleUrl}</p>
+                    <div className="rounded-lg border border-border p-3">
+                      <p className="mb-1 text-[10px] font-semibold uppercase text-muted-foreground">Article URL</p>
+                      <p className="truncate text-xs font-medium text-blue-600 dark:text-blue-300">{template.articleUrl}</p>
                     </div>
                   )}
                 </div>
               )}
-              <div className="rounded-lg border border-stone-100 p-3">
-                <p className="mb-2 text-[10px] font-semibold uppercase text-stone-400">
+              <div className="rounded-lg border border-border p-3">
+                <p className="mb-2 text-[10px] font-semibold uppercase text-muted-foreground">
                   {isSocialChannel(template.channel) ? "Seed Content" : "Message Body"}
                 </p>
-                <p className="whitespace-pre-wrap text-sm leading-relaxed text-stone-700">{template.body}</p>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/85">{template.body}</p>
               </div>
               {template.aiInstructions && (
-                <div className="rounded-xl border border-violet-100 bg-violet-50/30 p-4">
+                <div className="rounded-xl border border-violet-100 dark:border-violet-400/20 bg-violet-50/30 dark:bg-violet-400/10 p-4">
                   <p className="mb-2 flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-violet-400">
                     <TbBulb size={13} /> AI Instructions
                   </p>
-                  <p className="text-xs italic leading-relaxed text-stone-600">{template.aiInstructions}</p>
+                  <p className="text-xs italic leading-relaxed text-foreground/70">{template.aiInstructions}</p>
                 </div>
               )}
             </div>
@@ -286,8 +286,8 @@ export function TemplateSheet({
             </div>
 
             {/* AI assist strip */}
-            <div className="space-y-2 rounded-xl border border-violet-100 bg-violet-50/30 p-3">
-              <Label className="flex items-center gap-1 text-xs font-bold text-violet-600">
+            <div className="space-y-2 rounded-xl border border-violet-100 dark:border-violet-400/20 bg-violet-50/30 dark:bg-violet-400/10 p-3">
+              <Label className="flex items-center gap-1 text-xs font-bold text-violet-600 dark:text-violet-300">
                 <TbSparkles size={13} /> Draft with AI
               </Label>
               <div className="flex gap-2">
@@ -299,7 +299,7 @@ export function TemplateSheet({
                       ? "e.g. A thought leadership post about AI changing data analytics for mid-size companies"
                       : "e.g. A follow-up email for SaaS founders who haven't replied. Short and friendly."
                   }
-                  className="h-16 flex-1 resize-none bg-white text-xs"
+                  className="h-16 flex-1 resize-none bg-card text-xs"
                 />
               </div>
               <Button
@@ -327,8 +327,8 @@ export function TemplateSheet({
             )}
 
             {isSocial && (
-              <div className="space-y-3 rounded-xl border border-indigo-100 bg-indigo-50/20 p-3">
-                <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-indigo-500">
+              <div className="space-y-3 rounded-xl border border-indigo-100 dark:border-indigo-400/20 bg-indigo-50/20 dark:bg-indigo-400/10 p-3">
+                <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-indigo-500 dark:text-indigo-400">
                   <TbBrandLinkedin size={12} /> LinkedIn Options
                 </p>
                 <div className="space-y-1.5">
@@ -337,7 +337,7 @@ export function TemplateSheet({
                     value={form.visibility}
                     onValueChange={(v) => setForm({ ...form, visibility: v as "PUBLIC" | "CONNECTIONS" })}
                   >
-                    <SelectTrigger className="w-full bg-white">
+                    <SelectTrigger className="w-full bg-card">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -354,7 +354,7 @@ export function TemplateSheet({
                       value={form.articleUrl}
                       onChange={(e) => setForm({ ...form, articleUrl: e.target.value })}
                       placeholder="https://your-blog.com/post"
-                      className="bg-white"
+                      className="bg-card"
                     />
                   </div>
                 )}
@@ -366,7 +366,7 @@ export function TemplateSheet({
                       value={form.mediaTitle}
                       onChange={(e) => setForm({ ...form, mediaTitle: e.target.value })}
                       placeholder="Post headline"
-                      className="bg-white"
+                      className="bg-card"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -376,7 +376,7 @@ export function TemplateSheet({
                       value={form.mediaDescription}
                       onChange={(e) => setForm({ ...form, mediaDescription: e.target.value })}
                       placeholder="Short alt-text"
-                      className="bg-white"
+                      className="bg-card"
                     />
                   </div>
                 </div>
@@ -400,14 +400,14 @@ export function TemplateSheet({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="tpl-ai-instructions" className="flex items-center gap-1 text-violet-600">
+              <Label htmlFor="tpl-ai-instructions" className="flex items-center gap-1 text-violet-600 dark:text-violet-300">
                 <TbBulb size={14} /> AI Instructions
               </Label>
               <Textarea
                 id="tpl-ai-instructions"
                 value={form.aiInstructions}
                 onChange={(e) => setForm({ ...form, aiInstructions: e.target.value })}
-                className="h-20 resize-none border-violet-100 bg-violet-50/30 text-xs italic"
+                className="h-20 resize-none border-violet-100 dark:border-violet-400/20 bg-violet-50/30 dark:bg-violet-400/10 text-xs italic"
                 placeholder={
                   isSocial
                     ? "Tell the AI the tone, hashtags to include, length target..."

@@ -25,14 +25,14 @@ function Segmented<T extends string>({
   onChange: (v: T) => void;
 }) {
   return (
-    <div className="flex items-center gap-0.5 rounded-lg bg-stone-100 p-0.5">
+    <div className="flex items-center gap-0.5 rounded-lg bg-muted p-0.5">
       {options.map((o) => (
         <button
           key={o.key}
           onClick={() => onChange(o.key)}
           className={cn(
             "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs transition-colors",
-            value === o.key ? "bg-white font-semibold text-stone-900 shadow-sm" : "text-stone-500 hover:text-stone-800"
+            value === o.key ? "bg-card font-semibold text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
           )}
         >
           {o.icon}
@@ -66,7 +66,7 @@ export function TasksToolbar({
   onCollapseAll: () => void;
   onAdd: () => void;
 }) {
-  const selectClass = "rounded-lg border border-stone-200 bg-white px-2 py-1.5 text-xs text-stone-600 outline-none focus:border-stone-400";
+  const selectClass = "rounded-lg border border-border bg-card px-2 py-1.5 text-xs text-foreground/70 outline-none focus:border-border";
 
   return (
     <div className="shrink-0 space-y-2 border-b px-3 py-2 sm:px-4">
@@ -92,15 +92,15 @@ export function TasksToolbar({
         />
 
         <div className="ml-auto flex items-center gap-1.5">
-          <button onClick={onExpandAll} className="rounded-md p-1.5 text-stone-400 hover:bg-stone-100 hover:text-stone-700" title="Expand all">
+          <button onClick={onExpandAll} className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground/85" title="Expand all">
             <TbChevronDown size={15} />
           </button>
-          <button onClick={onCollapseAll} className="rounded-md p-1.5 text-stone-400 hover:bg-stone-100 hover:text-stone-700" title="Collapse all">
+          <button onClick={onCollapseAll} className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground/85" title="Collapse all">
             <TbChevronRight size={15} />
           </button>
           <button
             onClick={onAdd}
-            className="flex items-center gap-1.5 rounded-lg bg-stone-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-stone-700"
+            className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/80"
           >
             <TbPlus size={14} /> Add a task
           </button>
@@ -109,12 +109,12 @@ export function TasksToolbar({
 
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative min-w-[180px] flex-1 sm:max-w-xs">
-          <TbSearch size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-stone-400" />
+          <TbSearch size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search tasks…"
-            className="w-full rounded-lg border border-stone-200 bg-white py-1.5 pl-8 pr-2 text-xs outline-none focus:border-stone-400"
+            className="w-full rounded-lg border border-border bg-card py-1.5 pl-8 pr-2 text-xs outline-none focus:border-border"
           />
         </div>
 
@@ -153,7 +153,7 @@ export function TasksToolbar({
           </select>
         )}
 
-        <label className="flex cursor-pointer items-center gap-1.5 text-xs text-stone-600">
+        <label className="flex cursor-pointer items-center gap-1.5 text-xs text-foreground/70">
           <input
             type="checkbox"
             checked={filters.hideDone}
@@ -165,7 +165,7 @@ export function TasksToolbar({
       </div>
 
       {!rosterAvailable && (
-        <p className="flex items-center gap-1.5 text-[11px] text-amber-700">
+        <p className="flex items-center gap-1.5 text-[11px] text-amber-700 dark:text-amber-300">
           <TbAlertTriangle size={12} />
           Employee list unavailable — showing only people who have tasks.
         </p>

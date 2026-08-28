@@ -22,7 +22,7 @@ export function renderMentions(body: string): React.ReactNode[] {
   while ((m = re.exec(body)) !== null) {
     if (m.index > last) out.push(body.slice(last, m.index));
     out.push(
-      <span key={`${m.index}-${m[2]}`} className="rounded bg-blue-50 px-1 font-medium text-blue-700">
+      <span key={`${m.index}-${m[2]}`} className="rounded bg-blue-50 dark:bg-blue-400/10 px-1 font-medium text-blue-700 dark:text-blue-300">
         @{m[1]}
       </span>
     );
@@ -92,7 +92,7 @@ export function MentionInput({
   return (
     <div className="relative flex-1">
       {query && matches.length > 0 && (
-        <div className="absolute bottom-full left-0 z-20 mb-1 w-64 overflow-hidden rounded-lg border bg-white shadow-lg">
+        <div className="absolute bottom-full left-0 z-20 mb-1 w-64 overflow-hidden rounded-lg border bg-card shadow-lg">
           {matches.map((p, i) => (
             <button
               key={p.id}
@@ -101,7 +101,7 @@ export function MentionInput({
               onMouseEnter={() => setHighlight(i)}
               className={cn(
                 "block w-full truncate px-3 py-1.5 text-left text-sm",
-                i === highlight ? "bg-stone-900 text-white" : "text-stone-700 hover:bg-stone-100"
+                i === highlight ? "bg-primary text-primary-foreground" : "text-foreground/85 hover:bg-muted"
               )}
             >
               {p.fullName}
@@ -118,7 +118,7 @@ export function MentionInput({
         onChange={(e) => { onChange(e.target.value); syncQuery(e.target.value, e.target.selectionStart); }}
         onClick={(e) => syncQuery(value, (e.target as HTMLTextAreaElement).selectionStart)}
         onKeyDown={onKeyDown}
-        className="w-full resize-none rounded-lg border border-stone-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full resize-none rounded-lg border border-border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
       />
     </div>
   );

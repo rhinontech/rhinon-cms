@@ -43,9 +43,9 @@ interface InvestmentSummary {
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 const STATUS_STYLE: Record<string, string> = {
-  draft:     "bg-amber-100 text-amber-700",
-  processed: "bg-blue-100 text-blue-700",
-  paid:      "bg-green-100 text-green-700",
+  draft:     "bg-amber-100 dark:bg-amber-400/15 text-amber-700 dark:text-amber-300",
+  processed: "bg-blue-100 dark:bg-blue-400/15 text-blue-700 dark:text-blue-300",
+  paid:      "bg-green-100 dark:bg-green-400/15 text-green-700 dark:text-green-300",
 };
 
 const INR = (value: number) => `₹${Number(value || 0).toLocaleString("en-IN")}`;
@@ -53,11 +53,11 @@ const INR = (value: number) => `₹${Number(value || 0).toLocaleString("en-IN")}
 function StatCard({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub?: string }) {
   return (
     <div className="glass-card-solid rounded-xl p-3.5 sm:p-5 flex items-start gap-3 sm:gap-4">
-      <div className="p-2 bg-gray-50 rounded-lg text-gray-600 shrink-0">{icon}</div>
+      <div className="p-2 bg-muted/40 rounded-lg text-foreground/70 shrink-0">{icon}</div>
       <div className="min-w-0">
-        <p className="text-xs sm:text-sm text-gray-500 truncate">{label}</p>
-        <p className="text-sm sm:text-base font-semibold text-gray-900 mt-0.5 truncate">{value}</p>
-        {sub && <p className="text-[11px] sm:text-xs text-gray-400 mt-0.5 truncate">{sub}</p>}
+        <p className="text-xs sm:text-sm text-muted-foreground truncate">{label}</p>
+        <p className="text-sm sm:text-base font-semibold text-foreground mt-0.5 truncate">{value}</p>
+        {sub && <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 truncate">{sub}</p>}
       </div>
     </div>
   );
@@ -117,14 +117,14 @@ export function AdminPayrollOverview() {
 
   return (
     <div className={cn("flex min-h-0 min-w-0 flex-col h-full w-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl max-sm:rounded-xl" : "rounded-xl")}>
-      <div className="sticky top-0 z-10 flex min-h-16 flex-wrap items-center justify-between gap-2 px-4 sm:px-5 py-2 sm:py-0 border-b border-black/5 glass-header">
+      <div className="sticky top-0 z-10 flex min-h-16 flex-wrap items-center justify-between gap-2 px-4 sm:px-5 py-2 sm:py-0 border-b border-border glass-header">
         <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
           <SubNavToggle />
           <h1 className="text-base sm:text-lg font-semibold tracking-tight truncate">Payroll Dashboard</h1>
         </div>
         <Link
           href={`/${roleSlug}/payroll/run`}
-          className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-stone-900 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-stone-800 transition-colors whitespace-nowrap shrink-0"
+          className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-primary text-primary-foreground text-xs sm:text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap shrink-0"
         >
           <MdOutlinePlayCircle size={16} /> <span>Run Payroll</span>
         </Link>
@@ -142,31 +142,31 @@ export function AdminPayrollOverview() {
         <div className="mb-6 sm:mb-8 rounded-xl glass-card overflow-hidden">
           <div className="flex items-center justify-between flex-wrap gap-2 px-4 sm:px-5 py-3 sm:py-4 border-b">
             <div className="flex items-center gap-2 min-w-0">
-              <TbChartPie size={18} className="text-gray-500 shrink-0" />
-              <p className="font-semibold text-xs sm:text-sm text-gray-900 truncate">Company Investment</p>
+              <TbChartPie size={18} className="text-muted-foreground shrink-0" />
+              <p className="font-semibold text-xs sm:text-sm text-foreground truncate">Company Investment</p>
             </div>
-            <p className="text-[11px] sm:text-xs text-gray-400 truncate">{investment ? `${investment.activeSalaryEmployeeCount} salaried employees` : "Loading..."}</p>
+            <p className="text-[11px] sm:text-xs text-muted-foreground truncate">{investment ? `${investment.activeSalaryEmployeeCount} salaried employees` : "Loading..."}</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border">
             <div className="p-3.5 sm:p-5">
-              <p className="text-xs sm:text-sm text-gray-500">Total invested</p>
-              <p className="mt-1 text-base sm:text-xl font-bold text-gray-900 truncate">{investment ? INR(investment.totalCompanyCostPaid) : "—"}</p>
-              <p className="mt-1 text-[11px] sm:text-xs text-gray-400">Gross salary + employer PF paid</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Total invested</p>
+              <p className="mt-1 text-base sm:text-xl font-bold text-foreground truncate">{investment ? INR(investment.totalCompanyCostPaid) : "—"}</p>
+              <p className="mt-1 text-[11px] sm:text-xs text-muted-foreground">Gross salary + employer PF paid</p>
             </div>
             <div className="p-3.5 sm:p-5">
-              <p className="text-xs sm:text-sm text-gray-500">Salary credited</p>
-              <p className="mt-1 text-base sm:text-xl font-bold text-gray-900 truncate">{investment ? INR(investment.totalNetPaid) : "—"}</p>
-              <p className="mt-1 text-[11px] sm:text-xs text-gray-400">{investment ? `${investment.paidPayslipCount} paid payslips` : "Paid payroll only"}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Salary credited</p>
+              <p className="mt-1 text-base sm:text-xl font-bold text-foreground truncate">{investment ? INR(investment.totalNetPaid) : "—"}</p>
+              <p className="mt-1 text-[11px] sm:text-xs text-muted-foreground">{investment ? `${investment.paidPayslipCount} paid payslips` : "Paid payroll only"}</p>
             </div>
             <div className="p-3.5 sm:p-5">
-              <p className="text-xs sm:text-sm text-gray-500">Employer PF</p>
-              <p className="mt-1 text-base sm:text-xl font-bold text-gray-900 truncate">{investment ? INR(investment.totalEmployerPfPaid) : "—"}</p>
-              <p className="mt-1 text-[11px] sm:text-xs text-gray-400">Company contribution paid</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Employer PF</p>
+              <p className="mt-1 text-base sm:text-xl font-bold text-foreground truncate">{investment ? INR(investment.totalEmployerPfPaid) : "—"}</p>
+              <p className="mt-1 text-[11px] sm:text-xs text-muted-foreground">Company contribution paid</p>
             </div>
             <div className="p-3.5 sm:p-5">
-              <p className="text-xs sm:text-sm text-gray-500">Monthly commitment</p>
-              <p className="mt-1 text-base sm:text-xl font-bold text-gray-900 truncate">{investment ? INR(investment.monthlyCommittedGross) : "—"}</p>
-              <p className="mt-1 text-[11px] sm:text-xs text-gray-400">{investment ? `${investment.activeEmployeeCount} active employees` : "Current salary setup"}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Monthly commitment</p>
+              <p className="mt-1 text-base sm:text-xl font-bold text-foreground truncate">{investment ? INR(investment.monthlyCommittedGross) : "—"}</p>
+              <p className="mt-1 text-[11px] sm:text-xs text-muted-foreground">{investment ? `${investment.activeEmployeeCount} active employees` : "Current salary setup"}</p>
             </div>
           </div>
         </div>
@@ -174,22 +174,22 @@ export function AdminPayrollOverview() {
         {/* Payroll runs table */}
         <div className="glass-card-solid rounded-xl overflow-x-auto shadow-xs max-w-full w-full">
           <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b">
-            <p className="font-semibold text-xs sm:text-sm text-gray-900">Payroll Runs</p>
+            <p className="font-semibold text-xs sm:text-sm text-foreground">Payroll Runs</p>
           </div>
 
           {loading ? (
-            <div className="p-8 text-center text-xs sm:text-sm text-gray-400">Loading...</div>
+            <div className="p-8 text-center text-xs sm:text-sm text-muted-foreground">Loading...</div>
           ) : runs.length === 0 ? (
             <div className="p-8 sm:p-12 text-center">
-              <p className="text-xs sm:text-sm text-gray-500 font-medium">No payroll runs yet</p>
-              <p className="text-xs text-gray-400 mt-1">Use "Run Payroll" to generate the first month.</p>
-              <Link href={`/${roleSlug}/payroll/run`} className="inline-flex items-center gap-1.5 mt-4 px-3 sm:px-4 py-1.5 sm:py-2 bg-stone-900 text-white text-xs sm:text-sm rounded-lg hover:bg-stone-800">
+              <p className="text-xs sm:text-sm text-muted-foreground font-medium">No payroll runs yet</p>
+              <p className="text-xs text-muted-foreground mt-1">Use "Run Payroll" to generate the first month.</p>
+              <Link href={`/${roleSlug}/payroll/run`} className="inline-flex items-center gap-1.5 mt-4 px-3 sm:px-4 py-1.5 sm:py-2 bg-primary text-primary-foreground text-xs sm:text-sm rounded-lg hover:bg-primary/90">
                 <MdOutlinePlayCircle size={14} /> Run First Payroll
               </Link>
             </div>
           ) : (
             <table className="w-full min-w-[580px] text-xs sm:text-sm">
-              <thead className="glass-thead text-gray-600 text-xs uppercase">
+              <thead className="glass-thead text-foreground/70 text-xs uppercase">
                 <tr>
                   <th className="px-4 sm:px-5 py-2.5 sm:py-3 text-left">Period</th>
                   <th className="px-4 sm:px-5 py-2.5 sm:py-3 text-right">Total Gross</th>
@@ -199,23 +199,23 @@ export function AdminPayrollOverview() {
                   <th className="px-4 sm:px-5 py-2.5 sm:py-3 text-left">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-border">
                 {runs.map((run) => (
-                  <tr key={run.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={run.id} className="hover:bg-muted/40 transition-colors">
                     <td className="px-4 sm:px-5 py-2.5 sm:py-3 font-medium">{MONTHS[run.month - 1]} {run.year}</td>
                     <td className="px-4 sm:px-5 py-2.5 sm:py-3 text-right">₹{Number(run.totalGross).toLocaleString("en-IN")}</td>
                     <td className="px-4 sm:px-5 py-2.5 sm:py-3 text-right font-semibold">₹{Number(run.totalNet).toLocaleString("en-IN")}</td>
                     <td className="px-4 sm:px-5 py-2.5 sm:py-3">
-                      <span className={`px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold uppercase ${STATUS_STYLE[run.status] ?? "bg-gray-100 text-gray-600"}`}>
+                      <span className={`px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold uppercase ${STATUS_STYLE[run.status] ?? "bg-muted text-foreground/70"}`}>
                         {run.status}
                       </span>
                     </td>
-                    <td className="px-4 sm:px-5 py-2.5 sm:py-3 text-gray-500">{run.processedBy?.fullName ?? "—"}</td>
+                    <td className="px-4 sm:px-5 py-2.5 sm:py-3 text-muted-foreground">{run.processedBy?.fullName ?? "—"}</td>
                     <td className="px-4 sm:px-5 py-2.5 sm:py-3">
                       <div className="flex items-center gap-2">
                         <Link
                           href={`/${roleSlug}/payroll/payslips?run=${run.id}`}
-                          className="flex items-center gap-1 text-xs text-blue-600 hover:underline"
+                          className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-300 hover:underline"
                         >
                           View <TbChevronRight size={12} />
                         </Link>
@@ -223,7 +223,7 @@ export function AdminPayrollOverview() {
                           <button
                             onClick={() => markPaid(run.id)}
                             disabled={markingPaid === run.id}
-                            className="flex items-center gap-1 text-[11px] sm:text-xs text-green-700 bg-green-50 hover:bg-green-100 px-2 py-1 rounded-md transition-colors disabled:opacity-50"
+                            className="flex items-center gap-1 text-[11px] sm:text-xs text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-400/10 hover:bg-green-100 dark:hover:bg-green-400/15 px-2 py-1 rounded-md transition-colors disabled:opacity-50"
                           >
                             {markingPaid === run.id ? <TbLoader2 size={12} className="animate-spin" /> : <TbCheck size={12} />}
                             Mark Paid

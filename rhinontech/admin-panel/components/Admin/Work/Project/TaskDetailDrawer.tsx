@@ -238,15 +238,15 @@ export function TaskDetailDrawer({
       )}
     >
       <div className="flex h-14 shrink-0 items-center gap-2 border-b glass-header px-4">
-        <span className="truncate text-sm font-semibold text-stone-900">Task</span>
+        <span className="truncate text-sm font-semibold text-foreground">Task</span>
         <button
           onClick={() => { if (window.confirm(`Delete "${task.title}"?`)) { onDelete(task.id); onClose(); } }}
-          className="ml-auto rounded-lg p-2 text-stone-400 hover:bg-red-50 hover:text-red-600"
+          className="ml-auto rounded-lg p-2 text-muted-foreground hover:bg-red-50 dark:hover:bg-red-400/10 hover:text-red-600 dark:hover:text-red-300"
           title="Delete task"
         >
           <TbTrash size={16} />
         </button>
-        <button onClick={onClose} className="rounded-lg p-2 text-stone-500 hover:bg-stone-100">
+        <button onClick={onClose} className="rounded-lg p-2 text-muted-foreground hover:bg-muted">
           <TbX size={17} />
         </button>
       </div>
@@ -256,18 +256,18 @@ export function TaskDetailDrawer({
           defaultValue={task.title}
           key={task.id}
           onBlur={(e) => e.target.value.trim() && e.target.value !== task.title && onPatch(task.id, { title: e.target.value.trim() })}
-          className="w-full rounded border border-transparent px-1 py-0.5 text-lg font-semibold text-stone-900 outline-none hover:border-stone-200 focus:border-blue-500"
+          className="w-full rounded border border-transparent px-1 py-0.5 text-lg font-semibold text-foreground outline-none hover:border-border focus:border-blue-500"
         />
 
         {projectName && (
-          <span className="inline-flex items-center gap-1 rounded bg-orange-50 px-2 py-0.5 text-xs font-medium text-orange-800">
+          <span className="inline-flex items-center gap-1 rounded bg-orange-50 dark:bg-orange-400/10 px-2 py-0.5 text-xs font-medium text-orange-800 dark:text-orange-200">
             <TbFolder size={12} /> {projectName}
           </span>
         )}
 
         <div className="grid grid-cols-2 gap-2">
           <label className="block">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Status</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Status</span>
             <select
               value={task.statusId ?? ""}
               onChange={(e) => patchAndRefresh(task.id, { statusId: e.target.value || null })}
@@ -281,18 +281,18 @@ export function TaskDetailDrawer({
             </select>
           </label>
           <label className="block">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Assignee</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Assignee</span>
             <select
               value={task.assigneeId ?? ""}
               onChange={(e) => patchAndRefresh(task.id, { assigneeId: e.target.value || null })}
-              className="mt-1 w-full rounded-lg border border-stone-200 px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1 w-full rounded-lg border border-border px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Unassigned</option>
               {people.map((p) => <option key={p.id} value={p.id}>{p.fullName}</option>)}
             </select>
           </label>
           <label className="block">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Start</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Start</span>
             <div className="mt-1">
               <DatePicker
                 ariaLabel="Start date"
@@ -302,7 +302,7 @@ export function TaskDetailDrawer({
             </div>
           </label>
           <label className="block">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Due</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Due</span>
             <div className="mt-1">
               <DatePicker
                 ariaLabel="Due date"
@@ -314,7 +314,7 @@ export function TaskDetailDrawer({
         </div>
 
         {/* the summary strip: subitems · files · dependencies · timer */}
-        <div className="flex flex-wrap items-center gap-3 rounded-lg bg-stone-50 px-3 py-2 text-xs text-stone-600">
+        <div className="flex flex-wrap items-center gap-3 rounded-lg bg-muted/40 px-3 py-2 text-xs text-foreground/70">
           <span className="flex items-center gap-1"><TbSubtask size={13} /> {children.length} subitem{children.length === 1 ? "" : "s"}</span>
           <span className="flex items-center gap-1"><TbPaperclip size={13} /> {attachments.length} file{attachments.length === 1 ? "" : "s"}</span>
           <span className="flex items-center gap-1"><TbUnlink size={13} /> {deps.length} dependenc{deps.length === 1 ? "y" : "ies"}</span>
@@ -326,7 +326,7 @@ export function TaskDetailDrawer({
             <button
               onClick={() => (runningSince ? stopTimer() : setRunningSince(Date.now()))}
               title={runningSince ? "Stop and log" : "Start timer"}
-              className={cn("rounded p-1", runningSince ? "bg-red-100 text-red-700" : "hover:bg-stone-200")}
+              className={cn("rounded p-1", runningSince ? "bg-red-100 dark:bg-red-400/15 text-red-700 dark:text-red-300" : "hover:bg-muted")}
             >
               {runningSince ? <TbPlayerStop size={13} /> : <TbPlayerPlay size={13} />}
             </button>
@@ -334,7 +334,7 @@ export function TaskDetailDrawer({
         </div>
 
         <div>
-          <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-stone-400">Description</p>
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Description</p>
           <RichDescription
             key={task.id}
             html={task.descriptionHtml}
@@ -345,13 +345,13 @@ export function TaskDetailDrawer({
 
         {deps.length > 0 && (
           <div>
-            <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-stone-400">Waiting on</p>
+            <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Waiting on</p>
             <div className="space-y-1">
               {deps.map((d) => (
-                <div key={d.id} className="flex items-center gap-2 rounded-lg bg-stone-50 px-2.5 py-1.5 text-sm">
-                  <span className="min-w-0 flex-1 truncate text-stone-700">{titleOf(d.predecessorId)}</span>
-                  <span className="text-[10px] text-stone-400">{d.type}</span>
-                  <button onClick={() => onRemoveDependency(task.id, d.id)} className="rounded p-0.5 text-stone-400 hover:text-red-600" title="Unlink">
+                <div key={d.id} className="flex items-center gap-2 rounded-lg bg-muted/40 px-2.5 py-1.5 text-sm">
+                  <span className="min-w-0 flex-1 truncate text-foreground/85">{titleOf(d.predecessorId)}</span>
+                  <span className="text-[10px] text-muted-foreground">{d.type}</span>
+                  <button onClick={() => onRemoveDependency(task.id, d.id)} className="rounded p-0.5 text-muted-foreground hover:text-red-600 dark:hover:text-red-300" title="Unlink">
                     <TbUnlink size={13} />
                   </button>
                 </div>
@@ -361,11 +361,11 @@ export function TaskDetailDrawer({
         )}
 
         <div>
-          <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-stone-400">Subitems</p>
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Subitems</p>
           <div className="space-y-1">
             {children.map((c) => (
-              <div key={c.id} className="flex items-center gap-2 rounded-lg bg-stone-50 px-2.5 py-1.5 text-sm">
-                <span className="min-w-0 flex-1 truncate text-stone-700">{c.title}</span>
+              <div key={c.id} className="flex items-center gap-2 rounded-lg bg-muted/40 px-2.5 py-1.5 text-sm">
+                <span className="min-w-0 flex-1 truncate text-foreground/85">{c.title}</span>
                 {c.workflowStatus && (
                   <span className={cn("rounded-full px-1.5 py-0.5 text-[10px]", STATUS_CHIP[c.workflowStatus.color] ?? STATUS_CHIP.stone)}>
                     {c.workflowStatus.name}
@@ -382,18 +382,18 @@ export function TaskDetailDrawer({
               value={childTitle}
               onChange={(e) => setChildTitle(e.target.value)}
               placeholder="+ Add a subitem"
-              className="w-full rounded-lg border border-stone-200 px-2.5 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg border border-border px-2.5 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
             />
           </form>
         </div>
 
         <div>
           <div className="mb-1 flex items-center justify-between">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Files</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Files</p>
             <button
               onClick={() => fileRef.current?.click()}
               disabled={uploading}
-              className="flex items-center gap-1 rounded px-1.5 py-0.5 text-xs text-stone-600 hover:bg-stone-100 disabled:opacity-50"
+              className="flex items-center gap-1 rounded px-1.5 py-0.5 text-xs text-foreground/70 hover:bg-muted disabled:opacity-50"
             >
               {uploading ? <TbLoader size={12} className="animate-spin" /> : <TbUpload size={12} />} Upload
             </button>
@@ -406,44 +406,44 @@ export function TaskDetailDrawer({
                 href={a.url ?? "#"}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-2 rounded-lg bg-stone-50 px-2.5 py-1.5 text-sm hover:bg-stone-100"
+                className="flex items-center gap-2 rounded-lg bg-muted/40 px-2.5 py-1.5 text-sm hover:bg-muted"
               >
-                <TbPaperclip size={13} className="shrink-0 text-stone-400" />
-                <span className="min-w-0 flex-1 truncate text-stone-700">{a.name}</span>
+                <TbPaperclip size={13} className="shrink-0 text-muted-foreground" />
+                <span className="min-w-0 flex-1 truncate text-foreground/85">{a.name}</span>
               </a>
             ))}
-            {!attachments.length && <p className="text-xs text-stone-400">No files attached.</p>}
+            {!attachments.length && <p className="text-xs text-muted-foreground">No files attached.</p>}
           </div>
         </div>
 
         <div>
-          <p className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-stone-400">
+          <p className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             <TbHistory size={12} /> Activity
           </p>
-          {feed.length === 0 && <p className="text-xs text-stone-400">Nothing has happened yet.</p>}
+          {feed.length === 0 && <p className="text-xs text-muted-foreground">Nothing has happened yet.</p>}
           {groupedFeed.map(({ label, items }) => (
             <div key={label} className="mb-3">
-              <p className="mb-1.5 text-[11px] font-semibold text-stone-500">{label}</p>
+              <p className="mb-1.5 text-[11px] font-semibold text-muted-foreground">{label}</p>
               <div className="space-y-2">
                 {items.map((item) =>
                   item.kind === "comment" ? (
-                    <div key={`c-${item.data.id}`} className="rounded-lg bg-stone-50 p-2.5">
+                    <div key={`c-${item.data.id}`} className="rounded-lg bg-muted/40 p-2.5">
                       <div className="flex items-baseline justify-between gap-2">
-                        <span className="text-xs font-medium text-stone-800">{item.data.author?.fullName ?? "Someone"}</span>
-                        <span className="text-[10px] text-stone-400">{format(new Date(item.data.createdAt), "d MMM, HH:mm")}</span>
+                        <span className="text-xs font-medium text-foreground">{item.data.author?.fullName ?? "Someone"}</span>
+                        <span className="text-[10px] text-muted-foreground">{format(new Date(item.data.createdAt), "d MMM, HH:mm")}</span>
                       </div>
-                      <p className="mt-0.5 whitespace-pre-wrap text-sm text-stone-700">{renderMentions(item.data.body)}</p>
+                      <p className="mt-0.5 whitespace-pre-wrap text-sm text-foreground/85">{renderMentions(item.data.body)}</p>
                     </div>
                   ) : (
-                    <div key={`a-${item.data.id}`} className="flex items-baseline gap-2 px-1 text-xs text-stone-500">
-                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-stone-300" />
+                    <div key={`a-${item.data.id}`} className="flex items-baseline gap-2 px-1 text-xs text-muted-foreground">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-muted" />
                       <span className="flex-1">
-                        <span className="font-medium text-stone-700">
+                        <span className="font-medium text-foreground/85">
                           {item.data.actor?.fullName ?? "System"}
                         </span>{" "}
                         {item.data.summary}
                       </span>
-                      <span className="shrink-0 text-[10px] text-stone-400">
+                      <span className="shrink-0 text-[10px] text-muted-foreground">
                         {format(new Date(item.data.createdAt), "d MMM, HH:mm")}
                       </span>
                     </div>
@@ -463,7 +463,7 @@ export function TaskDetailDrawer({
           people={people}
           disabled={busy}
         />
-        <button type="submit" disabled={busy || !body.trim()} className="rounded-lg bg-stone-900 px-3 py-2 text-white disabled:opacity-40">
+        <button type="submit" disabled={busy || !body.trim()} className="rounded-lg bg-primary px-3 py-2 text-primary-foreground disabled:opacity-40">
           <TbSend size={15} />
         </button>
       </form>

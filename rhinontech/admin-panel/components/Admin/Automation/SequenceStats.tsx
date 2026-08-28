@@ -46,24 +46,24 @@ export function SequenceStats({ workflowId }: { workflowId: string }) {
 
   useEffect(() => { load(); }, [load]);
 
-  if (loading) return <div className="h-28 animate-pulse rounded-xl bg-gray-100" />;
+  if (loading) return <div className="h-28 animate-pulse rounded-xl bg-muted" />;
   if (!data || data.steps.length === 0) return null;
 
   const maxSent = Math.max(...data.steps.map((s) => s.sent), 1);
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4">
+    <div className="rounded-xl border border-border bg-card p-4">
       <div className="mb-3 flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900">Step performance</h3>
-          <p className="text-xs text-gray-400">Open and click rates are measured against sends.</p>
+          <h3 className="text-sm font-semibold text-foreground">Step performance</h3>
+          <p className="text-xs text-muted-foreground">Open and click rates are measured against sends.</p>
         </div>
-        <button onClick={load} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100" title="Refresh">
+        <button onClick={load} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted" title="Refresh">
           <TbRefresh size={15} />
         </button>
       </div>
 
-      <div className="mb-3 flex flex-wrap gap-4 border-b border-gray-100 pb-3">
+      <div className="mb-3 flex flex-wrap gap-4 border-b border-border pb-3">
         <Total icon={<TbMail size={14} />} label="Sent" value={data.totals.sent || 0} />
         <Total icon={<TbEye size={14} />} label="Opened" value={data.totals.opened || 0} />
         <Total icon={<TbPointer size={14} />} label="Clicked" value={data.totals.clicked || 0} />
@@ -75,16 +75,16 @@ export function SequenceStats({ workflowId }: { workflowId: string }) {
         {data.steps.map((step) => (
           <li key={step.nodeId}>
             <div className="mb-1 flex items-baseline justify-between gap-2">
-              <span className="min-w-0 truncate text-xs font-medium text-gray-800">
-                <span className="text-gray-400">{step.step}.</span> {step.subject || step.label}
+              <span className="min-w-0 truncate text-xs font-medium text-foreground">
+                <span className="text-muted-foreground">{step.step}.</span> {step.subject || step.label}
               </span>
-              <span className="shrink-0 text-[11px] tabular-nums text-gray-500">
+              <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
                 {step.sent} sent
                 {step.openRate != null && <span className="ml-2">{step.openRate}% opened</span>}
                 {step.clickRate != null && <span className="ml-2">{step.clickRate}% clicked</span>}
               </span>
             </div>
-            <div className="relative h-2 overflow-hidden rounded bg-gray-100">
+            <div className="relative h-2 overflow-hidden rounded bg-muted">
               {/* Sends set the bar's extent; opens and clicks are nested shares
                   of it, so the three read as one funnel rather than three scales. */}
               <div
@@ -107,7 +107,7 @@ export function SequenceStats({ workflowId }: { workflowId: string }) {
         ))}
       </ul>
 
-      <div className="mt-3 flex flex-wrap items-center gap-3 text-[10px] text-gray-500">
+      <div className="mt-3 flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground">
         <Key color="#cfe0f6" label="Sent" />
         <Key color="#7fb0ea" label="Opened" />
         <Key color="#2a78d6" label="Clicked" />
@@ -119,9 +119,9 @@ export function SequenceStats({ workflowId }: { workflowId: string }) {
 function Total({ icon, label, value }: { icon?: React.ReactNode; label: string; value: number }) {
   return (
     <div className="flex items-center gap-1.5">
-      {icon && <span className="text-gray-400">{icon}</span>}
-      <span className="text-sm font-semibold tabular-nums text-gray-900">{value}</span>
-      <span className="text-[11px] text-gray-400">{label}</span>
+      {icon && <span className="text-muted-foreground">{icon}</span>}
+      <span className="text-sm font-semibold tabular-nums text-foreground">{value}</span>
+      <span className="text-[11px] text-muted-foreground">{label}</span>
     </div>
   );
 }

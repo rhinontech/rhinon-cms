@@ -137,7 +137,7 @@ export function EmailBodyEditor({
     content: value || "",
     editorProps: {
       attributes: {
-        class: "email-tiptap outline-none text-sm leading-relaxed text-stone-800",
+        class: "email-tiptap outline-none text-sm leading-relaxed text-foreground",
         style: `min-height:${minHeight}`,
       },
     },
@@ -205,8 +205,8 @@ export function EmailBodyEditor({
   };
 
   return (
-    <div className="rounded-lg border border-stone-200 bg-white">
-      <div className="flex flex-wrap items-center gap-0.5 border-b border-stone-100 p-1.5">
+    <div className="rounded-lg border border-border bg-card">
+      <div className="flex flex-wrap items-center gap-0.5 border-b border-border p-1.5">
         <ToolbarBtn active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()} title="Bold">
           <TbBold size={15} />
         </ToolbarBtn>
@@ -265,7 +265,7 @@ export function EmailBodyEditor({
         <button
           type="button"
           onClick={() => setIsButtonModalOpen(true)}
-          className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-medium text-stone-600 hover:bg-stone-100 transition-colors"
+          className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-medium text-foreground/70 hover:bg-muted transition-colors"
           title="Insert Button"
         >
           <TbSquarePlus size={14} /> Button
@@ -281,7 +281,7 @@ export function EmailBodyEditor({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-medium text-stone-600 hover:bg-stone-100"
+              className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-medium text-foreground/70 hover:bg-muted"
               title="Insert variable"
             >
               <TbBraces size={14} /> Variable
@@ -290,7 +290,7 @@ export function EmailBodyEditor({
           <DropdownMenuContent align="start">
             {VARIABLES.map((v) => (
               <DropdownMenuItem key={v.token} onClick={() => insertVariable(v.token)}>
-                {v.label} <span className="ml-auto text-stone-400">{v.token}</span>
+                {v.label} <span className="ml-auto text-muted-foreground">{v.token}</span>
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
@@ -300,14 +300,14 @@ export function EmailBodyEditor({
           <button
             type="button"
             onClick={handleCopy}
-            className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-medium text-stone-600 hover:bg-stone-100"
+            className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-medium text-foreground/70 hover:bg-muted"
           >
             <TbCopy size={14} /> Copy
           </button>
           <button
             type="button"
             onClick={handlePaste}
-            className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-medium text-stone-600 hover:bg-stone-100"
+            className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-medium text-foreground/70 hover:bg-muted"
           >
             <TbClipboardText size={14} /> Paste
           </button>
@@ -364,36 +364,36 @@ function InsertButtonModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md p-6 bg-white rounded-2xl border border-stone-100 shadow-2xl">
+      <DialogContent className="sm:max-w-md p-6 bg-card rounded-2xl border border-border shadow-2xl">
         <DialogHeader className="pb-2">
-          <DialogTitle className="text-xl font-bold text-stone-900">Insert Button</DialogTitle>
+          <DialogTitle className="text-xl font-bold text-foreground">Insert Button</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-1">
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-stone-800">Button Text</label>
+            <label className="text-xs font-medium text-foreground">Button Text</label>
             <Input
               type="text"
               value={buttonText}
               onChange={(e) => setButtonText(e.target.value)}
               placeholder="Click Here"
-              className="h-10 rounded-xl border-stone-200 text-sm focus-visible:ring-stone-400"
+              className="h-10 rounded-xl border-border text-sm focus-visible:ring-border"
               required
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-stone-800">URL</label>
+            <label className="text-xs font-medium text-foreground">URL</label>
             <Input
               type="text"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://example.com"
-              className="h-10 rounded-xl border-stone-200 text-sm focus-visible:ring-stone-400"
+              className="h-10 rounded-xl border-border text-sm focus-visible:ring-border"
             />
-            <p className="text-[11px] leading-relaxed text-stone-500">
+            <p className="text-[11px] leading-relaxed text-muted-foreground">
               Inserted as{" "}
-              <span className="font-mono break-all text-stone-700">
+              <span className="font-mono break-all text-foreground/85">
                 {withEmailParam(url.trim() || "https://example.com")}
               </span>
               <br />
@@ -403,10 +403,10 @@ function InsertButtonModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-stone-800">Background Color</label>
+              <label className="text-xs font-medium text-foreground">Background Color</label>
               <div className="flex items-center gap-2">
                 <div
-                  className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-stone-200 shadow-xs cursor-pointer"
+                  className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-border shadow-xs cursor-pointer"
                   style={{ backgroundColor: bgColor }}
                 >
                   <input
@@ -420,16 +420,16 @@ function InsertButtonModal({
                   type="text"
                   value={bgColor}
                   onChange={(e) => setBgColor(e.target.value)}
-                  className="h-10 font-mono text-xs rounded-xl border-stone-200"
+                  className="h-10 font-mono text-xs rounded-xl border-border"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-stone-800">Text Color</label>
+              <label className="text-xs font-medium text-foreground">Text Color</label>
               <div className="flex items-center gap-2">
                 <div
-                  className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-stone-200 shadow-xs cursor-pointer"
+                  className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-border shadow-xs cursor-pointer"
                   style={{ backgroundColor: textColor }}
                 >
                   <input
@@ -443,7 +443,7 @@ function InsertButtonModal({
                   type="text"
                   value={textColor}
                   onChange={(e) => setTextColor(e.target.value)}
-                  className="h-10 font-mono text-xs rounded-xl border-stone-200"
+                  className="h-10 font-mono text-xs rounded-xl border-border"
                 />
               </div>
             </div>
@@ -451,31 +451,31 @@ function InsertButtonModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-stone-800">Border Radius</label>
+              <label className="text-xs font-medium text-foreground">Border Radius</label>
               <Input
                 type="text"
                 value={borderRadius}
                 onChange={(e) => setBorderRadius(e.target.value)}
                 placeholder="12px"
-                className="h-10 rounded-xl border-stone-200 text-sm"
+                className="h-10 rounded-xl border-border text-sm"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-stone-800">Padding</label>
+              <label className="text-xs font-medium text-foreground">Padding</label>
               <Input
                 type="text"
                 value={padding}
                 onChange={(e) => setPadding(e.target.value)}
                 placeholder="12px 24px"
-                className="h-10 rounded-xl border-stone-200 text-sm"
+                className="h-10 rounded-xl border-border text-sm"
               />
             </div>
           </div>
 
           <div className="space-y-2 pt-1">
-            <label className="text-xs font-medium text-stone-800">Preview:</label>
-            <div className="flex min-h-[110px] w-full items-center justify-center rounded-2xl border border-stone-100 bg-stone-50/70 p-6">
+            <label className="text-xs font-medium text-foreground">Preview:</label>
+            <div className="flex min-h-[110px] w-full items-center justify-center rounded-2xl border border-border bg-muted/40 p-6">
               <a
                 href={url || "#"}
                 onClick={(e) => e.preventDefault()}
@@ -500,14 +500,14 @@ function InsertButtonModal({
           <div className="flex items-center gap-3 pt-3">
             <button
               type="submit"
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white hover:bg-stone-800 transition-colors shadow-xs cursor-pointer"
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors shadow-xs cursor-pointer"
             >
               <TbPlus size={16} /> Insert Button
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-stone-200 bg-white px-5 py-3 text-sm font-medium text-stone-700 hover:bg-stone-50 transition-colors cursor-pointer"
+              className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground/85 hover:bg-muted/40 transition-colors cursor-pointer"
             >
               Cancel
             </button>
@@ -520,7 +520,7 @@ function InsertButtonModal({
 
 
 function Divider() {
-  return <span className="mx-1 h-5 w-px shrink-0 bg-stone-200" />;
+  return <span className="mx-1 h-5 w-px shrink-0 bg-muted" />;
 }
 
 function ToolbarBtn({
@@ -540,7 +540,7 @@ function ToolbarBtn({
       title={title}
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
-      className={cn("rounded-md p-1.5", active ? "bg-stone-900 text-white" : "text-stone-500 hover:bg-stone-100")}
+      className={cn("rounded-md p-1.5", active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")}
     >
       {children}
     </button>

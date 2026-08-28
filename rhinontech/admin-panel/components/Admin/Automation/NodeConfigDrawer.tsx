@@ -74,17 +74,17 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
   };
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 w-[500px] max-w-full bg-white shadow-2xl border-l border-gray-200 flex flex-col animate-in slide-in-from-right duration-200">
+    <div className="fixed inset-y-0 right-0 z-50 w-[500px] max-w-full bg-card shadow-2xl border-l border-border flex flex-col animate-in slide-in-from-right duration-200">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-border">
         <div>
-          <h3 className="text-lg font-bold text-gray-900 capitalize">{label || node.type.replace("_", " ")}</h3>
-          <p className="text-xs text-gray-500">Edit the fields below, then click Save.</p>
+          <h3 className="text-lg font-bold text-foreground capitalize">{label || node.type.replace("_", " ")}</h3>
+          <p className="text-xs text-muted-foreground">Edit the fields below, then click Save.</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={handleSave}
-            className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all ${isSaved ? "bg-emerald-100 text-emerald-700" : "bg-gray-900 text-white hover:bg-gray-800"
+            className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all ${isSaved ? "bg-emerald-100 dark:bg-emerald-400/15 text-emerald-700 dark:text-emerald-300" : "bg-primary text-primary-foreground hover:bg-primary/90"
               }`}
           >
             {isSaved ? "Saved ✓" : "Save"}
@@ -92,7 +92,7 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
           {node.type !== "trigger" && node.type !== "exit" && (
             <button
               onClick={() => onDelete(node.id)}
-              className="p-1.5 text-gray-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors"
+              className="p-1.5 text-muted-foreground hover:text-rose-600 dark:hover:text-rose-300 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-400/10 transition-colors"
               title="Delete node"
             >
               <TbTrash size={18} />
@@ -100,7 +100,7 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
           )}
           <button
             onClick={onClose}
-            className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+            className="p-1.5 text-muted-foreground hover:text-foreground/70 rounded-lg hover:bg-muted transition-colors"
           >
             <TbX size={20} />
           </button>
@@ -111,12 +111,12 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
       <div className="flex-1 overflow-y-auto p-6 space-y-5">
         {/* Node Label / Name */}
         <div>
-          <label className="block text-xs font-semibold text-gray-700 mb-1">Step Name</label>
+          <label className="block text-xs font-semibold text-foreground/85 mb-1">Step Name</label>
           <input
             type="text"
             value={label}
             onChange={(e) => setLabel(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+            className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
             placeholder="e.g. Welcome Email"
           />
         </div>
@@ -125,57 +125,57 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
         {node.type === "send_email" && (
           <>
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">From email</label>
+              <label className="block text-xs font-semibold text-foreground/85 mb-1">From email</label>
               <select
                 value={config.fromEmail || SHARED_SENDER}
                 onChange={(e) => setConfig({ ...config, fromEmail: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white font-medium text-gray-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm bg-card font-medium text-foreground focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
               >
                 <option value={SHARED_SENDER}>{SHARED_SENDER} (shared)</option>
                 {currentUserEmail && currentUserEmail !== SHARED_SENDER && (
                   <option value={currentUserEmail}>{currentUserEmail} (you)</option>
                 )}
               </select>
-              <p className="text-[11px] text-gray-400 mt-1">Send as the shared inbox, or your own address.</p>
+              <p className="text-[11px] text-muted-foreground mt-1">Send as the shared inbox, or your own address.</p>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">From name</label>
+              <label className="block text-xs font-semibold text-foreground/85 mb-1">From name</label>
               <input
                 type="text"
                 value={config.fromName || "Rhinon Tech"}
                 onChange={(e) => setConfig({ ...config, fromName: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                 placeholder="Rhinon Tech Team"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Subject</label>
+              <label className="block text-xs font-semibold text-foreground/85 mb-1">Subject</label>
               <input
                 type="text"
                 value={config.subject || ""}
                 onChange={(e) => setConfig({ ...config, subject: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                 placeholder="e.g. Welcome to Rhinon Tech!"
               />
-              <p className="text-[11px] text-gray-400 mt-1">Personalize with {"{{name}}"}, {"{{email}}"}, {"{{phone}}"}</p>
+              <p className="text-[11px] text-muted-foreground mt-1">Personalize with {"{{name}}"}, {"{{email}}"}, {"{{phone}}"}</p>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-semibold text-gray-700">Email body</label>
+                <label className="text-xs font-semibold text-foreground/85">Email body</label>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => navigator.clipboard.writeText(config.emailBody || "")}
-                    className="flex items-center gap-1 text-[11px] text-gray-500 hover:text-gray-900 border border-gray-200 px-2 py-0.5 rounded"
+                    className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground border border-border px-2 py-0.5 rounded"
                   >
                     <TbCopy size={12} /> Copy
                   </button>
                   <button
                     type="button"
-                    className="flex items-center gap-1 text-[11px] text-gray-500 hover:text-gray-900 border border-gray-200 px-2 py-0.5 rounded"
+                    className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground border border-border px-2 py-0.5 rounded"
                   >
                     <TbSend size={12} /> Send test
                   </button>
@@ -196,7 +196,7 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
         {node.type === "wait" && (
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Delay Duration</label>
+              <label className="block text-xs font-semibold text-foreground/85 mb-1">Delay Duration</label>
               <div className="flex gap-3">
                 <input
                   type="number"
@@ -222,7 +222,7 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
                       delayDays: currentUnit === "days" ? val : undefined,
                     });
                   }}
-                  className="w-1/2 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                  className="w-1/2 rounded-lg border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                 />
                 <select
                   value={
@@ -248,14 +248,14 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
                       delayDays: unit === "days" ? currentVal : undefined,
                     });
                   }}
-                  className="w-1/2 rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white focus:border-indigo-500 outline-none"
+                  className="w-1/2 rounded-lg border border-border px-3 py-2 text-sm bg-card focus:border-indigo-500 outline-none"
                 >
                   <option value="minutes">Minutes</option>
                   <option value="hours">Hours</option>
                   <option value="days">Days</option>
                 </select>
               </div>
-              <p className="text-[11px] text-gray-400 mt-1.5">
+              <p className="text-[11px] text-muted-foreground mt-1.5">
                 The workflow will pause for this duration before executing the next step.
               </p>
             </div>
@@ -266,45 +266,45 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
         {(node.type === "call_task" || node.type === "linkedin_step") && (
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Task title</label>
+              <label className="block text-xs font-semibold text-foreground/85 mb-1">Task title</label>
               <input
                 value={config.title || ""}
                 onChange={(e) => setConfig({ ...config, title: e.target.value })}
                 placeholder={node.type === "call_task" ? "Call {{name}} about pricing" : "Connect with {{name}} on LinkedIn"}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none bg-white font-medium text-gray-800"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none bg-card font-medium text-foreground"
               />
-              <p className="text-[11px] text-gray-400 mt-1.5">
+              <p className="text-[11px] text-muted-foreground mt-1.5">
                 Merge tags like <code>{"{{name}}"}</code> and <code>{"{{company}}"}</code> work here.
               </p>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Notes</label>
+              <label className="block text-xs font-semibold text-foreground/85 mb-1">Notes</label>
               <textarea
                 value={config.notes || ""}
                 onChange={(e) => setConfig({ ...config, notes: e.target.value })}
                 placeholder="What should the rep cover?"
-                className="w-full h-20 resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none bg-white text-gray-800"
+                className="w-full h-20 resize-none rounded-lg border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none bg-card text-foreground"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Due in (days)</label>
+                <label className="block text-xs font-semibold text-foreground/85 mb-1">Due in (days)</label>
                 <input
                   type="number"
                   min={0}
                   value={config.dueInDays ?? 1}
                   onChange={(e) => setConfig({ ...config, dueInDays: Number(e.target.value) })}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none bg-white font-medium text-gray-800"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none bg-card font-medium text-foreground"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Priority</label>
+                <label className="block text-xs font-semibold text-foreground/85 mb-1">Priority</label>
                 <select
                   value={config.priority || "Medium"}
                   onChange={(e) => setConfig({ ...config, priority: e.target.value as NodeConfig["priority"] })}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none bg-white font-medium text-gray-800"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none bg-card font-medium text-foreground"
                 >
                   <option value="Low">Low</option>
                   <option value="Medium">Medium</option>
@@ -313,7 +313,7 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
               </div>
             </div>
 
-            <p className="text-[11px] text-gray-400">
+            <p className="text-[11px] text-muted-foreground">
               Assigned to the lead&apos;s owner, or to whoever created this workflow if the lead has none.
               The sequence moves to the next step straight away — it does not wait for the task to be done.
             </p>
@@ -324,7 +324,7 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
         {node.type === "ab_split" && (
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">
+              <label className="block text-xs font-semibold text-foreground/85 mb-1">
                 Share taking variant A — {config.splitPercent ?? 50}%
               </label>
               <input
@@ -336,12 +336,12 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
                 onChange={(e) => setConfig({ ...config, splitPercent: Number(e.target.value) })}
                 className="w-full accent-fuchsia-600"
               />
-              <div className="flex justify-between text-[11px] font-semibold text-gray-500 mt-1">
-                <span className="text-fuchsia-600">A · {config.splitPercent ?? 50}%</span>
-                <span className="text-indigo-600">B · {100 - (config.splitPercent ?? 50)}%</span>
+              <div className="flex justify-between text-[11px] font-semibold text-muted-foreground mt-1">
+                <span className="text-fuchsia-600 dark:text-fuchsia-300">A · {config.splitPercent ?? 50}%</span>
+                <span className="text-indigo-600 dark:text-indigo-300">B · {100 - (config.splitPercent ?? 50)}%</span>
               </div>
             </div>
-            <p className="text-[11px] text-gray-400">
+            <p className="text-[11px] text-muted-foreground">
               The branch is picked once per lead and remembered, so a retry can never send the same
               lead down both paths. Connect the A and B handles to the two variants you want to compare.
             </p>
@@ -352,11 +352,11 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
         {node.type === "if_then" && (
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Condition Rule</label>
+              <label className="block text-xs font-semibold text-foreground/85 mb-1">Condition Rule</label>
               <select
                 value={config.conditionType || "email_opened"}
                 onChange={(e) => setConfig({ ...config, conditionType: e.target.value as NodeConfig["conditionType"] })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none bg-white font-medium text-gray-800"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none bg-card font-medium text-foreground"
               >
                 <option value="email_opened">Previous email was opened</option>
                 <option value="link_clicked">Link inside previous email was clicked</option>
@@ -364,7 +364,7 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Waiting Time before checking</label>
+              <label className="block text-xs font-semibold text-foreground/85 mb-1">Waiting Time before checking</label>
               <div className="flex gap-3">
                 <input
                   type="number"
@@ -390,7 +390,7 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
                       checkDelayDays: currentUnit === "days" ? val : undefined,
                     });
                   }}
-                  className="w-1/2 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                  className="w-1/2 rounded-lg border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                 />
                 <select
                   value={
@@ -416,15 +416,15 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
                       checkDelayDays: unit === "days" ? currentVal : undefined,
                     });
                   }}
-                  className="w-1/2 rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white focus:border-indigo-500 outline-none"
+                  className="w-1/2 rounded-lg border border-border px-3 py-2 text-sm bg-card focus:border-indigo-500 outline-none"
                 >
                   <option value="minutes">Minutes</option>
                   <option value="hours">Hours</option>
                   <option value="days">Days</option>
                 </select>
               </div>
-              <p className="text-[11px] text-gray-500 mt-1.5 leading-relaxed">
-                The workflow will pause for this duration to give the recipient time to interact. If they open/click during this window, they take the <span className="font-semibold text-emerald-600">YES</span> path; otherwise, they take the <span className="font-semibold text-rose-600">NO</span> path.
+              <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
+                The workflow will pause for this duration to give the recipient time to interact. If they open/click during this window, they take the <span className="font-semibold text-emerald-600 dark:text-emerald-300">YES</span> path; otherwise, they take the <span className="font-semibold text-rose-600 dark:text-rose-300">NO</span> path.
               </p>
             </div>
           </div>

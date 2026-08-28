@@ -32,9 +32,9 @@ export function initials(name: string): string {
 
 /** Deterministic avatar tint so a person keeps the same colour across sections. */
 const AVATAR_TINTS = [
-  "bg-blue-100 text-blue-700", "bg-emerald-100 text-emerald-700",
-  "bg-amber-100 text-amber-700", "bg-purple-100 text-purple-700",
-  "bg-pink-100 text-pink-700", "bg-indigo-100 text-indigo-700",
+  "bg-blue-100 dark:bg-blue-400/15 text-blue-700 dark:text-blue-300", "bg-emerald-100 dark:bg-emerald-400/15 text-emerald-700 dark:text-emerald-300",
+  "bg-amber-100 dark:bg-amber-400/15 text-amber-700 dark:text-amber-300", "bg-purple-100 dark:bg-purple-400/15 text-purple-700 dark:text-purple-300",
+  "bg-pink-100 dark:bg-pink-400/15 text-pink-700 dark:text-pink-300", "bg-indigo-100 dark:bg-indigo-400/15 text-indigo-700 dark:text-indigo-300",
 ];
 
 export function avatarTint(key: string): string {
@@ -46,14 +46,14 @@ export function avatarTint(key: string): string {
 export function DueBadge({ dueDate, status }: { dueDate: string | null; status: TaskStatus }) {
   if (isOverdue(dueDate, status)) {
     return (
-      <span className="inline-flex items-center gap-1 rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-semibold text-red-600">
+      <span className="inline-flex items-center gap-1 rounded bg-red-50 dark:bg-red-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-red-600 dark:text-red-300">
         <TbAlertTriangle size={10} /> Overdue
       </span>
     );
   }
   if (isDueToday(dueDate, status)) {
     return (
-      <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
+      <span className="inline-flex items-center gap-1 rounded bg-amber-50 dark:bg-amber-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:text-amber-300">
         <TbClock size={10} /> Today
       </span>
     );

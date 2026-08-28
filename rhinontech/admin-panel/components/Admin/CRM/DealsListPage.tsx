@@ -81,19 +81,19 @@ export function DealsListPage() {
 
   return (
     <main className={cn("flex h-full min-h-0 w-full flex-col overflow-hidden glass-panel", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
-      <div className="flex min-h-16 shrink-0 flex-wrap items-center justify-between gap-3 border-b border-stone-200/70 px-3 py-2">
+      <div className="flex min-h-16 shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border/70 px-3 py-2">
         <div className="flex min-w-0 items-center gap-2.5">
           <SubNavToggle />
           <div className="min-w-0">
-            <h1 className="text-sm font-semibold tracking-tight text-stone-900">Deals</h1>
-            <p className="text-[11px] tabular-nums text-stone-500">
+            <h1 className="text-sm font-semibold tracking-tight text-foreground">Deals</h1>
+            <p className="text-[11px] tabular-nums text-muted-foreground">
               {count.toLocaleString("en-IN")} matching · {formatMoney(pageValue)} on this page
             </p>
           </div>
         </div>
         <Link
           href={`${crmBase}/pipeline`}
-          className="inline-flex items-center gap-1.5 rounded-md border border-stone-200 bg-white/70 px-2.5 py-1.5 text-xs font-medium text-stone-700 hover:bg-stone-100"
+          className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card/70 px-2.5 py-1.5 text-xs font-medium text-foreground/85 hover:bg-muted"
         >
           <TbLayoutKanban size={14} /> Board view
         </Link>
@@ -102,12 +102,12 @@ export function DealsListPage() {
       <div className="flex-1 overflow-auto p-3">
         <div className="mb-2.5 flex flex-wrap items-center gap-2">
           <div className="relative min-w-[180px] flex-1 sm:max-w-xs">
-            <TbSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-stone-400" size={14} />
+            <TbSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search deal title…"
-              className="w-full rounded-md border border-stone-200 bg-white/70 py-1.5 pl-8 pr-3 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40"
+              className="w-full rounded-md border border-border bg-card/70 py-1.5 pl-8 pr-3 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40"
             />
           </div>
           <Sel value={statusFilter} onChange={(v) => { setStatusFilter(v); setOffset(0); }}>
@@ -126,7 +126,7 @@ export function DealsListPage() {
           </Sel>
         </div>
 
-        {error && <p className="mb-2.5 rounded-md border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-[11px] text-rose-700">{error}</p>}
+        {error && <p className="mb-2.5 rounded-md border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2.5 py-1.5 text-[11px] text-rose-700 dark:text-rose-300">{error}</p>}
 
         <TableShell>
           <HeaderRow cols={COLS}>
@@ -154,34 +154,34 @@ export function DealsListPage() {
                 new Date(deal.expectedCloseDate) < new Date(new Date().toDateString());
               return (
                 <DataRow key={deal.id} cols={COLS} onClick={() => setOpenDealId(deal.id)}>
-                  <span className="truncate font-medium text-stone-900">{deal.title}</span>
-                  <span className="flex min-w-0 items-center gap-1 text-[12px] text-stone-600">
+                  <span className="truncate font-medium text-foreground">{deal.title}</span>
+                  <span className="flex min-w-0 items-center gap-1 text-[12px] text-foreground/70">
                     {deal.account ? (
                       <>
-                        <TbBuilding size={11} className="shrink-0 text-stone-400" />
+                        <TbBuilding size={11} className="shrink-0 text-muted-foreground" />
                         <Link
                           href={`${crmBase}/accounts?accountId=${deal.account.id}`}
                           onClick={(e) => e.stopPropagation()}
-                          className="truncate hover:text-blue-600 hover:underline"
+                          className="truncate hover:text-blue-600 dark:hover:text-blue-300 hover:underline"
                         >
                           {deal.account.name}
                         </Link>
                       </>
-                    ) : <span className="text-stone-300">—</span>}
+                    ) : <span className="text-muted-foreground/70">—</span>}
                   </span>
-                  <span className="flex min-w-0 items-center gap-1.5 text-[12px] text-stone-600">
+                  <span className="flex min-w-0 items-center gap-1.5 text-[12px] text-foreground/70">
                     <StageDot color={deal.stage?.color} type={deal.stage?.type} />
                     <span className="truncate">{deal.stage?.name || "No stage"}</span>
                   </span>
-                  <span className="text-right font-medium tabular-nums text-stone-900">
+                  <span className="text-right font-medium tabular-nums text-foreground">
                     {formatMoney(deal.value, deal.currency)}
                   </span>
-                  <span className={cn("text-[11px] tabular-nums", overdue ? "text-rose-500" : "text-stone-400")}>
+                  <span className={cn("text-[11px] tabular-nums", overdue ? "text-rose-500 dark:text-rose-400" : "text-muted-foreground")}>
                     {deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "—"}
                   </span>
                   <span className="flex min-w-0 items-center gap-1.5">
                     <Avatar name={deal.owner?.fullName} size={18} />
-                    <span className="truncate text-[11px] text-stone-500">{deal.owner?.fullName || "—"}</span>
+                    <span className="truncate text-[11px] text-muted-foreground">{deal.owner?.fullName || "—"}</span>
                   </span>
                   <span />
                 </DataRow>
@@ -211,7 +211,7 @@ function Sel({ value, onChange, children }: { value: string; onChange: (v: strin
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="rounded-md border border-stone-200 bg-white/70 px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500/40"
+      className="rounded-md border border-border bg-card/70 px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500/40"
     >
       {children}
     </select>

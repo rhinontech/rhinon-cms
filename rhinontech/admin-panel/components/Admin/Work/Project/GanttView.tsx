@@ -172,7 +172,7 @@ export function GanttView({
   return (
     <div className="flex h-full min-h-0 flex-col">
       {linkFrom && (
-        <div className="flex shrink-0 items-center gap-2 border-b bg-blue-50 px-4 py-1.5 text-[11px] text-blue-800">
+        <div className="flex shrink-0 items-center gap-2 border-b bg-blue-50 dark:bg-blue-400/10 px-4 py-1.5 text-[11px] text-blue-800 dark:text-blue-200">
           <TbLink size={13} />
           Now click the task that should wait for this one.
           <button onClick={() => setLinkFrom(null)} className="ml-auto font-medium underline">Cancel</button>
@@ -182,9 +182,9 @@ export function GanttView({
       <div ref={scrollRef} className="min-h-0 flex-1 overflow-auto">
         <div className="relative" style={{ width: LEFT_W + days.length * DAY_W }}>
           {/* header */}
-          <div className="sticky top-0 z-30 flex bg-white">
+          <div className="sticky top-0 z-30 flex bg-card">
             <div
-              className="sticky left-0 z-10 grid shrink-0 items-center border-b border-r bg-stone-50 px-2 text-[11px] font-semibold uppercase tracking-wide text-stone-500"
+              className="sticky left-0 z-10 grid shrink-0 items-center border-b border-r bg-muted/40 px-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
               style={{ width: LEFT_W, height: 44, gridTemplateColumns: "1fr 110px 90px 90px" }}
             >
               <span className="px-1">Name</span>
@@ -192,13 +192,13 @@ export function GanttView({
               <span>Start</span>
               <span>Due</span>
             </div>
-            <div className="border-b bg-stone-50" style={{ width: days.length * DAY_W, height: 44 }}>
+            <div className="border-b bg-muted/40" style={{ width: days.length * DAY_W, height: 44 }}>
               <div className="flex h-5 items-center">
                 {days.map((d, i) =>
                   d.getDay() === 0 ? (
                     <span
                       key={i}
-                      className="shrink-0 border-l px-1 text-[10px] font-semibold text-stone-500"
+                      className="shrink-0 border-l px-1 text-[10px] font-semibold text-muted-foreground"
                       style={{ width: DAY_W * 7 }}
                     >
                       {format(d, "'W'w  d MMM")}
@@ -212,7 +212,7 @@ export function GanttView({
                     key={i}
                     className={cn(
                       "shrink-0 border-l text-center text-[10px] leading-6",
-                      [0, 6].includes(d.getDay()) ? "bg-stone-100 text-stone-400" : "text-stone-500"
+                      [0, 6].includes(d.getDay()) ? "bg-muted text-muted-foreground" : "text-muted-foreground"
                     )}
                     style={{ width: DAY_W }}
                   >
@@ -225,16 +225,16 @@ export function GanttView({
 
           {/* body */}
           <div className="relative flex">
-            <div className="sticky left-0 z-20 shrink-0 border-r bg-white" style={{ width: LEFT_W }}>
+            <div className="sticky left-0 z-20 shrink-0 border-r bg-card" style={{ width: LEFT_W }}>
               {placed.map(({ row, index }) => (
                 <div
                   key={row.task.id}
-                  className="grid items-center border-b px-2 text-sm hover:bg-stone-50"
+                  className="grid items-center border-b px-2 text-sm hover:bg-muted/40"
                   style={{ height: ROW_H, gridTemplateColumns: "1fr 110px 90px 90px" }}
                 >
                   <span className="flex min-w-0 items-center gap-1" style={{ paddingLeft: row.depth * 16 }}>
                     {row.hasChildren ? (
-                      <button onClick={() => onToggleCollapsed(row.task.id)} className="shrink-0 rounded p-0.5 text-stone-400 hover:bg-stone-200">
+                      <button onClick={() => onToggleCollapsed(row.task.id)} className="shrink-0 rounded p-0.5 text-muted-foreground hover:bg-muted">
                         {collapsed.has(row.task.id) ? <TbChevronRight size={13} /> : <TbChevronDown size={13} />}
                       </button>
                     ) : <span className="w-[18px] shrink-0" />}
@@ -249,10 +249,10 @@ export function GanttView({
                       </span>
                     )}
                   </span>
-                  <span className="text-[11px] text-stone-500">
+                  <span className="text-[11px] text-muted-foreground">
                     {row.task.startDate ? format(new Date(row.task.startDate), "dd/MM/yy") : "—"}
                   </span>
-                  <span className="text-[11px] text-stone-500">
+                  <span className="text-[11px] text-muted-foreground">
                     {row.task.dueDate ? format(new Date(row.task.dueDate), "dd/MM/yy") : "—"}
                   </span>
                 </div>
@@ -265,7 +265,7 @@ export function GanttView({
                 {days.map((d, i) => (
                   <div
                     key={i}
-                    className={cn("h-full shrink-0 border-l", [0, 6].includes(d.getDay()) && "bg-stone-50")}
+                    className={cn("h-full shrink-0 border-l", [0, 6].includes(d.getDay()) && "bg-muted/40")}
                     style={{ width: DAY_W }}
                   />
                 ))}
@@ -311,7 +311,7 @@ export function GanttView({
                       className={cn(
                         "group relative flex h-full w-full items-center overflow-hidden px-1.5",
                         p.isSummary
-                          ? "rounded-sm bg-stone-400/70"
+                          ? "rounded-sm bg-muted-foreground/40"
                           : cn("cursor-grab rounded", STATUS_CHIP[color] ?? STATUS_CHIP.stone),
                         linkFrom === p.row.task.id && "ring-2 ring-blue-500"
                       )}
@@ -323,14 +323,14 @@ export function GanttView({
                           <button
                             onClick={(e) => { e.stopPropagation(); handleLinkClick(p.row.task.id); }}
                             title="Link to another task"
-                            className="absolute right-3 hidden rounded bg-white/70 p-0.5 group-hover:block"
+                            className="absolute right-3 hidden rounded bg-card/70 p-0.5 group-hover:block"
                           >
                             <TbLink size={10} />
                           </button>
                           <span
                             onPointerDown={(e) => onBarPointerDown(e, p, "resize")}
                             title="Drag to change duration"
-                            className="absolute inset-y-0 right-0 w-1.5 cursor-ew-resize bg-black/10 opacity-0 group-hover:opacity-100"
+                            className="absolute inset-y-0 right-0 w-1.5 cursor-ew-resize bg-foreground/10 opacity-0 group-hover:opacity-100"
                           />
                         </>
                       )}
@@ -344,7 +344,7 @@ export function GanttView({
       </div>
 
       {!rows.length && (
-        <p className="px-4 py-10 text-center text-sm text-stone-400">Nothing to schedule yet.</p>
+        <p className="px-4 py-10 text-center text-sm text-muted-foreground">Nothing to schedule yet.</p>
       )}
     </div>
   );

@@ -151,12 +151,12 @@ export function LeadImportModal({
       <div className="w-full max-w-lg rounded-2xl glass-modal">
         <div className="flex h-16 items-center justify-between border-b px-5">
           <div className="flex items-center gap-2">
-            <TbFileTypeCsv className="text-blue-600" size={20} />
-            <h2 className="text-base font-semibold text-gray-900">
+            <TbFileTypeCsv className="text-blue-600 dark:text-blue-300" size={20} />
+            <h2 className="text-base font-semibold text-foreground">
               {groupName ? `Import Contacts into "${groupName}"` : "Import Leads from CSV"}
             </h2>
           </div>
-          <button onClick={() => onClose(!!result?.imported)} className="text-gray-500 hover:text-gray-900">
+          <button onClick={() => onClose(!!result?.imported)} className="text-muted-foreground hover:text-foreground">
             <TbX size={20} />
           </button>
         </div>
@@ -165,20 +165,20 @@ export function LeadImportModal({
           {result ? (
             <div className="space-y-4">
               <div className="flex flex-col items-center py-2 text-center">
-                <TbCircleCheck className="text-green-500" size={40} />
-                <p className="mt-2 text-lg font-semibold text-gray-900">{result.imported} leads imported</p>
-                <p className="text-sm text-gray-500">out of {result.total} rows in the file</p>
+                <TbCircleCheck className="text-green-500 dark:text-green-400" size={40} />
+                <p className="mt-2 text-lg font-semibold text-foreground">{result.imported} leads imported</p>
+                <p className="text-sm text-muted-foreground">out of {result.total} rows in the file</p>
                 {contactGroupId && (
-                  <p className="mt-1 text-xs text-stone-500">{result.addedToGroup || 0} added to {groupName ? `"${groupName}"` : "the group"}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{result.addedToGroup || 0} added to {groupName ? `"${groupName}"` : "the group"}</p>
                 )}
               </div>
               <div className="grid grid-cols-3 gap-2 text-center">
-                <Stat label="Imported" value={result.imported} tone="text-green-600" />
-                <Stat label="Duplicates" value={result.duplicates} tone="text-amber-600" />
-                <Stat label="Invalid" value={result.invalid} tone="text-red-600" />
+                <Stat label="Imported" value={result.imported} tone="text-green-600 dark:text-green-300" />
+                <Stat label="Duplicates" value={result.duplicates} tone="text-amber-600 dark:text-amber-300" />
+                <Stat label="Invalid" value={result.invalid} tone="text-red-600 dark:text-red-300" />
               </div>
               {result.errors.length > 0 && (
-                <div className="max-h-32 overflow-auto rounded-lg border border-red-100 bg-red-50/50 p-3 text-xs text-red-700">
+                <div className="max-h-32 overflow-auto rounded-lg border border-red-100 dark:border-red-400/20 bg-red-50/50 dark:bg-red-400/10 p-3 text-xs text-red-700 dark:text-red-300">
                   {result.errors.map((e, i) => (
                     <div key={i}>Row {e.row}: {e.reason}</div>
                   ))}
@@ -186,7 +186,7 @@ export function LeadImportModal({
               )}
               <button
                 onClick={() => onClose(true)}
-                className="w-full rounded-lg bg-stone-900 py-2.5 text-sm font-medium text-white hover:bg-stone-800"
+                className="w-full rounded-lg bg-primary py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
               >
                 Done
               </button>
@@ -195,11 +195,11 @@ export function LeadImportModal({
             <div className="space-y-4">
               <button
                 onClick={() => inputRef.current?.click()}
-                className="flex w-full flex-col items-center gap-2 rounded-xl border-2 border-dashed border-stone-200 py-8 text-stone-500 transition-colors hover:border-blue-400 hover:bg-blue-50/30"
+                className="flex w-full flex-col items-center gap-2 rounded-xl border-2 border-dashed border-border py-8 text-muted-foreground transition-colors hover:border-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-400/10"
               >
                 <TbUpload size={28} />
                 <span className="text-sm font-medium">{fileName || "Click to select a CSV file"}</span>
-                <span className="text-xs text-stone-400">Apollo export or any CSV with name & email columns</span>
+                <span className="text-xs text-muted-foreground">Apollo export or any CSV with name & email columns</span>
               </button>
               <input
                 ref={inputRef}
@@ -210,32 +210,32 @@ export function LeadImportModal({
               />
 
               {parseError && (
-                <div className="flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+                <div className="flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-400/10 px-3 py-2 text-sm text-red-700 dark:text-red-300">
                   <TbAlertTriangle size={16} /> {parseError}
                 </div>
               )}
 
               {rows.length > 0 && (
-                <div className="rounded-lg border border-stone-100 bg-stone-50 p-3 text-sm">
+                <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-stone-500">Rows parsed</span>
-                    <span className="font-medium text-stone-900">{rows.length}</span>
+                    <span className="text-muted-foreground">Rows parsed</span>
+                    <span className="font-medium text-foreground">{rows.length}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-stone-500">Ready to import (name + email)</span>
-                    <span className="font-medium text-green-600">{validRows.length}</span>
+                    <span className="text-muted-foreground">Ready to import (name + email)</span>
+                    <span className="font-medium text-green-600 dark:text-green-300">{validRows.length}</span>
                   </div>
                   {rows.length - validRows.length > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-stone-500">Skipped (missing name/email)</span>
-                      <span className="font-medium text-red-500">{rows.length - validRows.length}</span>
+                      <span className="text-muted-foreground">Skipped (missing name/email)</span>
+                      <span className="font-medium text-red-500 dark:text-red-400">{rows.length - validRows.length}</span>
                     </div>
                   )}
                 </div>
               )}
 
               <div className="flex items-center justify-end gap-3 pt-1">
-                <button onClick={() => onClose(false)} className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">
+                <button onClick={() => onClose(false)} className="rounded-lg px-4 py-2 text-sm font-medium text-foreground/85 hover:bg-muted">
                   Cancel
                 </button>
                 <button
@@ -256,9 +256,9 @@ export function LeadImportModal({
 
 function Stat({ label, value, tone }: { label: string; value: number; tone: string }) {
   return (
-    <div className="rounded-lg border border-stone-100 bg-stone-50 py-3">
+    <div className="rounded-lg border border-border bg-muted/40 py-3">
       <p className={`text-xl font-bold ${tone}`}>{value}</p>
-      <p className="text-[11px] uppercase tracking-wide text-stone-400">{label}</p>
+      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
     </div>
   );
 }

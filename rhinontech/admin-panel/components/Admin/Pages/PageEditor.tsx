@@ -185,7 +185,7 @@ export function PageEditor({ id }: { id: string }) {
     content: "",
     editorProps: {
       attributes: {
-        class: "page-tiptap min-h-[60vh] px-1 py-2 text-[16px] leading-relaxed text-stone-800 outline-none",
+        class: "page-tiptap min-h-[60vh] px-1 py-2 text-[16px] leading-relaxed text-foreground outline-none",
       },
       // Links navigate on click, Notion-style: internal page links flush the
       // pending save and route in-app; external ones open a new tab.
@@ -325,27 +325,27 @@ export function PageEditor({ id }: { id: string }) {
 
   return (
     <div className={cn("flex h-full min-h-0 w-full flex-col overflow-hidden glass-panel", isExpanded ? "lg:rounded-r-xl rounded-xl" : "rounded-xl")}>
-      <div className="flex h-14 shrink-0 items-center justify-between gap-2 sm:gap-3 border-b border-black/5 px-3 sm:px-4">
+      <div className="flex h-14 shrink-0 items-center justify-between gap-2 sm:gap-3 border-b border-border px-3 sm:px-4">
         <div className="flex min-w-0 items-center gap-1">
-          <button onClick={toggleSideNav} className="shrink-0 rounded-md p-1.5 text-gray-500 hover:bg-gray-100">
+          <button onClick={toggleSideNav} className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:bg-muted">
             {isExpanded ? <TbLayoutSidebarLeftCollapse size={18} /> : <TbLayoutSidebarLeftExpand size={18} />}
           </button>
           {/* Breadcrumbs: ancestor chain → current page, Notion-style */}
           <nav className="flex min-w-0 items-center gap-1 text-sm">
-            {loadError && <span className="px-1.5 py-0.5 font-medium text-gray-900">Pages</span>}
+            {loadError && <span className="px-1.5 py-0.5 font-medium text-foreground">Pages</span>}
             {!loadError && ancestors.map((a) => (
               <span key={a.id} className="flex min-w-0 items-center gap-1">
                 <button
                   onClick={() => navigateToPage(`/${roleSlug}/pages/${a.id}`)}
-                  className="max-w-[80px] sm:max-w-[160px] truncate rounded-md px-1.5 py-0.5 text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+                  className="max-w-[80px] sm:max-w-[160px] truncate rounded-md px-1.5 py-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                 >
                   {a.icon && !isImageIcon(a.icon) ? `${a.icon} ` : ""}{a.title || "Untitled"}
                 </button>
-                <span className="shrink-0 text-gray-300">/</span>
+                <span className="shrink-0 text-muted-foreground/70">/</span>
               </span>
             ))}
             {!loadError && (
-              <span className="max-w-[100px] sm:max-w-[200px] truncate px-1.5 py-0.5 font-medium text-gray-900">
+              <span className="max-w-[100px] sm:max-w-[200px] truncate px-1.5 py-0.5 font-medium text-foreground">
                 {icon && !isImageIcon(icon) ? `${icon} ` : ""}{title || "Untitled"}
               </span>
             )}
@@ -356,7 +356,7 @@ export function PageEditor({ id }: { id: string }) {
           {canEdit && (
             <button
               onClick={() => setShareOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 px-2 sm:px-2.5 py-1 text-xs font-medium text-stone-600 hover:bg-stone-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2 sm:px-2.5 py-1 text-xs font-medium text-foreground/70 hover:bg-muted/40"
             >
               <TbUsersPlus size={14} /> <span className="hidden sm:inline">Share</span>
             </button>
@@ -367,22 +367,22 @@ export function PageEditor({ id }: { id: string }) {
       <div className="flex-1 overflow-y-auto">
         {loadError ? (
           <div className="mx-auto flex h-full max-w-md flex-col items-center justify-center gap-3 px-10 text-center">
-            <TbLockAccess size={32} className="text-stone-300" />
-            <p className="text-sm font-medium text-stone-700">{loadError}</p>
-            <p className="text-xs text-stone-400">
+            <TbLockAccess size={32} className="text-muted-foreground/70" />
+            <p className="text-sm font-medium text-foreground/85">{loadError}</p>
+            <p className="text-xs text-muted-foreground">
               You may need to be granted access, or the page may have been removed.
             </p>
             <button
               onClick={() => router.push(`/${roleSlug}/pages`)}
-              className="mt-2 rounded-lg border border-stone-200 px-3.5 py-1.5 text-xs font-medium text-stone-600 hover:bg-stone-50"
+              className="mt-2 rounded-lg border border-border px-3.5 py-1.5 text-xs font-medium text-foreground/70 hover:bg-muted/40"
             >
               Back to Pages
             </button>
           </div>
         ) : loading || !editor ? (
           <div className="mx-auto max-w-3xl px-10 py-16">
-            <div className="mb-4 h-10 w-2/3 animate-pulse rounded bg-stone-100" />
-            <div className="h-40 animate-pulse rounded bg-stone-50" />
+            <div className="mb-4 h-10 w-2/3 animate-pulse rounded bg-muted" />
+            <div className="h-40 animate-pulse rounded bg-muted/40" />
           </div>
         ) : (
           <>
@@ -399,11 +399,11 @@ export function PageEditor({ id }: { id: string }) {
               onChange={(e) => handleTitleChange(e.target.value)}
               disabled={!canEdit}
               placeholder="Untitled"
-              className="mt-2 w-full border-none bg-transparent text-4xl font-black tracking-tight text-stone-900 outline-none placeholder:text-stone-300 disabled:cursor-not-allowed"
+              className="mt-2 w-full border-none bg-transparent text-4xl font-black tracking-tight text-foreground outline-none placeholder:text-muted-foreground/70 disabled:cursor-not-allowed"
             />
 
             {!canEdit && (
-              <p className="mt-2 rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700">
+              <p className="mt-2 rounded-lg bg-amber-50 dark:bg-amber-400/10 px-3 py-1.5 text-xs font-medium text-amber-700 dark:text-amber-300">
                 You have view-only access to this page.
               </p>
             )}
@@ -416,14 +416,14 @@ export function PageEditor({ id }: { id: string }) {
             <PageAttachments pageId={id} canEdit={canEdit} />
 
             {children.length > 0 && (
-              <div className="mt-10 border-t border-stone-100 pt-5">
-                <p className="mb-2 text-xs font-bold uppercase tracking-widest text-stone-400">Sub-pages</p>
+              <div className="mt-10 border-t border-border pt-5">
+                <p className="mb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">Sub-pages</p>
                 <div className="space-y-1">
                   {children.map((c) => (
                     <button
                       key={c.id}
                       onClick={() => router.push(`/${roleSlug}/pages/${c.id}`)}
-                      className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm text-stone-700 hover:bg-stone-50"
+                      className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm text-foreground/85 hover:bg-muted/40"
                     >
                       <span className="flex h-4 w-4 shrink-0 items-center justify-center overflow-hidden rounded-sm">
                         {isImageIcon(c.icon) ? (
@@ -431,7 +431,7 @@ export function PageEditor({ id }: { id: string }) {
                         ) : c.icon ? (
                           c.icon
                         ) : (
-                          <TbFileText size={14} className="text-stone-400" />
+                          <TbFileText size={14} className="text-muted-foreground" />
                         )}
                       </span>
                       <span className="truncate">{c.title || "Untitled"}</span>
@@ -444,7 +444,7 @@ export function PageEditor({ id }: { id: string }) {
             {canEdit && (
               <button
                 onClick={createChild}
-                className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-stone-400 hover:text-stone-700"
+                className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground/85"
               >
                 <TbPlus size={13} /> Add sub-page
               </button>
@@ -505,8 +505,8 @@ function IconPicker({
         <button
           disabled={disabled}
           className={cn(
-            "flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl text-4xl leading-none hover:bg-stone-100 disabled:cursor-not-allowed disabled:hover:bg-transparent",
-            withBackground && "border-4 border-white bg-white shadow-sm hover:bg-white"
+            "flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl text-4xl leading-none hover:bg-muted disabled:cursor-not-allowed disabled:hover:bg-transparent",
+            withBackground && "border-4 border-white bg-card shadow-sm hover:bg-card"
           )}
         >
           {isImageIcon(icon) ? (
@@ -514,28 +514,28 @@ function IconPicker({
           ) : icon ? (
             icon
           ) : (
-            <TbMoodSmile size={28} className="text-stone-300" />
+            <TbMoodSmile size={28} className="text-muted-foreground/70" />
           )}
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-72 p-2">
-        <div className="mb-2 flex items-center gap-1 border-b border-stone-100 pb-2">
+        <div className="mb-2 flex items-center gap-1 border-b border-border pb-2">
           <button
             onClick={() => setTab("emoji")}
-            className={cn("rounded-md px-2.5 py-1 text-xs font-medium", tab === "emoji" ? "bg-stone-900 text-white" : "text-stone-500 hover:bg-stone-100")}
+            className={cn("rounded-md px-2.5 py-1 text-xs font-medium", tab === "emoji" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")}
           >
             Emoji
           </button>
           <button
             onClick={() => setTab("upload")}
-            className={cn("rounded-md px-2.5 py-1 text-xs font-medium", tab === "upload" ? "bg-stone-900 text-white" : "text-stone-500 hover:bg-stone-100")}
+            className={cn("rounded-md px-2.5 py-1 text-xs font-medium", tab === "upload" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")}
           >
             Upload image
           </button>
           {icon && (
             <button
               onClick={() => { onChange(""); setOpen(false); }}
-              className="ml-auto rounded-md px-2 py-1 text-xs font-medium text-stone-400 hover:bg-stone-50"
+              className="ml-auto rounded-md px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-muted/40"
             >
               Remove
             </button>
@@ -548,7 +548,7 @@ function IconPicker({
               <button
                 key={e}
                 onClick={() => { onChange(e); setOpen(false); }}
-                className="rounded-md p-1.5 text-xl hover:bg-stone-100"
+                className="rounded-md p-1.5 text-xl hover:bg-muted"
               >
                 {e}
               </button>
@@ -559,7 +559,7 @@ function IconPicker({
             <button
               onClick={() => fileRef.current?.click()}
               disabled={uploading}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-stone-300 px-3.5 py-2 text-sm font-medium hover:bg-stone-100 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3.5 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
             >
               {uploading ? <TbLoader size={15} className="animate-spin" /> : <TbUpload size={15} />}
               {uploading ? "Uploading…" : "Choose an image"}
@@ -575,7 +575,7 @@ function IconPicker({
 function SaveIndicator({ status, onReload }: { status: SaveStatus; onReload: () => void }) {
   if (status === "conflict") {
     return (
-      <button onClick={onReload} className="rounded-lg bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100">
+      <button onClick={onReload} className="rounded-lg bg-amber-50 dark:bg-amber-400/10 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-400/15">
         Updated elsewhere — reload
       </button>
     );
@@ -583,7 +583,7 @@ function SaveIndicator({ status, onReload }: { status: SaveStatus; onReload: () 
   const label = { idle: "", saving: "Saving…", saved: "Saved", error: "Save failed" }[status];
   if (!label) return <span />;
   return (
-    <span className={cn("text-xs font-medium", status === "error" ? "text-red-500" : "text-stone-400")}>
+    <span className={cn("text-xs font-medium", status === "error" ? "text-red-500 dark:text-red-400" : "text-muted-foreground")}>
       {label}
     </span>
   );

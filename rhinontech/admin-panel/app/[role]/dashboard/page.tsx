@@ -165,13 +165,13 @@ function avatar(name: string, idx: number, size = "h-9 w-9") {
 function StatCard({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: React.ReactNode; sub?: string }) {
   return (
     <div className="flex items-center gap-3.5 sm:gap-4 rounded-xl glass-card p-4 sm:p-5 min-w-0">
-      <div className="flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-lg bg-stone-100 text-gray-600">
+      <div className="flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground/70">
         {icon}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-xs text-gray-400 truncate" title={label}>{label}</p>
-        <p className="mt-0.5 text-lg sm:text-xl font-bold text-gray-900 leading-none">{value}</p>
-        {sub && <p className="mt-1 text-xs text-gray-400 truncate" title={sub}>{sub}</p>}
+        <p className="text-xs text-muted-foreground truncate" title={label}>{label}</p>
+        <p className="mt-0.5 text-lg sm:text-xl font-bold text-foreground leading-none">{value}</p>
+        {sub && <p className="mt-1 text-xs text-muted-foreground truncate" title={sub}>{sub}</p>}
       </div>
     </div>
   );
@@ -179,20 +179,20 @@ function StatCard({ icon, label, value, sub }: { icon: React.ReactNode; label: s
 
 function SectionTitle({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
-    <div className="flex items-center gap-2 border-b border-gray-100 px-5 py-3">
-      <span className="text-gray-500">{icon}</span>
-      <h2 className="text-sm font-semibold text-gray-800">{title}</h2>
+    <div className="flex items-center gap-2 border-b border-border px-5 py-3">
+      <span className="text-muted-foreground">{icon}</span>
+      <h2 className="text-sm font-semibold text-foreground">{title}</h2>
     </div>
   );
 }
 
 function EmptyState({ message }: { message: string }) {
-  return <p className="px-5 py-6 text-sm text-gray-400">{message}</p>;
+  return <p className="px-5 py-6 text-sm text-muted-foreground">{message}</p>;
 }
 
 function DayBadge({ day, highlight }: { day: number; highlight?: boolean }) {
   return (
-    <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold ${highlight ? "bg-blue-600 text-white" : "bg-stone-100 text-gray-700"}`}>
+    <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold ${highlight ? "bg-blue-600 text-white" : "bg-muted text-foreground/85"}`}>
       {day}
     </span>
   );
@@ -261,10 +261,10 @@ export default function DashboardPage() {
           <div className="flex items-center gap-3">
             {greetingIcon()}
             <div>
-              <h1 className="text-xl font-bold text-gray-900">
+              <h1 className="text-xl font-bold text-foreground">
                 {stats ? greeting(stats.currentUser.fullName) : "Loading…"}
               </h1>
-              <p className="text-sm text-gray-400">{todayLabel}</p>
+              <p className="text-sm text-muted-foreground">{todayLabel}</p>
             </div>
           </div>
 
@@ -328,12 +328,12 @@ export default function DashboardPage() {
                 {isSuperadmin ? (
                   <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <p className="text-sm text-gray-500">Super admins manage team attendance instead of clocking in.</p>
-                      <p className="mt-2 text-xs text-gray-400">Use Attendance to review who is present, absent, or active today.</p>
+                      <p className="text-sm text-muted-foreground">Super admins manage team attendance instead of clocking in.</p>
+                      <p className="mt-2 text-xs text-muted-foreground">Use Attendance to review who is present, absent, or active today.</p>
                     </div>
                     <a
                       href={`/${roleSlug}/attendance`}
-                      className="rounded-lg bg-gray-900 px-5 py-2 text-sm font-semibold text-white hover:bg-gray-700"
+                      className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/80"
                     >
                       View team attendance
                     </a>
@@ -345,32 +345,32 @@ export default function DashboardPage() {
                     {clocked ? (
                       <>
                         <div>
-                          <p className="text-xs text-gray-400 uppercase tracking-wide">Clocked in</p>
-                          <p className="mt-1 text-3xl font-bold text-gray-900">{formatTime(att?.clockIn)}</p>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide">Clocked in</p>
+                          <p className="mt-1 text-3xl font-bold text-foreground">{formatTime(att?.clockIn)}</p>
                         </div>
                         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
                           <div>
-                            <p className="text-xs text-gray-400">Duration</p>
-                            <p className="mt-0.5 font-semibold text-gray-800">{formatDuration(att?.durationMinutes ?? 0)}</p>
+                            <p className="text-xs text-muted-foreground">Duration</p>
+                            <p className="mt-0.5 font-semibold text-foreground">{formatDuration(att?.durationMinutes ?? 0)}</p>
                           </div>
                           {clockedOut && (
                             <div>
-                              <p className="text-xs text-gray-400">Clocked out</p>
-                              <p className="mt-0.5 font-semibold text-gray-800">{formatTime(att?.clockOut)}</p>
+                              <p className="text-xs text-muted-foreground">Clocked out</p>
+                              <p className="mt-0.5 font-semibold text-foreground">{formatTime(att?.clockOut)}</p>
                             </div>
                           )}
                           <div>
-                            <p className="text-xs text-gray-400">Shift</p>
-                            <p className="mt-0.5 font-semibold text-gray-800">9:00 AM – 6:00 PM</p>
+                            <p className="text-xs text-muted-foreground">Shift</p>
+                            <p className="mt-0.5 font-semibold text-foreground">9:00 AM – 6:00 PM</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="rounded-md bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-600">DEFAULT SHIFT</span>
+                          <span className="rounded-md bg-blue-50 dark:bg-blue-400/10 px-2.5 py-1 text-xs font-semibold text-blue-600 dark:text-blue-300">DEFAULT SHIFT</span>
                           {!clockedOut && !onBreak && (
-                            <span className="rounded-md bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700">Active</span>
+                            <span className="rounded-md bg-green-50 dark:bg-green-400/10 px-2.5 py-1 text-xs font-semibold text-green-700 dark:text-green-300">Active</span>
                           )}
                           {onBreak && (
-                            <span className="rounded-md bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                            <span className="rounded-md bg-amber-50 dark:bg-amber-400/10 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
                               On break since {formatTime(att!.breaks![att!.breaks!.length - 1].start)}
                             </span>
                           )}
@@ -378,8 +378,8 @@ export default function DashboardPage() {
                       </>
                     ) : (
                       <div>
-                        <p className="text-sm text-gray-400 mb-1">You haven't clocked in yet.</p>
-                        <p className="text-xs text-gray-300">Shift: 9:00 AM – 6:00 PM</p>
+                        <p className="text-sm text-muted-foreground mb-1">You haven't clocked in yet.</p>
+                        <p className="text-xs text-muted-foreground/70">Shift: 9:00 AM – 6:00 PM</p>
                       </div>
                     )}
                   </div>
@@ -390,7 +390,7 @@ export default function DashboardPage() {
                       <button
                         onClick={handleClockIn}
                         disabled={clockingIn}
-                        className="rounded-lg bg-gray-900 px-5 py-2 text-sm font-semibold text-white hover:bg-gray-700 disabled:opacity-60"
+                        className="rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/80 disabled:opacity-60"
                       >
                         {clockingIn ? "Clocking in…" : "Clock in"}
                       </button>
@@ -401,7 +401,7 @@ export default function DashboardPage() {
                           onClick={handleToggleBreak}
                           disabled={breakLoading}
                           className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium disabled:opacity-60 ${
-                            onBreak ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100" : "border-gray-300 text-gray-800 hover:bg-gray-50"
+                            onBreak ? "border-amber-300 dark:border-amber-400/30 bg-amber-50 dark:bg-amber-400/10 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-400/15" : "border-border text-foreground hover:bg-muted/40"
                           }`}
                         >
                           <TbCoffee size={16} />
@@ -410,7 +410,7 @@ export default function DashboardPage() {
                         <button
                           onClick={handleClockOut}
                           disabled={clockingOut}
-                          className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-5 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-60"
+                          className="inline-flex items-center gap-2 rounded-lg border border-border px-5 py-2 text-sm font-medium text-foreground hover:bg-muted/40 disabled:opacity-60"
                         >
                           <TbStopwatch size={16} />
                           {clockingOut ? "Clocking out…" : "Clock out"}
@@ -418,9 +418,9 @@ export default function DashboardPage() {
                       </div>
                     )}
                     {clocked && clockedOut && (
-                      <span className="rounded-lg bg-stone-100 px-4 py-2 text-sm text-gray-500">Done for today</span>
+                      <span className="rounded-lg bg-muted px-4 py-2 text-sm text-muted-foreground">Done for today</span>
                     )}
-                    <button className="rounded-lg border border-gray-200 px-4 py-2 text-xs text-gray-500 hover:bg-gray-50">
+                    <button className="rounded-lg border border-border px-4 py-2 text-xs text-muted-foreground hover:bg-muted/40">
                       Add regularisation
                     </button>
                   </div>
@@ -428,7 +428,7 @@ export default function DashboardPage() {
 
                 {/* Timeline bar */}
                 <div className="mt-5">
-                  <div className="relative h-3 w-full overflow-hidden rounded-full bg-stone-100">
+                  <div className="relative h-3 w-full overflow-hidden rounded-full bg-muted">
                     {clocked && (
                       <div
                         className="absolute left-0 top-0 h-full rounded-full bg-blue-500"
@@ -446,7 +446,7 @@ export default function DashboardPage() {
                       />
                     )}
                   </div>
-                  <div className="mt-1 flex justify-between text-xs text-gray-300">
+                  <div className="mt-1 flex justify-between text-xs text-muted-foreground/70">
                     <span>12 AM</span><span>6 AM</span><span>12 PM</span><span>6 PM</span><span>12 AM</span>
                   </div>
                 </div>
@@ -464,17 +464,17 @@ export default function DashboardPage() {
             <div className="col-span-12 md:col-span-4 rounded-xl glass-card overflow-hidden">
               <SectionTitle icon={<TbCake size={16} />} title="Birthdays this month" />
               {stats?.birthdays.length ? (
-                <div className="divide-y divide-gray-50">
+                <div className="divide-y divide-border">
                   {stats.birthdays.map((p, i) => (
                     <div key={p.id} className="flex items-center gap-3 px-5 py-3.5">
                       <DayBadge day={p.day} highlight={p.isToday} />
                       {avatar(p.fullName, i)}
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium text-gray-800 truncate">{p.fullName}</p>
-                          {p.isToday && <span className="shrink-0 rounded-full bg-pink-100 px-2 py-0.5 text-[10px] font-semibold text-pink-600">Today 🎂</span>}
+                          <p className="text-sm font-medium text-foreground truncate">{p.fullName}</p>
+                          {p.isToday && <span className="shrink-0 rounded-full bg-pink-100 dark:bg-pink-400/15 px-2 py-0.5 text-[10px] font-semibold text-pink-600 dark:text-pink-300">Today 🎂</span>}
                         </div>
-                        <p className="text-xs text-gray-400">{p.department} · Turns {p.age}</p>
+                        <p className="text-xs text-muted-foreground">{p.department} · Turns {p.age}</p>
                       </div>
                     </div>
                   ))}
@@ -488,17 +488,17 @@ export default function DashboardPage() {
             <div className="col-span-12 md:col-span-4 rounded-xl glass-card overflow-hidden">
               <SectionTitle icon={<TbConfetti size={16} />} title="Work anniversaries" />
               {stats?.anniversaries.length ? (
-                <div className="divide-y divide-gray-50">
+                <div className="divide-y divide-border">
                   {stats.anniversaries.map((p, i) => (
                     <div key={p.id} className="flex items-center gap-3 px-5 py-3.5">
                       <DayBadge day={p.day} highlight={p.isToday} />
                       {avatar(p.fullName, i + 2)}
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium text-gray-800 truncate">{p.fullName}</p>
-                          {p.isToday && <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-600">Today 🎉</span>}
+                          <p className="text-sm font-medium text-foreground truncate">{p.fullName}</p>
+                          {p.isToday && <span className="shrink-0 rounded-full bg-amber-100 dark:bg-amber-400/15 px-2 py-0.5 text-[10px] font-semibold text-amber-600 dark:text-amber-300">Today 🎉</span>}
                         </div>
-                        <p className="text-xs text-gray-400">{p.department} · {p.years} {p.years === 1 ? "year" : "years"}</p>
+                        <p className="text-xs text-muted-foreground">{p.department} · {p.years} {p.years === 1 ? "year" : "years"}</p>
                       </div>
                     </div>
                   ))}
@@ -512,15 +512,15 @@ export default function DashboardPage() {
             <div className="col-span-12 md:col-span-4 rounded-xl glass-card overflow-hidden">
               <SectionTitle icon={<TbCalendarPlus size={16} />} title="Recent hires" />
               {stats?.recentHires.length ? (
-                <div className="divide-y divide-gray-50">
+                <div className="divide-y divide-border">
                   {stats.recentHires.map((p, i) => (
                     <div key={p.id} className="flex items-center gap-3 px-5 py-3.5">
                       {avatar(p.fullName, i + 4)}
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-gray-800 truncate">{p.fullName}</p>
-                        <p className="text-xs text-gray-400">{p.department} · {p.role}</p>
+                        <p className="text-sm font-medium text-foreground truncate">{p.fullName}</p>
+                        <p className="text-xs text-muted-foreground">{p.department} · {p.role}</p>
                       </div>
-                      <span className="shrink-0 text-xs text-gray-400">{ordinalDate(p.joiningDate as unknown as string)}</span>
+                      <span className="shrink-0 text-xs text-muted-foreground">{ordinalDate(p.joiningDate as unknown as string)}</span>
                     </div>
                   ))}
                 </div>
@@ -534,13 +534,13 @@ export default function DashboardPage() {
           <div className="rounded-xl glass-card overflow-hidden">
             <SectionTitle icon={<TbCalendar size={16} />} title={`My pending tasks${stats?.pendingTasks ? ` (${stats.pendingTasks})` : ""}`} />
             {stats?.pendingTasksList.length ? (
-              <div className="divide-y divide-gray-50">
+              <div className="divide-y divide-border">
                 {stats.pendingTasksList.map((task) => (
                   <div key={task.id} className="flex items-center gap-4 px-5 py-3.5">
-                    <span className="h-4 w-4 shrink-0 rounded border border-gray-300" />
-                    <p className="flex-1 text-sm font-medium text-gray-800">{task.title}</p>
+                    <span className="h-4 w-4 shrink-0 rounded border border-border" />
+                    <p className="flex-1 text-sm font-medium text-foreground">{task.title}</p>
                     {task.dueDate && (
-                      <span className="shrink-0 text-xs text-gray-400">Due {ordinalDate(task.dueDate)}</span>
+                      <span className="shrink-0 text-xs text-muted-foreground">Due {ordinalDate(task.dueDate)}</span>
                     )}
                   </div>
                 ))}

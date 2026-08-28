@@ -61,28 +61,28 @@ export function FaqEditor({
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-bold tracking-tight text-stone-900">FAQs (optional)</h2>
-          <p className="text-xs text-stone-400">
+          <h2 className="text-sm font-bold tracking-tight text-foreground">FAQs (optional)</h2>
+          <p className="text-xs text-muted-foreground">
             Render as an accordion on the blog page and power the FAQ schema for Google.
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {imported > 0 && (
-            <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-300">
               <TbCheck size={13} /> {imported} imported
             </span>
           )}
           <button
             type="button"
             onClick={() => { setJsonOpen((v) => !v); setJsonError(""); }}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-stone-300 px-3 py-1.5 text-xs font-medium hover:bg-stone-100"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted"
           >
             <TbCode size={13} /> Paste JSON
           </button>
           <button
             type="button"
             onClick={() => onChange([...faqs, { question: "", answer: "" }])}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-stone-300 px-3 py-1.5 text-xs font-medium hover:bg-stone-100"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted"
           >
             <TbPlus size={13} /> Add FAQ
           </button>
@@ -90,14 +90,14 @@ export function FaqEditor({
       </div>
 
       {jsonOpen && (
-        <div className="space-y-2 rounded-xl border border-stone-200 bg-stone-50/60 p-3">
+        <div className="space-y-2 rounded-xl border border-border bg-muted/40 p-3">
           <div className="flex items-start justify-between gap-2">
-            <p className="text-xs text-stone-500">
-              Paste either a plain array — <code className="rounded bg-white px-1 py-0.5 text-[10px]">[{"{"}&quot;question&quot;: &quot;…&quot;, &quot;answer&quot;: &quot;…&quot;{"}"}]</code> —
-              or a full <code className="rounded bg-white px-1 py-0.5 text-[10px]">FAQPage</code> schema with <code className="rounded bg-white px-1 py-0.5 text-[10px]">mainEntity</code>.
+            <p className="text-xs text-muted-foreground">
+              Paste either a plain array — <code className="rounded bg-card px-1 py-0.5 text-[10px]">[{"{"}&quot;question&quot;: &quot;…&quot;, &quot;answer&quot;: &quot;…&quot;{"}"}]</code> —
+              or a full <code className="rounded bg-card px-1 py-0.5 text-[10px]">FAQPage</code> schema with <code className="rounded bg-card px-1 py-0.5 text-[10px]">mainEntity</code>.
               The FAQ schema on the live page is generated automatically from these.
             </p>
-            <button type="button" onClick={() => setJsonOpen(false)} className="p-1 text-stone-400 hover:text-stone-700" title="Close">
+            <button type="button" onClick={() => setJsonOpen(false)} className="p-1 text-muted-foreground hover:text-foreground/85" title="Close">
               <TbX size={14} />
             </button>
           </div>
@@ -105,15 +105,15 @@ export function FaqEditor({
             value={jsonText}
             onChange={(e) => setJsonText(e.target.value)}
             placeholder={'[\n  { "question": "What is …?", "answer": "It is …" }\n]'}
-            className="h-40 w-full resize-y rounded-lg border border-stone-200 bg-white px-3 py-2 font-mono text-xs outline-none focus:ring-2 focus:ring-stone-900"
+            className="h-40 w-full resize-y rounded-lg border border-border bg-card px-3 py-2 font-mono text-xs outline-none focus:ring-2 focus:ring-ring"
           />
-          {jsonError && <p className="text-xs text-red-500">{jsonError}</p>}
+          {jsonError && <p className="text-xs text-red-500 dark:text-red-400">{jsonError}</p>}
           <div className="flex justify-end">
             <button
               type="button"
               onClick={handleImport}
               disabled={!jsonText.trim()}
-              className="rounded-lg bg-stone-900 px-3.5 py-1.5 text-xs font-medium text-white hover:bg-stone-800 disabled:opacity-50"
+              className="rounded-lg bg-primary px-3.5 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
               Import FAQs
             </button>
@@ -122,24 +122,24 @@ export function FaqEditor({
       )}
 
       {faqs.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-stone-200 bg-stone-50/50 px-4 py-6 text-center text-xs text-stone-400">
+        <p className="rounded-xl border border-dashed border-border bg-muted/40 px-4 py-6 text-center text-xs text-muted-foreground">
           No FAQs added. These render as an accordion on the blog page.
         </p>
       ) : (
         faqs.map((faq, index) => (
-          <div key={index} className="space-y-2 rounded-xl border border-stone-200 bg-white p-3">
+          <div key={index} className="space-y-2 rounded-xl border border-border bg-card p-3">
             <div className="flex items-center gap-2">
               <input
                 type="text"
                 value={faq.question}
                 onChange={(e) => patch(index, { question: e.target.value })}
                 placeholder={`Question ${index + 1}`}
-                className="flex-1 px-3 py-2 rounded-lg border border-stone-200 outline-none focus:ring-2 focus:ring-stone-900 bg-white text-sm font-medium"
+                className="flex-1 px-3 py-2 rounded-lg border border-border outline-none focus:ring-2 focus:ring-ring bg-card text-sm font-medium"
               />
               <button
                 type="button"
                 onClick={() => onChange(faqs.filter((_, i) => i !== index))}
-                className="p-2 rounded-lg text-stone-300 hover:bg-red-50 hover:text-red-600"
+                className="p-2 rounded-lg text-muted-foreground/70 hover:bg-red-50 dark:hover:bg-red-400/10 hover:text-red-600 dark:hover:text-red-300"
                 title="Remove FAQ"
               >
                 <TbTrash size={15} />
@@ -149,7 +149,7 @@ export function FaqEditor({
               value={faq.answer}
               onChange={(e) => patch(index, { answer: e.target.value })}
               placeholder="Answer"
-              className="w-full px-3 py-2 rounded-lg border border-stone-200 outline-none focus:ring-2 focus:ring-stone-900 bg-white resize-none h-20 text-sm"
+              className="w-full px-3 py-2 rounded-lg border border-border outline-none focus:ring-2 focus:ring-ring bg-card resize-none h-20 text-sm"
             />
           </div>
         ))

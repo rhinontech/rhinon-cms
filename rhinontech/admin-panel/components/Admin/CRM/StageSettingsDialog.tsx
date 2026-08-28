@@ -8,7 +8,7 @@ import type { PipelineStage, StageType } from "./types";
 import { StageDot, TBtn } from "./ui";
 
 const INPUT =
-  "w-full rounded border border-stone-200 bg-white px-2 py-1 text-[12px] outline-none focus:ring-2 focus:ring-blue-500/40";
+  "w-full rounded border border-border bg-card px-2 py-1 text-[12px] outline-none focus:ring-2 focus:ring-blue-500/40";
 
 /**
  * Pipeline stage management. Stages are rows, so renaming, reordering, and
@@ -117,26 +117,26 @@ export function StageSettingsDialog({ onClose }: { onClose: (changed: boolean) =
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center glass-overlay p-4" onClick={() => onClose(dirty)}>
       <div onClick={(e) => e.stopPropagation()} className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-xl glass-modal">
-        <div className="flex shrink-0 items-center justify-between border-b border-stone-200/70 px-4 py-3">
+        <div className="flex shrink-0 items-center justify-between border-b border-border/70 px-4 py-3">
           <div>
-            <h2 className="text-sm font-semibold text-stone-900">Pipeline stages</h2>
-            <p className="text-[11px] text-stone-500">Probability drives the weighted forecast on the board.</p>
+            <h2 className="text-sm font-semibold text-foreground">Pipeline stages</h2>
+            <p className="text-[11px] text-muted-foreground">Probability drives the weighted forecast on the board.</p>
           </div>
-          <button onClick={() => onClose(dirty)} className="rounded p-1 text-stone-400 hover:bg-stone-100">
+          <button onClick={() => onClose(dirty)} className="rounded p-1 text-muted-foreground hover:bg-muted">
             <TbX size={16} />
           </button>
         </div>
 
         <div className="flex-1 overflow-auto p-3">
-          {error && <p className="mb-2 rounded border border-rose-200 bg-rose-50 px-2 py-1.5 text-[11px] text-rose-700">{error}</p>}
+          {error && <p className="mb-2 rounded border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2 py-1.5 text-[11px] text-rose-700 dark:text-rose-300">{error}</p>}
 
           {loading ? (
             <div className="space-y-1.5">
-              {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-9 animate-pulse rounded bg-stone-100" />)}
+              {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-9 animate-pulse rounded bg-muted" />)}
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-[20px_minmax(0,1fr)_92px_104px_64px_56px] items-center gap-2 px-1 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-stone-500">
+              <div className="grid grid-cols-[20px_minmax(0,1fr)_92px_104px_64px_56px] items-center gap-2 px-1 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                 <span />
                 <span>Name</span>
                 <span>Type</span>
@@ -149,9 +149,9 @@ export function StageSettingsDialog({ onClose }: { onClose: (changed: boolean) =
                 {stages.map((stage, i) => (
                   <li
                     key={stage.id}
-                    className="grid grid-cols-[20px_minmax(0,1fr)_92px_104px_64px_56px] items-center gap-2 rounded-lg border border-stone-200 bg-white/70 px-1 py-1.5"
+                    className="grid grid-cols-[20px_minmax(0,1fr)_92px_104px_64px_56px] items-center gap-2 rounded-lg border border-border bg-card/70 px-1 py-1.5"
                   >
-                    <span className="flex justify-center text-stone-300"><TbGripVertical size={13} /></span>
+                    <span className="flex justify-center text-muted-foreground/70"><TbGripVertical size={13} /></span>
 
                     <span className="flex min-w-0 items-center gap-1.5">
                       <StageDot color={stage.color} type={stage.type} />
@@ -186,9 +186,9 @@ export function StageSettingsDialog({ onClose }: { onClose: (changed: boolean) =
                         onChange={(e) => patchLocal(stage.id, { probability: Number(e.target.value) })}
                         onBlur={() => saveStage(stage)}
                         disabled={stage.type !== "Open"}
-                        className={cn(INPUT, "tabular-nums disabled:bg-stone-50 disabled:text-stone-400")}
+                        className={cn(INPUT, "tabular-nums disabled:bg-muted/40 disabled:text-muted-foreground")}
                       />
-                      <span className="text-[11px] text-stone-400">%</span>
+                      <span className="text-[11px] text-muted-foreground">%</span>
                     </span>
 
                     <input
@@ -196,17 +196,17 @@ export function StageSettingsDialog({ onClose }: { onClose: (changed: boolean) =
                       value={stage.color || "#94a3b8"}
                       onChange={(e) => patchLocal(stage.id, { color: e.target.value })}
                       onBlur={() => saveStage(stage)}
-                      className="h-7 w-full cursor-pointer rounded border border-stone-200 bg-white"
+                      className="h-7 w-full cursor-pointer rounded border border-border bg-card"
                     />
 
                     <span className="flex items-center justify-end gap-0.5">
-                      <button onClick={() => move(i, -1)} disabled={i === 0 || busy} className="rounded p-1 text-stone-400 hover:bg-stone-100 disabled:opacity-30" title="Move up">
+                      <button onClick={() => move(i, -1)} disabled={i === 0 || busy} className="rounded p-1 text-muted-foreground hover:bg-muted disabled:opacity-30" title="Move up">
                         <TbArrowUp size={13} />
                       </button>
-                      <button onClick={() => move(i, 1)} disabled={i === stages.length - 1 || busy} className="rounded p-1 text-stone-400 hover:bg-stone-100 disabled:opacity-30" title="Move down">
+                      <button onClick={() => move(i, 1)} disabled={i === stages.length - 1 || busy} className="rounded p-1 text-muted-foreground hover:bg-muted disabled:opacity-30" title="Move down">
                         <TbArrowDown size={13} />
                       </button>
-                      <button onClick={() => remove(stage)} disabled={busy} className="rounded p-1 text-stone-300 hover:bg-rose-50 hover:text-rose-600" title="Delete stage">
+                      <button onClick={() => remove(stage)} disabled={busy} className="rounded p-1 text-muted-foreground/70 hover:bg-rose-50 dark:hover:bg-rose-400/10 hover:text-rose-600 dark:hover:text-rose-300" title="Delete stage">
                         <TbTrash size={13} />
                       </button>
                     </span>
@@ -218,7 +218,7 @@ export function StageSettingsDialog({ onClose }: { onClose: (changed: boolean) =
                 <TBtn onClick={add} disabled={busy}><TbPlus size={13} /> Add stage</TBtn>
               </div>
 
-              <p className="mt-3 text-[11px] leading-relaxed text-stone-400">
+              <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
                 A deal takes its Open/Won/Lost status from the stage it sits in, so keep exactly one
                 Won and one Lost stage. Stages holding deals can&apos;t be deleted until those deals move.
               </p>
@@ -226,7 +226,7 @@ export function StageSettingsDialog({ onClose }: { onClose: (changed: boolean) =
           )}
         </div>
 
-        <div className="flex shrink-0 justify-end border-t border-stone-200/70 px-4 py-2.5">
+        <div className="flex shrink-0 justify-end border-t border-border/70 px-4 py-2.5">
           <TBtn variant="solid" onClick={() => onClose(dirty)}>Done</TBtn>
         </div>
       </div>

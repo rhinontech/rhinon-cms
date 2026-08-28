@@ -144,7 +144,7 @@ function ToolbarButton({
       onClick={onClick}
       className={cn(
         "p-1.5 rounded-md transition-colors",
-        active ? "bg-stone-900 text-white" : "text-stone-500 hover:bg-stone-100 hover:text-stone-900"
+        active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
       )}
     >
       {children}
@@ -153,7 +153,7 @@ function ToolbarButton({
 }
 
 function Divider() {
-  return <span className="mx-1 h-4 w-px shrink-0 bg-stone-200" />;
+  return <span className="mx-1 h-4 w-px shrink-0 bg-muted" />;
 }
 
 function InsertImageButton({ editor }: { editor: Editor }) {
@@ -195,30 +195,30 @@ function InsertImageButton({ editor }: { editor: Editor }) {
           title="Insert Image"
           onMouseDown={(e) => e.preventDefault()}
           className={cn(
-            "p-1.5 rounded-md transition-colors text-stone-500 hover:bg-stone-100 hover:text-stone-900",
-            open && "bg-stone-100 text-stone-900"
+            "p-1.5 rounded-md transition-colors text-muted-foreground hover:bg-muted hover:text-foreground",
+            open && "bg-muted text-foreground"
           )}
         >
           <TbPhoto size={16} />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-80 p-3 bg-white border border-stone-200 shadow-md rounded-lg z-[110]">
+      <PopoverContent align="start" className="w-80 p-3 bg-card border border-border shadow-md rounded-lg z-[110]">
         <div className="space-y-3">
-          <h4 className="text-xs font-semibold text-stone-700">Insert Image</h4>
+          <h4 className="text-xs font-semibold text-foreground/85">Insert Image</h4>
           <div className="flex flex-col gap-2">
             <button
               onClick={() => fileRef.current?.click()}
               disabled={uploading}
-              className="inline-flex items-center justify-center gap-1.5 w-full rounded-lg border border-stone-300 bg-white py-2 text-sm font-medium hover:bg-stone-50 disabled:opacity-50 text-stone-700 cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 w-full rounded-lg border border-border bg-card py-2 text-sm font-medium hover:bg-muted/40 disabled:opacity-50 text-foreground/85 cursor-pointer"
             >
-              {uploading ? <TbLoader size={15} className="animate-spin text-stone-500" /> : <TbUpload size={15} />}
+              {uploading ? <TbLoader size={15} className="animate-spin text-muted-foreground" /> : <TbUpload size={15} />}
               {uploading ? "Uploading..." : "Upload from Computer"}
             </button>
             <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
 
             <div className="relative flex items-center py-1">
-              <span className="absolute inset-x-0 h-px bg-stone-200" />
-              <span className="relative mx-auto bg-white px-2 text-[10px] text-stone-400 font-medium">OR</span>
+              <span className="absolute inset-x-0 h-px bg-muted" />
+              <span className="relative mx-auto bg-card px-2 text-[10px] text-muted-foreground font-medium">OR</span>
             </div>
 
             <form onSubmit={handleUrlSubmit} className="flex gap-1.5">
@@ -227,12 +227,12 @@ function InsertImageButton({ editor }: { editor: Editor }) {
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="Paste image URL..."
-                className="flex-1 h-8 px-2.5 rounded-md border border-stone-200 text-xs outline-none focus:ring-1 focus:ring-stone-900 bg-white text-stone-900"
+                className="flex-1 h-8 px-2.5 rounded-md border border-border text-xs outline-none focus:ring-1 focus:ring-ring bg-card text-foreground"
               />
               <button
                 type="submit"
                 disabled={!url.trim()}
-                className="h-8 px-3 rounded-md bg-stone-900 text-white text-xs font-medium hover:bg-stone-800 disabled:opacity-50 cursor-pointer"
+                className="h-8 px-3 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 disabled:opacity-50 cursor-pointer"
               >
                 Insert
               </button>
@@ -293,32 +293,32 @@ function InsertVideoButton({ editor }: { editor: Editor }) {
           title="Insert Video"
           onMouseDown={(e) => e.preventDefault()}
           className={cn(
-            "p-1.5 rounded-md transition-colors text-stone-500 hover:bg-stone-100 hover:text-stone-900",
-            open && "bg-stone-100 text-stone-900"
+            "p-1.5 rounded-md transition-colors text-muted-foreground hover:bg-muted hover:text-foreground",
+            open && "bg-muted text-foreground"
           )}
         >
           <TbVideo size={16} />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-80 p-3 bg-white border border-stone-200 shadow-md rounded-lg z-[110]">
+      <PopoverContent align="start" className="w-80 p-3 bg-card border border-border shadow-md rounded-lg z-[110]">
         <div className="space-y-3">
-          <h4 className="text-xs font-semibold text-stone-700">Insert Video</h4>
+          <h4 className="text-xs font-semibold text-foreground/85">Insert Video</h4>
           <div className="flex flex-col gap-2">
             <button
               onClick={() => fileRef.current?.click()}
               disabled={uploading}
-              className="inline-flex items-center justify-center gap-1.5 w-full rounded-lg border border-stone-300 bg-white py-2 text-sm font-medium hover:bg-stone-50 disabled:opacity-50 text-stone-700 cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 w-full rounded-lg border border-border bg-card py-2 text-sm font-medium hover:bg-muted/40 disabled:opacity-50 text-foreground/85 cursor-pointer"
             >
-              {uploading ? <TbLoader size={15} className="animate-spin text-stone-500" /> : <TbUpload size={15} />}
+              {uploading ? <TbLoader size={15} className="animate-spin text-muted-foreground" /> : <TbUpload size={15} />}
               {uploading ? "Uploading..." : "Upload from Computer"}
             </button>
             <input ref={fileRef} type="file" accept="video/mp4,video/webm,video/quicktime" onChange={handleFile} className="hidden" />
-            <p className="text-[10px] text-stone-400">MP4, WebM or MOV — up to {MAX_VIDEO_MB} MB.</p>
-            {error && <p className="text-[10px] text-red-500">{error}</p>}
+            <p className="text-[10px] text-muted-foreground">MP4, WebM or MOV — up to {MAX_VIDEO_MB} MB.</p>
+            {error && <p className="text-[10px] text-red-500 dark:text-red-400">{error}</p>}
 
             <div className="relative flex items-center py-1">
-              <span className="absolute inset-x-0 h-px bg-stone-200" />
-              <span className="relative mx-auto bg-white px-2 text-[10px] text-stone-400 font-medium">OR</span>
+              <span className="absolute inset-x-0 h-px bg-muted" />
+              <span className="relative mx-auto bg-card px-2 text-[10px] text-muted-foreground font-medium">OR</span>
             </div>
 
             <form onSubmit={handleUrlSubmit} className="flex gap-1.5">
@@ -327,17 +327,17 @@ function InsertVideoButton({ editor }: { editor: Editor }) {
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="Paste a YouTube or video URL..."
-                className="flex-1 h-8 px-2.5 rounded-md border border-stone-200 text-xs outline-none focus:ring-1 focus:ring-stone-900 bg-white text-stone-900"
+                className="flex-1 h-8 px-2.5 rounded-md border border-border text-xs outline-none focus:ring-1 focus:ring-ring bg-card text-foreground"
               />
               <button
                 type="submit"
                 disabled={!url.trim()}
-                className="h-8 px-3 rounded-md bg-stone-900 text-white text-xs font-medium hover:bg-stone-800 disabled:opacity-50 cursor-pointer"
+                className="h-8 px-3 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 disabled:opacity-50 cursor-pointer"
               >
                 Insert
               </button>
             </form>
-            <p className="flex items-center gap-1 text-[10px] text-stone-400">
+            <p className="flex items-center gap-1 text-[10px] text-muted-foreground">
               <TbBrandYoutube size={13} /> YouTube links embed automatically.
             </p>
           </div>
@@ -377,7 +377,7 @@ export function ParagraphBlock({
     editorProps: {
       attributes: {
         class:
-          "blog-tiptap min-h-[65vh] px-4 py-3 text-[15px] leading-relaxed text-stone-800 outline-none",
+          "blog-tiptap min-h-[65vh] px-4 py-3 text-[15px] leading-relaxed text-foreground outline-none",
       },
     },
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
@@ -403,7 +403,7 @@ export function ParagraphBlock({
   }, []);
 
   if (!editor) {
-    return <div className="min-h-[160px] rounded-lg bg-stone-50 animate-pulse" />;
+    return <div className="min-h-[160px] rounded-lg bg-muted/40 animate-pulse" />;
   }
 
   const styleValue = editor.isActive("heading", { level: 2 })
@@ -419,11 +419,11 @@ export function ParagraphBlock({
   const inTable = editor.isActive("table");
 
   const selectClass =
-    "h-7 rounded-md border border-stone-200 bg-white px-1.5 text-xs font-medium text-stone-700 outline-none focus:ring-1 focus:ring-stone-900";
+    "h-7 rounded-md border border-border bg-card px-1.5 text-xs font-medium text-foreground/85 outline-none focus:ring-1 focus:ring-ring";
 
   return (
-    <div className="rounded-lg border border-stone-200 bg-white focus-within:ring-2 focus-within:ring-stone-900 transition-shadow">
-      <div className="flex flex-wrap items-center gap-0.5 border-b border-stone-100 px-2 py-1.5">
+    <div className="rounded-lg border border-border bg-card focus-within:ring-2 focus-within:ring-ring transition-shadow">
+      <div className="flex flex-wrap items-center gap-0.5 border-b border-border px-2 py-1.5">
         {/* Font family */}
         <select
           title="Font"
@@ -482,7 +482,7 @@ export function ParagraphBlock({
               type="button"
               title="Text color"
               onMouseDown={(e) => e.preventDefault()}
-              className="p-1.5 rounded-md text-stone-500 hover:bg-stone-100 hover:text-stone-900"
+              className="p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <span className="flex flex-col items-center">
                 <TbLetterA size={14} />
@@ -500,7 +500,7 @@ export function ParagraphBlock({
                 }}
                 className="gap-2.5"
               >
-                <span className="h-3.5 w-3.5 rounded-full border border-stone-200" style={{ background: c.value || "#1c1917" }} />
+                <span className="h-3.5 w-3.5 rounded-full border border-border" style={{ background: c.value || "#1c1917" }} />
                 {c.label}
               </DropdownMenuItem>
             ))}
@@ -516,7 +516,7 @@ export function ParagraphBlock({
               onMouseDown={(e) => e.preventDefault()}
               className={cn(
                 "p-1.5 rounded-md transition-colors",
-                editor.isActive("highlight") ? "bg-stone-900 text-white" : "text-stone-500 hover:bg-stone-100 hover:text-stone-900"
+                editor.isActive("highlight") ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
             >
               <TbHighlight size={16} />
@@ -532,7 +532,7 @@ export function ParagraphBlock({
                 }}
                 className="gap-2.5"
               >
-                <span className="h-3.5 w-3.5 rounded-full border border-stone-200" style={{ background: c.value || "#ffffff" }} />
+                <span className="h-3.5 w-3.5 rounded-full border border-border" style={{ background: c.value || "#ffffff" }} />
                 {c.label}
               </DropdownMenuItem>
             ))}
@@ -622,8 +622,8 @@ export function ParagraphBlock({
 
       {/* Contextual table controls */}
       {inTable && (
-        <div className="flex flex-wrap items-center gap-0.5 border-b border-stone-100 bg-stone-50/60 px-2 py-1">
-          <span className="mr-1 text-[10px] font-bold uppercase tracking-widest text-stone-400">Table</span>
+        <div className="flex flex-wrap items-center gap-0.5 border-b border-border bg-muted/40 px-2 py-1">
+          <span className="mr-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Table</span>
           <ToolbarButton title="Add row below" onClick={() => editor.chain().focus().addRowAfter().run()}>
             <TbRowInsertBottom size={15} />
           </ToolbarButton>
@@ -644,8 +644,8 @@ export function ParagraphBlock({
 
       {/* Contextual image controls */}
       {editor.isActive("image") && (
-        <div className="flex flex-wrap items-center gap-1.5 border-b border-stone-100 bg-stone-50/60 px-3 py-1.5 text-xs text-stone-500">
-          <span className="mr-1 text-[10px] font-bold uppercase tracking-widest text-stone-400">Image</span>
+        <div className="flex flex-wrap items-center gap-1.5 border-b border-border bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground">
+          <span className="mr-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Image</span>
           
           <Divider />
           
@@ -675,7 +675,7 @@ export function ParagraphBlock({
           <Divider />
           
           {/* Preset Sizes */}
-          <span className="text-[11px] font-medium text-stone-400 font-sans">Size:</span>
+          <span className="text-[11px] font-medium text-muted-foreground font-sans">Size:</span>
           {(["25%", "50%", "75%", "100%"] as const).map((size) => (
             <button
               key={size}
@@ -684,8 +684,8 @@ export function ParagraphBlock({
               className={cn(
                 "px-2 py-0.5 rounded text-[11px] font-semibold border transition-all cursor-pointer",
                 editor.getAttributes("image").width === size
-                  ? "bg-stone-900 border-stone-900 text-white"
-                  : "bg-white border-stone-200 hover:bg-stone-100 text-stone-600"
+                  ? "bg-primary border-primary text-primary-foreground"
+                  : "bg-card border-border hover:bg-muted text-foreground/70"
               )}
             >
               {size}
@@ -694,7 +694,7 @@ export function ParagraphBlock({
 
           {/* Slider for custom size */}
           <div className="flex items-center gap-2 ml-2">
-            <span className="text-[11px] font-medium text-stone-400 font-sans">Custom:</span>
+            <span className="text-[11px] font-medium text-muted-foreground font-sans">Custom:</span>
             <input
               type="range"
               min="10"
@@ -702,9 +702,9 @@ export function ParagraphBlock({
               step="5"
               value={parseInt(editor.getAttributes("image").width || "100")}
               onChange={(e) => editor.chain().focus().updateAttributes("image", { width: `${e.target.value}%` }).run()}
-              className="w-20 accent-stone-900 cursor-pointer h-1.5 rounded-lg appearance-none bg-stone-200"
+              className="w-20 accent-primary cursor-pointer h-1.5 rounded-lg appearance-none bg-muted"
             />
-            <span className="text-[11px] font-medium w-8 text-stone-600 font-sans text-right">
+            <span className="text-[11px] font-medium w-8 text-foreground/70 font-sans text-right">
               {parseInt(editor.getAttributes("image").width || "100")}%
             </span>
           </div>
@@ -713,13 +713,13 @@ export function ParagraphBlock({
 
           {/* Alt text */}
           <div className="flex items-center gap-1.5 flex-1 min-w-[200px]">
-            <span className="text-[11px] font-medium text-stone-400 shrink-0 font-sans">Alt Text:</span>
+            <span className="text-[11px] font-medium text-muted-foreground shrink-0 font-sans">Alt Text:</span>
             <input
               type="text"
               placeholder="Describe image..."
               value={editor.getAttributes("image").alt || ""}
               onChange={(e) => editor.chain().focus().updateAttributes("image", { alt: e.target.value }).run()}
-              className="flex-1 max-w-[300px] h-6 px-2 rounded border border-stone-200 text-[11px] outline-none focus:ring-1 focus:ring-stone-900 bg-white text-stone-900"
+              className="flex-1 max-w-[300px] h-6 px-2 rounded border border-border text-[11px] outline-none focus:ring-1 focus:ring-ring bg-card text-foreground"
             />
           </div>
 
@@ -729,7 +729,7 @@ export function ParagraphBlock({
           <button
             type="button"
             onClick={() => editor.chain().focus().deleteSelection().run()}
-            className="p-1 rounded text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors cursor-pointer"
+            className="p-1 rounded text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-400/10 hover:text-red-700 dark:hover:text-red-300 transition-colors cursor-pointer"
             title="Delete Image"
           >
             <TbTrash size={15} />
@@ -739,14 +739,14 @@ export function ParagraphBlock({
 
       {/* Contextual video controls */}
       {editor.isActive("videoEmbed") && (
-        <div className="flex flex-wrap items-center gap-1.5 border-b border-stone-100 bg-stone-50/60 px-3 py-1.5 text-xs text-stone-500">
-          <span className="mr-1 text-[10px] font-bold uppercase tracking-widest text-stone-400">
+        <div className="flex flex-wrap items-center gap-1.5 border-b border-border bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground">
+          <span className="mr-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             {editor.getAttributes("videoEmbed").kind === "youtube" ? "YouTube" : "Video"}
           </span>
 
           <Divider />
 
-          <span className="text-[11px] font-medium text-stone-400 font-sans">Width:</span>
+          <span className="text-[11px] font-medium text-muted-foreground font-sans">Width:</span>
           {(["50%", "75%", "100%"] as const).map((size) => (
             <button
               key={size}
@@ -755,8 +755,8 @@ export function ParagraphBlock({
               className={cn(
                 "px-2 py-0.5 rounded text-[11px] font-semibold border transition-all cursor-pointer",
                 editor.getAttributes("videoEmbed").width === size
-                  ? "bg-stone-900 border-stone-900 text-white"
-                  : "bg-white border-stone-200 hover:bg-stone-100 text-stone-600"
+                  ? "bg-primary border-primary text-primary-foreground"
+                  : "bg-card border-border hover:bg-muted text-foreground/70"
               )}
             >
               {size}
@@ -768,7 +768,7 @@ export function ParagraphBlock({
           <button
             type="button"
             onClick={() => editor.chain().focus().deleteSelection().run()}
-            className="p-1 rounded text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors cursor-pointer"
+            className="p-1 rounded text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-400/10 hover:text-red-700 dark:hover:text-red-300 transition-colors cursor-pointer"
             title="Delete Video"
           >
             <TbTrash size={15} />

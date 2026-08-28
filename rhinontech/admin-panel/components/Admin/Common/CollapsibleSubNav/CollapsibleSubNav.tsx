@@ -54,14 +54,14 @@ export function CollapsibleSubNav({ title, items }: CollapsibleSubNavProps) {
     <aside
       className={`flex-col glass-sidenav transition-all duration-200 ease-in-out overflow-hidden
         ${showNav
-          ? "fixed inset-y-0 left-0 z-50 flex w-64 max-lg:bg-white! shadow-xl lg:static lg:z-auto lg:h-full lg:w-[15%] lg:min-w-[180px] lg:rounded-l-xl lg:glass-sidenav lg:shadow-none lg:border-r lg:border-black/5"
+          ? "fixed inset-y-0 left-0 z-50 flex w-64 max-lg:bg-card! shadow-xl lg:static lg:z-auto lg:h-full lg:w-[15%] lg:min-w-[180px] lg:rounded-l-xl lg:glass-sidenav lg:shadow-none lg:border-r lg:border-border"
           : "hidden lg:flex lg:h-full lg:w-0"}`}
     >
       {showNav && (
         <div className="flex flex-col w-full flex-1">
-          <div className="flex items-center justify-between w-full h-16 px-5 py-4 text-xl font-semibold tracking-tight border-b border-black/5">
+          <div className="flex items-center justify-between w-full h-16 px-5 py-4 text-xl font-semibold tracking-tight border-b border-border">
             {title}
-            <button onClick={toggleSideNav} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 lg:hidden" aria-label="Close menu">
+            <button onClick={toggleSideNav} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted lg:hidden" aria-label="Close menu">
               <TbX size={18} />
             </button>
           </div>
@@ -101,7 +101,7 @@ export function SubNavToggle() {
   return (
     <button
       onClick={toggleSideNav}
-      className="p-1.5 rounded-md hover:bg-gray-100 text-gray-500 transition-colors"
+      className="p-1.5 rounded-md hover:bg-muted text-muted-foreground transition-colors"
     >
       {isExpanded ? (
         <TbLayoutSidebarFilled size={20} />

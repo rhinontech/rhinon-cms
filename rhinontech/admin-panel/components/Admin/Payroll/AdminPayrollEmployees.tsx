@@ -215,7 +215,7 @@ export function AdminPayrollEmployees() {
   return (
     <div className="flex min-h-0 min-w-0 gap-2 h-full overflow-hidden w-full">
       <main className={cn("flex min-h-0 min-w-0 flex-col h-full w-full glass-panel overflow-hidden", isSubNavExpanded ? "rounded-r-xl max-sm:rounded-xl" : "rounded-xl")}>
-        <div className="sticky top-0 z-10 flex min-h-16 flex-wrap items-center justify-between gap-2 px-4 sm:px-5 py-2 sm:py-0 border-b border-black/5 glass-header">
+        <div className="sticky top-0 z-10 flex min-h-16 flex-wrap items-center justify-between gap-2 px-4 sm:px-5 py-2 sm:py-0 border-b border-border glass-header">
           <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
             <SubNavToggle />
             <h1 className="text-base sm:text-lg font-semibold tracking-tight truncate">Employee Salary Setup</h1>
@@ -223,7 +223,7 @@ export function AdminPayrollEmployees() {
           {!isPreviewExpanded && (
             <button
               onClick={() => setIsPreviewExpanded(true)}
-              className="p-1.5 sm:p-2 text-gray-600 hover:bg-stone-100 rounded-lg shrink-0"
+              className="p-1.5 sm:p-2 text-foreground/70 hover:bg-muted rounded-lg shrink-0"
             >
               <TbLayoutSidebarFilled size={18} />
             </button>
@@ -232,23 +232,23 @@ export function AdminPayrollEmployees() {
 
         <div className="flex-1 min-h-0 min-w-0 overflow-auto p-3 sm:p-6 max-w-full">
           <div className="relative mb-3.5 sm:mb-5 max-w-sm w-full">
-            <TbSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <TbSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by name, department or role..."
-              className="w-full pl-9 pr-4 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-9 pr-4 py-1.5 sm:py-2 text-xs sm:text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div className="glass-card-solid rounded-xl overflow-x-auto shadow-xs max-w-full w-full">
             {loading ? (
-              <div className="p-8 text-center text-xs sm:text-sm text-gray-400">Loading employees...</div>
+              <div className="p-8 text-center text-xs sm:text-sm text-muted-foreground">Loading employees...</div>
             ) : filtered.length === 0 ? (
-              <div className="p-8 text-center text-xs sm:text-sm text-gray-400">No employees found.</div>
+              <div className="p-8 text-center text-xs sm:text-sm text-muted-foreground">No employees found.</div>
             ) : (
               <table className="w-full min-w-[640px] text-xs sm:text-sm">
-                <thead className="glass-thead text-xs text-gray-600 uppercase">
+                <thead className="glass-thead text-xs text-foreground/70 uppercase">
                   <tr>
                     <th className="px-3.5 sm:px-5 py-2.5 sm:py-3 text-left">Employee</th>
                     <th className="px-3.5 sm:px-5 py-2.5 sm:py-3 text-left">Role / Dept</th>
@@ -258,7 +258,7 @@ export function AdminPayrollEmployees() {
                     <th className="px-3.5 sm:px-5 py-2.5 sm:py-3 text-left">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-border">
                   {filtered.map((emp) => {
                     const hasSalary = emp.basicSalary && Number(emp.basicSalary) > 0;
                     const gross = hasSalary
@@ -274,32 +274,32 @@ export function AdminPayrollEmployees() {
                         key={emp.id}
                         onClick={() => selectEmployee(emp)}
                         className={cn(
-                          "cursor-pointer hover:bg-gray-50 transition-colors",
-                          selectedEmployee?.id === emp.id && "bg-blue-50 hover:bg-blue-50"
+                          "cursor-pointer hover:bg-muted/40 transition-colors",
+                          selectedEmployee?.id === emp.id && "bg-blue-50 dark:bg-blue-400/10 hover:bg-blue-50 dark:hover:bg-blue-400/10"
                         )}
                       >
                         <td className="px-3.5 sm:px-5 py-2.5 sm:py-3">
-                          <p className="font-medium text-gray-900">{emp.fullName}</p>
-                          <p className="text-xs text-gray-400">{emp.companyEmail}</p>
+                          <p className="font-medium text-foreground">{emp.fullName}</p>
+                          <p className="text-xs text-muted-foreground">{emp.companyEmail}</p>
                         </td>
                         <td className="px-3.5 sm:px-5 py-2.5 sm:py-3">
-                          <p className="text-gray-700">{emp.role?.name ?? "—"}</p>
-                          <p className="text-xs text-gray-400">{emp.department}</p>
+                          <p className="text-foreground/85">{emp.role?.name ?? "—"}</p>
+                          <p className="text-xs text-muted-foreground">{emp.department}</p>
                         </td>
                         <td className="px-3.5 sm:px-5 py-2.5 sm:py-3 text-right font-medium">
-                          {hasSalary ? INR(Number(emp.basicSalary)) : <span className="text-gray-300">—</span>}
+                          {hasSalary ? INR(Number(emp.basicSalary)) : <span className="text-muted-foreground/70">—</span>}
                         </td>
                         <td className="px-3.5 sm:px-5 py-2.5 sm:py-3 text-right">
-                          {gross ? INR(gross) : <span className="text-gray-300">—</span>}
+                          {gross ? INR(gross) : <span className="text-muted-foreground/70">—</span>}
                         </td>
                         <td className="px-3.5 sm:px-5 py-2.5 sm:py-3 text-right font-semibold">
-                          {net ? INR(net) : <span className="text-gray-300">—</span>}
+                          {net ? INR(net) : <span className="text-muted-foreground/70">—</span>}
                         </td>
                         <td className="px-3.5 sm:px-5 py-2.5 sm:py-3">
                           {hasSalary ? (
-                            <span className="px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700 font-medium">Set</span>
+                            <span className="px-2 py-0.5 rounded-full text-xs bg-green-100 dark:bg-green-400/15 text-green-700 dark:text-green-300 font-medium">Set</span>
                           ) : (
-                            <span className="px-2 py-0.5 rounded-full text-xs bg-amber-100 text-amber-700 font-medium">Not Set</span>
+                            <span className="px-2 py-0.5 rounded-full text-xs bg-amber-100 dark:bg-amber-400/15 text-amber-700 dark:text-amber-300 font-medium">Not Set</span>
                           )}
                         </td>
                       </tr>
@@ -314,7 +314,7 @@ export function AdminPayrollEmployees() {
 
       <aside
         className={cn(
-          "min-h-0 flex-col bg-white overflow-hidden transition-all duration-200 ease-in-out",
+          "min-h-0 flex-col bg-card overflow-hidden transition-all duration-200 ease-in-out",
           mobileDetail ? "fixed inset-0 z-50 flex w-full max-w-full" : "hidden",
           "lg:static lg:z-auto lg:flex lg:h-full lg:rounded-xl",
           isPreviewExpanded ? "lg:w-[42%]" : "lg:w-0"
@@ -322,22 +322,22 @@ export function AdminPayrollEmployees() {
       >
         {isPreviewExpanded && (
           <div className="flex flex-col w-full flex-1 h-full overflow-hidden relative">
-            <div className="sticky top-0 w-full flex items-center justify-between min-h-16 px-4 sm:px-5 py-2 sm:py-0 border-b bg-white z-10 shrink-0">
-              <p className="flex self-stretch items-center text-sm sm:text-md font-medium tracking-tight border-b-2 border-blue-600 text-black -mb-px">
+            <div className="sticky top-0 w-full flex items-center justify-between min-h-16 px-4 sm:px-5 py-2 sm:py-0 border-b bg-card z-10 shrink-0">
+              <p className="flex self-stretch items-center text-sm sm:text-md font-medium tracking-tight border-b-2 border-blue-600 text-foreground -mb-px">
                 Salary Details
               </p>
               <div className="flex items-center gap-1.5 sm:gap-2">
                 {mode === "view" && selectedEmployee && (
                   <button
                     onClick={startEdit}
-                    className="inline-flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                    className="inline-flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium text-foreground/85 hover:bg-muted transition-colors"
                   >
                     <TbPencil size={14} />
                     <span>Edit</span>
                   </button>
                 )}
                 <button
-                  className="p-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-stone-100 transition-colors"
+                  className="p-1.5 rounded-lg text-foreground/70 hover:text-foreground hover:bg-muted transition-colors"
                   onClick={() => { setIsPreviewExpanded(false); setMobileDetail(false); }}
                 >
                   <TbX size={18} className="lg:hidden" />
@@ -351,62 +351,62 @@ export function AdminPayrollEmployees() {
                 {selectedEmployee ? (
                   <div className="space-y-5">
                     <div>
-                      <h2 className="text-lg font-semibold text-gray-900">{selectedEmployee.fullName}</h2>
-                      <p className="text-sm text-gray-500">{selectedEmployee.companyEmail}</p>
-                      <p className="text-xs text-gray-400 mt-1">{selectedEmployee.role?.name ?? "-"} / {selectedEmployee.department}</p>
+                      <h2 className="text-lg font-semibold text-foreground">{selectedEmployee.fullName}</h2>
+                      <p className="text-sm text-muted-foreground">{selectedEmployee.companyEmail}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{selectedEmployee.role?.name ?? "-"} / {selectedEmployee.department}</p>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                      <div className="rounded-lg border border-gray-100 p-3">
-                        <p className="text-xs text-gray-400">Legal name</p>
-                        <p className="mt-1 font-semibold text-gray-900">{selectedEmployee.legalName || selectedEmployee.fullName}</p>
+                      <div className="rounded-lg border border-border p-3">
+                        <p className="text-xs text-muted-foreground">Legal name</p>
+                        <p className="mt-1 font-semibold text-foreground">{selectedEmployee.legalName || selectedEmployee.fullName}</p>
                       </div>
-                      <div className="rounded-lg border border-gray-100 p-3">
-                        <p className="text-xs text-gray-400">PAN</p>
-                        <p className="mt-1 font-semibold text-gray-900">{selectedEmployee.pan || "-"}</p>
+                      <div className="rounded-lg border border-border p-3">
+                        <p className="text-xs text-muted-foreground">PAN</p>
+                        <p className="mt-1 font-semibold text-foreground">{selectedEmployee.pan || "-"}</p>
                       </div>
-                      <div className="rounded-lg border border-gray-100 p-3">
-                        <p className="text-xs text-gray-400">Employment type</p>
-                        <p className="mt-1 font-semibold text-gray-900">{selectedEmployee.employmentType || "-"}</p>
+                      <div className="rounded-lg border border-border p-3">
+                        <p className="text-xs text-muted-foreground">Employment type</p>
+                        <p className="mt-1 font-semibold text-foreground">{selectedEmployee.employmentType || "-"}</p>
                       </div>
-                      <div className="rounded-lg border border-gray-100 p-3">
-                        <p className="text-xs text-gray-400">Work location</p>
-                        <p className="mt-1 font-semibold text-gray-900">{selectedEmployee.workLocation || "-"}</p>
+                      <div className="rounded-lg border border-border p-3">
+                        <p className="text-xs text-muted-foreground">Work location</p>
+                        <p className="mt-1 font-semibold text-foreground">{selectedEmployee.workLocation || "-"}</p>
                       </div>
-                      <div className="rounded-lg border border-gray-100 p-3">
-                        <p className="text-xs text-gray-400">Basic salary</p>
-                        <p className="mt-1 font-semibold text-gray-900">{selectedHasSalary ? INR(Number(selectedEmployee.basicSalary)) : "-"}</p>
+                      <div className="rounded-lg border border-border p-3">
+                        <p className="text-xs text-muted-foreground">Basic salary</p>
+                        <p className="mt-1 font-semibold text-foreground">{selectedHasSalary ? INR(Number(selectedEmployee.basicSalary)) : "-"}</p>
                       </div>
-                      <div className="rounded-lg border border-gray-100 p-3">
-                        <p className="text-xs text-gray-400">HRA</p>
-                        <p className="mt-1 font-semibold text-gray-900">{INR(Number(selectedEmployee.hra ?? 0))}</p>
+                      <div className="rounded-lg border border-border p-3">
+                        <p className="text-xs text-muted-foreground">HRA</p>
+                        <p className="mt-1 font-semibold text-foreground">{INR(Number(selectedEmployee.hra ?? 0))}</p>
                       </div>
-                      <div className="rounded-lg border border-gray-100 p-3">
-                        <p className="text-xs text-gray-400">Transport</p>
-                        <p className="mt-1 font-semibold text-gray-900">{INR(Number(selectedEmployee.ta ?? 0))}</p>
+                      <div className="rounded-lg border border-border p-3">
+                        <p className="text-xs text-muted-foreground">Transport</p>
+                        <p className="mt-1 font-semibold text-foreground">{INR(Number(selectedEmployee.ta ?? 0))}</p>
                       </div>
-                      <div className="rounded-lg border border-gray-100 p-3">
-                        <p className="text-xs text-gray-400">Medical</p>
-                        <p className="mt-1 font-semibold text-gray-900">{INR(Number(selectedEmployee.medicalAllowance ?? 0))}</p>
+                      <div className="rounded-lg border border-border p-3">
+                        <p className="text-xs text-muted-foreground">Medical</p>
+                        <p className="mt-1 font-semibold text-foreground">{INR(Number(selectedEmployee.medicalAllowance ?? 0))}</p>
                       </div>
-                      <div className="rounded-lg border border-gray-100 p-3">
-                        <p className="text-xs text-gray-400">Other allowances</p>
-                        <p className="mt-1 font-semibold text-gray-900">{INR(Number(selectedEmployee.otherAllowances ?? 0))}</p>
+                      <div className="rounded-lg border border-border p-3">
+                        <p className="text-xs text-muted-foreground">Other allowances</p>
+                        <p className="mt-1 font-semibold text-foreground">{INR(Number(selectedEmployee.otherAllowances ?? 0))}</p>
                       </div>
-                      <div className="rounded-lg border border-gray-100 p-3">
-                        <p className="text-xs text-gray-400">Status</p>
+                      <div className="rounded-lg border border-border p-3">
+                        <p className="text-xs text-muted-foreground">Status</p>
                         <div className="mt-1">
                           {selectedHasSalary ? (
-                            <span className="px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700 font-medium">Set</span>
+                            <span className="px-2 py-0.5 rounded-full text-xs bg-green-100 dark:bg-green-400/15 text-green-700 dark:text-green-300 font-medium">Set</span>
                           ) : (
-                            <span className="px-2 py-0.5 rounded-full text-xs bg-amber-100 text-amber-700 font-medium">Not Set</span>
+                            <span className="px-2 py-0.5 rounded-full text-xs bg-amber-100 dark:bg-amber-400/15 text-amber-700 dark:text-amber-300 font-medium">Not Set</span>
                           )}
                         </div>
                       </div>
                     </div>
 
-                    <div className="rounded-lg border border-gray-100 p-4 text-sm space-y-3">
-                      <p className="font-semibold text-gray-900">Payment Information</p>
+                    <div className="rounded-lg border border-border p-4 text-sm space-y-3">
+                      <p className="font-semibold text-foreground">Payment Information</p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <PayrollDetail label="Account number" value={selectedEmployee.bankAccountNumber || "-"} />
                         <PayrollDetail label="IFSC code" value={selectedEmployee.bankIfscCode || "-"} />
@@ -415,8 +415,8 @@ export function AdminPayrollEmployees() {
                       </div>
                     </div>
 
-                    <div className="rounded-lg border border-gray-100 p-4 text-sm space-y-3">
-                      <p className="font-semibold text-gray-900">Past Payroll & Statutory</p>
+                    <div className="rounded-lg border border-border p-4 text-sm space-y-3">
+                      <p className="font-semibold text-foreground">Past Payroll & Statutory</p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <PayrollDetail label="Financial year" value={selectedEmployee.pastPayrollFinancialYear || "FY 2026 - 2027"} />
                         <PayrollDetail label="Past taxable salary" value={INR(Number(selectedEmployee.pastTaxableSalary || 0))} />
@@ -427,31 +427,31 @@ export function AdminPayrollEmployees() {
                       </div>
                     </div>
 
-                    <div className="rounded-lg border border-gray-100 p-4 text-sm space-y-2">
+                    <div className="rounded-lg border border-border p-4 text-sm space-y-2">
                       <div className="flex justify-between">
-                        <span className="text-gray-500">Gross monthly</span>
+                        <span className="text-muted-foreground">Gross monthly</span>
                         <strong>{selectedHasSalary ? INR(selectedGross) : "-"}</strong>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-500">PF {selectedEmployee?.pfEnabled !== false ? "(12%)" : "(disabled)"}</span>
-                        <strong className={selectedPF > 0 ? "text-red-600" : "text-gray-400"}>{selectedHasSalary ? `-${INR(selectedPF)}` : "-"}</strong>
+                        <span className="text-muted-foreground">PF {selectedEmployee?.pfEnabled !== false ? "(12%)" : "(disabled)"}</span>
+                        <strong className={selectedPF > 0 ? "text-red-600 dark:text-red-300" : "text-muted-foreground"}>{selectedHasSalary ? `-${INR(selectedPF)}` : "-"}</strong>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-500">PT</span>
-                        <strong className={selectedPT > 0 ? "text-red-600" : "text-gray-400"}>{selectedHasSalary ? `-${INR(selectedPT)}` : "-"}</strong>
+                        <span className="text-muted-foreground">PT</span>
+                        <strong className={selectedPT > 0 ? "text-red-600 dark:text-red-300" : "text-muted-foreground"}>{selectedHasSalary ? `-${INR(selectedPT)}` : "-"}</strong>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-500">TDS</span>
-                        <strong className={selectedTDS > 0 ? "text-red-600" : "text-gray-400"}>{selectedHasSalary ? `-${INR(selectedTDS)}` : "-"}</strong>
+                        <span className="text-muted-foreground">TDS</span>
+                        <strong className={selectedTDS > 0 ? "text-red-600 dark:text-red-300" : "text-muted-foreground"}>{selectedHasSalary ? `-${INR(selectedTDS)}` : "-"}</strong>
                       </div>
                       <div className="flex justify-between border-t pt-2">
-                        <span className="text-gray-700">Estimated net</span>
-                        <strong className="text-green-700">{selectedHasSalary ? INR(selectedNet) : "-"}</strong>
+                        <span className="text-foreground/85">Estimated net</span>
+                        <strong className="text-green-700 dark:text-green-300">{selectedHasSalary ? INR(selectedNet) : "-"}</strong>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center h-full text-gray-400 text-sm">Select an employee.</div>
+                  <div className="flex items-center justify-center h-full text-muted-foreground text-sm">Select an employee.</div>
                 )}
               </div>
             ) : (
@@ -464,16 +464,16 @@ export function AdminPayrollEmployees() {
                     { key: "medicalAllowance", label: "Medical" },
                     { key: "otherAllowances",  label: "Other" },
                   ] as { key: keyof SalaryForm; label: string }[]).map(({ key, label }) => (
-                    <label key={key} className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                    <label key={key} className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                       {label}
                       <div className="relative">
-                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs">₹</span>
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">₹</span>
                         <input
                           type="number"
                           min={0}
                           value={form[key] as string}
                           onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
-                          className="w-full pl-6 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                          className="w-full pl-6 pr-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card"
                           placeholder="0"
                         />
                       </div>
@@ -483,71 +483,71 @@ export function AdminPayrollEmployees() {
 
                 {/* Deductions */}
                 <div className="space-y-3">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Deductions</p>
-                  <label className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 cursor-pointer">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Deductions</p>
+                  <label className="flex items-center justify-between rounded-lg border border-border px-4 py-3 cursor-pointer">
                     <div>
-                      <p className="text-sm font-medium text-gray-700">PF (12% of Basic)</p>
-                      <p className="text-xs text-gray-400 mt-0.5">Provident Fund — employee contribution</p>
+                      <p className="text-sm font-medium text-foreground/85">PF (12% of Basic)</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Provident Fund — employee contribution</p>
                     </div>
                     <div
-                      className={cn("w-9 h-5 rounded-full transition-colors flex items-center px-0.5 shrink-0 cursor-pointer", form.pfEnabled ? "bg-stone-900" : "bg-gray-200")}
+                      className={cn("w-9 h-5 rounded-full transition-colors flex items-center px-0.5 shrink-0 cursor-pointer", form.pfEnabled ? "bg-primary" : "bg-muted")}
                       onClick={() => setForm((f) => ({ ...f, pfEnabled: !f.pfEnabled }))}
                     >
-                      <div className={cn("w-4 h-4 bg-white rounded-full shadow-sm transition-transform", form.pfEnabled ? "translate-x-4" : "translate-x-0")} />
+                      <div className={cn("w-4 h-4 bg-card rounded-full shadow-sm transition-transform", form.pfEnabled ? "translate-x-4" : "translate-x-0")} />
                     </div>
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                    <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                       Professional Tax (₹/mo)
                       <div className="relative">
-                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs">₹</span>
-                        <input type="number" min={0} value={form.ptAmount} onChange={(e) => setForm((f) => ({ ...f, ptAmount: e.target.value }))} className="w-full pl-6 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white" placeholder="200" />
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">₹</span>
+                        <input type="number" min={0} value={form.ptAmount} onChange={(e) => setForm((f) => ({ ...f, ptAmount: e.target.value }))} className="w-full pl-6 pr-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card" placeholder="200" />
                       </div>
                     </label>
-                    <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                    <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                       TDS (₹/mo)
                       <div className="relative">
-                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs">₹</span>
-                        <input type="number" min={0} value={form.tdsAmount} onChange={(e) => setForm((f) => ({ ...f, tdsAmount: e.target.value }))} className="w-full pl-6 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white" placeholder="0" />
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">₹</span>
+                        <input type="number" min={0} value={form.tdsAmount} onChange={(e) => setForm((f) => ({ ...f, tdsAmount: e.target.value }))} className="w-full pl-6 pr-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card" placeholder="0" />
                       </div>
                     </label>
                   </div>
                 </div>
 
                 {/* Live preview */}
-                <div className="rounded-lg border border-gray-100 p-4 text-sm space-y-2">
+                <div className="rounded-lg border border-border p-4 text-sm space-y-2">
                   {(() => { const d = calcDeductions(form); return (
                     <>
                       <div className="flex justify-between">
-                        <span className="text-gray-500">Gross</span>
+                        <span className="text-muted-foreground">Gross</span>
                         <strong>{INR(calcGross(form))}</strong>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-500">PF {form.pfEnabled ? "(12%)" : "(off)"}</span>
-                        <strong className={d.pf > 0 ? "text-red-600" : "text-gray-400"}>-{INR(d.pf)}</strong>
+                        <span className="text-muted-foreground">PF {form.pfEnabled ? "(12%)" : "(off)"}</span>
+                        <strong className={d.pf > 0 ? "text-red-600 dark:text-red-300" : "text-muted-foreground"}>-{INR(d.pf)}</strong>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-500">PT</span>
-                        <strong className={d.pt > 0 ? "text-red-600" : "text-gray-400"}>-{INR(d.pt)}</strong>
+                        <span className="text-muted-foreground">PT</span>
+                        <strong className={d.pt > 0 ? "text-red-600 dark:text-red-300" : "text-muted-foreground"}>-{INR(d.pt)}</strong>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-500">TDS</span>
-                        <strong className={d.tds > 0 ? "text-red-600" : "text-gray-400"}>-{INR(d.tds)}</strong>
+                        <span className="text-muted-foreground">TDS</span>
+                        <strong className={d.tds > 0 ? "text-red-600 dark:text-red-300" : "text-muted-foreground"}>-{INR(d.tds)}</strong>
                       </div>
                       <div className="flex justify-between border-t pt-2">
-                        <span className="text-gray-700">Estimated net</span>
-                        <strong className="text-green-700">{INR(calcNet(form))}</strong>
+                        <span className="text-foreground/85">Estimated net</span>
+                        <strong className="text-green-700 dark:text-green-300">{INR(calcNet(form))}</strong>
                       </div>
                     </>
                   ); })()}
                 </div>
 
-                {error && <p className="text-xs text-red-500">{error}</p>}
+                {error && <p className="text-xs text-red-500 dark:text-red-400">{error}</p>}
 
                 <div className="flex items-center justify-end gap-3 border-t pt-4">
                   <button
                     onClick={cancelEdit}
-                    className="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                    className="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium text-foreground/85 hover:bg-muted"
                   >
                     <TbX size={15} />
                     Cancel
@@ -555,7 +555,7 @@ export function AdminPayrollEmployees() {
                   <button
                     onClick={save}
                     disabled={saving}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                   >
                     {saving ? <TbLoader2 size={15} className="animate-spin" /> : <TbCheck size={15} />}
                     Save changes
@@ -573,8 +573,8 @@ export function AdminPayrollEmployees() {
 function PayrollDetail({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
-      <p className="text-xs text-gray-400">{label}</p>
-      <div className="mt-1 font-medium text-gray-900">{value}</div>
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <div className="mt-1 font-medium text-foreground">{value}</div>
     </div>
   );
 }

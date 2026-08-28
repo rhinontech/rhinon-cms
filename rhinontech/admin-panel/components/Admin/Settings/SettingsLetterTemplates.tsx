@@ -51,21 +51,21 @@ export function SettingsLetterTemplates() {
 
   return (
     <div className="flex h-full glass-panel rounded-r-xl overflow-hidden">
-      <aside className="w-72 shrink-0 border-r border-black/5 overflow-y-auto">
-        <div className="sticky top-0 z-10 flex items-center gap-3 h-16 px-4 border-b border-black/5 glass-header">
+      <aside className="w-72 shrink-0 border-r border-border overflow-y-auto">
+        <div className="sticky top-0 z-10 flex items-center gap-3 h-16 px-4 border-b border-border glass-header">
           <SubNavToggle />
           <div>
             <h1 className="text-sm font-semibold tracking-tight">Letter Templates</h1>
-            <p className="text-[11px] text-gray-500">Offer letter &amp; NDA content</p>
+            <p className="text-[11px] text-muted-foreground">Offer letter &amp; NDA content</p>
           </div>
         </div>
         <div className="p-2">
           <div className="flex items-center justify-between px-2 pt-1 pb-1.5">
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-stone-400">Offer Letters</span>
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Offer Letters</span>
             <button
               type="button"
               onClick={() => setCreating(true)}
-              className="flex items-center gap-1 rounded-md px-1.5 py-1 text-[11px] font-semibold text-stone-500 hover:bg-stone-100 hover:text-stone-900"
+              className="flex items-center gap-1 rounded-md px-1.5 py-1 text-[11px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <TbPlus size={13} /> New
             </button>
@@ -83,7 +83,7 @@ export function SettingsLetterTemplates() {
           </nav>
 
           <div className="mt-4 px-2 pb-1.5">
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-stone-400">NDA</span>
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">NDA</span>
           </div>
           <nav className="space-y-0.5">
             {ndaTemplates.map((s) => (
@@ -100,7 +100,7 @@ export function SettingsLetterTemplates() {
           onSaved={(t) => setSummaries((prev) => prev.map((s) => (s.key === t.key ? t : s)))}
         />
       ) : (
-        <div className="flex-1 flex items-center justify-center text-sm text-stone-400">Select a template.</div>
+        <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">Select a template.</div>
       )}
 
       {creating && (
@@ -133,14 +133,14 @@ function TemplateRow({
     <div
       className={cn(
         "group flex items-start gap-2 rounded-lg px-3 py-2.5 transition-colors",
-        selected ? "bg-stone-900 text-white" : "hover:bg-stone-100 text-stone-700"
+        selected ? "bg-primary text-primary-foreground" : "hover:bg-muted text-foreground/85"
       )}
     >
       <button type="button" onClick={onSelect} className="flex flex-1 items-start gap-3 text-left min-w-0">
         <TbFileText size={16} className="mt-0.5 shrink-0 opacity-70" />
         <span className="min-w-0">
           <span className="block truncate text-sm font-medium">{summary.title}</span>
-          <span className={cn("block text-[11px]", selected ? "text-white/60" : "text-stone-400")}>
+          <span className={cn("block text-[11px]", selected ? "text-primary-foreground/60" : "text-muted-foreground")}>
             v{summary.version} · {new Date(summary.updatedAt).toLocaleDateString()}
           </span>
         </span>
@@ -152,7 +152,7 @@ function TemplateRow({
           title="Delete template"
           className={cn(
             "shrink-0 rounded p-1 opacity-0 group-hover:opacity-100",
-            selected ? "hover:bg-white/10 text-white/80" : "hover:bg-stone-200 text-stone-400"
+            selected ? "hover:bg-primary-foreground/10 text-primary-foreground/80" : "hover:bg-muted text-muted-foreground"
           )}
         >
           <TbTrash size={14} />
@@ -212,34 +212,34 @@ function TemplateEditor({ templateKey, onSaved }: { templateKey: LetterTemplateK
 
   return (
     <div className="flex-1 flex flex-col min-w-0">
-      <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b border-black/5 glass-header">
+      <div className="sticky top-0 z-10 flex items-center justify-between gap-4 h-16 px-5 border-b border-border glass-header">
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold">{template?.title}</p>
         </div>
-        <div className="flex items-center gap-1 rounded-lg bg-stone-100 p-1">
+        <div className="flex items-center gap-1 rounded-lg bg-muted p-1">
           <button
             type="button"
             onClick={() => setMode("preview")}
-            className={cn("flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold", mode === "preview" ? "bg-white shadow-sm text-stone-900" : "text-stone-500")}
+            className={cn("flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold", mode === "preview" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground")}
           >
             <TbSparkles size={14} /> AI select &amp; rewrite
           </button>
           <button
             type="button"
             onClick={() => setMode("edit")}
-            className={cn("flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold", mode === "edit" ? "bg-white shadow-sm text-stone-900" : "text-stone-500")}
+            className={cn("flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold", mode === "edit" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground")}
           >
             <TbTextWrap size={14} /> Edit text directly
           </button>
         </div>
         <div className="flex items-center gap-3">
-          {saveMessage && <span className="text-xs text-emerald-600">{saveMessage}</span>}
-          {dirty && !saveMessage && <span className="text-xs text-amber-600">Unsaved changes</span>}
+          {saveMessage && <span className="text-xs text-emerald-600 dark:text-emerald-300">{saveMessage}</span>}
+          {dirty && !saveMessage && <span className="text-xs text-amber-600 dark:text-amber-300">Unsaved changes</span>}
           <button
             type="button"
             disabled={!dirty || saving}
             onClick={save}
-            className="rounded-md bg-stone-900 px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
+            className="rounded-md bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-40"
           >
             {saving ? "Saving…" : "Save changes"}
           </button>
@@ -247,8 +247,8 @@ function TemplateEditor({ templateKey, onSaved }: { templateKey: LetterTemplateK
       </div>
 
       <div className="flex-1 overflow-auto">
-        {loading && <div className="p-8 text-sm text-stone-400">Loading template…</div>}
-        {error && <div className="p-8 text-sm text-red-500">{error}</div>}
+        {loading && <div className="p-8 text-sm text-muted-foreground">Loading template…</div>}
+        {error && <div className="p-8 text-sm text-red-500 dark:text-red-400">{error}</div>}
         {!loading && !error && mode === "preview" && (
           <div className="relative" ref={containerRef}>
             <LetterEnvelope type={template?.category === "nda" ? "nda" : "offer"}>
@@ -266,7 +266,7 @@ function TemplateEditor({ templateKey, onSaved }: { templateKey: LetterTemplateK
             {blocks.map((block) =>
               block.kind === "pagebreak" ? null : (
                 <div key={block.id}>
-                  <label className="mb-1 block text-[11px] font-medium uppercase tracking-wide text-stone-400">
+                  <label className="mb-1 block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                     {block.kind}
                     {"num" in block && block.num ? ` ${block.num}` : ""}
                     {"marker" in block && block.marker ? ` ${block.marker}` : ""}
@@ -278,7 +278,7 @@ function TemplateEditor({ templateKey, onSaved }: { templateKey: LetterTemplateK
                       setBlocks((prev) => prev.map((b) => (b.id === block.id ? { ...b, text } : b)));
                     }}
                     rows={block.text.length > 200 ? 4 : 2}
-                    className="w-full rounded-md border border-stone-200 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
+                    className="w-full rounded-md border border-border p-2 text-sm focus:outline-none focus:ring-2 focus:ring-border"
                   />
                 </div>
               )

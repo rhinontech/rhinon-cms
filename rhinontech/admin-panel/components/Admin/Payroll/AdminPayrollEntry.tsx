@@ -147,11 +147,11 @@ export function AdminPayrollEntry() {
 
   return (
     <div className="flex flex-col h-full glass-panel rounded-r-xl overflow-hidden">
-      <div className="sticky top-0 z-10 flex items-center gap-4 h-16 px-5 border-b border-black/5 glass-header shrink-0">
+      <div className="sticky top-0 z-10 flex items-center gap-4 h-16 px-5 border-b border-border glass-header shrink-0">
         <SubNavToggle />
         <div>
           <h1 className="text-sm font-semibold tracking-tight">Payslip Entry</h1>
-          <p className="text-xs text-gray-400">Create payslips for past or current periods</p>
+          <p className="text-xs text-muted-foreground">Create payslips for past or current periods</p>
         </div>
       </div>
 
@@ -159,20 +159,20 @@ export function AdminPayrollEntry() {
         <div className="max-w-2xl space-y-6">
 
           {success ? (
-            <div className="bg-white rounded-xl border border-green-200 p-8 text-center space-y-4">
-              <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto">
-                <TbCheck size={22} className="text-green-600" />
+            <div className="bg-card rounded-xl border border-green-200 dark:border-green-400/25 p-8 text-center space-y-4">
+              <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-400/15 flex items-center justify-center mx-auto">
+                <TbCheck size={22} className="text-green-600 dark:text-green-300" />
               </div>
               <div>
-                <p className="text-base font-semibold text-gray-900">Payslip Created</p>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-base font-semibold text-foreground">Payslip Created</p>
+                <p className="text-sm text-muted-foreground mt-1">
                   {success.employeeName} · {MONTHS[success.month - 1]} {success.year}
                 </p>
-                <p className="text-2xl font-bold text-gray-900 mt-2">{INR(success.net)} <span className="text-sm font-normal text-gray-400">net pay</span></p>
+                <p className="text-2xl font-bold text-foreground mt-2">{INR(success.net)} <span className="text-sm font-normal text-muted-foreground">net pay</span></p>
               </div>
               <button
                 onClick={resetForm}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-stone-900 text-white text-sm font-medium hover:bg-stone-800"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90"
               >
                 <TbPlus size={15} /> Add another payslip
               </button>
@@ -181,55 +181,55 @@ export function AdminPayrollEntry() {
             <>
               {/* Period + Employee */}
               <div className="glass-card-solid rounded-xl p-5 space-y-4">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Period & Employee</p>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Period & Employee</p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                  <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                     Month
                     <div className="relative">
                       <select
                         value={month}
                         onChange={(e) => setMonth(Number(e.target.value))}
-                        className="w-full appearance-none border border-gray-200 rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                        className="w-full appearance-none border border-border rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card"
                       >
                         {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
                       </select>
-                      <TbChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                      <TbChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                     </div>
                   </label>
 
-                  <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                  <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                     Year
                     <div className="relative">
                       <select
                         value={year}
                         onChange={(e) => setYear(Number(e.target.value))}
-                        className="w-full appearance-none border border-gray-200 rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                        className="w-full appearance-none border border-border rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card"
                       >
                         {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
                       </select>
-                      <TbChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                      <TbChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                     </div>
                   </label>
                 </div>
 
-                <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                   Employee
                   <div className="relative">
                     <select
                       value={selectedId}
                       onChange={(e) => handleEmployeeChange(e.target.value)}
-                      className="w-full appearance-none border border-gray-200 rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                      className="w-full appearance-none border border-border rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card"
                     >
                       <option value="">{loading ? "Loading..." : "Select employee"}</option>
                       {employees.map((e) => (
                         <option key={e.id} value={e.id}>{e.fullName} — {e.department}</option>
                       ))}
                     </select>
-                    <TbChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                    <TbChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                   </div>
                   {selectedEmployee && (
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       Current salary: {selectedEmployee.basicSalary ? INR(Number(selectedEmployee.basicSalary)) : "not set"} basic
                       {selectedEmployee.basicSalary ? " — pre-filled below, edit for this period" : ""}
                     </p>
@@ -239,7 +239,7 @@ export function AdminPayrollEntry() {
 
               {/* Earnings */}
               <div className="glass-card-solid rounded-xl p-5 space-y-4">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Earnings for this period</p>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Earnings for this period</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {([
                     { label: "Basic Salary *", value: basicSalary, set: setBasicSalary },
@@ -248,14 +248,14 @@ export function AdminPayrollEntry() {
                     { label: "Medical",         value: medicalAllowance, set: setMedicalAllowance },
                     { label: "Other Allowances",value: otherAllowances,  set: setOtherAllowances  },
                   ] as { label: string; value: string; set: (v: string) => void }[]).map(({ label, value, set }) => (
-                    <label key={label} className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                    <label key={label} className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                       {label}
                       <div className="relative">
-                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs">₹</span>
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">₹</span>
                         <input
                           type="number" min={0} value={value}
                           onChange={(e) => { set(e.target.value); setError(""); }}
-                          className="w-full pl-6 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full pl-6 pr-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                           placeholder="0"
                         />
                       </div>
@@ -266,38 +266,38 @@ export function AdminPayrollEntry() {
 
               {/* Deductions */}
               <div className="glass-card-solid rounded-xl p-5 space-y-4">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Deductions for this period</p>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Deductions for this period</p>
 
-                <label className="flex items-center justify-between rounded-lg border border-gray-100 px-4 py-3 cursor-pointer">
+                <label className="flex items-center justify-between rounded-lg border border-border px-4 py-3 cursor-pointer">
                   <div>
-                    <p className="text-sm font-medium text-gray-700">PF (12% of Basic)</p>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-sm font-medium text-foreground/85">PF (12% of Basic)</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       {pfEnabled ? `= ${INR(Math.round(Number(basicSalary || 0) * 0.12))} this period` : "Disabled — ₹0"}
                     </p>
                   </div>
                   <div
-                    className={cn("w-9 h-5 rounded-full flex items-center px-0.5 shrink-0 cursor-pointer transition-colors", pfEnabled ? "bg-stone-900" : "bg-gray-200")}
+                    className={cn("w-9 h-5 rounded-full flex items-center px-0.5 shrink-0 cursor-pointer transition-colors", pfEnabled ? "bg-primary" : "bg-muted")}
                     onClick={() => setPfEnabled((v) => !v)}
                   >
-                    <div className={cn("w-4 h-4 bg-white rounded-full shadow-sm transition-transform", pfEnabled ? "translate-x-4" : "translate-x-0")} />
+                    <div className={cn("w-4 h-4 bg-card rounded-full shadow-sm transition-transform", pfEnabled ? "translate-x-4" : "translate-x-0")} />
                   </div>
                 </label>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                  <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                     Professional Tax (₹)
                     <div className="relative">
-                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs">₹</span>
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">₹</span>
                       <input type="number" min={0} value={ptAmount} onChange={(e) => setPtAmount(e.target.value)}
-                        className="w-full pl-6 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="200" />
+                        className="w-full pl-6 pr-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="200" />
                     </div>
                   </label>
-                  <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                  <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                     TDS (₹)
                     <div className="relative">
-                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs">₹</span>
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">₹</span>
                       <input type="number" min={0} value={tdsAmount} onChange={(e) => setTdsAmount(e.target.value)}
-                        className="w-full pl-6 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0" />
+                        className="w-full pl-6 pr-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0" />
                     </div>
                   </label>
                 </div>
@@ -305,37 +305,37 @@ export function AdminPayrollEntry() {
 
               {/* Live summary */}
               <div className="glass-card-solid rounded-xl p-5">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Summary</p>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">Summary</p>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Gross</span>
+                    <span className="text-muted-foreground">Gross</span>
                     <span className="font-medium">{INR(amounts.gross)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">PF {pfEnabled ? "(12%)" : "(off)"}</span>
-                    <span className={amounts.pf > 0 ? "text-red-500" : "text-gray-400"}>−{INR(amounts.pf)}</span>
+                    <span className="text-muted-foreground">PF {pfEnabled ? "(12%)" : "(off)"}</span>
+                    <span className={amounts.pf > 0 ? "text-red-500 dark:text-red-400" : "text-muted-foreground"}>−{INR(amounts.pf)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Professional Tax</span>
-                    <span className={amounts.pt > 0 ? "text-red-500" : "text-gray-400"}>−{INR(amounts.pt)}</span>
+                    <span className="text-muted-foreground">Professional Tax</span>
+                    <span className={amounts.pt > 0 ? "text-red-500 dark:text-red-400" : "text-muted-foreground"}>−{INR(amounts.pt)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">TDS</span>
-                    <span className={amounts.tds > 0 ? "text-red-500" : "text-gray-400"}>−{INR(amounts.tds)}</span>
+                    <span className="text-muted-foreground">TDS</span>
+                    <span className={amounts.tds > 0 ? "text-red-500 dark:text-red-400" : "text-muted-foreground"}>−{INR(amounts.tds)}</span>
                   </div>
                   <div className="flex justify-between border-t pt-3 mt-1">
-                    <span className="font-semibold text-gray-900">Net Pay</span>
-                    <span className="text-lg font-bold text-green-700">{INR(amounts.net)}</span>
+                    <span className="font-semibold text-foreground">Net Pay</span>
+                    <span className="text-lg font-bold text-green-700 dark:text-green-300">{INR(amounts.net)}</span>
                   </div>
                 </div>
               </div>
 
-              {error && <p className="text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg px-4 py-3">{error}</p>}
+              {error && <p className="text-sm text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-400/10 border border-red-200 dark:border-red-400/25 rounded-lg px-4 py-3">{error}</p>}
 
               <button
                 onClick={submit}
                 disabled={saving || !selectedId || !basicSalary}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-stone-900 text-white text-sm font-medium hover:bg-stone-800 disabled:opacity-50 transition-colors"
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
               >
                 {saving ? <TbLoader2 size={16} className="animate-spin" /> : <TbCheck size={16} />}
                 {saving ? "Creating payslip…" : `Create payslip for ${MONTHS[month - 1]} ${year}`}

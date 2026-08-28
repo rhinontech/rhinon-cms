@@ -132,12 +132,12 @@ export function DealsBoard() {
 
   return (
     <main className={cn("flex h-full min-h-0 w-full flex-col overflow-hidden glass-panel", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
-      <div className="flex min-h-16 shrink-0 flex-wrap items-center justify-between gap-3 border-b border-stone-200/70 px-3 py-2">
+      <div className="flex min-h-16 shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border/70 px-3 py-2">
         <div className="flex min-w-0 items-center gap-2.5">
           <SubNavToggle />
           <div className="min-w-0">
-            <h1 className="text-sm font-semibold tracking-tight text-stone-900">Pipeline</h1>
-            <p className="text-[11px] tabular-nums text-stone-500">
+            <h1 className="text-sm font-semibold tracking-tight text-foreground">Pipeline</h1>
+            <p className="text-[11px] tabular-nums text-muted-foreground">
               {totals.count} open · {formatMoney(totals.open)} ·{" "}
               <span title="Value discounted by each stage's probability">
                 {formatMoney(totals.weighted)} weighted
@@ -149,7 +149,7 @@ export function DealsBoard() {
           <select
             value={ownerFilter}
             onChange={(e) => setOwnerFilter(e.target.value)}
-            className="rounded-md border border-stone-200 bg-white/70 px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="rounded-md border border-border bg-card/70 px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500/40"
           >
             <option value="All">All owners</option>
             {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}
@@ -160,14 +160,14 @@ export function DealsBoard() {
       </div>
 
       {error && (
-        <p className="shrink-0 border-b border-rose-200 bg-rose-50 px-3 py-1.5 text-[11px] text-rose-700">{error}</p>
+        <p className="shrink-0 border-b border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-3 py-1.5 text-[11px] text-rose-700 dark:text-rose-300">{error}</p>
       )}
 
       <div className="flex-1 overflow-x-auto overflow-y-hidden p-3">
         {loading ? (
           <div className="flex h-full gap-2.5">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-full w-[248px] shrink-0 animate-pulse rounded-lg bg-stone-100/70" />
+              <div key={i} className="h-full w-[248px] shrink-0 animate-pulse rounded-lg bg-muted/70" />
             ))}
           </div>
         ) : (
@@ -177,20 +177,20 @@ export function DealsBoard() {
           // whole lead list — so say that and point at the way in.
           <div className="flex h-full items-center justify-center p-6">
             <div className="max-w-md text-center">
-              <p className="text-sm font-semibold text-stone-800">No deals yet</p>
-              <p className="mt-1.5 text-[13px] leading-relaxed text-stone-500">
+              <p className="text-sm font-semibold text-foreground">No deals yet</p>
+              <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
                 The pipeline holds deals, not leads. A lead becomes a deal once it is
                 qualified and has money attached — so this board stays small and
                 workable while your lead list grows.
               </p>
-              <p className="mt-2 text-[12px] leading-relaxed text-stone-400">
-                Select the leads worth pursuing and use <span className="font-medium text-stone-600">Convert to deals</span>,
+              <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground">
+                Select the leads worth pursuing and use <span className="font-medium text-foreground/70">Convert to deals</span>,
                 or add one directly here.
               </p>
               <div className="mt-4 flex items-center justify-center gap-2">
                 <Link
                   href={leadsHref}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-stone-200 bg-white/70 px-2.5 py-1.5 text-xs font-medium text-stone-700 hover:bg-stone-100"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card/70 px-2.5 py-1.5 text-xs font-medium text-foreground/85 hover:bg-muted"
                 >
                   <TbUsers size={14} /> Go to leads <TbArrowRight size={13} />
                 </Link>
@@ -280,19 +280,19 @@ function applyMoveDelta(
 function UnstagedColumn({ deals, onOpen }: { deals: Deal[]; onOpen: (id: string) => void }) {
   const total = deals.reduce((sum, d) => sum + Number(d.value || 0), 0);
   return (
-    <div className="flex h-full w-[248px] shrink-0 flex-col rounded-lg border border-dashed border-amber-300 bg-amber-50/40">
-      <div className="shrink-0 border-b border-amber-200/70 px-2.5 py-2">
+    <div className="flex h-full w-[248px] shrink-0 flex-col rounded-lg border border-dashed border-amber-300 dark:border-amber-400/30 bg-amber-50/40 dark:bg-amber-400/10">
+      <div className="shrink-0 border-b border-amber-200/70 dark:border-amber-400/25 px-2.5 py-2">
         <div className="flex items-center justify-between gap-2">
-          <span className="truncate text-[11px] font-semibold uppercase tracking-wide text-amber-700">No stage</span>
-          <span className="shrink-0 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-amber-700">
+          <span className="truncate text-[11px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">No stage</span>
+          <span className="shrink-0 rounded bg-amber-100 dark:bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-amber-700 dark:text-amber-300">
             {deals.length}
           </span>
         </div>
-        <p className="mt-1 text-[11px] font-medium tabular-nums text-amber-600">{formatMoney(total)}</p>
+        <p className="mt-1 text-[11px] font-medium tabular-nums text-amber-600 dark:text-amber-300">{formatMoney(total)}</p>
       </div>
       <div className="flex-1 space-y-1.5 overflow-y-auto p-1.5">
         {deals.map((deal) => <DealCard key={deal.id} deal={deal} onOpen={onOpen} />)}
-        <p className="px-1 py-1 text-[10px] leading-relaxed text-amber-600/80">
+        <p className="px-1 py-1 text-[10px] leading-relaxed text-amber-600/80 dark:text-amber-300">
           Drag these into a stage to bring them onto the pipeline.
         </p>
       </div>
@@ -306,36 +306,36 @@ function StageColumn({ stage, onOpen }: { stage: BoardStage; onOpen: (id: string
     <div
       ref={setNodeRef}
       className={cn(
-        "flex h-full w-[248px] shrink-0 flex-col rounded-lg border border-stone-200/70 bg-white/45 transition-colors",
-        isOver && "border-blue-300 bg-blue-50/60"
+        "flex h-full w-[248px] shrink-0 flex-col rounded-lg border border-border/70 bg-card/45 transition-colors",
+        isOver && "border-blue-300 dark:border-blue-400/30 bg-blue-50/60 dark:bg-blue-400/10"
       )}
     >
-      <div className="shrink-0 border-b border-stone-200/70 px-2.5 py-2">
+      <div className="shrink-0 border-b border-border/70 px-2.5 py-2">
         <div className="flex items-center justify-between gap-2">
           <span className="flex min-w-0 items-center gap-1.5">
             <StageDot color={stage.color} type={stage.type} />
-            <span className="truncate text-[11px] font-semibold uppercase tracking-wide text-stone-600">{stage.name}</span>
+            <span className="truncate text-[11px] font-semibold uppercase tracking-wide text-foreground/70">{stage.name}</span>
           </span>
-          <span className="shrink-0 rounded bg-stone-100 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-stone-500">
+          <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-muted-foreground">
             {stage.dealCount}
           </span>
         </div>
-        <p className="mt-1 text-[11px] font-medium tabular-nums text-stone-500">
+        <p className="mt-1 text-[11px] font-medium tabular-nums text-muted-foreground">
           {formatMoney(stage.totalValue)}
           {stage.type === "Open" && stage.probability > 0 && (
-            <span className="ml-1 text-stone-400">· {stage.probability}%</span>
+            <span className="ml-1 text-muted-foreground">· {stage.probability}%</span>
           )}
         </p>
       </div>
       <div className="flex-1 space-y-1.5 overflow-y-auto p-1.5">
         {stage.deals.map((deal) => <DealCard key={deal.id} deal={deal} onOpen={onOpen} />)}
         {stage.deals.length === 0 && (
-          <div className="rounded border border-dashed border-stone-200 py-5 text-center text-[10px] text-stone-300">
+          <div className="rounded border border-dashed border-border py-5 text-center text-[10px] text-muted-foreground/70">
             Drop here
           </div>
         )}
         {Boolean(stage.hiddenCount) && (
-          <p className="py-1.5 text-center text-[10px] text-stone-400">
+          <p className="py-1.5 text-center text-[10px] text-muted-foreground">
             +{stage.hiddenCount} more — filter by owner to narrow
           </p>
         )}
@@ -348,7 +348,7 @@ function DealCard({ deal, overlay, onOpen }: { deal: Deal; overlay?: boolean; on
   // The DragOverlay copy must not register a second draggable with the same id.
   if (overlay) {
     return (
-      <div className="w-[232px] rotate-2 rounded-md border border-stone-200 bg-white p-2 shadow-lg">
+      <div className="w-[232px] rotate-2 rounded-md border border-border bg-card p-2 shadow-lg">
         <DealCardBody deal={deal} />
       </div>
     );
@@ -378,7 +378,7 @@ function DraggableDealCard({ deal, onOpen }: { deal: Deal; onOpen?: (id: string)
       }}
       style={{ transform: CSS.Translate.toString(transform) }}
       className={cn(
-        "cursor-grab touch-none rounded-md border border-stone-200 bg-white/90 p-2 shadow-sm transition-shadow hover:shadow active:cursor-grabbing",
+        "cursor-grab touch-none rounded-md border border-border bg-card/90 p-2 shadow-sm transition-shadow hover:shadow active:cursor-grabbing",
         isDragging && "opacity-30"
       )}
     >
@@ -395,18 +395,18 @@ function DealCardBody({ deal }: { deal: Deal }) {
 
   return (
     <>
-      <p className="truncate text-[13px] font-medium leading-tight text-stone-900">{deal.title}</p>
-      <p className="mt-1 text-[13px] font-semibold tabular-nums text-stone-800">
+      <p className="truncate text-[13px] font-medium leading-tight text-foreground">{deal.title}</p>
+      <p className="mt-1 text-[13px] font-semibold tabular-nums text-foreground">
         {formatMoney(deal.value, deal.currency)}
       </p>
       {deal.account && (
-        <p className="mt-1 flex items-center gap-1 truncate text-[11px] text-stone-500">
+        <p className="mt-1 flex items-center gap-1 truncate text-[11px] text-muted-foreground">
           <TbBuilding size={11} className="shrink-0" /> {deal.account.name}
         </p>
       )}
       <div className="mt-1.5 flex items-center justify-between gap-2">
         {deal.expectedCloseDate ? (
-          <span className={cn("flex items-center gap-1 text-[10px] tabular-nums", overdue ? "text-rose-500" : "text-stone-400")}>
+          <span className={cn("flex items-center gap-1 text-[10px] tabular-nums", overdue ? "text-rose-500 dark:text-rose-400" : "text-muted-foreground")}>
             <TbCalendar size={10} /> {formatDate(deal.expectedCloseDate)}
           </span>
         ) : <span />}
@@ -473,8 +473,8 @@ function NewDealDialog({
         className="w-full max-w-md rounded-xl glass-modal p-4"
       >
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-stone-900">New deal</h2>
-          <button type="button" onClick={() => onClose(false)} className="rounded p-1 text-stone-400 hover:bg-stone-100">
+          <h2 className="text-sm font-semibold text-foreground">New deal</h2>
+          <button type="button" onClick={() => onClose(false)} className="rounded p-1 text-muted-foreground hover:bg-muted">
             <TbX size={16} />
           </button>
         </div>
@@ -539,7 +539,7 @@ function NewDealDialog({
           </div>
         </div>
 
-        {error && <p className="mt-2.5 rounded border border-rose-200 bg-rose-50 px-2 py-1.5 text-[11px] text-rose-700">{error}</p>}
+        {error && <p className="mt-2.5 rounded border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2 py-1.5 text-[11px] text-rose-700 dark:text-rose-300">{error}</p>}
 
         <div className="mt-4 flex justify-end gap-2">
           <TBtn onClick={() => onClose(false)}>Cancel</TBtn>
@@ -553,12 +553,12 @@ function NewDealDialog({
 }
 
 const INPUT =
-  "w-full rounded border border-stone-200 bg-white px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40";
+  "w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-stone-500">{label}</span>
+      <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
       {children}
     </label>
   );

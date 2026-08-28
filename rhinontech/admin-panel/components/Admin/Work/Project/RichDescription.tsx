@@ -73,8 +73,8 @@ export function RichDescription({
       onMouseDown={(e) => e.preventDefault()}
       onClick={on}
       className={cn(
-        "rounded p-1.5 text-stone-500 hover:bg-stone-100",
-        active && "bg-stone-200 text-stone-900"
+        "rounded p-1.5 text-muted-foreground hover:bg-muted",
+        active && "bg-muted text-foreground"
       )}
     >
       {children}
@@ -82,17 +82,17 @@ export function RichDescription({
   );
 
   return (
-    <div className="rounded-lg border border-stone-200 focus-within:border-blue-400">
+    <div className="rounded-lg border border-border focus-within:border-blue-400">
       {editable && (
         <div className="flex flex-wrap items-center gap-0.5 border-b px-1.5 py-1">
           <Btn title="Bold" on={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")}><TbBold size={14} /></Btn>
           <Btn title="Italic" on={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive("italic")}><TbItalic size={14} /></Btn>
           <Btn title="Strikethrough" on={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive("strike")}><TbStrikethrough size={14} /></Btn>
           <Btn title="Highlight" on={() => editor.chain().focus().toggleHighlight().run()} active={editor.isActive("highlight")}><TbHighlight size={14} /></Btn>
-          <span className="mx-1 h-4 w-px bg-stone-200" />
+          <span className="mx-1 h-4 w-px bg-muted" />
           <Btn title="Heading" on={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={editor.isActive("heading", { level: 2 })}><TbH2 size={14} /></Btn>
           <Btn title="Subheading" on={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} active={editor.isActive("heading", { level: 3 })}><TbH3 size={14} /></Btn>
-          <span className="mx-1 h-4 w-px bg-stone-200" />
+          <span className="mx-1 h-4 w-px bg-muted" />
           <Btn title="Bullet list" on={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive("bulletList")}><TbList size={14} /></Btn>
           <Btn title="Numbered list" on={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive("orderedList")}><TbListNumbers size={14} /></Btn>
           <Btn title="Task list" on={() => editor.chain().focus().toggleTaskList().run()} active={editor.isActive("taskList")}><TbListCheck size={14} /></Btn>

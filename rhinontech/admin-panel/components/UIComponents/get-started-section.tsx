@@ -26,7 +26,7 @@ export function GetStartedSection() {
               </Button>
             </div>
             <div className="hidden md:block">
-              <div className="h-32 w-48 rounded-md bg-gray-100"></div>
+              <div className="h-32 w-48 rounded-md bg-muted"></div>
             </div>
           </div>
 

@@ -8,9 +8,9 @@ import { TaskCard } from "./TaskCard";
 import type { ApiTask, GroupMode, PersonOption, ProjectOption, TaskPatch, TaskStatus } from "./types";
 
 const COLUMN_ACCENT: Record<TaskStatus, string> = {
-  Pending: "text-stone-500",
-  "In progress": "text-blue-600",
-  Done: "text-emerald-600",
+  Pending: "text-muted-foreground",
+  "In progress": "text-blue-600 dark:text-blue-300",
+  Done: "text-emerald-600 dark:text-emerald-300",
 };
 
 function Column({
@@ -47,13 +47,13 @@ function Column({
     <div
       ref={setNodeRef}
       className={cn(
-        "flex min-w-0 flex-col gap-2 rounded-xl bg-stone-100/70 p-2 transition-colors",
-        isOver && "bg-blue-50 ring-2 ring-blue-200"
+        "flex min-w-0 flex-col gap-2 rounded-xl bg-muted/70 p-2 transition-colors",
+        isOver && "bg-blue-50 dark:bg-blue-400/10 ring-2 ring-blue-200"
       )}
     >
       <div className="flex items-center justify-between px-1">
         <span className={cn("text-[10px] font-bold uppercase tracking-widest", COLUMN_ACCENT[status])}>{status}</span>
-        <span className="rounded-full bg-white px-1.5 py-0.5 text-[10px] font-bold text-stone-400">{tasks.length}</span>
+        <span className="rounded-full bg-card px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">{tasks.length}</span>
       </div>
 
       {showCards ? (
@@ -73,12 +73,12 @@ function Column({
             />
           ))}
           {tasks.length === 0 && (
-            <div className="rounded-lg border border-dashed border-stone-200 py-5 text-center text-[10px] text-stone-300">
+            <div className="rounded-lg border border-dashed border-border py-5 text-center text-[10px] text-muted-foreground/70">
               Drop here
             </div>
           )}
           {collapsed && revealed && (
-            <button onClick={() => setRevealed(false)} className="text-[10px] text-stone-400 hover:text-stone-600">
+            <button onClick={() => setRevealed(false)} className="text-[10px] text-muted-foreground hover:text-foreground/70">
               Hide done
             </button>
           )}
@@ -87,7 +87,7 @@ function Column({
         <button
           onClick={() => setRevealed(true)}
           disabled={tasks.length === 0}
-          className="rounded-lg border border-dashed border-stone-200 py-5 text-center text-[10px] text-stone-400 transition-colors hover:border-stone-300 hover:text-stone-600 disabled:opacity-50"
+          className="rounded-lg border border-dashed border-border py-5 text-center text-[10px] text-muted-foreground transition-colors hover:border-border hover:text-foreground/70 disabled:opacity-50"
         >
           {tasks.length === 0 ? "Drop here" : `Show ${tasks.length} done`}
         </button>

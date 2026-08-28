@@ -54,7 +54,7 @@ export function ProjectRail({
         <button
           onClick={() => setCollapsed(false)}
           title="Show projects"
-          className="rounded-lg p-2 text-stone-500 hover:bg-white"
+          className="rounded-lg p-2 text-muted-foreground hover:bg-card"
         >
           <TbChevronRight size={16} />
         </button>
@@ -66,7 +66,7 @@ export function ProjectRail({
             className={cn(
               "flex h-7 w-7 items-center justify-center rounded-lg text-[10px] font-bold text-white transition",
               accentFor(p.id),
-              p.id === activeId ? "ring-2 ring-stone-900 ring-offset-1" : "opacity-70 hover:opacity-100"
+              p.id === activeId ? "ring-2 ring-ring ring-offset-1" : "opacity-70 hover:opacity-100"
             )}
           >
             {p.name.replace(/[^\p{L}\p{N} ]/gu, "").trim().slice(0, 2).toUpperCase()}
@@ -79,14 +79,14 @@ export function ProjectRail({
   return (
     <aside className="hidden w-56 shrink-0 flex-col border-r glass-sidenav md:flex">
       <div className="flex items-center gap-1 px-3 pt-3">
-        <span className="flex-1 text-[10px] font-bold uppercase tracking-widest text-stone-400">
+        <span className="flex-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
           Projects
         </span>
         {showAllProjectsLink && (
           <Link
             href={`/${roleSlug}/work/clients`}
             title="All projects"
-            className="rounded p-1 text-stone-400 hover:bg-white hover:text-stone-700"
+            className="rounded p-1 text-muted-foreground hover:bg-card hover:text-foreground/85"
           >
             <TbPlus size={14} />
           </Link>
@@ -94,7 +94,7 @@ export function ProjectRail({
         <button
           onClick={() => setCollapsed(true)}
           title="Collapse"
-          className="rounded p-1 text-stone-400 hover:bg-white hover:text-stone-700"
+          className="rounded p-1 text-muted-foreground hover:bg-card hover:text-foreground/85"
         >
           <TbChevronLeft size={14} />
         </button>
@@ -102,12 +102,12 @@ export function ProjectRail({
 
       <div className="px-3 py-2">
         <div className="relative">
-          <TbSearch size={13} className="absolute left-2 top-1/2 -translate-y-1/2 text-stone-400" />
+          <TbSearch size={13} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Find a project"
-            className="w-full rounded-lg border border-stone-200 bg-white/70 py-1.5 pl-7 pr-2 text-xs outline-none focus:ring-2 focus:ring-indigo-400"
+            className="w-full rounded-lg border border-border bg-card/70 py-1.5 pl-7 pr-2 text-xs outline-none focus:ring-2 focus:ring-indigo-400"
           />
         </div>
       </div>
@@ -121,18 +121,18 @@ export function ProjectRail({
               href={linkTo(p.id)}
               className={cn(
                 "flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition",
-                active ? "bg-stone-900 text-white shadow-sm" : "text-stone-700 hover:bg-white"
+                active ? "bg-primary text-primary-foreground shadow-sm" : "text-foreground/85 hover:bg-card"
               )}
             >
               <span className={cn("h-2 w-2 shrink-0 rounded-full", accentFor(p.id))} />
               <span className="min-w-0 flex-1 truncate">{p.name}</span>
-              {p.visibility === "team" && <TbUsers size={12} className={active ? "text-white/70" : "text-indigo-500"} />}
-              {p.visibility === "private" && <TbLock size={12} className={active ? "text-white/70" : "text-amber-500"} />}
+              {p.visibility === "team" && <TbUsers size={12} className={active ? "text-primary-foreground/70" : "text-indigo-500 dark:text-indigo-400"} />}
+              {p.visibility === "private" && <TbLock size={12} className={active ? "text-primary-foreground/70" : "text-amber-500 dark:text-amber-400"} />}
             </Link>
           );
         })}
         {!visible.length && (
-          <p className="px-2 py-6 text-center text-xs text-stone-400">
+          <p className="px-2 py-6 text-center text-xs text-muted-foreground">
             {projects.length ? "No match." : "No projects yet."}
           </p>
         )}

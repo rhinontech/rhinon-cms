@@ -24,12 +24,12 @@ type Tab = "table" | "board" | "gantt" | "files" | "analytics" | "calendar";
 
 /** Each tab carries its own accent so the view you are in is obvious at a glance. */
 const TABS: { key: Tab; label: string; icon: React.ReactNode; accent: string; tint: string }[] = [
-  { key: "table",     label: "Table",       icon: <TbTable size={15} />,        accent: "border-blue-500 text-blue-700",       tint: "text-blue-500" },
-  { key: "board",     label: "Board",       icon: <TbLayoutKanban size={15} />, accent: "border-violet-500 text-violet-700",   tint: "text-violet-500" },
-  { key: "gantt",     label: "Gantt chart", icon: <TbTimeline size={15} />,     accent: "border-emerald-500 text-emerald-700", tint: "text-emerald-500" },
-  { key: "files",     label: "Files",       icon: <TbPaperclip size={15} />,    accent: "border-amber-500 text-amber-700",     tint: "text-amber-500" },
-  { key: "analytics", label: "Analytics",   icon: <TbChartPie size={15} />,     accent: "border-rose-500 text-rose-700",       tint: "text-rose-500" },
-  { key: "calendar",  label: "Calendar",    icon: <TbCalendar size={15} />,     accent: "border-cyan-500 text-cyan-700",       tint: "text-cyan-500" },
+  { key: "table",     label: "Table",       icon: <TbTable size={15} />,        accent: "border-blue-500 text-blue-700 dark:text-blue-300",       tint: "text-blue-500 dark:text-blue-400" },
+  { key: "board",     label: "Board",       icon: <TbLayoutKanban size={15} />, accent: "border-violet-500 text-violet-700 dark:text-violet-300",   tint: "text-violet-500 dark:text-violet-400" },
+  { key: "gantt",     label: "Gantt chart", icon: <TbTimeline size={15} />,     accent: "border-emerald-500 text-emerald-700 dark:text-emerald-300", tint: "text-emerald-500 dark:text-emerald-400" },
+  { key: "files",     label: "Files",       icon: <TbPaperclip size={15} />,    accent: "border-amber-500 text-amber-700 dark:text-amber-300",     tint: "text-amber-500 dark:text-amber-400" },
+  { key: "analytics", label: "Analytics",   icon: <TbChartPie size={15} />,     accent: "border-rose-500 text-rose-700 dark:text-rose-300",       tint: "text-rose-500 dark:text-rose-400" },
+  { key: "calendar",  label: "Calendar",    icon: <TbCalendar size={15} />,     accent: "border-cyan-500 text-cyan-700 dark:text-cyan-300",       tint: "text-cyan-500 dark:text-cyan-400" },
 ];
 
 /**
@@ -70,7 +70,7 @@ export function ProjectWorkspace({
 
   if (ws.loading) {
     return (
-      <div className="flex h-full items-center justify-center text-sm text-stone-400">
+      <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
         <TbLoader className="mr-2 animate-spin" size={16} /> Loading project…
       </div>
     );
@@ -79,12 +79,12 @@ export function ProjectWorkspace({
   if (!ws.project) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-        <p className="text-sm font-medium text-stone-700">Project not found</p>
-        <p className="max-w-sm text-xs text-stone-500">
+        <p className="text-sm font-medium text-foreground/85">Project not found</p>
+        <p className="max-w-sm text-xs text-muted-foreground">
           It may have been deleted, or its visibility changed so it is no longer shared with you.
         </p>
         {!isCollab && (
-          <Link href={`/${roleSlug}/work/clients`} className="mt-1 text-xs font-medium text-blue-600 underline">
+          <Link href={`/${roleSlug}/work/clients`} className="mt-1 text-xs font-medium text-blue-600 dark:text-blue-300 underline">
             Back to projects
           </Link>
         )}
@@ -108,27 +108,27 @@ export function ProjectWorkspace({
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <div className="shrink-0 border-b glass-header px-4 pt-3">
-        <div className="flex items-center gap-1.5 text-xs text-stone-500">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           {isCollab ? (
             <>
-              <span className="rounded bg-stone-100 px-1.5 py-0.5 text-[10px] font-medium text-stone-600">
+              <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/70">
                 Collaborator
               </span>
               <TbChevronRight size={12} />
-              <span className="truncate text-stone-700">{p.name}</span>
+              <span className="truncate text-foreground/85">{p.name}</span>
               {onSignOut && (
-                <button onClick={onSignOut} className="ml-auto text-xs text-stone-500 hover:text-stone-800">
+                <button onClick={onSignOut} className="ml-auto text-xs text-muted-foreground hover:text-foreground">
                   Sign out
                 </button>
               )}
             </>
           ) : (
             <>
-              <Link href={`/${roleSlug}/work/clients`} className="flex items-center gap-1 hover:text-stone-800">
+              <Link href={`/${roleSlug}/work/clients`} className="flex items-center gap-1 hover:text-foreground">
                 <TbArrowLeft size={13} /> Projects
               </Link>
               <TbChevronRight size={12} />
-              <span className="truncate text-stone-700">{p.name}</span>
+              <span className="truncate text-foreground/85">{p.name}</span>
             </>
           )}
         </div>
@@ -137,14 +137,14 @@ export function ProjectWorkspace({
           <span className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[11px] font-bold text-white", accentFor(p.id))}>
             {p.name.replace(/[^\p{L}\p{N} ]/gu, "").trim().slice(0, 2).toUpperCase()}
           </span>
-          <h1 className="truncate text-xl font-bold tracking-tight text-stone-900">{p.name}</h1>
+          <h1 className="truncate text-xl font-bold tracking-tight text-foreground">{p.name}</h1>
           {p.visibility === "team" && (
-            <span className="flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700">
+            <span className="flex items-center gap-1 rounded-full bg-indigo-50 dark:bg-indigo-400/10 px-2 py-0.5 text-[10px] font-medium text-indigo-700 dark:text-indigo-300">
               <TbUsers size={11} /> {p.team?.name ?? "Team"}
             </span>
           )}
           {p.visibility === "private" && (
-            <span className="flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+            <span className="flex items-center gap-1 rounded-full bg-amber-50 dark:bg-amber-400/10 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-300">
               <TbLock size={11} /> Private
             </span>
           )}
@@ -159,7 +159,7 @@ export function ProjectWorkspace({
                 "flex shrink-0 items-center gap-1.5 rounded-t-lg border-b-2 px-3 py-2 text-sm font-medium transition",
                 tab === t.key
                   ? t.accent
-                  : "border-transparent text-stone-500 hover:bg-stone-100 hover:text-stone-800"
+                  : "border-transparent text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
             >
               <span className={tab === t.key ? "" : t.tint}>{t.icon}</span>

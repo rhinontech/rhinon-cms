@@ -17,9 +17,9 @@ interface Activity {
 }
 
 const TYPE_META: Record<string, { icon: React.ReactNode; color: string }> = {
-  DraftGenerated: { icon: <TbSparkles size={14} />, color: "bg-violet-100 text-violet-600" },
-  OutreachSent: { icon: <TbMail size={14} />, color: "bg-blue-100 text-blue-600" },
-  ReplyReceived: { icon: <TbMessage size={14} />, color: "bg-emerald-100 text-emerald-600" },
+  DraftGenerated: { icon: <TbSparkles size={14} />, color: "bg-violet-100 dark:bg-violet-400/15 text-violet-600 dark:text-violet-300" },
+  OutreachSent: { icon: <TbMail size={14} />, color: "bg-blue-100 dark:bg-blue-400/15 text-blue-600 dark:text-blue-300" },
+  ReplyReceived: { icon: <TbMessage size={14} />, color: "bg-emerald-100 dark:bg-emerald-400/15 text-emerald-600 dark:text-emerald-300" },
 };
 
 export function ActivityTab({
@@ -69,9 +69,9 @@ export function ActivityTab({
           description="Drafts and sends for this campaign show up here as they happen."
         />
       ) : (
-        <div className="divide-y divide-stone-50 rounded-lg border border-stone-100 bg-white">
+        <div className="divide-y divide-border rounded-lg border border-border bg-card">
           {activities.map((a) => {
-            const meta = TYPE_META[a.type] || { icon: <TbActivity size={14} />, color: "bg-stone-100 text-stone-500" };
+            const meta = TYPE_META[a.type] || { icon: <TbActivity size={14} />, color: "bg-muted text-muted-foreground" };
             const isReply = a.type === "ReplyReceived" && !!a.generatedContent;
             const expanded = expandedId === a.id;
             return (
@@ -81,18 +81,18 @@ export function ActivityTab({
                     {meta.icon}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm text-stone-800">
+                    <p className="text-sm text-foreground">
                       {a.lead && <span className="font-bold">{a.lead.name}</span>}
-                      {a.lead?.company && <span className="text-stone-400"> ({a.lead.company})</span>}
+                      {a.lead?.company && <span className="text-muted-foreground"> ({a.lead.company})</span>}
                       {a.lead && " — "}
                       {a.content}
                     </p>
                     <div className="mt-0.5 flex items-center gap-2">
-                      <p className="text-[11px] text-stone-400">{new Date(a.timestamp).toLocaleString()}</p>
+                      <p className="text-[11px] text-muted-foreground">{new Date(a.timestamp).toLocaleString()}</p>
                       {isReply && (
                         <button
                           onClick={() => setExpandedId(expanded ? null : a.id)}
-                          className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-emerald-600 hover:underline"
+                          className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-300 hover:underline"
                         >
                           {expanded ? "Hide reply" : "View reply"}
                           <TbChevronDown size={12} className={cn("transition-transform", expanded && "rotate-180")} />
@@ -103,7 +103,7 @@ export function ActivityTab({
                 </div>
                 {isReply && expanded && (
                   <div
-                    className="prose prose-sm mt-3 ml-10 max-w-none rounded-lg border border-emerald-100 bg-emerald-50/30 p-3 text-sm text-stone-800 [&_*]:!my-1"
+                    className="prose prose-sm mt-3 ml-10 max-w-none rounded-lg border border-emerald-100 dark:border-emerald-400/20 bg-emerald-50/30 dark:bg-emerald-400/10 p-3 text-sm text-foreground [&_*]:!my-1"
                     dangerouslySetInnerHTML={{ __html: a.generatedContent! }}
                   />
                 )}

@@ -13,7 +13,7 @@ export default function AutomationIndexPage() {
   }, [router, roleSlug]);
 
   return (
-    <div className="flex h-full items-center justify-center p-8 text-gray-500">
+    <div className="flex h-full items-center justify-center p-8 text-muted-foreground">
       Redirecting to Workflows...
     </div>
   );

@@ -38,7 +38,7 @@ export function CollaboratorWorkspace() {
 
   if (projects === null) {
     return (
-      <div className="flex h-screen items-center justify-center text-sm text-stone-400">
+      <div className="flex h-screen items-center justify-center text-sm text-muted-foreground">
         <TbLoader className="mr-2 animate-spin" size={16} /> Loading your workspace…
       </div>
     );
@@ -47,13 +47,13 @@ export function CollaboratorWorkspace() {
   if (!projects.length) {
     return (
       <div className="flex h-screen flex-col items-center justify-center gap-3 px-6 text-center">
-        <TbFolderOff size={30} className="text-stone-300" />
-        <h1 className="text-lg font-semibold text-stone-800">Nothing shared with you yet</h1>
-        <p className="max-w-sm text-sm text-stone-500">
+        <TbFolderOff size={30} className="text-muted-foreground/70" />
+        <h1 className="text-lg font-semibold text-foreground">Nothing shared with you yet</h1>
+        <p className="max-w-sm text-sm text-muted-foreground">
           When someone shares a project with you it will appear here. If you were expecting
           access, ask whoever invited you to confirm the project has been shared.
         </p>
-        <button onClick={signOut} className="mt-1 text-xs font-medium text-stone-600 underline">
+        <button onClick={signOut} className="mt-1 text-xs font-medium text-foreground/70 underline">
           Sign out
         </button>
       </div>

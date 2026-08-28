@@ -217,7 +217,7 @@ export function CaseStudyEditorPage({ id }: { id?: string }) {
   if (loading) {
     return (
       <main className="flex h-full min-h-0 w-full items-center justify-center rounded-xl glass-panel">
-        <TbLoader size={22} className="animate-spin text-stone-400" />
+        <TbLoader size={22} className="animate-spin text-muted-foreground" />
       </main>
     );
   }
@@ -228,21 +228,21 @@ export function CaseStudyEditorPage({ id }: { id?: string }) {
         <div className="flex min-w-0 items-center gap-2">
           <button
             onClick={() => router.push(listPath)}
-            className="rounded-lg p-2 text-gray-600 hover:bg-stone-100"
+            className="rounded-lg p-2 text-foreground/70 hover:bg-muted"
             title="Back to case studies"
           >
             <TbArrowLeft size={18} />
           </button>
           <SubNavToggle />
-          <h1 className="truncate text-base font-semibold tracking-tight text-gray-900">
+          <h1 className="truncate text-base font-semibold tracking-tight text-foreground">
             {id ? "Edit Case Study" : "New Case Study"}
           </h1>
           <span
             className={cn(
               "ml-2 shrink-0 rounded border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest",
               status === "Published"
-                ? "border-emerald-100 bg-emerald-50 text-emerald-600"
-                : "border-amber-100 bg-amber-50 text-amber-600"
+                ? "border-emerald-100 dark:border-emerald-400/20 bg-emerald-50 dark:bg-emerald-400/10 text-emerald-600 dark:text-emerald-300"
+                : "border-amber-100 dark:border-amber-400/20 bg-amber-50 dark:bg-amber-400/10 text-amber-600 dark:text-amber-300"
             )}
           >
             {status}
@@ -253,14 +253,14 @@ export function CaseStudyEditorPage({ id }: { id?: string }) {
           <button
             onClick={() => handleSave("Draft")}
             disabled={!!saving}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium hover:bg-stone-100 disabled:opacity-60"
+            className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted disabled:opacity-60"
           >
             {saving === "Draft" ? "Saving…" : "Save as Draft"}
           </button>
           <button
             onClick={() => handleSave("Published")}
             disabled={!!saving}
-            className="rounded-lg bg-stone-900 px-3.5 py-1.5 text-xs font-medium text-white hover:bg-stone-800 disabled:opacity-60"
+            className="rounded-lg bg-primary px-3.5 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
           >
             {saving === "Published" ? "Publishing…" : status === "Published" ? "Update" : "Publish"}
           </button>
@@ -268,10 +268,10 @@ export function CaseStudyEditorPage({ id }: { id?: string }) {
       </div>
 
       {error && (
-        <div className="border-b border-red-100 bg-red-50 px-4 py-2 text-xs font-medium text-red-600">{error}</div>
+        <div className="border-b border-red-100 dark:border-red-400/20 bg-red-50 dark:bg-red-400/10 px-4 py-2 text-xs font-medium text-red-600 dark:text-red-300">{error}</div>
       )}
       {legacyConverted && (
-        <div className="border-b border-cyan-100 bg-cyan-50 px-4 py-2 text-xs font-medium text-cyan-700">
+        <div className="border-b border-cyan-100 dark:border-cyan-400/20 bg-cyan-50 dark:bg-cyan-400/10 px-4 py-2 text-xs font-medium text-cyan-700 dark:text-cyan-300">
           This case study was converted from legacy markdown — review the formatting before saving.
         </div>
       )}
@@ -280,22 +280,22 @@ export function CaseStudyEditorPage({ id }: { id?: string }) {
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 p-4 sm:p-6 xl:grid-cols-[minmax(0,1fr)_340px]">
           {/* Left — content */}
           <div className="min-w-0 space-y-5">
-            <div className="space-y-4 rounded-xl border border-stone-200 bg-white p-4 sm:p-5">
-              <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+            <div className="space-y-4 rounded-xl border border-border bg-card p-4 sm:p-5">
+              <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                 Title
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="ApexisPro — Architecture Operations"
-                  className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2.5 text-lg font-bold tracking-tight outline-none focus:ring-2 focus:ring-stone-900"
+                  className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-lg font-bold tracking-tight outline-none focus:ring-2 focus:ring-ring"
                 />
               </label>
 
-              <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+              <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                 Case Study URL
-                <div className="flex items-center overflow-hidden rounded-lg border border-stone-200 bg-white focus-within:ring-2 focus-within:ring-stone-900">
-                  <span className="shrink-0 border-r border-stone-100 bg-stone-50 px-3 py-2 text-sm text-stone-400">/case-studies/</span>
+                <div className="flex items-center overflow-hidden rounded-lg border border-border bg-card focus-within:ring-2 focus-within:ring-ring">
+                  <span className="shrink-0 border-r border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">/case-studies/</span>
                   <input
                     type="text"
                     value={slug}
@@ -305,69 +305,69 @@ export function CaseStudyEditorPage({ id }: { id?: string }) {
                   />
                 </div>
                 {slugChangedOnPublished && (
-                  <p className="text-xs font-normal text-amber-600">
+                  <p className="text-xs font-normal text-amber-600 dark:text-amber-300">
                     Changing the URL of a published case study breaks existing links to it.
                   </p>
                 )}
               </label>
 
-              <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+              <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                 Summary
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Short summary shown on cards & the case-study header."
-                  className="h-20 w-full resize-none rounded-lg border border-stone-200 bg-white px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-stone-900"
+                  className="h-20 w-full resize-none rounded-lg border border-border bg-card px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
               </label>
             </div>
 
             <ParagraphBlock html={content} onChange={setContent} />
 
-            <div className="space-y-3 rounded-xl border border-stone-200 bg-white p-4 sm:p-5">
-              <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+            <div className="space-y-3 rounded-xl border border-border bg-card p-4 sm:p-5">
+              <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                 Result (optional)
                 <input
                   type="text"
                   value={result}
                   onChange={(e) => setResult(e.target.value)}
                   placeholder="Delivered a centralized operational platform (₹4,00,000 project)."
-                  className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-stone-900"
+                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
               </label>
-              <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+              <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                 Quote (optional)
                 <textarea
                   value={quote}
                   onChange={(e) => setQuote(e.target.value)}
                   placeholder="A short, factual outcome statement (not a fabricated testimonial)."
-                  className="h-20 w-full resize-none rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-stone-900"
+                  className="h-20 w-full resize-none rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
               </label>
             </div>
 
             {/* Gallery editor */}
-            <div className="space-y-3 rounded-xl border border-stone-200 bg-white p-4 sm:p-5">
+            <div className="space-y-3 rounded-xl border border-border bg-card p-4 sm:p-5">
               <div className="flex items-center justify-between">
-                <h2 className="text-xs font-bold uppercase tracking-widest text-stone-400">Gallery Images</h2>
+                <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Gallery Images</h2>
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
                     onClick={() => galleryInputRef.current?.click()}
                     disabled={galleryUploading}
-                    className="flex items-center gap-1 text-xs font-medium text-stone-600 hover:text-stone-900 disabled:opacity-50"
+                    className="flex items-center gap-1 text-xs font-medium text-foreground/70 hover:text-foreground disabled:opacity-50"
                   >
                     {galleryUploading ? <TbLoader className="animate-spin" size={13} /> : <TbUpload size={13} />}
                     {galleryUploading ? "Uploading…" : "Upload"}
                   </button>
-                  <button type="button" onClick={addImageUrl} className="flex items-center gap-1 text-xs font-medium text-stone-600 hover:text-stone-900">
+                  <button type="button" onClick={addImageUrl} className="flex items-center gap-1 text-xs font-medium text-foreground/70 hover:text-foreground">
                     <TbPlus size={13} /> Add URL
                   </button>
                 </div>
               </div>
               <input ref={galleryInputRef} type="file" accept="image/*" onChange={handleGalleryUpload} className="hidden" />
               {images.length === 0 && (
-                <p className="text-xs text-stone-400">No gallery images yet — these show on the case-study detail page.</p>
+                <p className="text-xs text-muted-foreground">No gallery images yet — these show on the case-study detail page.</p>
               )}
               {images.map((url, i) => (
                 <div key={i} className="flex items-center gap-2">
@@ -375,9 +375,9 @@ export function CaseStudyEditorPage({ id }: { id?: string }) {
                     value={url}
                     onChange={(e) => updateImage(i, e.target.value)}
                     placeholder="https://image-url..."
-                    className="flex-1 rounded-lg border border-stone-200 bg-white px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-stone-900"
+                    className="flex-1 rounded-lg border border-border bg-card px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-ring"
                   />
-                  <button type="button" onClick={() => removeImage(i)} className="shrink-0 rounded p-1.5 text-stone-300 hover:text-red-600">
+                  <button type="button" onClick={() => removeImage(i)} className="shrink-0 rounded p-1.5 text-muted-foreground/70 hover:text-red-600 dark:hover:text-red-300">
                     <TbTrash size={15} />
                   </button>
                 </div>
@@ -385,10 +385,10 @@ export function CaseStudyEditorPage({ id }: { id?: string }) {
             </div>
 
             {/* Stats editor */}
-            <div className="space-y-3 rounded-xl border border-stone-200 bg-white p-4 sm:p-5">
+            <div className="space-y-3 rounded-xl border border-border bg-card p-4 sm:p-5">
               <div className="flex items-center justify-between">
-                <h2 className="text-xs font-bold uppercase tracking-widest text-stone-400">Headline Stats</h2>
-                <button type="button" onClick={addStat} className="flex items-center gap-1 text-xs font-medium text-stone-600 hover:text-stone-900">
+                <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Headline Stats</h2>
+                <button type="button" onClick={addStat} className="flex items-center gap-1 text-xs font-medium text-foreground/70 hover:text-foreground">
                   <TbPlus size={13} /> Add
                 </button>
               </div>
@@ -398,21 +398,21 @@ export function CaseStudyEditorPage({ id }: { id?: string }) {
                     value={stat.value}
                     onChange={(e) => updateStat(i, "value", e.target.value)}
                     placeholder="₹4L"
-                    className="w-20 rounded-lg border border-stone-200 bg-white px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-stone-900"
+                    className="w-20 rounded-lg border border-border bg-card px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-ring"
                   />
                   <input
                     value={stat.suffix || ""}
                     onChange={(e) => updateStat(i, "suffix", e.target.value)}
                     placeholder="+"
-                    className="w-14 rounded-lg border border-stone-200 bg-white px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-stone-900"
+                    className="w-14 rounded-lg border border-border bg-card px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-ring"
                   />
                   <input
                     value={stat.label}
                     onChange={(e) => updateStat(i, "label", e.target.value)}
                     placeholder="project value delivered"
-                    className="flex-1 rounded-lg border border-stone-200 bg-white px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-stone-900"
+                    className="flex-1 rounded-lg border border-border bg-card px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-ring"
                   />
-                  <button type="button" onClick={() => removeStat(i)} className="shrink-0 rounded p-1.5 text-stone-300 hover:text-red-600">
+                  <button type="button" onClick={() => removeStat(i)} className="shrink-0 rounded p-1.5 text-muted-foreground/70 hover:text-red-600 dark:hover:text-red-300">
                     <TbTrash size={15} />
                   </button>
                 </div>
@@ -423,76 +423,76 @@ export function CaseStudyEditorPage({ id }: { id?: string }) {
           {/* Right — settings rail */}
           <div className="space-y-4">
             <SettingsCard title="Client">
-              <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+              <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                 Client
                 <input
                   type="text"
                   value={client}
                   onChange={(e) => setClient(e.target.value)}
                   placeholder="ApexisPro"
-                  className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-stone-900"
+                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
               </label>
-              <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+              <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                 Industry
                 <input
                   type="text"
                   value={industry}
                   onChange={(e) => setIndustry(e.target.value)}
                   placeholder="Architecture"
-                  className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-stone-900"
+                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
               </label>
             </SettingsCard>
 
             <SettingsCard title="Project Details">
-              <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+              <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                 Category
                 <input
                   type="text"
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   placeholder="Operations Platform"
-                  className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-stone-900"
+                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
               </label>
-              <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+              <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                 Timeline
                 <input
                   type="text"
                   value={timeline}
                   onChange={(e) => setTimeline(e.target.value)}
                   placeholder="12 weeks"
-                  className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-stone-900"
+                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
               </label>
-              <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+              <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                 Date
                 <input
                   type="text"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
                   placeholder="2024"
-                  className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-stone-900"
+                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
               </label>
-              <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+              <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                 Live Link
                 <input
                   type="text"
                   value={liveLink}
                   onChange={(e) => setLiveLink(e.target.value)}
                   placeholder="https://client-site.com"
-                  className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-stone-900"
+                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
               </label>
-              <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+              <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                 Display Order
                 <input
                   type="number"
                   value={displayOrder}
                   onChange={(e) => setDisplayOrder(Number(e.target.value) || 0)}
-                  className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-stone-900"
+                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
               </label>
             </SettingsCard>
@@ -509,8 +509,8 @@ export function CaseStudyEditorPage({ id }: { id?: string }) {
 
 function SettingsCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="space-y-3 rounded-xl border border-stone-200 bg-white p-4">
-      <h2 className="text-xs font-bold uppercase tracking-widest text-stone-400">{title}</h2>
+    <div className="space-y-3 rounded-xl border border-border bg-card p-4">
+      <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{title}</h2>
       {children}
     </div>
   );

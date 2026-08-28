@@ -38,8 +38,8 @@ export function ContactsPage() {
         <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
           <SubNavToggle />
           <div className="min-w-0">
-            <h1 className="text-base font-semibold tracking-tight text-gray-900 truncate">Contacts</h1>
-            <p className="hidden text-xs text-gray-500 sm:block truncate">Organize leads into named groups to target with campaigns.</p>
+            <h1 className="text-base font-semibold tracking-tight text-foreground truncate">Contacts</h1>
+            <p className="hidden text-xs text-muted-foreground sm:block truncate">Organize leads into named groups to target with campaigns.</p>
           </div>
         </div>
       </div>
@@ -73,7 +73,7 @@ export function ContactsPage() {
           )}
         >
           {loading ? (
-            <div className="flex flex-1 items-center justify-center text-sm text-stone-400">Loading groups...</div>
+            <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">Loading groups...</div>
           ) : selectedGroup ? (
             <GroupMembersPanel
               key={selectedGroup.id}
@@ -87,7 +87,7 @@ export function ContactsPage() {
               onBack={() => setMobileDetailOpen(false)}
             />
           ) : (
-            <div className="flex flex-1 items-center justify-center text-sm text-stone-400 p-6 text-center">
+            <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground p-6 text-center">
               Create a group on the left to start organizing contacts.
             </div>
           )}

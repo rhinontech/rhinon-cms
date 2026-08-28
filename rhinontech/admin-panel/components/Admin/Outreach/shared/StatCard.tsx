@@ -26,11 +26,11 @@ export function StatCard({
       ) : (
         <>
           <div className="flex items-center justify-between gap-2">
-            <span className="text-sm font-medium text-stone-500">{label}</span>
-            {icon && <span className="text-stone-400">{icon}</span>}
+            <span className="text-sm font-medium text-muted-foreground">{label}</span>
+            {icon && <span className="text-muted-foreground">{icon}</span>}
           </div>
-          <div className="mt-2 text-3xl font-bold tracking-tight text-stone-900 tabular-nums">{value}</div>
-          {hint && <p className="mt-1 text-xs text-stone-400">{hint}</p>}
+          <div className="mt-2 text-3xl font-bold tracking-tight text-foreground tabular-nums">{value}</div>
+          {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
         </>
       )}
     </div>

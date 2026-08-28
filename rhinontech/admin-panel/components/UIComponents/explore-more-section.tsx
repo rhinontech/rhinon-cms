@@ -7,7 +7,7 @@ export function ExploreMoreSection() {
 
       <div className="grid gap-6 md:grid-cols-3">
         <div className="rounded-lg border p-6">
-          <div className="mb-4 h-12 w-32 rounded-md bg-gray-100"></div>
+          <div className="mb-4 h-12 w-32 rounded-md bg-muted"></div>
           <h3 className="mb-1 font-medium">Speak to a specialist</h3>
           <p className="mb-4 text-sm text-muted-foreground">
             Get expert guidance as you get up and running with Intercom.
@@ -18,7 +18,7 @@ export function ExploreMoreSection() {
         </div>
 
         <div className="rounded-lg border p-6">
-          <div className="mb-4 h-12 w-32 rounded-md bg-gray-100"></div>
+          <div className="mb-4 h-12 w-32 rounded-md bg-muted"></div>
           <h3 className="mb-1 font-medium">Get the best from AI and Automation</h3>
           <p className="mb-4 text-sm text-muted-foreground">
             Learn how to use Workflows, Fin AI Agent, and Copilot to empower your team.
@@ -26,7 +26,7 @@ export function ExploreMoreSection() {
         </div>
 
         <div className="rounded-lg border p-6">
-          <div className="mb-4 h-12 w-32 rounded-md bg-gray-100"></div>
+          <div className="mb-4 h-12 w-32 rounded-md bg-muted"></div>
           <h3 className="mb-1 font-medium">Improve your customer experience</h3>
           <p className="mb-4 text-sm text-muted-foreground">
             Learn to identify and track key metrics, to improve your customer experience.

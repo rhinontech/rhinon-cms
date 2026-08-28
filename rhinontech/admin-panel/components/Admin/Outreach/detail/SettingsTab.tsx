@@ -56,11 +56,11 @@ export function SettingsTab({
 
   return (
     <div className="max-w-xl space-y-6">
-      <div className="space-y-4 rounded-xl border border-stone-200 bg-white p-5">
-        <div className="flex items-center justify-between rounded-lg border border-stone-100 bg-stone-50 px-4 py-3">
+      <div className="space-y-4 rounded-xl border border-border bg-card p-5">
+        <div className="flex items-center justify-between rounded-lg border border-border bg-muted/40 px-4 py-3">
           <div>
-            <p className="text-sm font-semibold text-stone-800">Schedule automatic send</p>
-            <p className="text-xs text-stone-500">
+            <p className="text-sm font-semibold text-foreground">Schedule automatic send</p>
+            <p className="text-xs text-muted-foreground">
               When on, the whole enrolled list sends automatically at the date/time below. When off, this campaign only sends via "Send Now".
             </p>
           </div>
@@ -114,7 +114,7 @@ export function SettingsTab({
           />
         </div>
 
-        <div className="flex justify-end border-t border-stone-100 pt-4">
+        <div className="flex justify-end border-t border-border pt-4">
           <Button onClick={handleSave} disabled={saving}>
             {saving ? <TbLoader className="animate-spin" size={14} /> : <TbCheck size={14} />}
             Save Settings
@@ -123,12 +123,12 @@ export function SettingsTab({
       </div>
 
       {/* Danger zone */}
-      <div className="space-y-3 rounded-xl border border-red-100 bg-red-50/40 p-5">
+      <div className="space-y-3 rounded-xl border border-red-100 dark:border-red-400/20 bg-red-50/40 dark:bg-red-400/10 p-5">
         <p className="text-xs font-bold uppercase tracking-widest text-red-400">Danger Zone</p>
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold text-stone-800">Reset campaign</p>
-            <p className="text-xs text-stone-500">Re-enroll all leads and clear drafts.</p>
+            <p className="text-sm font-semibold text-foreground">Reset campaign</p>
+            <p className="text-xs text-muted-foreground">Re-enroll all leads and clear drafts.</p>
           </div>
           <Button variant="outline" size="sm" onClick={onReset}>
             <TbRefresh size={14} /> Reset
@@ -136,8 +136,8 @@ export function SettingsTab({
         </div>
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold text-stone-800">Delete campaign</p>
-            <p className="text-xs text-stone-500">Unenrolls all leads. Cannot be undone.</p>
+            <p className="text-sm font-semibold text-foreground">Delete campaign</p>
+            <p className="text-xs text-muted-foreground">Unenrolls all leads. Cannot be undone.</p>
           </div>
           <Button variant="destructive" size="sm" onClick={onDelete}>
             <TbTrash size={14} /> Delete

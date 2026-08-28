@@ -230,7 +230,7 @@ export function AnalyticsDashboard() {
         </div>
 
         {error && (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+          <div className="rounded-lg border border-red-200 dark:border-red-400/25 bg-red-50 dark:bg-red-400/10 px-4 py-3 text-sm text-red-700 dark:text-red-300">{error}</div>
         )}
 
         {/* Stat cards */}
@@ -266,7 +266,7 @@ export function AnalyticsDashboard() {
                           <span
                             className={cn(
                               "inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-semibold",
-                              up ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
+                              up ? "bg-emerald-50 dark:bg-emerald-400/10 text-emerald-700 dark:text-emerald-300" : "bg-rose-50 dark:bg-rose-400/10 text-rose-700 dark:text-rose-300"
                             )}
                           >
                             {up ? <TbArrowUpRight size={14} /> : <TbArrowDownRight size={14} />}
@@ -428,7 +428,7 @@ function VisitorsTable({ visitors, loading }: { visitors: VisitorRow[]; loading:
           <div>
             <div className="flex items-center gap-2">
               <CardTitle>Identified Visitors</CardTitle>
-              <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700 border border-blue-200/60">
+              <span className="rounded-full bg-blue-50 dark:bg-blue-400/10 px-2.5 py-0.5 text-xs font-semibold text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-400/25">
                 {filtered.length} {selectedDate ? `on ${formattedDateLabel}` : "total"}
               </span>
             </div>
@@ -564,7 +564,7 @@ function VisitorsTable({ visitors, loading }: { visitors: VisitorRow[]; loading:
                     {/* Email */}
                     <td className="py-3 pr-3 font-medium text-foreground">
                       <div className="flex items-center gap-2">
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-700">
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-400/10 text-blue-700 dark:text-blue-300">
                           <TbMail size={14} />
                         </div>
                         <span className="font-semibold">{v.email}</span>
@@ -573,7 +573,7 @@ function VisitorsTable({ visitors, loading }: { visitors: VisitorRow[]; loading:
                           className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded hover:bg-muted"
                           title="Copy email"
                         >
-                          {copiedId === `email-${v.id}` ? <TbCheck size={13} className="text-emerald-600" /> : <TbCopy size={13} />}
+                          {copiedId === `email-${v.id}` ? <TbCheck size={13} className="text-emerald-600 dark:text-emerald-300" /> : <TbCopy size={13} />}
                         </button>
                       </div>
                     </td>
@@ -588,7 +588,7 @@ function VisitorsTable({ visitors, loading }: { visitors: VisitorRow[]; loading:
                     {/* Location */}
                     <td className="py-3 pr-3 text-foreground">
                       <div className="flex items-center gap-1.5 text-xs">
-                        <TbMapPin size={14} className="text-rose-500 shrink-0" />
+                        <TbMapPin size={14} className="text-rose-500 dark:text-rose-400 shrink-0" />
                         <span className="font-medium">
                           {v.location || [v.city, v.region, v.country].filter(Boolean).join(", ") || "Unknown Location"}
                         </span>
@@ -597,7 +597,7 @@ function VisitorsTable({ visitors, loading }: { visitors: VisitorRow[]; loading:
 
                     {/* Path */}
                     <td className="py-3 pr-3">
-                      <span className="inline-flex items-center text-xs font-medium text-muted-foreground bg-stone-100 dark:bg-stone-800 px-2 py-0.5 rounded">
+                      <span className="inline-flex items-center text-xs font-medium text-muted-foreground bg-muted dark:bg-primary/90 px-2 py-0.5 rounded">
                         {v.path || "/"}
                       </span>
                     </td>

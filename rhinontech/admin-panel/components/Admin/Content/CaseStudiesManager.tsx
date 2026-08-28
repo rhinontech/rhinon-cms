@@ -68,13 +68,13 @@ export function CaseStudiesManager() {
         <div className="flex items-center gap-3">
           <SubNavToggle />
           <div>
-            <h1 className="text-base font-semibold tracking-tight text-gray-900">Case Studies</h1>
-            <p className="text-xs text-gray-500">Proof points shown on the Rhinon Labs website.</p>
+            <h1 className="text-base font-semibold tracking-tight text-foreground">Case Studies</h1>
+            <p className="text-xs text-muted-foreground">Proof points shown on the Rhinon Labs website.</p>
           </div>
         </div>
         <button
           onClick={() => router.push(`${basePath}/new`)}
-          className="inline-flex items-center gap-2 rounded-lg bg-stone-900 px-3.5 py-1.5 text-xs font-medium text-white hover:bg-stone-800 transition-colors"
+          className="inline-flex items-center gap-2 rounded-lg bg-primary px-3.5 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
         >
           New Case Study <TbPlus size={14} />
         </button>
@@ -84,47 +84,47 @@ export function CaseStudiesManager() {
         <div className="grid grid-cols-1 gap-2">
           {loading ? (
             Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-16 rounded-xl border border-stone-100 bg-white animate-pulse" />
+              <div key={i} className="h-16 rounded-xl border border-border bg-card animate-pulse" />
             ))
           ) : items.length === 0 ? (
-            <div className="py-20 text-center text-sm text-gray-400">No case studies yet.</div>
+            <div className="py-20 text-center text-sm text-muted-foreground">No case studies yet.</div>
           ) : (
             items.map((cs) => (
               <div
                 key={cs.id}
                 onClick={() => router.push(`${basePath}/${cs.id}`)}
-                className="flex items-center justify-between p-4 rounded-xl border border-gray-200 bg-white cursor-pointer hover:bg-stone-50 transition-colors group"
+                className="flex items-center justify-between p-4 rounded-xl border border-border bg-card cursor-pointer hover:bg-muted/40 transition-colors group"
               >
                 <div className="flex items-center gap-4 min-w-0">
-                  <div className="h-12 w-16 shrink-0 rounded-lg overflow-hidden border border-stone-100 bg-stone-100 flex items-center justify-center">
+                  <div className="h-12 w-16 shrink-0 rounded-lg overflow-hidden border border-border bg-muted flex items-center justify-center">
                     {cs.image ? (
                       <img src={cs.image} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <TbTrophy size={18} className="text-stone-300" />
+                      <TbTrophy size={18} className="text-muted-foreground/70" />
                     )}
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-bold text-stone-900 text-sm truncate">{cs.title}</h3>
+                    <h3 className="font-bold text-foreground text-sm truncate">{cs.title}</h3>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span
                         className={cn(
                           "text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded border",
                           cs.status === "Published"
-                            ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                            : "bg-amber-50 text-amber-600 border-amber-100"
+                            ? "bg-emerald-50 dark:bg-emerald-400/10 text-emerald-600 dark:text-emerald-300 border-emerald-100 dark:border-emerald-400/20"
+                            : "bg-amber-50 dark:bg-amber-400/10 text-amber-600 dark:text-amber-300 border-amber-100 dark:border-amber-400/20"
                         )}
                       >
                         {cs.status}
                       </span>
-                      {cs.industry && <span className="text-xs text-stone-400 truncate">{cs.industry}</span>}
-                      <span className="text-[10px] text-stone-300">#{cs.displayOrder}</span>
+                      {cs.industry && <span className="text-xs text-muted-foreground truncate">{cs.industry}</span>}
+                      <span className="text-[10px] text-muted-foreground/70">#{cs.displayOrder}</span>
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all shrink-0">
                   <button
                     onClick={(e) => { e.stopPropagation(); handleDelete(cs.id); }}
-                    className="p-1.5 text-stone-300 hover:text-red-600 rounded"
+                    className="p-1.5 text-muted-foreground/70 hover:text-red-600 dark:hover:text-red-300 rounded"
                     title="Delete"
                   >
                     <TbTrash size={17} />

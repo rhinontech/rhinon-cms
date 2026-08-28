@@ -20,7 +20,7 @@ function PageIcon({ icon, size = 14 }: { icon: string | null; size?: number }) {
     );
   }
   if (icon) return <span className="shrink-0 text-sm leading-none">{icon}</span>;
-  return <TbFileText size={size} className="shrink-0 text-gray-400" />;
+  return <TbFileText size={size} className="shrink-0 text-muted-foreground" />;
 }
 import {
   DropdownMenu,
@@ -154,7 +154,7 @@ export function PagesSidebar({ activeId, onChanged }: { activeId?: string; onCha
         <div
           className={cn(
             "group flex items-center gap-1 rounded-md py-1.5 pr-1.5 text-sm cursor-pointer",
-            isActive ? "bg-white/80 text-gray-900 font-medium shadow-xs" : "text-gray-600 hover:bg-white/40"
+            isActive ? "bg-card/80 text-foreground font-medium shadow-xs" : "text-foreground/70 hover:bg-card/40"
           )}
           style={{ paddingLeft: `${depth * 14 + 6}px` }}
           onClick={() => {
@@ -166,7 +166,7 @@ export function PagesSidebar({ activeId, onChanged }: { activeId?: string; onCha
         >
           <button
             onClick={(e) => { e.stopPropagation(); toggleExpand(node.id); }}
-            className={cn("shrink-0 rounded p-0.5 hover:bg-black/5", node.children.length === 0 && "invisible")}
+            className={cn("shrink-0 rounded p-0.5 hover:bg-foreground/5", node.children.length === 0 && "invisible")}
           >
             <TbChevronRight size={13} className={cn("transition-transform", isOpen && "rotate-90")} />
           </button>
@@ -174,7 +174,7 @@ export function PagesSidebar({ activeId, onChanged }: { activeId?: string; onCha
           <span className="flex-1 min-w-0 truncate">{node.title || "Untitled"}</span>
           <button
             onClick={(e) => { e.stopPropagation(); createPage(node.id); }}
-            className="shrink-0 rounded p-1 text-gray-400 hover:text-gray-700 hover:bg-black/5 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
+            className="shrink-0 rounded p-1 text-muted-foreground hover:text-foreground/85 hover:bg-foreground/5 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
             title="Add sub-page"
           >
             <TbPlus size={14} />
@@ -183,13 +183,13 @@ export function PagesSidebar({ activeId, onChanged }: { activeId?: string; onCha
             <DropdownMenuTrigger asChild>
               <button
                 onClick={(e) => e.stopPropagation()}
-                className="shrink-0 rounded p-1 text-gray-400 hover:text-gray-700 hover:bg-black/5 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
+                className="shrink-0 rounded p-1 text-muted-foreground hover:text-foreground/85 hover:bg-foreground/5 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
               >
                 <TbDots size={14} />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
-              <DropdownMenuItem onSelect={() => archivePage(node.id)} className="gap-2 text-red-600">
+              <DropdownMenuItem onSelect={() => archivePage(node.id)} className="gap-2 text-red-600 dark:text-red-300">
                 <TbTrash size={14} /> Archive
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -210,19 +210,19 @@ export function PagesSidebar({ activeId, onChanged }: { activeId?: string; onCha
         className={cn(
           "flex-col glass-sidenav transition-all duration-200 ease-in-out overflow-hidden",
           isExpanded
-            ? "fixed inset-y-0 left-0 z-50 flex w-72 max-lg:bg-white! shadow-xl lg:static lg:z-auto lg:h-full lg:w-[18%] lg:min-w-[220px] lg:rounded-l-xl lg:glass-sidenav lg:shadow-none lg:border-r lg:border-black/5"
+            ? "fixed inset-y-0 left-0 z-50 flex w-72 max-lg:bg-card! shadow-xl lg:static lg:z-auto lg:h-full lg:w-[18%] lg:min-w-[220px] lg:rounded-l-xl lg:glass-sidenav lg:shadow-none lg:border-r lg:border-border"
             : "hidden lg:flex lg:h-full lg:w-0"
         )}
       >
         {isExpanded && (
           <div className="flex h-full w-full flex-col">
-            <div className="flex items-center justify-between border-b border-black/5 px-4 py-3.5">
+            <div className="flex items-center justify-between border-b border-border px-4 py-3.5">
               <span className="text-lg font-semibold tracking-tight">Pages</span>
               <div className="flex items-center gap-1">
-                <button onClick={() => createPage()} className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100" title="New page">
+                <button onClick={() => createPage()} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted" title="New page">
                   <TbPlus size={17} />
                 </button>
-                <button onClick={toggleSideNav} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 lg:hidden" aria-label="Close menu">
+                <button onClick={toggleSideNav} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted lg:hidden" aria-label="Close menu">
                   <TbX size={18} />
                 </button>
               </div>
@@ -230,15 +230,15 @@ export function PagesSidebar({ activeId, onChanged }: { activeId?: string; onCha
 
             <div className="px-3 pt-3">
               <div className="relative">
-                <TbSearch size={13} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                <TbSearch size={13} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search pages…"
-                  className="w-full rounded-lg border border-black/10 bg-white/60 py-1.5 pl-7 pr-7 text-xs outline-none focus:ring-1 focus:ring-stone-400"
+                  className="w-full rounded-lg border border-border bg-card/60 py-1.5 pl-7 pr-7 text-xs outline-none focus:ring-1 focus:ring-border"
                 />
                 {search && (
-                  <button onClick={() => setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700">
+                  <button onClick={() => setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground/85">
                     <TbX size={13} />
                   </button>
                 )}
@@ -248,11 +248,11 @@ export function PagesSidebar({ activeId, onChanged }: { activeId?: string; onCha
             <div className="flex-1 overflow-y-auto px-2 py-2">
               {loading ? (
                 <div className="space-y-1.5 px-2">
-                  {Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-6 animate-pulse rounded bg-white/40" />)}
+                  {Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-6 animate-pulse rounded bg-card/40" />)}
                 </div>
               ) : searchResults ? (
                 searchResults.length === 0 ? (
-                  <p className="px-3 py-4 text-center text-xs text-gray-400">No matches</p>
+                  <p className="px-3 py-4 text-center text-xs text-muted-foreground">No matches</p>
                 ) : (
                   searchResults.map((p) => (
                     <div
@@ -264,7 +264,7 @@ export function PagesSidebar({ activeId, onChanged }: { activeId?: string; onCha
                           toggleSideNav();
                         }
                       }}
-                      className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm text-gray-700 hover:bg-white/40"
+                      className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm text-foreground/85 hover:bg-card/40"
                     >
                       <PageIcon icon={p.icon} />
                       <span className="truncate">{p.title || "Untitled"}</span>
@@ -273,8 +273,8 @@ export function PagesSidebar({ activeId, onChanged }: { activeId?: string; onCha
                 )
               ) : tree.length === 0 ? (
                 <div className="px-3 py-6 text-center">
-                  <p className="mb-2 text-xs text-gray-400">No pages yet</p>
-                  <button onClick={() => createPage()} className="text-xs font-semibold text-stone-700 hover:underline">
+                  <p className="mb-2 text-xs text-muted-foreground">No pages yet</p>
+                  <button onClick={() => createPage()} className="text-xs font-semibold text-foreground/85 hover:underline">
                     + New page
                   </button>
                 </div>

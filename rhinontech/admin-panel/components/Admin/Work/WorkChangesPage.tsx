@@ -56,16 +56,16 @@ const statusOptions: RequestStatus[] = ["Open", "In review", "In progress", "Don
 const priorityOptions: RequestPriority[] = ["Low", "Medium", "High"];
 
 const statusStyles: Record<RequestStatus, string> = {
-  Open: "border-blue-100 bg-blue-50 text-blue-700",
-  "In review": "border-violet-100 bg-violet-50 text-violet-700",
-  "In progress": "border-amber-100 bg-amber-50 text-amber-700",
-  Done: "border-green-100 bg-green-50 text-green-700",
+  Open: "border-blue-100 dark:border-blue-400/20 bg-blue-50 dark:bg-blue-400/10 text-blue-700 dark:text-blue-300",
+  "In review": "border-violet-100 dark:border-violet-400/20 bg-violet-50 dark:bg-violet-400/10 text-violet-700 dark:text-violet-300",
+  "In progress": "border-amber-100 dark:border-amber-400/20 bg-amber-50 dark:bg-amber-400/10 text-amber-700 dark:text-amber-300",
+  Done: "border-green-100 dark:border-green-400/20 bg-green-50 dark:bg-green-400/10 text-green-700 dark:text-green-300",
 };
 
 const priorityStyles: Record<RequestPriority, string> = {
-  Low: "border-gray-100 bg-gray-50 text-gray-600",
-  Medium: "border-amber-100 bg-amber-50 text-amber-700",
-  High: "border-red-100 bg-red-50 text-red-700",
+  Low: "border-border bg-muted/40 text-foreground/70",
+  Medium: "border-amber-100 dark:border-amber-400/20 bg-amber-50 dark:bg-amber-400/10 text-amber-700 dark:text-amber-300",
+  High: "border-red-100 dark:border-red-400/20 bg-red-50 dark:bg-red-400/10 text-red-700 dark:text-red-300",
 };
 
 const SLA_THRESHOLDS: Record<RequestPriority, number> = { High: 1, Medium: 3, Low: 7 };
@@ -277,17 +277,17 @@ export function WorkChangesPage() {
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <SubNavToggle />
             <div className="min-w-0">
-              <h1 className="text-base font-semibold tracking-tight text-gray-900 truncate">Changes & Bugs</h1>
-              <p className="hidden text-xs text-gray-500 sm:block truncate">Project-wise grid for client-reported issues and requested changes.</p>
+              <h1 className="text-base font-semibold tracking-tight text-foreground truncate">Changes & Bugs</h1>
+              <p className="hidden text-xs text-muted-foreground sm:block truncate">Project-wise grid for client-reported issues and requested changes.</p>
             </div>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <button onClick={startCreate} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-2.5 sm:px-3 py-1.5 text-xs font-medium hover:bg-stone-100 whitespace-nowrap shrink-0">
+            <button onClick={startCreate} className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 sm:px-3 py-1.5 text-xs font-medium hover:bg-muted whitespace-nowrap shrink-0">
               <TbPlus size={14} />
               <span>Add item</span>
             </button>
             {(!isPreviewExpanded || (visibleRequests.length === 0 && mode !== "create")) && (
-              <button onClick={() => (setIsPreviewExpanded(true), setMobileDetail(true))} className="rounded-lg p-1.5 sm:p-2 text-gray-600 hover:bg-stone-100 shrink-0" title="Open details">
+              <button onClick={() => (setIsPreviewExpanded(true), setMobileDetail(true))} className="rounded-lg p-1.5 sm:p-2 text-foreground/70 hover:bg-muted shrink-0" title="Open details">
                 <TbLayoutSidebarFilled size={18} />
               </button>
             )}
@@ -300,7 +300,7 @@ export function WorkChangesPage() {
               <select
                 value={projectFilter}
                 onChange={(event) => setProjectFilter(event.target.value)}
-                className="w-[220px] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-[220px] rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">All projects</option>
                 {projects.map((project) => (
@@ -314,7 +314,7 @@ export function WorkChangesPage() {
                   href={`/p/${projectFilter}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground/70 hover:bg-muted/40 hover:text-foreground"
                   title="View Public Portal"
                 >
                   <TbExternalLink size={16} />
@@ -325,7 +325,7 @@ export function WorkChangesPage() {
             <select
               value={typeFilter}
               onChange={(event) => setTypeFilter(event.target.value as RequestType | "All")}
-              className="w-[180px] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-[180px] rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option>All</option>
               <option>Bug</option>
@@ -334,7 +334,7 @@ export function WorkChangesPage() {
             <select
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value as RequestStatus | "All")}
-              className="w-[180px] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-[180px] rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option>All</option>
               <option>Open</option>
@@ -345,12 +345,12 @@ export function WorkChangesPage() {
           </div>
 
           {selectedIds.size > 0 && (
-            <div className="mt-4 flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
-              <span className="text-sm font-medium text-blue-900">{selectedIds.size} item{selectedIds.size !== 1 ? "s" : ""} selected</span>
+            <div className="mt-4 flex items-center justify-between rounded-lg border border-blue-200 dark:border-blue-400/25 bg-blue-50 dark:bg-blue-400/10 px-4 py-3">
+              <span className="text-sm font-medium text-blue-900 dark:text-blue-200">{selectedIds.size} item{selectedIds.size !== 1 ? "s" : ""} selected</span>
               <button
                 onClick={handleConvertSelected}
                 disabled={converting}
-                className="inline-flex items-center gap-2 rounded-lg bg-stone-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-stone-800 disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
               >
                 <TbCheck size={14} />
                 {converting ? "Creating..." : "Create Tasks"}
@@ -359,13 +359,13 @@ export function WorkChangesPage() {
           )}
 
           <div className="mt-8 overflow-auto rounded-xl glass-card">
-            <div className="grid min-w-[1160px] w-full grid-cols-[40px_minmax(300px,1.55fr)_minmax(190px,0.95fr)_minmax(150px,0.75fr)_minmax(130px,0.65fr)_minmax(130px,0.65fr)_minmax(210px,1fr)] border-b bg-stone-100 text-xs font-semibold uppercase tracking-wide text-gray-500">
+            <div className="grid min-w-[1160px] w-full grid-cols-[40px_minmax(300px,1.55fr)_minmax(190px,0.95fr)_minmax(150px,0.75fr)_minmax(130px,0.65fr)_minmax(130px,0.65fr)_minmax(210px,1fr)] border-b bg-muted text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               <span className="flex items-center justify-center px-4 py-3">
                 <input
                   type="checkbox"
                   checked={selectedIds.size === visibleRequests.length && visibleRequests.length > 0}
                   onChange={toggleSelectAll}
-                  className="rounded border-gray-300"
+                  className="rounded border-border"
                   aria-label="Select all"
                 />
               </span>
@@ -393,9 +393,9 @@ export function WorkChangesPage() {
                   (setIsPreviewExpanded(true), setMobileDetail(true));
                 }}
                 className={cn(
-                  "grid min-w-[1160px] w-full cursor-pointer grid-cols-[40px_minmax(300px,1.55fr)_minmax(190px,0.95fr)_minmax(150px,0.75fr)_minmax(130px,0.65fr)_minmax(130px,0.65fr)_minmax(210px,1fr)] items-stretch border-b text-left text-sm hover:bg-stone-50",
-                  request.convertedTaskId && "bg-emerald-50/60 hover:bg-emerald-50",
-                  selectedRequest?.id === request.id && "bg-blue-50 hover:bg-blue-50"
+                  "grid min-w-[1160px] w-full cursor-pointer grid-cols-[40px_minmax(300px,1.55fr)_minmax(190px,0.95fr)_minmax(150px,0.75fr)_minmax(130px,0.65fr)_minmax(130px,0.65fr)_minmax(210px,1fr)] items-stretch border-b text-left text-sm hover:bg-muted/40",
+                  request.convertedTaskId && "bg-emerald-50/60 dark:bg-emerald-400/10 hover:bg-emerald-50 dark:hover:bg-emerald-400/10",
+                  selectedRequest?.id === request.id && "bg-blue-50 dark:bg-blue-400/10 hover:bg-blue-50 dark:hover:bg-blue-400/10"
                 )}
               >
                 <span
@@ -409,15 +409,15 @@ export function WorkChangesPage() {
                     type="checkbox"
                     checked={selectedIds.has(request.id)}
                     onChange={() => toggleSelectRequest(request.id)}
-                    className="rounded border-gray-300"
+                    className="rounded border-border"
                     onClick={(e) => e.stopPropagation()}
                   />
                 </span>
                 <span className="flex min-w-0 flex-col justify-center gap-1 px-4 py-3">
-                  <span className="whitespace-normal break-words font-medium leading-6 text-gray-900">{request.title}</span>
+                  <span className="whitespace-normal break-words font-medium leading-6 text-foreground">{request.title}</span>
                   <span className="flex flex-wrap gap-1">
                     {request.convertedTaskId && (
-                      <span className="inline-flex w-fit items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                      <span className="inline-flex w-fit items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-400/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
                         <TbCheckbox size={10} />
                         Task created
                       </span>
@@ -426,7 +426,7 @@ export function WorkChangesPage() {
                       const days = daysOpen(request.createdAt);
                       const threshold = SLA_THRESHOLDS[request.priority];
                       if (days >= threshold) return (
-                        <span className="inline-flex w-fit items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">
+                        <span className="inline-flex w-fit items-center gap-1 rounded-full bg-red-100 dark:bg-red-400/15 px-2 py-0.5 text-[10px] font-semibold text-red-700 dark:text-red-300">
                           <TbAlertTriangle size={10} />
                           {days}d open
                         </span>
@@ -435,8 +435,8 @@ export function WorkChangesPage() {
                     })()}
                   </span>
                 </span>
-                <span className="min-w-0 truncate px-4 py-3 text-gray-600">{request.project?.name || "—"}</span>
-                <span className="min-w-0 px-4 py-3 text-gray-600">{request.type}</span>
+                <span className="min-w-0 truncate px-4 py-3 text-foreground/70">{request.project?.name || "—"}</span>
+                <span className="min-w-0 px-4 py-3 text-foreground/70">{request.type}</span>
                 <span className="flex min-w-0 items-center px-4 py-3">
                   <InlineBadgeSelect
                     value={request.status}
@@ -453,30 +453,30 @@ export function WorkChangesPage() {
                     onChange={(value) => updateRequestField(request, "priority", value as RequestPriority)}
                   />
                 </span>
-                <span className="min-w-0 truncate px-4 py-3 text-gray-600">{request.reportedBy || "—"}</span>
+                <span className="min-w-0 truncate px-4 py-3 text-foreground/70">{request.reportedBy || "—"}</span>
               </div>
             ))}
             {!visibleRequests.length && (
-              <div className="px-4 py-10 text-center text-sm text-gray-400">No change or bug items found.</div>
+              <div className="px-4 py-10 text-center text-sm text-muted-foreground">No change or bug items found.</div>
             )}
           </div>
         </div>
       </main>
 
-      <aside className={`min-h-0 flex-col bg-white overflow-hidden transition-all duration-200 ease-in-out ${mobileDetail ? "fixed inset-0 z-50 flex" : "hidden"} lg:static lg:z-auto lg:flex lg:h-full lg:rounded-xl ${isPreviewExpanded && (visibleRequests.length > 0 || mode === "create") ? "lg:w-[42%] lg:ml-2" : "lg:w-0"}`}>
+      <aside className={`min-h-0 flex-col bg-card overflow-hidden transition-all duration-200 ease-in-out ${mobileDetail ? "fixed inset-0 z-50 flex" : "hidden"} lg:static lg:z-auto lg:flex lg:h-full lg:rounded-xl ${isPreviewExpanded && (visibleRequests.length > 0 || mode === "create") ? "lg:w-[42%] lg:ml-2" : "lg:w-0"}`}>
         {isPreviewExpanded && (visibleRequests.length > 0 || mode === "create") && (
           <div className="flex h-full flex-1 flex-col overflow-hidden">
-            <div className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-white px-5">
-              <p className="-mb-px flex self-stretch items-center border-b-2 border-blue-600 text-md font-medium tracking-tight text-black">
+            <div className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-card px-5">
+              <p className="-mb-px flex self-stretch items-center border-b-2 border-blue-600 text-md font-medium tracking-tight text-foreground">
                 {mode === "create" ? "Add item" : mode === "edit" ? "Edit item" : "Details"}
               </p>
               <div className="flex items-center gap-2">
                 {mode === "view" && selectedRequest && (
-                  <button onClick={startEdit} className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100">
+                  <button onClick={startEdit} className="rounded-lg px-3 py-1.5 text-sm font-medium text-foreground/85 hover:bg-muted">
                     Edit
                   </button>
                 )}
-                <button onClick={() => (setIsPreviewExpanded(false), setMobileDetail(false))} className="text-gray-600 hover:text-gray-900">
+                <button onClick={() => (setIsPreviewExpanded(false), setMobileDetail(false))} className="text-foreground/70 hover:text-foreground">
                   <TbLayoutSidebarRightFilled size={20} />
                 </button>
               </div>
@@ -487,8 +487,8 @@ export function WorkChangesPage() {
                 {selectedRequest ? (
                   <div className="space-y-5">
                     <div>
-                      <h2 className="text-xl font-semibold text-gray-900">{selectedRequest.title}</h2>
-                      <p className="mt-2 text-sm text-gray-500">{selectedRequest.description}</p>
+                      <h2 className="text-xl font-semibold text-foreground">{selectedRequest.title}</h2>
+                      <p className="mt-2 text-sm text-muted-foreground">{selectedRequest.description}</p>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                       <Detail label="Project" value={selectedRequest.project?.name || "—"} />
@@ -506,34 +506,34 @@ export function WorkChangesPage() {
                       {converting ? "Creating..." : "Create Task"}
                     </button>
                     {selectedRequest.convertedTaskId && (
-                      <div className="flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700">
+                      <div className="flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-200 dark:border-emerald-400/25 bg-emerald-50 dark:bg-emerald-400/10 px-4 py-2 text-sm font-medium text-emerald-700 dark:text-emerald-300">
                         <TbCheckbox size={16} />
                         Converted to task
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div className="flex h-full items-center justify-center text-sm text-gray-400">Select an item.</div>
+                  <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Select an item.</div>
                 )}
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="flex-1 space-y-4 overflow-auto p-5">
                 <FormInput label="Title" value={form.title} onChange={(value) => setForm((current) => ({ ...current, title: value }))} required />
-                <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                   Description
                   <textarea
                     value={form.description}
                     onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
-                    className="min-h-32 rounded-lg border border-gray-200 px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
+                    className="min-h-32 rounded-lg border border-border px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                  <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                     Project
                     <select
                       value={form.projectId}
                       onChange={(event) => setForm((current) => ({ ...current, projectId: event.target.value }))}
-                      className="rounded-lg border border-gray-200 bg-white px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
+                      className="rounded-lg border border-border bg-card px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">Not linked</option>
                       {projects.map((project) => (
@@ -543,12 +543,12 @@ export function WorkChangesPage() {
                       ))}
                     </select>
                   </label>
-                  <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                  <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                     Reported by
                     <select
                       value={form.reportedBy}
                       onChange={(event) => setForm((current) => ({ ...current, reportedBy: event.target.value }))}
-                      className="rounded-lg border border-gray-200 bg-white px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
+                      className="rounded-lg border border-border bg-card px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">Select employee</option>
                       {employees.map((employee) => (
@@ -563,10 +563,10 @@ export function WorkChangesPage() {
                   <SelectField label="Priority" value={form.priority} onChange={(value) => setForm((current) => ({ ...current, priority: value as RequestPriority }))} options={["Low", "Medium", "High"]} />
                 </div>
                 <div className="flex items-center justify-end gap-3 border-t pt-4">
-                  <button type="button" onClick={() => setMode("view")} className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">
+                  <button type="button" onClick={() => setMode("view")} className="rounded-lg px-4 py-2 text-sm font-medium text-foreground/85 hover:bg-muted">
                     Cancel
                   </button>
-                  <button type="submit" disabled={saving} className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 disabled:opacity-60">
+                  <button type="submit" disabled={saving} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
                     {saving ? "Saving..." : "Save"}
                   </button>
                 </div>
@@ -581,22 +581,22 @@ export function WorkChangesPage() {
 
 function Detail({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-gray-100 p-3">
-      <p className="text-xs text-gray-400">{label}</p>
-      <p className="mt-1 font-medium text-gray-800">{value}</p>
+    <div className="rounded-lg border border-border p-3">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="mt-1 font-medium text-foreground">{value}</p>
     </div>
   );
 }
 
 function FormInput({ label, value, onChange, required }: { label: string; value: string; onChange: (value: string) => void; required?: boolean }) {
   return (
-    <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+    <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
       {label}
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
         required={required}
-        className="rounded-lg border border-gray-200 px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
+        className="rounded-lg border border-border px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
       />
     </label>
   );
@@ -604,12 +604,12 @@ function FormInput({ label, value, onChange, required }: { label: string; value:
 
 function SelectField({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: string[] }) {
   return (
-    <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+    <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
       {label}
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="rounded-lg border border-gray-200 bg-white px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
+        className="rounded-lg border border-border bg-card px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
       >
         {options.map((option) => (
           <option key={option} value={option}>

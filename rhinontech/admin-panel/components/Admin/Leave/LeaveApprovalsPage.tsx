@@ -93,13 +93,13 @@ export function LeaveApprovalsPage() {
         "flex min-h-0 flex-col h-full w-full overflow-hidden glass-panel",
         isSubNavExpanded ? "rounded-r-xl max-sm:rounded-xl" : "rounded-xl"
       )}>
-        <div className="sticky top-0 z-10 flex min-h-16 flex-wrap items-center justify-between gap-2 px-4 sm:px-5 py-2 sm:py-0 border-b border-black/5 glass-header">
+        <div className="sticky top-0 z-10 flex min-h-16 flex-wrap items-center justify-between gap-2 px-4 sm:px-5 py-2 sm:py-0 border-b border-border glass-header">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <SubNavToggle />
             <h1 className="text-base sm:text-lg font-semibold tracking-tight truncate">Leave Approvals</h1>
           </div>
           {requests.length > 0 && (
-            <span className="rounded-full bg-yellow-100 text-yellow-700 text-xs font-bold px-2.5 py-0.5 shrink-0">
+            <span className="rounded-full bg-yellow-100 dark:bg-yellow-400/15 text-yellow-700 dark:text-yellow-300 text-xs font-bold px-2.5 py-0.5 shrink-0">
               {requests.length} pending
             </span>
           )}
@@ -107,15 +107,15 @@ export function LeaveApprovalsPage() {
 
         <div className="flex-1 overflow-auto p-3 sm:p-4 space-y-2.5 sm:space-y-3">
           {loading ? (
-            <div className="flex items-center justify-center py-20 text-gray-400">
+            <div className="flex items-center justify-center py-20 text-muted-foreground">
               <TbLoader size={32} className="animate-spin" />
             </div>
           ) : requests.length === 0 ? (
             <div className="flex flex-col items-center gap-4 py-20 text-center">
               <TbCircleCheck size={64} className="text-green-200" />
               <div>
-                <p className="text-lg font-bold text-stone-900">All caught up!</p>
-                <p className="text-sm text-stone-500">No pending leave requests to approve.</p>
+                <p className="text-lg font-bold text-foreground">All caught up!</p>
+                <p className="text-sm text-muted-foreground">No pending leave requests to approve.</p>
               </div>
             </div>
           ) : (
@@ -124,24 +124,24 @@ export function LeaveApprovalsPage() {
                 key={req.id}
                 onClick={() => handleSelect(req)}
                 className={cn(
-                  "p-3 sm:p-4 rounded-2xl border border-stone-100 transition-all cursor-pointer flex items-center justify-between group",
-                  selected?.id === req.id ? "bg-stone-50 border-stone-200 ring-1 ring-stone-200" : "bg-white hover:bg-stone-50"
+                  "p-3 sm:p-4 rounded-2xl border border-border transition-all cursor-pointer flex items-center justify-between group",
+                  selected?.id === req.id ? "bg-muted/40 border-border ring-1 ring-border" : "bg-card hover:bg-muted/40"
                 )}
               >
                 <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                  <div className="p-2.5 sm:p-3 rounded-xl bg-blue-50 text-blue-600 shrink-0">
+                  <div className="p-2.5 sm:p-3 rounded-xl bg-blue-50 dark:bg-blue-400/10 text-blue-600 dark:text-blue-300 shrink-0">
                     <TbCalendarEvent size={18} />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-bold text-stone-900 text-xs sm:text-sm truncate">{req.userName}</h3>
-                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest truncate">
+                    <h3 className="font-bold text-foreground text-xs sm:text-sm truncate">{req.userName}</h3>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest truncate">
                       {req.leaveTypeName} · {req.days}d · {formatDate(req.startDate)}
                     </p>
                   </div>
                 </div>
                 <TbChevronRight className={cn(
-                  "text-stone-200 group-hover:text-stone-900 group-hover:translate-x-1 transition-all shrink-0",
-                  selected?.id === req.id && "text-stone-900"
+                  "text-muted-foreground/50 group-hover:text-foreground group-hover:translate-x-1 transition-all shrink-0",
+                  selected?.id === req.id && "text-foreground"
                 )} />
               </div>
             ))
@@ -151,22 +151,22 @@ export function LeaveApprovalsPage() {
 
       {/* Aside Panel */}
       <aside className={cn(
-        "min-h-0 flex-col bg-white overflow-hidden transition-all duration-200 ease-in-out",
+        "min-h-0 flex-col bg-card overflow-hidden transition-all duration-200 ease-in-out",
         mobileDetail ? "fixed inset-0 z-50 flex w-full max-w-full" : "hidden",
         "lg:static lg:z-auto lg:flex lg:h-full lg:rounded-xl",
         isPanelOpen && selected ? "lg:w-[42%]" : "lg:w-0"
       )}>
         {selected && (
           <div className="flex h-full flex-col">
-            <div className="sticky top-0 w-full flex items-center justify-between min-h-16 px-4 sm:px-5 py-2 sm:py-0 border-b bg-white z-10 shrink-0">
+            <div className="sticky top-0 w-full flex items-center justify-between min-h-16 px-4 sm:px-5 py-2 sm:py-0 border-b bg-card z-10 shrink-0">
               <div className="flex items-center gap-4 self-stretch">
-                <p className="flex self-stretch items-center text-sm sm:text-md font-medium tracking-tight border-b-2 border-blue-600 text-black -mb-px">
+                <p className="flex self-stretch items-center text-sm sm:text-md font-medium tracking-tight border-b-2 border-blue-600 text-foreground -mb-px">
                   Request Details
                 </p>
               </div>
               <button
                 onClick={() => { setIsPanelOpen(false); setMobileDetail(false); }}
-                className="p-1.5 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-stone-100 transition-colors"
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                 title="Close"
               >
                 <TbX size={18} className="lg:hidden" />
@@ -176,50 +176,50 @@ export function LeaveApprovalsPage() {
 
             <div className="flex-1 overflow-auto p-4 sm:p-5 space-y-4 sm:space-y-5">
               <div className="flex items-center gap-3 sm:gap-4">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold text-lg sm:text-xl shrink-0">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg sm:text-xl shrink-0">
                   {selected.userName?.charAt(0) ?? "?"}
                 </div>
                 <div className="min-w-0">
-                  <h2 className="text-base sm:text-lg font-semibold text-gray-900 leading-tight truncate">{selected.userName}</h2>
-                  <p className="text-xs text-gray-400 truncate">{selected.department}</p>
+                  <h2 className="text-base sm:text-lg font-semibold text-foreground leading-tight truncate">{selected.userName}</h2>
+                  <p className="text-xs text-muted-foreground truncate">{selected.department}</p>
                 </div>
               </div>
 
               <div className="space-y-2.5 sm:space-y-3">
-                <div className="rounded-lg border border-gray-100 p-2.5 sm:p-3">
-                  <p className="text-xs text-gray-400 mb-1">Leave Type</p>
+                <div className="rounded-lg border border-border p-2.5 sm:p-3">
+                  <p className="text-xs text-muted-foreground mb-1">Leave Type</p>
                   <div className="flex items-center gap-2">
                     <span
                       className="h-3 w-3 rounded-full shrink-0"
                       style={{ backgroundColor: selected.leaveTypeColor || "#6B7280" }}
                     />
-                    <p className="font-semibold text-sm sm:text-base text-gray-900 truncate">{selected.leaveTypeName}</p>
+                    <p className="font-semibold text-sm sm:text-base text-foreground truncate">{selected.leaveTypeName}</p>
                   </div>
                 </div>
-                <div className="rounded-lg border border-gray-100 p-2.5 sm:p-3">
-                  <p className="text-xs text-gray-400 mb-1">Duration</p>
-                  <p className="font-semibold text-sm sm:text-base text-gray-900">
+                <div className="rounded-lg border border-border p-2.5 sm:p-3">
+                  <p className="text-xs text-muted-foreground mb-1">Duration</p>
+                  <p className="font-semibold text-sm sm:text-base text-foreground">
                     {formatDate(selected.startDate)} – {formatDate(selected.endDate)}
-                    <span className="ml-2 text-gray-400 font-normal">({selected.days} day{selected.days !== 1 ? "s" : ""})</span>
+                    <span className="ml-2 text-muted-foreground font-normal">({selected.days} day{selected.days !== 1 ? "s" : ""})</span>
                   </p>
                 </div>
-                <div className="rounded-lg border border-gray-100 p-2.5 sm:p-3">
-                  <p className="text-xs text-gray-400 mb-1 sm:mb-2">Reason</p>
-                  <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-medium">"{selected.reason}"</p>
+                <div className="rounded-lg border border-border p-2.5 sm:p-3">
+                  <p className="text-xs text-muted-foreground mb-1 sm:mb-2">Reason</p>
+                  <p className="text-xs sm:text-sm text-foreground/70 leading-relaxed font-medium">"{selected.reason}"</p>
                 </div>
-                <div className="rounded-lg border border-gray-100 p-2.5 sm:p-3">
-                  <p className="text-xs text-gray-400 mb-1 sm:mb-2">Applied On</p>
-                  <p className="font-semibold text-sm sm:text-base text-gray-900">{formatDate(selected.createdAt)}</p>
+                <div className="rounded-lg border border-border p-2.5 sm:p-3">
+                  <p className="text-xs text-muted-foreground mb-1 sm:mb-2">Applied On</p>
+                  <p className="font-semibold text-sm sm:text-base text-foreground">{formatDate(selected.createdAt)}</p>
                 </div>
               </div>
 
               <div>
-                <label className="text-xs text-gray-400 mb-1.5 block">Manager Note (optional)</label>
+                <label className="text-xs text-muted-foreground mb-1.5 block">Manager Note (optional)</label>
                 <textarea
                   value={managerNote}
                   onChange={e => setManagerNote(e.target.value)}
                   placeholder="Add a note for the employee..."
-                  className="w-full px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-xl border border-gray-100 bg-stone-50 focus:ring-2 focus:ring-stone-900 outline-none h-20 resize-none"
+                  className="w-full px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-xl border border-border bg-muted/40 focus:ring-2 focus:ring-ring outline-none h-20 resize-none"
                 />
               </div>
 
@@ -235,7 +235,7 @@ export function LeaveApprovalsPage() {
                 <button
                   onClick={() => handleAction(selected.id, "Rejected")}
                   disabled={!!processing}
-                  className="w-full py-2.5 sm:py-3 bg-white text-red-600 border border-red-100 rounded-xl font-bold text-xs sm:text-sm hover:bg-red-50 transition-colors active:scale-95 flex items-center justify-center gap-2 disabled:opacity-60"
+                  className="w-full py-2.5 sm:py-3 bg-card text-red-600 dark:text-red-300 border border-red-100 dark:border-red-400/20 rounded-xl font-bold text-xs sm:text-sm hover:bg-red-50 dark:hover:bg-red-400/10 transition-colors active:scale-95 flex items-center justify-center gap-2 disabled:opacity-60"
                 >
                   <TbX size={16} />
                   Decline
