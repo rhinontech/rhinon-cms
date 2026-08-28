@@ -377,8 +377,13 @@ router.post("/projects/:id/collaborators", requireInternal, async (req: AuthRequ
     }
 
     // An existing internal employee must never be downgraded into a guest.
+    //
+    // Match on BOTH address columns: staff are commonly reached at their personal
+    // address, and `users` has a unique index on each. Checking only companyEmail
+    // let the guard miss an existing employee and fall through to a create that
+    // then died on the personalEmail constraint.
     const existing = await User.unscoped().findOne({
-      where: { companyEmail: cleanEmail },
+      where: { [Op.or]: [{ companyEmail: cleanEmail }, { personalEmail: cleanEmail }] },
     });
     if (existing && existing.userType === "internal") {
       res.status(409).json({
@@ -446,7 +451,13 @@ router.post("/projects/:id/collaborators", requireInternal, async (req: AuthRequ
     }
 
     res.status(201).json({ member });
-  } catch (err) {
+  } catch (err: any) {
+    if (err?.name === "SequelizeUniqueConstraintError") {
+      res.status(409).json({
+        message: "That email is already registered to someone in this workspace.",
+      });
+      return;
+    }
     console.error("Failed to invite collaborator:", err);
     res.status(500).json({ message: "Failed to invite collaborator" });
   }
