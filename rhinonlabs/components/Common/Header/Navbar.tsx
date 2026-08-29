@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Menu, X } from 'lucide-react';
+import { buttonVariants, cn } from '@/components/ui/button';
+import { ArrowRight, Menu, X } from 'lucide-react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -92,9 +92,13 @@ export function Navbar() {
 
                 {/* Action Button & Mobile Toggle */}
                 <div className="flex items-center gap-4">
-                    <Button variant="default" size="default" className="hidden sm:inline-flex">
-                        Free Resources
-                    </Button>
+                    <Link
+                        href="/build"
+                        className={cn(buttonVariants({ variant: 'default', size: 'default' }), 'hidden sm:inline-flex gap-1.5')}
+                    >
+                        Build Your Idea
+                        <ArrowRight className="w-4 h-4" />
+                    </Link>
 
                     <button
                         className="md:hidden text-white/70 hover:text-white transition-colors flex items-center justify-center p-2"
@@ -126,9 +130,14 @@ export function Navbar() {
                                 {item.title}
                             </Link>
                         ))}
-                        <Button variant="default" size="default" className="w-full mt-2 sm:hidden">
-                            Free Resources
-                        </Button>
+                        <Link
+                            href="/build"
+                            onClick={() => setIsOpen(false)}
+                            className={cn(buttonVariants({ variant: 'default', size: 'default' }), 'w-full mt-2 gap-1.5 sm:hidden')}
+                        >
+                            Build Your Idea
+                            <ArrowRight className="w-4 h-4" />
+                        </Link>
                     </motion.div>
                 )}
             </AnimatePresence>

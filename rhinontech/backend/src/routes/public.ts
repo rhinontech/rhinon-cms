@@ -1,5 +1,5 @@
 import express, { Router, Response, Request } from "express";
-import { ClientRequest, Project, User, Lead, Blog, CaseStudy, Event, PageView, DocsAccess, WorkflowEnrollment, CampaignActivity, Visitor, Unsubscribe } from "../models";
+import { ClientRequest, Project, User, Lead, Blog, CaseStudy, Event, PageView, DocsAccess, WorkflowEnrollment, CampaignActivity, Visitor, Unsubscribe, StartupIdea } from "../models";
 import type { BlogDomain } from "../models/Blog";
 import { clientIpFrom, isIpCompanyLookupEnabled, lookupCompanyByIp } from "../services/ipCompany";
 import { sendEmail } from "../services/mailer";
@@ -696,6 +696,54 @@ router.get("/track/click", async (req: Request, res: Response) => {
 });
 
 // POST /public/unsubscribe — captures email unsubscribe reason and records it
+// POST /public/startup-ideas — unauthenticated capture for the rhinonlabs /build campaign
+// page. Intentionally does NOT write to the `leads` table: startup-idea submissions live in
+// their own store so a high-volume student campaign never pollutes the CRM pipeline. The
+// admin panel converts an idea into a Lead explicitly when it's worth pursuing.
+router.post("/startup-ideas", async (req: Request, res: Response) => {
+  try {
+    const b = req.body || {};
+    const str = (v: any, max = 500): string | null => {
+      const s = (v ?? "").toString().trim();
+      return s === "" ? null : s.slice(0, max);
+    };
+
+    const name = str(b.name, 200);
+    const emailRaw = str(b.email, 320);
+    const email = emailRaw ? emailRaw.toLowerCase() : null;
+    const idea = str(b.idea ?? b.message, 5000);
+
+    if (!name || !email || !idea) {
+      res.status(400).json({ message: "Name, email and your idea are required" });
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      res.status(400).json({ message: "Please provide a valid email address" });
+      return;
+    }
+
+    const created = await StartupIdea.create({
+      name,
+      email,
+      phone: str(b.phone ?? b.whatsapp, 40),
+      organization: str(b.organization ?? b.company, 200),
+      idea,
+      stage: str(b.stage, 100),
+      budget: str(b.budget, 100),
+      source: str(b.source, 100) || "/build",
+      utmSource: str(b.utmSource, 200),
+      utmMedium: str(b.utmMedium, 200),
+      utmCampaign: str(b.utmCampaign, 200),
+      referrer: str(b.referrer, 1000),
+    });
+
+    res.status(201).json({ ok: true, id: created.id });
+  } catch (error: any) {
+    console.error("Failed to save startup idea:", error);
+    res.status(500).json({ message: "Failed to submit your idea" });
+  }
+});
+
 router.post("/unsubscribe", async (req: Request, res: Response) => {
   try {
     const b = req.body || {};

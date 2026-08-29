@@ -1,18 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { MdDashboard } from "react-icons/md";
 import { FaUserGroup } from "react-icons/fa6";
 import { RiSettings3Fill } from "react-icons/ri";
 import { HiInbox } from "react-icons/hi2";
-import { TbBriefcase, TbCash, TbSpeakerphone, TbNews, TbBook, TbTargetArrow, TbChartArcs, TbHierarchy, TbCalendarEvent } from "react-icons/tb";
+import { TbBriefcase, TbCash, TbSpeakerphone, TbNews, TbBook, TbTargetArrow, TbChartArcs, TbHierarchy, TbCalendarEvent, TbBulb } from "react-icons/tb";
 import { BsPinAngleFill, BsPinAngle } from "react-icons/bs";
 import { cn } from "@/lib/utils";
 import { useDashboard } from "../../../Common/DashboardProvider/DashboardProvider";
 import adminImages from "@/constants/admin/images";
 import { usePermissions } from "@/context/PermissionsContext";
+import { apiFetch } from "@/lib/api";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -27,6 +29,25 @@ export function Sidebar() {
   // The mobile drawer always shows labels; desktop keeps pin/hover behavior.
   const expanded = sidebarExpanded || isHovering || mobileNavOpen;
 
+  // Unread startup-idea submissions, shown as a badge on that nav item. Polled on a slow
+  // interval and refreshed on navigation, so opening a submission clears it promptly.
+  const canReadIdeas = has("startupIdeas:read");
+  const [unreadIdeas, setUnreadIdeas] = useState(0);
+  useEffect(() => {
+    if (!canReadIdeas) return;
+    let active = true;
+    const load = () =>
+      apiFetch<{ count: number }>("/startup-ideas/unread-count")
+        .then((d) => active && setUnreadIdeas(d.count))
+        .catch(() => {/* a failed badge poll must never break the sidebar */});
+    load();
+    const timer = setInterval(load, 60_000);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, [canReadIdeas, pathname]);
+
   const navItems = [
     { title: "Dashboard",  icon: <MdDashboard size={20} className="h-5 w-5 flex-shrink-0" />,    href: `/${roleSlug}/dashboard`,  permissions: ["dashboard:read"] },
     { title: "Inbox",      icon: <HiInbox size={20} className="h-5 w-5 flex-shrink-0" />,         href: `/${roleSlug}/inbox`,      permissions: ["inbox:read"] },
@@ -38,10 +59,17 @@ export function Sidebar() {
     { title: "Team",       icon: <FaUserGroup size={20} className="h-5 w-5 flex-shrink-0" />,     href: `/${roleSlug}/employees`,  permissions: ["people:read", "attendance:read", "leave:read", "performance:read", "documents:read"] },
     { title: "Payroll",    icon: <TbCash size={20} className="h-5 w-5 flex-shrink-0" />,          href: `/${roleSlug}/payroll`,    permissions: ["payslips:read"] },
     { title: "Content",    icon: <TbNews size={20} className="h-5 w-5 flex-shrink-0" />,          href: `/${roleSlug}/content`,    permissions: ["content:read"] },
+    { title: "Startup Ideas", icon: <TbBulb size={20} className="h-5 w-5 flex-shrink-0" />,       href: `/${roleSlug}/startup-ideas`, permissions: ["startupIdeas:read"], badge: unreadIdeas },
     { title: "Meetings",   icon: <TbCalendarEvent size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/meetings`,   permissions: ["meetings:read"] },
     { title: "Analytics",  icon: <TbChartArcs size={20} className="h-5 w-5 flex-shrink-0" />,     href: `/${roleSlug}/analytics`,  permissions: ["analytics:read"] },
     { title: "Settings",   icon: <RiSettings3Fill size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/settings`,   permissions: ["settings:read", "docsAccess:read", "provisioning:read"] },
-  ].filter((item) => has(...item.permissions));
+  ].filter((item) => has(...item.permissions)) as Array<{
+    title: string;
+    icon: React.ReactNode;
+    href: string;
+    permissions: string[];
+    badge?: number;
+  }>;
 
   return (
     <>
@@ -99,8 +127,19 @@ export function Sidebar() {
                   : "text-foreground/85 hover:bg-card/40 hover:text-foreground"
               )}
             >
-              {item.icon}
+              <span className="relative flex-shrink-0">
+                {item.icon}
+                {/* Collapsed rail has no room for a count — a dot still signals "something new". */}
+                {!expanded && !!item.badge && (
+                  <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-primary ring-2 ring-background" />
+                )}
+              </span>
               {expanded && <span className="flex-1 truncate">{item.title}</span>}
+              {expanded && !!item.badge && (
+                <span className="ml-auto rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold leading-none text-primary-foreground">
+                  {item.badge > 99 ? "99+" : item.badge}
+                </span>
+              )}
             </Link>
           ))}
         </div>

@@ -40,6 +40,7 @@ import pagesRoutes from "./routes/pages";
 import googleCalendarSettingsRoutes from "./routes/googleCalendarSettings";
 import meetingsRoutes from "./routes/meetings";
 import scheduleCallRoutes from "./routes/scheduleCall";
+import startupIdeasRoutes from "./routes/startupIdeas";
 
 const app = express();
 
@@ -99,6 +100,7 @@ app.use("/meetings", meetingsRoutes);
 app.use("/ai", aiRoutes);
 app.use("/content", contentRoutes);
 app.use("/analytics", analyticsRoutes);
+app.use("/startup-ideas", startupIdeasRoutes);
 app.use("/docs-access", docsAccessRoutes);
 app.use("/pages", pagesRoutes);
 app.use("/branding", brandingRoutes);
