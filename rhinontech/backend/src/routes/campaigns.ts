@@ -2,7 +2,8 @@ import { Router, Response } from "express";
 import { Campaign, CampaignTemplate, Lead, CampaignActivity, User, InboxEmail, Unsubscribe } from "../models";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 import { env } from "../config/env";
-import { generateAIEmailDraft, generateAISocialDraft, generateTemplateWithAI } from "../services/gemini";
+import { generateAIEmailDraft, generateLinkedInPost, generateTemplateWithAI } from "../services/gemini";
+import { isLinkedInPostType } from "../config/linkedInPlaybook";
 import { postToLinkedIn } from "../services/linkedin";
 import { sendEmail } from "../services/mailer";
 import { stripHtml, toEmailHtml, BACKEND_URL } from "../services/emailTemplate";
@@ -363,13 +364,54 @@ router.post("/:id/process", authorize("outreach:write"), async (req: AuthRequest
       await campaign.increment("leadsProcessed", { by: processedCount });
       res.json({ success: true, processed: processedCount, total: leads.length });
     } else {
-      // Social / LinkedIn channel
+      // Social / LinkedIn channel — generated against the five-post-type playbook.
+      // The body may override the stored post type/topic/facts so the detail page can
+      // retype a draft and regenerate in one call.
+      // `undefined` means "not sent, use what's stored"; an explicit null means "cleared".
+      const pick = <T,>(key: string, stored: T): T => (key in (req.body || {}) ? req.body[key] : stored);
+      const postType = pick("postType", campaign.postType);
+      if (!isLinkedInPostType(postType)) {
+        res.status(400).json({
+          message: "Pick one of the five post types (Storytelling, Framework, Contrarian, Case Study, Direct Offer) before generating.",
+        });
+        return;
+      }
+
+      const audience = pick("postAudience", campaign.postAudience);
+      const topic = pick("topic", campaign.topic);
+      const sourceFacts = pick("sourceFacts", campaign.sourceFacts);
+
       try {
-        const draft = await generateAISocialDraft((campaign as any).template);
-        const updates: any = { aiDraft: draft };
-        if ((campaign as any).template?.imageUrl) updates.mediaUrl = (campaign as any).template.imageUrl;
+        const result = await generateLinkedInPost({
+          postType,
+          audience: audience ?? null,
+          topic: topic ?? null,
+          sourceFacts: sourceFacts ?? null,
+          templateData: (campaign as any).template,
+          customPrompt: req.body?.customPrompt ?? null,
+        });
+
+        const body = result.hashtags.length ? `${result.post}\n\n${result.hashtags.join(" ")}` : result.post;
+        const updates: any = {
+          aiDraft: body,
+          postType: result.postType,
+          objective: result.objective,
+          postMeta: {
+            hook: result.hook,
+            cta: result.cta,
+            hashtags: result.hashtags,
+            visualSuggestion: result.visualSuggestion,
+            inputNeeded: result.inputNeeded,
+            generatedAt: new Date().toISOString(),
+          },
+        };
+        updates.postAudience = audience ?? null;
+        updates.topic = topic ?? null;
+        updates.sourceFacts = sourceFacts ?? null;
+        if (!campaign.mediaUrl && (campaign as any).template?.imageUrl) updates.mediaUrl = (campaign as any).template.imageUrl;
+
         await campaign.update(updates);
-        res.json({ success: true, processed: 1, total: 1, message: "Social draft generated successfully." });
+        res.json({ success: true, processed: 1, total: 1, post: result, message: "Draft generated." });
       } catch (err: any) {
         res.status(500).json({ message: "Failed to generate social draft.", details: err.message });
       }

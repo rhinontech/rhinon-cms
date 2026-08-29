@@ -1,3 +1,5 @@
+import type { PostAudience, PostType } from "../publishing/postTypes";
+
 export type CampaignStage = "Draft" | "Active" | "Paused" | "Completed";
 export type CampaignChannel =
   | "Email"
@@ -35,6 +37,19 @@ export interface Campaign {
   mediaTitle?: string | null;
   mediaDescription?: string | null;
   articleUrl?: string | null;
+  // LinkedIn Publishing — the five approved post types (see publishing/postTypes.ts).
+  postType?: PostType | null;
+  postAudience?: PostAudience | null;
+  topic?: string | null;
+  sourceFacts?: string | null;
+  postMeta?: {
+    hook?: string;
+    cta?: string;
+    hashtags?: string[];
+    visualSuggestion?: string;
+    inputNeeded?: string[];
+    generatedAt?: string;
+  } | null;
   platformPostId?: string | null;
   organizationId?: string | null;
   socialStats?: { likes: number; comments: number; shares: number; impressions: number; lastUpdated?: string } | null;

@@ -1,5 +1,11 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../config/database";
+import {
+  LINKEDIN_AUDIENCES,
+  LINKEDIN_POST_TYPES,
+  type LinkedInAudience,
+  type LinkedInPostType,
+} from "../config/linkedInPlaybook";
 
 export type CampaignStage = "Draft" | "Active" | "Paused" | "Completed";
 export type CampaignChannel = "Email" | "Cold Email" | "LinkedIn DM" | "LinkedIn Connection" | "LinkedIn Post" | "LinkedIn Video" | "LinkedIn Article";
@@ -33,6 +39,22 @@ interface CampaignAttributes {
   mediaTitle?: string | null;
   mediaDescription?: string | null;
   articleUrl?: string | null;
+  // LinkedIn Publishing — the five approved Rhinon Labs post types (see config/linkedInPlaybook.ts).
+  postType?: LinkedInPostType | null;
+  postAudience?: LinkedInAudience | null;
+  /** The angle/business problem this post is about — steers generation. */
+  topic?: string | null;
+  /** Verified facts, metrics and client details. The ONLY source the AI may draw factual claims from. */
+  sourceFacts?: string | null;
+  /** Structured generation output: hook, cta, hashtags, visual suggestion, outstanding [INPUT NEEDED] items. */
+  postMeta?: {
+    hook?: string;
+    cta?: string;
+    hashtags?: string[];
+    visualSuggestion?: string;
+    inputNeeded?: string[];
+    generatedAt?: string;
+  } | null;
   slug?: string | null;
   platformPostId?: string | null;
   organizationId?: string | null;
@@ -48,7 +70,7 @@ interface CampaignAttributes {
   updatedAt?: Date;
 }
 
-interface CampaignCreationAttributes extends Optional<CampaignAttributes, "id" | "channel" | "templateId" | "stage" | "subject" | "body" | "senderEmail" | "senderName" | "autoSend" | "startDate" | "runTime" | "leadsTotal" | "leadsProcessed" | "objective" | "notes" | "mediaUrl" | "aiDraft" | "visibility" | "mediaTitle" | "mediaDescription" | "articleUrl" | "slug" | "platformPostId" | "organizationId" | "socialStats"> {}
+interface CampaignCreationAttributes extends Optional<CampaignAttributes, "id" | "channel" | "templateId" | "stage" | "subject" | "body" | "senderEmail" | "senderName" | "autoSend" | "startDate" | "runTime" | "leadsTotal" | "leadsProcessed" | "objective" | "notes" | "mediaUrl" | "aiDraft" | "visibility" | "mediaTitle" | "mediaDescription" | "articleUrl" | "postType" | "postAudience" | "topic" | "sourceFacts" | "postMeta" | "slug" | "platformPostId" | "organizationId" | "socialStats"> {}
 
 export class Campaign extends Model<CampaignAttributes, CampaignCreationAttributes> implements CampaignAttributes {
   declare id: string;
@@ -73,6 +95,11 @@ export class Campaign extends Model<CampaignAttributes, CampaignCreationAttribut
   declare mediaTitle: string | null;
   declare mediaDescription: string | null;
   declare articleUrl: string | null;
+  declare postType: LinkedInPostType | null;
+  declare postAudience: LinkedInAudience | null;
+  declare topic: string | null;
+  declare sourceFacts: string | null;
+  declare postMeta: any;
   declare slug: string | null;
   declare platformPostId: string | null;
   declare organizationId: string | null;
@@ -114,6 +141,11 @@ Campaign.init(
     mediaTitle: { type: DataTypes.STRING, allowNull: true },
     mediaDescription: { type: DataTypes.TEXT, allowNull: true },
     articleUrl: { type: DataTypes.TEXT, allowNull: true },
+    postType: { type: DataTypes.ENUM(...LINKEDIN_POST_TYPES), allowNull: true },
+    postAudience: { type: DataTypes.ENUM(...LINKEDIN_AUDIENCES), allowNull: true },
+    topic: { type: DataTypes.TEXT, allowNull: true },
+    sourceFacts: { type: DataTypes.TEXT, allowNull: true },
+    postMeta: { type: DataTypes.JSONB, allowNull: true },
     slug: { type: DataTypes.STRING, allowNull: true, unique: true },
     platformPostId: { type: DataTypes.STRING, allowNull: true },
     organizationId: { type: DataTypes.STRING, allowNull: true },

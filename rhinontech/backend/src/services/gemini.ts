@@ -2,6 +2,13 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import axios from "axios";
 import { env } from "../config/env";
 import { getSalesMemory } from "../config/salesMemory";
+import {
+  AUDIENCE_BRIEFS,
+  getLinkedInPlaybook,
+  POST_TYPE_BRIEFS,
+  type LinkedInAudience,
+  type LinkedInPostType,
+} from "../config/linkedInPlaybook";
 
 const genAI = new GoogleGenerativeAI(env.geminiApiKey || "");
 const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
@@ -177,30 +184,6 @@ export async function generateImagePromptForCampaign(campaignName: string, chann
   return result.response.text().trim();
 }
 
-export async function generateAISocialDraft(templateData: any = null): Promise<string> {
-  const prompt = `
-    You are an expert LinkedIn content creator for Rhinon Tech.
-
-    RHINON COMPANY KNOWLEDGE:
-    ${RHINON_KNOWLEDGE}
-
-    ${templateData ? `TEMPLATE GUIDANCE:\n${templateData.body}\nAI Instructions: ${templateData.aiInstructions || "None"}` : ""}
-
-    TASK:
-    Write a compelling LinkedIn post for Rhinon Tech.
-    - Professional yet engaging tone
-    - 150-300 words
-    - Include relevant hashtags at the end
-    - No markdown formatting (plain text only)
-
-    Return only the post text, no JSON, no labels.
-  `;
-
-  const result = await model.generateContent(prompt);
-  const response = await result.response;
-  return response.text().trim();
-}
-
 // Rewrites one offer-letter/NDA block's text per an admin's instruction —
 // used by both the letter-template editor (master template) and the
 // per-employee live preview (see routes/letterTemplates.ts). Takes the
@@ -281,4 +264,124 @@ export async function enrichLeadWithAI(
   } catch (e) {
     return { error: "Invalid AI response format" };
   }
+}
+
+/* ------------------------------------------------------------------ *
+ * LinkedIn Publishing — the five approved Rhinon Labs post types.
+ * The playbook (config/linkedInPlaybook.ts, or the live training-guide
+ * .md at the repo root) is the system instruction; the per-type brief
+ * pins the structure so each type is actually distinguishable in the feed.
+ * ------------------------------------------------------------------ */
+
+export interface LinkedInPostRequest {
+  postType: LinkedInPostType;
+  audience?: LinkedInAudience | null;
+  /** What the post is about — the angle, topic or business problem. */
+  topic?: string | null;
+  /** Verified facts, metrics, client details. The ONLY source of factual claims. */
+  sourceFacts?: string | null;
+  /** Optional reusable template seed from the template library. */
+  templateData?: { body?: string | null; aiInstructions?: string | null } | null;
+  /** Freeform steer from the operator, e.g. "make the hook blunter". */
+  customPrompt?: string | null;
+}
+
+export interface LinkedInPostResult {
+  postType: LinkedInPostType;
+  audience: string;
+  objective: string;
+  hook: string;
+  post: string;
+  cta: string;
+  hashtags: string[];
+  visualSuggestion: string;
+  /** What the model needs from a human before this post can be published truthfully. */
+  inputNeeded: string[];
+}
+
+export async function generateLinkedInPost(req: LinkedInPostRequest): Promise<LinkedInPostResult> {
+  const brief = POST_TYPE_BRIEFS[req.postType];
+  const audienceBrief = req.audience ? AUDIENCE_BRIEFS[req.audience] : null;
+
+  const prompt = `
+${getLinkedInPlaybook()}
+
+---
+
+# THIS REQUEST
+
+POST TYPE (already decided — do not reclassify): ${req.postType} — ${brief.label}
+OBJECTIVE: ${brief.objective}
+
+REQUIRED STRUCTURE for this type, in order:
+${brief.structure.map((s, i) => `${i + 1}. ${s}`).join("\n")}
+
+TYPE-SPECIFIC RULES:
+${brief.rules}
+
+${audienceBrief ? `TARGET AUDIENCE:\n${audienceBrief}\n` : ""}
+${req.topic ? `TOPIC / ANGLE:\n${req.topic}\n` : ""}
+${
+  req.sourceFacts
+    ? `VERIFIED FACTS — the ONLY permitted source of factual claims, numbers, client names and outcomes:\n"""${req.sourceFacts}"""\n`
+    : `VERIFIED FACTS: none supplied. You therefore may NOT state any metric, client name, outcome or personal experience. Write the post around the idea itself, and use [INPUT NEEDED] markers where a real detail would make it far stronger.\n`
+}
+${req.templateData?.body ? `TEMPLATE SEED (starting material, rewrite it — do not paste it):\n${req.templateData.body}\n` : ""}
+${req.templateData?.aiInstructions ? `TEMPLATE INSTRUCTIONS:\n${req.templateData.aiInstructions}\n` : ""}
+${req.customPrompt ? `OPERATOR INSTRUCTIONS (highest priority, but never override the proof discipline rules):\n${req.customPrompt}\n` : ""}
+
+# OUTPUT
+Return ONLY a JSON object, no surrounding text or code fences:
+{
+  "postType": "${req.postType}",
+  "audience": "who this post is written for, one short phrase",
+  "objective": "${brief.objective}",
+  "hook": "the first line of the post, repeated here",
+  "post": "the complete LinkedIn post as plain text, including the hook and the CTA, using \\n for line breaks. No markdown. No hashtags inside this field.",
+  "cta": "the single call to action, repeated here",
+  "hashtags": ["0 to 3 hashtags, each including the # character"],
+  "visualSuggestion": "one suitable visual concept for this post type",
+  "inputNeeded": ["each real fact a human must supply before publishing; empty array if the post is fully supported by the input"]
+}
+`;
+
+  const result = await model.generateContent(prompt);
+  const text = (await result.response).text().trim();
+
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error("AI did not return a parseable post. Try regenerating.");
+
+  let parsed: any;
+  try {
+    parsed = JSON.parse(jsonMatch[0]);
+  } catch {
+    throw new Error("AI returned malformed JSON. Try regenerating.");
+  }
+
+  const post: string = (parsed.post || "").trim();
+  if (!post) throw new Error("AI returned an empty post. Try regenerating.");
+
+  const hashtags: string[] = Array.isArray(parsed.hashtags)
+    ? parsed.hashtags.filter((h: any) => typeof h === "string" && h.trim()).slice(0, 3).map((h: string) => (h.startsWith("#") ? h : `#${h}`))
+    : [];
+
+  // The model is told to flag gaps, but it is not always honest about it —
+  // catch any [INPUT NEEDED] markers left in the body as a backstop.
+  const markers = post.match(/\[INPUT NEEDED[^\]]*\]/gi) || [];
+  const inputNeeded: string[] = [
+    ...(Array.isArray(parsed.inputNeeded) ? parsed.inputNeeded.filter((s: any) => typeof s === "string" && s.trim()) : []),
+    ...markers.map((m) => m.replace(/^\[|\]$/g, "").replace(/^INPUT NEEDED:?\s*/i, "").trim() || "A missing detail is marked in the post body."),
+  ];
+
+  return {
+    postType: req.postType,
+    audience: typeof parsed.audience === "string" ? parsed.audience : "",
+    objective: typeof parsed.objective === "string" ? parsed.objective : brief.objective,
+    hook: typeof parsed.hook === "string" ? parsed.hook : post.split("\n")[0],
+    post,
+    cta: typeof parsed.cta === "string" ? parsed.cta : "",
+    hashtags,
+    visualSuggestion: typeof parsed.visualSuggestion === "string" ? parsed.visualSuggestion : "",
+    inputNeeded: Array.from(new Set(inputNeeded)),
+  };
 }

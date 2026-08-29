@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { env } from "./config/env";
+import { requestLogger } from "./middleware/requestLogger";
 import authRoutes from "./routes/auth";
 import rolesRoutes from "./routes/roles";
 import permissionsRoutes from "./routes/permissions";
@@ -64,6 +65,10 @@ app.use((req, res, next) =>
   req.path.startsWith("/public") ? openCors(req, res, next) : restrictedCors(req, res, next)
 );
 app.use(express.json({ limit: "20mb" }));
+
+// One line per request, after the body parser so payloads are readable and before
+// the routes so nothing escapes it. Tune with LOG_REQUESTS / LOG_BODY / LOG_SKIP.
+app.use(requestLogger);
 
 import workflowsRoutes from "./routes/workflows";
 
