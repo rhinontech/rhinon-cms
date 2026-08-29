@@ -16,6 +16,12 @@ out/
 build/
 dist/
 
+# ...but these are source directories, not build output. `build/` above matches them
+# because core.ignorecase=true on macOS (so it also catches `Build/`), which silently
+# kept the whole /build landing page out of commits.
+!rhinonlabs/app/build/
+!rhinonlabs/components/Pages/Build/
+
 # misc
 .DS_Store
 *.pem
