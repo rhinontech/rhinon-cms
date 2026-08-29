@@ -281,6 +281,20 @@ pm2 save
 curl -s http://localhost:5002/health   # {"status":"ok"}
 ```
 
+**Deploy from the admin panel** (Settings → Deploy) runs exactly that sequence for you.
+The API already runs on this box as `ubuntu`, so there is no SSH and no PEM key involved —
+`routes/deploy.ts` spawns `backend/scripts/deploy.sh` **detached** (it has to outlive the
+`pm2 restart` that kills the API mid-request), streams to `~/deploy-logs/<id>.log`, and
+reconstructs status from the exit-code file the script drops on the way out. History lands in
+the `deployments` table. Gated on `deploy:trigger` (super-admin only by default).
+
+Server-side setup, once per box:
+```bash
+echo "DEPLOY_ENABLED=true" >> /home/ubuntu/rhinon-cms/rhinontech/backend/.env
+```
+Deploys are off unless that flag is set, so a laptop never exposes a self-restart button.
+Beta is deployable from the prod panel (`/home/ubuntu/rhinon-cms-beta`, `beta` branch).
+
 - `.env` files are git-ignored and live only on the server (switching branches preserves them).
 - Schema sync on boot is additive (`sync({ alter: { drop: false } })`) — never drops.
 - Git pushes authenticate over SSH as GitHub `rhinontech` (key `~/.ssh/id_ed25519`).

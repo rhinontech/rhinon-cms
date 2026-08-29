@@ -58,6 +58,7 @@ import { FieldDefinition } from "./FieldDefinition";
 import { TimeEntry } from "./TimeEntry";
 import { TaskActivity } from "./TaskActivity";
 import { StartupIdea } from "./StartupIdea";
+import { Deployment } from "./Deployment";
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/database";
 
@@ -396,6 +397,7 @@ export {
   TimeEntry,
   TaskActivity,
   StartupIdea,
+  Deployment,
 };
 
 export async function syncDatabase(force = false) {

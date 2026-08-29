@@ -41,6 +41,9 @@ export const PERMISSION_CATALOG = [
   { name: "startupIdeas:write", resource: "startupIdeas", action: "write" },
   { name: "meetings:read",      resource: "meetings",     action: "read"  },
   { name: "meetings:write",     resource: "meetings",     action: "write" },
+  // Deploy: read = see the build history, trigger = restart a backend.
+  { name: "deploy:read",        resource: "deploy",       action: "read"  },
+  { name: "deploy:trigger",     resource: "deploy",       action: "trigger" },
 ];
 
 // Grants applied only when a permission is FIRST created, preserving today's

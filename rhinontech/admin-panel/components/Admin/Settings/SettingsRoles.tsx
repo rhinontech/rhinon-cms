@@ -55,6 +55,8 @@ const PERMISSION_LABELS: Record<string, string> = {
   "attendance:write": "View team attendance & manage governance",
   "work:read": "View own tasks",
   "work:write": "View & manage team's tasks",
+  "deploy:read": "View deploy history",
+  "deploy:trigger": "Deploy & restart the backend",
 };
 
 // Display order + label for each resource group. Any resource not listed here
@@ -77,6 +79,7 @@ const RESOURCE_META: { key: string; label: string; order: number }[] = [
   { key: "docsAccess", label: "Docs Access", order: 14 },
   { key: "provisioning", label: "Provisioning", order: 15 },
   { key: "settings", label: "Settings", order: 16 },
+  { key: "deploy", label: "Deploy", order: 17 },
 ];
 
 function resourceLabel(resource: string) {
