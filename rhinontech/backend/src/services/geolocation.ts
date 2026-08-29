@@ -97,3 +97,50 @@ export async function lookupIpLocation(ip: string): Promise<GeoLocationResult> {
     return { ip: cleanIp, location: null };
   }
 }
+
+
+// ---------------------------------------------------------------------------
+// Cached lookup for pageview tracking.
+//
+// Every pageview would otherwise be one ip-api call, and the free tier allows
+// ~45/minute for the whole server. One visitor reading five pages is one IP, so
+// caching by IP collapses almost all of that traffic. Entries are held in memory
+// only — a restart just re-warms the cache.
+// ---------------------------------------------------------------------------
+
+interface CacheEntry {
+  value: GeoLocationResult;
+  expiresAt: number;
+}
+
+const GEO_CACHE = new Map<string, CacheEntry>();
+const GEO_TTL_MS = 24 * 60 * 60 * 1000; // an IP's city does not move meaningfully within a day
+const GEO_CACHE_MAX = 5000;
+
+/**
+ * lookupIpLocation with an in-memory TTL cache.
+ *
+ * Returns null rather than throwing when the lookup fails or is rate-limited, so a
+ * tracking beacon never fails because geolocation did.
+ */
+export async function lookupIpLocationCached(ip: string): Promise<GeoLocationResult | null> {
+  const key = ip.trim().replace(/^::ffff:/, "");
+  if (!key) return null;
+
+  const hit = GEO_CACHE.get(key);
+  if (hit && hit.expiresAt > Date.now()) return hit.value;
+
+  try {
+    const value = await lookupIpLocation(key);
+
+    // Cheapest eviction that keeps the map bounded: drop the oldest inserted key.
+    if (GEO_CACHE.size >= GEO_CACHE_MAX) {
+      const oldest = GEO_CACHE.keys().next().value;
+      if (oldest) GEO_CACHE.delete(oldest);
+    }
+    GEO_CACHE.set(key, { value, expiresAt: Date.now() + GEO_TTL_MS });
+    return value;
+  } catch {
+    return null;
+  }
+}

@@ -6,7 +6,7 @@ import { sendEmail } from "../services/mailer";
 import { env } from "../config/env";
 import { classifyChannel, parseHost, isBotUserAgent } from "../services/analytics";
 import { enrollRealtimeLead } from "../services/workflowEngine";
-import { extractClientIp, lookupIpLocation } from "../services/geolocation";
+import { extractClientIp, lookupIpLocation, lookupIpLocationCached } from "../services/geolocation";
 
 const router = Router();
 
@@ -366,7 +366,7 @@ router.post("/track", express.text({ type: ["text/plain"] }), async (req: Reques
       }
     }
 
-    await PageView.create({
+    const view = await PageView.create({
       visitorId,
       sessionId,
       path,
@@ -386,6 +386,28 @@ router.post("/track", express.text({ type: ["text/plain"] }), async (req: Reques
     });
 
     res.status(204).end();
+
+    // Geo is resolved AFTER responding: the beacon must never wait on a third-party
+    // lookup. Bots are skipped — they only burn the rate limit. The lookup is cached
+    // per IP, so a visitor reading several pages costs one call.
+    if (!isBot) {
+      void (async () => {
+        try {
+          const ip = extractClientIp(req);
+          const geo = await lookupIpLocationCached(ip);
+          if (!geo || (geo.latitude == null && geo.country == null)) return;
+          await view.update({
+            country: geo.country ?? null,
+            region: geo.region ?? null,
+            city: geo.city ?? null,
+            latitude: geo.latitude ?? null,
+            longitude: geo.longitude ?? null,
+          });
+        } catch (err) {
+          console.error("Pageview geo enrichment failed:", err);
+        }
+      })();
+    }
   } catch (err) {
     console.error("Failed to record pageview:", err);
     res.status(204).end(); // never surface tracking errors to the visitor

@@ -199,4 +199,113 @@ router.get("/visitors", async (req: AuthRequest, res: Response) => {
   }
 });
 
+// GET /analytics/visitor-map — every located visitor, for the full-page world map.
+//
+// Two sources, deliberately kept distinct:
+//   - PageView : ALL site traffic (anonymous). Geo resolved from IP at capture time.
+//   - Visitor  : the email-identified subset (?email=... links), which has had geo all along.
+// PageViews are collapsed to one point per visitorId so a visitor reading ten pages is one
+// dot, not ten. Bots are excluded unless ?includeBots=true.
+router.get("/visitor-map", async (req: AuthRequest, res: Response) => {
+  try {
+    const { from, to } = resolveRange(req);
+    const includeBots = String(req.query.includeBots || "") === "true";
+    const limit = Math.min(20000, Math.max(1, Number(req.query.limit) || 5000));
+
+    const pvWhere: any = {
+      createdAt: { [Op.gte]: from, [Op.lt]: to },
+      latitude: { [Op.ne]: null },
+    };
+    if (!includeBots) pvWhere.isBot = false;
+
+    const [rawViews, identified, totalViews, locatedViews] = await Promise.all([
+      PageView.findAll({
+        where: pvWhere,
+        attributes: [
+          "visitorId", "country", "region", "city",
+          "latitude", "longitude", "channel", "companyName", "createdAt",
+        ],
+        order: [["createdAt", "DESC"]],
+        limit,
+        raw: true,
+      }),
+      Visitor.findAll({
+        where: { visitedAt: { [Op.gte]: from, [Op.lt]: to }, latitude: { [Op.ne]: null } },
+        attributes: [
+          "id", "email", "country", "region", "city", "location",
+          "latitude", "longitude", "visitedAt",
+        ],
+        order: [["visitedAt", "DESC"]],
+        limit,
+        raw: true,
+      }),
+      PageView.count({ where: includeBots ? { createdAt: { [Op.gte]: from, [Op.lt]: to } } : { createdAt: { [Op.gte]: from, [Op.lt]: to }, isBot: false } }),
+      PageView.count({ where: pvWhere }),
+    ]);
+
+    // One dot per visitor, keeping their most recent located pageview.
+    const byVisitor = new Map<string, any>();
+    for (const v of rawViews as any[]) {
+      if (!byVisitor.has(v.visitorId)) byVisitor.set(v.visitorId, v);
+    }
+
+    const points = [
+      ...Array.from(byVisitor.values()).map((v) => ({
+        id: `pv:${v.visitorId}`,
+        identified: false,
+        email: null as string | null,
+        country: v.country,
+        region: v.region,
+        city: v.city,
+        location: [v.city, v.region, v.country].filter(Boolean).join(", ") || null,
+        latitude: v.latitude,
+        longitude: v.longitude,
+        channel: v.channel,
+        company: v.companyName,
+        visitedAt: v.createdAt,
+      })),
+      ...(identified as any[]).map((v) => ({
+        id: `id:${v.id}`,
+        identified: true,
+        email: v.email,
+        country: v.country,
+        region: v.region,
+        city: v.city,
+        location: v.location || [v.city, v.region, v.country].filter(Boolean).join(", ") || null,
+        latitude: v.latitude,
+        longitude: v.longitude,
+        channel: null as string | null,
+        company: null as string | null,
+        visitedAt: v.visitedAt,
+      })),
+    ];
+
+    // Country tallies for the side list.
+    const byCountry = new Map<string, number>();
+    for (const p of points) {
+      if (!p.country) continue;
+      byCountry.set(p.country, (byCountry.get(p.country) || 0) + 1);
+    }
+    const countries = Array.from(byCountry, ([country, count]) => ({ country, count })).sort(
+      (a, b) => b.count - a.count
+    );
+
+    res.json({
+      range: { from, to },
+      points,
+      countries,
+      stats: {
+        anonymous: byVisitor.size,
+        identified: identified.length,
+        // How much of the traffic in this window could be placed on the map at all.
+        totalPageviews: totalViews,
+        locatedPageviews: locatedViews,
+      },
+    });
+  } catch (err) {
+    console.error("analytics/visitor-map failed:", err);
+    res.status(500).json({ message: "Failed to load visitor map" });
+  }
+});
+
 export default router;

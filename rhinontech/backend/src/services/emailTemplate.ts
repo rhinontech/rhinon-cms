@@ -155,7 +155,8 @@ export function renderTemplate1(ctx: RenderContext): string {
       .email-body, .email-body p, .email-body li, .email-body strong { color:#f4f4f5 !important; }
       .text-muted { color:#71717a !important; }
       .border-line { border-color:#27272a !important; }
-      a { color:#60a5fa !important; }
+      /* Buttons keep their own colour — only recolour plain text links. */
+      a:not([style*="inline-block"]) { color:#60a5fa !important; }
     }
   </style>
 </head>
@@ -228,7 +229,8 @@ export function renderTemplate2(ctx: RenderContext): string {
       .text-muted { color:#94a3b8 !important; }
       .header-border { border-color:#26334d !important; }
       .footer-bg { background:#111726 !important; border-color:#26334d !important; }
-      a { color:#60a5fa !important; }
+      /* Buttons keep their own colour — only recolour plain text links. */
+      a:not([style*="inline-block"]) { color:#60a5fa !important; }
     }
   </style>
 </head>
@@ -303,7 +305,9 @@ export function renderTemplate3(ctx: RenderContext): string {
     :root { color-scheme: only light; supported-color-schemes: light; }
     body,table,td,p,a,div,span,li { -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; }
     img { -ms-interpolation-mode:bicubic; border:0; outline:none; text-decoration:none; }
-    a { color:#111827 !important; text-decoration:underline; font-weight:600; }
+    /* Scoped away from buttons: this rule is !important, so on an inline-block anchor it
+       would override the button's own colour and force an underline on it too. */
+    a:not([style*="inline-block"]) { color:#111827 !important; text-decoration:underline; font-weight:600; }
     .email-body { font-size:15px; line-height:1.7; color:#111827 !important; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; }
     .email-body p { margin:0 0 18px 0; color:#111827 !important; }
     .email-body ul { margin:0 0 18px 0; padding-left:20px; list-style-type:disc; color:#111827 !important; }
@@ -325,7 +329,8 @@ export function renderTemplate3(ctx: RenderContext): string {
         background: #ffffff !important;
         background-color: #ffffff !important;
       }
-      .email-body, .email-body p, .email-body li, .email-body strong, .header-title, a {
+      /* The anchor selector excludes buttons — an inline-block anchor carries its own colour. */
+      .email-body, .email-body p, .email-body li, .email-body strong, .header-title, a:not([style*="inline-block"]) {
         color: #111827 !important;
       }
       .text-sub {
@@ -427,7 +432,8 @@ export function renderTemplate4(ctx: RenderContext): string {
       .email-body, .email-body p, .email-body li, .email-body strong { color:#f4f4f5 !important; }
       .text-muted { color:#a1a1aa !important; }
       .divider-line { border-color:#2c2c30 !important; }
-      a { color:#60a5fa !important; }
+      /* Buttons keep their own colour — only recolour plain text links. */
+      a:not([style*="inline-block"]) { color:#60a5fa !important; }
     }
   </style>
 </head>
@@ -505,7 +511,8 @@ export function renderDefaultTemplate(ctx: RenderContext): string {
       .muted { color:#8b8f98 !important; }
       .divider { border-color:#27272a !important; }
       .unsub-link { color:#a5b4fc !important; }
-      a { color:#a5b4fc !important; }
+      /* Buttons keep their own colour — only recolour plain text links. */
+      a:not([style*="inline-block"]) { color:#a5b4fc !important; }
     }
   </style>
 </head>

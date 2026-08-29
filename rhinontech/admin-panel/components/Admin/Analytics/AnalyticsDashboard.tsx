@@ -37,7 +37,9 @@ import {
   TbCalendar,
   TbCalendarOff,
   TbX,
+  TbMap2,
 } from "react-icons/tb";
+import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -75,6 +77,9 @@ interface VisitorRow {
   region: string | null;
   country: string | null;
   location: string | null;
+  // Resolved by the IP lookup at capture time; null when the lookup failed or was skipped.
+  latitude: number | null;
+  longitude: number | null;
   path: string | null;
   referrer: string | null;
   userAgent: string | null;
@@ -370,6 +375,9 @@ export function AnalyticsDashboard() {
 }
 
 function VisitorsTable({ visitors, loading }: { visitors: VisitorRow[]; loading: boolean }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const roleSlug = pathname.split("/")[1];
   const [query, setQuery] = useState("");
   // Default to today's date (YYYY-MM-DD); null means "All Dates"
   const [selectedDate, setSelectedDate] = useState<string | null>(() => ymd(new Date()));
@@ -437,15 +445,28 @@ function VisitorsTable({ visitors, loading }: { visitors: VisitorRow[]; loading:
             </CardDescription>
           </div>
 
-          {/* Search box */}
-          <div className="relative w-full sm:w-64">
-            <TbSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={15} />
-            <Input
-              placeholder="Search email, IP, location..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="pl-8 h-9 text-xs"
-            />
+          <div className="flex w-full items-center gap-2 sm:w-auto">
+            {/* Search box */}
+            <div className="relative w-full sm:w-64">
+              <TbSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={15} />
+              <Input
+                placeholder="Search email, IP, location..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="pl-8 h-9 text-xs"
+              />
+            </div>
+
+            {/* The map lives on its own page — it plots ALL traffic, not just this table. */}
+            <button
+              type="button"
+              onClick={() => router.push(`/${roleSlug}/analytics/visitor-maps`)}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+              title="Open the full-page visitor map"
+            >
+              <TbMap2 size={14} />
+              World map
+            </button>
           </div>
         </div>
 

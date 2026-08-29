@@ -198,7 +198,11 @@ export function EmailBodyEditor({
   }) => {
     const href = withEmailParam(data.url);
     const label = data.text.trim() || "Click Here";
-    const buttonHtml = `<a href="${href}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: ${data.bgColor}; color: ${data.textColor}; border-radius: ${data.borderRadius}; padding: ${data.padding}; text-decoration: none; font-weight: 600; font-size: 14px; text-align: center; margin: 4px 0;">${label}</a>&nbsp;`;
+    // `!important` on the colour is deliberate: an inline declaration marked important
+    // outranks the template's dark-mode `a { color: ... !important }` rules, so the button
+    // label stays the colour that was picked here instead of flipping in dark mode. The
+    // <span> repeats it because some clients recolour the anchor's child text nodes.
+    const buttonHtml = `<a href="${href}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: ${data.bgColor} !important; color: ${data.textColor} !important; border-radius: ${data.borderRadius}; padding: ${data.padding}; text-decoration: none; font-weight: 600; font-size: 14px; text-align: center; margin: 4px 0;"><span style="color: ${data.textColor} !important; text-decoration: none;">${label}</span></a>&nbsp;`;
 
     editor.chain().focus().insertContent(buttonHtml).run();
     setIsButtonModalOpen(false);

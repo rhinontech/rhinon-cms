@@ -23,6 +23,13 @@ interface PageViewAttributes {
   isBot: boolean;
   companyName?: string | null;
   companyDomain?: string | null; // excluded from all dashboard counts so organic numbers stay honest
+  // Coarse geo, resolved from the request IP at capture time and then the IP is discarded.
+  // Null on rows recorded before geo capture existed — those cannot be backfilled.
+  country?: string | null;
+  region?: string | null;
+  city?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -33,6 +40,7 @@ interface PageViewCreationAttributes
     | "id" | "title" | "referrer" | "referrerHost" | "utmSource" | "utmMedium"
     | "utmCampaign" | "utmTerm" | "utmContent" | "userAgent" | "isBot"
     | "companyName" | "companyDomain"
+    | "country" | "region" | "city" | "latitude" | "longitude"
   > {}
 
 export class PageView extends Model<PageViewAttributes, PageViewCreationAttributes> implements PageViewAttributes {
@@ -53,6 +61,11 @@ export class PageView extends Model<PageViewAttributes, PageViewCreationAttribut
   declare isBot: boolean;
   declare companyName: string | null;
   declare companyDomain: string | null;
+  declare country: string | null;
+  declare region: string | null;
+  declare city: string | null;
+  declare latitude: number | null;
+  declare longitude: number | null;
   declare readonly createdAt: Date;
   declare readonly updatedAt: Date;
 }
@@ -82,6 +95,11 @@ PageView.init(
     // still yielding a company-level intent signal.
     companyName: { type: DataTypes.STRING, allowNull: true },
     companyDomain: { type: DataTypes.STRING, allowNull: true },
+    country: { type: DataTypes.STRING, allowNull: true },
+    region: { type: DataTypes.STRING, allowNull: true },
+    city: { type: DataTypes.STRING, allowNull: true },
+    latitude: { type: DataTypes.FLOAT, allowNull: true },
+    longitude: { type: DataTypes.FLOAT, allowNull: true },
     isBot: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
   },
   {
