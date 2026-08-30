@@ -205,7 +205,7 @@ export function SettingsDeploy() {
           <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {appName}
           </h2>
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-3 md:grid-cols-3">
           {appTargets.map((t) => {
             const busy = t.latest?.status === "running" || starting === t.key;
             return (
