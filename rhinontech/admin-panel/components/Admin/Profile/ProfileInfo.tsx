@@ -138,7 +138,7 @@ export function ProfileInfo() {
         ) : !profile ? (
           <p className="text-sm text-muted-foreground">Failed to load profile.</p>
         ) : (
-          <div className="max-w-3xl space-y-5">
+          <div className="max-w-5xl space-y-5">
             {/* Profile card */}
             <div className="bg-card rounded-xl border border-border p-6">
               <div className="flex items-start gap-5">

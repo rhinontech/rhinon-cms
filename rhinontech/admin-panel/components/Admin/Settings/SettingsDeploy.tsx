@@ -187,7 +187,7 @@ export function SettingsDeploy() {
 
       <div className="flex-1 overflow-auto p-6 space-y-6">
         {!loading && !enabled && (
-          <div className="flex items-start gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 max-w-3xl">
+          <div className="flex items-start gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4">
             <TbAlertTriangle size={18} className="mt-0.5 shrink-0 text-amber-500" />
             <div className="text-xs">
               <p className="font-semibold text-foreground">Deploys are disabled on this server</p>
@@ -201,86 +201,86 @@ export function SettingsDeploy() {
         )}
 
         {groupByApp(targets).map(([appName, appTargets]) => (
-        <div key={appName} className="max-w-3xl space-y-2">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            {appName}
-          </h2>
-          <div className="grid gap-3 md:grid-cols-3">
-          {appTargets.map((t) => {
-            const busy = t.latest?.status === "running" || starting === t.key;
-            return (
-              <div key={t.key} className="rounded-xl glass-card p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-foreground">{t.label}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">{t.description}</p>
-                  </div>
-                  <StatusPill status={t.latest?.status} />
-                </div>
+          <div key={appName} className="space-y-2">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {appName}
+            </h2>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {appTargets.map((t) => {
+                const busy = t.latest?.status === "running" || starting === t.key;
+                return (
+                  <div key={t.key} className="rounded-xl glass-card p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-foreground">{t.label}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">{t.description}</p>
+                      </div>
+                      <StatusPill status={t.latest?.status} />
+                    </div>
 
-                <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-                  <dt>Branch</dt>
-                  <dd className="font-mono text-foreground">{t.branch}</dd>
-                  <dt>{t.kind === "docker" ? "Service" : "Process"}</dt>
-                  <dd className="font-mono text-foreground">{t.unit}</dd>
-                  <dt>Last deploy</dt>
-                  <dd className="text-foreground">
-                    {t.latest ? `${when(t.latest.startedAt)} · ${t.latest.triggeredByName}` : "never"}
-                  </dd>
-                </dl>
+                    <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+                      <dt>Branch</dt>
+                      <dd className="font-mono text-foreground">{t.branch}</dd>
+                      <dt>{t.kind === "docker" ? "Service" : "Process"}</dt>
+                      <dd className="font-mono text-foreground">{t.unit}</dd>
+                      <dt>Last deploy</dt>
+                      <dd className="text-foreground">
+                        {t.latest ? `${when(t.latest.startedAt)} · ${t.latest.triggeredByName}` : "never"}
+                      </dd>
+                    </dl>
 
-                {t.latest?.commitMessage && (
-                  <p className="mt-2 flex items-start gap-1.5 text-[11px] text-muted-foreground">
-                    <TbGitCommit size={13} className="mt-0.5 shrink-0" />
-                    <span className="truncate" title={t.latest.commitMessage}>
-                      {t.latest.commitMessage}
-                    </span>
-                  </p>
-                )}
-
-                <div className="mt-4 flex items-center gap-2">
-                  <button
-                    type="button"
-                    disabled={!canTrigger || !enabled || busy}
-                    onClick={() => runDeploy(t)}
-                    className={cn(
-                      "flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-colors",
-                      "bg-primary text-primary-foreground hover:opacity-90",
-                      "disabled:cursor-not-allowed disabled:opacity-50"
+                    {t.latest?.commitMessage && (
+                      <p className="mt-2 flex items-start gap-1.5 text-[11px] text-muted-foreground">
+                        <TbGitCommit size={13} className="mt-0.5 shrink-0" />
+                        <span className="truncate" title={t.latest.commitMessage}>
+                          {t.latest.commitMessage}
+                        </span>
+                      </p>
                     )}
-                  >
-                    {busy ? <TbLoader2 size={14} className="animate-spin" /> : <TbRocket size={14} />}
-                    {busy ? "Deploying…" : `Deploy ${t.label}`}
-                  </button>
-                  {t.latest && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setActive(null);
-                        setActiveId(t.latest!.id);
-                      }}
-                      className="rounded-lg px-2.5 py-2 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-                    >
-                      View log
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+
+                    <div className="mt-4 flex items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={!canTrigger || !enabled || busy}
+                        onClick={() => runDeploy(t)}
+                        className={cn(
+                          "flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-colors",
+                          "bg-primary text-primary-foreground hover:opacity-90",
+                          "disabled:cursor-not-allowed disabled:opacity-50"
+                        )}
+                      >
+                        {busy ? <TbLoader2 size={14} className="animate-spin" /> : <TbRocket size={14} />}
+                        {busy ? "Deploying…" : `Deploy ${t.label}`}
+                      </button>
+                      {t.latest && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActive(null);
+                            setActiveId(t.latest!.id);
+                          }}
+                          className="rounded-lg px-2.5 py-2 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+                        >
+                          View log
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
         ))}
 
         {!canTrigger && !loading && (
-          <p className="max-w-3xl text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             You can see deploy history but not trigger deploys. Ask a super-admin for the{" "}
             <code className="font-mono">deploy:trigger</code> permission.
           </p>
         )}
 
         {activeId && (
-          <div className="max-w-3xl rounded-xl glass-card overflow-hidden">
+          <div className="rounded-xl glass-card overflow-hidden">
             <div className="flex items-center gap-3 border-b border-border px-4 py-3">
               <StatusPill status={active?.status} />
               <p className="flex-1 text-xs text-muted-foreground">
@@ -308,14 +308,14 @@ export function SettingsDeploy() {
                 const el = e.currentTarget;
                 stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
               }}
-              className="max-h-96 overflow-auto bg-black/85 p-4 font-mono text-[11px] leading-relaxed text-emerald-100 whitespace-pre-wrap"
+              className="max-h-[28rem] overflow-auto bg-black/85 p-4 font-mono text-[11px] leading-relaxed text-emerald-100 whitespace-pre-wrap"
             >
               {active?.log?.trim() || "Waiting for output…"}
             </pre>
           </div>
         )}
 
-        <div className="max-w-3xl">
+        <div>
           <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             History
           </h2>

@@ -90,7 +90,7 @@ export function ProfileSecurity() {
       </div>
 
       <div className="flex-1 overflow-auto p-6">
-        <div className="max-w-2xl space-y-5">
+        <div className="max-w-5xl space-y-5">
 
           {/* Change password */}
           <div className="bg-card rounded-xl border border-border overflow-hidden">

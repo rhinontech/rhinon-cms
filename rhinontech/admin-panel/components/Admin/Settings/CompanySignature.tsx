@@ -56,7 +56,7 @@ export function CompanySignature() {
   };
 
   return (
-    <div className="rounded-xl glass-card p-5 max-w-xl">
+    <div className="rounded-xl glass-card p-5">
       <h3 className="text-sm font-semibold text-foreground">Company signature</h3>
       <p className="mt-1 text-xs text-muted-foreground">
         Used to sign relieving and experience letters generated from the Team panel.

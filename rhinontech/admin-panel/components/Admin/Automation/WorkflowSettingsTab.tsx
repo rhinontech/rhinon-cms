@@ -24,7 +24,7 @@ export function WorkflowSettingsTab({ workflow, onSave, roleSlug }: WorkflowSett
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
+    <div className="p-6 max-w-5xl">
       <form onSubmit={handleSubmit} className="bg-card p-6 rounded-2xl border border-border shadow-2xs space-y-6">
         <div>
           <label className="block text-xs font-bold text-foreground/85 mb-1">Name</label>

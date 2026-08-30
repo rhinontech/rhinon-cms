@@ -14,7 +14,11 @@ export function SettingsGeneral() {
         </div>
       </div>
       <div className="flex-1 overflow-auto p-6">
-        <CompanySignature />
+        {/* Grid, not a single column: settings cards sit side by side on wide screens
+            instead of leaving half the panel empty. */}
+        <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+          <CompanySignature />
+        </div>
       </div>
     </div>
   );

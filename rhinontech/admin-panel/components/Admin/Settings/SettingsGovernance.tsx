@@ -39,7 +39,7 @@ export function SettingsGovernance() {
         </div>
       </div>
       <div className="flex-1 overflow-auto p-6">
-        <div className="grid max-w-2xl gap-3">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {links.map((link) => (
             <Link
               key={link.href}
