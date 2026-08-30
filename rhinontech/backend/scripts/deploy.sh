@@ -10,7 +10,7 @@
 # the API process that started it. That also means nothing is waiting on our exit
 # status: the EXIT trap writing $EXIT_FILE is the only completion signal there is.
 #
-# Required env: REPO BRANCH PROC PORT LOG EXIT_FILE META_FILE
+# Required env: REPO BRANCH PROC PORT HEALTH_PATH LOG EXIT_FILE META_FILE
 
 set -uo pipefail
 
@@ -88,9 +88,9 @@ say "pm2 restart $PROC"
 pm2 restart "$PROC" --update-env || exit $?
 pm2 save || true
 
-say "health check :$PORT"
+say "health check :$PORT$HEALTH_PATH"
 for i in $(seq 1 30); do
-  if curl -fsS --max-time 3 "http://localhost:$PORT/health" >/dev/null 2>&1; then
+  if curl -fsS --max-time 3 "http://localhost:$PORT$HEALTH_PATH" >/dev/null 2>&1; then
     echo "healthy after ${i}s"
     echo ""
     echo "=== SUCCESS — $(date -u '+%Y-%m-%d %H:%M:%S UTC') ==="

@@ -8,16 +8,25 @@ import os from "os";
  * process name are never accepted from the client. If a caller could supply a path or
  * a command, this endpoint would be a remote shell for anyone holding a stolen token.
  */
+export type DeployKind = "pm2" | "docker";
+
 export interface DeployTarget {
   key: string;
   label: string;
-  /** Absolute path to the checkout on this EC2 box. */
+  /** How this app is served — decides which deploy script runs. */
+  kind: DeployKind;
+  /** Absolute path to the git checkout on this EC2 box. */
   repo: string;
   branch: string;
-  /** pm2 process name to restart once the build succeeds. */
-  proc: string;
-  /** Local port used for the post-restart health check. */
+  /** pm2 process name to restart once the build succeeds. `kind: "pm2"` only. */
+  proc?: string;
+  /** Directory holding docker-compose.yml, and the service to restart. `kind: "docker"` only. */
+  compose?: { dir: string; service: string };
+  /** Local port and path used for the post-restart health check. */
   port: number;
+  healthPath: string;
+  /** Apps grouped in the UI, so Rhinon and FurrCircle don't read as one system. */
+  app: string;
   description: string;
 }
 
@@ -25,20 +34,42 @@ export const DEPLOY_TARGETS: Record<string, DeployTarget> = {
   prod: {
     key: "prod",
     label: "Production",
+    kind: "pm2",
+    app: "Rhinon Tech",
     repo: process.env.DEPLOY_PROD_REPO || "/home/ubuntu/rhinon-cms",
     branch: "main",
     proc: "rhinontech-backend",
     port: 5002,
+    healthPath: "/health",
     description: "api.rhinontech.in — live backend serving the admin panel and website.",
   },
   beta: {
     key: "beta",
     label: "Beta",
+    kind: "pm2",
+    app: "Rhinon Tech",
     repo: process.env.DEPLOY_BETA_REPO || "/home/ubuntu/rhinon-cms-beta",
     branch: "beta",
     proc: "rhinontech-backend-beta",
     port: 5003,
+    healthPath: "/health",
     description: "Staging backend on port 5003 — safe to deploy any time.",
+  },
+  furrcircle: {
+    key: "furrcircle",
+    label: "FurrCircle API",
+    kind: "docker",
+    app: "FurrCircle",
+    repo: process.env.DEPLOY_FURRCIRCLE_REPO || "/home/ubuntu/FurrCircle",
+    branch: "main",
+    compose: {
+      dir: (process.env.DEPLOY_FURRCIRCLE_REPO || "/home/ubuntu/FurrCircle") + "/backend",
+      service: "backend",
+    },
+    port: 5001,
+    // No liveness route on this app — /api/health is pet medical records. `/` returns 200.
+    healthPath: "/",
+    description: "api.furrcircle.com — Docker container, restarted in place (no image rebuild).",
   },
 };
 

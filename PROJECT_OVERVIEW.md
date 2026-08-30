@@ -295,6 +295,21 @@ echo "DEPLOY_ENABLED=true" >> /home/ubuntu/rhinon-cms/rhinontech/backend/.env
 Deploys are off unless that flag is set, so a laptop never exposes a self-restart button.
 Beta is deployable from the prod panel (`/home/ubuntu/rhinon-cms-beta`, `beta` branch).
 
+**Targets** live in `config/deployTargets.ts` — the panel only ever sends a key, never a path:
+
+| Key | App | Kind | What it does |
+|-----|-----|------|--------------|
+| `prod` | Rhinon Tech | pm2 | `/home/ubuntu/rhinon-cms`, `main` → build → restart `rhinontech-backend` |
+| `beta` | Rhinon Tech | pm2 | `/home/ubuntu/rhinon-cms-beta`, `beta` → build → restart `rhinontech-backend-beta` |
+| `furrcircle` | FurrCircle | docker | `/home/ubuntu/FurrCircle`, `main` → `docker compose restart backend` |
+
+FurrCircle deliberately does **not** rebuild its image: `backend/docker-compose.yml` bind-mounts
+the source (`.:/app`) and the entrypoint re-runs `npm install` + `sequelize-cli db:migrate` on
+every container start, so a restart already ships pulled code, new deps and new migrations. A
+`--build` would run npm install inside a Docker build on a 1GB box for a layer the bind mount
+immediately masks. If a pull changes `Dockerfile` or `docker-compose.yml`, the deploy stops
+before restarting and tells you to rebuild by hand — it never half-ships an image change.
+
 - `.env` files are git-ignored and live only on the server (switching branches preserves them).
 - Schema sync on boot is additive (`sync({ alter: { drop: false } })`) — never drops.
 - Git pushes authenticate over SSH as GitHub `rhinontech` (key `~/.ssh/id_ed25519`).

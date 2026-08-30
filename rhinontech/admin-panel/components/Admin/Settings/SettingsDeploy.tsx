@@ -35,8 +35,13 @@ interface DeploymentSummary {
 interface DeployTarget {
   key: string;
   label: string;
+  /** "pm2" apps rebuild before restarting; "docker" ones restart the compose service. */
+  kind: "pm2" | "docker";
+  /** Grouping heading — Rhinon Tech and FurrCircle are separate systems on one box. */
+  app: string;
   branch: string;
-  proc: string;
+  /** The pm2 process or compose service that gets restarted. */
+  unit: string;
   port: number;
   description: string;
   latest: DeploymentSummary | null;
@@ -134,10 +139,14 @@ export function SettingsDeploy() {
   const labelFor = (key: string) => targets.find((t) => t.key === key)?.label || key;
 
   const runDeploy = async (target: DeployTarget) => {
+    const action =
+      target.kind === "docker"
+        ? `restarts the ${target.unit} container (deps + migrations re-run on boot)`
+        : `rebuilds and restarts ${target.unit}`;
     const warning =
       target.key === "prod"
-        ? `Deploy PRODUCTION?\n\nThis pulls ${target.branch}, rebuilds and restarts ${target.proc}. The API will be briefly unavailable.`
-        : `Deploy ${target.label}? This pulls ${target.branch} and restarts ${target.proc}.`;
+        ? `Deploy PRODUCTION?\n\nThis pulls ${target.branch}, ${action}. The API will be briefly unavailable.`
+        : `Deploy ${target.label}?\n\nThis pulls ${target.branch} and ${action}.`;
     if (!confirm(warning)) return;
 
     setStarting(target.key);
@@ -191,8 +200,13 @@ export function SettingsDeploy() {
           </div>
         )}
 
-        <div className="grid gap-3 max-w-3xl md:grid-cols-2">
-          {targets.map((t) => {
+        {groupByApp(targets).map(([appName, appTargets]) => (
+        <div key={appName} className="max-w-3xl space-y-2">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {appName}
+          </h2>
+          <div className="grid gap-3 md:grid-cols-2">
+          {appTargets.map((t) => {
             const busy = t.latest?.status === "running" || starting === t.key;
             return (
               <div key={t.key} className="rounded-xl glass-card p-5">
@@ -207,8 +221,8 @@ export function SettingsDeploy() {
                 <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
                   <dt>Branch</dt>
                   <dd className="font-mono text-foreground">{t.branch}</dd>
-                  <dt>Process</dt>
-                  <dd className="font-mono text-foreground">{t.proc}</dd>
+                  <dt>{t.kind === "docker" ? "Service" : "Process"}</dt>
+                  <dd className="font-mono text-foreground">{t.unit}</dd>
                   <dt>Last deploy</dt>
                   <dd className="text-foreground">
                     {t.latest ? `${when(t.latest.startedAt)} · ${t.latest.triggeredByName}` : "never"}
@@ -254,7 +268,9 @@ export function SettingsDeploy() {
               </div>
             );
           })}
+          </div>
         </div>
+        ))}
 
         {!canTrigger && !loading && (
           <p className="max-w-3xl text-xs text-muted-foreground">
@@ -345,6 +361,17 @@ export function SettingsDeploy() {
       </div>
     </div>
   );
+}
+
+/** Preserves server order while grouping, so Rhinon's environments stay adjacent. */
+function groupByApp(targets: DeployTarget[]): [string, DeployTarget[]][] {
+  const groups = new Map<string, DeployTarget[]>();
+  for (const t of targets) {
+    const existing = groups.get(t.app);
+    if (existing) existing.push(t);
+    else groups.set(t.app, [t]);
+  }
+  return [...groups.entries()];
 }
 
 function StatusPill({ status, compact }: { status?: DeployStatus | null; compact?: boolean }) {

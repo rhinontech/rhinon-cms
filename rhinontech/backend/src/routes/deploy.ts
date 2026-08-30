@@ -14,6 +14,7 @@ import {
   deployLogPath,
   getDeployTarget,
   type DeployTarget,
+  type DeployKind,
 } from "../config/deployTargets";
 
 /**
@@ -21,7 +22,8 @@ import {
  *
  * There is no SSH and no PEM key anywhere in this flow: the API already runs on the
  * EC2 box as the same `ubuntu` user an operator would SSH in as, so the deploy is a
- * plain local `git pull && npm run build && pm2 restart`.
+ * plain local `git pull && npm run build && pm2 restart`. Docker targets (FurrCircle)
+ * take the same path through a different script: `git pull && docker compose restart`.
  *
  * The catch is that restarting "prod" kills THIS process mid-request. So the work is
  * handed to a detached child (scripts/deploy.sh) that outlives us, streams to a log
@@ -32,7 +34,11 @@ import {
 const router = Router();
 router.use(authenticate);
 
-const SCRIPT_SRC = path.join(__dirname, "..", "..", "scripts", "deploy.sh");
+const SCRIPTS_DIR = path.join(__dirname, "..", "..", "scripts");
+const SCRIPT_FOR: Record<DeployKind, string> = {
+  pm2: path.join(SCRIPTS_DIR, "deploy.sh"),
+  docker: path.join(SCRIPTS_DIR, "deploy-docker.sh"),
+};
 /** A run that has produced no exit file by now is assumed dead (script SIGKILLed, box rebooted). */
 const STALE_AFTER_MS = 20 * 60 * 1000;
 const metaPath = (id: string) => path.join(DEPLOY_LOG_DIR, `${id}.meta`);
@@ -41,8 +47,11 @@ function publicTarget(t: DeployTarget) {
   return {
     key: t.key,
     label: t.label,
+    kind: t.kind,
+    app: t.app,
     branch: t.branch,
-    proc: t.proc,
+    // What actually gets restarted — a pm2 process or a compose service.
+    unit: t.kind === "docker" ? `${t.compose!.service} (compose)` : t.proc!,
     port: t.port,
     description: t.description,
   };
@@ -207,7 +216,7 @@ router.post("/:target", authorize("deploy:trigger"), async (req: AuthRequest, re
     // Run a COPY of the script: `git pull` rewrites scripts/deploy.sh underneath a
     // running bash, which reads its script lazily and would execute garbage.
     const runner = path.join(os.tmpdir(), `rhinon-deploy-${dep.id}.sh`);
-    await fsp.copyFile(SCRIPT_SRC, runner);
+    await fsp.copyFile(SCRIPT_FOR[target.kind], runner);
     await fsp.chmod(runner, 0o755);
 
     const child = spawn("bash", [runner], {
@@ -218,8 +227,12 @@ router.post("/:target", authorize("deploy:trigger"), async (req: AuthRequest, re
         ...process.env,
         REPO: target.repo,
         BRANCH: target.branch,
-        PROC: target.proc,
         PORT: String(target.port),
+        HEALTH_PATH: target.healthPath,
+        // Only one of these pairs is read, by the script the kind selected.
+        PROC: target.proc || "",
+        COMPOSE_DIR: target.compose?.dir || "",
+        SERVICE: target.compose?.service || "",
         LOG: deployLogPath(dep.id),
         EXIT_FILE: deployExitPath(dep.id),
         META_FILE: metaPath(dep.id),
