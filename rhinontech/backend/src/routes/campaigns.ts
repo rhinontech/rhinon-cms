@@ -421,6 +421,161 @@ router.post("/:id/process", authorize("outreach:write"), async (req: AuthRequest
   }
 });
 
+// A single line of the live send console. `level` only drives colouring in the
+// UI — the message itself is the record of what happened to that lead.
+export type SendEvent =
+  | { type: "start"; total: number; resend: boolean; from: string; subject: string | null }
+  | { type: "log"; level: "info" | "success" | "warn" | "error"; message: string }
+  | { type: "progress"; done: number; total: number; sent: number; skipped: number; failed: number }
+  | { type: "done"; summary: EmailSendSummary }
+  | { type: "error"; message: string };
+
+export type EmailSendSummary = {
+  sent: number;
+  skipped: number;
+  failed: number;
+  failures: { email: string; reason: string }[];
+  total: number;
+  completed: boolean;
+};
+
+/**
+ * Runs an email campaign send end to end (draft mail-merge, optional resend
+ * regeneration, then per-lead dispatch).
+ *
+ * Extracted from the send route so the plain JSON endpoint and the streaming
+ * one execute exactly the same thing — the only difference is that the streamer
+ * passes an `onEvent` that forwards each step to the browser as it happens.
+ * `onEvent` is best-effort: a dead client must never abort a send that is
+ * already delivering real email, so its errors are swallowed.
+ */
+export async function runEmailSend(
+  campaign: Campaign,
+  opts: { senderName: string; fromEmail: string; resend: boolean },
+  onEvent: (e: SendEvent) => void = () => {}
+): Promise<EmailSendSummary> {
+  const { senderName, fromEmail, resend } = opts;
+  const emit = (e: SendEvent) => {
+    try {
+      onEvent(e);
+    } catch {
+      /* a broken pipe must not stop the send */
+    }
+  };
+  const log = (level: "info" | "success" | "warn" | "error", message: string) => emit({ type: "log", level, message });
+
+  const defaultBody = "Hi {{lead.name}},\n\nWe'd love to connect.\n\nBest,\n{{sender.name}}";
+
+  // 1. Auto-generate drafts for any leads that are still Enrolled or missing drafts
+  const enrolledLeads = await Lead.findAll({
+    where: { campaignId: campaign.id, status: [...NEEDS_DRAFT_STATUSES] },
+  });
+
+  if (enrolledLeads.length) log("info", `Preparing drafts for ${enrolledLeads.length} lead(s)…`);
+
+  for (const lead of enrolledLeads) {
+    try {
+      const draftBody = fillPlaceholders(campaign.body || defaultBody, lead, senderName);
+      await lead.update({ aiDraft: draftBody, status: "Interested" });
+      await CampaignActivity.create({
+        leadId: lead.id,
+        campaignId: campaign.id,
+        type: "DraftGenerated",
+        content: "Template draft prepared (mail-merge).",
+        generatedContent: draftBody,
+      });
+    } catch (err: any) {
+      console.error(`Draft error for lead ${lead.id}:`, err.message);
+      log("error", `Draft failed for ${lead.email}: ${err.message}`);
+    }
+  }
+
+  // 1b. Explicit resend: re-run the mail-merge from the campaign's current
+  // body/subject for already-emailed leads (so template edits made after the
+  // first send actually go out), then queue them back up for dispatch. This
+  // overwrites any manual per-lead draft edits made since the last send.
+  // Deliberately excludes Bounced/Unsubscribed/Replied — those must never
+  // be re-emailed regardless of what the caller asks for.
+  if (resend) {
+    const emailedLeads = await Lead.findAll({ where: { campaignId: campaign.id, status: "Emailed" } });
+    if (emailedLeads.length) log("info", `Regenerating ${emailedLeads.length} draft(s) for resend…`);
+
+    for (const lead of emailedLeads) {
+      try {
+        const draftBody = fillPlaceholders(campaign.body || defaultBody, lead, senderName);
+        await lead.update({ aiDraft: draftBody, status: "Interested", emailOpened: false, openedAt: null });
+        await CampaignActivity.create({
+          leadId: lead.id,
+          campaignId: campaign.id,
+          type: "DraftGenerated",
+          content: "Draft regenerated from campaign template for resend.",
+          generatedContent: draftBody,
+        });
+      } catch (err: any) {
+        console.error(`Resend draft error for lead ${lead.id}:`, err.message);
+        log("error", `Draft regeneration failed for ${lead.email}: ${err.message}`);
+      }
+    }
+  }
+
+  // 2. Dispatch emails to all ready leads
+  const leads = await Lead.findAll({ where: { campaignId: campaign.id, status: "Interested" } });
+
+  emit({ type: "start", total: leads.length, resend, from: fromEmail, subject: campaign.subject || null });
+
+  let sentCount = 0;
+  let skippedCount = 0;
+  const failures: { email: string; reason: string }[] = [];
+
+  for (const [i, lead] of leads.entries()) {
+    log("info", `[${i + 1}/${leads.length}] Sending to ${lead.email}…`);
+    const outcome = await dispatchLeadEmail(
+      campaign,
+      lead,
+      senderName,
+      fromEmail,
+      "Campaign outreach email delivered via Rhinon Engine."
+    );
+    if (outcome.result === "sent") {
+      sentCount++;
+      log("success", `Sent → ${lead.email}`);
+    } else if (outcome.result === "skipped") {
+      skippedCount++;
+      log("warn", `Skipped ${lead.email} — ${outcome.reason || "not eligible"}`);
+    } else {
+      failures.push({ email: lead.email, reason: outcome.reason || "unknown error" });
+      console.error(`Send error for lead ${lead.id} (${lead.email}):`, outcome.reason);
+      log(
+        "error",
+        `Failed ${lead.email} — ${outcome.reason || "unknown error"}${outcome.permanent ? " (marked Bounced)" : " (will retry next send)"}`
+      );
+    }
+    emit({
+      type: "progress",
+      done: i + 1,
+      total: leads.length,
+      sent: sentCount,
+      skipped: skippedCount,
+      failed: failures.length,
+    });
+  }
+
+  await syncCampaignCounts(campaign);
+  const completed = await maybeCompleteCampaign(campaign);
+  if (completed) log("info", "All enrolled leads handled — campaign marked Completed.");
+
+  const summary: EmailSendSummary = {
+    sent: sentCount,
+    skipped: skippedCount,
+    failed: failures.length,
+    failures,
+    total: leads.length,
+    completed,
+  };
+  emit({ type: "done", summary });
+  return summary;
+}
+
 // POST /campaigns/:id/send — send email campaign or publish LinkedIn post
 router.post("/:id/send", authorize("outreach:write"), async (req: AuthRequest, res: Response) => {
   try {
@@ -435,101 +590,13 @@ router.post("/:id/send", authorize("outreach:write"), async (req: AuthRequest, r
     const isEmail = isEmailChannel(campaign.channel);
 
     if (isEmail) {
-      const senderName = campaign.senderName || req.user!.fullName || "Rhinon Team";
-      const fromEmail = campaign.senderEmail || req.user!.companyEmail || "admin@rhinontech.in";
-
-      // 1. Auto-generate drafts for any leads that are still Enrolled or missing drafts
-      const enrolledLeads = await Lead.findAll({
-        where: {
-          campaignId: campaign.id,
-          status: [...NEEDS_DRAFT_STATUSES],
-        },
+      const summary = await runEmailSend(campaign, {
+        senderName: campaign.senderName || req.user!.fullName || "Rhinon Team",
+        fromEmail: campaign.senderEmail || req.user!.companyEmail || "admin@rhinontech.in",
+        resend: req.body?.resend === true,
       });
 
-      for (const lead of enrolledLeads) {
-        try {
-          const rawBody = campaign.body || "Hi {{lead.name}},\n\nWe'd love to connect.\n\nBest,\n{{sender.name}}";
-          const draftBody = fillPlaceholders(rawBody, lead, senderName);
-          await lead.update({ aiDraft: draftBody, status: "Interested" });
-          await CampaignActivity.create({
-            leadId: lead.id,
-            campaignId: campaign.id,
-            type: "DraftGenerated",
-            content: "Template draft prepared (mail-merge).",
-            generatedContent: draftBody,
-          });
-        } catch (err: any) {
-          console.error(`Draft error for lead ${lead.id}:`, err.message);
-        }
-      }
-
-      // 1b. Explicit resend: re-run the mail-merge from the campaign's current
-      // body/subject for already-emailed leads (so template edits made after the
-      // first send actually go out), then queue them back up for dispatch. This
-      // overwrites any manual per-lead draft edits made since the last send.
-      // Deliberately excludes Bounced/Unsubscribed/Replied — those must never
-      // be re-emailed regardless of what the caller asks for.
-      if (req.body?.resend === true) {
-        const emailedLeads = await Lead.findAll({
-          where: { campaignId: campaign.id, status: "Emailed" },
-        });
-
-        for (const lead of emailedLeads) {
-          try {
-            const rawBody = campaign.body || "Hi {{lead.name}},\n\nWe'd love to connect.\n\nBest,\n{{sender.name}}";
-            const draftBody = fillPlaceholders(rawBody, lead, senderName);
-            await lead.update({ aiDraft: draftBody, status: "Interested", emailOpened: false, openedAt: null });
-            await CampaignActivity.create({
-              leadId: lead.id,
-              campaignId: campaign.id,
-              type: "DraftGenerated",
-              content: "Draft regenerated from campaign template for resend.",
-              generatedContent: draftBody,
-            });
-          } catch (err: any) {
-            console.error(`Resend draft error for lead ${lead.id}:`, err.message);
-          }
-        }
-      }
-
-      // 2. Dispatch emails to all ready leads
-      const leads = await Lead.findAll({
-        where: { campaignId: campaign.id, status: "Interested" },
-      });
-
-      let sentCount = 0;
-      let skippedCount = 0;
-      const failures: { email: string; reason: string }[] = [];
-
-      for (const lead of leads) {
-        const outcome = await dispatchLeadEmail(
-          campaign,
-          lead,
-          senderName,
-          fromEmail,
-          "Campaign outreach email delivered via Rhinon Engine."
-        );
-        if (outcome.result === "sent") sentCount++;
-        else if (outcome.result === "skipped") skippedCount++;
-        else {
-          failures.push({ email: lead.email, reason: outcome.reason || "unknown error" });
-          console.error(`Send error for lead ${lead.id} (${lead.email}):`, outcome.reason);
-
-        }
-      }
-
-      await syncCampaignCounts(campaign);
-      const completed = await maybeCompleteCampaign(campaign);
-
-      res.json({
-        success: true,
-        sent: sentCount,
-        skipped: skippedCount,
-        failed: failures.length,
-        failures,
-        total: leads.length,
-        completed,
-      });
+      res.json({ success: true, ...summary });
     } else {
       // Social / LinkedIn broadcast
       let postContent = campaign.aiDraft;
@@ -580,6 +647,60 @@ router.post("/:id/send", authorize("outreach:write"), async (req: AuthRequest, r
     }
   } catch (error: any) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+// POST /campaigns/:id/send/stream — same send as above, streamed as NDJSON so
+// the admin panel can show a live console instead of a spinner. Big lists (100+
+// leads) take minutes; without this the UI has nothing to show until the very
+// end, and a timeout in between looks identical to a failure.
+//
+// NDJSON over POST rather than SSE/EventSource: auth here is a Bearer token and
+// EventSource can't set headers.
+router.post("/:id/send/stream", authorize("outreach:write"), async (req: AuthRequest, res: Response) => {
+  res.setHeader("Content-Type", "application/x-ndjson; charset=utf-8");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
+  res.setHeader("Connection", "keep-alive");
+  // Tells nginx not to buffer the response — without it the whole stream lands
+  // in one chunk at the end and the console stays empty the entire send.
+  res.setHeader("X-Accel-Buffering", "no");
+  res.flushHeaders?.();
+
+  const write = (e: SendEvent) => {
+    if (!res.writableEnded) res.write(JSON.stringify({ ...e, ts: new Date().toISOString() }) + "\n");
+  };
+
+  try {
+    const campaign = await Campaign.findByPk(req.params.id, {
+      include: [{ model: CampaignTemplate, as: "template" }],
+    });
+    if (!campaign) {
+      write({ type: "error", message: "Campaign not found" });
+      res.end();
+      return;
+    }
+    if (!isEmailChannel(campaign.channel)) {
+      write({ type: "error", message: `Live send console is only available for email campaigns (this one is "${campaign.channel}").` });
+      res.end();
+      return;
+    }
+
+    const fromEmail = campaign.senderEmail || req.user!.companyEmail || "admin@rhinontech.in";
+    write({ type: "log", level: "info", message: `Campaign "${campaign.name}" — sending as ${fromEmail}` });
+
+    await runEmailSend(
+      campaign,
+      {
+        senderName: campaign.senderName || req.user!.fullName || "Rhinon Team",
+        fromEmail,
+        resend: req.body?.resend === true,
+      },
+      write
+    );
+  } catch (err: any) {
+    write({ type: "error", message: err.message || "Send failed" });
+  } finally {
+    res.end();
   }
 });
 

@@ -68,3 +68,54 @@ export async function apiUpload<T = unknown>(path: string, file: File, field = "
   }
   return res.json() as Promise<T>;
 }
+
+/**
+ * POSTs to an endpoint that answers with NDJSON and invokes `onEvent` for each
+ * line as it arrives.
+ *
+ * Used by the campaign send console: EventSource can't carry the Authorization
+ * header, so the stream is read off a plain fetch body instead. Partial lines
+ * are buffered — a chunk boundary can land mid-JSON.
+ */
+export async function apiStream<T = unknown>(
+  path: string,
+  onEvent: (event: T) => void,
+  init?: RequestInit
+): Promise<void> {
+  const res = await fetch(`${API_URL}${path}`, {
+    method: "POST",
+    ...init,
+    headers: { ...authHeaders(), ...(init?.headers as Record<string, string> | undefined) },
+  });
+  if (!res.ok || !res.body) {
+    const err = await res.json().catch(() => ({ message: "Request failed" }));
+    throw new Error(err.message || "Request failed");
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      try {
+        onEvent(JSON.parse(line) as T);
+      } catch {
+        /* ignore a malformed line rather than killing the stream */
+      }
+    }
+  }
+  if (buffer.trim()) {
+    try {
+      onEvent(JSON.parse(buffer) as T);
+    } catch {
+      /* trailing partial line */
+    }
+  }
+}
