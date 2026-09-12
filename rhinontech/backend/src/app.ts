@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import { env } from "./config/env";
 import { requestLogger } from "./middleware/requestLogger";
+import { runAsSystem } from "./services/tenantContext";
 import authRoutes from "./routes/auth";
 import rolesRoutes from "./routes/roles";
 import permissionsRoutes from "./routes/permissions";
@@ -114,11 +115,24 @@ app.use("/branding", brandingRoutes);
 app.use("/document-signing", documentSigningRoutes);
 
 // Use text parser for SNS webhooks since AWS SNS sends content-type text/plain
-app.use("/webhooks", express.text({ type: ["application/json", "text/plain"] }), webhooksRoutes);
+
+/**
+ * Unauthenticated routers resolve their own tenant (an API key, a slug, an
+ * inbound recipient address) or genuinely serve all of them, so they cannot
+ * enter a tenant context up front. Declaring system mode keeps the tenancy
+ * hooks quiet HERE and loud everywhere else — an unscoped query on an
+ * authenticated route stays a warning rather than blending in.
+ *
+ * Scoping these down to a resolved organization is Phase 4.
+ */
+const systemContext = (label: string): express.RequestHandler =>
+  (_req, _res, next) => runAsSystem(label, next);
+
+app.use("/webhooks", systemContext("webhooks"), express.text({ type: ["application/json", "text/plain"] }), webhooksRoutes);
 
 // Public unauthenticated routes
-app.use("/public", publicRoutes);
-app.use("/public", scheduleCallRoutes);
+app.use("/public", systemContext("public"), publicRoutes);
+app.use("/public", systemContext("public"), scheduleCallRoutes);
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });

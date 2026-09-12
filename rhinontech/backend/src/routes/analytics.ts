@@ -1,10 +1,14 @@
 import { Router, Response } from "express";
 import { Op, fn, col, literal } from "sequelize";
 import { PageView, Visitor } from "../models";
-import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
+import { authenticate, authorize, requirePlatformOrg, AuthRequest } from "../middleware/authenticate";
 
 const router = Router();
 router.use(authenticate);
+// rhinonlabs.com traffic is the platform's own marketing data.
+// authorize() waves every superadmin through, and each tenant owner IS a
+// superadmin — so the permission check alone would not keep customers out.
+router.use(requirePlatformOrg);
 router.use(authorize("analytics:read"));
 
 const DAY_MS = 24 * 60 * 60 * 1000;

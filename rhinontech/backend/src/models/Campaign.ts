@@ -146,11 +146,14 @@ Campaign.init(
     topic: { type: DataTypes.TEXT, allowNull: true },
     sourceFacts: { type: DataTypes.TEXT, allowNull: true },
     postMeta: { type: DataTypes.JSONB, allowNull: true },
-    slug: { type: DataTypes.STRING, allowNull: true, unique: true },
+    slug: { type: DataTypes.STRING, allowNull: true },
     platformPostId: { type: DataTypes.STRING, allowNull: true },
     organizationId: { type: DataTypes.STRING, allowNull: true },
     socialStats: { type: DataTypes.JSONB, allowNull: true },
     createdById: { type: DataTypes.UUID, allowNull: false },
   },
-  { sequelize, tableName: "campaigns", timestamps: true }
+  { sequelize, tableName: "campaigns", timestamps: true,
+    // Scoped per tenant. Campaign slugs only have to be unique inside one org.
+    indexes: [{ unique: true, fields: ["organizationId", "slug"] }],
+  }
 );

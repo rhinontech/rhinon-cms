@@ -83,7 +83,7 @@ Account.init(
   {
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
     name: { type: DataTypes.STRING, allowNull: false },
-    domain: { type: DataTypes.STRING, allowNull: true, unique: true },
+    domain: { type: DataTypes.STRING, allowNull: true },
     website: { type: DataTypes.STRING, allowNull: true },
     industry: { type: DataTypes.STRING, allowNull: true },
     employeeCount: { type: DataTypes.INTEGER, allowNull: true },
@@ -95,5 +95,8 @@ Account.init(
     ownerId: { type: DataTypes.UUID, allowNull: true },
     createdById: { type: DataTypes.UUID, allowNull: true },
   },
-  { sequelize, tableName: "accounts", timestamps: true }
+  { sequelize, tableName: "accounts", timestamps: true,
+    // Scoped per tenant. Two orgs may both have an account at the same company domain.
+    indexes: [{ unique: true, fields: ["organizationId", "domain"] }],
+  }
 );

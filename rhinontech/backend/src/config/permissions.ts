@@ -83,17 +83,20 @@ export async function syncPermissionCatalog() {
   const allPerms = results.map(([perm]) => perm);
   const createdPerms = results.filter(([, created]) => created).map(([perm]) => perm);
 
-  const superadmin = await Role.findOne({ where: { slug: "superadmin" } });
-  if (superadmin) {
+  // findAll, not findOne: every organization has its own superadmin role, and
+  // a new catalog entry has to reach all of them. Runs under system context at
+  // boot, so this deliberately crosses tenants.
+  const superadmins = await Role.findAll({ where: { slug: "superadmin" } });
+  for (const superadmin of superadmins) {
     await (superadmin as any).addPermissions(allPerms);
   }
 
   if (createdPerms.length > 0) {
     for (const [slug, grantNames] of Object.entries(DEFAULT_ROLE_GRANTS)) {
-      const role = await Role.findOne({ where: { slug } });
-      if (!role) continue;
+      const roles = await Role.findAll({ where: { slug } });
       const toGrant = createdPerms.filter((p) => grantNames.includes(p.name));
-      if (toGrant.length > 0) {
+      if (toGrant.length === 0) continue;
+      for (const role of roles) {
         await (role as any).addPermissions(toGrant);
       }
     }

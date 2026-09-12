@@ -84,7 +84,7 @@ Event.init(
     category: { type: DataTypes.STRING, allowNull: true },
     metaTitle: { type: DataTypes.STRING, allowNull: true },
     metaDescription: { type: DataTypes.TEXT, allowNull: true },
-    slug: { type: DataTypes.STRING, allowNull: false, unique: true },
+    slug: { type: DataTypes.STRING, allowNull: false },
     authorName: { type: DataTypes.STRING, allowNull: false, defaultValue: "" },
     authorRole: { type: DataTypes.STRING, allowNull: false, defaultValue: "" },
     authorAvatar: { type: DataTypes.TEXT, allowNull: true },
@@ -95,5 +95,8 @@ Event.init(
     status: { type: DataTypes.ENUM("Draft", "Published"), allowNull: false, defaultValue: "Draft" },
     createdById: { type: DataTypes.UUID, allowNull: true },
   },
-  { sequelize, tableName: "events", timestamps: true }
+  { sequelize, tableName: "events", timestamps: true,
+    // Scoped per tenant. Two orgs may both publish the same event slug.
+    indexes: [{ unique: true, fields: ["organizationId", "slug"] }],
+  }
 );

@@ -1,11 +1,18 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env";
-import { User, Role, Permission } from "../models";
+import { User, Role, Permission, Organization } from "../models";
+import { enterTenantContext, runAsSystem } from "../services/tenantContext";
 
 export interface AuthRequest extends Request {
   user?: {
     userId: string;
+    organizationId: string;
+    orgSlug: string;
+    /** The org's email subdomain, e.g. swiggy.rhinontech.in */
+    emailDomain: string;
+    /** Rhinon Tech itself — gates the platform-operations modules. */
+    isPlatformOrg: boolean;
     userType: "internal" | "guest";
     roleSlug: string;
     permissions: string[];
@@ -47,13 +54,35 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
   // offboarding, role changes, and permission grants/revocations take effect
   // immediately instead of waiting for the token to expire or a re-login.
   try {
-    // unscoped: the default scope hides guests, who must still be able to authenticate.
-    const account = await User.unscoped().findByPk(payload.userId, {
-      attributes: ["id", "status", "fullName", "companyEmail", "userType"],
-      include: [{ model: Role, as: "role", include: [{ model: Permission }] }],
-    });
+    // This lookup is what RESOLVES the tenant, so it cannot already be inside
+    // one — runAsSystem says that out loud rather than leaving it looking like
+    // a query someone forgot to scope.
+    //
+    // unscoped: the default scope hides guests, who must still authenticate.
+    const account = await runAsSystem("auth:resolve-identity", () =>
+      User.unscoped().findByPk(payload.userId, {
+        attributes: ["id", "status", "fullName", "companyEmail", "userType", "organizationId"],
+        include: [
+          { model: Role, as: "role", include: [{ model: Permission }] },
+          { model: Organization, as: "tenant" },
+        ],
+      })
+    );
     if (!account || account.status !== "active") {
       res.status(401).json({ message: "This account is no longer active." });
+      return;
+    }
+
+    const org = (account as any).tenant as Organization | null;
+    if (!org) {
+      // Pre-migration row, or an insert that escaped the stamping hook. Refuse
+      // rather than fall through into an unscoped session.
+      console.error(`[Tenancy] User ${account.id} has no organization; refusing request.`);
+      res.status(403).json({ message: "This account is not attached to a workspace." });
+      return;
+    }
+    if (org.status === "suspended") {
+      res.status(403).json({ message: "This workspace has been suspended." });
       return;
     }
 
@@ -62,6 +91,10 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
 
     req.user = {
       userId: account.id,
+      organizationId: org.id,
+      orgSlug: org.slug,
+      emailDomain: org.emailDomain,
+      isPlatformOrg: org.isPlatform,
       userType: (account as any).userType === "guest" ? "guest" : "internal",
       roleSlug: role?.slug ?? "",
       permissions,
@@ -74,12 +107,31 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
       res.status(403).json({ message: "This area is not available to collaborator accounts." });
       return;
     }
+
+    // Everything downstream of next() runs inside this org's context, so the
+    // Sequelize hooks filter it without the route having to remember.
+    enterTenantContext(org.id, account.id, next);
+    return;
   } catch (err: any) {
     console.error("Auth lookup failed:", err.message);
     res.status(500).json({ message: "Could not verify account" });
     return;
   }
+}
 
+/**
+ * Platform-operations guard.
+ *
+ * authorize() short-circuits for any superadmin, and every customer's owner is
+ * a superadmin — so without this, a tenant could reach /deploy and restart our
+ * own backends. Modules that operate the platform rather than a workspace sit
+ * behind this.
+ */
+export function requirePlatformOrg(req: AuthRequest, res: Response, next: NextFunction) {
+  if (!req.user?.isPlatformOrg) {
+    res.status(403).json({ message: "This module is not available to your workspace." });
+    return;
+  }
   next();
 }
 

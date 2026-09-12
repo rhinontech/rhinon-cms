@@ -84,7 +84,7 @@ Blog.init(
     category: { type: DataTypes.STRING, allowNull: true },
     metaTitle: { type: DataTypes.STRING, allowNull: true },
     metaDescription: { type: DataTypes.TEXT, allowNull: true },
-    slug: { type: DataTypes.STRING, allowNull: false, unique: true },
+    slug: { type: DataTypes.STRING, allowNull: false },
     authorName: { type: DataTypes.STRING, allowNull: false, defaultValue: "Prabhat Patra" },
     authorRole: { type: DataTypes.STRING, allowNull: false, defaultValue: "Founder @ Rhinon Tech" },
     authorAvatar: { type: DataTypes.TEXT, allowNull: true },
@@ -96,5 +96,8 @@ Blog.init(
     domain: { type: DataTypes.ENUM("rhinonlabs", "uppercurve"), allowNull: false, defaultValue: "rhinonlabs" },
     createdById: { type: DataTypes.UUID, allowNull: true },
   },
-  { sequelize, tableName: "blogs", timestamps: true }
+  { sequelize, tableName: "blogs", timestamps: true,
+    // Scoped per tenant. Two orgs may both publish /blogs/getting-started.
+    indexes: [{ unique: true, fields: ["organizationId", "slug"] }],
+  }
 );

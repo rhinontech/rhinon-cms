@@ -2,12 +2,16 @@ import { Router, Response } from "express";
 import { Op } from "sequelize";
 import { StartupIdea, Lead } from "../models";
 import { STARTUP_IDEA_STATUSES, type StartupIdeaStatus } from "../models/StartupIdea";
-import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
+import { authenticate, authorize, requirePlatformOrg, AuthRequest } from "../middleware/authenticate";
 
 // Inbound submissions from the rhinonlabs /build campaign page. Separate from CRM leads
 // by design — see models/StartupIdea.ts.
 const router = Router();
 router.use(authenticate);
+// The /build funnel belongs to Rhinon Labs, not to tenants.
+// authorize() waves every superadmin through, and each tenant owner IS a
+// superadmin — so the permission check alone would not keep customers out.
+router.use(requirePlatformOrg);
 
 function isStatus(v: unknown): v is StartupIdeaStatus {
   return STARTUP_IDEA_STATUSES.includes(v as StartupIdeaStatus);

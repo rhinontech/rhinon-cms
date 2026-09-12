@@ -195,7 +195,12 @@ User.init(
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
     userType: { type: DataTypes.ENUM("internal", "guest"), allowNull: false, defaultValue: "internal" },
     fullName: { type: DataTypes.STRING, allowNull: false },
-    personalEmail: { type: DataTypes.STRING, allowNull: false, unique: true },
+    // Scoped per org (see the composite index below): one person can hold
+    // accounts at two different organizations with the same personal address.
+    personalEmail: { type: DataTypes.STRING, allowNull: false },
+    // Stays globally unique — company addresses live on the org's own email
+    // subdomain (aman@swiggy.rhinontech.in), so they cannot collide anyway, and
+    // the global constraint is what lets login resolve a tenant from the address.
     companyEmail: { type: DataTypes.STRING, unique: true },
     passwordHash: { type: DataTypes.STRING, allowNull: false },
     roleId: { type: DataTypes.UUID, allowNull: false },
@@ -248,6 +253,7 @@ User.init(
     sequelize,
     tableName: "users",
     timestamps: true,
+    indexes: [{ unique: true, fields: ["organizationId", "personalEmail"] }],
     /**
      * NO defaultScope here, deliberately.
      *

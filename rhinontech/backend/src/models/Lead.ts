@@ -114,7 +114,7 @@ Lead.init(
     name: { type: DataTypes.STRING, allowNull: false },
     company: { type: DataTypes.STRING, allowNull: false },
     title: { type: DataTypes.STRING, allowNull: true },
-    email: { type: DataTypes.STRING, allowNull: false, unique: true },
+    email: { type: DataTypes.STRING, allowNull: false },
     linkedinUrl: { type: DataTypes.STRING, allowNull: true },
     phone: { type: DataTypes.STRING, allowNull: true },
     seniority: { type: DataTypes.STRING, allowNull: true },
@@ -155,5 +155,9 @@ Lead.init(
     lastActivityAt: { type: DataTypes.DATE, allowNull: true },
     addedAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW, allowNull: false },
   },
-  { sequelize, tableName: "leads", timestamps: true }
+  { sequelize, tableName: "leads", timestamps: true,
+    // Scoped per tenant. A globally unique lead email would mean the second org to
+    // prospect cto@target.com could never add them at all.
+    indexes: [{ unique: true, fields: ["organizationId", "email"] }],
+  }
 );

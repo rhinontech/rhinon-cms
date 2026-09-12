@@ -78,7 +78,7 @@ CaseStudy.init(
     description: { type: DataTypes.TEXT, allowNull: false },
     content: { type: DataTypes.TEXT, allowNull: true },
     contentBlocks: { type: DataTypes.JSONB, allowNull: false, defaultValue: [] },
-    slug: { type: DataTypes.STRING, allowNull: false, unique: true },
+    slug: { type: DataTypes.STRING, allowNull: false },
     client: { type: DataTypes.STRING, allowNull: true },
     industry: { type: DataTypes.STRING, allowNull: true },
     category: { type: DataTypes.STRING, allowNull: true },
@@ -94,5 +94,8 @@ CaseStudy.init(
     status: { type: DataTypes.ENUM("Draft", "Published"), allowNull: false, defaultValue: "Draft" },
     createdById: { type: DataTypes.UUID, allowNull: true },
   },
-  { sequelize, tableName: "case_studies", timestamps: true }
+  { sequelize, tableName: "case_studies", timestamps: true,
+    // Scoped per tenant. Two orgs may both publish the same case-study slug.
+    indexes: [{ unique: true, fields: ["organizationId", "slug"] }],
+  }
 );
