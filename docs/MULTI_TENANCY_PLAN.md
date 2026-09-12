@@ -95,8 +95,16 @@ Rhinon Tech is `isPlatform: true`. Modules that operate the platform itself
 Two modes behind `SES_SUBDOMAIN_MODE`:
 
 - `inherit` (default, zero AWS work): parent `rhinontech.in` is a verified domain
-  identity, so SES already permits sending from any subdomain and signs with the
-  parent DKIM key. Inbound relies on wildcard MX + a catch-all receipt rule.
+  identity, so SES permits sending from any subdomain and signs with the parent
+  DKIM key. Inbound relies on wildcard MX + a catch-all receipt rule.
+
+  > **Corrected 2026-09-12.** The original plan claimed the parent was "already
+  > DKIM-signed and SPF-verified". It was not: SES had DKIM `NOT_STARTED` and the
+  > domain had zero TXT records — no SPF, no DMARC — while sending ~2.5k/day, which
+  > is why mail was going to spam. Easy DKIM, SPF, a custom MAIL FROM
+  > (`mail.rhinontech.in`) and DMARC `p=none` have since been applied to the live
+  > Route53 zone. **The wildcard MX on `*.rhinontech.in` still does not exist**, so
+  > tenant subdomains cannot receive mail yet.
 - `identity` (better): on signup call `CreateEmailIdentity(swiggy.rhinontech.in)`,
   then Route53-upsert the 3 DKIM CNAMEs, the MX record, and a custom MAIL FROM.
   Gives per-tenant DKIM `d=`, per-tenant DMARC, and reputation that doesn't pool.

@@ -1,5 +1,6 @@
 import express, { Router, Response, Request } from "express";
 import { ClientRequest, Project, User, Lead, Blog, CaseStudy, Event, PageView, DocsAccess, WorkflowEnrollment, CampaignActivity, Visitor, Unsubscribe, StartupIdea } from "../models";
+import { verifyUnsubscribe } from "../services/unsubscribeToken";
 import type { BlogDomain } from "../models/Blog";
 import { clientIpFrom, isIpCompanyLookupEnabled, lookupCompanyByIp } from "../services/ipCompany";
 import { sendEmail } from "../services/mailer";
@@ -764,6 +765,41 @@ router.post("/startup-ideas", async (req: Request, res: Response) => {
     console.error("Failed to save startup idea:", error);
     res.status(500).json({ message: "Failed to submit your idea" });
   }
+});
+
+/**
+ * RFC 8058 one-click unsubscribe.
+ *
+ * Hit by the RECEIVING mail provider (Gmail, Yahoo) when the recipient clicks
+ * the native Unsubscribe button — not by a browser. So it has no session, takes
+ * an empty body, and must answer 200 quickly. The address is HMAC-signed
+ * because otherwise anyone could POST arbitrary addresses and suppress a whole
+ * list; the separate /unsubscribe form below stays as the human-facing path.
+ */
+router.post("/unsubscribe/one-click", async (req: Request, res: Response) => {
+  const email = String(req.query.email ?? "").trim().toLowerCase();
+  const token = String(req.query.t ?? "");
+
+  if (!verifyUnsubscribe(email, token)) {
+    res.status(403).json({ message: "Invalid unsubscribe link" });
+    return;
+  }
+
+  try {
+    const [entry, created] = await Unsubscribe.findOrCreate({
+      where: { email },
+      defaults: { email, reason: "One-click unsubscribe (RFC 8058)" } as never,
+    });
+    if (!created && !entry.reason) {
+      await entry.update({ reason: "One-click unsubscribe (RFC 8058)" });
+    }
+  } catch (err: any) {
+    console.error("[Unsubscribe] one-click failed:", err.message);
+  }
+
+  // Always 200: a provider that sees an error may keep retrying or downgrade
+  // the sender's reputation.
+  res.status(200).json({ message: "Unsubscribed" });
 });
 
 router.post("/unsubscribe", async (req: Request, res: Response) => {

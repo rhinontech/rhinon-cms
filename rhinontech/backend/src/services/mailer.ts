@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 import MailComposer from "nodemailer/lib/mail-composer";
 import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
+import { oneClickUnsubscribeUrl } from "./unsubscribeToken";
 
 type SendEmailPayload = {
   to: string | string[];
@@ -22,6 +23,16 @@ type SendEmailPayload = {
   icalEvent?: { method: string; content: string; filename?: string };
   /** Send through this specific mailbox instead of the shared transport. */
   smtpAuth?: { user: string; pass: string; host?: string; port?: number };
+  /**
+   * Marks this as bulk mail and attaches RFC 8058 one-click unsubscribe headers
+   * for the given recipient.
+   *
+   * Gmail and Yahoo require these of bulk senders — a link in the footer does
+   * not satisfy it, and mail without them is filtered regardless of how clean
+   * the content is. Deliberately opt-in: transactional mail (onboarding,
+   * password resets) must NOT carry them.
+   */
+  unsubscribeFor?: string;
 };
 
 const sesRegion = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION;
@@ -76,6 +87,15 @@ function toArray(value: string | string[]) {
   return Array.isArray(value) ? value : [value];
 }
 
+/** RFC 8058 headers. Both are required — the URL alone is not enough. */
+function unsubscribeHeaders(email?: string): Record<string, string> {
+  if (!email) return {};
+  return {
+    "List-Unsubscribe": `<${oneClickUnsubscribeUrl(email)}>`,
+    "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+  };
+}
+
 export async function sendEmail({
   to,
   cc = [],
@@ -89,8 +109,11 @@ export async function sendEmail({
   attachments,
   icalEvent,
   smtpAuth,
+  unsubscribeFor,
 }: SendEmailPayload) {
   const toAddresses = toArray(to);
+  const listHeaders = unsubscribeHeaders(unsubscribeFor);
+  const hasListHeaders = Object.keys(listHeaders).length > 0;
   const fromAddress = from || sesFromEmail;
   const displayName = customFromName || fromName;
   // A dedicated mailbox is the whole point of rotation, so it overrides the
@@ -107,6 +130,7 @@ export async function sendEmail({
       text,
       attachments,
       icalEvent,
+      ...(hasListHeaders ? { headers: listHeaders } : {}),
     } as any);
     return;
   }
@@ -137,6 +161,7 @@ export async function sendEmail({
         text,
         attachments,
         icalEvent,
+        ...(hasListHeaders ? { headers: listHeaders } : {}),
       })
         .compile()
         .build();
@@ -158,6 +183,7 @@ export async function sendEmail({
       text,
       attachments,
       icalEvent,
+      ...(hasListHeaders ? { headers: listHeaders } : {}),
     });
     return;
   }
@@ -172,6 +198,9 @@ export async function sendEmail({
       },
       Content: {
         Simple: {
+          ...(hasListHeaders
+            ? { Headers: Object.entries(listHeaders).map(([Name, Value]) => ({ Name, Value })) }
+            : {}),
           Subject: { Data: subject, Charset: "UTF-8" },
           Body: {
             ...(html ? { Html: { Data: html, Charset: "UTF-8" } } : {}),
@@ -192,6 +221,7 @@ export async function sendEmail({
       subject,
       html,
       text,
+      ...(hasListHeaders ? { headers: listHeaders } : {}),
     });
     return;
   }

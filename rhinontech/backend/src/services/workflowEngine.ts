@@ -422,6 +422,7 @@ async function executeEnrollmentSteps(
             subject,
             html: htmlBody,
             text: stripHtml(richHtml),
+            unsubscribeFor: enrollment.leadEmail,
           });
 
           logs.push({

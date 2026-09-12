@@ -12,12 +12,19 @@ import { Organization } from "../models/Organization";
  * Two modes, because they trade off against each other and the right one
  * depends on how much of our DNS we are willing to automate:
  *
- *   inherit  (default) — rhinontech.in is already a verified DOMAIN identity, and
- *                        SES lets a verified domain send from any subdomain. So
+ *   inherit  (default) — rhinontech.in is a verified DOMAIN identity, and SES lets
+ *                        a verified domain send from any subdomain. So
  *                        aman@swiggy.rhinontech.in sends immediately, with zero
  *                        API calls and zero DNS writes. The cost: mail is signed
  *                        d=rhinontech.in, so every tenant shares one DKIM
  *                        reputation — one spammer's complaint rate is everyone's.
+ *
+ *                        NOTE: 'verified' in SES means ownership only. Until
+ *                        2026-09-12 this domain had DKIM NOT_STARTED and no SPF
+ *                        or DMARC at all, so there was nothing to inherit and
+ *                        outbound mail was landing in spam. Enabling Easy DKIM,
+ *                        SPF, a custom MAIL FROM and DMARC is a PREREQUISITE for
+ *                        this mode, not an optimisation.
  *
  *   identity          — create a real SES identity per subdomain. Mail is signed
  *                        d=swiggy.rhinontech.in, which separates DKIM reputation

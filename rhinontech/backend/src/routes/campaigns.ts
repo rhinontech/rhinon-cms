@@ -270,7 +270,9 @@ export async function dispatchLeadEmail(
   const plainText = stripHtml(lead.aiDraft);
 
   try {
-    await sendEmail({ to: email!, from: fromEmail, fromName: senderName, via: "ses", subject, html: htmlBody, text: plainText });
+    // Bulk mail: carries RFC 8058 one-click unsubscribe headers, which Gmail
+    // and Yahoo require of bulk senders.
+    await sendEmail({ to: email!, from: fromEmail, fromName: senderName, via: "ses", subject, html: htmlBody, text: plainText, unsubscribeFor: email! });
   } catch (err: any) {
     return fail(err.message || "send failed", isPermanentSendError(err));
   }
