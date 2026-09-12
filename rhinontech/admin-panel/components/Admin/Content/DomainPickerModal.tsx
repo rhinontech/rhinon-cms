@@ -2,7 +2,7 @@
 
 import { TbArrowRight } from "react-icons/tb";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { CONTENT_DOMAINS, type ContentDomain } from "./domains";
+import { useContentDomains } from "./domains";
 
 export function DomainPickerModal({
   open,
@@ -11,8 +11,10 @@ export function DomainPickerModal({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelect: (domain: ContentDomain) => void;
+  onSelect: (domain: string) => void;
 }) {
+  const { domains, loading } = useContentDomains();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -21,7 +23,10 @@ export function DomainPickerModal({
           <DialogDescription>Content is managed separately per website.</DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-1 gap-2.5">
-          {CONTENT_DOMAINS.map((d) => (
+          {loading && (
+            <p className="text-sm text-muted-foreground">Loading sites…</p>
+          )}
+          {domains.map((d) => (
             <button
               key={d.slug}
               onClick={() => onSelect(d.slug)}

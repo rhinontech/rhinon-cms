@@ -1,7 +1,7 @@
 import { Router, Response } from "express";
 import { Op } from "sequelize";
 import multer from "multer";
-import { Blog, CaseStudy, Event } from "../models";
+import { Blog, CaseStudy, Event, Site } from "../models";
 import type { BlogDomain } from "../models/Blog";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 import { uploadBuffer, publicUrl } from "../services/storage";
@@ -11,12 +11,43 @@ function parseDomain(value: unknown): BlogDomain {
   return BLOG_DOMAINS.includes(value as BlogDomain) ? (value as BlogDomain) : "rhinonlabs";
 }
 
+/**
+ * Resolves which of the workspace's sites a request is about.
+ *
+ * Accepts `?siteId=` (what the admin UI sends) or the legacy `?domain=` slug,
+ * and falls back to the workspace's default site. Every query here is already
+ * tenant-scoped, so this only ever picks between sites the caller owns — a
+ * tenant with one site never has to send anything.
+ */
+async function resolveSite(query: Record<string, unknown>): Promise<Site | null> {
+  const siteId = typeof query.siteId === "string" ? query.siteId : null;
+  if (siteId) {
+    const bySelection = await Site.findByPk(siteId);
+    if (bySelection) return bySelection;
+  }
+  const slug = typeof query.domain === "string" ? query.domain : null;
+  if (slug) {
+    const bySlug = await Site.findOne({ where: { slug } });
+    if (bySlug) return bySlug;
+  }
+  return (
+    (await Site.findOne({ where: { isDefault: true } })) ?? (await Site.findOne())
+  );
+}
+
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024 } });
 const MAX_VIDEO_MB = 100;
 const uploadVideo = multer({ storage: multer.memoryStorage(), limits: { fileSize: MAX_VIDEO_MB * 1024 * 1024 } });
 
 router.use(authenticate);
+
+// GET /content/sites — the workspace's publishing brands. A tenant normally has
+// exactly one, so the admin UI hides the picker when this returns a single row.
+router.get("/sites", authorize("content:read"), async (_req: AuthRequest, res: Response) => {
+  const sites = await Site.findAll({ order: [["isDefault", "DESC"], ["name", "ASC"]] });
+  res.json(sites);
+});
 
 // POST /content/upload-image — upload a blog/case-study image to S3 (public), returns a permanent URL
 router.post("/upload-image", authorize("content:write"), upload.single("image"), async (req: AuthRequest, res: Response) => {
@@ -102,10 +133,14 @@ async function uniqueSlug(model: any, base: string, excludeId?: string): Promise
 
 /* ----------------------------- BLOGS ----------------------------- */
 
-// GET /content/blogs?domain=rhinonlabs|uppercurve — all blogs (drafts included) for the CMS,
-// scoped to one site's blog (defaults to rhinonlabs when omitted).
+// GET /content/blogs?siteId=…|domain=… — all blogs (drafts included) for the CMS,
+// scoped to one of the workspace's sites (defaults to the default site).
 router.get("/blogs", authorize("content:read"), async (req: AuthRequest, res: Response) => {
-  const blogs = await Blog.findAll({ where: { domain: parseDomain(req.query.domain) }, order: [["updatedAt", "DESC"]] });
+  const site = await resolveSite(req.query as Record<string, unknown>);
+  const blogs = await Blog.findAll({
+    where: site ? { siteId: site.id } : {},
+    order: [["updatedAt", "DESC"]],
+  });
   res.json(blogs);
 });
 
@@ -126,11 +161,15 @@ router.post("/blogs", authorize("content:write"), async (req: AuthRequest, res: 
       return;
     }
     const slug = await uniqueSlug(Blog, b.slug || b.title);
+    const site = await resolveSite(b);
     const blog = await Blog.create({
       ...b,
       content: b.content || "",
       slug,
-      domain: parseDomain(b.domain),
+      siteId: site?.id ?? null,
+      // Legacy column, kept so the Uppercurve site (a separate repo) can keep
+      // calling /public/blogs?domain=uppercurve during the transition.
+      domain: parseDomain(site?.slug ?? b.domain),
       createdById: req.user!.userId,
     });
     res.status(201).json(blog);
@@ -147,8 +186,9 @@ router.put("/blogs/:id", authorize("content:write"), async (req: AuthRequest, re
     const b = { ...req.body };
     delete b.id;
     delete b.createdById;
-    // Domain is set at creation time and never re-assigned from the editor.
+    // Site/domain are set at creation time and never re-assigned from the editor.
     delete b.domain;
+    delete b.siteId;
     // Re-slug only when an explicit slug/title change requires it
     if (b.slug && b.slug !== blog.slug) {
       b.slug = await uniqueSlug(Blog, b.slug, blog.id);

@@ -1,6 +1,7 @@
 import { QueryTypes } from "sequelize";
 import { sequelize } from "../config/database";
 import { Organization } from "../models/Organization";
+import { Site } from "../models/Site";
 import { TENANT_MODELS } from "../models/tenantScope";
 
 /**
@@ -133,12 +134,90 @@ async function renameCollidingColumns(): Promise<string[]> {
   return renamed;
 }
 
+
+/**
+ * Moves content off the fixed `Blog.domain` enum ("rhinonlabs" | "uppercurve")
+ * and onto per-org Sites.
+ *
+ * Those two were never tenants — they are two brands of ONE organization. The
+ * platform org keeps both, with its existing posts mapped by their old domain
+ * value so both live marketing sites keep serving. Every other workspace is
+ * seeded with a single default site, so a tenant writing a blog never sees a
+ * brand picker.
+ */
+async function migrateContentSites(): Promise<{ sitesCreated: number; contentMapped: number }> {
+  await Site.sync();
+
+  // The content tables need the column before anything can be mapped onto it.
+  for (const table of ["blogs", "case_studies", "events"]) {
+    if (!(await tableExists(table))) continue;
+    await sequelize.query(`ALTER TABLE "${table}" ADD COLUMN IF NOT EXISTS "siteId" UUID`);
+    await sequelize.query(
+      `CREATE INDEX IF NOT EXISTS "idx_${table}_siteId" ON "${table}" ("siteId")`
+    );
+  }
+
+  let sitesCreated = 0;
+  let contentMapped = 0;
+
+  const orgs = await Organization.findAll();
+  for (const org of orgs) {
+    const wanted = org.isPlatform
+      ? [
+          { name: "Rhinon Labs", slug: "rhinonlabs", siteUrl: "https://www.rhinonlabs.com", isDefault: true, supportsEvents: false, supportsCaseStudies: true },
+          { name: "Uppercurve", slug: "uppercurve", siteUrl: process.env.UPPERCURVE_SITE_URL || null, isDefault: false, supportsEvents: true, supportsCaseStudies: false },
+        ]
+      : [{ name: org.name, slug: "main", siteUrl: null, isDefault: true, supportsEvents: true, supportsCaseStudies: true }];
+
+    for (const def of wanted) {
+      const [, created] = await Site.findOrCreate({
+        where: { organizationId: org.id, slug: def.slug } as never,
+        defaults: { ...def, organizationId: org.id } as never,
+      });
+      if (created) sitesCreated++;
+    }
+
+    const sites = await Site.findAll({ where: { organizationId: org.id } as never });
+    const bySlug = new Map(sites.map((site) => [site.slug, site.id]));
+    const fallback = bySlug.get(org.isPlatform ? "rhinonlabs" : "main");
+    if (!fallback) continue;
+
+    // Blogs carry the legacy enum, so map by it; everything else falls back.
+    if (await tableExists("blogs")) {
+      for (const [slug, siteId] of bySlug) {
+        const [, meta] = await sequelize.query(
+          `UPDATE "blogs" SET "siteId" = :siteId
+            WHERE "organizationId" = :orgId AND "siteId" IS NULL AND "domain" = :slug`,
+          { replacements: { siteId, orgId: org.id, slug } }
+        );
+        contentMapped += (meta as { rowCount?: number })?.rowCount ?? 0;
+      }
+    }
+
+    // Case studies have no domain column — they belong to the default site.
+    // Events were Uppercurve-only, so they go to the events-capable site.
+    const eventsSite = sites.find((site) => site.supportsEvents)?.id ?? fallback;
+    for (const [table, target] of [["blogs", fallback], ["case_studies", fallback], ["events", eventsSite]] as const) {
+      if (!(await tableExists(table))) continue;
+      const [, meta] = await sequelize.query(
+        `UPDATE "${table}" SET "siteId" = :siteId WHERE "organizationId" = :orgId AND "siteId" IS NULL`,
+        { replacements: { siteId: target, orgId: org.id } }
+      );
+      contentMapped += (meta as { rowCount?: number })?.rowCount ?? 0;
+    }
+  }
+
+  return { sitesCreated, contentMapped };
+}
+
 export async function runTenancyMigration(): Promise<{
   defaultOrgId: string;
   columnsAdded: number;
   rowsBackfilled: number;
   uniquesDropped: string[];
   columnsRenamed: string[];
+  sitesCreated: number;
+  contentMapped: number;
 }> {
   // 0. Move any pre-existing column that happens to be called organizationId
   //    but means something else. Must run before step 3 creates the real one.
@@ -194,6 +273,9 @@ export async function runTenancyMigration(): Promise<{
     );
   }
 
+  // 4b. Content brands. Runs after the org backfill, since it groups by org.
+  const { sitesCreated, contentMapped } = await migrateContentSites();
+
   // 5. Retire the global uniques. Composite replacements are on the models and
   //    get created by the syncDatabase() that runs straight after this.
   const uniquesDropped: string[] = [];
@@ -203,7 +285,10 @@ export async function runTenancyMigration(): Promise<{
     uniquesDropped.push(...dropped.map((name) => `${table}.${column} (${name})`));
   }
 
-  return { defaultOrgId: org.id, columnsAdded, rowsBackfilled, uniquesDropped, columnsRenamed };
+  return {
+    defaultOrgId: org.id, columnsAdded, rowsBackfilled,
+    uniquesDropped, columnsRenamed, sitesCreated, contentMapped,
+  };
 }
 
 /**

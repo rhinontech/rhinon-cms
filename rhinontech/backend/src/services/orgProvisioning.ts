@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { Role, Permission, Organization, PipelineStage, WorkflowStatus } from "../models";
+import { Role, Permission, Organization, PipelineStage, WorkflowStatus, Site } from "../models";
 import { DEFAULT_STAGES } from "../models/PipelineStage";
 import { DEFAULT_STATUSES } from "../config/seedWorkflow";
 import { PERMISSION_CATALOG, DEFAULT_ROLE_GRANTS } from "../config/permissions";
@@ -110,6 +110,7 @@ export interface ProvisionResult {
   rolesCreated: string[];
   stagesCreated: number;
   statusesCreated: number;
+  siteCreated: boolean;
 }
 
 /**
@@ -159,7 +160,22 @@ export async function provisionOrganizationDefaults(
       if (created) statusesCreated++;
     }
 
-    return { rolesCreated, stagesCreated, statusesCreated };
+    // One publishing site, so a new workspace writes blogs without ever being
+    // shown a brand picker. Orgs that later want two brands add a second site.
+    const org = await Organization.findByPk(organizationId, { transaction });
+    const [, siteCreated] = await Site.findOrCreate({
+      where: { slug: "main" },
+      defaults: {
+        name: org?.name ?? "Main site",
+        slug: "main",
+        isDefault: true,
+        supportsEvents: true,
+        supportsCaseStudies: true,
+      } as never,
+      transaction,
+    });
+
+    return { rolesCreated, stagesCreated, statusesCreated, siteCreated };
   });
 }
 
@@ -169,7 +185,7 @@ export async function provisionAllOrganizations(): Promise<number> {
   let touched = 0;
   for (const org of orgs) {
     const result = await provisionOrganizationDefaults(org.id);
-    if (result.rolesCreated.length || result.stagesCreated || result.statusesCreated) touched++;
+    if (result.rolesCreated.length || result.stagesCreated || result.statusesCreated || result.siteCreated) touched++;
   }
   return touched;
 }

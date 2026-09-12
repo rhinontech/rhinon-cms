@@ -35,6 +35,8 @@ interface BlogAttributes {
   publishedAt: Date;
   status: BlogStatus;
   domain: BlogDomain;
+  /** Publishing brand within the org (rhinonlabs / uppercurve / a tenant's own). */
+  siteId?: string | null;
   createdById?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
@@ -43,6 +45,7 @@ interface BlogAttributes {
 interface BlogCreationAttributes
   extends Optional<
     BlogAttributes,
+    | "siteId"
     | "id" | "contentBlocks" | "faqs" | "category" | "metaTitle" | "metaDescription"
     | "authorName" | "authorRole" | "authorAvatar" | "coverImage"
     | "tags" | "readTime" | "publishedAt" | "status" | "domain" | "createdById"
@@ -68,6 +71,7 @@ export class Blog extends Model<BlogAttributes, BlogCreationAttributes> implemen
   declare publishedAt: Date;
   declare status: BlogStatus;
   declare domain: BlogDomain;
+  declare siteId: string | null;
   declare createdById: string | null;
   declare readonly createdAt: Date;
   declare readonly updatedAt: Date;
@@ -94,6 +98,7 @@ Blog.init(
     publishedAt: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
     status: { type: DataTypes.ENUM("Draft", "Published"), allowNull: false, defaultValue: "Draft" },
     domain: { type: DataTypes.ENUM("rhinonlabs", "uppercurve"), allowNull: false, defaultValue: "rhinonlabs" },
+    siteId: { type: DataTypes.UUID, allowNull: true },
     createdById: { type: DataTypes.UUID, allowNull: true },
   },
   { sequelize, tableName: "blogs", timestamps: true,

@@ -1,44 +1,92 @@
-export type ContentDomain = "rhinonlabs" | "uppercurve";
+"use client";
+import { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/api";
+
+/**
+ * Publishing brands for the signed-in workspace.
+ *
+ * This file used to hardcode Rhinon's own two brands (rhinonlabs, uppercurve).
+ * Under multi-tenancy that put Rhinon's brand names in every customer's Content
+ * module, so the list now comes from GET /content/sites — which is tenant-scoped,
+ * returns exactly one site for a new workspace, and still returns both of
+ * Rhinon's brands for Rhinon. The slugs are unchanged, so existing
+ * /content/rhinonlabs/... URLs keep working.
+ */
 export type ContentResource = "blogs" | "case-studies" | "events";
 
+export interface Site {
+  id: string;
+  name: string;
+  slug: string;
+  siteUrl: string | null;
+  isDefault: boolean;
+  supportsEvents: boolean;
+  supportsCaseStudies: boolean;
+}
+
 export interface ContentDomainConfig {
-  slug: ContentDomain;
+  slug: string;
   label: string;
   description: string;
-  /** Public site this domain's content is served on — used for "view live" links. */
   siteUrl: string;
   resources: Array<{ key: ContentResource; label: string }>;
 }
 
-// Each domain is a separate public site with its own blog; rhinonlabs additionally
-// runs case studies, uppercurve additionally runs events.
-export const CONTENT_DOMAINS: ContentDomainConfig[] = [
-  {
-    slug: "rhinonlabs",
-    label: "Rhinon Labs",
-    description: "Blogs and case studies",
-    siteUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://rhinonlabs.com",
-    resources: [
-      { key: "blogs", label: "Blogs" },
-      { key: "case-studies", label: "Case Studies" },
-    ],
-  },
-  {
-    slug: "uppercurve",
-    label: "Uppercurve",
-    description: "Blogs and events",
-    siteUrl: process.env.NEXT_PUBLIC_UPPERCURVE_SITE_URL || "https://uppercurve.com",
-    resources: [
-      { key: "blogs", label: "Blogs" },
-      { key: "events", label: "Events" },
-    ],
-  },
-];
+export function toDomainConfig(site: Site): ContentDomainConfig {
+  const resources: ContentDomainConfig["resources"] = [{ key: "blogs", label: "Blogs" }];
+  if (site.supportsCaseStudies) resources.push({ key: "case-studies", label: "Case Studies" });
+  if (site.supportsEvents) resources.push({ key: "events", label: "Events" });
 
-export function isContentDomain(value: string): value is ContentDomain {
-  return CONTENT_DOMAINS.some((d) => d.slug === value);
+  return {
+    slug: site.slug,
+    label: site.name,
+    description: resources.map((r) => r.label).join(" and "),
+    siteUrl: site.siteUrl || "",
+    resources,
+  };
 }
 
-export function getDomainConfig(value: string): ContentDomainConfig | undefined {
-  return CONTENT_DOMAINS.find((d) => d.slug === value);
+// Shared across the several Content components that mount on the same screen.
+let cache: ContentDomainConfig[] | null = null;
+let inFlight: Promise<ContentDomainConfig[]> | null = null;
+
+function load(): Promise<ContentDomainConfig[]> {
+  if (cache) return Promise.resolve(cache);
+  if (!inFlight) {
+    inFlight = apiFetch<Site[]>("/content/sites")
+      .then((sites) => {
+        cache = (sites ?? []).map(toDomainConfig);
+        return cache;
+      })
+      .catch(() => [])
+      .finally(() => {
+        inFlight = null;
+      });
+  }
+  return inFlight;
+}
+
+export function useContentDomains() {
+  const [domains, setDomains] = useState<ContentDomainConfig[]>(cache ?? []);
+  const [loading, setLoading] = useState(!cache);
+
+  useEffect(() => {
+    let active = true;
+    load().then((list) => {
+      if (!active) return;
+      setDomains(list);
+      setLoading(false);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  return { domains, loading };
+}
+
+/** One site by slug. `loading` matters: until it resolves, absence is not proof. */
+export function useDomainConfig(slug: string) {
+  const { domains, loading } = useContentDomains();
+  return { config: domains.find((d) => d.slug === slug), loading, domains };
 }

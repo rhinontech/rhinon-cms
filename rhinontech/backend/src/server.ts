@@ -76,6 +76,7 @@ async function bootstrap() {
   console.log(
     `[Tenancy] Default org ${tenancy.defaultOrgId} · ` +
       `${tenancy.columnsAdded} column(s) added · ${tenancy.rowsBackfilled} row(s) adopted` +
+      (tenancy.sitesCreated ? ` · ${tenancy.sitesCreated} site(s), ${tenancy.contentMapped} content row(s) mapped` : "") +
       (tenancy.columnsRenamed.length ? ` · renamed ${tenancy.columnsRenamed.join(", ")}` : "") +
       (tenancy.uniquesDropped.length
         ? ` · dropped global uniques: ${tenancy.uniquesDropped.join(", ")}`

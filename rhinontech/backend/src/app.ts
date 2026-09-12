@@ -3,6 +3,7 @@ import cors from "cors";
 import { env } from "./config/env";
 import { requestLogger } from "./middleware/requestLogger";
 import { runAsSystem } from "./services/tenantContext";
+import { publicTenantContext } from "./services/publicTenant";
 import authRoutes from "./routes/auth";
 import rolesRoutes from "./routes/roles";
 import permissionsRoutes from "./routes/permissions";
@@ -131,8 +132,24 @@ const systemContext = (label: string): express.RequestHandler =>
 app.use("/webhooks", systemContext("webhooks"), express.text({ type: ["application/json", "text/plain"] }), webhooksRoutes);
 
 // Public unauthenticated routes
-app.use("/public", systemContext("public"), publicRoutes);
-app.use("/public", systemContext("public"), scheduleCallRoutes);
+/**
+ * The public API is mounted twice against the SAME routers.
+ *
+ * Bare `/public/...` resolves an x-api-key header, and failing that the
+ * platform org — a compatibility requirement, not a convenience: rhinonlabs.com
+ * already calls /public/blogs with no key and would go blank without it.
+ * `/public/:orgSlug/...` names the workspace in the path instead.
+ *
+ * Order matters, and the intuitive order is wrong. Mounting the :orgSlug form
+ * first makes "/public/blogs" match it with orgSlug="blogs", so every existing
+ * unprefixed call 404s. Mounting bare first is what works: "/public/blogs"
+ * matches a real route there, while "/public/swiggy/blogs" matches nothing and
+ * falls through to the :orgSlug mount below.
+ */
+app.use("/public", publicTenantContext(), publicRoutes);
+app.use("/public", publicTenantContext(), scheduleCallRoutes);
+app.use("/public/:orgSlug", publicTenantContext(), publicRoutes);
+app.use("/public/:orgSlug", publicTenantContext(), scheduleCallRoutes);
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });

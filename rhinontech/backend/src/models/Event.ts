@@ -33,6 +33,8 @@ interface EventAttributes {
   readTime: string;
   publishedAt: Date;
   status: EventStatus;
+  /** Publishing brand within the org (rhinonlabs / uppercurve / a tenant's own). */
+  siteId?: string | null;
   createdById?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
@@ -41,6 +43,7 @@ interface EventAttributes {
 interface EventCreationAttributes
   extends Optional<
     EventAttributes,
+    | "siteId"
     | "id" | "contentBlocks" | "faqs" | "category" | "metaTitle" | "metaDescription"
     | "authorName" | "authorRole" | "authorAvatar" | "coverImage"
     | "tags" | "readTime" | "publishedAt" | "status" | "createdById"
@@ -68,6 +71,7 @@ export class Event extends Model<EventAttributes, EventCreationAttributes> imple
   declare readTime: string;
   declare publishedAt: Date;
   declare status: EventStatus;
+  declare siteId: string | null;
   declare createdById: string | null;
   declare readonly createdAt: Date;
   declare readonly updatedAt: Date;
@@ -93,6 +97,7 @@ Event.init(
     readTime: { type: DataTypes.STRING, allowNull: false, defaultValue: "5 min read" },
     publishedAt: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
     status: { type: DataTypes.ENUM("Draft", "Published"), allowNull: false, defaultValue: "Draft" },
+    siteId: { type: DataTypes.UUID, allowNull: true },
     createdById: { type: DataTypes.UUID, allowNull: true },
   },
   { sequelize, tableName: "events", timestamps: true,

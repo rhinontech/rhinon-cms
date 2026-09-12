@@ -30,6 +30,7 @@ import { LinkedInToken } from "./LinkedInToken";
 import { Subtask } from "./Subtask";
 import { TaskComment } from "./TaskComment";
 import { TaskTag } from "./TaskTag";
+import { Site } from "./Site";
 import { Blog } from "./Blog";
 import { CaseStudy } from "./CaseStudy";
 import { Event } from "./Event";
@@ -268,6 +269,14 @@ ContactGroupMember.belongsTo(Lead, { foreignKey: "leadId", as: "lead" });
 ContactGroupMember.belongsTo(ContactGroup, { foreignKey: "contactGroupId", as: "group" });
 
 // Content (CMS) Associations
+// Sites are brands within one org (rhinonlabs / uppercurve), not tenants.
+Site.hasMany(Blog, { foreignKey: "siteId", as: "blogs" });
+Blog.belongsTo(Site, { foreignKey: "siteId", as: "site" });
+Site.hasMany(CaseStudy, { foreignKey: "siteId", as: "caseStudies" });
+CaseStudy.belongsTo(Site, { foreignKey: "siteId", as: "site" });
+Site.hasMany(Event, { foreignKey: "siteId", as: "events" });
+Event.belongsTo(Site, { foreignKey: "siteId", as: "site" });
+
 Blog.belongsTo(User, { foreignKey: "createdById", as: "author" });
 User.hasMany(Blog, { foreignKey: "createdById", as: "blogs" });
 CaseStudy.belongsTo(User, { foreignKey: "createdById", as: "author" });
@@ -391,6 +400,7 @@ export {
   Subtask,
   TaskComment,
   TaskTag,
+  Site,
   Blog,
   CaseStudy,
   Event,

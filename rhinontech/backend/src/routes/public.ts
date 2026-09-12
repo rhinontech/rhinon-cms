@@ -1,6 +1,7 @@
 import express, { Router, Response, Request } from "express";
 import { ClientRequest, Project, User, Lead, Blog, CaseStudy, Event, PageView, DocsAccess, WorkflowEnrollment, CampaignActivity, Visitor, Unsubscribe, StartupIdea } from "../models";
 import { verifyUnsubscribe } from "../services/unsubscribeToken";
+import { resolvePublicSite } from "../services/publicTenant";
 import type { BlogDomain } from "../models/Blog";
 import { clientIpFrom, isIpCompanyLookupEnabled, lookupCompanyByIp } from "../services/ipCompany";
 import { sendEmail } from "../services/mailer";
@@ -468,8 +469,11 @@ router.post("/visitors", express.text({ type: ["text/plain"] }), async (req: Req
 // send it) keeps working unchanged.
 router.get("/blogs", async (req: Request, res: Response) => {
   try {
+    // Site, not domain: ?domain= is kept as the legacy spelling the Uppercurve
+    // site still sends, and resolves to that workspace's matching site.
+    const site = await resolvePublicSite(req.query.domain);
     const blogs = await Blog.findAll({
-      where: { status: "Published", domain: parseDomain(req.query.domain) },
+      where: { status: "Published", ...(site ? { siteId: site.id } : {}) },
       attributes: PUBLIC_BLOG_LIST_FIELDS as unknown as string[],
       order: [["publishedAt", "DESC"]],
     });
@@ -483,8 +487,13 @@ router.get("/blogs", async (req: Request, res: Response) => {
 // GET /public/blogs/:slug?domain=rhinonlabs|uppercurve — single published blog
 router.get("/blogs/:slug", async (req: Request, res: Response) => {
   try {
+    const site = await resolvePublicSite(req.query.domain);
     const blog = await Blog.findOne({
-      where: { slug: req.params.slug, status: "Published", domain: parseDomain(req.query.domain) },
+      where: {
+        slug: req.params.slug,
+        status: "Published",
+        ...(site ? { siteId: site.id } : {}),
+      },
       attributes: PUBLIC_BLOG_DETAIL_FIELDS as unknown as string[],
     });
     if (!blog) {
