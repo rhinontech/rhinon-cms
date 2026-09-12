@@ -57,7 +57,7 @@ Rhinon Tech is `isPlatform: true`. Modules that operate the platform itself
 
 ## Phases
 
-### Phase 1 — Tenancy foundation  *(this session)*
+### Phase 1 — Tenancy foundation  ✅ DONE
 
 - `Organization` model: `id, name, slug, emailDomain, customDomain, status, plan,
   apiKey, isPlatform, settings(JSONB), ses*` fields.
@@ -77,7 +77,7 @@ Rhinon Tech is `isPlatform: true`. Modules that operate the platform itself
 - Reserved-slug list (`api`, `www`, `mail`, `admin`, `app`, `smtp`, `beta`, …)
   plus a blocklist hook for brand-squatting (`hdfc`, `icici`, …).
 
-### Phase 2 — Signup + auth  *(this session)*
+### Phase 2 — Signup + auth  ✅ DONE
 
 - `POST /auth/signup` — one transaction: org -> roles -> superadmin user ->
   defaults -> API key -> JWT. SES provisioning fires after commit.
@@ -90,7 +90,7 @@ Rhinon Tech is `isPlatform: true`. Modules that operate the platform itself
 - Admin panel: `/auth/signup` page, live slug -> subdomain preview, org email
   domain shown wherever the suffix was hardcoded.
 
-### Phase 3 — Email / SES per subdomain
+### Phase 3 — Email / SES per subdomain  ⚠️ PARTIAL — service written, inbound hardening outstanding
 
 Two modes behind `SES_SUBDOMAIN_MODE`:
 
@@ -168,3 +168,50 @@ multi-org switching.
 The migration is additive and idempotent, so it can land on beta and be re-run.
 Nothing drops data. The one-way step is swapping unique constraints — those are
 recreated as composite in the same transaction.
+
+---
+
+## Status after the first implementation pass
+
+**Done.** Organization model; runtime `organizationId` on all 60 tenant-owned
+models; AsyncLocalStorage context + per-model Sequelize hooks; boot migration
+with backfill, index and unique-constraint swap; per-org provisioning; reserved
+slugs; `requirePlatformOrg` on /deploy, /startup-ideas, /analytics; signup;
+org-scoped login; per-org employee addresses; admin signup page.
+
+**Verified** against a throwaway Postgres, over real HTTP:
+`scripts/isolation-test.mjs` 20/20, `npm run verify:tenancy` 10/10, and a sweep
+of 36 module endpoints reporting zero unscoped queries.
+
+**Two bugs the boot found that reading could not:**
+- `campaigns.organizationId` already meant the LinkedIn page URN. Renamed;
+  the migration moves the live column before creating the tenancy one.
+- `/workflows` had no authentication at all — an anonymous POST returned 201.
+  Now guarded.
+
+### Before this can be deployed
+
+1. **Run it on beta first** (`rhinon-cms-beta`, :5003, its own database). The
+   migration is idempotent and drops no data, but it does drop the legacy
+   unique constraints, and that is the one step worth watching on real rows.
+2. **Boot once with `TENANT_STRICT=true`** and exercise every module. Anything
+   that reaches a tenant model outside a context throws with a stack trace
+   instead of warning. That flag is what found /workflows.
+3. **Check the orphan-row report** in the boot log. It should be empty; once it
+   has been empty for a while, set `TENANCY_ENFORCE_NOT_NULL=true` to make the
+   column NOT NULL.
+4. `SES_SUBDOMAIN_MODE` stays `inherit` until the inbound work in Phase 3 lands.
+
+### Next, in priority order
+
+1. **Inbound mail (Phase 3).** This is the largest remaining hole and it is a
+   live cross-tenant read today: `/webhooks/ses-inbound` verifies no SNS
+   signature, auto-confirms any SubscribeURL, matches threads with
+   `subject ILIKE %…%` across every tenant, and creates an inbox row per `to:`
+   address without checking the recipient is ours.
+2. **Public API back-compat (Phase 4).** rhinonlabs calls `/public/blogs` with
+   no key; unkeyed requests must keep resolving to the platform org.
+3. **Unsubscribe per org.** One global list means org A's unsubscribe silently
+   blocks org B.
+4. **White-label (Phase 5).** Every outbound artifact still says "Rhinon",
+   including the AI sales agent's company knowledge.
