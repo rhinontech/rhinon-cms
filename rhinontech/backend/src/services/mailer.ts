@@ -9,9 +9,10 @@ type SendEmailPayload = {
   from?: string;
   fromName?: string;
   replyTo?: string;
-  // Transport policy: "gmail" = the shared info@ Gmail account (onboarding
-  // emails only); "ses" = send as the user's own domain address. Default keeps
-  // the old preference (SES when configured, else Gmail).
+  // Transport policy: "ses" = send as a domain address on the authenticated
+  // sending domain; "gmail" = the legacy shared Gmail account, which is on an
+  // unauthenticated domain and is no longer used by any caller. Default is SES
+  // when configured.
   via?: "gmail" | "ses";
   subject: string;
   html?: string;
@@ -36,7 +37,10 @@ type SendEmailPayload = {
 };
 
 const sesRegion = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION;
-const sesFromEmail = process.env.AWS_SES_FROM_EMAIL || process.env.GMAIL_USER || process.env.SMTP_FROM_EMAIL;
+// Deliberately does NOT fall back to GMAIL_USER: that account is on a
+// different domain, and silently sending as it is how unauthenticated mail
+// got out in the first place.
+const sesFromEmail = process.env.AWS_SES_FROM_EMAIL || process.env.SMTP_FROM_EMAIL;
 const smtpUser = process.env.GMAIL_USER || process.env.SMTP_USER;
 const smtpPass = process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASSWORD;
 const fromName = process.env.MAIL_FROM_NAME || "Rhinon Labs";
@@ -87,6 +91,21 @@ function toArray(value: string | string[]) {
   return Array.isArray(value) ? value : [value];
 }
 
+/**
+ * Is this address on a domain we actually authenticate?
+ *
+ * Only the platform domain and its subdomains are DKIM-signed and SPF-aligned,
+ * so a tenant address (aman@swiggy.rhinontech.in) passes and anything else does
+ * not. Sending from an unauthenticated domain is what put this system's mail in
+ * the spam folder, so it is worth a loud line in the log rather than a silent
+ * delivery failure nobody sees.
+ */
+function isAuthenticatedSender(address: string): boolean {
+  const platform = (process.env.PLATFORM_EMAIL_DOMAIN || "rhinontech.in").toLowerCase();
+  const domain = address.split("@")[1]?.toLowerCase() ?? "";
+  return domain === platform || domain.endsWith(`.${platform}`);
+}
+
 /** RFC 8058 headers. Both are required — the URL alone is not enough. */
 function unsubscribeHeaders(email?: string): Record<string, string> {
   if (!email) return {};
@@ -112,6 +131,12 @@ export async function sendEmail({
   unsubscribeFor,
 }: SendEmailPayload) {
   const toAddresses = toArray(to);
+  if (from && !isAuthenticatedSender(from)) {
+    console.warn(
+      `[Mailer] Sending as ${from}, which is not on the authenticated sending ` +
+        `domain — this mail will not be DKIM-signed or SPF-aligned and is likely to be filtered.`
+    );
+  }
   const listHeaders = unsubscribeHeaders(unsubscribeFor);
   const hasListHeaders = Object.keys(listHeaders).length > 0;
   const fromAddress = from || sesFromEmail;

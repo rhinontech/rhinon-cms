@@ -32,7 +32,7 @@ export async function fetchWebsiteText(url?: string | null, maxChars = 4000): Pr
       responseType: "text",
       transformResponse: (d) => d, // keep raw string
       headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; RhinonSalesBot/1.0; +https://rhinontech.com)",
+        "User-Agent": "Mozilla/5.0 (compatible; RhinonSalesBot/1.0; +https://rhinontech.in)",
         Accept: "text/html,application/xhtml+xml",
       },
       validateStatus: (s) => s >= 200 && s < 400,

@@ -664,7 +664,7 @@ router.get("/track/open", async (req: Request, res: Response) => {
 
 // GET /public/track/click — Email link click tracking redirect
 router.get("/track/click", async (req: Request, res: Response) => {
-  const targetUrl = (req.query.url as string) || "https://rhinontech.com";
+  const targetUrl = (req.query.url as string) || "https://www.rhinonlabs.com";
   try {
     const enrollmentId = req.query.e as string;
     if (enrollmentId) {

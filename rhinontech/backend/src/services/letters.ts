@@ -360,7 +360,9 @@ function buildTokenMap(user: User, isIntern: boolean): LetterTokenMap {
     "dates.acceptanceDeadline": fmtLong(acceptD),
     "compensation.annualCtcOrDiscussed": user.annualCompensation ? money(user.annualCompensation) : "As discussed",
     "compensation.monthlyStipend": String(monthlyStipend),
-    "support.email": "info@rhinontech.com",
+    // rhinontech.com is not a delegated domain (no NS, no MX), so mail to it
+    // bounces — this address is printed in offer letters and NDAs.
+    "support.email": "info@rhinontech.in",
   };
 }
 
