@@ -59,8 +59,10 @@ import { TimeEntry } from "./TimeEntry";
 import { TaskActivity } from "./TaskActivity";
 import { StartupIdea } from "./StartupIdea";
 import { Deployment } from "./Deployment";
+import { Organization } from "./Organization";
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/database";
+import { TENANT_MODELS, installTenantScope, assertTenantColumns } from "./tenantScope";
 
 // RolePermission join table
 const RolePermission = sequelize.define(
@@ -340,7 +342,27 @@ Deal.hasMany(Task, { foreignKey: "dealId", as: "tasks" });
 Task.belongsTo(Account, { foreignKey: "accountId", as: "account" });
 Account.hasMany(Task, { foreignKey: "accountId", as: "tasks" });
 
+// ---------------------------------------------------------------------------
+// Multi-tenancy
+// ---------------------------------------------------------------------------
+// installTenantScope() injects the organizationId column and the query hooks at
+// runtime, so the association loop below can stay generic instead of repeating
+// 60 near-identical hasMany lines — and so a model added later cannot quietly
+// skip tenancy (assertTenantColumns fails the boot if it does).
+installTenantScope();
+
+// Aliased "tenant" rather than "organization": StartupIdea already has an
+// `organization` attribute (the company name typed into the /build form), and
+// Sequelize refuses an association that shadows a column.
+for (const model of TENANT_MODELS) {
+  Organization.hasMany(model, { foreignKey: "organizationId" });
+  model.belongsTo(Organization, { foreignKey: "organizationId", as: "tenant" });
+}
+
+assertTenantColumns();
+
 export {
+  Organization,
   Role, Permission, RolePermission,
   User,
   InboxConversation, InboxMessage, InboxEmail,
