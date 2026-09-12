@@ -57,7 +57,8 @@ interface CampaignAttributes {
   } | null;
   slug?: string | null;
   platformPostId?: string | null;
-  organizationId?: string | null;
+  /** LinkedIn company page URN to post as (urn:li:organization:<id>). */
+  linkedinOrganizationId?: string | null;
   socialStats?: {
     likes: number;
     comments: number;
@@ -70,7 +71,7 @@ interface CampaignAttributes {
   updatedAt?: Date;
 }
 
-interface CampaignCreationAttributes extends Optional<CampaignAttributes, "id" | "channel" | "templateId" | "stage" | "subject" | "body" | "senderEmail" | "senderName" | "autoSend" | "startDate" | "runTime" | "leadsTotal" | "leadsProcessed" | "objective" | "notes" | "mediaUrl" | "aiDraft" | "visibility" | "mediaTitle" | "mediaDescription" | "articleUrl" | "postType" | "postAudience" | "topic" | "sourceFacts" | "postMeta" | "slug" | "platformPostId" | "organizationId" | "socialStats"> {}
+interface CampaignCreationAttributes extends Optional<CampaignAttributes, "id" | "channel" | "templateId" | "stage" | "subject" | "body" | "senderEmail" | "senderName" | "autoSend" | "startDate" | "runTime" | "leadsTotal" | "leadsProcessed" | "objective" | "notes" | "mediaUrl" | "aiDraft" | "visibility" | "mediaTitle" | "mediaDescription" | "articleUrl" | "postType" | "postAudience" | "topic" | "sourceFacts" | "postMeta" | "slug" | "platformPostId" | "linkedinOrganizationId" | "socialStats"> {}
 
 export class Campaign extends Model<CampaignAttributes, CampaignCreationAttributes> implements CampaignAttributes {
   declare id: string;
@@ -102,7 +103,7 @@ export class Campaign extends Model<CampaignAttributes, CampaignCreationAttribut
   declare postMeta: any;
   declare slug: string | null;
   declare platformPostId: string | null;
-  declare organizationId: string | null;
+  declare linkedinOrganizationId: string | null;
   declare socialStats: any;
   declare createdById: string;
   declare readonly createdAt: Date;
@@ -148,7 +149,7 @@ Campaign.init(
     postMeta: { type: DataTypes.JSONB, allowNull: true },
     slug: { type: DataTypes.STRING, allowNull: true },
     platformPostId: { type: DataTypes.STRING, allowNull: true },
-    organizationId: { type: DataTypes.STRING, allowNull: true },
+    linkedinOrganizationId: { type: DataTypes.STRING, allowNull: true },
     socialStats: { type: DataTypes.JSONB, allowNull: true },
     createdById: { type: DataTypes.UUID, allowNull: false },
   },

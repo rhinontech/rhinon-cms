@@ -1,9 +1,21 @@
 import { Router } from "express";
+import { authenticate, authorizeAny, authorize } from "../middleware/authenticate";
 import { Workflow } from "../models/Workflow";
 import { WorkflowEnrollment } from "../models/WorkflowEnrollment";
 import { enrollStaticListLeads, runWorkflowEngineCycle } from "../services/workflowEngine";
 
 const router = Router();
+
+/**
+ * This router previously had NO authentication at all — an anonymous caller
+ * could list, create and delete automation workflows, which carry the email
+ * sequences and the lead enrolment rules.
+ *
+ * That was already a hole; multi-tenancy turns it into a cross-tenant one, and
+ * writes landed with a null organizationId (a row no tenant query can ever see
+ * again). Guards match the Automation module's sidebar permissions.
+ */
+router.use(authenticate, authorizeAny("outreach:read", "crm:read", "dashboard:read"));
 
 const DEFAULT_WORKFLOW = {
   id: "wf-1",
@@ -96,7 +108,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // POST /workflows
-router.post("/", async (req, res) => {
+router.post("/", authorize("outreach:write"), async (req, res) => {
   try {
     const { name, description, triggerType, triggerConfig, nodes, edges, stats } = req.body;
     const newWf = await Workflow.create({
@@ -122,7 +134,7 @@ router.post("/", async (req, res) => {
 });
 
 // PUT /workflows/:id
-router.put("/:id", async (req, res) => {
+router.put("/:id", authorize("outreach:write"), async (req, res) => {
   try {
     const item = await Workflow.findByPk(req.params.id);
     if (!item) {
@@ -160,7 +172,7 @@ router.put("/:id", async (req, res) => {
 });
 
 // POST /workflows/:id/run - trigger bulk execution for static list workflow
-router.post("/:id/run", async (req, res) => {
+router.post("/:id/run", authorize("outreach:write"), async (req, res) => {
   try {
     const item = await Workflow.findByPk(req.params.id);
     if (!item) {
@@ -182,7 +194,7 @@ router.post("/:id/run", async (req, res) => {
 });
 
 // DELETE /workflows/:id
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", authorize("outreach:write"), async (req, res) => {
   try {
     const item = await Workflow.findByPk(req.params.id);
     if (!item) {
@@ -283,7 +295,7 @@ router.get("/:id/enrollments", async (req, res) => {
 });
 
 // POST /workflows/:id/enroll - enroll a test lead or specific lead
-router.post("/:id/enroll", async (req, res) => {
+router.post("/:id/enroll", authorize("outreach:write"), async (req, res) => {
   try {
     const workflow = await Workflow.findByPk(req.params.id);
     if (!workflow) {
@@ -333,7 +345,7 @@ router.post("/:id/enroll", async (req, res) => {
 });
 
 // POST /workflows/:id/cancel-enrollments - cancel active enrollments
-router.post("/:id/cancel-enrollments", async (req, res) => {
+router.post("/:id/cancel-enrollments", authorize("outreach:write"), async (req, res) => {
   try {
     const workflow = await Workflow.findByPk(req.params.id);
     if (!workflow) {

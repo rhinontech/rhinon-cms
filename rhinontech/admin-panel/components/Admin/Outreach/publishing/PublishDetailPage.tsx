@@ -310,7 +310,7 @@ export function PublishDetailPage({ id }: { id: string }) {
             </div>
             <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
               <ChannelIcon channel={post.channel} size={13} /> {post.channel}
-              {post.organizationId ? " · Company page" : " · Personal profile"} · {post.visibility === "CONNECTIONS" ? "Connections" : "Public"}
+              {post.linkedinOrganizationId ? " · Company page" : " · Personal profile"} · {post.visibility === "CONNECTIONS" ? "Connections" : "Public"}
               {typeMeta && ` · ${typeMeta.objective}`}
             </p>
           </div>
@@ -572,7 +572,7 @@ export function PublishDetailPage({ id }: { id: string }) {
                   <div className="h-9 w-9 shrink-0 rounded-full bg-muted" />
                   <div className="min-w-0">
                     <p className="truncate text-xs font-bold text-foreground">
-                      {post.organizationId ? "Rhinon Labs" : "Your profile"}
+                      {post.linkedinOrganizationId ? "Rhinon Labs" : "Your profile"}
                     </p>
                     <p className="text-[10px] text-muted-foreground">
                       Now · {post.visibility === "CONNECTIONS" ? "Connections" : "Public"}

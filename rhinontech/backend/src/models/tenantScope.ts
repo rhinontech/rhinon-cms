@@ -244,3 +244,18 @@ export function assertTenantColumns() {
     );
   }
 }
+
+/**
+ * Strips tenancy keys from client-supplied input.
+ *
+ * Several routes do `Model.create({ ...req.body })`. Now that organizationId
+ * decides which tenant owns a row, letting it arrive from the browser is
+ * mass-assignment straight across the isolation boundary. The write hooks would
+ * refuse a mismatch anyway, but failing at the edge gives a 400 instead of a
+ * 500 and keeps the refusal legible.
+ */
+export function stripTenantKeys<T extends Record<string, unknown>>(body: T): T {
+  if (!body || typeof body !== "object") return body;
+  const { organizationId: _ignored, ...rest } = body as Record<string, unknown>;
+  return rest as T;
+}

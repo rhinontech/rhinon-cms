@@ -1,5 +1,6 @@
 import { Router, Response } from "express";
 import { Campaign, CampaignTemplate, Lead, CampaignActivity, User, InboxEmail, Unsubscribe } from "../models";
+import { stripTenantKeys } from "../models/tenantScope";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 import { env } from "../config/env";
 import { generateAIEmailDraft, generateLinkedInPost, generateTemplateWithAI } from "../services/gemini";
@@ -63,7 +64,7 @@ router.post("/", authorize("outreach:write"), async (req: AuthRequest, res: Resp
     const campaign = await Campaign.create({
       senderEmail: req.user!.companyEmail,
       senderName: req.user!.fullName,
-      ...req.body,
+      ...stripTenantKeys(req.body),
       createdById: req.user!.userId,
     });
     res.status(201).json(campaign);
@@ -84,7 +85,7 @@ router.get("/templates", authorize("outreach:read"), async (req: AuthRequest, re
 router.post("/templates", authorize("outreach:write"), async (req: AuthRequest, res: Response) => {
   try {
     const template = await CampaignTemplate.create({
-      ...req.body,
+      ...stripTenantKeys(req.body),
       createdById: req.user!.userId,
     });
     res.status(201).json(template);
@@ -636,7 +637,7 @@ router.post("/:id/send", authorize("outreach:write"), async (req: AuthRequest, r
           campaignId: campaign.id,
           slug: slug || undefined,
           userName: req.user!.fullName || "Prabhat Patra",
-          organizationId: campaign.organizationId || null,
+          organizationId: campaign.linkedinOrganizationId || null,
         });
 
         await campaign.update({ platformPostId: result.postId, stage: "Completed", slug: slug || campaign.slug });
@@ -911,7 +912,7 @@ router.put("/:id", authorize("outreach:write"), async (req: AuthRequest, res: Re
       res.status(404).json({ message: "Campaign not found" });
       return;
     }
-    await campaign.update(req.body);
+    await campaign.update(stripTenantKeys(req.body));
     res.json(campaign);
   } catch (error: any) {
     res.status(400).json({ message: error.message });
@@ -991,7 +992,7 @@ router.put("/templates/:id", authorize("outreach:write"), async (req: AuthReques
       res.status(404).json({ message: "Template not found" });
       return;
     }
-    await template.update(req.body);
+    await template.update(stripTenantKeys(req.body));
     res.json(template);
   } catch (error: any) {
     res.status(400).json({ message: error.message });

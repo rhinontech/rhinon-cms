@@ -96,12 +96,54 @@ async function dropSingleColumnUnique(table: string, column: string): Promise<st
   return dropped;
 }
 
+
+/**
+ * campaigns.organizationId already existed and meant something else entirely:
+ * the LinkedIn company page URN to post as. Adding tenancy on top of that name
+ * would have stamped tenant UUIDs into the field the LinkedIn publisher reads.
+ *
+ * Renamed out of the way BEFORE the tenancy column is created, so live rows
+ * keep their page URNs. Identified by type (varchar, not uuid) so a database
+ * that has already been migrated is left alone.
+ */
+async function renameCollidingColumns(): Promise<string[]> {
+  const renamed: string[] = [];
+  if (!(await tableExists("campaigns"))) return renamed;
+
+  const rows = await sequelize.query<{ data_type: string }>(
+    `SELECT data_type FROM information_schema.columns
+      WHERE table_schema = 'public' AND table_name = 'campaigns'
+        AND column_name = 'organizationId'`,
+    { type: QueryTypes.SELECT }
+  );
+  if (rows[0]?.data_type === "character varying") {
+    const already = await sequelize.query<{ count: string }>(
+      `SELECT count(*)::text AS count FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'campaigns'
+          AND column_name = 'linkedinOrganizationId'`,
+      { type: QueryTypes.SELECT }
+    );
+    if (Number(already[0]?.count ?? 0) === 0) {
+      await sequelize.query(
+        `ALTER TABLE "campaigns" RENAME COLUMN "organizationId" TO "linkedinOrganizationId"`
+      );
+      renamed.push("campaigns.organizationId -> linkedinOrganizationId");
+    }
+  }
+  return renamed;
+}
+
 export async function runTenancyMigration(): Promise<{
   defaultOrgId: string;
   columnsAdded: number;
   rowsBackfilled: number;
   uniquesDropped: string[];
+  columnsRenamed: string[];
 }> {
+  // 0. Move any pre-existing column that happens to be called organizationId
+  //    but means something else. Must run before step 3 creates the real one.
+  const columnsRenamed = await renameCollidingColumns();
+
   // 1. The organizations table must exist before anything can reference it.
   await Organization.sync();
 
@@ -161,7 +203,7 @@ export async function runTenancyMigration(): Promise<{
     uniquesDropped.push(...dropped.map((name) => `${table}.${column} (${name})`));
   }
 
-  return { defaultOrgId: org.id, columnsAdded, rowsBackfilled, uniquesDropped };
+  return { defaultOrgId: org.id, columnsAdded, rowsBackfilled, uniquesDropped, columnsRenamed };
 }
 
 /**

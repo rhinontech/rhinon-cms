@@ -17,7 +17,8 @@
     "db:seed:demo": "ts-node src/config/seedDemoProject.ts",
     "db:seed:leadership-template": "ts-node src/config/seedLeadershipTemplate.ts",
     "grant:crm": "ts-node src/config/grantCrm.ts",
-    "verify:tenancy": "DATABASE_URL=postgres://verify:verify@127.0.0.1:1/verify ts-node --transpile-only src/scripts/verifyTenantScope.ts"
+    "verify:tenancy": "DATABASE_URL=postgres://verify:verify@127.0.0.1:1/verify ts-node --transpile-only src/scripts/verifyTenantScope.ts",
+    "test:isolation": "node scripts/isolation-test.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1043.0",
