@@ -34,11 +34,32 @@ const router = Router();
 
 router.use(authenticate);
 
+/**
+ * The signed-in user's own mailbox address.
+ *
+ * This used to fall back to a literal "admin@rhinontech.in" in eight places.
+ * Under multi-tenancy that is a cross-tenant read: any user without a company
+ * address — a collaborator, a half-provisioned account — would have been served
+ * Rhinon Tech's own inbox. There is no safe default, so refuse instead.
+ */
+function requireMailbox(req: AuthRequest, res: Response): string | null {
+  const address = req.user?.companyEmail;
+  if (!address) {
+    res.status(409).json({
+      message: "This account has no company email address yet, so it has no mailbox.",
+    });
+    return null;
+  }
+  return address;
+}
+
 const folders = new Set(["inbox", "sent", "drafts", "archive", "trash"]);
 
 router.get("/", authorize("inbox:read"), async (req: AuthRequest, res: Response) => {
   const { folder = "inbox", search, starred } = req.query;
-  const where: WhereOptions = { ownerEmail: req.user?.companyEmail || "admin@rhinontech.in", isInternal: false };
+  const mailbox = requireMailbox(req, res);
+  if (!mailbox) return;
+  const where: WhereOptions = { ownerEmail: mailbox, isInternal: false };
 
   if (typeof folder === "string" && folders.has(folder)) {
     where.folder = folder;
@@ -97,6 +118,8 @@ router.post("/:id/note", authorize("inbox:write"), async (req: AuthRequest, res:
     res.status(400).json({ message: "Note body or an attachment is required" });
     return;
   }
+  const mailbox = requireMailbox(req, res);
+  if (!mailbox) return;
   const original = await InboxEmail.findByPk(req.params.id);
   if (!original) {
     res.status(404).json({ message: "Email not found" });
@@ -106,7 +129,7 @@ router.post("/:id/note", authorize("inbox:write"), async (req: AuthRequest, res:
     threadKey: original.threadKey,
     folder: original.folder,
     fromName: req.user?.fullName || "Rhinon",
-    fromEmail: req.user?.companyEmail || "admin@rhinontech.in",
+    fromEmail: mailbox,
     toEmails: [],
     ccEmails: [],
     subject: original.subject,
@@ -124,6 +147,8 @@ router.post("/:id/note", authorize("inbox:write"), async (req: AuthRequest, res:
 });
 
 router.get("/:id", authorize("inbox:read"), async (req: AuthRequest, res: Response) => {
+  const mailbox = requireMailbox(req, res);
+  if (!mailbox) return;
   const email = await InboxEmail.findByPk(req.params.id, {
     include: [{ model: Campaign, as: "campaign", attributes: ["id", "name"] }],
   });
@@ -133,7 +158,7 @@ router.get("/:id", authorize("inbox:read"), async (req: AuthRequest, res: Respon
     return;
   }
 
-  if (email.ownerEmail !== (req.user?.companyEmail || "admin@rhinontech.in")) {
+  if (email.ownerEmail !== mailbox) {
     res.status(403).json({ message: "Forbidden" });
     return;
   }
@@ -143,7 +168,7 @@ router.get("/:id", authorize("inbox:read"), async (req: AuthRequest, res: Respon
   }
 
   const thread = await InboxEmail.findAll({
-    where: { threadKey: email.threadKey, ownerEmail: req.user?.companyEmail || "admin@rhinontech.in" },
+    where: { threadKey: email.threadKey, ownerEmail: mailbox },
     order: [["sentAt", "ASC"]],
   });
 
@@ -175,7 +200,8 @@ router.post("/", authorize("inbox:write"), async (req: AuthRequest, res: Respons
 
   const sentAt = new Date();
   const threadKey = `thread-${sentAt.getTime()}`;
-  const fromEmail = req.user?.companyEmail || "admin@rhinontech.in";
+  const fromEmail = requireMailbox(req, res);
+  if (!fromEmail) return;
   const isDraft = folder === "drafts";
 
   if (!isDraft) {
@@ -227,6 +253,8 @@ router.post("/:id/reply", authorize("inbox:write"), async (req: AuthRequest, res
     return;
   }
 
+  const mailbox = requireMailbox(req, res);
+  if (!mailbox) return;
   const original = await InboxEmail.findByPk(req.params.id);
   if (!original) {
     res.status(404).json({ message: "Email not found" });
@@ -237,13 +265,13 @@ router.post("/:id/reply", authorize("inbox:write"), async (req: AuthRequest, res
     threadKey: original.threadKey,
     folder: "sent",
     fromName: req.user?.fullName || "Rhinon",
-    fromEmail: req.user?.companyEmail || "admin@rhinontech.in",
+    fromEmail: mailbox,
     toEmails: [original.fromEmail],
     ccEmails: [],
     subject: original.subject.startsWith("Re:") ? original.subject : `Re: ${original.subject}`,
     body: (body || "").trim(),
     snippet: (body || "").trim().slice(0, 160),
-    ownerEmail: req.user?.companyEmail || "admin@rhinontech.in",
+    ownerEmail: mailbox,
     isRead: true,
     isStarred: false,
     hasAttachment: attachments.length > 0,
@@ -276,6 +304,8 @@ router.post("/:id/reply", authorize("inbox:write"), async (req: AuthRequest, res
 });
 
 router.patch("/:id", authorize("inbox:write"), async (req: AuthRequest, res: Response) => {
+  const mailbox = requireMailbox(req, res);
+  if (!mailbox) return;
   const email = await InboxEmail.findByPk(req.params.id);
 
   if (!email) {
@@ -283,7 +313,7 @@ router.patch("/:id", authorize("inbox:write"), async (req: AuthRequest, res: Res
     return;
   }
 
-  if (email.ownerEmail !== (req.user?.companyEmail || "admin@rhinontech.in")) {
+  if (email.ownerEmail !== mailbox) {
     res.status(403).json({ message: "Forbidden" });
     return;
   }

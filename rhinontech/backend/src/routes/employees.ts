@@ -123,7 +123,10 @@ router.post("/", authorize("employees:write"), async (req: AuthRequest, res: Res
     return;
   }
 
-  const companyEmail = `${emailPrefix.toLowerCase()}@rhinontech.in`;
+  // The org's own email subdomain — aman@swiggy.rhinontech.in — not a hardcoded
+  // company domain. emailDomain is resolved from the DB user by authenticate(),
+  // so a request cannot pick someone else's domain by editing its token.
+  const companyEmail = `${emailPrefix.toLowerCase()}@${req.user!.emailDomain}`;
 
   // Check companyEmail uniqueness
   const emailTaken = await User.findOne({ where: { companyEmail } });
@@ -132,12 +135,14 @@ router.post("/", authorize("employees:write"), async (req: AuthRequest, res: Res
     return;
   }
 
-  // Enforce one superadmin
+  // One superadmin PER ORGANIZATION. The User query is tenant-scoped by the
+  // Sequelize hooks, so this counts only this workspace's owners — the old
+  // global check would have stopped the second org from ever having one.
   const role = await Role.findByPk(roleId);
   if (role?.slug === "superadmin") {
     const existing = await User.findOne({ include: [{ model: Role, as: "role", where: { slug: "superadmin" } }] });
     if (existing) {
-      res.status(400).json({ message: "A Super Admin already exists. Only one superadmin is allowed." });
+      res.status(400).json({ message: "A Super Admin already exists for this workspace. Only one superadmin is allowed." });
       return;
     }
   }
@@ -320,13 +325,14 @@ router.put("/:id", authorize("employees:write"), async (req: AuthRequest, res: R
     res.status(404).json({ message: "Employee not found" });
     return;
   }
-  // Enforce one superadmin — if changing someone else's role TO superadmin, block it
+  // One superadmin per workspace — block promoting a second one. Tenant-scoped
+  // by the query hooks, so this is now a per-org check.
   if (req.body.roleId) {
     const role = await Role.findByPk(req.body.roleId);
     if (role?.slug === "superadmin" && employee.roleId !== req.body.roleId) {
       const existing = await User.findOne({ include: [{ model: Role, as: "role", where: { slug: "superadmin" } }] });
       if (existing && existing.id !== employee.id) {
-        res.status(400).json({ message: "A Super Admin already exists. Only one superadmin is allowed." });
+        res.status(400).json({ message: "A Super Admin already exists for this workspace. Only one superadmin is allowed." });
         return;
       }
     }

@@ -3,6 +3,7 @@ import { Role, Permission, Organization, PipelineStage, WorkflowStatus } from ".
 import { DEFAULT_STAGES } from "../models/PipelineStage";
 import { DEFAULT_STATUSES } from "../config/seedWorkflow";
 import { PERMISSION_CATALOG, DEFAULT_ROLE_GRANTS } from "../config/permissions";
+import type { Transaction } from "sequelize";
 import { runForOrg } from "./tenantContext";
 
 /**
@@ -116,10 +117,11 @@ export interface ProvisionResult {
  * each new org at signup.
  */
 export async function provisionOrganizationDefaults(
-  organizationId: string
+  organizationId: string,
+  transaction?: Transaction
 ): Promise<ProvisionResult> {
   return runForOrg(organizationId, async () => {
-    const permissions = await Permission.findAll();
+    const permissions = await Permission.findAll({ transaction });
     const byName = new Map(permissions.map((p) => [p.name, p]));
     const allNames = PERMISSION_CATALOG.map((p) => p.name);
 
@@ -128,19 +130,21 @@ export async function provisionOrganizationDefaults(
       const [role, created] = await Role.findOrCreate({
         where: { slug: def.slug },
         defaults: { name: def.name, slug: def.slug } as never,
+        transaction,
       });
       if (created) {
         rolesCreated.push(def.slug);
         const grants = def.grants.map((n) => byName.get(n)).filter(Boolean);
-        await (role as never as { setPermissions(p: unknown[]): Promise<void> })
-          .setPermissions(grants);
+        await (role as never as {
+          setPermissions(p: unknown[], o?: unknown): Promise<void>;
+        }).setPermissions(grants, { transaction });
       }
     }
 
     // Deal pipeline. The old version returned early if ANY org had stages.
     let stagesCreated = 0;
-    if ((await PipelineStage.count()) === 0) {
-      const rows = await PipelineStage.bulkCreate(DEFAULT_STAGES as never[]);
+    if ((await PipelineStage.count({ transaction })) === 0) {
+      const rows = await PipelineStage.bulkCreate(DEFAULT_STAGES as never[], { transaction });
       stagesCreated = rows.length;
     }
 
@@ -150,6 +154,7 @@ export async function provisionOrganizationDefaults(
       const [, created] = await WorkflowStatus.findOrCreate({
         where: { projectId: null, name: def.name },
         defaults: { ...def, projectId: null, isDefault: def.isDefault ?? false } as never,
+        transaction,
       });
       if (created) statusesCreated++;
     }
