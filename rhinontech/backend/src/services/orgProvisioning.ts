@@ -162,18 +162,28 @@ export async function provisionOrganizationDefaults(
 
     // One publishing site, so a new workspace writes blogs without ever being
     // shown a brand picker. Orgs that later want two brands add a second site.
-    const org = await Organization.findByPk(organizationId, { transaction });
-    const [, siteCreated] = await Site.findOrCreate({
-      where: { slug: "main" },
-      defaults: {
-        name: org?.name ?? "Main site",
-        slug: "main",
-        isDefault: true,
-        supportsEvents: true,
-        supportsCaseStudies: true,
-      } as never,
-      transaction,
-    });
+    //
+    // Guarded on "has no sites at all", not on the "main" slug: this runs for
+    // every org on every boot, and keying it to the slug added a third site to
+    // the platform org (which already has rhinonlabs + uppercurve) and left TWO
+    // rows flagged isDefault — making which site bare /public/blogs reads a coin
+    // flip, and rhinonlabs.com's blog list flaky.
+    const existingSites = await Site.count({ transaction });
+    let siteCreated = false;
+    if (existingSites === 0) {
+      const org = await Organization.findByPk(organizationId, { transaction });
+      await Site.create(
+        {
+          name: org?.name ?? "Main site",
+          slug: "main",
+          isDefault: true,
+          supportsEvents: true,
+          supportsCaseStudies: true,
+        } as never,
+        { transaction }
+      );
+      siteCreated = true;
+    }
 
     return { rolesCreated, stagesCreated, statusesCreated, siteCreated };
   });

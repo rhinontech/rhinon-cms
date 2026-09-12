@@ -177,7 +177,35 @@ async function migrateContentSites(): Promise<{ sitesCreated: number; contentMap
       if (created) sitesCreated++;
     }
 
+    // Repair: an earlier build seeded a "main" site for EVERY org, including the
+    // platform org that already had rhinonlabs + uppercurve, leaving two rows
+    // flagged isDefault. Drop the stray only when it holds no content.
+    if (org.isPlatform) {
+      const stray = await Site.findOne({ where: { organizationId: org.id, slug: "main" } as never });
+      if (stray) {
+        const [used] = await sequelize.query<{ count: string }>(
+          `SELECT (
+             (SELECT count(*) FROM "blogs" WHERE "siteId" = :id) +
+             (SELECT count(*) FROM "case_studies" WHERE "siteId" = :id) +
+             (SELECT count(*) FROM "events" WHERE "siteId" = :id)
+           )::text AS count`,
+          { type: QueryTypes.SELECT, replacements: { id: stray.id } }
+        );
+        if (Number(used?.count ?? 0) === 0) await stray.destroy();
+      }
+    }
+
     const sites = await Site.findAll({ where: { organizationId: org.id } as never });
+
+    // Exactly one default, or resolveSite() picks non-deterministically.
+    const defaults = sites.filter((site) => site.isDefault);
+    if (defaults.length !== 1 && sites.length > 0) {
+      const keep = defaults[0] ?? sites[0];
+      for (const site of sites) {
+        const shouldBeDefault = site.id === keep.id;
+        if (site.isDefault !== shouldBeDefault) await site.update({ isDefault: shouldBeDefault });
+      }
+    }
     const bySlug = new Map(sites.map((site) => [site.slug, site.id]));
     const fallback = bySlug.get(org.isPlatform ? "rhinonlabs" : "main");
     if (!fallback) continue;
