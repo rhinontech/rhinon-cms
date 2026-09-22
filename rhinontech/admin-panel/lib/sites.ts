@@ -131,3 +131,70 @@ export function useModuleBase(): string {
   const base = `/${role}/${moduleSlug}`;
   return siteSlugFromPath(pathname) ? `${base}/${domain}` : base;
 }
+
+/* ------------------------------------------------------------------ *
+ * The brand the whole admin is being viewed as
+ * ------------------------------------------------------------------ */
+
+const ACTIVE_BRAND_KEY = "rhinon.activeBrand";
+
+/**
+ * The brand the whole admin is currently being viewed as.
+ *
+ * The URL wins wherever it carries a `[domain]` — a pasted link to another
+ * brand's inbox has to show that brand, not whatever was last picked here.
+ * Everywhere else (Dashboard, Work, Payroll) there is nothing in the path to
+ * read, so the last choice is remembered per browser and the workspace's
+ * default brand is the fallback.
+ *
+ * Reading localStorage is deferred to an effect: touching it during render
+ * would make the server and client markup disagree and blow up hydration.
+ */
+export function useActiveBrand() {
+  const pathname = usePathname();
+  const { sites, loading } = useSites();
+  const fromUrl = siteSlugFromPath(pathname);
+  const [remembered, setRemembered] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      setRemembered(window.localStorage.getItem(ACTIVE_BRAND_KEY));
+    } catch {
+      /* private mode / blocked storage — the default brand still works */
+    }
+  }, []);
+
+  // A brand reached by URL becomes the remembered one, so navigating away to
+  // Dashboard does not silently snap back to the previous brand.
+  useEffect(() => {
+    if (!fromUrl) return;
+    setRemembered(fromUrl);
+    try {
+      window.localStorage.setItem(ACTIVE_BRAND_KEY, fromUrl);
+    } catch {
+      /* ignore */
+    }
+  }, [fromUrl]);
+
+  const fallback = sites.find((s) => s.isDefault)?.slug ?? sites[0]?.slug ?? null;
+  const candidate = fromUrl ?? remembered ?? fallback;
+  // A remembered brand that no longer exists must not strand the menu.
+  const slug = sites.some((s) => s.slug === candidate) ? candidate : fallback;
+
+  const select = (next: string) => {
+    setRemembered(next);
+    try {
+      window.localStorage.setItem(ACTIVE_BRAND_KEY, next);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  return {
+    slug,
+    brand: sites.find((s) => s.slug === slug) ?? null,
+    sites,
+    loading,
+    select,
+  };
+}
