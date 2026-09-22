@@ -1,5 +1,6 @@
 "use client";
 
+import Image, { type StaticImageData } from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { TbCheck, TbSelector } from "react-icons/tb";
 import {
@@ -9,6 +10,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import adminImages from "@/constants/admin/images";
 import { cn } from "@/lib/utils";
 import { SITE_SCOPED_MODULES, useActiveBrand, type SiteScopedModule } from "@/lib/sites";
 
@@ -21,7 +23,22 @@ function initials(name: string): string {
 }
 
 /**
- * A stable colour per brand.
+ * Each brand's own mark.
+ *
+ * Bundled per slug rather than fetched, so the switcher paints with the sidebar
+ * instead of popping in a frame later. A brand with no logo here falls back to
+ * coloured initials, which is what keeps this from breaking the moment someone
+ * adds a third brand.
+ */
+const BRAND_LOGOS: Record<string, { light: StaticImageData; dark: StaticImageData }> = {
+  rhinonlabs: { light: adminImages.blueLogo, dark: adminImages.whiteLogo },
+  // One mark on both themes: the Uppercurve arrow carries its own gradient and
+  // the navy U stays legible on a dark sidebar.
+  uppercurve: { light: adminImages.Logo_Uppercurve, dark: adminImages.Logo_Uppercurve },
+};
+
+/**
+ * A stable colour per brand, for the initials fallback.
  *
  * Hashed from the slug rather than stored, so a brand added later gets a colour
  * without anyone having to choose one, and it never changes between sessions.
@@ -43,12 +60,27 @@ function host(siteUrl: string | null): string | null {
 }
 
 function Glyph({ name, slug, size = "md" }: { name: string; slug: string; size?: "md" | "sm" }) {
+  const box = size === "md" ? "h-9 w-9" : "h-8 w-8";
+  const logo = BRAND_LOGOS[slug];
+
+  if (logo) {
+    return (
+      <span className={cn("flex shrink-0 items-center justify-center rounded-lg bg-muted/50 p-1", box)}>
+        {/* Both marks render and CSS picks one — swapping via useTheme() would
+            flash the wrong logo before hydration resolves. */}
+        <Image src={logo.light} alt="" aria-hidden className="h-full w-full object-contain dark:hidden" />
+        <Image src={logo.dark} alt="" aria-hidden className="hidden h-full w-full object-contain dark:block" />
+      </span>
+    );
+  }
+
   return (
     <span
       className={cn(
         "flex shrink-0 items-center justify-center rounded-lg font-bold text-white",
         glyphColor(slug),
-        size === "md" ? "h-9 w-9 text-xs" : "h-8 w-8 text-[11px]"
+        box,
+        size === "md" ? "text-xs" : "text-[11px]"
       )}
     >
       {initials(name)}
