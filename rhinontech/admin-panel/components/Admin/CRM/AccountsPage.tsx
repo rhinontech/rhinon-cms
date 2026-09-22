@@ -5,7 +5,7 @@ import {
   TbSearch, TbPlus, TbBuilding, TbExternalLink, TbUsers, TbWand, TbX, TbTrash,
 } from "react-icons/tb";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
@@ -17,15 +17,15 @@ import {
   Avatar, DataRow, EmptyState, HeaderRow, LifecycleBadge, Pagination,
   SkeletonRows, TableShell, TBtn, formatMoney,
 } from "./ui";
+import { useModuleBase } from "@/lib/sites";
 
 const COLS = "minmax(200px,2fr) minmax(140px,1.4fr) 90px 90px 110px 40px";
 const LIMIT = 50;
 
 export function AccountsPage() {
   const { isExpanded: isSubNavExpanded } = useSideNav();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
-  const crmBase = `/${pathname.split("/")[1]}/crm`;
+  const crmBase = useModuleBase();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [count, setCount] = useState(0);
   const [offset, setOffset] = useState(0);

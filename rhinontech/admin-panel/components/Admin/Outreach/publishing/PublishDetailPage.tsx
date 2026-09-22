@@ -32,6 +32,7 @@ import { ChannelIcon, isLinkedInChannel } from "../shared/ChannelIcon";
 import { PostStatsCard } from "./PostStatsCard";
 import type { Campaign } from "../shared/types";
 import { AUDIENCE_META, POST_AUDIENCES, POST_TYPE_LIST, POST_TYPE_META, type PostAudience, type PostType } from "./postTypes";
+import { useModuleBase } from "@/lib/sites";
 
 /** LinkedIn truncates the feed preview at roughly this many characters. */
 const FOLD = 210;
@@ -41,6 +42,7 @@ export function PublishDetailPage({ id }: { id: string }) {
   const pathname = usePathname();
   const confirm = useConfirm();
   const roleSlug = pathname.split("/")[1];
+  const base = useModuleBase();
 
   const [post, setPost] = useState<Campaign | null>(null);
   const [loading, setLoading] = useState(true);
@@ -68,7 +70,7 @@ export function PublishDetailPage({ id }: { id: string }) {
       const data = await apiFetch<Campaign>(`/campaigns/${id}`);
       // Email campaigns live under Campaigns — bounce there.
       if (!isLinkedInChannel(data.channel)) {
-        router.replace(`/${roleSlug}/outreach/campaigns/${id}`);
+        router.replace(`${base}/campaigns/${id}`);
         return;
       }
       setPost(data);
@@ -256,7 +258,7 @@ export function PublishDetailPage({ id }: { id: string }) {
     try {
       await apiFetch(`/campaigns/${id}`, { method: "DELETE" });
       toast.success("Deleted");
-      router.push(`/${roleSlug}/outreach/publishing`);
+      router.push(`${base}/publishing`);
     } catch (err: any) {
       toast.error(err.message || "Delete failed");
     }
@@ -285,7 +287,7 @@ export function PublishDetailPage({ id }: { id: string }) {
       <div className="flex min-h-16 shrink-0 flex-wrap items-center justify-between gap-2 border-b px-4 py-2">
         <div className="flex min-w-0 items-center gap-3">
           <button
-            onClick={() => router.push(`/${roleSlug}/outreach/publishing`)}
+            onClick={() => router.push(`${base}/publishing`)}
             className="-ml-2 rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <TbArrowLeft size={20} />

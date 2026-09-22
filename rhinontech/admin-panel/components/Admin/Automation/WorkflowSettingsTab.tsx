@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { TbSettings } from "react-icons/tb";
 import { WorkflowItem } from "@/types/automation";
+import { useModuleBase } from "@/lib/sites";
 
 interface WorkflowSettingsTabProps {
   workflow: WorkflowItem;
@@ -12,6 +13,7 @@ interface WorkflowSettingsTabProps {
 }
 
 export function WorkflowSettingsTab({ workflow, onSave, roleSlug }: WorkflowSettingsTabProps) {
+  const base = useModuleBase();
   const [name, setName] = useState(workflow.name);
   const [description, setDescription] = useState(workflow.description || "");
   const [isSaved, setIsSaved] = useState(false);
@@ -55,7 +57,7 @@ export function WorkflowSettingsTab({ workflow, onSave, roleSlug }: WorkflowSett
             <h5 className="font-bold text-foreground mb-0.5">Concurrent workflow limit</h5>
             <p className="leading-relaxed">
               The number of workflows a single lead can be active in at once is configured system-wide. By default a lead can only be in one workflow at a time — raise it in settings to let leads run through multiple workflows simultaneously.{" "}
-              <Link href={`/${roleSlug}/automation/settings`} className="underline font-semibold text-indigo-600 dark:text-indigo-300">
+              <Link href={`${base}/settings`} className="underline font-semibold text-indigo-600 dark:text-indigo-300">
                 Open workflow settings
               </Link>.
             </p>

@@ -2,6 +2,7 @@ import { Router, Response } from "express";
 import { Campaign, CampaignTemplate, Lead, CampaignActivity, User, InboxEmail, Unsubscribe } from "../models";
 import { stripTenantKeys } from "../models/tenantScope";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
+import { resolveSiteContext } from "../middleware/siteContext";
 import { env } from "../config/env";
 import { generateAIEmailDraft, generateLinkedInPost, generateTemplateWithAI } from "../services/gemini";
 import { isLinkedInPostType } from "../config/linkedInPlaybook";
@@ -10,6 +11,7 @@ import { sendEmail } from "../services/mailer";
 import { stripHtml, toEmailHtml, BACKEND_URL } from "../services/emailTemplate";
 import { Op } from "sequelize";
 import { normalizeEmail, isValidEmail } from "../utils/email";
+import { brandSender } from "../services/siteSender";
 
 const router = Router();
 
@@ -27,6 +29,10 @@ router.use((req, res, next) => {
   }
   authenticate(req as AuthRequest, res as Response, next);
 });
+
+// Brand-split module. No-ops for the cron entry point above, which has no
+// tenant and must fire every workspace's campaigns.
+router.use(resolveSiteContext);
 
 // GET /campaigns/sender-options - assigned company emails a campaign can send from.
 // Sent via SES (domain-verified), so any of these addresses is a real, deliverable "From".
@@ -688,7 +694,11 @@ router.post("/:id/send/stream", authorize("outreach:write"), async (req: AuthReq
       return;
     }
 
-    const fromEmail = campaign.senderEmail || req.user!.companyEmail || "admin@rhinontech.in";
+    // Rewritten onto the campaign's brand domain, so an Uppercurve campaign
+    // leaves as <user>@uppercurve.in rather than the platform domain.
+    const fromEmail =
+      (await brandSender(campaign.senderEmail || req.user!.companyEmail || "admin@rhinontech.in", campaign.siteId)) ||
+      "admin@rhinontech.in";
     write({ type: "log", level: "info", message: `Campaign "${campaign.name}" — sending as ${fromEmail}` });
 
     await runEmailSend(
@@ -779,7 +789,10 @@ router.get("/cron/run", async (req, res) => {
 
       // Send from the campaign's chosen sender — SES is domain-verified, so any
       // assigned company email works as a real "From" address.
-      const fromEmail = campaign.senderEmail || campaignCreator?.companyEmail || "admin@rhinontech.in";
+      // The cron has no ambient brand, so the campaign names its own.
+      const fromEmail =
+        (await brandSender(campaign.senderEmail || campaignCreator?.companyEmail || "admin@rhinontech.in", campaign.siteId)) ||
+        "admin@rhinontech.in";
 
       for (const lead of leadsReadyToSend) {
         const outcome = await dispatchLeadEmail(

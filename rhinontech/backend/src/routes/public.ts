@@ -171,9 +171,14 @@ router.post("/web-leads", async (req: Request, res: Response) => {
       });
       res.status(200).json({ ok: true, deduped: true });
     } else {
+      // Which brand's form this was. Uppercurve posts `?domain=uppercurve`;
+      // rhinonlabs.com posts nothing and lands on the default site — so a
+      // website lead shows up in the CRM of the site that actually captured it.
+      const site = await resolvePublicSite(b.site ?? b.domain ?? req.query.domain);
       await Lead.create({
         name,
         email,
+        siteId: site?.id ?? null,
         company: company || "Website Enquiry",
         phone: whatsapp,
         notes: message,
@@ -368,7 +373,13 @@ router.post("/track", express.text({ type: ["text/plain"] }), async (req: Reques
       }
     }
 
+    // Which brand's traffic this is. The beacon may name a site (`domain`), and
+    // the Uppercurve front-end does; rhinonlabs.com sends nothing and falls
+    // through to the workspace's default site, which is Rhinon Labs.
+    const site = await resolvePublicSite(b.site ?? b.domain ?? req.query.domain);
+
     const view = await PageView.create({
+      siteId: site?.id ?? null,
       visitorId,
       sessionId,
       path,
@@ -442,7 +453,10 @@ router.post("/visitors", express.text({ type: ["text/plain"] }), async (req: Req
     const referrer = typeof b.referrer === "string" ? b.referrer.slice(0, 1024) : null;
     const userAgent = (req.headers["user-agent"] as string) || null;
 
+    const site = await resolvePublicSite(b.site ?? b.domain ?? req.query.domain);
+
     const visitor = await Visitor.create({
+      siteId: site?.id ?? null,
       email: rawEmail,
       ip,
       city: geo.city,

@@ -17,6 +17,7 @@ import { ensureCollaboratorRole } from "./services/collaboratorRole";
 import { runTenancyMigration, auditOrphanRows } from "./services/tenancyMigration";
 import { provisionAllOrganizations } from "./services/orgProvisioning";
 import { runAsSystem } from "./services/tenantContext";
+import { refreshSendingDomains } from "./services/siteSender";
 
 async function autoClockOut() {
   const now = new Date();
@@ -77,6 +78,7 @@ async function bootstrap() {
     `[Tenancy] Default org ${tenancy.defaultOrgId} · ` +
       `${tenancy.columnsAdded} column(s) added · ${tenancy.rowsBackfilled} row(s) adopted` +
       (tenancy.sitesCreated ? ` · ${tenancy.sitesCreated} site(s), ${tenancy.contentMapped} content row(s) mapped` : "") +
+      (tenancy.moduleRowsMapped ? ` · ${tenancy.moduleRowsMapped} module row(s) assigned to a site` : "") +
       (tenancy.columnsRenamed.length ? ` · renamed ${tenancy.columnsRenamed.join(", ")}` : "") +
       (tenancy.uniquesDropped.length
         ? ` · dropped global uniques: ${tenancy.uniquesDropped.join(", ")}`
@@ -110,6 +112,15 @@ async function bootstrap() {
     if (touched) console.log(`[Tenancy] Provisioned defaults for ${touched} organization(s)`);
   } catch (err: any) {
     console.error("[Tenancy] Org provisioning failed:", err.message);
+  }
+
+  // Prime the brand sending-domain cache before the first mail goes out —
+  // mailer.ts reads it synchronously, so an empty cache would send the first
+  // message of the process on the platform domain regardless of brand.
+  try {
+    await refreshSendingDomains();
+  } catch (err: any) {
+    console.error("[Mail] Could not load brand sending domains:", err.message);
   }
 
   // Repairs a collaborator role created before per-org provisioning shipped.

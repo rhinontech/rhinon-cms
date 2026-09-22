@@ -12,6 +12,9 @@ export type CampaignChannel = "Email" | "Cold Email" | "LinkedIn DM" | "LinkedIn
 
 interface CampaignAttributes {
   id: string;
+  /** The brand this row belongs to. Injected for every site model by
+   *  models/siteScope.ts; declared here so route code can read it. */
+  siteId?: string | null;
   name: string;
   channel: CampaignChannel;
   templateId?: string | null;
@@ -71,10 +74,11 @@ interface CampaignAttributes {
   updatedAt?: Date;
 }
 
-interface CampaignCreationAttributes extends Optional<CampaignAttributes, "id" | "channel" | "templateId" | "stage" | "subject" | "body" | "senderEmail" | "senderName" | "autoSend" | "startDate" | "runTime" | "leadsTotal" | "leadsProcessed" | "objective" | "notes" | "mediaUrl" | "aiDraft" | "visibility" | "mediaTitle" | "mediaDescription" | "articleUrl" | "postType" | "postAudience" | "topic" | "sourceFacts" | "postMeta" | "slug" | "platformPostId" | "linkedinOrganizationId" | "socialStats"> {}
+interface CampaignCreationAttributes extends Optional<CampaignAttributes, "siteId" | "id" | "channel" | "templateId" | "stage" | "subject" | "body" | "senderEmail" | "senderName" | "autoSend" | "startDate" | "runTime" | "leadsTotal" | "leadsProcessed" | "objective" | "notes" | "mediaUrl" | "aiDraft" | "visibility" | "mediaTitle" | "mediaDescription" | "articleUrl" | "postType" | "postAudience" | "topic" | "sourceFacts" | "postMeta" | "slug" | "platformPostId" | "linkedinOrganizationId" | "socialStats"> {}
 
 export class Campaign extends Model<CampaignAttributes, CampaignCreationAttributes> implements CampaignAttributes {
   declare id: string;
+  declare siteId: string | null;
   declare name: string;
   declare channel: CampaignChannel;
   declare templateId: string | null;
@@ -113,6 +117,7 @@ export class Campaign extends Model<CampaignAttributes, CampaignCreationAttribut
 Campaign.init(
   {
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    siteId: { type: DataTypes.UUID, allowNull: true },
     name: { type: DataTypes.STRING, allowNull: false },
     templateId: { type: DataTypes.UUID, allowNull: true },
     stage: {

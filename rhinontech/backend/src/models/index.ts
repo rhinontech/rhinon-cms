@@ -64,6 +64,7 @@ import { Organization } from "./Organization";
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/database";
 import { TENANT_MODELS, installTenantScope, assertTenantColumns } from "./tenantScope";
+import { SITE_MODELS, installSiteScope, assertSiteColumns } from "./siteScope";
 
 // RolePermission join table
 const RolePermission = sequelize.define(
@@ -369,6 +370,23 @@ for (const model of TENANT_MODELS) {
 }
 
 assertTenantColumns();
+
+// ---------------------------------------------------------------------------
+// Per-brand (site) scoping
+// ---------------------------------------------------------------------------
+// The second axis: one workspace, several public brands. Same runtime-injection
+// trick as tenancy, but filtering is opt-in — see models/siteScope.ts.
+installSiteScope();
+
+for (const model of SITE_MODELS) {
+  Site.hasMany(model, { foreignKey: "siteId" });
+  // Aliased "site", not "brand": InboxConversation already has a `brand`
+  // column (the channel a conversation came in on) and Sequelize refuses an
+  // association that shadows one.
+  model.belongsTo(Site, { foreignKey: "siteId", as: "site" });
+}
+
+assertSiteColumns();
 
 export {
   Organization,

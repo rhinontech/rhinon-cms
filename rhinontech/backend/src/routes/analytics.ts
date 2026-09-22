@@ -2,9 +2,12 @@ import { Router, Response } from "express";
 import { Op, fn, col, literal } from "sequelize";
 import { PageView, Visitor } from "../models";
 import { authenticate, authorize, requirePlatformOrg, AuthRequest } from "../middleware/authenticate";
+import { resolveSiteContext } from "../middleware/siteContext";
 
 const router = Router();
 router.use(authenticate);
+// Brand-split module: the [domain] the admin is showing scopes every read below.
+router.use(resolveSiteContext);
 // rhinonlabs.com traffic is the platform's own marketing data.
 // authorize() waves every superadmin through, and each tenant owner IS a
 // superadmin — so the permission check alone would not keep customers out.

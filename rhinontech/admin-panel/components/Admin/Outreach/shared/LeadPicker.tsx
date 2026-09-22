@@ -9,6 +9,7 @@ import { apiFetch } from "@/lib/api";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import type { CampaignLead } from "./types";
+import { useCurrentSite } from "@/lib/sites";
 
 const LEAD_STATUSES = ["New", "Enriched", "Enrolled", "Emailed", "Interested", "Replied", "Bounced", "Unsubscribed"];
 const LEAD_PAGE_SIZE = 50;
@@ -26,6 +27,7 @@ export function LeadPicker({
 }) {
   const pathname = usePathname();
   const roleSlug = pathname.split("/")[1];
+  const { slug } = useCurrentSite();
 
   const [leads, setLeads] = useState<CampaignLead[]>([]);
   const [count, setCount] = useState(0);
@@ -186,7 +188,9 @@ export function LeadPicker({
       </div>
 
       <Link
-        href={`/${roleSlug}/crm`}
+        // Jumps modules, so it rebuilds the URL rather than using the Outreach
+        // base — but keeps the brand, or the reader would land on the picker.
+        href={`/${roleSlug}/crm${slug ? `/${slug}` : ""}`}
         className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground"
       >
         Manage leads in CRM <TbExternalLink size={12} />

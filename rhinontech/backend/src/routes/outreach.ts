@@ -1,12 +1,16 @@
 import { Router, Response } from "express";
 import { Lead, Campaign, CampaignActivity, InboxEmail, Unsubscribe } from "../models";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
+import { resolveSiteContext } from "../middleware/siteContext";
+import { currentSiteFilter } from "../services/siteContext";
 import { sendEmail } from "../services/mailer";
 import { sequelize } from "../config/database";
 
 const router = Router();
 
 router.use(authenticate);
+// Brand-split module: the [domain] the admin is showing scopes every read below.
+router.use(resolveSiteContext);
 
 // POST /outreach/send - manual 1-to-1 outreach
 router.post("/send", authorize("outreach:write"), async (req: AuthRequest, res: Response) => {
@@ -104,6 +108,10 @@ router.get("/stats", authorize("outreach:read"), async (_req: AuthRequest, res: 
  *
  * Days are bucketed in IST so they line up with the business dates the team
  * actually works to, and the series is gap-filled server-side.
+ *
+ * Raw SQL bypasses both the tenancy and the site hooks, so the org and brand
+ * filters are spelled out here by hand — without them this endpoint counted
+ * every workspace's activity, and now every brand's.
  */
 router.get("/timeseries", authorize("outreach:read"), async (req: AuthRequest, res: Response) => {
   const days = Math.min(Math.max(parseInt(req.query.days as string, 10) || 14, 1), 90);
@@ -126,10 +134,17 @@ router.get("/timeseries", authorize("outreach:read"), async (req: AuthRequest, r
       LEFT JOIN campaign_activities a
         ON a."timestamp" >= (d.date::text || ' 00:00:00')::timestamp AT TIME ZONE 'Asia/Kolkata'
        AND a."timestamp" <  ((d.date + 1)::text || ' 00:00:00')::timestamp AT TIME ZONE 'Asia/Kolkata'
+       AND a."organizationId" = :orgId
+       AND (:siteId::uuid IS NULL OR a."campaignId" IN (
+             SELECT c.id FROM campaigns c WHERE c."siteId" = :siteId::uuid
+           ))
       GROUP BY d.date
       ORDER BY d.date
       `,
-      { replacements: { days }, type: (sequelize as any).QueryTypes?.SELECT ?? "SELECT" }
+      {
+        replacements: { days, orgId: req.user!.organizationId, siteId: currentSiteFilter() },
+        type: (sequelize as any).QueryTypes?.SELECT ?? "SELECT",
+      }
     )) as any[];
 
     // pg returns COUNT() as a bigint string.

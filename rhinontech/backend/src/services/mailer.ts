@@ -2,6 +2,7 @@ import nodemailer from "nodemailer";
 import MailComposer from "nodemailer/lib/mail-composer";
 import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
 import { oneClickUnsubscribeUrl } from "./unsubscribeToken";
+import { brandSender, ensureSendingDomains, knownSendingDomains } from "./siteSender";
 
 type SendEmailPayload = {
   to: string | string[];
@@ -94,16 +95,21 @@ function toArray(value: string | string[]) {
 /**
  * Is this address on a domain we actually authenticate?
  *
- * Only the platform domain and its subdomains are DKIM-signed and SPF-aligned,
- * so a tenant address (aman@swiggy.rhinontech.in) passes and anything else does
- * not. Sending from an unauthenticated domain is what put this system's mail in
- * the spam folder, so it is worth a loud line in the log rather than a silent
+ * The platform domain and its subdomains are DKIM-signed and SPF-aligned, so a
+ * tenant address (aman@swiggy.rhinontech.in) passes. A brand may also have its
+ * own sending domain (uppercurve.in), which counts only once it has been
+ * configured on the Site — that column is not meant to be set until the domain
+ * is a verified SES identity.
+ *
+ * Sending from an unauthenticated domain is what put this system's mail in the
+ * spam folder, so it is worth a loud line in the log rather than a silent
  * delivery failure nobody sees.
  */
 function isAuthenticatedSender(address: string): boolean {
   const platform = (process.env.PLATFORM_EMAIL_DOMAIN || "rhinontech.in").toLowerCase();
   const domain = address.split("@")[1]?.toLowerCase() ?? "";
-  return domain === platform || domain.endsWith(`.${platform}`);
+  if (domain === platform || domain.endsWith(`.${platform}`)) return true;
+  return knownSendingDomains().includes(domain);
 }
 
 /** RFC 8058 headers. Both are required — the URL alone is not enough. */
@@ -131,6 +137,8 @@ export async function sendEmail({
   unsubscribeFor,
 }: SendEmailPayload) {
   const toAddresses = toArray(to);
+  // Prime the brand cache before the synchronous check below reads it.
+  await ensureSendingDomains();
   if (from && !isAuthenticatedSender(from)) {
     console.warn(
       `[Mailer] Sending as ${from}, which is not on the authenticated sending ` +
@@ -139,7 +147,10 @@ export async function sendEmail({
   }
   const listHeaders = unsubscribeHeaders(unsubscribeFor);
   const hasListHeaders = Object.keys(listHeaders).length > 0;
-  const fromAddress = from || sesFromEmail;
+  // No explicit sender: fall back to the configured default, rewritten onto
+  // the active brand. Outside a brand-split module there is no site
+  // context, so HR and account mail keeps the platform domain.
+  const fromAddress = from || (await brandSender(sesFromEmail)) || sesFromEmail;
   const displayName = customFromName || fromName;
   // A dedicated mailbox is the whole point of rotation, so it overrides the
   // usual SES/SMTP selection rather than being folded into it.

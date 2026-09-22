@@ -39,7 +39,7 @@ import {
   TbX,
   TbMap2,
 } from "react-icons/tb";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -56,6 +56,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { useModuleBase } from "@/lib/sites";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://rhinonlabs.com";
 
@@ -376,8 +377,7 @@ export function AnalyticsDashboard() {
 
 function VisitorsTable({ visitors, loading }: { visitors: VisitorRow[]; loading: boolean }) {
   const router = useRouter();
-  const pathname = usePathname();
-  const roleSlug = pathname.split("/")[1];
+  const base = useModuleBase();
   const [query, setQuery] = useState("");
   // Default to today's date (YYYY-MM-DD); null means "All Dates"
   const [selectedDate, setSelectedDate] = useState<string | null>(() => ymd(new Date()));
@@ -460,7 +460,7 @@ function VisitorsTable({ visitors, loading }: { visitors: VisitorRow[]; loading:
             {/* The map lives on its own page — it plots ALL traffic, not just this table. */}
             <button
               type="button"
-              onClick={() => router.push(`/${roleSlug}/analytics/visitor-maps`)}
+              onClick={() => router.push(`${base}/visitor-maps`)}
               className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-muted"
               title="Open the full-page visitor map"
             >

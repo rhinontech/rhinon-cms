@@ -5,6 +5,7 @@ import { Lead, ContactGroup, ContactGroupMember, Unsubscribe, Task, Activity } f
 import { sendEmail } from "./mailer";
 import { toEmailHtml, stripHtml, BACKEND_URL } from "./emailTemplate";
 import { isRotationEnabled, pickMailbox } from "./mailboxes";
+import { brandSender } from "./siteSender";
 
 const UUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 function isUuid(val: any): boolean {
@@ -81,6 +82,9 @@ export async function enrollStaticListLeads(workflowId: string) {
       await WorkflowEnrollment.create({
         id: `enr-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
         workflowId: workflow.id,
+        // The cron has no site context, so the enrollment inherits the
+        // workflow's brand rather than landing site-less and invisible.
+        siteId: workflow.siteId ?? null,
         leadId: lead.id && isUuid(lead.id) ? lead.id : null,
         leadName: lead.name || "Lead",
         leadEmail: lead.email,
@@ -162,6 +166,9 @@ export async function enrollRealtimeLead(lead: any, formSource: string) {
       await WorkflowEnrollment.create({
         id: `enr-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
         workflowId: workflow.id,
+        // The cron has no site context, so the enrollment inherits the
+        // workflow's brand rather than landing site-less and invisible.
+        siteId: workflow.siteId ?? null,
         leadId: lead.id && isUuid(lead.id) ? lead.id : null,
         leadName: lead.name || "Lead",
         leadEmail: lead.email,
@@ -413,10 +420,17 @@ async function executeEnrollmentSteps(
           }
         }
 
+        // A rotation mailbox with its own SMTP credentials keeps its real
+        // address: the login and the From header have to match, so rewriting
+        // the domain there would break authentication outright.
+        const brandedFrom = smtpAuth
+          ? fromEmail
+          : (await brandSender(fromEmail, workflow.siteId)) || fromEmail;
+
         try {
           await sendEmail({
             to: enrollment.leadEmail,
-            from: fromEmail,
+            from: brandedFrom,
             fromName: fromName || "Rhinon Automation",
             smtpAuth,
             subject,

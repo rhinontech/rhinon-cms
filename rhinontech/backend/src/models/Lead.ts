@@ -13,6 +13,9 @@ export type LeadLifecycleStage =
 
 interface LeadAttributes {
   id: string;
+  /** The brand this row belongs to. Injected for every site model by
+   *  models/siteScope.ts; declared here so route code can read it. */
+  siteId?: string | null;
   name: string;
   company: string;
   title?: string | null;
@@ -59,7 +62,7 @@ interface LeadAttributes {
 interface LeadCreationAttributes
   extends Optional<
     LeadAttributes,
-    | "id" | "title" | "linkedinUrl" | "campaignId" | "aiDraft" | "source" | "notes" | "addedAt"
+    "siteId" | "id" | "title" | "linkedinUrl" | "campaignId" | "aiDraft" | "source" | "notes" | "addedAt"
     | "phone" | "seniority" | "department" | "industry" | "employeeCount" | "location"
     | "website" | "companyLinkedinUrl" | "emailStatus" | "emailConfidence" | "keywords" | "apolloContactId"
     | "technologies" | "annualRevenue" | "raw" | "enrichment" | "draftSubject" | "draftApproved"
@@ -69,6 +72,7 @@ interface LeadCreationAttributes
 
 export class Lead extends Model<LeadAttributes, LeadCreationAttributes> implements LeadAttributes {
   declare id: string;
+  declare siteId: string | null;
   declare name: string;
   declare company: string;
   declare title: string | null;
@@ -111,6 +115,7 @@ export class Lead extends Model<LeadAttributes, LeadCreationAttributes> implemen
 Lead.init(
   {
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    siteId: { type: DataTypes.UUID, allowNull: true },
     name: { type: DataTypes.STRING, allowNull: false },
     company: { type: DataTypes.STRING, allowNull: false },
     title: { type: DataTypes.STRING, allowNull: true },

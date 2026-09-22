@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { TbSearch, TbBuilding, TbLayoutKanban } from "react-icons/tb";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
@@ -14,6 +13,7 @@ import {
   Avatar, DataRow, EmptyState, HeaderRow, Pagination, SkeletonRows,
   StageDot, TableShell, formatDate, formatMoney,
 } from "./ui";
+import { useModuleBase } from "@/lib/sites";
 
 const COLS = "minmax(180px,2fr) minmax(120px,1.2fr) 110px 120px 96px 96px 34px";
 const LIMIT = 50;
@@ -27,8 +27,7 @@ const LIMIT = 50;
  */
 export function DealsListPage() {
   const { isExpanded: isSubNavExpanded } = useSideNav();
-  const pathname = usePathname();
-  const crmBase = `/${pathname.split("/")[1]}/crm`;
+  const crmBase = useModuleBase();
 
   const [deals, setDeals] = useState<Deal[]>([]);
   const [count, setCount] = useState(0);

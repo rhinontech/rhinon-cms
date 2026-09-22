@@ -3,6 +3,9 @@ import { sequelize } from "../config/database";
 
 export interface VisitorAttributes {
   id: string;
+  /** The brand this row belongs to. Injected for every site model by
+   *  models/siteScope.ts; declared here so route code can read it. */
+  siteId?: string | null;
   email: string;
   ip: string;
   city?: string | null;
@@ -22,7 +25,7 @@ export interface VisitorAttributes {
 export interface VisitorCreationAttributes
   extends Optional<
     VisitorAttributes,
-    | "id"
+    "siteId" | "id"
     | "city"
     | "region"
     | "country"
@@ -40,6 +43,7 @@ export class Visitor
   implements VisitorAttributes
 {
   declare id: string;
+  declare siteId: string | null;
   declare email: string;
   declare ip: string;
   declare city: string | null;
@@ -63,6 +67,7 @@ Visitor.init(
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
+    siteId: { type: DataTypes.UUID, allowNull: true },
     email: {
       type: DataTypes.STRING,
       allowNull: false,

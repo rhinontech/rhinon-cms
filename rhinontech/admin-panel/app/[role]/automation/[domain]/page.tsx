@@ -1,16 +1,16 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { useModuleBase } from "@/lib/sites";
 
 export default function AutomationIndexPage() {
   const router = useRouter();
-  const pathname = usePathname();
-  const roleSlug = pathname.split("/")[1] || "admin";
+  const base = useModuleBase();
 
   useEffect(() => {
-    router.replace(`/${roleSlug}/automation/workflows`);
-  }, [router, roleSlug]);
+    router.replace(`${base}/workflows`);
+  }, [router, base]);
 
   return (
     <div className="flex h-full items-center justify-center p-8 text-muted-foreground">

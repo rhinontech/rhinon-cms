@@ -2,13 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { TbRefresh, TbRobot, TbUsers, TbMailCheck, TbAlertTriangle, TbArrowLeft } from "react-icons/tb";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { VisitorsMap, type MappableVisitor } from "./VisitorsMap";
+import { useModuleBase } from "@/lib/sites";
 
 interface MapPoint extends MappableVisitor {
   identified: boolean;
@@ -38,8 +39,7 @@ function isoDaysAgo(days: number) {
 
 export function VisitorMapPage() {
   const router = useRouter();
-  const pathname = usePathname();
-  const roleSlug = pathname.split("/")[1];
+  const base = useModuleBase();
 
   const [days, setDays] = useState(30);
   const [includeBots, setIncludeBots] = useState(false);
@@ -86,7 +86,7 @@ export function VisitorMapPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => router.push(`/${roleSlug}/analytics`)}
+            onClick={() => router.push(`${base}`)}
             className="rounded-lg border border-border p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             title="Back to Analytics"
           >

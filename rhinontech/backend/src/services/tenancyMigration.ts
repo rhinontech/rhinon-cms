@@ -145,8 +145,24 @@ async function renameCollidingColumns(): Promise<string[]> {
  * seeded with a single default site, so a tenant writing a blog never sees a
  * brand picker.
  */
+/**
+ * Uppercurve's real public origin. The site row was seeded before anyone had
+ * confirmed the domain, so it sat null and "view live" had nothing to point at;
+ * the brand pickers show this URL too now. Still overridable by env in case the
+ * domain moves, but it no longer defaults to nothing.
+ */
+const UPPERCURVE_SITE_URL = process.env.UPPERCURVE_SITE_URL || "https://uppercurve.in";
+
 async function migrateContentSites(): Promise<{ sitesCreated: number; contentMapped: number }> {
   await Site.sync();
+
+  // Site.sync() creates the table but never adds a column to an existing one —
+  // only syncDatabase()'s alter does, and that runs AFTER this. So any column
+  // this migration itself reads has to be added here by hand, or the very next
+  // Site query dies on a column that does not exist yet.
+  if (await tableExists("sites")) {
+    await sequelize.query(`ALTER TABLE "sites" ADD COLUMN IF NOT EXISTS "sendingDomain" VARCHAR(255)`);
+  }
 
   // The content tables need the column before anything can be mapped onto it.
   for (const table of ["blogs", "case_studies", "events"]) {
@@ -165,7 +181,7 @@ async function migrateContentSites(): Promise<{ sitesCreated: number; contentMap
     const wanted = org.isPlatform
       ? [
           { name: "Rhinon Labs", slug: "rhinonlabs", siteUrl: "https://www.rhinonlabs.com", isDefault: true, supportsEvents: false, supportsCaseStudies: true },
-          { name: "Uppercurve", slug: "uppercurve", siteUrl: process.env.UPPERCURVE_SITE_URL || null, isDefault: false, supportsEvents: true, supportsCaseStudies: false },
+          { name: "Uppercurve", slug: "uppercurve", siteUrl: UPPERCURVE_SITE_URL, isDefault: false, supportsEvents: true, supportsCaseStudies: false },
         ]
       : [{ name: org.name, slug: "main", siteUrl: null, isDefault: true, supportsEvents: true, supportsCaseStudies: true }];
 
@@ -196,6 +212,11 @@ async function migrateContentSites(): Promise<{ sitesCreated: number; contentMap
     }
 
     const sites = await Site.findAll({ where: { organizationId: org.id } as never });
+
+    // Backfill the URL onto an Uppercurve row seeded before the domain was
+    // confirmed. Only fills a blank — a deliberately set URL is left alone.
+    const uppercurve = sites.find((site) => site.slug === "uppercurve");
+    if (uppercurve && !uppercurve.siteUrl) await uppercurve.update({ siteUrl: UPPERCURVE_SITE_URL });
 
     // Exactly one default, or resolveSite() picks non-deterministically.
     const defaults = sites.filter((site) => site.isDefault);
@@ -240,6 +261,53 @@ async function migrateContentSites(): Promise<{ sitesCreated: number; contentMap
   return { sitesCreated, contentMapped };
 }
 
+/**
+ * Tables that split by brand as well as by tenant.
+ *
+ * Content went first (blogs/case studies/events); these are the rest of the
+ * modules a multi-brand workspace runs separately — Inbox, CRM, Outreach,
+ * Automation and Analytics. Everything that exists today predates the split, so
+ * it is adopted by each org's DEFAULT site: that is where the Rhinon Labs
+ * pipeline, inbox and traffic already belonged, and leaving the column NULL
+ * would have made those rows invisible the moment a brand filter was applied.
+ */
+const SITE_SCOPED_TABLES = [
+  "inbox_conversations", "inbox_messages", "inbox_emails",
+  "leads", "accounts", "deals", "activities",
+  "campaigns", "campaign_templates", "contact_groups",
+  "workflows", "workflow_enrollments",
+  "page_views", "visitors",
+];
+
+async function migrateModuleSites(): Promise<number> {
+  for (const table of SITE_SCOPED_TABLES) {
+    if (!(await tableExists(table))) continue;
+    await sequelize.query(`ALTER TABLE "${table}" ADD COLUMN IF NOT EXISTS "siteId" UUID`);
+    await sequelize.query(
+      `CREATE INDEX IF NOT EXISTS "idx_${table}_siteId" ON "${table}" ("siteId")`
+    );
+  }
+
+  let mapped = 0;
+  const orgs = await Organization.findAll();
+  for (const org of orgs) {
+    const sites = await Site.findAll({ where: { organizationId: org.id } as never });
+    if (!sites.length) continue;
+    const fallback = (sites.find((site) => site.isDefault) ?? sites[0]).id;
+
+    for (const table of SITE_SCOPED_TABLES) {
+      if (!(await tableExists(table))) continue;
+      const [, meta] = await sequelize.query(
+        `UPDATE "${table}" SET "siteId" = :siteId WHERE "organizationId" = :orgId AND "siteId" IS NULL`,
+        { replacements: { siteId: fallback, orgId: org.id } }
+      );
+      mapped += (meta as { rowCount?: number })?.rowCount ?? 0;
+    }
+  }
+
+  return mapped;
+}
+
 export async function runTenancyMigration(): Promise<{
   defaultOrgId: string;
   columnsAdded: number;
@@ -248,6 +316,7 @@ export async function runTenancyMigration(): Promise<{
   columnsRenamed: string[];
   sitesCreated: number;
   contentMapped: number;
+  moduleRowsMapped: number;
 }> {
   // 0. Move any pre-existing column that happens to be called organizationId
   //    but means something else. Must run before step 3 creates the real one.
@@ -306,6 +375,10 @@ export async function runTenancyMigration(): Promise<{
   // 4b. Content brands. Runs after the org backfill, since it groups by org.
   const { sitesCreated, contentMapped } = await migrateContentSites();
 
+  // 4b. Same treatment for the rest of the brand-split modules. Runs after
+  //     migrateContentSites because it needs the Sites those rows map onto.
+  const moduleRowsMapped = await migrateModuleSites();
+
   // 5. Retire the global uniques. Composite replacements are on the models and
   //    get created by the syncDatabase() that runs straight after this.
   const uniquesDropped: string[] = [];
@@ -317,7 +390,7 @@ export async function runTenancyMigration(): Promise<{
 
   return {
     defaultOrgId: org.id, columnsAdded, rowsBackfilled,
-    uniquesDropped, columnsRenamed, sitesCreated, contentMapped,
+    uniquesDropped, columnsRenamed, sitesCreated, contentMapped, moduleRowsMapped,
   };
 }
 

@@ -3,8 +3,10 @@ import { Op, WhereOptions } from "sequelize";
 import { InboxEmail, User, Campaign } from "../models";
 import { InboxEmailFolder } from "../models/InboxEmail";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
+import { resolveSiteContext } from "../middleware/siteContext";
 import { sendEmail } from "../services/mailer";
 import { getPresignedUploadUrl, getPresignedReadUrl, getObjectBuffer } from "../services/storage";
+import { brandSender, mailboxVariants } from "../services/siteSender";
 
 type Att = { key: string; name: string; size: number; mimeType: string };
 
@@ -33,6 +35,8 @@ async function presignAll(atts: Att[] | null | undefined) {
 const router = Router();
 
 router.use(authenticate);
+// Brand-split module: the [domain] the admin is showing scopes every read below.
+router.use(resolveSiteContext);
 
 /**
  * The signed-in user's own mailbox address.
@@ -53,13 +57,32 @@ function requireMailbox(req: AuthRequest, res: Response): string | null {
   return address;
 }
 
+/**
+ * The caller's mailbox as stored on messages, across every brand.
+ *
+ * `ownerEmail` records the address a message was actually sent from or
+ * delivered to, so once a brand has its own sending domain one person owns
+ * prabhat@rhinontech.in AND prabhat@uppercurve.in. Matching a single address
+ * here would hide a user's own Uppercurve mail from them — sent items missing
+ * from Sent, replies never arriving — while the rows sat right there in the
+ * table. The brand filter still narrows this per site.
+ */
+function ownedBy(mailbox: string): string | { [Op.in]: string[] } {
+  const variants = mailboxVariants(mailbox);
+  return variants.length > 1 ? { [Op.in]: variants } : mailbox;
+}
+
+function ownsEmail(mailbox: string, ownerEmail: string): boolean {
+  return mailboxVariants(mailbox).includes((ownerEmail || "").toLowerCase());
+}
+
 const folders = new Set(["inbox", "sent", "drafts", "archive", "trash"]);
 
 router.get("/", authorize("inbox:read"), async (req: AuthRequest, res: Response) => {
   const { folder = "inbox", search, starred } = req.query;
   const mailbox = requireMailbox(req, res);
   if (!mailbox) return;
-  const where: WhereOptions = { ownerEmail: mailbox, isInternal: false };
+  const where: WhereOptions = { ownerEmail: ownedBy(mailbox), isInternal: false };
 
   if (typeof folder === "string" && folders.has(folder)) {
     where.folder = folder;
@@ -158,7 +181,7 @@ router.get("/:id", authorize("inbox:read"), async (req: AuthRequest, res: Respon
     return;
   }
 
-  if (email.ownerEmail !== mailbox) {
+  if (!ownsEmail(mailbox, email.ownerEmail)) {
     res.status(403).json({ message: "Forbidden" });
     return;
   }
@@ -168,7 +191,7 @@ router.get("/:id", authorize("inbox:read"), async (req: AuthRequest, res: Respon
   }
 
   const thread = await InboxEmail.findAll({
-    where: { threadKey: email.threadKey, ownerEmail: mailbox },
+    where: { threadKey: email.threadKey, ownerEmail: ownedBy(mailbox) },
     order: [["sentAt", "ASC"]],
   });
 
@@ -200,8 +223,10 @@ router.post("/", authorize("inbox:write"), async (req: AuthRequest, res: Respons
 
   const sentAt = new Date();
   const threadKey = `thread-${sentAt.getTime()}`;
-  const fromEmail = requireMailbox(req, res);
-  if (!fromEmail) return;
+  const mailboxAddress = requireMailbox(req, res);
+  if (!mailboxAddress) return;
+  // Sent from the brand the user is working in — the [domain] in the URL.
+  const fromEmail = (await brandSender(mailboxAddress)) || mailboxAddress;
   const isDraft = folder === "drafts";
 
   if (!isDraft) {
@@ -261,17 +286,21 @@ router.post("/:id/reply", authorize("inbox:write"), async (req: AuthRequest, res
     return;
   }
 
+  // A reply goes out under the brand it is being answered from, so a thread
+  // that arrived at Uppercurve is answered by Uppercurve.
+  const replyFrom = (await brandSender(mailbox)) || mailbox;
+
   const reply = await InboxEmail.create({
     threadKey: original.threadKey,
     folder: "sent",
     fromName: req.user?.fullName || "Rhinon",
-    fromEmail: mailbox,
+    fromEmail: replyFrom,
     toEmails: [original.fromEmail],
     ccEmails: [],
     subject: original.subject.startsWith("Re:") ? original.subject : `Re: ${original.subject}`,
     body: (body || "").trim(),
     snippet: (body || "").trim().slice(0, 160),
-    ownerEmail: mailbox,
+    ownerEmail: replyFrom,
     isRead: true,
     isStarred: false,
     hasAttachment: attachments.length > 0,
@@ -313,7 +342,7 @@ router.patch("/:id", authorize("inbox:write"), async (req: AuthRequest, res: Res
     return;
   }
 
-  if (email.ownerEmail !== mailbox) {
+  if (!ownsEmail(mailbox, email.ownerEmail)) {
     res.status(403).json({ message: "Forbidden" });
     return;
   }

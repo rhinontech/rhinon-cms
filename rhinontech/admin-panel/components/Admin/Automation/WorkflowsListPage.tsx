@@ -15,6 +15,7 @@ import {
   TbGitBranch,
 } from "react-icons/tb";
 import { WorkflowItem, WorkflowStatus } from "@/types/automation";
+import { useModuleBase } from "@/lib/sites";
 
 interface WorkflowsListPageProps {
   workflows: WorkflowItem[];
@@ -34,6 +35,7 @@ export function WorkflowsListPage({
   onDuplicateWorkflow,
 }: WorkflowsListPageProps) {
   const router = useRouter();
+  const base = useModuleBase();
   const [filterTab, setFilterTab] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -84,7 +86,7 @@ export function WorkflowsListPage({
           </button>
 
           <Link
-            href={`/${roleSlug}/automation/settings`}
+            href={`${base}/settings`}
             className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-foreground/85 bg-card border border-border rounded-xl hover:bg-muted/40 transition-all shadow-2xs"
           >
             <TbSettings size={18} /> Settings
@@ -160,7 +162,7 @@ export function WorkflowsListPage({
                   <tr key={item.id} className="hover:bg-muted/40 transition-colors group">
                     <td className="px-6 py-4">
                       <Link
-                        href={`/${roleSlug}/automation/workflows/${item.id}`}
+                        href={`${base}/workflows/${item.id}`}
                         className="font-bold text-foreground hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors"
                       >
                         {item.name}
@@ -192,7 +194,7 @@ export function WorkflowsListPage({
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
-                          onClick={() => router.push(`/${roleSlug}/automation/workflows/${item.id}`)}
+                          onClick={() => router.push(`${base}/workflows/${item.id}`)}
                           className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors"
                           title="Edit workflow"
                         >

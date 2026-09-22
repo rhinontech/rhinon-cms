@@ -38,6 +38,7 @@ import documentsRoutes from "./routes/documents";
 import linkedinRoutes from "./routes/linkedin";
 import aiRoutes from "./routes/ai";
 import contentRoutes from "./routes/content";
+import sitesRoutes from "./routes/sites";
 import analyticsRoutes from "./routes/analytics";
 import docsAccessRoutes from "./routes/docs-access";
 import brandingRoutes from "./routes/branding";
@@ -110,6 +111,8 @@ app.use("/google-calendar", googleCalendarSettingsRoutes);
 app.use("/meetings", meetingsRoutes);
 app.use("/ai", aiRoutes);
 app.use("/content", contentRoutes);
+// The workspace's brands. Every brand-split module reads this before it renders.
+app.use("/sites", sitesRoutes);
 app.use("/analytics", analyticsRoutes);
 app.use("/startup-ideas", startupIdeasRoutes);
 app.use("/deploy", deployRoutes);

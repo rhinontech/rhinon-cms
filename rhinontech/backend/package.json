@@ -19,6 +19,8 @@
     "db:seed:leadership-template": "ts-node src/config/seedLeadershipTemplate.ts",
     "grant:crm": "ts-node src/config/grantCrm.ts",
     "verify:tenancy": "DATABASE_URL=postgres://verify:verify@127.0.0.1:1/verify ts-node --transpile-only src/scripts/verifyTenantScope.ts",
+    "verify:sites": "DATABASE_URL=postgres://verify:verify@127.0.0.1:1/verify ts-node --transpile-only src/scripts/verifySiteScope.ts",
+    "migrate:rehearse": "ts-node --transpile-only src/scripts/runSiteMigration.ts",
     "test:isolation": "node scripts/isolation-test.mjs",
     "test:sites": "node scripts/sites-test.mjs"
   },

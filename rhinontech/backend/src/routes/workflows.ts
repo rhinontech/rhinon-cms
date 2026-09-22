@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { authenticate, authorizeAny, authorize } from "../middleware/authenticate";
+import { resolveSiteContext } from "../middleware/siteContext";
 import { Workflow } from "../models/Workflow";
 import { WorkflowEnrollment } from "../models/WorkflowEnrollment";
 import { enrollStaticListLeads, runWorkflowEngineCycle } from "../services/workflowEngine";
@@ -16,6 +17,8 @@ const router = Router();
  * again). Guards match the Automation module's sidebar permissions.
  */
 router.use(authenticate, authorizeAny("outreach:read", "crm:read", "dashboard:read"));
+// Brand-split module: the [domain] the admin is showing scopes every read below.
+router.use(resolveSiteContext);
 
 const DEFAULT_WORKFLOW = {
   id: "wf-1",

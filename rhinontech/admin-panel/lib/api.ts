@@ -1,12 +1,28 @@
 import Cookies from "js-cookie";
+import { siteSlugFromPath } from "@/lib/sites";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+/**
+ * The brand the user is currently looking at, read off the URL at call time.
+ *
+ * Sent as a header rather than threaded through ~200 call sites as a query
+ * param. Derived per request instead of stored, so navigating from
+ * /crm/uppercurve to /payroll stops sending it without anything having to
+ * remember to clear it.
+ */
+function siteHeader(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  const slug = siteSlugFromPath(window.location.pathname);
+  return slug ? { "X-Site-Slug": slug } : {};
+}
 
 export function authHeaders(): Record<string, string> {
   const token = Cookies.get("authToken");
   return {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...siteHeader(),
   };
 }
 
@@ -59,7 +75,8 @@ export async function apiUpload<T = unknown>(path: string, file: File, field = "
   form.append(field, file);
   const res = await fetch(`${API_URL}${path}`, {
     method: "POST",
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    // No Content-Type — the browser adds the multipart boundary itself.
+    headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...siteHeader() },
     body: form,
   });
   if (!res.ok) {

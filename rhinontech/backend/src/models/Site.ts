@@ -20,6 +20,16 @@ interface SiteAttributes {
   slug: string;
   /** Public site origin, used for canonical URLs and previews. */
   siteUrl: string | null;
+  /**
+   * The domain this brand's outbound mail is sent from, e.g. uppercurve.in.
+   *
+   * Null means "use the workspace's platform domain" — which is what every
+   * brand did before, and what Rhinon Labs still does. A value here only works
+   * once the domain is a verified SES identity with DKIM published; until then
+   * mailer.ts refuses to rewrite onto it, because sending from an
+   * unauthenticated domain lands in spam rather than failing loudly.
+   */
+  sendingDomain: string | null;
   /** The site content lands on when none is specified. Exactly one per org. */
   isDefault: boolean;
   /**
@@ -36,7 +46,7 @@ interface SiteAttributes {
 interface SiteCreationAttributes
   extends Optional<
     SiteAttributes,
-    "id" | "siteUrl" | "isDefault" | "supportsEvents" | "supportsCaseStudies" | "settings"
+    "id" | "siteUrl" | "sendingDomain" | "isDefault" | "supportsEvents" | "supportsCaseStudies" | "settings"
   > {}
 
 export class Site
@@ -47,6 +57,7 @@ export class Site
   declare name: string;
   declare slug: string;
   declare siteUrl: string | null;
+  declare sendingDomain: string | null;
   declare isDefault: boolean;
   declare supportsEvents: boolean;
   declare supportsCaseStudies: boolean;
@@ -61,6 +72,7 @@ Site.init(
     name: { type: DataTypes.STRING, allowNull: false },
     slug: { type: DataTypes.STRING, allowNull: false },
     siteUrl: { type: DataTypes.STRING, allowNull: true },
+    sendingDomain: { type: DataTypes.STRING, allowNull: true },
     isDefault: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
     supportsEvents: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
     supportsCaseStudies: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },

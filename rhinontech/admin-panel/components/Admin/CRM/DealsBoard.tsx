@@ -8,7 +8,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { TbPlus, TbBuilding, TbCalendar, TbX, TbSettings, TbUsers, TbArrowRight } from "react-icons/tb";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
@@ -17,6 +17,7 @@ import type { BoardStage, Deal, UserRef, AccountRef, PipelineStage } from "./typ
 import { DealDrawer } from "./DealDrawer";
 import { StageSettingsDialog } from "./StageSettingsDialog";
 import { Avatar, StageDot, TBtn, formatMoney, formatDate } from "./ui";
+import { useModuleBase } from "@/lib/sites";
 
 interface BoardResponse {
   stages: BoardStage[];
@@ -61,10 +62,8 @@ export function DealsBoard() {
     () => (board?.stages || []).map(({ deals: _deals, dealCount: _c, totalValue: _t, weightedValue: _w, ...stage }) => stage),
     [board]
   );
-
-  const pathname = usePathname();
   const searchParams = useSearchParams();
-  const leadsHref = `/${pathname.split("/")[1]}/crm`;
+  const leadsHref = useModuleBase();
 
   // ?dealId=… opens the drawer straight away, so leads and accounts can link
   // to a specific deal rather than just to the board.

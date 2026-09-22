@@ -5,6 +5,9 @@ export type InboxEmailFolder = "inbox" | "sent" | "drafts" | "archive" | "trash"
 
 interface InboxEmailAttributes {
   id: string;
+  /** The brand this row belongs to. Injected for every site model by
+   *  models/siteScope.ts; declared here so route code can read it. */
+  siteId?: string | null;
   threadKey: string;
   folder: InboxEmailFolder;
   fromName: string;
@@ -37,7 +40,7 @@ interface InboxEmailAttributes {
 interface InboxEmailCreationAttributes
   extends Optional<
     InboxEmailAttributes,
-    "id" | "folder" | "ccEmails" | "isRead" | "isStarred" | "hasAttachment" | "attachments" | "isInternal" | "messageId" | "inReplyTo" | "campaignId" | "leadId"
+    "siteId" | "id" | "folder" | "ccEmails" | "isRead" | "isStarred" | "hasAttachment" | "attachments" | "isInternal" | "messageId" | "inReplyTo" | "campaignId" | "leadId"
   > {}
 
 export class InboxEmail
@@ -45,6 +48,7 @@ export class InboxEmail
   implements InboxEmailAttributes
 {
   declare id: string;
+  declare siteId: string | null;
   declare threadKey: string;
   declare folder: InboxEmailFolder;
   declare fromName: string;
@@ -76,6 +80,7 @@ InboxEmail.init(
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
+    siteId: { type: DataTypes.UUID, allowNull: true },
     threadKey: {
       type: DataTypes.STRING,
       allowNull: false,
