@@ -3,7 +3,7 @@ import { Op } from "sequelize";
 import multer from "multer";
 import { Blog, CaseStudy, Event, Site } from "../models";
 import type { BlogDomain } from "../models/Blog";
-import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
+import { authenticate, authorize, requirePlatformOrg, AuthRequest } from "../middleware/authenticate";
 import { uploadBuffer, publicUrl } from "../services/storage";
 
 const BLOG_DOMAINS: BlogDomain[] = ["rhinonlabs", "uppercurve"];
@@ -41,6 +41,10 @@ const MAX_VIDEO_MB = 100;
 const uploadVideo = multer({ storage: multer.memoryStorage(), limits: { fileSize: MAX_VIDEO_MB * 1024 * 1024 } });
 
 router.use(authenticate);
+// The CMS behind rhinonlabs.com and uppercurve — not part of a customer's
+// workspace. Sites/Blog stay tenant-scoped so the data model needs no special
+// case, but only the platform org can reach the admin CRUD.
+router.use(requirePlatformOrg);
 
 // GET /content/sites — the workspace's publishing brands. A tenant normally has
 // exactly one, so the admin UI hides the picker when this returns a single row.

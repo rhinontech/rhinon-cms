@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import { CalendarNotConnectedError, createEvent, getBusyIntervals } from "../services/googleCalendar";
 import { sendMeetingInvite } from "../services/meetingInvite";
 import { findOrMergeLead, str } from "../services/leadCapture";
@@ -17,6 +17,20 @@ import {
 } from "../services/scheduling";
 
 const router = Router();
+
+// The booking page is Rhinon Labs' own: the invite is organized by
+// support@rhinon.tech and the .ics says "Rhinon Labs", so it is not something a
+// customer's workspace can hand out under its own name. publicTenantContext()
+// has already resolved the org — unkeyed calls resolve to the platform org, so
+// rhinonlabs.com is unaffected and only /public/<tenant>/schedule-call is shut.
+router.use((req: Request, res: Response, next: NextFunction) => {
+  const org = (req as unknown as { organization?: { isPlatform?: boolean } }).organization;
+  if (org && !org.isPlatform) {
+    res.status(404).json({ message: "No booking page is configured for this workspace." });
+    return;
+  }
+  next();
+});
 
 const BUSINESS_TIMEZONE = "Asia/Kolkata";
 const SOURCE = "Scheduler";

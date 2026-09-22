@@ -211,11 +211,13 @@ async function migrateContentSites(): Promise<{ sitesCreated: number; contentMap
     if (!fallback) continue;
 
     // Blogs carry the legacy enum, so map by it; everything else falls back.
+    // Compare as text: a tenant's "main" slug is not a valid enum value, and
+    // Postgres rejects the literal outright instead of matching nothing.
     if (await tableExists("blogs")) {
       for (const [slug, siteId] of bySlug) {
         const [, meta] = await sequelize.query(
           `UPDATE "blogs" SET "siteId" = :siteId
-            WHERE "organizationId" = :orgId AND "siteId" IS NULL AND "domain" = :slug`,
+            WHERE "organizationId" = :orgId AND "siteId" IS NULL AND "domain"::text = :slug`,
           { replacements: { siteId, orgId: org.id, slug } }
         );
         contentMapped += (meta as { rowCount?: number })?.rowCount ?? 0;

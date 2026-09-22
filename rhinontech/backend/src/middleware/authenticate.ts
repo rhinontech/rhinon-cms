@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { env } from "../config/env";
 import { User, Role, Permission, Organization } from "../models";
 import { enterTenantContext, runAsSystem } from "../services/tenantContext";
+import { permissionsForOrg } from "../config/permissions";
 
 export interface AuthRequest extends Request {
   user?: {
@@ -144,22 +145,39 @@ export function requireInternal(req: AuthRequest, res: Response, next: NextFunct
   next();
 }
 
+/**
+ * The superadmin bypass, bounded by what the workspace is sold.
+ *
+ * Every customer's owner is a superadmin of their own org, so an unconditional
+ * bypass handed them the platform modules — Content, Provisioning, Startup
+ * Ideas, Docs access, Deploy, Analytics — the moment a route forgot
+ * requirePlatformOrg. Bounding it here makes the withheld grants real rather
+ * than decorative.
+ */
+function isSuperadminOf(req: AuthRequest, ...permissions: string[]): boolean {
+  if (req.user?.roleSlug !== "superadmin") return false;
+  const entitled = new Set(permissionsForOrg(Boolean(req.user?.isPlatformOrg)));
+  return permissions.every((p) => entitled.has(p));
+}
+
 // For imperative in-handler checks (as opposed to the authorize() route guard below).
 export function hasPermission(req: AuthRequest, ...anyOf: string[]): boolean {
   if (req.user?.userType === "guest") {
     // A guest must never inherit a management bypass, whatever role it carries.
     return false;
   }
-  if (req.user?.roleSlug === "superadmin") return true;
+  if (isSuperadminOf(req, ...anyOf)) return true;
   const granted = req.user?.permissions || [];
   return anyOf.some((p) => granted.includes(p));
 }
 
 export function authorize(...requiredPermissions: string[]) {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
-    // Superadmin — the CEO panel — always has full authority, even if the
-    // permission catalog drifts or a role's grants are misconfigured.
-    if (req.user?.roleSlug === "superadmin") {
+    // Superadmin — the CEO panel — has full authority over its OWN workspace
+    // even if the catalog drifts or a role's grants are misconfigured. It is
+    // not authority over the platform's modules: a customer's owner is a
+    // superadmin too, so the bypass stops at what the workspace is entitled to.
+    if (isSuperadminOf(req, ...requiredPermissions)) {
       next();
       return;
     }
@@ -181,7 +199,7 @@ export function authorize(...requiredPermissions: string[]) {
 // from both CRM and Outreach) during a transition period.
 export function authorizeAny(...anyOfPermissions: string[]) {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (req.user?.roleSlug === "superadmin") {
+    if (isSuperadminOf(req, ...anyOfPermissions)) {
       next();
       return;
     }

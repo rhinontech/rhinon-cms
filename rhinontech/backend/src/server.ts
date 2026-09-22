@@ -235,6 +235,13 @@ function listen() {
   });
 }
 
+// A rejected promise that escapes a handler must not kill the process and take
+// every other tenant's in-flight request with it. Logged loudly instead, so it
+// still shows up in `pm2 logs` as something to fix.
+process.on("unhandledRejection", (reason) => {
+  console.error("[UnhandledRejection]", reason instanceof Error ? reason.stack : reason);
+});
+
 start().catch((err) => {
   console.error("Failed to start server:", err);
   process.exit(1);

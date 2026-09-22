@@ -117,7 +117,16 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
     if (isPreviewing) {
       return (previewRolePermissions ?? []).some((p) => anyOf.includes(p));
     }
-    if (roleSlug === "superadmin") return true;
+    // No blanket superadmin override. Every workspace owner is a superadmin of
+    // their own org, so returning true here showed customers the platform
+    // modules — Content, Startup Ideas, Analytics — in the sidebar, even though
+    // the API refuses them. The server already gives a platform superadmin the
+    // whole catalog and a tenant's only what their workspace holds, so the list
+    // is the answer for both.
+    //
+    // The one exception is the window before that list arrives: falling back to
+    // "allow" there would flash the full sidebar, so an empty list means the
+    // nav simply has not rendered yet.
     return anyOf.some((p) => permissions.includes(p));
   };
 

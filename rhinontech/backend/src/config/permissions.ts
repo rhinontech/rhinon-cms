@@ -1,4 +1,4 @@
-import { Role, Permission } from "../models";
+import { Role, Permission, Organization } from "../models";
 
 // Single source of truth for the permission catalog. The DB is synced to this
 // list on every boot (additive only) — see syncPermissionCatalog below.
@@ -46,6 +46,38 @@ export const PERMISSION_CATALOG = [
   { name: "deploy:trigger",     resource: "deploy",       action: "trigger" },
 ];
 
+/**
+ * Modules that operate Rhinon Tech itself and are never sold with a workspace.
+ * A tenant's superadmin is never granted these, so the sidebar item does not
+ * even render — the route guard (`requirePlatformOrg`) is the second line.
+ *
+ * Everything absent from this list IS part of the product, including Outreach,
+ * CRM, Campaigns, LinkedIn and Inbox: a customer runs sales and mail out of
+ * their own workspace, on their own domain.
+ *
+ * - provisioning: invites into Rhinon's OWN Slack workspace and GitHub org,
+ *   from one server-level token. Nothing about it is per-tenant.
+ * - content:      the CMS behind rhinonlabs.com and uppercurve.
+ * - startupIdeas: submissions from Rhinon's /build campaign.
+ * - docsAccess:   gating for Rhinon's own published docs.
+ * - deploy:       restarts our backend processes.
+ * - analytics:    rhinonlabs.com traffic.
+ */
+export const PLATFORM_ONLY_PERMISSIONS = new Set([
+  "provisioning:read", "provisioning:write",
+  "content:read", "content:write",
+  "startupIdeas:read", "startupIdeas:write",
+  "docsAccess:read", "docsAccess:write",
+  "deploy:read", "deploy:trigger",
+  "analytics:read",
+]);
+
+/** The catalog minus the platform modules — what a tenant superadmin holds. */
+export function permissionsForOrg(isPlatform: boolean): string[] {
+  const all = PERMISSION_CATALOG.map((p) => p.name);
+  return isPlatform ? all : all.filter((name) => !PLATFORM_ONLY_PERMISSIONS.has(name));
+}
+
 // Grants applied only when a permission is FIRST created, preserving today's
 // role behavior. Existing permissions are never re-granted, so revocations
 // made from the Settings UI survive restarts.
@@ -72,7 +104,8 @@ export const DEFAULT_ROLE_GRANTS: Record<string, string[]> = {
 
 // Idempotent, additive catalog sync. Runs on every boot:
 // - creates any catalog permissions missing from the DB
-// - superadmin always accumulates the full catalog (addPermissions, never set)
+// - each org's superadmin accumulates the catalog its org is entitled to:
+//   the full list for the platform org, minus PLATFORM_ONLY_PERMISSIONS for tenants
 // - DEFAULT_ROLE_GRANTS apply only to newly created permissions
 export async function syncPermissionCatalog() {
   const results = await Promise.all(
@@ -87,8 +120,21 @@ export async function syncPermissionCatalog() {
   // a new catalog entry has to reach all of them. Runs under system context at
   // boot, so this deliberately crosses tenants.
   const superadmins = await Role.findAll({ where: { slug: "superadmin" } });
+  const platformOrgIds = new Set(
+    (await Organization.findAll({ where: { isPlatform: true } })).map((org) => org.id)
+  );
   for (const superadmin of superadmins) {
-    await (superadmin as any).addPermissions(allPerms);
+    // organizationId is installed on tenant models at runtime by tenantScope,
+    // so it is not on the declared Role type.
+    const orgId = superadmin.get("organizationId") as string | null;
+    const allowed = new Set(permissionsForOrg(Boolean(orgId && platformOrgIds.has(orgId))));
+    const grant = allPerms.filter((p) => allowed.has(p.name));
+    await (superadmin as any).addPermissions(grant);
+
+    // Revoke, not just withhold: tenant superadmins created before this split
+    // already hold the platform grants — deploy:trigger among them.
+    const revoke = allPerms.filter((p) => !allowed.has(p.name));
+    if (revoke.length) await (superadmin as any).removePermissions(revoke);
   }
 
   if (createdPerms.length > 0) {

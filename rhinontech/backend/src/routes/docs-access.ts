@@ -1,10 +1,11 @@
 import { Router, Response } from "express";
 import { DocsAccess } from "../models";
-import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
+import { authenticate, authorize, requirePlatformOrg, AuthRequest } from "../middleware/authenticate";
 
 const router = Router();
 
-router.use(authenticate);
+// Gating for Rhinon's own published docs.
+router.use(authenticate, requirePlatformOrg);
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

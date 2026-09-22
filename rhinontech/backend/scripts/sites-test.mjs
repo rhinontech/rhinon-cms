@@ -1,5 +1,6 @@
 /**
- * Per-org Sites + public tenant routing.
+ * Module boundary between the platform and a customer workspace, plus public
+ * tenant routing.
  *
  * Run against a THROWAWAY database with the server on TEST_API (default :5002).
  * Creates a "swiggy" workspace, so run it on its own database — the isolation
@@ -27,24 +28,29 @@ const run = async () => {
   const tokenA = a.data.token;
   const apiKeyA = a.data.apiKey;
 
-  // --- a new workspace gets exactly one site, no brand picker --------------
+  // --- Content is a platform module, not part of a workspace --------------
+  // Sites still exist per-org in the data model (the platform org publishes
+  // rhinonlabs + uppercurve through them), but the CMS is not sold: a customer
+  // gets 403, and never sees the sidebar item because the grant is withheld.
   const sitesA = await call("/content/sites", { token: tokenA });
-  check("new workspace has exactly one site", Array.isArray(sitesA.data) && sitesA.data.length === 1,
-    JSON.stringify((sitesA.data || []).map((s) => s.slug)));
-  check("that site is the default", sitesA.data?.[0]?.isDefault === true, String(sitesA.data?.[0]?.isDefault));
-  check("it is NOT named rhinonlabs/uppercurve", !["rhinonlabs", "uppercurve"].includes(sitesA.data?.[0]?.slug),
-    sitesA.data?.[0]?.slug);
+  check("tenant cannot list sites", sitesA.status === 403, String(sitesA.status));
 
-  // --- tenant writes a blog without specifying a site ---------------------
   const blog = await call("/content/blogs", { method: "POST", token: tokenA, body: {
     title: "Scaling Swiggy Ops", excerpt: "How we did it", content: "Body text", status: "Published" } });
-  check("tenant blog created", blog.status === 201, `${blog.status} ${blog.data?.message ?? ""}`);
-  check("blog auto-assigned to the workspace's site", blog.data?.siteId === sitesA.data?.[0]?.id,
-    String(blog.data?.siteId));
+  check("tenant cannot write a blog", blog.status === 403, `${blog.status} ${blog.data?.message ?? ""}`);
 
-  // --- platform org keeps both brands -------------------------------------
-  // (login as the seeded platform superadmin is not available on a fresh DB,
-  //  so check via the public API instead)
+  const platformOnly = ["/startup-ideas", "/analytics/overview", "/docs-access", "/deploy/history"];
+  for (const path of platformOnly) {
+    const res = await call(path, { token: tokenA });
+    check(`tenant is refused ${path}`, res.status === 403, String(res.status));
+  }
+
+  // Provisioning would invite into Rhinon's own Slack/GitHub on a shared token.
+  const prov = await call("/provisioning/00000000-0000-0000-0000-000000000000/slack",
+    { method: "POST", token: tokenA });
+  check("tenant is refused provisioning", prov.status === 403, String(prov.status));
+
+  // --- the live marketing site is untouched --------------------------------
   const platformBlogs = await call("/public/blogs");
   check("unkeyed /public/blogs still answers (rhinonlabs back-comp)", platformBlogs.status === 200,
     String(platformBlogs.status));
@@ -54,23 +60,24 @@ const run = async () => {
   const uppercurve = await call("/public/blogs?domain=uppercurve");
   check("legacy ?domain=uppercurve still resolves", uppercurve.status === 200, String(uppercurve.status));
 
-  // --- tenant content via path prefix and via api key ----------------------
+  // --- public tenant routing still resolves workspaces ---------------------
   const bySlug = await call("/public/swiggy/blogs");
-  check("/public/:orgSlug/blogs returns the tenant's post",
-    bySlug.status === 200 && bySlug.data?.length === 1, `${bySlug.status} count=${(bySlug.data || []).length}`);
+  check("/public/:orgSlug/blogs resolves the workspace",
+    bySlug.status === 200 && bySlug.data?.length === 0, `${bySlug.status} count=${(bySlug.data || []).length}`);
 
   const byKey = await call("/public/blogs", { headers: { "x-api-key": apiKeyA } });
-  check("x-api-key returns the tenant's post",
-    byKey.status === 200 && byKey.data?.length === 1, `${byKey.status} count=${(byKey.data || []).length}`);
+  check("x-api-key resolves the workspace",
+    byKey.status === 200 && byKey.data?.length === 0, `${byKey.status} count=${(byKey.data || []).length}`);
 
   const unknown = await call("/public/doesnotexist/blogs");
   check("unknown workspace slug 404s", unknown.status === 404, String(unknown.status));
 
   // --- the booking bug ----------------------------------------------------
+  // The booking page is Rhinon Labs' own (support@rhinon.tech organizes the
+  // invite), so a workspace does not get one — while rhinonlabs.com keeps its.
   const avail = await call("/public/swiggy/schedule-call/availability?date=2026-12-15");
   const availPlatform = await call("/public/schedule-call/availability?date=2026-12-15");
-  check("tenant booking endpoint is reachable and org-scoped",
-    avail.status !== 404, `${avail.status}`);
+  check("tenant has no booking page", avail.status === 404, `${avail.status}`);
   check("platform booking endpoint still reachable", availPlatform.status !== 404, `${availPlatform.status}`);
 
   let failed = 0;

@@ -1,4 +1,7 @@
-import express from "express";
+// First import: patches Express so rejected async handlers reach the error
+// middleware at the bottom of this file instead of the process.
+import "./middleware/asyncErrors";
+import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { env } from "./config/env";
 import { requestLogger } from "./middleware/requestLogger";
@@ -153,6 +156,25 @@ app.use("/public/:orgSlug", publicTenantContext(), scheduleCallRoutes);
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
+});
+
+/**
+ * Last-resort error handler.
+ *
+ * Without one, a rejected handler took the whole process down: GET
+ * /inbox/conversations matched /inbox/:id, Postgres rejected "conversations" as
+ * a uuid, and the backend exited — every in-flight request of every tenant with
+ * it. Any signed-in user could do that with a typo'd URL.
+ *
+ * A malformed id is the caller's mistake, so it answers 400 rather than 500.
+ */
+app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  const badInput = err?.parent?.code === "22P02" || err?.original?.code === "22P02";
+  if (!badInput) console.error("[Unhandled]", err?.stack || err?.message || err);
+  if (res.headersSent) return;
+  res.status(badInput ? 400 : 500).json({
+    message: badInput ? "Malformed identifier in the request." : "Something went wrong.",
+  });
 });
 
 export default app;

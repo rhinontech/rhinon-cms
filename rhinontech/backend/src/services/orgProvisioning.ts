@@ -2,7 +2,7 @@ import crypto from "crypto";
 import { Role, Permission, Organization, PipelineStage, WorkflowStatus, Site } from "../models";
 import { DEFAULT_STAGES } from "../models/PipelineStage";
 import { DEFAULT_STATUSES } from "../config/seedWorkflow";
-import { PERMISSION_CATALOG, DEFAULT_ROLE_GRANTS } from "../config/permissions";
+import { PERMISSION_CATALOG, DEFAULT_ROLE_GRANTS, permissionsForOrg } from "../config/permissions";
 import type { Transaction } from "sequelize";
 import { runForOrg } from "./tenantContext";
 
@@ -124,7 +124,10 @@ export async function provisionOrganizationDefaults(
   return runForOrg(organizationId, async () => {
     const permissions = await Permission.findAll({ transaction });
     const byName = new Map(permissions.map((p) => [p.name, p]));
-    const allNames = PERMISSION_CATALOG.map((p) => p.name);
+    // A tenant's superadmin never receives the platform modules (Content,
+    // Provisioning, Startup Ideas, Docs access, Deploy, Analytics).
+    const org = await Organization.findByPk(organizationId, { transaction });
+    const allNames = permissionsForOrg(Boolean(org?.isPlatform));
 
     const rolesCreated: string[] = [];
     for (const def of roleDefinitions(allNames)) {
