@@ -93,7 +93,7 @@ export function Footer() {
               { name: "Events", href: "/events" },
               { name: "Community", href: "/community" },
               { name: "Blogs", href: "/blog" },
-              { name: "Jobs", href: "/#jobs" },
+              { name: "Jobs", href: "/jobs" },
             ].map((link) => (
               <div key={link.name}>
                 <Link href={link.href} className="text-sm font-bold text-gray-900 hover:text-black transition-colors">

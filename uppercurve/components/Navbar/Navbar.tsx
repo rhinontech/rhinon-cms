@@ -81,7 +81,7 @@ export function Navbar() {
         // },
       ],
     },
-    { name: "Jobs", href: "/#jobs" },
+    { name: "Jobs", href: "/jobs" },
   ];
 
   const secondaryLinks = [
