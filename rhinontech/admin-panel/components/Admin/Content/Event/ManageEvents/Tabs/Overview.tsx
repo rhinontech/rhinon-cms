@@ -18,7 +18,7 @@ import {
   X,
   ExternalLink,
 } from "lucide-react";
-import { IEvent } from "../../AddEventDialog";
+import type { IEvent } from "../../types";
 import { formatDateRange, formatTimeRange } from "@/utils/events";
 import { toggleEventAcceptResponse } from "@/services/Events/eventServices";
 import { useNotification } from "@/helpers/NotificationContext";

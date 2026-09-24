@@ -277,6 +277,16 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
     delete updates.id;
     delete updates.createdById;
 
+    // The legacy blog-shaped columns mirror the event ones, and the public
+    // listing shows an event when EITHER isPublished or status says so. Create
+    // sets both; update used to set only what it was sent, so unpublishing an
+    // event left status="Published" and it stayed on the public site.
+    if (typeof updates.isPublished === "boolean") {
+      updates.status = updates.isPublished ? "Published" : "Draft";
+    }
+    if (typeof updates.eventTitle === "string") updates.title = updates.eventTitle;
+    if (typeof updates.eventSubtitle === "string") updates.excerpt = updates.eventSubtitle;
+
     if (updates.eventSlug && updates.eventSlug !== event.eventSlug) {
       const cleanSlug = toSlug(updates.eventSlug);
       const conflict = await Event.findOne({
@@ -286,6 +296,7 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
         return res.status(409).json({ error: "Event URL already in use." });
       }
       updates.eventSlug = cleanSlug;
+      updates.slug = cleanSlug;
     }
 
     await event.update(updates);

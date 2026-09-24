@@ -33,7 +33,9 @@ export async function apiFetch<T = unknown>(path: string, init?: RequestInit): P
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: "Request failed" }));
-    throw new Error(err.message || "Request failed");
+    // Some routes answer { error } rather than { message } (events, among
+    // others); without this the real reason — "slug already in use" — was lost.
+    throw new Error(err.message || err.error || "Request failed");
   }
   return res.json() as Promise<T>;
 }

@@ -12,7 +12,7 @@ import { EventReferrals } from "../EventCommonComponents/Referrals/Referrals";
 import ReminderEmailV2 from "../EventCommonComponents/ReminderEmailV2/ReminderEmailV2";
 import CertificateTemplate from "../EventCommonComponents/CertificateTemplate/CertificateTemplate";
 import EventResponse from "../EventCommonComponents/EventResponse/EventResponse";
-import { IEvent } from "../AddEventDialog";
+import type { IEvent } from "../types";
 import {
   eventGuestStatus,
   getAllGuests,

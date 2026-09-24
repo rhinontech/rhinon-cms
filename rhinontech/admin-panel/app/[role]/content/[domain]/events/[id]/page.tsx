@@ -1,10 +1,9 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import EditEventPage from "@/components/Admin/Content/Event/EditEvent/EditEvent";
+import EventEditor from "@/components/Admin/Content/Event/Editor/EventEditor";
 
 export default function EventDetailRoute() {
   const params = useParams();
-  const id = params.id as string;
-  return <EditEventPage eventId={id} />;
+  return <EventEditor eventId={params.id as string} />;
 }

@@ -49,7 +49,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AddEventDialog, IEvent } from "./AddEventDialog";
+import type { IEvent } from "./types";
 import DuplicateEventDialog from "./EventCommonComponents/DuplicateEventDialog";
 import {
   deleteEvents,
@@ -68,7 +68,6 @@ export default function Events() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedEvent, setSelectedEvent] = useState<IEvent | null>(null);
-  const [isAddEventOpen, setIsAddEventOpen] = useState(false);
 
   // Delete State
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -157,22 +156,10 @@ export default function Events() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Dialog open={isAddEventOpen} onOpenChange={setIsAddEventOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm" className="gap-2 bg-primary text-primary-foreground">
-                <Plus className="w-4 h-4" /> Add Event
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Create New Event</DialogTitle>
-              </DialogHeader>
-              <AddEventDialog
-                pageRefresh={fetchEvents}
-                onClose={() => setIsAddEventOpen(false)}
-              />
-            </DialogContent>
-          </Dialog>
+          {/* The full-page editor replaced the old create dialog. */}
+          <Button size="sm" className="gap-2 bg-primary text-primary-foreground" onClick={() => router.push(`${pathname}/new`)}>
+            <Plus className="w-4 h-4" /> Add Event
+          </Button>
         </div>
       </div>
 
