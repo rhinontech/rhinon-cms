@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import EventDetails from "@/components/Pages/Events/EventDetails/EventDetails";
-import { getEventBySlug, upcomingEvents } from "@/components/Pages/Events/eventsData";
+import { getEventBySlug } from "@/services/eventService";
 
-export function generateStaticParams() {
-  return upcomingEvents.map((event) => ({ slug: event.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -13,7 +11,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const event = getEventBySlug(slug);
+  const event = await getEventBySlug(slug);
   if (!event) {
     return { title: "Event not found — UpperCurve" };
   }
@@ -29,7 +27,7 @@ export default async function Page({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const event = getEventBySlug(slug);
+  const event = await getEventBySlug(slug);
 
   if (!event) {
     notFound();

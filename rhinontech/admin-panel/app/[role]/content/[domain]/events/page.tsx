@@ -1,7 +1,7 @@
 "use client";
 
-import { BlogsManager } from "@/components/Admin/Content/BlogsManager";
+import Events from "@/components/Admin/Content/Event/Events";
 
 export default function ContentEventsPage() {
-  return <BlogsManager resource="events" />;
+  return <Events />;
 }

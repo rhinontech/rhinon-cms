@@ -1,5 +1,7 @@
 import express, { Router, Response, Request } from "express";
-import { ClientRequest, Project, User, Lead, Blog, CaseStudy, Event, PageView, DocsAccess, WorkflowEnrollment, CampaignActivity, Visitor, Unsubscribe, StartupIdea } from "../models";
+import { Op } from "sequelize";
+import { ClientRequest, Project, User, Lead, Blog, CaseStudy, Event, EventGuest, PageView, DocsAccess, WorkflowEnrollment, CampaignActivity, Visitor, Unsubscribe, StartupIdea } from "../models";
+import { registerEventHandler } from "./events";
 import { verifyUnsubscribe } from "../services/unsubscribeToken";
 import { resolvePublicSite } from "../services/publicTenant";
 import type { BlogDomain } from "../models/Blog";
@@ -521,13 +523,14 @@ router.get("/blogs/:slug", async (req: Request, res: Response) => {
   }
 });
 
-// GET /public/events — published uppercurve events, newest first
+// GET /public/events — published events for UpperCurve
 router.get("/events", async (_req: Request, res: Response) => {
   try {
     const events = await Event.findAll({
-      where: { status: "Published" },
-      attributes: PUBLIC_EVENT_LIST_FIELDS as unknown as string[],
-      order: [["publishedAt", "DESC"]],
+      where: {
+        [Op.or]: [{ isPublished: true }, { status: "Published" }],
+      },
+      order: [["eventStartDate", "ASC"], ["createdAt", "DESC"]],
     });
     res.json(events);
   } catch (err) {
@@ -539,9 +542,12 @@ router.get("/events", async (_req: Request, res: Response) => {
 // GET /public/events/:slug — single published event
 router.get("/events/:slug", async (req: Request, res: Response) => {
   try {
+    const slug = req.params.slug;
     const event = await Event.findOne({
-      where: { slug: req.params.slug, status: "Published" },
-      attributes: PUBLIC_EVENT_DETAIL_FIELDS as unknown as string[],
+      where: {
+        [Op.or]: [{ eventSlug: slug }, { slug: slug }],
+        [Op.and]: [{ [Op.or]: [{ isPublished: true }, { status: "Published" }] }],
+      },
     });
     if (!event) {
       res.status(404).json({ message: "Event not found" });
@@ -553,6 +559,9 @@ router.get("/events/:slug", async (req: Request, res: Response) => {
     res.status(500).json({ message: "Failed to fetch event" });
   }
 });
+
+// POST /public/events/register — register guest for an event from public UpperCurve site
+router.post("/events/register", registerEventHandler as any);
 
 const PUBLIC_CASE_STUDY_FIELDS = [
   "id", "title", "description", "slug", "client", "industry",

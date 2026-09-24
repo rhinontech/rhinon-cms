@@ -34,6 +34,7 @@ import { Site } from "./Site";
 import { Blog } from "./Blog";
 import { CaseStudy } from "./CaseStudy";
 import { Event } from "./Event";
+import { EventGuest } from "./EventGuest";
 import { PageView } from "./PageView";
 import { DocsAccess } from "./DocsAccess";
 import { Page } from "./Page";
@@ -285,6 +286,11 @@ User.hasMany(CaseStudy, { foreignKey: "createdById", as: "caseStudies" });
 Event.belongsTo(User, { foreignKey: "createdById", as: "author" });
 User.hasMany(Event, { foreignKey: "createdById", as: "events" });
 
+Event.hasMany(EventGuest, { foreignKey: "eventId", as: "guests", onDelete: "CASCADE" });
+EventGuest.belongsTo(Event, { foreignKey: "eventId", as: "event" });
+EventGuest.belongsTo(User, { foreignKey: "userId", as: "user" });
+User.hasMany(EventGuest, { foreignKey: "userId", as: "eventRegistrations" });
+
 // Pages (Notion-like docs) Associations
 Page.belongsTo(User, { foreignKey: "ownerId", as: "owner" });
 User.hasMany(Page, { foreignKey: "ownerId", as: "ownedPages" });
@@ -422,6 +428,7 @@ export {
   Blog,
   CaseStudy,
   Event,
+  EventGuest,
   PageView,
   DocsAccess,
   Page,
@@ -451,6 +458,61 @@ export {
 };
 
 export async function syncDatabase(force = false) {
+  try {
+    // Pre-sync migration: Ensure new event columns exist with safe defaults and backfill legacy rows
+    // This prevents Postgres 23502 (NOT NULL constraint violation) when adding columns to existing tables with rows
+    await sequelize.query(`
+      DO $$
+      DECLARE
+        r RECORD;
+      BEGIN
+        IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'events') THEN
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "eventSlug" VARCHAR(255);
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "eventTitle" VARCHAR(255);
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "eventSubtitle" VARCHAR(255);
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "eventStartDate" VARCHAR(255) DEFAULT '';
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "eventEndDate" VARCHAR(255) DEFAULT '';
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "eventStartTime" VARCHAR(255);
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "eventEndTime" VARCHAR(255);
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "speakers" JSONB DEFAULT '[]'::jsonb;
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "numberOfAttendees" INTEGER DEFAULT 0;
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "eventCreativeUrl" TEXT;
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "isPublished" BOOLEAN DEFAULT false;
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "eventCategory" VARCHAR(255) DEFAULT 'Normal';
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "location" TEXT;
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "locationType" TEXT;
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "tags" TEXT[] DEFAULT ARRAY[]::TEXT[];
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "eventDetails" JSONB DEFAULT '{}'::jsonb;
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "canAcceptResponse" BOOLEAN DEFAULT false;
+
+          -- Drop NOT NULL from all columns except id, createdAt, updatedAt
+          -- so new event creation never violates legacy blog-like constraints (publishedAt, authorName, domain, readTime, etc.)
+          FOR r IN 
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_schema = 'public' 
+              AND table_name = 'events' 
+              AND is_nullable = 'NO' 
+              AND column_name NOT IN ('id', 'createdAt', 'updatedAt')
+          LOOP
+            EXECUTE 'ALTER TABLE public.events ALTER COLUMN "' || r.column_name || '" DROP NOT NULL;';
+          END LOOP;
+
+          IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'events' AND column_name = 'slug') THEN
+            UPDATE public.events SET "eventSlug" = slug WHERE ("eventSlug" IS NULL OR "eventSlug" = '') AND slug IS NOT NULL;
+          END IF;
+          IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'events' AND column_name = 'title') THEN
+            UPDATE public.events SET "eventTitle" = title WHERE ("eventTitle" IS NULL OR "eventTitle" = '') AND title IS NOT NULL;
+          END IF;
+          UPDATE public.events SET "eventSlug" = id::text WHERE "eventSlug" IS NULL OR "eventSlug" = '';
+          UPDATE public.events SET "eventTitle" = 'Untitled Event' WHERE "eventTitle" IS NULL OR "eventTitle" = '';
+        END IF;
+      END $$;
+    `);
+  } catch (preSyncErr) {
+    console.warn("[syncDatabase] Pre-sync migration check:", preSyncErr);
+  }
+
   // alter: { drop: false } — adds new columns/tables but never drops constraints,
   // avoiding the SequelizeUnknownConstraintError on PostgreSQL when FK constraints
   // don't already exist and Sequelize tries to DROP them before re-adding.
