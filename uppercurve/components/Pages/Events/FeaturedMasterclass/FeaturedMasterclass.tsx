@@ -99,13 +99,14 @@ const EVENT_VISUALS: Record<
 
 const CATEGORIES = ["All Events", "Workshop", "Showcase", "Build Jam", "AMA", "Meetup"];
 
-export function FeaturedMasterclass() {
+export function FeaturedMasterclass({ events }: { events?: UpcomingEvent[] }) {
   const [selectedCategory, setSelectedCategory] = useState("All Events");
 
+  const sourceEvents = events && events.length > 0 ? events : upcomingEvents;
   const filteredEvents =
     selectedCategory === "All Events"
-      ? upcomingEvents
-      : upcomingEvents.filter((event) => event.type.toLowerCase() === selectedCategory.toLowerCase());
+      ? sourceEvents
+      : sourceEvents.filter((event) => event.type.toLowerCase() === selectedCategory.toLowerCase());
 
   return (
     <section className="w-full pb-20 pt-4 font-sans">
@@ -117,38 +118,24 @@ export function FeaturedMasterclass() {
           </h2>
           <div className="w-20 h-1 bg-[#0066FF] mt-2.5 rounded-full" />
         </div>
-
-        {/* Category Pills */}
-        {/* <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${selectedCategory === cat
-                  ? "bg-[#0066FF] text-white shadow-sm"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div> */}
       </div>
 
       {/* Events List */}
       <div className="space-y-6">
         {filteredEvents.map((event: UpcomingEvent) => {
+          const firstSpeaker = (event as any).speakers?.[0];
           const visual = EVENT_VISUALS[event.slug] || {
-            ribbon: "LIMITED SEATS",
+            ribbon: event.type?.toUpperCase() || "LIMITED SEATS",
             posterTitle: event.title,
             posterSubtitle: event.tagline,
-            instructorName: "UpperCurve Mentors",
-            instructorRole: "Industry Expert",
+            instructorName: firstSpeaker?.name || "UpperCurve Mentors",
+            instructorRole: firstSpeaker?.designation ? `${firstSpeaker.designation}${firstSpeaker.company ? ` · ${firstSpeaker.company}` : ""}` : "Industry Expert",
             badgeText: event.mode.toUpperCase(),
             badgeType: event.type,
             bgGradient: "from-[#021338] via-[#052b82] to-[#0b4bc9]",
             accentColor: "#FACC15",
-            showAvatar: false,
+            showAvatar: Boolean(firstSpeaker?.photoUrl),
+            avatarSrc: firstSpeaker?.photoUrl || "/instructor/image1.avif",
           };
 
           return (

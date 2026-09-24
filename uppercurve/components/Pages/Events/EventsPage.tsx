@@ -5,14 +5,16 @@ import UpcomingEventsSection from "./UpcomingEventsSection/UpcomingEventsSection
 import PastEventsTimeline from "./PastEventsTimeline/PastEventsTimeline";
 import TopicFAQSection from "../Homepage/TopicFAQSection/TopicFAQSection";
 
-export function EventsPage() {
+import { UpcomingEvent } from "./eventsData";
+
+export function EventsPage({ events }: { events?: UpcomingEvent[] }) {
   return (
     <main className="min-h-screen bg-white flex flex-col items-center">
       <div className="w-full max-w-7xl">
         <EventsHero />
       </div>
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6">
-        <FeaturedMasterclass />
+        <FeaturedMasterclass events={events} />
       </div>
       {/* <div id="upcoming" className="w-full max-w-7xl mx-auto max-sm:px-5">
         <UpcomingEventsSection />

@@ -52,6 +52,7 @@ import { Site } from "./Site";
 import { Blog } from "./Blog";
 import { CaseStudy } from "./CaseStudy";
 import { Event } from "./Event";
+import { EventGuest } from "./EventGuest";
 import { Page } from "./Page";
 import { PageShare } from "./PageShare";
 import { PageAttachment } from "./PageAttachment";
@@ -89,7 +90,7 @@ export const TENANT_MODELS: ModelStatic<any>[] = [
   ReviewCycle, ReviewGoal, ReviewSubmission,
   Document, LetterTemplate,
   LinkedInToken, GoogleCalendarToken,
-  Site, Blog, CaseStudy, Event,
+  Site, Blog, CaseStudy, Event, EventGuest,
   Page, PageShare, PageAttachment,
   Workflow, WorkflowEnrollment,
   Account, PipelineStage, Deal, Activity, SavedView,

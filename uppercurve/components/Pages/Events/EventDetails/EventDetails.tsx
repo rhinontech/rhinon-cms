@@ -134,6 +134,8 @@ export function EventDetails({ event }: { event: UpcomingEvent }) {
         eventTitle={event.title}
         eventDate={event.dateLabel}
         eventTime={event.time}
+        eventId={(event as any).id}
+        eventSlug={event.slug}
       />
     </main>
   );

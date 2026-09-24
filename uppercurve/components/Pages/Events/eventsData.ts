@@ -1,4 +1,5 @@
 export interface UpcomingEvent {
+  id?: string;
   slug: string;
   title: string;
   tagline: string;
@@ -16,6 +17,9 @@ export interface UpcomingEvent {
   about: string[];
   agenda: { time: string; item: string }[];
   takeaways: string[];
+  bannerUrl?: string;
+  speakers?: Array<{ name: string; company?: string; designation?: string; photoUrl?: string }>;
+  canAcceptResponse?: boolean;
 }
 
 export const upcomingEvents: UpcomingEvent[] = [

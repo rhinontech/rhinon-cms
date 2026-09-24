@@ -49,6 +49,7 @@ import meetingsRoutes from "./routes/meetings";
 import scheduleCallRoutes from "./routes/scheduleCall";
 import startupIdeasRoutes from "./routes/startupIdeas";
 import deployRoutes from "./routes/deploy";
+import eventsRoutes from "./routes/events";
 
 const app = express();
 
@@ -111,6 +112,7 @@ app.use("/google-calendar", googleCalendarSettingsRoutes);
 app.use("/meetings", meetingsRoutes);
 app.use("/ai", aiRoutes);
 app.use("/content", contentRoutes);
+app.use("/events", eventsRoutes);
 // The workspace's brands. Every brand-split module reads this before it renders.
 app.use("/sites", sitesRoutes);
 app.use("/analytics", analyticsRoutes);

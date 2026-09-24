@@ -5,6 +5,7 @@ import { Blog, CaseStudy, Event, Site } from "../models";
 import type { BlogDomain } from "../models/Blog";
 import { authenticate, authorize, requirePlatformOrg, AuthRequest } from "../middleware/authenticate";
 import { uploadBuffer, publicUrl } from "../services/storage";
+import eventsRouter from "./events";
 
 const BLOG_DOMAINS: BlogDomain[] = ["rhinonlabs", "uppercurve"];
 function parseDomain(value: unknown): BlogDomain {
@@ -274,71 +275,7 @@ router.delete("/case-studies/:id", authorize("content:write"), async (req: AuthR
 });
 
 /* ----------------------------- EVENTS ----------------------------- */
-// Uppercurve's events — same shape/CRUD as Blogs, but a single-domain resource
-// (no `domain` filter/field, since only uppercurve owns events).
-
-// GET /content/events — all events (drafts included) for the CMS
-router.get("/events", authorize("content:read"), async (_req: AuthRequest, res: Response) => {
-  const events = await Event.findAll({ order: [["updatedAt", "DESC"]] });
-  res.json(events);
-});
-
-// GET /content/events/:id — single event (for the editor)
-router.get("/events/:id", authorize("content:read"), async (req: AuthRequest, res: Response) => {
-  const event = await Event.findByPk(req.params.id);
-  if (!event) { res.status(404).json({ message: "Event not found" }); return; }
-  res.json(event);
-});
-
-// POST /content/events
-router.post("/events", authorize("content:write"), async (req: AuthRequest, res: Response) => {
-  try {
-    const b = req.body || {};
-    const hasBlocks = Array.isArray(b.contentBlocks) && b.contentBlocks.length > 0;
-    if (!b.title || !b.excerpt || (!b.content && !hasBlocks)) {
-      res.status(400).json({ message: "title, excerpt and content (or content blocks) are required" });
-      return;
-    }
-    const slug = await uniqueSlug(Event, b.slug || b.title);
-    const event = await Event.create({
-      ...b,
-      content: b.content || "",
-      slug,
-      createdById: req.user!.userId,
-    });
-    res.status(201).json(event);
-  } catch (error: any) {
-    res.status(400).json({ message: error.message });
-  }
-});
-
-// PUT /content/events/:id
-router.put("/events/:id", authorize("content:write"), async (req: AuthRequest, res: Response) => {
-  try {
-    const event = await Event.findByPk(req.params.id);
-    if (!event) { res.status(404).json({ message: "Event not found" }); return; }
-    const b = { ...req.body };
-    delete b.id;
-    delete b.createdById;
-    // Re-slug only when an explicit slug/title change requires it
-    if (b.slug && b.slug !== event.slug) {
-      b.slug = await uniqueSlug(Event, b.slug, event.id);
-    } else {
-      delete b.slug;
-    }
-    await event.update(b);
-    res.json(event);
-  } catch (error: any) {
-    res.status(400).json({ message: error.message });
-  }
-});
-
-// DELETE /content/events/:id
-router.delete("/events/:id", authorize("content:write"), async (req: AuthRequest, res: Response) => {
-  const event = await Event.findByPk(req.params.id);
-  if (!event) { res.status(404).json({ message: "Event not found" }); return; }
-  await event.destroy();
-  res.json({ ok: true });
-});
+// Delegate /content/events to the comprehensive eventsRouter (cloned from TPS)
+router.use("/events", eventsRouter);
 
 export default router;

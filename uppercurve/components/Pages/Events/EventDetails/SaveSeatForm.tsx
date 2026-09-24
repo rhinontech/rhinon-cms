@@ -1,17 +1,44 @@
 "use client";
 
 import React, { useState } from "react";
+import { registerForEvent } from "@/services/eventService";
 
-export function SaveSeatForm({ eventTitle }: { eventTitle: string }) {
+export function SaveSeatForm({
+  eventTitle,
+  eventId,
+  eventSlug,
+}: {
+  eventTitle: string;
+  eventId?: string;
+  eventSlug?: string;
+}) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim() && email.trim()) {
+    if (!name.trim() || !email.trim()) return;
+
+    setSubmitting(true);
+    setErrorMsg("");
+
+    const res = await registerForEvent({
+      eventId,
+      eventSlug,
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone.trim() || undefined,
+    });
+
+    setSubmitting(false);
+    if (res.success) {
       setSubmitted(true);
+    } else {
+      setErrorMsg(res.message || "Failed to reserve seat");
     }
   };
 
@@ -82,23 +109,34 @@ export function SaveSeatForm({ eventTitle }: { eventTitle: string }) {
         />
       </div>
 
+      {errorMsg && (
+        <div className="p-2.5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs font-medium">
+          {errorMsg}
+        </div>
+      )}
+
       <button
         type="submit"
-        className="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm sm:text-base py-3.5 px-6 rounded-xl shadow-sm hover:shadow-md transition-all active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer font-poppins"
+        disabled={submitting}
+        className="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-75 text-white font-medium text-sm sm:text-base py-3.5 px-6 rounded-xl shadow-sm hover:shadow-md transition-all active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer font-poppins"
       >
-        <span>Reserve Free Seat</span>
+        <span>{submitting ? "Reserving..." : "Reserve Free Seat"}</span>
         <svg
-          className="w-4 h-4"
+          className={`w-4 h-4 ${submitting ? "animate-spin" : ""}`}
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
           viewBox="0 0 24 24"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
-          />
+          {submitting ? (
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+          ) : (
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
+            />
+          )}
         </svg>
       </button>
 
