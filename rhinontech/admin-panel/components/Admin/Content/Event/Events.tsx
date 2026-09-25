@@ -40,7 +40,7 @@ import {
 import { useCurrentSite } from "@/lib/sites";
 import type { IEvent } from "./types";
 import { CATEGORIES, type EventCategory } from "./Editor/eventForm";
-import { DuplicateDialog } from "./Manage/EventManage";
+import { DuplicateDialog, TAB_COUNT, TAB_TRIGGER } from "./Manage/EventManage";
 import { eventsApi } from "./Manage/api";
 import { ConfirmDialog, EmptyState, StatCard, formatDay } from "./Manage/ui";
 
@@ -333,19 +333,18 @@ export default function Events() {
         </div>
 
         <div className="flex flex-col lg:flex-row lg:items-center gap-3">
-          <div role="tablist" aria-label="Which events" className="glass-card inline-flex w-fit rounded-xl p-1">
+          <div role="tablist" aria-label="Which events" className="glass-card inline-flex w-fit gap-1 rounded-xl p-1.5">
             {VIEWS.map((v) => (
               <button
                 key={v.id}
                 role="tab"
                 aria-selected={view === v.id}
+                data-state={view === v.id ? "active" : "inactive"}
                 onClick={() => setView(v.id)}
-                className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
-                  view === v.id ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
-                }`}
+                className={TAB_TRIGGER + " inline-flex items-center"}
               >
                 {v.label}
-                <span className="rounded-full bg-muted px-1.5 text-[11px] font-semibold tabular-nums">{buckets[v.id].length}</span>
+                <span className={TAB_COUNT}>{buckets[v.id].length}</span>
               </button>
             ))}
           </div>

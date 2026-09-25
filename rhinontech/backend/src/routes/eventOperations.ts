@@ -2,7 +2,7 @@ import { Router, Response } from "express";
 import { Op } from "sequelize";
 import { sequelize } from "../config/database";
 import { AuthRequest } from "../middleware/authenticate";
-import { Event, EventGuest, EventEmailTemplate, EventEnrollmentEmail, EventCertificateTemplate } from "../models";
+import { Event, EventGuest, EventEmailTemplate, EventEnrollmentEmail, EventCertificateTemplate, MailboxAddress, User } from "../models";
 import {
   EMAIL_TARGET_ROLES,
   EMAIL_TARGET_TYPES,
@@ -19,7 +19,8 @@ import {
   renderForGuest,
   replacePlaceholders,
   sendEnrollmentEmail,
-  withEventSite,
+  sendEventEmail,
+  eventSender,
   wrapEmailTemplate,
 } from "../services/eventEmail";
 import {
@@ -29,8 +30,9 @@ import {
   issueCertificate,
   renderCertificate,
 } from "../services/eventCertificate";
-import { sendEmail } from "../services/mailer";
 import { uploadBuffer, publicUrl } from "../services/storage";
+import { brandSender } from "../services/siteSender";
+import { mailboxesFor } from "../services/userMailboxes";
 
 /**
  * Everything around an event beyond its own row: guest approval, referrals,
@@ -226,6 +228,71 @@ async function templateOr404(id: unknown) {
   return template;
 }
 
+/* ====================================================== email sender ==== */
+
+/**
+ * The addresses someone may send an event's emails from: their own company
+ * address and any extra address assigned to them — and, for the Super Admin,
+ * every extra address in the workspace. Each is shown on the event's brand
+ * domain (hello@uppercurve.in for an Uppercurve event).
+ */
+async function senderOptions(req: AuthRequest, event: Event) {
+  const user = req.user!;
+  const siteId = (event.get("siteId") as string | null) ?? null;
+  const own = await mailboxesFor({ id: user.userId, companyEmail: user.companyEmail, fullName: user.fullName, emailDomain: user.emailDomain });
+  const options = new Map<string, { localPart: string; label: string; name: string | null }>();
+  for (const m of own) {
+    options.set(m.address.split("@")[0], { localPart: m.address.split("@")[0], label: m.shared ? "Assigned to you" : "Your address", name: m.shared ? m.name : null });
+  }
+  if (user.roleSlug === "superadmin") {
+    const shared = await MailboxAddress.findAll({ include: [{ model: User, as: "assignee", attributes: ["fullName"] }], order: [["localPart", "ASC"]] });
+    for (const row of shared) {
+      if (options.has(row.localPart)) continue;
+      const owner = (row.get("assignee") as User | null)?.fullName;
+      options.set(row.localPart, { localPart: row.localPart, label: owner ? `Shared · ${owner}` : "Shared · unassigned", name: row.displayName });
+    }
+  }
+  return Promise.all(
+    [...options.values()].map(async (o) => {
+      const base = `${o.localPart}@${user.emailDomain}`;
+      return { ...o, address: (await brandSender(base, siteId)) || base };
+    })
+  );
+}
+
+router.get(
+  "/:eventId/email/sender",
+  handle(async (req, res) => {
+    const event = await eventOr404(String(req.params.eventId));
+    const current = await eventSender(event);
+    const fallback = process.env.AWS_SES_FROM_EMAIL || "";
+    res.json({
+      localPart: (event.get("emailFromLocalPart") as string | null) ?? null,
+      name: (event.get("emailFromName") as string | null) ?? null,
+      current: { address: current.from || (await brandSender(fallback, (event.get("siteId") as string | null) ?? null)) || fallback, name: current.fromName ?? null },
+      options: await senderOptions(req, event),
+    });
+  })
+);
+
+router.put(
+  "/:eventId/email/sender",
+  handle(async (req, res) => {
+    const event = await eventOr404(String(req.params.eventId));
+    const raw = req.body?.localPart;
+    const localPart = typeof raw === "string" && raw.trim() ? raw.trim().toLowerCase() : null;
+    // Only an address the person may actually use — nobody sends as support@
+    // just by typing it here.
+    if (localPart && !(await senderOptions(req, event)).some((o) => o.localPart === localPart)) {
+      throw fail(403, "You can only choose one of your own addresses.");
+    }
+    const name = typeof req.body?.name === "string" ? req.body.name.replace(/[\r\n<>"]/g, "").trim().slice(0, 120) || null : null;
+    await event.update({ emailFromLocalPart: localPart, emailFromName: name });
+    const current = await eventSender(event);
+    res.json({ result: "SUCCESS", localPart, name, current: { address: current.from ?? null, name: current.fromName ?? null } });
+  })
+);
+
 /** Counts per audience, so the editor can say "goes to 42 guests". */
 router.get(
   "/:eventId/email/audience",
@@ -340,7 +407,7 @@ router.post(
     const template = await templateOr404(req.params.templateId);
     const event = await eventOr404(template.eventId);
     const { subject, html } = await renderForGuest(template, event, null, name || "there");
-    await withEventSite(event, () => sendEmail({ to: email, subject: `[Test] ${subject}`, html }));
+    await sendEventEmail(event, { to: email, subject: `[Test] ${subject}`, html });
     res.json({ message: "Test email sent successfully" });
   })
 );
@@ -429,13 +496,11 @@ router.post(
     const template = await EventEnrollmentEmail.findOne({ where: { eventId: event.id, type: String(req.params.type) } });
     if (!template) throw fail(404, "Save this email before sending a test");
     const values = await placeholdersFor(event, null, req.body?.name || "there");
-    await withEventSite(event, () =>
-      sendEmail({
-        to: email,
-        subject: `[Test] ${replacePlaceholders(template.subject || String(event.get("eventTitle")), values, { html: false })}`,
-        html: wrapEmailTemplate(cleanHtml(replacePlaceholders(template.body, values))),
-      })
-    );
+    await sendEventEmail(event, {
+      to: email,
+      subject: `[Test] ${replacePlaceholders(template.subject || String(event.get("eventTitle")), values, { html: false })}`,
+      html: wrapEmailTemplate(cleanHtml(replacePlaceholders(template.body, values))),
+    });
     res.json({ result: "SUCCESS", message: "Test email sent" });
   })
 );
@@ -554,14 +619,12 @@ router.post(
     const sample = { name: "Priya Sharma", date: new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }), certificateId: "UC-SAMP-LE01" };
     const png = await renderCertificate(template, sample);
     const values = { ...(await placeholdersFor(event, null, sample.name)), recipientName: sample.name, certificateId: sample.certificateId, certificateLink: "#", verifyLink: "#" };
-    await withEventSite(event, () =>
-      sendEmail({
+    await sendEventEmail(event, {
         to: email,
         subject: `[Test] ${replacePlaceholders(template.emailSubject || `Your certificate — ${event.get("eventTitle")}`, values, { html: false })}`,
         html: wrapEmailTemplate(cleanHtml(replacePlaceholders(template.emailBody!, values))),
         attachments: [{ filename: "certificate-sample.png", content: png, contentType: "image/png" }],
-      })
-    );
+      });
     res.json({ success: true, message: "Test email sent" });
   })
 );

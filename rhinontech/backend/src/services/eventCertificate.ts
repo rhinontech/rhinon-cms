@@ -5,14 +5,13 @@ import { createCanvas, loadImage, GlobalFonts } from "@napi-rs/canvas";
 import { Event, EventGuest, EventCertificateTemplate } from "../models";
 import type { CertificateField } from "../models/EventCertificateTemplate";
 import { uploadFixedObject, getPresignedReadUrl } from "./storage";
-import { sendEmail } from "./mailer";
 import {
   capitalizeName,
   cleanHtml,
   eventPublicUrl,
   placeholdersFor,
   replacePlaceholders,
-  withEventSite,
+  sendEventEmail,
   wrapEmailTemplate,
 } from "./eventEmail";
 
@@ -140,14 +139,12 @@ export async function issueCertificate(guestId: string, { email = true }: { emai
       certificateLink: await certificateDownloadUrl(certificateId),
       verifyLink: await verifyUrl(event, certificateId),
     };
-    await withEventSite(event, () =>
-      sendEmail({
+    await sendEventEmail(event, {
         to: guest.email!,
         subject: replacePlaceholders(template.emailSubject || `Your certificate — ${event.get("eventTitle")}`, values, { html: false }),
         html: wrapEmailTemplate(cleanHtml(replacePlaceholders(template.emailBody!, values))),
         attachments: [{ filename: `${certificateId}.png`, content: png, contentType: "image/png" }],
-      })
-    );
+      });
   }
   return { guest, certificateId, alreadyIssued: false };
 }

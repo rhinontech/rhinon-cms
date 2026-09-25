@@ -122,7 +122,19 @@ const json = (method: string, body?: unknown): RequestInit => ({
   ...(body === undefined ? {} : { body: JSON.stringify(body) }),
 });
 
+export interface SenderOption { localPart: string; address: string; label: string; name: string | null }
+export interface EventSender {
+  localPart: string | null;
+  name: string | null;
+  /** What guests see right now, on this event's brand domain. */
+  current: { address: string | null; name: string | null };
+  options: SenderOption[];
+}
+
 export const eventsApi = {
+  sender: (eventId: string) => apiFetch<EventSender>(`/events/${eventId}/email/sender`),
+  setSender: (eventId: string, localPart: string | null, name: string | null) =>
+    apiFetch<{ current: EventSender["current"] }>(`/events/${eventId}/email/sender`, json("PUT", { localPart, name })),
   list: () => apiFetch<{ events: IEvent[] }>(`/events`).then((r) => r.events ?? []),
   event: (id: string) => apiFetch<{ event: IEvent }>(`/events/${id}`).then((r) => r.event),
   update: (id: string, body: Partial<IEvent>) => apiFetch(`/events/${id}`, json("PUT", body)),

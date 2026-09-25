@@ -51,6 +51,9 @@ export interface EventAttributes {
   siteId?: string | null;
   organizationId?: string | null;
   createdById?: string | null;
+  /** Local part of the address event emails go out from (hello); the brand supplies the domain. */
+  emailFromLocalPart?: string | null;
+  emailFromName?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -82,6 +85,8 @@ export interface EventCreationAttributes
     | "siteId"
     | "organizationId"
     | "createdById"
+    | "emailFromLocalPart"
+    | "emailFromName"
   > {}
 
 export class Event
@@ -119,6 +124,8 @@ export class Event
   declare siteId: string | null;
   declare organizationId: string | null;
   declare createdById: string | null;
+  declare emailFromLocalPart: string | null;
+  declare emailFromName: string | null;
   declare readonly createdAt: Date;
   declare readonly updatedAt: Date;
 }
@@ -256,6 +263,14 @@ Event.init(
     },
     createdById: {
       type: DataTypes.UUID,
+      allowNull: true,
+    },
+    emailFromLocalPart: {
+      type: DataTypes.STRING(64),
+      allowNull: true,
+    },
+    emailFromName: {
+      type: DataTypes.STRING(120),
       allowNull: true,
     },
   },

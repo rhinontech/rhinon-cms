@@ -35,6 +35,7 @@ import {
   eventsApi,
   type EnrollmentTemplate,
   type EnrollmentType,
+  type EventSender,
   type ReminderTemplate,
   type TargetRole,
   type TargetType,
@@ -497,9 +498,101 @@ function RemindersSection({ event }: ManageContext) {
   );
 }
 
+const DEFAULT_SENDER = "__default";
+
+/**
+ * Which address every email of this event goes out from — status emails,
+ * reminders, certificates and tests. Guests' replies land in that address's
+ * Inbox, so pick the one whose owner should answer them.
+ */
+function SenderSection({ event }: ManageContext) {
+  const [data, setData] = useState<EventSender | null>(null);
+  const [choice, setChoice] = useState(DEFAULT_SENDER);
+  const [name, setName] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    eventsApi
+      .sender(String(event.id))
+      .then((d) => {
+        setData(d);
+        setChoice(d.localPart ?? DEFAULT_SENDER);
+        setName(d.name ?? "");
+      })
+      .catch(() => setData(null));
+  }, [event.id]);
+
+  if (!data) return null;
+  const picked = data.options.find((o) => o.localPart === choice);
+  const dirty = (choice === DEFAULT_SENDER ? null : choice) !== data.localPart || (name.trim() || null) !== data.name;
+  // A saved address that is no longer offered (unassigned since) still sends; say so.
+  const orphan = data.localPart && !data.options.some((o) => o.localPart === data.localPart);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const localPart = choice === DEFAULT_SENDER ? null : choice;
+      const res = await eventsApi.setSender(String(event.id), localPart, name.trim() || null);
+      setData({ ...data, localPart, name: name.trim() || null, current: { address: res.current.address ?? data.current.address, name: res.current.name } });
+      toast.success(`Event emails now come from ${res.current.address ?? "the default address"}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not save");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="glass-card rounded-2xl p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="text-[15px] font-semibold">Sender</h3>
+          <p className="text-[13px] text-muted-foreground">
+            Every email for this event comes from this address, and guests&apos; replies land in its Inbox.
+          </p>
+        </div>
+        <p className="rounded-lg bg-muted px-3 py-1.5 text-[12.5px]">
+          Guests see: <span className="font-medium">{data.current.name ? `${data.current.name} <${data.current.address}>` : data.current.address}</span>
+        </p>
+      </div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+        <div className="space-y-1.5">
+          <Label>Send from</Label>
+          <Select value={choice} onValueChange={setChoice}>
+            <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value={DEFAULT_SENDER}>Default address</SelectItem>
+              {orphan ? <SelectItem value={data.localPart!}>{data.localPart}@… (no longer assigned)</SelectItem> : null}
+              {data.options.map((o) => (
+                <SelectItem key={o.localPart} value={o.localPart}>
+                  {o.address} <span className="text-muted-foreground">· {o.label}</span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="sender-name">Sender name</Label>
+          <Input id="sender-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={120}
+            placeholder={picked?.name || "Brand name"} />
+        </div>
+        <Button onClick={save} disabled={!dirty || saving} className="gap-1.5">
+          {saving ? <Loader2 className="size-4 animate-spin" /> : null} Save sender
+        </Button>
+      </div>
+      {data.options.length === 0 ? (
+        <p className="mt-3 text-[12px] text-muted-foreground">
+          No other addresses yet — the Super Admin can create hello@ or events@ in Team → Email addresses.
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 export default function EmailsTab(ctx: ManageContext) {
   return (
     <div className="space-y-10">
+      <SenderSection {...ctx} />
       <EnrollmentSection {...ctx} />
       <RemindersSection {...ctx} />
     </div>

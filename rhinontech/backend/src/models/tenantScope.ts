@@ -56,6 +56,7 @@ import { EventGuest } from "./EventGuest";
 import { EventEmailTemplate } from "./EventEmailTemplate";
 import { EventEnrollmentEmail } from "./EventEnrollmentEmail";
 import { EventCertificateTemplate } from "./EventCertificateTemplate";
+import { MailboxAddress } from "./MailboxAddress";
 import { Page } from "./Page";
 import { PageShare } from "./PageShare";
 import { PageAttachment } from "./PageAttachment";
@@ -95,6 +96,7 @@ export const TENANT_MODELS: ModelStatic<any>[] = [
   LinkedInToken, GoogleCalendarToken,
   Site, Blog, CaseStudy, Event, EventGuest,
   EventEmailTemplate, EventEnrollmentEmail, EventCertificateTemplate,
+  MailboxAddress,
   Page, PageShare, PageAttachment,
   Workflow, WorkflowEnrollment,
   Account, PipelineStage, Deal, Activity, SavedView,

@@ -1,9 +1,10 @@
 import crypto from "crypto";
 import { Op, type WhereOptions } from "sequelize";
 import { createEvent } from "ics";
-import { Event, EventGuest, EventEmailTemplate, EventEnrollmentEmail, Site } from "../models";
+import { Event, EventGuest, EventEmailTemplate, EventEnrollmentEmail, Organization, Site } from "../models";
 import { INVITE_EMAIL_TYPES, type EnrollmentEmailType } from "../models/EventEnrollmentEmail";
 import { sendEmail } from "./mailer";
+import { brandSender } from "./siteSender";
 import { runForSite } from "./siteContext";
 import { env } from "../config/env";
 
@@ -106,6 +107,31 @@ export async function withEventSite<T>(event: Event, fn: () => Promise<T>): Prom
   return runForSite(site ? { id: site.id, slug: site.slug } : null, Boolean(site), fn);
 }
 
+/**
+ * Who an event's emails come from: the address picked in the event's Emails
+ * tab (hello@, events@ — see Team → Email addresses), on the brand's domain,
+ * under the brand's name. With nothing picked, the mailer's default address is
+ * used, still on the brand's domain — but no longer as "Rhinon Labs".
+ */
+export async function eventSender(event: Event): Promise<{ from?: string; fromName?: string }> {
+  const site = await siteFor(event);
+  const fromName = (event.get("emailFromName") as string | null) || site?.name || undefined;
+  const localPart = event.get("emailFromLocalPart") as string | null;
+  if (!localPart) return { fromName };
+  const org = await Organization.findByPk(event.get("organizationId") as string, { attributes: ["emailDomain"] });
+  if (!org?.emailDomain) return { fromName };
+  const base = `${localPart}@${org.emailDomain}`;
+  return { from: (await brandSender(base, site?.id ?? null)) || base, fromName };
+}
+
+type EventMail = Parameters<typeof sendEmail>[0];
+
+/** Sends one email as the event: its brand, its chosen sender. */
+export async function sendEventEmail(event: Event, message: EventMail) {
+  const sender = await eventSender(event);
+  return withEventSite(event, () => sendEmail({ ...message, ...sender }));
+}
+
 export async function eventPublicUrl(event: Event): Promise<string> {
   const site = await siteFor(event);
   const base = (site?.siteUrl || process.env.UPPERCURVE_SITE_URL || "").replace(/\/$/, "");
@@ -179,6 +205,7 @@ export async function deliverTemplate(template: EventEmailTemplate) {
   const delivered = new Set((template.deliveredTo || []).map((e) => e.toLowerCase()));
   const failed: string[] = [];
   let sentNow = 0;
+  const sender = await eventSender(event);
 
   await withEventSite(event, async () => {
     for (const guest of guests) {
@@ -186,7 +213,7 @@ export async function deliverTemplate(template: EventEmailTemplate) {
       if (!email || delivered.has(email)) continue;
       try {
         const { subject, html } = await renderForGuest(template, event, guest);
-        await sendEmail({ to: email, subject, html });
+        await sendEmail({ to: email, subject, html, ...sender });
         delivered.add(email);
         sentNow += 1;
         // Persist progress as we go, so a crash mid-run doesn't forget who was reached.
@@ -265,13 +292,12 @@ export async function sendEnrollmentEmail(event: Event, guest: EventGuest, typeO
   const subject = replacePlaceholders(template.subject || String(event.get("eventTitle")), values, { html: false });
   const ics = INVITE_EMAIL_TYPES.includes(template.type) ? buildEventIcs(event, template, guest.email, values.eventLink) : null;
 
-  await withEventSite(event, () =>
-    sendEmail({
+  await sendEventEmail(event, {
       to: guest.email!,
       subject,
       html,
       ...(ics ? { icalEvent: { method: "REQUEST", content: ics, filename: "invite.ics" } } : {}),
-    })
+    }
   );
   return { sent: true as const, type: template.type };
 }

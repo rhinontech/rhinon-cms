@@ -22,6 +22,8 @@ export interface Site {
   name: string;
   slug: string;
   siteUrl: string | null;
+  /** Mail sent under this brand leaves on this domain; null keeps the workspace's. */
+  sendingDomain?: string | null;
   isDefault: boolean;
   supportsEvents: boolean;
   supportsCaseStudies: boolean;

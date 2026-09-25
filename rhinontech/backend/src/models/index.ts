@@ -38,6 +38,7 @@ import { EventGuest } from "./EventGuest";
 import { EventEmailTemplate } from "./EventEmailTemplate";
 import { EventEnrollmentEmail } from "./EventEnrollmentEmail";
 import { EventCertificateTemplate } from "./EventCertificateTemplate";
+import { MailboxAddress } from "./MailboxAddress";
 import { PageView } from "./PageView";
 import { DocsAccess } from "./DocsAccess";
 import { Page } from "./Page";
@@ -300,6 +301,10 @@ EventEnrollmentEmail.belongsTo(Event, { foreignKey: "eventId", as: "event" });
 Event.hasOne(EventCertificateTemplate, { foreignKey: "eventId", as: "certificateTemplate", onDelete: "CASCADE" });
 EventCertificateTemplate.belongsTo(Event, { foreignKey: "eventId", as: "event" });
 
+// Extra addresses (hello@, support@) handed to one employee each.
+User.hasMany(MailboxAddress, { foreignKey: "assignedUserId", as: "mailboxAddresses", onDelete: "SET NULL" });
+MailboxAddress.belongsTo(User, { foreignKey: "assignedUserId", as: "assignee", onDelete: "SET NULL" });
+
 // Pages (Notion-like docs) Associations
 Page.belongsTo(User, { foreignKey: "ownerId", as: "owner" });
 User.hasMany(Page, { foreignKey: "ownerId", as: "ownedPages" });
@@ -441,6 +446,7 @@ export {
   EventEmailTemplate,
   EventEnrollmentEmail,
   EventCertificateTemplate,
+  MailboxAddress,
   PageView,
   DocsAccess,
   Page,

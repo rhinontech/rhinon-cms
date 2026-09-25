@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import multer from "multer";
 import { Op } from "sequelize";
-import { User, Role, Document } from "../models";
+import { User, Role, Document, MailboxAddress } from "../models";
 import type { ExitReason } from "../models/User";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 import { finalizeOffboarding, todayIST } from "../services/offboarding";
@@ -132,6 +132,10 @@ router.post("/", authorize("employees:write"), async (req: AuthRequest, res: Res
   const emailTaken = await User.findOne({ where: { companyEmail } });
   if (emailTaken) {
     res.status(409).json({ message: `${companyEmail} is already taken. Choose a different prefix.` });
+    return;
+  }
+  if (await MailboxAddress.findOne({ where: { localPart: emailPrefix.toLowerCase() } })) {
+    res.status(409).json({ message: `${companyEmail} is a shared address (Team → Email addresses). Choose a different prefix.` });
     return;
   }
 

@@ -6,7 +6,8 @@ import { authenticate, authorize, AuthRequest } from "../middleware/authenticate
 import { resolveSiteContext } from "../middleware/siteContext";
 import { sendEmail } from "../services/mailer";
 import { getPresignedUploadUrl, getPresignedReadUrl, getObjectBuffer } from "../services/storage";
-import { brandSender, mailboxVariants } from "../services/siteSender";
+import { brandSender } from "../services/siteSender";
+import { findMailbox, mailboxesFor, ownerVariants, type UserMailbox } from "../services/userMailboxes";
 
 type Att = { key: string; name: string; size: number; mimeType: string };
 
@@ -39,50 +40,73 @@ router.use(authenticate);
 router.use(resolveSiteContext);
 
 /**
- * The signed-in user's own mailbox address.
+ * Every mailbox the signed-in user reads and sends as: their own company
+ * address, then any extra address (hello@, support@) the superadmin assigned
+ * them in Team → Email addresses.
  *
  * This used to fall back to a literal "admin@rhinontech.in" in eight places.
  * Under multi-tenancy that is a cross-tenant read: any user without a company
  * address — a collaborator, a half-provisioned account — would have been served
  * Rhinon Tech's own inbox. There is no safe default, so refuse instead.
  */
-function requireMailbox(req: AuthRequest, res: Response): string | null {
-  const address = req.user?.companyEmail;
-  if (!address) {
+async function requireMailboxes(req: AuthRequest, res: Response): Promise<UserMailbox[] | null> {
+  const user = req.user;
+  const mailboxes = user
+    ? await mailboxesFor({ id: user.userId, companyEmail: user.companyEmail, fullName: user.fullName, emailDomain: user.emailDomain })
+    : [];
+  if (!mailboxes.length) {
     res.status(409).json({
       message: "This account has no company email address yet, so it has no mailbox.",
     });
     return null;
   }
-  return address;
+  return mailboxes;
 }
 
 /**
- * The caller's mailbox as stored on messages, across every brand.
+ * The caller's mailboxes as stored on messages, across every brand.
  *
  * `ownerEmail` records the address a message was actually sent from or
  * delivered to, so once a brand has its own sending domain one person owns
- * prabhat@rhinontech.in AND prabhat@uppercurve.in. Matching a single address
- * here would hide a user's own Uppercurve mail from them — sent items missing
- * from Sent, replies never arriving — while the rows sat right there in the
- * table. The brand filter still narrows this per site.
+ * prabhat@rhinontech.in AND prabhat@uppercurve.in — and hello@ on both, when
+ * hello is theirs. Matching a single address here would hide mail from them
+ * while the rows sat right there in the table. The brand filter still narrows
+ * this per site.
  */
-function ownedBy(mailbox: string): string | { [Op.in]: string[] } {
-  const variants = mailboxVariants(mailbox);
-  return variants.length > 1 ? { [Op.in]: variants } : mailbox;
+function ownedBy(mailboxes: UserMailbox[]): string | { [Op.in]: string[] } {
+  const variants = ownerVariants(mailboxes);
+  return variants.length > 1 ? { [Op.in]: variants } : variants[0];
 }
 
-function ownsEmail(mailbox: string, ownerEmail: string): boolean {
-  return mailboxVariants(mailbox).includes((ownerEmail || "").toLowerCase());
+function ownsEmail(mailboxes: UserMailbox[], ownerEmail: string): boolean {
+  return ownerVariants(mailboxes).includes((ownerEmail || "").toLowerCase());
+}
+
+/**
+ * Which mailbox a send goes out from: the one asked for, when it is the
+ * caller's; otherwise `fallback`. Asking for someone else's address is refused
+ * rather than silently swapped, so nobody believes they sent as hello@ when
+ * they did not.
+ */
+function pickSender(mailboxes: UserMailbox[], requested: unknown, fallback: UserMailbox, res: Response): UserMailbox | null {
+  if (requested === undefined || requested === null || requested === "") return fallback;
+  const chosen = findMailbox(mailboxes, requested);
+  if (!chosen) {
+    res.status(403).json({ message: "You can only send from your own addresses." });
+    return null;
+  }
+  return chosen;
 }
 
 const folders = new Set(["inbox", "sent", "drafts", "archive", "trash"]);
 
 router.get("/", authorize("inbox:read"), async (req: AuthRequest, res: Response) => {
-  const { folder = "inbox", search, starred } = req.query;
-  const mailbox = requireMailbox(req, res);
-  if (!mailbox) return;
-  const where: WhereOptions = { ownerEmail: ownedBy(mailbox), isInternal: false };
+  const { folder = "inbox", search, starred, mailbox: only } = req.query;
+  const mailboxes = await requireMailboxes(req, res);
+  if (!mailboxes) return;
+  // ?mailbox= narrows to one of the caller's addresses; anything else is ignored.
+  const chosen = findMailbox(mailboxes, only);
+  const where: WhereOptions = { ownerEmail: ownedBy(chosen ? [chosen] : mailboxes), isInternal: false };
 
   if (typeof folder === "string" && folders.has(folder)) {
     where.folder = folder;
@@ -110,6 +134,20 @@ router.get("/", authorize("inbox:read"), async (req: AuthRequest, res: Response)
   });
 
   res.json(emails);
+});
+
+/**
+ * The addresses the caller can send from, as they appear in the brand being
+ * viewed — hello@uppercurve.in while working in Uppercurve.
+ */
+router.get("/addresses", authorize("inbox:read"), async (req: AuthRequest, res: Response) => {
+  const mailboxes = await requireMailboxes(req, res);
+  if (!mailboxes) return;
+  res.json(
+    await Promise.all(
+      mailboxes.map(async (m) => ({ address: (await brandSender(m.address)) || m.address, name: m.name, shared: m.shared }))
+    )
+  );
 });
 
 // Internal directory for the composer's To-field suggestions.
@@ -141,13 +179,14 @@ router.post("/:id/note", authorize("inbox:write"), async (req: AuthRequest, res:
     res.status(400).json({ message: "Note body or an attachment is required" });
     return;
   }
-  const mailbox = requireMailbox(req, res);
-  if (!mailbox) return;
+  const mailboxes = await requireMailboxes(req, res);
+  if (!mailboxes) return;
   const original = await InboxEmail.findByPk(req.params.id);
-  if (!original) {
+  if (!original || !ownsEmail(mailboxes, original.ownerEmail)) {
     res.status(404).json({ message: "Email not found" });
     return;
   }
+  const mailbox = mailboxes[0].address;
   const note = await InboxEmail.create({
     threadKey: original.threadKey,
     folder: original.folder,
@@ -170,8 +209,8 @@ router.post("/:id/note", authorize("inbox:write"), async (req: AuthRequest, res:
 });
 
 router.get("/:id", authorize("inbox:read"), async (req: AuthRequest, res: Response) => {
-  const mailbox = requireMailbox(req, res);
-  if (!mailbox) return;
+  const mailboxes = await requireMailboxes(req, res);
+  if (!mailboxes) return;
   const email = await InboxEmail.findByPk(req.params.id, {
     include: [{ model: Campaign, as: "campaign", attributes: ["id", "name"] }],
   });
@@ -181,7 +220,7 @@ router.get("/:id", authorize("inbox:read"), async (req: AuthRequest, res: Respon
     return;
   }
 
-  if (!ownsEmail(mailbox, email.ownerEmail)) {
+  if (!ownsEmail(mailboxes, email.ownerEmail)) {
     res.status(403).json({ message: "Forbidden" });
     return;
   }
@@ -191,7 +230,7 @@ router.get("/:id", authorize("inbox:read"), async (req: AuthRequest, res: Respon
   }
 
   const thread = await InboxEmail.findAll({
-    where: { threadKey: email.threadKey, ownerEmail: ownedBy(mailbox) },
+    where: { threadKey: email.threadKey, ownerEmail: ownedBy(mailboxes) },
     order: [["sentAt", "ASC"]],
   });
 
@@ -206,7 +245,13 @@ router.get("/:id", authorize("inbox:read"), async (req: AuthRequest, res: Respon
       avatarCache.set(from, sender?.avatarKey ? await getPresignedReadUrl(sender.avatarKey) : null);
     }
     senderAvatarUrl = avatarCache.get(from) ?? null;
-    serialized.push({ ...item.toJSON(), attachments: await presignAll(item.attachments), senderAvatarUrl });
+    serialized.push({
+      ...item.toJSON(),
+      attachments: await presignAll(item.attachments),
+      senderAvatarUrl,
+      // Sent by the viewer from ANY of their addresses — own or shared.
+      fromMe: ownsEmail(mailboxes, item.fromEmail),
+    });
   }
 
   res.json({ ...email.toJSON(), isRead: true, attachments: await presignAll(email.attachments), thread: serialized });
@@ -223,10 +268,12 @@ router.post("/", authorize("inbox:write"), async (req: AuthRequest, res: Respons
 
   const sentAt = new Date();
   const threadKey = `thread-${sentAt.getTime()}`;
-  const mailboxAddress = requireMailbox(req, res);
-  if (!mailboxAddress) return;
+  const mailboxes = await requireMailboxes(req, res);
+  if (!mailboxes) return;
+  const sender = pickSender(mailboxes, req.body.from, mailboxes[0], res);
+  if (!sender) return;
   // Sent from the brand the user is working in — the [domain] in the URL.
-  const fromEmail = (await brandSender(mailboxAddress)) || mailboxAddress;
+  const fromEmail = (await brandSender(sender.address)) || sender.address;
   const isDraft = folder === "drafts";
 
   if (!isDraft) {
@@ -235,7 +282,7 @@ router.post("/", authorize("inbox:write"), async (req: AuthRequest, res: Respons
         to: toEmails,
         cc: ccEmails,
         from: fromEmail,
-        fromName: req.user?.fullName,
+        fromName: sender.name || req.user?.fullName,
         via: "ses",
         subject,
         html: body,
@@ -251,7 +298,7 @@ router.post("/", authorize("inbox:write"), async (req: AuthRequest, res: Respons
   const email = await InboxEmail.create({
     threadKey,
     folder: isDraft ? "drafts" : "sent",
-    fromName: req.user?.fullName || "Rhinon",
+    fromName: sender.name || req.user?.fullName || "Rhinon",
     fromEmail,
     toEmails,
     ccEmails,
@@ -278,22 +325,28 @@ router.post("/:id/reply", authorize("inbox:write"), async (req: AuthRequest, res
     return;
   }
 
-  const mailbox = requireMailbox(req, res);
-  if (!mailbox) return;
+  const mailboxes = await requireMailboxes(req, res);
+  if (!mailboxes) return;
   const original = await InboxEmail.findByPk(req.params.id);
-  if (!original) {
+  if (!original || !ownsEmail(mailboxes, original.ownerEmail)) {
     res.status(404).json({ message: "Email not found" });
     return;
   }
 
+  // By default a thread is answered from the address it lives in — mail to
+  // hello@ is answered as hello@ — unless the sender picks another of theirs.
+  const threadMailbox = findMailbox(mailboxes, original.ownerEmail) ?? mailboxes[0];
+  const sender = pickSender(mailboxes, req.body.from, threadMailbox, res);
+  if (!sender) return;
+
   // A reply goes out under the brand it is being answered from, so a thread
   // that arrived at Uppercurve is answered by Uppercurve.
-  const replyFrom = (await brandSender(mailbox)) || mailbox;
+  const replyFrom = (await brandSender(sender.address)) || sender.address;
 
   const reply = await InboxEmail.create({
     threadKey: original.threadKey,
     folder: "sent",
-    fromName: req.user?.fullName || "Rhinon",
+    fromName: sender.name || req.user?.fullName || "Rhinon",
     fromEmail: replyFrom,
     toEmails: [original.fromEmail],
     ccEmails: [],
@@ -316,7 +369,7 @@ router.post("/:id/reply", authorize("inbox:write"), async (req: AuthRequest, res
     await sendEmail({
       to: reply.toEmails,
       from: reply.fromEmail,
-      fromName: req.user?.fullName,
+      fromName: reply.fromName,
       via: "ses",
       subject: reply.subject,
       html: reply.body || `${attachments.length} attachment(s)`,
@@ -333,8 +386,8 @@ router.post("/:id/reply", authorize("inbox:write"), async (req: AuthRequest, res
 });
 
 router.patch("/:id", authorize("inbox:write"), async (req: AuthRequest, res: Response) => {
-  const mailbox = requireMailbox(req, res);
-  if (!mailbox) return;
+  const mailboxes = await requireMailboxes(req, res);
+  if (!mailboxes) return;
   const email = await InboxEmail.findByPk(req.params.id);
 
   if (!email) {
@@ -342,7 +395,7 @@ router.patch("/:id", authorize("inbox:write"), async (req: AuthRequest, res: Res
     return;
   }
 
-  if (!ownsEmail(mailbox, email.ownerEmail)) {
+  if (!ownsEmail(mailboxes, email.ownerEmail)) {
     res.status(403).json({ message: "Forbidden" });
     return;
   }

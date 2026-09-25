@@ -5,6 +5,9 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   Award,
+  LayoutDashboard,
+  Mail,
+  Share2,
   CalendarDays,
   Copy,
   ExternalLink,
@@ -121,6 +124,24 @@ export function DuplicateDialog({ event, open, onOpenChange, onDone }: { event: 
     </Dialog>
   );
 }
+
+const TAB_META: { id: TabId; label: string; teamLabel?: string; icon: typeof Users }[] = [
+  { id: "overview", label: "Overview", icon: LayoutDashboard },
+  { id: "guests", label: "Guests", icon: Users },
+  { id: "emails", label: "Emails", icon: Mail },
+  { id: "referrals", label: "Referrals", icon: Share2 },
+  { id: "responses", label: "Feedback", teamLabel: "Submissions", icon: MessageSquareText },
+  { id: "certificates", label: "Certificates", icon: Award },
+];
+
+// Selected tab is solid ink (inverts in dark mode); the rest stay quiet until hovered.
+export const TAB_TRIGGER =
+  "group flex-none h-9 gap-2 rounded-lg border-0 px-3.5 text-[13px] font-medium text-muted-foreground transition-colors " +
+  "hover:bg-muted/70 hover:text-foreground data-[state=active]:bg-foreground data-[state=active]:text-background data-[state=active]:shadow-sm " +
+  "dark:text-muted-foreground dark:data-[state=active]:bg-foreground dark:data-[state=active]:text-background";
+export const TAB_COUNT =
+  "rounded-full bg-muted px-1.5 py-px text-[11px] font-semibold tabular-nums text-foreground/80 " +
+  "group-data-[state=active]:bg-background/20 group-data-[state=active]:text-background";
 
 export default function EventManage({ eventId }: { eventId: string }) {
   const router = useRouter();
@@ -288,17 +309,17 @@ export default function EventManage({ eventId }: { eventId: string }) {
         </div>
 
         <Tabs value={tab} onValueChange={(v) => goTo(v as TabId)} className="space-y-6">
-          <TabsList className="glass-card h-auto p-1 rounded-xl w-full justify-start overflow-x-auto">
-            <TabsTrigger value="overview" className="rounded-lg px-4 py-2">Overview</TabsTrigger>
-            <TabsTrigger value="guests" className="rounded-lg px-4 py-2 gap-2">
-              Guests <span className="rounded-full bg-muted px-1.5 text-[11px] font-semibold">{stats.total}</span>
-            </TabsTrigger>
-            <TabsTrigger value="emails" className="rounded-lg px-4 py-2">Emails</TabsTrigger>
-            <TabsTrigger value="referrals" className="rounded-lg px-4 py-2">Referrals</TabsTrigger>
-            <TabsTrigger value="responses" className="rounded-lg px-4 py-2 gap-2">
-              {team ? "Submissions" : "Feedback"} <span className="rounded-full bg-muted px-1.5 text-[11px] font-semibold">{stats.responses}</span>
-            </TabsTrigger>
-            <TabsTrigger value="certificates" className="rounded-lg px-4 py-2">Certificates</TabsTrigger>
+          <TabsList className="glass-card h-auto w-full justify-start gap-1 overflow-x-auto rounded-xl p-1.5">
+            {TAB_META.map(({ id, label, teamLabel, icon: Icon }) => {
+              const count = id === "guests" ? stats.total : id === "responses" ? stats.responses : null;
+              return (
+                <TabsTrigger key={id} value={id} className={TAB_TRIGGER}>
+                  <Icon className="size-4" aria-hidden />
+                  {team && teamLabel ? teamLabel : label}
+                  {count !== null ? <span className={TAB_COUNT}>{count}</span> : null}
+                </TabsTrigger>
+              );
+            })}
           </TabsList>
           <TabsContent value="overview"><OverviewTab {...ctx} /></TabsContent>
           <TabsContent value="guests"><GuestsTab {...ctx} /></TabsContent>
