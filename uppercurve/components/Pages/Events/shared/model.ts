@@ -60,7 +60,8 @@ export interface EventDetailModel {
   dayCount: number;
   mode: "Online" | "In person" | "Hybrid";
   location: string;
-  seats: number;
+  /** numberOfAttendees — the attendee figure the admin sets for social proof ("300+ attending"), not a capacity. */
+  attending: number;
 
   speakers: Speaker[];
   about: string[];
@@ -271,7 +272,9 @@ export function buildEventDetail(api: ApiEvent, now = new Date()): EventDetailMo
     category,
     type: text(api.eventType) || "Workshop",
     ctaLabel: text(api.ctaType) || "Register Now",
-    canRegister: Boolean(api.canAcceptResponse) && !isPast,
+    // Registration is open until the event has passed. canAcceptResponse is the
+    // feedback switch, not a registration one (as in Product Space).
+    canRegister: !isPast,
     isPast,
     bannerUrl: text(api.eventCreativeUrl) || undefined,
 
@@ -285,7 +288,7 @@ export function buildEventDetail(api: ApiEvent, now = new Date()): EventDetailMo
     dayCount,
     mode,
     location,
-    seats: Number(api.numberOfAttendees) || 0,
+    attending: Number(api.numberOfAttendees) || 0,
 
     speakers,
     about,

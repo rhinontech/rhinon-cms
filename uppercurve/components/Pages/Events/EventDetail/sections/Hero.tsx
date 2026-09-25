@@ -181,7 +181,7 @@ export default function Hero({ event, config }: { event: EventDetailModel; confi
                 <div>
                   <p className="text-[13px] font-bold text-[#0B1B3D]">{event.mode}</p>
                   <p className="text-xs text-[#64748B]">
-                    {event.seats > 0 ? `${event.seats} seats` : event.durationLabel}
+                    {event.attending > 0 ? `${event.attending}+ attending` : event.durationLabel}
                   </p>
                 </div>
               </div>

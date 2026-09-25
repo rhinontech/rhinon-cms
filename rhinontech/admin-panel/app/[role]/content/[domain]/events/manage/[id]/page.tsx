@@ -1,10 +1,15 @@
 "use client";
 
+import { Suspense } from "react";
 import { useParams } from "next/navigation";
-import ManageEventPage from "@/components/Admin/Content/Event/ManageEvents/ManageEvents";
+import EventManage from "@/components/Admin/Content/Event/Manage/EventManage";
 
-export default function ManageRoute() {
+export default function ManageEventRoute() {
   const params = useParams();
-  const id = params.id as string;
-  return <ManageEventPage eventId={id} />;
+  // EventManage reads ?tab= with useSearchParams, which needs a Suspense boundary.
+  return (
+    <Suspense>
+      <EventManage eventId={params.id as string} />
+    </Suspense>
+  );
 }

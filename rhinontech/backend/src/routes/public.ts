@@ -2,6 +2,8 @@ import express, { Router, Response, Request } from "express";
 import { Op } from "sequelize";
 import { ClientRequest, Project, User, Lead, Blog, CaseStudy, Event, EventGuest, PageView, DocsAccess, WorkflowEnrollment, CampaignActivity, Visitor, Unsubscribe, StartupIdea } from "../models";
 import { registerEventHandler } from "./events";
+import { verifyGuestToken } from "../services/eventEmail";
+import { certificateDownloadUrl } from "../services/eventCertificate";
 import { verifyUnsubscribe } from "../services/unsubscribeToken";
 import { resolvePublicSite } from "../services/publicTenant";
 import type { BlogDomain } from "../models/Blog";
@@ -562,6 +564,179 @@ router.get("/events/:slug", async (req: Request, res: Response) => {
 
 // POST /public/events/register — register guest for an event from public UpperCurve site
 router.post("/events/register", registerEventHandler as any);
+
+/* ---------------------------------------------------------------------------
+ * Guest self-service. Guests have no accounts: their personal pages are
+ * reached with the signed token from their registration / emails
+ * (services/eventEmail.ts guestToken), which names exactly one guest.
+ * ------------------------------------------------------------------------- */
+
+const publishedWhere = { [Op.or]: [{ isPublished: true }, { status: "Published" }] };
+
+async function guestFromToken(slug: string, token: unknown) {
+  const guestId = verifyGuestToken(token);
+  if (!guestId) return { error: "This link is invalid or has been altered." as const };
+  const guest = await EventGuest.findByPk(guestId);
+  const event = guest ? await Event.findByPk(guest.eventId) : null;
+  if (!guest || !event || (event.get("eventSlug") !== slug && event.get("slug") !== slug)) {
+    return { error: "This link doesn't match an event registration." as const };
+  }
+  return { guest, event };
+}
+
+// POST /public/events/check-guest-status — { slug, email } → already registered?
+router.post("/events/check-guest-status", async (req: Request, res: Response) => {
+  try {
+    const slug = String(req.body?.slug || req.body?.eventSlug || "");
+    const email = String(req.body?.email || "").trim().toLowerCase();
+    if (!slug || !email) {
+      res.status(400).json({ error: "slug and email are required" });
+      return;
+    }
+    const event = await Event.findOne({ where: { eventSlug: slug, ...publishedWhere } });
+    if (!event) {
+      res.status(404).json({ error: "Event not found" });
+      return;
+    }
+    const guest = await EventGuest.findOne({ where: { eventId: event.id, email }, attributes: ["guestType"] });
+    res.json(guest ? { result: "SUBMITTED", guestType: guest.guestType } : { result: "NOT_FOUND" });
+  } catch (err) {
+    console.error("check-guest-status failed:", err);
+    res.status(500).json({ error: "Could not check registration" });
+  }
+});
+
+// GET /public/events/:slug/whatsapp — the event's community link, if it has one
+router.get("/events/:slug/whatsapp", async (req: Request, res: Response) => {
+  const event = await Event.findOne({ where: { eventSlug: req.params.slug, ...publishedWhere }, attributes: ["eventDetails"] });
+  const link = (event?.get("eventDetails") as Record<string, any> | null)?.whatsappLink?.Link;
+  if (!link) {
+    res.status(404).json({ result: "FAILED", message: "WhatsApp link not found for this event" });
+    return;
+  }
+  res.json({ result: "SUCCESS", whatsappLink: link });
+});
+
+// GET /public/events/:slug/guest?token= — a guest's own registration page
+router.get("/events/:slug/guest", async (req: Request, res: Response) => {
+  try {
+    const found = await guestFromToken(req.params.slug, req.query.token);
+    if ("error" in found) {
+      res.status(403).json({ message: found.error });
+      return;
+    }
+    const { guest, event } = found;
+    const details = (event.get("eventDetails") || {}) as Record<string, any>;
+    res.json({
+      guest: {
+        name: guest.name,
+        email: guest.email,
+        guestType: guest.guestType,
+        userType: guest.userType,
+        ownReferralCode: guest.ownReferralCode,
+        feedbackSubmitted: Boolean(guest.feedbackSubmittedAt),
+        certificateApproved: Boolean(guest.certificateApproved),
+        certificateId: guest.certificateGenerated ? guest.certificateId : null,
+        registeredAt: guest.createdAt,
+      },
+      event: {
+        title: event.get("eventTitle"),
+        slug: event.get("eventSlug"),
+        type: event.get("eventType"),
+        category: event.get("eventCategory"),
+        startDate: event.get("eventStartDate"),
+        endDate: event.get("eventEndDate"),
+        startTime: event.get("eventStartTime"),
+        endTime: event.get("eventEndTime"),
+        location: event.get("location"),
+        locationType: event.get("locationType"),
+        bannerUrl: event.get("eventCreativeUrl"),
+        acceptingFeedback: Boolean(event.get("canAcceptResponse")),
+        // Only confirmed guests get the group link on their page.
+        whatsappLink: guest.guestType === "Approved" ? details?.whatsappLink?.Link || null : null,
+      },
+    });
+  } catch (err) {
+    console.error("guest page failed:", err);
+    res.status(500).json({ message: "Could not load your registration" });
+  }
+});
+
+// POST /public/events/:slug/feedback — { token, feedbackData }
+router.post("/events/:slug/feedback", async (req: Request, res: Response) => {
+  try {
+    const found = await guestFromToken(req.params.slug, req.body?.token);
+    if ("error" in found) {
+      res.status(403).json({ error: found.error });
+      return;
+    }
+    const { guest, event } = found;
+    const feedbackData = req.body?.feedbackData;
+    if (!feedbackData || typeof feedbackData !== "object" || Array.isArray(feedbackData) || !Object.keys(feedbackData).length) {
+      res.status(400).json({ error: "feedbackData must be a non-empty object" });
+      return;
+    }
+    if (JSON.stringify(feedbackData).length > 20_000) {
+      res.status(413).json({ error: "That response is too long." });
+      return;
+    }
+    if (!event.get("canAcceptResponse")) {
+      res.status(409).json({ error: "This event is not accepting feedback at the moment.", code: "CLOSED" });
+      return;
+    }
+    if (guest.guestType !== "Approved") {
+      res.status(409).json({ error: "Feedback can only be submitted by approved guests.", code: "NOT_APPROVED" });
+      return;
+    }
+    if (guest.feedbackSubmittedAt) {
+      res.status(409).json({ error: "Feedback already submitted for this event.", code: "ALREADY_SUBMITTED" });
+      return;
+    }
+    // Only plain values are kept: this JSON is shown in the admin and exported.
+    const clean: Record<string, string | number | boolean> = {};
+    for (const [key, value] of Object.entries(feedbackData as Record<string, unknown>)) {
+      if (!/^[a-zA-Z][a-zA-Z0-9_]{0,40}$/.test(key)) continue;
+      if (typeof value === "string") clean[key] = value.slice(0, 4000);
+      else if (typeof value === "number" || typeof value === "boolean") clean[key] = value;
+    }
+    if (typeof clean.teamMember2Email === "string") clean.teamMember2Email = clean.teamMember2Email.trim().toLowerCase();
+    if (["Hackathon", "Teardown"].includes(String(event.get("eventType")))) clean.isPrimaryMember = true;
+    await guest.update({ feedbackData: clean, feedbackSubmittedAt: new Date() });
+    res.json({ result: "SUCCESS", message: "Feedback submitted successfully" });
+  } catch (err) {
+    console.error("feedback submit failed:", err);
+    res.status(500).json({ error: "Could not save your feedback" });
+  }
+});
+
+// GET /public/certificates/:certificateId — anyone can verify a certificate
+router.get("/certificates/:certificateId", async (req: Request, res: Response) => {
+  try {
+    const certificateId = String(req.params.certificateId || "").toUpperCase();
+    if (!/^[A-Z0-9-]{6,40}$/.test(certificateId)) {
+      res.status(404).json({ valid: false });
+      return;
+    }
+    const guest = await EventGuest.findOne({ where: { certificateId, certificateGenerated: true } });
+    const event = guest ? await Event.findByPk(guest.eventId) : null;
+    if (!guest || !event) {
+      res.status(404).json({ valid: false });
+      return;
+    }
+    res.json({
+      valid: true,
+      certificateId,
+      name: guest.name,
+      certificateName: guest.certificateName,
+      issuedAt: guest.certificateGeneratedAt,
+      event: { title: event.get("eventTitle"), slug: event.get("eventSlug"), startDate: event.get("eventStartDate"), endDate: event.get("eventEndDate") },
+      imageUrl: await certificateDownloadUrl(certificateId),
+    });
+  } catch (err) {
+    console.error("certificate verify failed:", err);
+    res.status(500).json({ valid: false });
+  }
+});
 
 const PUBLIC_CASE_STUDY_FIELDS = [
   "id", "title", "description", "slug", "client", "industry",

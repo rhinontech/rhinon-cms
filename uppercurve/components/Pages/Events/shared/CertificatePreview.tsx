@@ -111,7 +111,7 @@ export default function CertificatePreview({ event, config }: { event: EventDeta
               <p className="text-[1.6cqw] font-bold text-[#0B1B3D]">{event.dateLabel}</p>
               <div aria-hidden className="mt-[0.8cqw] ml-auto h-[0.1cqw] w-[20cqw] bg-[#0B1B3D]/30" />
               <p className="mt-[0.6cqw] text-[1.2cqw] font-semibold text-[#0B1B3D]">Date of issue</p>
-              <p className="text-[1.1cqw] text-[#64748B]">Verify at uppercurve.in/verify</p>
+              <p className="text-[1.1cqw] text-[#64748B]">Verify at uppercurve.in/certificates</p>
             </div>
           </div>
         </div>

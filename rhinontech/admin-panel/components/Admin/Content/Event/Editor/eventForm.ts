@@ -84,6 +84,7 @@ export interface EventFormState {
   faqs: Faq[];
   whatsappLink: string;
   certificateUrl: string;
+  /** canAcceptResponse — whether approved guests may submit feedback. Not a registration switch. */
   acceptingRegistrations: boolean;
   isPublished: boolean;
 }
@@ -112,7 +113,7 @@ export const EMPTY_FORM: EventFormState = {
   faqs: [],
   whatsappLink: "",
   certificateUrl: "",
-  acceptingRegistrations: true,
+  acceptingRegistrations: false,
   isPublished: false,
 };
 

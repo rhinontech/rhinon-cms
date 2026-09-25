@@ -1,313 +1,243 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { registerForEvent } from "@/services/eventService";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import Link from "next/link";
+import { ArrowRight, Check, CheckCircle2, Copy, Hourglass, Loader2, X } from "lucide-react";
+import { checkGuestStatus, registerForEvent, type RegistrationResult } from "@/services/eventService";
 
 export interface EventRegistrationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  eventTitle?: string;
+  eventTitle: string;
   eventDate?: string;
   eventTime?: string;
   eventId?: string;
-  eventSlug?: string;
+  eventSlug: string;
+  /** Code from a ?ref= link, if the visitor arrived through one. */
+  referralCode?: string;
 }
+
+const field =
+  "w-full rounded-xl border border-[#E2E8F0] bg-white px-3.5 py-2.5 text-[14.5px] text-[#0B1B3D] placeholder:text-[#94A3B8] outline-none transition focus:border-[#0052FF] focus:ring-4 focus:ring-[#0052FF]/10";
+const label = "block text-[12.5px] font-semibold text-[#334155] mb-1.5";
 
 export function EventRegistrationModal({
   isOpen,
   onClose,
-  eventTitle = "2 Days AI PM Masterclass",
+  eventTitle,
   eventDate,
   eventTime,
   eventId,
   eventSlug,
+  referralCode = "",
 }: EventRegistrationModalProps) {
-  const [formData, setFormData] = useState({
-    fullName: "",
+  const [form, setForm] = useState({
+    name: "",
     email: "",
     phone: "",
-    experience: "1-3 Years",
+    userType: "Professional" as "Professional" | "Student",
+    role: "",
+    collegeName: "",
+    graduationYear: "",
+    linkedin: "",
+    referralCode,
     expectation: "",
   });
-
   const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
+  const [error, setError] = useState("");
+  const [existing, setExisting] = useState<string | null>(null);
+  const [result, setResult] = useState<RegistrationResult | null>(null);
+  const [copied, setCopied] = useState(false);
+  const firstField = useRef<HTMLInputElement>(null);
 
-  // Lock body scroll when modal is open
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
+    if (!isOpen) return;
+    document.body.style.overflow = "hidden";
+    const t = window.setTimeout(() => firstField.current?.focus(), 50);
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
     return () => {
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = "";
+      window.clearTimeout(t);
+      window.removeEventListener("keydown", onKey);
     };
-  }, [isOpen]);
+  }, [isOpen, onClose]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  if (!isOpen) return null;
+
+  const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => setForm((f) => ({ ...f, [key]: value }));
+
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!formData.fullName.trim() || !formData.email.trim()) return;
-
+    setError("");
+    if (!form.name.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      setError("Please enter your name and a valid email address.");
+      return;
+    }
     setSubmitting(true);
-    setErrorMsg("");
-
-    const isStudent = formData.experience.toLowerCase().includes("student");
     const res = await registerForEvent({
       eventId,
       eventSlug,
-      name: formData.fullName.trim(),
-      email: formData.email.trim(),
-      phone: formData.phone.trim() || undefined,
-      role: formData.experience,
-      userType: isStudent ? "Student" : "Professional",
-      expectation: formData.expectation.trim() || undefined,
+      name: form.name.trim(),
+      email: form.email.trim(),
+      phone: form.phone.trim() || undefined,
+      userType: form.userType,
+      role: form.userType === "Professional" ? form.role.trim() || undefined : "Student",
+      collegeName: form.userType === "Student" ? form.collegeName.trim() || undefined : undefined,
+      graduationYear: form.userType === "Student" ? form.graduationYear.trim() || undefined : undefined,
+      linkedin: form.linkedin.trim() || undefined,
+      referralCode: form.referralCode.trim() || undefined,
+      expectation: form.expectation.trim() || undefined,
     });
-
     setSubmitting(false);
-    if (res.success) {
-      setSubmitted(true);
-    } else {
-      setErrorMsg(res.message || "Failed to register. Please try again.");
-    }
+    if (res.success) setResult(res);
+    else setError(res.message || "We couldn't register you. Please try again.");
   };
 
-  if (!isOpen) return null;
+  const pageUrl = result?.token ? `/events/${eventSlug}/registered?token=${encodeURIComponent(result.token)}` : null;
+  const shareUrl =
+    result?.referralCode && typeof window !== "undefined"
+      ? `${window.location.origin}/events/${eventSlug}?ref=${result.referralCode}`
+      : "";
 
   return (
     <div
       role="dialog"
       aria-modal="true"
-      aria-labelledby="register-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs transition-opacity overflow-y-auto"
+      aria-labelledby="register-title"
+      className="fixed inset-0 z-[60] flex items-start sm:items-center justify-center overflow-y-auto bg-[#0B1B3D]/55 p-4 backdrop-blur-sm font-[family-name:var(--font-plus-jakarta)]"
       onClick={onClose}
     >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-lg bg-white rounded-3xl border border-gray-200/90 shadow-2xl p-6 sm:p-8 my-8 text-left transition-all overflow-hidden"
-      >
-        {/* Soft Ambient Corner Aura */}
-        <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-indigo-50/70 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-16 -left-16 w-56 h-56 rounded-full bg-emerald-50/70 blur-3xl pointer-events-none" />
-
-        {/* Close Button */}
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute top-5 right-5 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-900 flex items-center justify-center text-sm font-medium transition-colors cursor-pointer z-10"
-          aria-label="Close modal"
-        >
-          ✕
+      <div onClick={(e) => e.stopPropagation()} className="relative my-6 w-full max-w-xl overflow-hidden rounded-3xl bg-white shadow-[0_40px_100px_-30px_rgba(11,27,61,0.6)]">
+        <div className="h-1.5 bg-gradient-to-r from-[#0052FF] via-[#0077FF] to-[#00C2FF]" aria-hidden />
+        <button type="button" onClick={onClose} aria-label="Close" className="absolute right-4 top-5 grid size-9 place-items-center rounded-full text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#0B1B3D]">
+          <X className="size-4" />
         </button>
 
-        {submitted ? (
-          <div className="relative z-10 py-8 px-2 text-center font-poppins">
-            <div className="w-16 h-16 mx-auto rounded-full bg-emerald-500 text-white flex items-center justify-center text-3xl font-bold mb-4 shadow-lg shadow-emerald-500/25">
-              ✓
-            </div>
-            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight mb-2">
-              Seat Reserved Successfully!
-            </h3>
-            <p className="text-xs sm:text-sm text-gray-600 max-w-sm mx-auto leading-relaxed mb-6">
-              You&apos;re registered for{" "}
-              <span className="font-semibold text-gray-900">{eventTitle}</span>.
-              A calendar invite and session link will be sent to{" "}
-              <span className="font-semibold text-indigo-600">{formData.email}</span>.
+        {result ? (
+          <div className="px-7 py-9 sm:px-10 text-center">
+            <span className={`mx-auto grid size-14 place-items-center rounded-2xl ${result.guestType === "Approved" ? "bg-[#ECFDF3] text-[#16A34A]" : "bg-[#FFF7ED] text-[#D97706]"}`}>
+              {result.guestType === "Approved" ? <CheckCircle2 className="size-7" /> : <Hourglass className="size-7" />}
+            </span>
+            <h2 id="register-title" className="mt-5 text-2xl font-extrabold tracking-tight text-[#0B1B3D]">
+              {result.alreadyRegistered
+                ? "You're already registered"
+                : result.guestType === "Approved"
+                  ? "You're registered"
+                  : "You're on the waitlist"}
+            </h2>
+            <p className="mx-auto mt-2 max-w-sm text-[14.5px] leading-relaxed text-[#475569]">
+              {result.alreadyRegistered
+                ? `Your status for ${eventTitle}: ${result.guestType === "Waitlist" ? "on the waitlist" : result.guestType?.toLowerCase()}.`
+                : result.guestType === "Approved"
+                  ? `A confirmation with a calendar invite is on its way to ${form.email}.`
+                  : `We review every registration. We'll email ${form.email} the moment you're approved.`}
             </p>
-            <div className="flex items-center justify-center gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setSubmitted(false);
-                  onClose();
-                }}
-                className="px-7 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-sm font-semibold transition-all shadow-md cursor-pointer"
-              >
-                Done
-              </button>
+            <div className="mt-7 flex flex-col gap-3">
+              {pageUrl ? (
+                <Link href={pageUrl} className="inline-flex items-center justify-center gap-2 rounded-[4px] bg-[#0052FF] px-6 py-3.5 text-[13px] font-bold uppercase tracking-wider text-white hover:bg-[#0043CC]">
+                  Open your registration <ArrowRight className="size-4" />
+                </Link>
+              ) : null}
+              {shareUrl ? (
+                <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 text-left">
+                  <p className="text-[13px] font-semibold text-[#0B1B3D]">Bring a friend</p>
+                  <p className="mt-0.5 text-[12.5px] text-[#64748B]">Registrations through your link are credited to you.</p>
+                  <div className="mt-3 flex items-center gap-2">
+                    <code className="min-w-0 flex-1 truncate rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-[12.5px] text-[#334155]">{shareUrl}</code>
+                    <button type="button" onClick={() => { navigator.clipboard?.writeText(shareUrl); setCopied(true); window.setTimeout(() => setCopied(false), 1500); }}
+                      className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-[12.5px] font-semibold text-[#0B1B3D] hover:border-[#0052FF]">
+                      {copied ? <Check className="size-3.5 text-[#16A34A]" /> : <Copy className="size-3.5" />} {copied ? "Copied" : "Copy"}
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+              <button type="button" onClick={onClose} className="text-[13px] font-semibold text-[#64748B] hover:text-[#0B1B3D]">Close</button>
             </div>
           </div>
         ) : (
-          <>
-            {/* Modal Header */}
-            <div className="relative z-10 mb-6 pr-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium mb-2.5 font-poppins">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                <span>100% Free Live Masterclass</span>
+          <form onSubmit={submit} className="px-6 py-7 sm:px-9 sm:py-9" noValidate>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#0052FF]">Register · Free</p>
+            <h2 id="register-title" className="mt-2 pr-8 text-[22px] font-extrabold leading-snug tracking-tight text-[#0B1B3D]">{eventTitle}</h2>
+            {eventDate ? <p className="mt-1 text-[13.5px] text-[#64748B]">{eventDate}{eventTime ? ` · ${eventTime}` : ""}</p> : null}
+
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label className={label} htmlFor="rg-name">Full name *</label>
+                <input ref={firstField} id="rg-name" className={field} value={form.name} onChange={(e) => set("name", e.target.value)} autoComplete="name" required />
               </div>
-
-              <h3
-                id="register-modal-title"
-                className="text-xl sm:text-2xl font-medium text-gray-900 tracking-tight font-poppins leading-snug"
-              >
-                Register for Masterclass
-              </h3>
-
-              <p
-                className="text-xs sm:text-sm text-gray-600 mt-1 leading-relaxed"
-                style={{ fontFamily: 'Georgia, "Times New Roman", Times, serif' }}
-              >
-                {eventTitle}
-                {(eventDate || eventTime) && (
-                  <span className="block text-gray-500 text-xs mt-0.5 font-poppins">
-                    {eventDate} {eventTime ? `• ${eventTime}` : ""}
-                  </span>
-                )}
+              <div>
+                <label className={label} htmlFor="rg-email">Email *</label>
+                <input id="rg-email" type="email" className={field} value={form.email} autoComplete="email" required
+                  onChange={(e) => { set("email", e.target.value); setExisting(null); }}
+                  onBlur={async () => {
+                    const email = form.email.trim();
+                    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) setExisting(await checkGuestStatus(eventSlug, email));
+                  }} />
+              </div>
+              <div>
+                <label className={label} htmlFor="rg-phone">Phone</label>
+                <input id="rg-phone" type="tel" className={field} value={form.phone} onChange={(e) => set("phone", e.target.value)} autoComplete="tel" placeholder="+91" />
+              </div>
+            </div>
+            {existing ? (
+              <p className="mt-3 rounded-xl bg-[#EBF3FF] px-3.5 py-2.5 text-[13px] text-[#0B1B3D]">
+                This email is already registered ({existing === "Waitlist" ? "on the waitlist" : existing.toLowerCase()}). Submit again to get your registration link back.
               </p>
+            ) : null}
+
+            <div className="mt-5">
+              <span className={label}>I&apos;m joining as</span>
+              <div className="grid grid-cols-2 gap-2 rounded-xl bg-[#F1F5F9] p-1" role="radiogroup" aria-label="Joining as">
+                {(["Professional", "Student"] as const).map((type) => (
+                  <button key={type} type="button" role="radio" aria-checked={form.userType === type} onClick={() => set("userType", type)}
+                    className={`rounded-lg py-2 text-[13.5px] font-semibold transition ${form.userType === type ? "bg-white text-[#0B1B3D] shadow-sm" : "text-[#64748B] hover:text-[#0B1B3D]"}`}>
+                    {type === "Professional" ? "A professional" : "A student"}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {errorMsg && (
-              <div className="relative z-10 mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium font-poppins">
-                {errorMsg}
-              </div>
-            )}
-
-            {/* Registration Form */}
-            <form onSubmit={handleSubmit} className="relative z-10 space-y-4 font-poppins">
-              {/* Full Name */}
-              <div>
-                <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-500 mb-1.5">
-                  Full Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.fullName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, fullName: e.target.value })
-                  }
-                  placeholder="e.g. John Doe"
-                  className="w-full px-4 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-gray-50/60 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition-all font-normal"
-                />
-              </div>
-
-              {/* Email Address */}
-              <div>
-                <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-500 mb-1.5">
-                  Email Address <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  placeholder="name@company.com or name@gmail.com"
-                  className="w-full px-4 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-gray-50/60 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition-all font-normal"
-                />
-              </div>
-
-              {/* Phone & Experience Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div>
-                  <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-500 mb-1.5">
-                    WhatsApp / Phone
-                  </label>
-                  <input
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value })
-                    }
-                    placeholder="+91 98765 43210"
-                    className="w-full px-4 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-gray-50/60 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition-all font-normal"
-                  />
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              {form.userType === "Professional" ? (
+                <div className="sm:col-span-2">
+                  <label className={label} htmlFor="rg-role">Role & organisation</label>
+                  <input id="rg-role" className={field} value={form.role} onChange={(e) => set("role", e.target.value)} placeholder="e.g. Maths teacher, Delhi Public School" />
                 </div>
-
-                <div>
-                  <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-500 mb-1.5">
-                    Your Experience
-                  </label>
-                  <select
-                    value={formData.experience}
-                    onChange={(e) =>
-                      setFormData({ ...formData, experience: e.target.value })
-                    }
-                    className="w-full px-4 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-gray-50/60 text-sm text-gray-900 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition-all cursor-pointer font-normal"
-                  >
-                    <option value="College Student">College Student / Fresher</option>
-                    <option value="0-1 Years">0-1 Years Experience</option>
-                    <option value="1-3 Years">1-3 Years Experience</option>
-                    <option value="3-5 Years">3-5 Years Experience</option>
-                    <option value="5+ Years">5+ Years Experience</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* What do you want to learn? */}
+              ) : (
+                <>
+                  <div>
+                    <label className={label} htmlFor="rg-college">College</label>
+                    <input id="rg-college" className={field} value={form.collegeName} onChange={(e) => set("collegeName", e.target.value)} />
+                  </div>
+                  <div>
+                    <label className={label} htmlFor="rg-grad">Graduation year</label>
+                    <input id="rg-grad" inputMode="numeric" className={field} value={form.graduationYear} onChange={(e) => set("graduationYear", e.target.value.replace(/[^0-9]/g, "").slice(0, 4))} placeholder="2027" />
+                  </div>
+                </>
+              )}
               <div>
-                <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-500 mb-1.5">
-                  What do you hope to learn or build? (Optional)
-                </label>
-                <textarea
-                  rows={2}
-                  value={formData.expectation}
-                  onChange={(e) =>
-                    setFormData({ ...formData, expectation: e.target.value })
-                  }
-                  placeholder="e.g. How to use AI agents in product workflows..."
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50/60 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-600 transition-all resize-none font-normal"
-                />
+                <label className={label} htmlFor="rg-linkedin">LinkedIn</label>
+                <input id="rg-linkedin" className={field} value={form.linkedin} onChange={(e) => set("linkedin", e.target.value)} placeholder="linkedin.com/in/…" />
               </div>
+              <div>
+                <label className={label} htmlFor="rg-ref">Referral code</label>
+                <input id="rg-ref" className={`${field} uppercase`} value={form.referralCode} onChange={(e) => set("referralCode", e.target.value.toUpperCase())} placeholder="Optional" />
+              </div>
+              <div className="sm:col-span-2">
+                <label className={label} htmlFor="rg-exp">What do you hope to take away?</label>
+                <textarea id="rg-exp" rows={2} className={`${field} resize-none`} value={form.expectation} onChange={(e) => set("expectation", e.target.value)} placeholder="Optional — it helps the host tailor the session" />
+              </div>
+            </div>
 
-              {/* Form Actions */}
-              <div className="pt-2 flex items-center justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  disabled={submitting}
-                  className="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-6 sm:px-7 py-2.5 sm:py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-70 active:scale-[0.98] text-white text-xs sm:text-sm font-medium shadow-sm hover:shadow-md transition-all cursor-pointer font-poppins flex items-center gap-2"
-                >
-                  <span>{submitting ? "Registering..." : "Register Now"}</span>
-                  <svg
-                    className={`w-4 h-4 ${submitting ? "animate-spin" : ""}`}
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                  >
-                    {submitting ? (
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                      />
-                    ) : (
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
-                      />
-                    )}
-                  </svg>
-                </button>
-              </div>
+            {error ? <p role="alert" className="mt-4 rounded-xl bg-[#FEF2F2] px-3.5 py-2.5 text-[13px] text-[#B91C1C]">{error}</p> : null}
 
-              {/* Guarantees */}
-              <div className="flex items-center justify-center gap-3 pt-2 text-[11px] text-gray-500 font-normal">
-                <span className="flex items-center gap-1 font-medium text-emerald-700">
-                  ✓ 100% Free
-                </span>
-                <span>•</span>
-                <span className="flex items-center gap-1 font-medium text-emerald-700">
-                  ✓ Certificate Included
-                </span>
-                <span>•</span>
-                <span className="flex items-center gap-1 font-medium text-gray-600">
-                  ✓ No Spam
-                </span>
-              </div>
-            </form>
-          </>
+            <button type="submit" disabled={submitting}
+              className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-[4px] bg-[#0052FF] px-6 py-3.5 text-[13px] font-bold uppercase tracking-wider text-white shadow-[0_10px_24px_-10px_rgba(0,82,255,0.6)] transition hover:bg-[#0043CC] disabled:opacity-70">
+              {submitting ? <Loader2 className="size-4 animate-spin" /> : null} Register
+            </button>
+            <p className="mt-3 text-center text-[12px] text-[#94A3B8]">We&apos;ll only email you about this event.</p>
+          </form>
         )}
       </div>
     </div>

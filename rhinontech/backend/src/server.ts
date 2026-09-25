@@ -18,6 +18,7 @@ import { runTenancyMigration, auditOrphanRows } from "./services/tenancyMigratio
 import { provisionAllOrganizations } from "./services/orgProvisioning";
 import { runAsSystem } from "./services/tenantContext";
 import { refreshSendingDomains } from "./services/siteSender";
+import { dispatchDueEventEmails } from "./services/eventReminderJob";
 
 async function autoClockOut() {
   const now = new Date();
@@ -241,6 +242,14 @@ function listen() {
         await runAsSystem("cron:workflow-engine", runWorkflowEngineCycle);
       } catch (err: any) {
         console.error("[Cron] Workflow engine cycle failed:", err.message);
+      }
+
+      // Scheduled event emails (reminders, announcements) that have come due.
+      try {
+        const { processed } = await dispatchDueEventEmails();
+        if (processed) console.log(`[Cron] Sent ${processed} scheduled event email(s)`);
+      } catch (err: any) {
+        console.error("[Cron] Event email dispatch failed:", err.message);
       }
     });
   });

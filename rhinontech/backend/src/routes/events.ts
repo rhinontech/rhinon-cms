@@ -1,20 +1,24 @@
 import { Router, Response } from "express";
-import { Op } from "sequelize";
+import { Op, fn, col } from "sequelize";
 import multer from "multer";
 import { AuthRequest, authenticate, authorize } from "../middleware/authenticate";
-import { Event, EventGuest, User } from "../models";
+import { Event, EventGuest, User, EventEnrollmentEmail, EventCertificateTemplate } from "../models";
+import { ENROLLMENT_EMAIL_TYPES, type EnrollmentEmailType } from "../models/EventEnrollmentEmail";
+import { guestToken, makeReferralCode, sendEnrollmentEmail, sendEnrollmentEmailInBackground } from "../services/eventEmail";
+import eventOperations from "./eventOperations";
 import { uploadBuffer, publicUrl } from "../services/storage";
-import { runAsSystem } from "../services/tenantContext";
 
 const router = Router();
 
-// Automatically authenticate if token is supplied, or run in system context for public requests
-router.use((req: AuthRequest, res: Response, next) => {
-  if (req.headers.authorization) {
-    return authenticate(req, res, next);
-  }
-  return runAsSystem("events", next);
-});
+// Every route here is admin-only. This used to fall back to running
+// unauthenticated requests as the SYSTEM when no Authorization header was
+// sent — so anyone could edit or delete events and read guests' contact
+// details. The public site reads events through /public/events instead.
+router.use(authenticate);
+router.use((req: AuthRequest, res: Response, next) =>
+  authorize(req.method === "GET" || req.method === "HEAD" ? "content:read" : "content:write")(req, res, next)
+);
+router.use(eventOperations);
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -36,14 +40,36 @@ function isValidSlug(slug: string): boolean {
 
 /* ----------------------------- EVENT CRUD & ACTIONS ----------------------------- */
 
-// GET /events — list all events (both upcoming and past)
+// GET /events — list all events (both upcoming and past), each with its
+// registration counts so the list can show demand without a request per row.
 router.get("/", async (_req: AuthRequest, res: Response) => {
   try {
-    const events = await Event.findAll({
-      order: [["createdAt", "DESC"]],
-    });
+    const [events, counts] = await Promise.all([
+      Event.findAll({ order: [["createdAt", "DESC"]] }),
+      EventGuest.findAll({
+        attributes: ["eventId", "guestType", [fn("COUNT", col("id")), "count"]],
+        group: ["eventId", "guestType"],
+        raw: true,
+      }) as unknown as Promise<{ eventId: string; guestType: string; count: string }[]>,
+    ]);
 
-    res.status(200).json({ result: "SUCCESS", events });
+    const byEvent = new Map<string, { total: number; approved: number; waitlist: number }>();
+    for (const row of counts) {
+      const entry = byEvent.get(row.eventId) || { total: 0, approved: 0, waitlist: 0 };
+      const n = Number(row.count) || 0;
+      entry.total += n;
+      if (row.guestType === "Approved") entry.approved += n;
+      if (row.guestType === "Waitlist") entry.waitlist += n;
+      byEvent.set(row.eventId, entry);
+    }
+
+    res.status(200).json({
+      result: "SUCCESS",
+      events: events.map((e) => ({
+        ...e.toJSON(),
+        registrations: byEvent.get(String(e.id)) || { total: 0, approved: 0, waitlist: 0 },
+      })),
+    });
   } catch (error: any) {
     console.error("Error fetching all events:", error);
     res.status(500).json({ result: "ERROR", message: error.message || "Internal server error" });
@@ -346,8 +372,8 @@ router.post("/:id/publish", async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: "Event not found" });
     }
 
-    event.isPublished = isPublished;
-    await event.save();
+    // status is what the public listing also reads; see PUT /:id.
+    await event.update({ isPublished, status: isPublished ? "Published" : "Draft" } as never);
 
     return res.status(200).json({
       result: "SUCCESS",
@@ -414,10 +440,28 @@ router.post("/:id/duplicate", async (req: AuthRequest, res: Response) => {
       createdById: req.user?.userId || null,
     });
 
+    // Copied, as in Product Space: enrollment emails and the certificate
+    // template. Not copied: guests, reminders, feedback, issued certificates.
+    const enrollment = await EventEnrollmentEmail.findAll({ where: { eventId: sourceEvent.id } });
+    for (const e of enrollment) {
+      await EventEnrollmentEmail.create({
+        eventId: newEvent.id, type: e.type, subject: e.subject, body: e.body,
+        date: e.date, startTime: e.startTime, endTime: e.endTime,
+      });
+    }
+    const certificate = await EventCertificateTemplate.findOne({ where: { eventId: sourceEvent.id } });
+    if (certificate) {
+      await EventCertificateTemplate.create({
+        eventId: newEvent.id, certificateName: certificate.certificateName, imageSize: certificate.imageSize,
+        fields: certificate.fields, templateImage: certificate.templateImage,
+        emailSubject: certificate.emailSubject, emailBody: certificate.emailBody,
+      });
+    }
     return res.status(201).json({
       result: "SUCCESS",
       message: "Event duplicated successfully",
       newEvent,
+      copied: { enrollmentEmails: enrollment.length, certificateTemplate: Boolean(certificate) },
     });
   } catch (error: any) {
     console.error("Error duplicating event:", error);
@@ -481,11 +525,21 @@ export const registerEventHandler = async (req: AuthRequest, res: Response) => {
       additionalData,
     } = b;
 
-    const guestName = (name || fullName || "").trim();
+    // Names are printed on certificates and shown in the admin, so markup and
+    // control characters are removed rather than merely escaped downstream.
+    const guestName = String(name || fullName || "")
+      .replace(/<[^>]*>/g, " ")
+      .replace(/[\u0000-\u001f\u007f]/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 120);
     const guestEmail = (email || "").trim().toLowerCase();
 
     if (!guestName || !guestEmail) {
       return res.status(400).json({ error: "Name and email are required" });
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail)) {
+      return res.status(400).json({ error: "Please enter a valid email address" });
     }
 
     // Resolve event by id or slug
@@ -500,13 +554,8 @@ export const registerEventHandler = async (req: AuthRequest, res: Response) => {
         },
       });
     }
-    if (!event) {
-      // Pick latest published event if not specified
-      event = await Event.findOne({
-        where: { [Op.or]: [{ isPublished: true }, { status: "Published" }] },
-        order: [["createdAt", "DESC"]],
-      });
-    }
+    // No guessing: a registration with no (or an unknown) event used to be
+    // filed under whichever event was published most recently.
 
     if (!event) {
       return res.status(404).json({ error: "Event not found" });
@@ -524,17 +573,26 @@ export const registerEventHandler = async (req: AuthRequest, res: Response) => {
       return res.status(200).json({
         result: "SUCCESS",
         alreadyRegistered: true,
+        guestType: existing.guestType,
         message: "You are already registered for this event!",
-        guest: existing,
+        token: guestToken(existing.id),
+        referralCode: existing.ownReferralCode,
       });
     }
 
-    // Auto-approve logic:
-    // If canAcceptResponse is true or Teardown/Hackathon event, approve; otherwise Waitlist
-    const isAutoApproved =
-      event.canAcceptResponse ||
-      ["Teardown", "Hackathon"].includes(event.eventType);
-    const guestType = isAutoApproved ? "Approved" : "Waitlist";
+    // Product Space's approval rules. Teardowns and Hackathons are open
+    // sign-ups and approve at once; everything else joins the waitlist until an
+    // admin approves it. (Product Space's cohort-member shortcuts for Community
+    // events rest on its learner accounts, which uppercurve doesn't have.)
+    // canAcceptResponse is NOT a registration switch — it controls feedback.
+    const guestType = ["Teardown", "Hackathon"].includes(String(event.eventType)) ? "Approved" : "Waitlist";
+
+    // Each guest gets a code of their own to share; registrations made with it
+    // are counted as their referrals.
+    let ownReferralCode = makeReferralCode(guestName);
+    for (let i = 0; i < 4 && (await EventGuest.findOne({ where: { eventId: event.id, ownReferralCode } })); i++) {
+      ownReferralCode = makeReferralCode(guestName);
+    }
 
     const guest = await EventGuest.create({
       eventId: event.id,
@@ -542,7 +600,8 @@ export const registerEventHandler = async (req: AuthRequest, res: Response) => {
       email: guestEmail,
       phone: phone ? phone.trim() : null,
       linkedin: linkedin ? linkedin.trim() : null,
-      referralCode: referralCode ? referralCode.trim() : null,
+      referralCode: referralCode ? String(referralCode).trim().toUpperCase() : null,
+      ownReferralCode,
       role: role || null,
       userType: userType || "Professional",
       graduationYear: graduationYear || null,
@@ -558,17 +617,18 @@ export const registerEventHandler = async (req: AuthRequest, res: Response) => {
       organizationId: event.organizationId || null,
     });
 
-    // Increment attendees counter
-    try {
-      await event.increment("numberOfAttendees", { by: 1 });
-    } catch {
-      // Non-fatal
-    }
+    // numberOfAttendees is the figure an admin sets for the page; Product
+    // Space never incremented it on registration, and counting here made the
+    // shown number drift upward with every sign-up.
+    sendEnrollmentEmailInBackground(event, guest);
 
     return res.status(201).json({
       result: "SUCCESS",
-      message: guestType === "Approved" ? "Registration confirmed!" : "Added to waitlist!",
-      guest,
+      guestType,
+      message: guestType === "Approved" ? "Registration confirmed!" : "You're on the waitlist — we'll email you once you're approved.",
+      // Opens the guest's personal registration page (and, later, feedback).
+      token: guestToken(guest.id),
+      referralCode: ownReferralCode,
     });
   } catch (error: any) {
     console.error("Error registering event guest:", error);
@@ -619,131 +679,7 @@ router.post("/guests/by-id", async (req: AuthRequest, res: Response) => {
   }
 });
 
-// POST /events/approve-guests — bulk approve/decline guests
-router.post("/approve-guests", async (req: AuthRequest, res: Response) => {
-  try {
-    const { userIds, status, eventId } = req.body;
-    if (!userIds || !Array.isArray(userIds) || userIds.length === 0 || !eventId) {
-      return res.status(400).json({ error: "userIds (array) and eventId are required" });
-    }
-
-    const [updatedCount] = await EventGuest.update(
-      { guestType: status },
-      {
-        where: {
-          [Op.or]: [
-            { id: { [Op.in]: userIds } },
-            { userId: { [Op.in]: userIds } },
-          ],
-          eventId,
-        },
-      }
-    );
-
-    return res.status(200).json({
-      result: "SUCCESS",
-      message: `${updatedCount} guest(s) updated`,
-    });
-  } catch (error: any) {
-    console.error("Error approving guests:", error);
-    return res.status(500).json({ result: "ERROR", message: error.message });
-  }
-});
-
-// GET /events/referrals/with-referees
-router.get("/referrals/with-referees", async (req: AuthRequest, res: Response) => {
-  try {
-    const eventId = req.query.eventId as string;
-    if (!eventId) {
-      return res.status(400).json({ error: "eventId is required" });
-    }
-
-    const guests = await EventGuest.findAll({
-      where: { eventId, referralCode: { [Op.ne]: null } },
-    });
-
-    const summaryMap: Record<string, any> = {};
-    for (const g of guests) {
-      const code = g.referralCode!;
-      if (!summaryMap[code]) {
-        summaryMap[code] = {
-          id: g.id,
-          name: g.name,
-          email: g.email || "",
-          phone: g.phone || "",
-          referralCode: code,
-          memberCount: 0,
-          type: g.userType || "General",
-        };
-      }
-      summaryMap[code].memberCount += 1;
-    }
-
-    return res.status(200).json({
-      result: "SUCCESS",
-      data: Object.values(summaryMap),
-    });
-  } catch (error: any) {
-    console.error("Error fetching referrals:", error);
-    return res.status(500).json({ result: "ERROR", message: error.message });
-  }
-});
-
-// POST /events/referrals/by-code
-router.post("/referrals/by-code", async (req: AuthRequest, res: Response) => {
-  try {
-    const { eventId, referralCode } = req.body;
-    if (!eventId || !referralCode) {
-      return res.status(400).json({ error: "eventId and referralCode are required" });
-    }
-
-    const referrals = await EventGuest.findAll({
-      where: { eventId, referralCode },
-    });
-
-    const referredMembers = referrals.map((r) => ({
-      id: r.id,
-      name: r.name,
-      email: r.email || "",
-      phone: r.phone || "",
-    }));
-
-    return res.status(200).json({
-      referralId: referralCode,
-      referralCode,
-      referredMembers,
-    });
-  } catch (error: any) {
-    console.error("Error fetching referees by code:", error);
-    return res.status(500).json({ error: error.message });
-  }
-});
-
-// POST /events/send-notification
-router.post("/send-notification", async (_req: AuthRequest, res: Response) => {
-  return res.status(200).json({ result: "SUCCESS", message: "Notification queued" });
-});
-
-// GET /events/feedback/:eventId
-router.get("/feedback/:eventId", async (req: AuthRequest, res: Response) => {
-  try {
-    const { eventId } = req.params;
-    const feedbacks = await EventGuest.findAll({
-      where: {
-        eventId,
-        feedbackSubmittedAt: { [Op.ne]: null },
-      },
-      order: [["feedbackSubmittedAt", "DESC"]],
-    });
-
-    return res.status(200).json({
-      success: true,
-      data: feedbacks,
-    });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
-  }
-});
+// Guest approval, referrals, notifications and feedback live in eventOperations.ts.
 
 // POST /events/upload (or banner upload)
 router.post("/upload", upload.single("file"), async (req: AuthRequest, res: Response) => {

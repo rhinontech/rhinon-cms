@@ -94,45 +94,137 @@ export interface RegisterGuestPayload {
   collegeName?: string;
 }
 
-/**
- * Register a user as a guest/attendee for an event.
- * Posts to backend and creates an EventGuest row visible in the Admin Panel.
- */
-export async function registerForEvent(payload: RegisterGuestPayload): Promise<{
+export interface RegistrationResult {
   success: boolean;
   message?: string;
-  guest?: unknown;
   alreadyRegistered?: boolean;
-}> {
+  guestType?: "Approved" | "Waitlist" | "Declined";
+  /** Opens the guest's own registration page: /events/<slug>/registered?token=… */
+  token?: string;
+  /** The guest's own code to share. */
+  referralCode?: string;
+}
+
+/**
+ * Registers a guest. Workshops put guests on the waitlist until an admin
+ * approves them; Teardowns and Hackathons confirm at once. Either way an
+ * enrollment email goes out from the backend.
+ */
+export async function registerForEvent(payload: RegisterGuestPayload): Promise<RegistrationResult> {
   try {
     const res = await fetch(`${API_BASE}/public/events/register`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify(payload),
     });
-
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      return {
-        success: false,
-        message: data.error || data.message || "Failed to register for event",
-      };
+      return { success: false, message: data.error || data.message || "Failed to register for event" };
     }
-
     return {
       success: true,
-      message: data.message || "Registration successful!",
-      guest: data.guest,
+      message: data.message,
       alreadyRegistered: data.alreadyRegistered,
+      guestType: data.guestType,
+      token: data.token,
+      referralCode: data.referralCode,
     };
   } catch (err) {
     console.error("[registerForEvent] Network error:", err);
-    return {
-      success: false,
-      message: (err instanceof Error && err.message) || "Network error. Please try again.",
-    };
+    return { success: false, message: "Network error. Please try again." };
+  }
+}
+
+export interface GuestPage {
+  guest: {
+    name: string;
+    email: string | null;
+    guestType: "Approved" | "Waitlist" | "Declined";
+    userType: string | null;
+    ownReferralCode: string | null;
+    feedbackSubmitted: boolean;
+    certificateApproved: boolean;
+    certificateId: string | null;
+    registeredAt: string;
+  };
+  event: {
+    title: string;
+    slug: string;
+    type: string;
+    category: string;
+    startDate: string;
+    endDate: string;
+    startTime: string | null;
+    endTime: string | null;
+    location: string | null;
+    locationType: string | null;
+    bannerUrl: string | null;
+    acceptingFeedback: boolean;
+    whatsappLink: string | null;
+  };
+}
+
+/** A guest's own registration page, from the signed token in their link. */
+export async function getGuestPage(slug: string, token: string): Promise<GuestPage | { error: string }> {
+  try {
+    const res = await fetch(`${API_BASE}/public/events/${encodeURIComponent(slug)}/guest?token=${encodeURIComponent(token)}`, {
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    });
+    const data = await res.json().catch(() => ({}));
+    return res.ok ? (data as GuestPage) : { error: data.message || "This link isn't valid." };
+  } catch {
+    return { error: "We couldn't reach the server. Please try again." };
+  }
+}
+
+export async function submitFeedback(
+  slug: string,
+  token: string,
+  feedbackData: Record<string, string | number | boolean>
+): Promise<{ success: boolean; message?: string; code?: string }> {
+  try {
+    const res = await fetch(`${API_BASE}/public/events/${encodeURIComponent(slug)}/feedback`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ token, feedbackData }),
+    });
+    const data = await res.json().catch(() => ({}));
+    return res.ok ? { success: true } : { success: false, message: data.error || "Could not submit", code: data.code };
+  } catch {
+    return { success: false, message: "Network error. Please try again." };
+  }
+}
+
+export interface CertificateCheck {
+  valid: boolean;
+  certificateId?: string;
+  name?: string;
+  certificateName?: string;
+  issuedAt?: string;
+  imageUrl?: string;
+  event?: { title: string; slug: string; startDate: string; endDate: string };
+}
+
+export async function verifyCertificate(id: string): Promise<CertificateCheck> {
+  try {
+    const res = await fetch(`${API_BASE}/public/certificates/${encodeURIComponent(id)}`, { cache: "no-store" });
+    return (await res.json().catch(() => ({ valid: false }))) as CertificateCheck;
+  } catch {
+    return { valid: false };
+  }
+}
+
+export async function checkGuestStatus(slug: string, email: string): Promise<"Approved" | "Waitlist" | "Declined" | null> {
+  try {
+    const res = await fetch(`${API_BASE}/public/events/check-guest-status`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug, email }),
+    });
+    const data = await res.json().catch(() => ({}));
+    return data?.result === "SUBMITTED" ? data.guestType : null;
+  } catch {
+    return null;
   }
 }

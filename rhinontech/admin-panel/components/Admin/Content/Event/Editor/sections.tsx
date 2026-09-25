@@ -183,7 +183,7 @@ export function ScheduleSection({ form, update, errorFor }: SectionProps) {
           <Input id="ev-loc" value={form.location} onChange={(e) => update("location", e.target.value)} placeholder="Online · Zoom" />
         </Field>
       </div>
-      <Field label="Capacity" htmlFor="ev-cap" hint="Shown as the seat count. 0 hides it.">
+      <Field label="Attendees shown" htmlFor="ev-cap" hint="Social proof on the page — “300+ attending”. You set it; registrations don't change it. 0 hides it.">
         <Input id="ev-cap" type="number" min={0} value={form.capacity} onChange={(e) => update("capacity", Number(e.target.value))} className="max-w-[180px]" />
       </Field>
     </SectionCard>
@@ -329,13 +329,15 @@ export function FaqSection({ form, update }: SectionProps) {
 export function ExtrasSection({ form, update }: SectionProps) {
   const certificate = CATEGORIES[form.category].certificate;
   return (
-    <SectionCard id="extras" icon={Award} title="Registration, certificate & community">
+    <SectionCard id="extras" icon={Award} title="Feedback, certificate & community">
       <div className="flex items-start justify-between gap-6 rounded-xl border border-border p-4">
         <div>
-          <p className="text-[14px] font-medium">Accept registrations</p>
-          <p className="text-[12.5px] text-muted-foreground">When off, the page shows “Registrations closed”.</p>
+          <p className="text-[14px] font-medium">Accept {form.type === "Workshop" ? "feedback" : "submissions"}</p>
+          <p className="text-[12.5px] text-muted-foreground">
+            Approved guests can respond from their personal link while this is on. Registration stays open either way — it closes once the event has ended.
+          </p>
         </div>
-        <Switch checked={form.acceptingRegistrations} onCheckedChange={(v) => update("acceptingRegistrations", v)} aria-label="Accept registrations" />
+        <Switch checked={form.acceptingRegistrations} onCheckedChange={(v) => update("acceptingRegistrations", v)} aria-label="Accept responses" />
       </div>
       {certificate ? (
         <Field label={`Certificate image (${certificate.toLowerCase()})`}

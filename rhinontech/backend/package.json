@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "rm -rf dist && tsc && mkdir -p dist/assets && cp src/assets/*.png dist/assets/",
+    "build": "rm -rf dist && tsc && mkdir -p dist/assets/fonts && cp src/assets/*.png dist/assets/ && cp src/assets/fonts/*.ttf dist/assets/fonts/",
     "start": "node dist/server.js",
     "db:migrate": "ts-node src/config/migrate.ts",
     "db:seed": "ts-node src/config/seed.ts",
@@ -31,6 +31,7 @@
     "@google/generative-ai": "^0.24.1",
     "@googleapis/calendar": "^16.0.0",
     "@googleapis/oauth2": "^6.0.0",
+    "@napi-rs/canvas": "^1.0.9",
     "axios": "^1.16.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",

@@ -35,6 +35,9 @@ import { Blog } from "./Blog";
 import { CaseStudy } from "./CaseStudy";
 import { Event } from "./Event";
 import { EventGuest } from "./EventGuest";
+import { EventEmailTemplate } from "./EventEmailTemplate";
+import { EventEnrollmentEmail } from "./EventEnrollmentEmail";
+import { EventCertificateTemplate } from "./EventCertificateTemplate";
 import { PageView } from "./PageView";
 import { DocsAccess } from "./DocsAccess";
 import { Page } from "./Page";
@@ -290,6 +293,12 @@ Event.hasMany(EventGuest, { foreignKey: "eventId", as: "guests", onDelete: "CASC
 EventGuest.belongsTo(Event, { foreignKey: "eventId", as: "event" });
 EventGuest.belongsTo(User, { foreignKey: "userId", as: "user" });
 User.hasMany(EventGuest, { foreignKey: "userId", as: "eventRegistrations" });
+Event.hasMany(EventEmailTemplate, { foreignKey: "eventId", as: "emailTemplates", onDelete: "CASCADE" });
+EventEmailTemplate.belongsTo(Event, { foreignKey: "eventId", as: "event" });
+Event.hasMany(EventEnrollmentEmail, { foreignKey: "eventId", as: "enrollmentEmails", onDelete: "CASCADE" });
+EventEnrollmentEmail.belongsTo(Event, { foreignKey: "eventId", as: "event" });
+Event.hasOne(EventCertificateTemplate, { foreignKey: "eventId", as: "certificateTemplate", onDelete: "CASCADE" });
+EventCertificateTemplate.belongsTo(Event, { foreignKey: "eventId", as: "event" });
 
 // Pages (Notion-like docs) Associations
 Page.belongsTo(User, { foreignKey: "ownerId", as: "owner" });
@@ -429,6 +438,9 @@ export {
   CaseStudy,
   Event,
   EventGuest,
+  EventEmailTemplate,
+  EventEnrollmentEmail,
+  EventCertificateTemplate,
   PageView,
   DocsAccess,
   Page,

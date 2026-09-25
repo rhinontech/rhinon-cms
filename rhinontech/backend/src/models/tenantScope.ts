@@ -53,6 +53,9 @@ import { Blog } from "./Blog";
 import { CaseStudy } from "./CaseStudy";
 import { Event } from "./Event";
 import { EventGuest } from "./EventGuest";
+import { EventEmailTemplate } from "./EventEmailTemplate";
+import { EventEnrollmentEmail } from "./EventEnrollmentEmail";
+import { EventCertificateTemplate } from "./EventCertificateTemplate";
 import { Page } from "./Page";
 import { PageShare } from "./PageShare";
 import { PageAttachment } from "./PageAttachment";
@@ -91,6 +94,7 @@ export const TENANT_MODELS: ModelStatic<any>[] = [
   Document, LetterTemplate,
   LinkedInToken, GoogleCalendarToken,
   Site, Blog, CaseStudy, Event, EventGuest,
+  EventEmailTemplate, EventEnrollmentEmail, EventCertificateTemplate,
   Page, PageShare, PageAttachment,
   Workflow, WorkflowEnrollment,
   Account, PipelineStage, Deal, Activity, SavedView,

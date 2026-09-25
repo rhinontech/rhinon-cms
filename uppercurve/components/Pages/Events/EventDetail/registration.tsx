@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { ArrowRight, Check, Link2 } from "lucide-react";
 import EventRegistrationModal from "./EventRegistrationModal";
 
@@ -27,18 +27,48 @@ export function RegistrationProvider({
   children: ReactNode;
 }) {
   const [isOpen, setOpen] = useState(false);
+  const [referralCode, setReferralCode] = useState("");
+  const storageKey = `uc-ref:${event.slug}`;
+
+  // A friend's link carries ?ref=CODE. Remember it for the visit, so it still
+  // applies if they read the page for a while before registering.
+  useEffect(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get("ref");
+    if (!fromUrl) return;
+    try {
+      sessionStorage.setItem(storageKey, fromUrl.toUpperCase());
+    } catch {
+      // Storage unavailable (private mode) — open() falls back to the URL.
+    }
+  }, [storageKey]);
+
+  const open = () => {
+    let code = new URLSearchParams(window.location.search).get("ref") || "";
+    try {
+      code = code || sessionStorage.getItem(storageKey) || "";
+    } catch {
+      // ignore
+    }
+    setReferralCode(code.toUpperCase());
+    setOpen(true);
+  };
+
   return (
-    <RegistrationContext.Provider value={{ open: () => setOpen(true) }}>
+    <RegistrationContext.Provider value={{ open }}>
       {children}
-      <EventRegistrationModal
-        isOpen={isOpen}
-        onClose={() => setOpen(false)}
-        eventTitle={event.title}
-        eventDate={event.dateLabel}
-        eventTime={event.timeLabel}
-        eventId={event.id}
-        eventSlug={event.slug}
-      />
+      {/* Mounted per opening, so the form starts clean with the current referral code. */}
+      {isOpen ? (
+        <EventRegistrationModal
+          isOpen
+          onClose={() => setOpen(false)}
+          eventTitle={event.title}
+          eventDate={event.dateLabel}
+          eventTime={event.timeLabel}
+          eventId={event.id}
+          eventSlug={event.slug}
+          referralCode={referralCode}
+        />
+      ) : null}
     </RegistrationContext.Provider>
   );
 }

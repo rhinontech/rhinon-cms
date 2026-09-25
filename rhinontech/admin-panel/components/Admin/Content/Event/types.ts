@@ -25,4 +25,7 @@ export interface IEvent {
   location?: string;
   eventCategory?: string;
   eventDetails?: Record<string, unknown> | null;
+  /** Present on the list endpoint only. */
+  registrations?: { total: number; approved: number; waitlist: number };
+  createdAt?: string;
 }

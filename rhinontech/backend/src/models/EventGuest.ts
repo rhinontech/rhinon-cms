@@ -10,6 +10,8 @@ export interface EventGuestAttributes {
   email?: string | null;
   linkedin?: string | null;
   referralCode?: string | null;
+  /** This guest's own code to share — others registering with it count as their referrals. */
+  ownReferralCode?: string | null;
   role?: string | null;
   graduationYear?: string | null;
   collegeName?: string | null;
@@ -41,6 +43,7 @@ export interface EventGuestCreationAttributes
     | "email"
     | "linkedin"
     | "referralCode"
+    | "ownReferralCode"
     | "role"
     | "graduationYear"
     | "collegeName"
@@ -72,6 +75,7 @@ export class EventGuest
   declare email: string | null;
   declare linkedin: string | null;
   declare referralCode: string | null;
+  declare ownReferralCode?: string | null;
   declare role: string | null;
   declare graduationYear: string | null;
   declare collegeName: string | null;
@@ -128,6 +132,10 @@ EventGuest.init(
     },
     referralCode: {
       type: DataTypes.STRING,
+      allowNull: true,
+    },
+    ownReferralCode: {
+      type: DataTypes.STRING(32),
       allowNull: true,
     },
     role: {
@@ -211,6 +219,7 @@ EventGuest.init(
       { fields: ["eventId"] },
       { fields: ["userId"] },
       { fields: ["guestType"] },
+      { fields: ["eventId", "ownReferralCode"] },
     ],
   }
 );

@@ -61,7 +61,7 @@ export default function RegistrationCard({
             {event.location}
             <span className="block text-[12px] text-[#94A3B8]">{event.mode}</span>
           </Row>
-          {event.seats > 0 ? <Row icon={Users}>Limited to {event.seats} participants</Row> : null}
+          {event.attending > 0 ? <Row icon={Users}>{event.attending}+ people attending</Row> : null}
           {certificate ? <Row icon={Award}>{certificate}</Row> : null}
         </ul>
 

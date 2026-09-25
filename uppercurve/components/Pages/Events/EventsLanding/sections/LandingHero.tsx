@@ -112,7 +112,7 @@ export default function LandingHero({ upcoming }: { upcoming: EventDetailModel[]
   const inPerson = upcoming.some((e) => e.mode !== "Online");
   const where = online && inPerson ? "Online & in Bengaluru" : inPerson ? "In Bengaluru" : "Online";
   const formats = new Set(upcoming.map((e) => e.category)).size;
-  const seats = upcoming.reduce((sum, e) => sum + e.seats, 0);
+  const attending = upcoming.reduce((sum, e) => sum + e.attending, 0);
 
   return (
     <section className="relative overflow-hidden bg-white">
@@ -165,7 +165,7 @@ export default function LandingHero({ upcoming }: { upcoming: EventDetailModel[]
               <div className="mt-12 flex divide-x divide-[#E2E8F0]">
                 <Stat value={String(upcoming.length)} label="Upcoming" />
                 <Stat value={String(formats)} label={formats === 1 ? "Format" : "Formats"} />
-                {seats > 0 ? <Stat value={seats.toLocaleString("en-IN")} label="Seats" /> : null}
+                {attending > 0 ? <Stat value={`${attending.toLocaleString("en-IN")}+`} label="Attending" /> : null}
                 <Stat value="₹0" label="To attend" />
               </div>
             ) : null}

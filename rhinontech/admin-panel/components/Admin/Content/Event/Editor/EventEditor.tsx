@@ -45,7 +45,7 @@ const NAV: { id: SectionId; label: string; filled: (f: EventFormState) => boolea
   { id: "agenda", label: "Agenda", filled: (f) => f.agenda.some((a) => a.title) },
   { id: "audience", label: "Audience & topics", filled: (f) => f.audience.length > 0 || f.topics.length > 0 },
   { id: "faqs", label: "FAQs", filled: (f) => f.faqs.some((q) => q.question) },
-  { id: "extras", label: "Registration & more", filled: () => true },
+  { id: "extras", label: "Feedback & more", filled: () => true },
 ];
 
 function formatDate(value: string) {
@@ -368,7 +368,7 @@ export default function EventEditor({ eventId }: { eventId?: string }) {
                 {CATEGORIES[form.category].label} ·{" "}
                 {CATEGORIES[form.category].certificate ? `${CATEGORIES[form.category].certificate} certificate` : "no certificate"}
               </p>
-              <p>{form.acceptingRegistrations ? `Registrations open · “${form.ctaType}”` : "Registrations closed"}</p>
+              <p>Button: “{form.ctaType}” · {form.acceptingRegistrations ? "accepting responses" : "responses closed"}</p>
               {form.category === "InternalCohort" ? <p>Hidden from the public listing; reachable by direct link.</p> : null}
             </div>
           </div>
