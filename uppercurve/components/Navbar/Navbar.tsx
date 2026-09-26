@@ -53,7 +53,7 @@ export function Navbar() {
   }, [isOpen]);
 
   const navLinks: NavLinkItem[] = [
-    { name: "Courses", href: "/#courses" },
+    { name: "Courses", href: "/courses" },
     { name: "Events", href: "/events" },
     { name: "Community", href: "/community" },
     {

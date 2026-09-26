@@ -89,7 +89,7 @@ export function Footer() {
               Site map
             </div>
             {[
-              { name: "Courses", href: "/#courses" },
+              { name: "Courses", href: "/courses" },
               { name: "Events", href: "/events" },
               { name: "Community", href: "/community" },
               { name: "Blogs", href: "/blog" },
