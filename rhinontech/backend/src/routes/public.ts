@@ -1,5 +1,11 @@
 import express, { Router, Response, Request } from "express";
-import { ClientRequest, Project, User, Lead, Blog, CaseStudy, Event, PageView, DocsAccess, WorkflowEnrollment, CampaignActivity, Visitor, Unsubscribe, StartupIdea } from "../models";
+import { Op } from "sequelize";
+import { ClientRequest, Project, User, Lead, Blog, CaseStudy, Event, EventGuest, PageView, DocsAccess, WorkflowEnrollment, CampaignActivity, Visitor, Unsubscribe, StartupIdea } from "../models";
+import { registerEventHandler } from "./events";
+import { verifyGuestToken } from "../services/eventEmail";
+import { certificateDownloadUrl } from "../services/eventCertificate";
+import { verifyUnsubscribe } from "../services/unsubscribeToken";
+import { resolvePublicSite } from "../services/publicTenant";
 import type { BlogDomain } from "../models/Blog";
 import { clientIpFrom, isIpCompanyLookupEnabled, lookupCompanyByIp } from "../services/ipCompany";
 import { sendEmail } from "../services/mailer";
@@ -169,9 +175,14 @@ router.post("/web-leads", async (req: Request, res: Response) => {
       });
       res.status(200).json({ ok: true, deduped: true });
     } else {
+      // Which brand's form this was. Uppercurve posts `?domain=uppercurve`;
+      // rhinonlabs.com posts nothing and lands on the default site — so a
+      // website lead shows up in the CRM of the site that actually captured it.
+      const site = await resolvePublicSite(b.site ?? b.domain ?? req.query.domain);
       await Lead.create({
         name,
         email,
+        siteId: site?.id ?? null,
         company: company || "Website Enquiry",
         phone: whatsapp,
         notes: message,
@@ -366,7 +377,13 @@ router.post("/track", express.text({ type: ["text/plain"] }), async (req: Reques
       }
     }
 
+    // Which brand's traffic this is. The beacon may name a site (`domain`), and
+    // the Uppercurve front-end does; rhinonlabs.com sends nothing and falls
+    // through to the workspace's default site, which is Rhinon Labs.
+    const site = await resolvePublicSite(b.site ?? b.domain ?? req.query.domain);
+
     const view = await PageView.create({
+      siteId: site?.id ?? null,
       visitorId,
       sessionId,
       path,
@@ -440,7 +457,10 @@ router.post("/visitors", express.text({ type: ["text/plain"] }), async (req: Req
     const referrer = typeof b.referrer === "string" ? b.referrer.slice(0, 1024) : null;
     const userAgent = (req.headers["user-agent"] as string) || null;
 
+    const site = await resolvePublicSite(b.site ?? b.domain ?? req.query.domain);
+
     const visitor = await Visitor.create({
+      siteId: site?.id ?? null,
       email: rawEmail,
       ip,
       city: geo.city,
@@ -467,8 +487,11 @@ router.post("/visitors", express.text({ type: ["text/plain"] }), async (req: Req
 // send it) keeps working unchanged.
 router.get("/blogs", async (req: Request, res: Response) => {
   try {
+    // Site, not domain: ?domain= is kept as the legacy spelling the Uppercurve
+    // site still sends, and resolves to that workspace's matching site.
+    const site = await resolvePublicSite(req.query.domain);
     const blogs = await Blog.findAll({
-      where: { status: "Published", domain: parseDomain(req.query.domain) },
+      where: { status: "Published", ...(site ? { siteId: site.id } : {}) },
       attributes: PUBLIC_BLOG_LIST_FIELDS as unknown as string[],
       order: [["publishedAt", "DESC"]],
     });
@@ -482,8 +505,13 @@ router.get("/blogs", async (req: Request, res: Response) => {
 // GET /public/blogs/:slug?domain=rhinonlabs|uppercurve — single published blog
 router.get("/blogs/:slug", async (req: Request, res: Response) => {
   try {
+    const site = await resolvePublicSite(req.query.domain);
     const blog = await Blog.findOne({
-      where: { slug: req.params.slug, status: "Published", domain: parseDomain(req.query.domain) },
+      where: {
+        slug: req.params.slug,
+        status: "Published",
+        ...(site ? { siteId: site.id } : {}),
+      },
       attributes: PUBLIC_BLOG_DETAIL_FIELDS as unknown as string[],
     });
     if (!blog) {
@@ -497,13 +525,14 @@ router.get("/blogs/:slug", async (req: Request, res: Response) => {
   }
 });
 
-// GET /public/events — published uppercurve events, newest first
+// GET /public/events — published events for UpperCurve
 router.get("/events", async (_req: Request, res: Response) => {
   try {
     const events = await Event.findAll({
-      where: { status: "Published" },
-      attributes: PUBLIC_EVENT_LIST_FIELDS as unknown as string[],
-      order: [["publishedAt", "DESC"]],
+      where: {
+        [Op.or]: [{ isPublished: true }, { status: "Published" }],
+      },
+      order: [["eventStartDate", "ASC"], ["createdAt", "DESC"]],
     });
     res.json(events);
   } catch (err) {
@@ -515,9 +544,12 @@ router.get("/events", async (_req: Request, res: Response) => {
 // GET /public/events/:slug — single published event
 router.get("/events/:slug", async (req: Request, res: Response) => {
   try {
+    const slug = req.params.slug;
     const event = await Event.findOne({
-      where: { slug: req.params.slug, status: "Published" },
-      attributes: PUBLIC_EVENT_DETAIL_FIELDS as unknown as string[],
+      where: {
+        [Op.or]: [{ eventSlug: slug }, { slug: slug }],
+        [Op.and]: [{ [Op.or]: [{ isPublished: true }, { status: "Published" }] }],
+      },
     });
     if (!event) {
       res.status(404).json({ message: "Event not found" });
@@ -527,6 +559,182 @@ router.get("/events/:slug", async (req: Request, res: Response) => {
   } catch (err) {
     console.error("Failed to fetch public event:", err);
     res.status(500).json({ message: "Failed to fetch event" });
+  }
+});
+
+// POST /public/events/register — register guest for an event from public UpperCurve site
+router.post("/events/register", registerEventHandler as any);
+
+/* ---------------------------------------------------------------------------
+ * Guest self-service. Guests have no accounts: their personal pages are
+ * reached with the signed token from their registration / emails
+ * (services/eventEmail.ts guestToken), which names exactly one guest.
+ * ------------------------------------------------------------------------- */
+
+const publishedWhere = { [Op.or]: [{ isPublished: true }, { status: "Published" }] };
+
+async function guestFromToken(slug: string, token: unknown) {
+  const guestId = verifyGuestToken(token);
+  if (!guestId) return { error: "This link is invalid or has been altered." as const };
+  const guest = await EventGuest.findByPk(guestId);
+  const event = guest ? await Event.findByPk(guest.eventId) : null;
+  if (!guest || !event || (event.get("eventSlug") !== slug && event.get("slug") !== slug)) {
+    return { error: "This link doesn't match an event registration." as const };
+  }
+  return { guest, event };
+}
+
+// POST /public/events/check-guest-status — { slug, email } → already registered?
+router.post("/events/check-guest-status", async (req: Request, res: Response) => {
+  try {
+    const slug = String(req.body?.slug || req.body?.eventSlug || "");
+    const email = String(req.body?.email || "").trim().toLowerCase();
+    if (!slug || !email) {
+      res.status(400).json({ error: "slug and email are required" });
+      return;
+    }
+    const event = await Event.findOne({ where: { eventSlug: slug, ...publishedWhere } });
+    if (!event) {
+      res.status(404).json({ error: "Event not found" });
+      return;
+    }
+    const guest = await EventGuest.findOne({ where: { eventId: event.id, email }, attributes: ["guestType"] });
+    res.json(guest ? { result: "SUBMITTED", guestType: guest.guestType } : { result: "NOT_FOUND" });
+  } catch (err) {
+    console.error("check-guest-status failed:", err);
+    res.status(500).json({ error: "Could not check registration" });
+  }
+});
+
+// GET /public/events/:slug/whatsapp — the event's community link, if it has one
+router.get("/events/:slug/whatsapp", async (req: Request, res: Response) => {
+  const event = await Event.findOne({ where: { eventSlug: req.params.slug, ...publishedWhere }, attributes: ["eventDetails"] });
+  const link = (event?.get("eventDetails") as Record<string, any> | null)?.whatsappLink?.Link;
+  if (!link) {
+    res.status(404).json({ result: "FAILED", message: "WhatsApp link not found for this event" });
+    return;
+  }
+  res.json({ result: "SUCCESS", whatsappLink: link });
+});
+
+// GET /public/events/:slug/guest?token= — a guest's own registration page
+router.get("/events/:slug/guest", async (req: Request, res: Response) => {
+  try {
+    const found = await guestFromToken(req.params.slug, req.query.token);
+    if ("error" in found) {
+      res.status(403).json({ message: found.error });
+      return;
+    }
+    const { guest, event } = found;
+    const details = (event.get("eventDetails") || {}) as Record<string, any>;
+    res.json({
+      guest: {
+        name: guest.name,
+        email: guest.email,
+        guestType: guest.guestType,
+        userType: guest.userType,
+        ownReferralCode: guest.ownReferralCode,
+        feedbackSubmitted: Boolean(guest.feedbackSubmittedAt),
+        certificateApproved: Boolean(guest.certificateApproved),
+        certificateId: guest.certificateGenerated ? guest.certificateId : null,
+        registeredAt: guest.createdAt,
+      },
+      event: {
+        title: event.get("eventTitle"),
+        slug: event.get("eventSlug"),
+        type: event.get("eventType"),
+        category: event.get("eventCategory"),
+        startDate: event.get("eventStartDate"),
+        endDate: event.get("eventEndDate"),
+        startTime: event.get("eventStartTime"),
+        endTime: event.get("eventEndTime"),
+        location: event.get("location"),
+        locationType: event.get("locationType"),
+        bannerUrl: event.get("eventCreativeUrl"),
+        acceptingFeedback: Boolean(event.get("canAcceptResponse")),
+        // Only confirmed guests get the group link on their page.
+        whatsappLink: guest.guestType === "Approved" ? details?.whatsappLink?.Link || null : null,
+      },
+    });
+  } catch (err) {
+    console.error("guest page failed:", err);
+    res.status(500).json({ message: "Could not load your registration" });
+  }
+});
+
+// POST /public/events/:slug/feedback — { token, feedbackData }
+router.post("/events/:slug/feedback", async (req: Request, res: Response) => {
+  try {
+    const found = await guestFromToken(req.params.slug, req.body?.token);
+    if ("error" in found) {
+      res.status(403).json({ error: found.error });
+      return;
+    }
+    const { guest, event } = found;
+    const feedbackData = req.body?.feedbackData;
+    if (!feedbackData || typeof feedbackData !== "object" || Array.isArray(feedbackData) || !Object.keys(feedbackData).length) {
+      res.status(400).json({ error: "feedbackData must be a non-empty object" });
+      return;
+    }
+    if (JSON.stringify(feedbackData).length > 20_000) {
+      res.status(413).json({ error: "That response is too long." });
+      return;
+    }
+    if (!event.get("canAcceptResponse")) {
+      res.status(409).json({ error: "This event is not accepting feedback at the moment.", code: "CLOSED" });
+      return;
+    }
+    if (guest.guestType !== "Approved") {
+      res.status(409).json({ error: "Feedback can only be submitted by approved guests.", code: "NOT_APPROVED" });
+      return;
+    }
+    if (guest.feedbackSubmittedAt) {
+      res.status(409).json({ error: "Feedback already submitted for this event.", code: "ALREADY_SUBMITTED" });
+      return;
+    }
+    // Only plain values are kept: this JSON is shown in the admin and exported.
+    const clean: Record<string, string | number | boolean> = {};
+    for (const [key, value] of Object.entries(feedbackData as Record<string, unknown>)) {
+      if (!/^[a-zA-Z][a-zA-Z0-9_]{0,40}$/.test(key)) continue;
+      if (typeof value === "string") clean[key] = value.slice(0, 4000);
+      else if (typeof value === "number" || typeof value === "boolean") clean[key] = value;
+    }
+    if (typeof clean.teamMember2Email === "string") clean.teamMember2Email = clean.teamMember2Email.trim().toLowerCase();
+    if (["Hackathon", "Teardown"].includes(String(event.get("eventType")))) clean.isPrimaryMember = true;
+    await guest.update({ feedbackData: clean, feedbackSubmittedAt: new Date() });
+    res.json({ result: "SUCCESS", message: "Feedback submitted successfully" });
+  } catch (err) {
+    console.error("feedback submit failed:", err);
+    res.status(500).json({ error: "Could not save your feedback" });
+  }
+});
+
+// GET /public/certificates/:certificateId — anyone can verify a certificate
+router.get("/certificates/:certificateId", async (req: Request, res: Response) => {
+  try {
+    const certificateId = String(req.params.certificateId || "").toUpperCase();
+    if (!/^[A-Z0-9-]{6,40}$/.test(certificateId)) {
+      res.status(404).json({ valid: false });
+      return;
+    }
+    const guest = await EventGuest.findOne({ where: { certificateId, certificateGenerated: true } });
+    const event = guest ? await Event.findByPk(guest.eventId) : null;
+    if (!guest || !event) {
+      res.status(404).json({ valid: false });
+      return;
+    }
+    res.json({
+      valid: true,
+      certificateId,
+      name: guest.name,
+      certificateName: guest.certificateName,
+      issuedAt: guest.certificateGeneratedAt,
+      event: { title: event.get("eventTitle"), slug: event.get("eventSlug"), startDate: event.get("eventStartDate"), endDate: event.get("eventEndDate") },
+      imageUrl: await certificateDownloadUrl(certificateId),
+    });
+  } catch (err) {
+    console.error("certificate verify failed:", err);
+    res.status(500).json({ valid: false });
   }
 });
 
@@ -663,7 +871,7 @@ router.get("/track/open", async (req: Request, res: Response) => {
 
 // GET /public/track/click — Email link click tracking redirect
 router.get("/track/click", async (req: Request, res: Response) => {
-  const targetUrl = (req.query.url as string) || "https://rhinontech.com";
+  const targetUrl = (req.query.url as string) || "https://www.rhinonlabs.com";
   try {
     const enrollmentId = req.query.e as string;
     if (enrollmentId) {
@@ -764,6 +972,41 @@ router.post("/startup-ideas", async (req: Request, res: Response) => {
     console.error("Failed to save startup idea:", error);
     res.status(500).json({ message: "Failed to submit your idea" });
   }
+});
+
+/**
+ * RFC 8058 one-click unsubscribe.
+ *
+ * Hit by the RECEIVING mail provider (Gmail, Yahoo) when the recipient clicks
+ * the native Unsubscribe button — not by a browser. So it has no session, takes
+ * an empty body, and must answer 200 quickly. The address is HMAC-signed
+ * because otherwise anyone could POST arbitrary addresses and suppress a whole
+ * list; the separate /unsubscribe form below stays as the human-facing path.
+ */
+router.post("/unsubscribe/one-click", async (req: Request, res: Response) => {
+  const email = String(req.query.email ?? "").trim().toLowerCase();
+  const token = String(req.query.t ?? "");
+
+  if (!verifyUnsubscribe(email, token)) {
+    res.status(403).json({ message: "Invalid unsubscribe link" });
+    return;
+  }
+
+  try {
+    const [entry, created] = await Unsubscribe.findOrCreate({
+      where: { email },
+      defaults: { email, reason: "One-click unsubscribe (RFC 8058)" } as never,
+    });
+    if (!created && !entry.reason) {
+      await entry.update({ reason: "One-click unsubscribe (RFC 8058)" });
+    }
+  } catch (err: any) {
+    console.error("[Unsubscribe] one-click failed:", err.message);
+  }
+
+  // Always 200: a provider that sees an error may keep retrying or downgrade
+  // the sender's reputation.
+  res.status(200).json({ message: "Unsubscribed" });
 });
 
 router.post("/unsubscribe", async (req: Request, res: Response) => {

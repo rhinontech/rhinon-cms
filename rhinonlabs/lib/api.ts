@@ -71,11 +71,11 @@ async function getJSON<T>(path: string): Promise<T | null> {
 }
 
 export async function getBlogs(): Promise<Blog[]> {
-  return (await getJSON<Blog[]>("/public/blogs")) ?? [];
+  return (await getJSON<Blog[]>("/public/blogs?domain=rhinonlabs")) ?? [];
 }
 
 export async function getBlog(slug: string): Promise<Blog | null> {
-  return getJSON<Blog>(`/public/blogs/${encodeURIComponent(slug)}`);
+  return getJSON<Blog>(`/public/blogs/${encodeURIComponent(slug)}?domain=rhinonlabs`);
 }
 
 export async function getCaseStudies(): Promise<CaseStudy[]> {

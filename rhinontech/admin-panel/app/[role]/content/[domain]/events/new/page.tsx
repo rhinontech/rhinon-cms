@@ -1,7 +1,7 @@
 "use client";
 
-import { BlogEditorPage } from "@/components/Admin/Content/BlogEditor/BlogEditorPage";
+import EventEditor from "@/components/Admin/Content/Event/Editor/EventEditor";
 
 export default function NewEventRoute() {
-  return <BlogEditorPage resource="events" />;
+  return <EventEditor />;
 }

@@ -3,6 +3,9 @@ import { sequelize } from "../config/database";
 
 export interface WorkflowAttributes {
   id: string;
+  /** The brand this row belongs to. Injected for every site model by
+   *  models/siteScope.ts; declared here so route code can read it. */
+  siteId?: string | null;
   name: string;
   description?: string | null;
   status: string;
@@ -25,7 +28,7 @@ export interface WorkflowAttributes {
 export interface WorkflowCreationAttributes
   extends Optional<
     WorkflowAttributes,
-    "id" | "description" | "status" | "version" | "triggerType" | "triggerConfig" | "nodes" | "edges" | "stats" | "createdById"
+    "siteId" | "id" | "description" | "status" | "version" | "triggerType" | "triggerConfig" | "nodes" | "edges" | "stats" | "createdById"
   > {}
 
 export class Workflow
@@ -33,6 +36,7 @@ export class Workflow
   implements WorkflowAttributes
 {
   declare id: string;
+  declare siteId: string | null;
   declare name: string;
   declare description: string | null;
   declare status: string;
@@ -58,6 +62,7 @@ Workflow.init(
       type: DataTypes.STRING,
       primaryKey: true,
     },
+    siteId: { type: DataTypes.UUID, allowNull: true },
     name: {
       type: DataTypes.STRING,
       allowNull: false,

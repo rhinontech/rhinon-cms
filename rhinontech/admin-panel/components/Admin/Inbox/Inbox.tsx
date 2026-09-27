@@ -21,6 +21,42 @@ interface Email {
   isInternal?: boolean; attachments?: Att[]; senderAvatarUrl?: string | null;
   campaign?: { id: string; name: string } | null;
   thread?: Email[];
+  /** Set on thread messages: sent by the viewer from any of their addresses. */
+  fromMe?: boolean;
+}
+
+/** An address the viewer can send from, as it reads in the brand being viewed. */
+interface SenderAddress { address: string; name: string; shared: boolean }
+
+const localPart = (address: string) => address.split("@")[0].toLowerCase();
+
+/**
+ * The viewer's address a message belongs to. Brands change only the domain
+ * (hello@rhinontech.in and hello@uppercurve.in are one mailbox), so the local
+ * part identifies it.
+ */
+const addressFor = (addresses: SenderAddress[], ownerEmail: string) =>
+  addresses.find((a) => localPart(a.address) === localPart(ownerEmail || ""));
+
+function FromSelect({ addresses, value, onChange, compact = false }: { addresses: SenderAddress[]; value: string; onChange: (v: string) => void; compact?: boolean }) {
+  if (addresses.length < 2) return null;
+  return (
+    <label className={cn("flex min-w-0 items-center gap-2 text-xs text-muted-foreground", compact ? "" : "rounded-lg border px-3 py-2")}>
+      <span className="shrink-0">From</span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="min-w-0 flex-1 truncate bg-transparent text-sm font-medium text-foreground focus:outline-none"
+        aria-label="Send from"
+      >
+        {addresses.map((a) => (
+          <option key={a.address} value={a.address}>
+            {a.name ? `${a.name} <${a.address}>` : a.address}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
 }
 
 const FOLDERS: Array<{ value: Folder; label: string; icon: React.ReactNode }> = [
@@ -75,7 +111,8 @@ function AttachmentView({ att }: { att: Att }) {
   );
 }
 
-function ComposeModal({ onClose, onSent }: { onClose: () => void; onSent: () => void }) {
+function ComposeModal({ onClose, onSent, addresses, defaultFrom }: { onClose: () => void; onSent: () => void; addresses: SenderAddress[]; defaultFrom: string }) {
+  const [from, setFrom] = useState(defaultFrom);
   const [to, setTo] = useState(""); const [subject, setSubject] = useState(""); const [body, setBody] = useState("");
   const [files, setFiles] = useState<File[]>([]); const [busy, setBusy] = useState(false); const [error, setError] = useState("");
   const [contacts, setContacts] = useState<Array<{ fullName: string; companyEmail: string }>>([]);
@@ -110,7 +147,7 @@ function ComposeModal({ onClose, onSent }: { onClose: () => void; onSent: () => 
       for (const f of files) attachments.push(await uploadAttachment(f));
       await apiFetch("/inbox", {
         method: "POST",
-        body: JSON.stringify({ toEmails: to.split(",").map((t) => t.trim()).filter(Boolean), subject, body, attachments }),
+        body: JSON.stringify({ from: from || undefined, toEmails: to.split(",").map((t) => t.trim()).filter(Boolean), subject, body, attachments }),
       });
       onSent(); onClose();
     } catch (err: any) { setError(err.message || "Could not send."); } finally { setBusy(false); }
@@ -124,6 +161,7 @@ function ComposeModal({ onClose, onSent }: { onClose: () => void; onSent: () => 
           <button onClick={onClose} className="rounded p-1 hover:bg-muted"><TbX size={18} /></button>
         </div>
         <form onSubmit={submit} className="flex flex-col gap-3 p-5">
+          <FromSelect addresses={addresses} value={from} onChange={setFrom} />
           <div className="relative">
             <input
               className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -187,6 +225,10 @@ export default function Inbox() {
   const [showInfo, setShowInfo] = useState(true);       // desktop info column
   const [mobileInfo, setMobileInfo] = useState(false);  // phone slide-over
   const [showCompose, setShowCompose] = useState(false);
+  const [addresses, setAddresses] = useState<SenderAddress[]>([]);
+  /** "" = every address the viewer owns. */
+  const [mailbox, setMailbox] = useState("");
+  const [replyFrom, setReplyFrom] = useState("");
 
   const [mode, setMode] = useState<"reply" | "note">("reply");
   const [draft, setDraft] = useState("");
@@ -196,6 +238,9 @@ export default function Inbox() {
   const [isMobile, setIsMobile] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const addressesRef = useRef<SenderAddress[]>([]);
+  const detailIdRef = useRef<string | null>(null);
+  useEffect(() => { addressesRef.current = addresses; }, [addresses]);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 640);
@@ -204,11 +249,16 @@ export default function Inbox() {
     return () => window.removeEventListener("resize", check);
   }, []);
 
+  useEffect(() => {
+    apiFetch<SenderAddress[]>("/inbox/addresses").then(setAddresses).catch(() => { });
+  }, []);
+
   const fetchEmails = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ folder });
       if (search.trim()) params.set("search", search.trim());
+      if (mailbox) params.set("mailbox", mailbox);
       const data = await apiFetch<Email[]>(`/inbox?${params.toString()}`);
       setEmails(data);
       setSelectedId((cur) => {
@@ -219,7 +269,7 @@ export default function Inbox() {
         return desktop ? data[0]?.id ?? null : null;
       });
     } finally { setLoading(false); }
-  }, [folder, search]);
+  }, [folder, search, mailbox]);
 
   useEffect(() => {
     const t = setTimeout(fetchEmails, search ? 350 : 0);
@@ -229,6 +279,9 @@ export default function Inbox() {
   const fetchDetail = useCallback(async (id: string) => {
     const data = await apiFetch<Email>(`/inbox/${id}`);
     setDetail(data);
+    // Answer from the address the thread lives in: mail to hello@ is answered as hello@.
+    setReplyFrom((current) => (detailIdRef.current === id && current ? current : addressFor(addressesRef.current, data.ownerEmail)?.address ?? ""));
+    detailIdRef.current = id;
     setEmails((items) => items.map((i) => (i.id === id ? { ...i, isRead: true } : i)));
   }, []);
 
@@ -251,7 +304,8 @@ export default function Inbox() {
     setSending(true);
     try {
       await apiFetch(`/inbox/${detail.id}/${mode === "note" ? "note" : "reply"}`, {
-        method: "POST", body: JSON.stringify({ body: draft.trim(), attachments: pending }),
+        method: "POST",
+        body: JSON.stringify({ body: draft.trim(), attachments: pending, ...(mode === "reply" && replyFrom ? { from: replyFrom } : {}) }),
       });
       setDraft(""); setPending([]);
       await fetchDetail(detail.id);
@@ -266,7 +320,8 @@ export default function Inbox() {
   };
 
   const thread = detail?.thread ?? (detail ? [detail] : []);
-  const isMine = (m: Email) => m.isInternal || m.fromEmail.toLowerCase() === (detail?.ownerEmail ?? "").toLowerCase();
+  const isMine = (m: Email) => m.isInternal || (m.fromMe ?? m.fromEmail.toLowerCase() === (detail?.ownerEmail ?? "").toLowerCase());
+  const multi = addresses.length > 1;
   const daySeparated = useMemo(() => {
     const out: Array<{ day: string | null; msg: Email }> = [];
     let last = "";
@@ -301,6 +356,19 @@ export default function Inbox() {
             <TbSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search subject, name or email" className="w-full rounded-lg border border-border py-2 pl-9 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
+          {multi && (
+            <select
+              value={mailbox}
+              onChange={(e) => setMailbox(e.target.value)}
+              aria-label="Which address"
+              className="w-full rounded-lg border border-border bg-transparent px-2.5 py-1.5 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All my addresses ({addresses.length})</option>
+              {addresses.map((a) => (
+                <option key={a.address} value={a.address}>{a.address}{a.shared ? "" : " (you)"}</option>
+              ))}
+            </select>
+          )}
           <div className="flex gap-1">
             {FOLDERS.map((f) => (
               <button key={f.value} onClick={() => setFolder(f.value)} className={cn("flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium", folder === f.value ? "bg-primary text-primary-foreground" : "border text-muted-foreground hover:bg-muted/40")}>
@@ -321,6 +389,11 @@ export default function Inbox() {
                       <span className="shrink-0 text-[10px] text-muted-foreground">{relTime(e.sentAt)}</span>
                     </div>
                     <p className="truncate text-xs font-medium text-foreground/85">{e.subject}</p>
+                    {multi && !mailbox && addressFor(addresses, e.ownerEmail)?.shared && (
+                      <span className="mr-1 mt-0.5 inline-block rounded-full bg-sky-50 dark:bg-sky-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-sky-700 dark:text-sky-300">
+                        {localPart(e.ownerEmail)}@
+                      </span>
+                    )}
                     {e.campaign && (
                       <span className="mt-0.5 inline-block truncate rounded-full bg-violet-50 dark:bg-violet-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-violet-600 dark:text-violet-300">
                         {e.campaign.name}
@@ -410,7 +483,13 @@ export default function Inbox() {
                   <button onClick={() => setMode("reply")} className={cn("rounded-full px-3.5 py-1.5 text-xs font-semibold", mode === "reply" ? "bg-blue-600 text-white" : "border text-muted-foreground hover:bg-muted/40")}>Reply</button>
                   <button onClick={() => setMode("note")} className={cn("rounded-full px-3.5 py-1.5 text-xs font-semibold", mode === "note" ? "bg-amber-500 text-white" : "border text-muted-foreground hover:bg-muted/40")}>Internal note</button>
                 </div>
-                <span className="hidden text-[11px] text-muted-foreground sm:inline">{mode === "note" ? "Visible to the team only — never emailed." : `Emailed to ${detail.fromEmail}`}</span>
+                {mode === "reply" && multi ? (
+                  <div className="ml-3 flex min-w-0 max-w-[60%] items-center gap-1.5">
+                    <FromSelect compact addresses={addresses} value={replyFrom} onChange={setReplyFrom} />
+                  </div>
+                ) : (
+                  <span className="hidden text-[11px] text-muted-foreground sm:inline">{mode === "note" ? "Visible to the team only — never emailed." : `Emailed to ${detail.fromEmail}`}</span>
+                )}
               </div>
               {pending.length > 0 && (
                 <div className="mb-2 flex flex-wrap gap-1.5">
@@ -475,7 +554,15 @@ export default function Inbox() {
         </aside>
       )}
 
-      {showCompose && <ComposeModal onClose={() => setShowCompose(false)} onSent={fetchEmails} />}
+      {showCompose && (
+        <ComposeModal
+          onClose={() => setShowCompose(false)}
+          onSent={fetchEmails}
+          addresses={addresses}
+          // Composing while filtered to hello@ starts from hello@.
+          defaultFrom={(mailbox && addresses.find((a) => a.address === mailbox)?.address) || addresses[0]?.address || ""}
+        />
+      )}
     </div>
   );
 }

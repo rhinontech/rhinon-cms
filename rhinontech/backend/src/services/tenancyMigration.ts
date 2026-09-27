@@ -1,0 +1,429 @@
+import { QueryTypes } from "sequelize";
+import { sequelize } from "../config/database";
+import { Organization } from "../models/Organization";
+import { Site } from "../models/Site";
+import { TENANT_MODELS } from "../models/tenantScope";
+
+/**
+ * Brings an existing single-tenant database up to the multi-tenant schema.
+ *
+ * Runs on every boot, BEFORE syncDatabase(). That ordering is the whole point:
+ * sync({ alter }) cannot add a populated table's organizationId, cannot convert
+ * a single-column UNIQUE into a composite one (alter never drops constraints,
+ * deliberately), and cannot backfill. So this does those three things first and
+ * hands sync a schema it can reconcile.
+ *
+ * Idempotent and additive — safe to re-run, drops no data. The only destructive
+ * step is dropping the legacy single-column unique constraints that multi-tenancy
+ * makes impossible; the composite replacements are declared on the models and
+ * created by the sync that follows.
+ */
+
+export const PLATFORM_ORG = {
+  name: "Rhinon Tech",
+  slug: "rhinontech",
+  // The platform org keeps the apex domain; tenants get <slug>.rhinontech.in.
+  emailDomain: process.env.PLATFORM_EMAIL_DOMAIN || "rhinontech.in",
+};
+
+/** Legacy global uniques that cannot survive more than one organization. */
+const LEGACY_UNIQUES: { table: string; column: string }[] = [
+  { table: "roles", column: "slug" },
+  { table: "users", column: "personalEmail" },
+  { table: "leads", column: "email" },
+  { table: "blogs", column: "slug" },
+  { table: "case_studies", column: "slug" },
+  { table: "events", column: "slug" },
+  { table: "campaigns", column: "slug" },
+  { table: "accounts", column: "domain" },
+  { table: "letter_templates", column: "key" },
+];
+
+async function tableExists(table: string): Promise<boolean> {
+  const rows = await sequelize.query<{ exists: boolean }>(
+    `SELECT to_regclass(:qualified) IS NOT NULL AS exists`,
+    { type: QueryTypes.SELECT, replacements: { qualified: `public."${table}"` } }
+  );
+  return Boolean(rows[0]?.exists);
+}
+
+/**
+ * Drops UNIQUE constraints and bare unique indexes that cover exactly this one
+ * column. Discovered from the catalog rather than guessed by name, because
+ * Sequelize's inline uniques and its addIndex path produce different names.
+ */
+async function dropSingleColumnUnique(table: string, column: string): Promise<string[]> {
+  const dropped: string[] = [];
+
+  const constraints = await sequelize.query<{ conname: string }>(
+    `SELECT con.conname
+       FROM pg_constraint con
+       JOIN pg_class rel ON rel.oid = con.conrelid
+       JOIN pg_namespace nsp ON nsp.oid = rel.relnamespace
+      WHERE con.contype = 'u'
+        AND nsp.nspname = 'public'
+        AND rel.relname = :table
+        AND array_length(con.conkey, 1) = 1
+        AND (SELECT attname FROM pg_attribute
+              WHERE attrelid = rel.oid AND attnum = con.conkey[1]) = :column`,
+    { type: QueryTypes.SELECT, replacements: { table, column } }
+  );
+  for (const { conname } of constraints) {
+    await sequelize.query(`ALTER TABLE "${table}" DROP CONSTRAINT "${conname}"`);
+    dropped.push(conname);
+  }
+
+  const indexes = await sequelize.query<{ indexname: string }>(
+    `SELECT i.relname AS indexname
+       FROM pg_index x
+       JOIN pg_class i ON i.oid = x.indexrelid
+       JOIN pg_class t ON t.oid = x.indrelid
+       JOIN pg_namespace nsp ON nsp.oid = t.relnamespace
+      WHERE x.indisunique
+        AND NOT x.indisprimary
+        AND nsp.nspname = 'public'
+        AND t.relname = :table
+        AND x.indnatts = 1
+        AND (SELECT attname FROM pg_attribute
+              WHERE attrelid = t.oid AND attnum = x.indkey[0]) = :column
+        AND NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conindid = i.oid)`,
+    { type: QueryTypes.SELECT, replacements: { table, column } }
+  );
+  for (const { indexname } of indexes) {
+    await sequelize.query(`DROP INDEX "${indexname}"`);
+    dropped.push(indexname);
+  }
+
+  return dropped;
+}
+
+
+/**
+ * campaigns.organizationId already existed and meant something else entirely:
+ * the LinkedIn company page URN to post as. Adding tenancy on top of that name
+ * would have stamped tenant UUIDs into the field the LinkedIn publisher reads.
+ *
+ * Renamed out of the way BEFORE the tenancy column is created, so live rows
+ * keep their page URNs. Identified by type (varchar, not uuid) so a database
+ * that has already been migrated is left alone.
+ */
+async function renameCollidingColumns(): Promise<string[]> {
+  const renamed: string[] = [];
+  if (!(await tableExists("campaigns"))) return renamed;
+
+  const rows = await sequelize.query<{ data_type: string }>(
+    `SELECT data_type FROM information_schema.columns
+      WHERE table_schema = 'public' AND table_name = 'campaigns'
+        AND column_name = 'organizationId'`,
+    { type: QueryTypes.SELECT }
+  );
+  if (rows[0]?.data_type === "character varying") {
+    const already = await sequelize.query<{ count: string }>(
+      `SELECT count(*)::text AS count FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'campaigns'
+          AND column_name = 'linkedinOrganizationId'`,
+      { type: QueryTypes.SELECT }
+    );
+    if (Number(already[0]?.count ?? 0) === 0) {
+      await sequelize.query(
+        `ALTER TABLE "campaigns" RENAME COLUMN "organizationId" TO "linkedinOrganizationId"`
+      );
+      renamed.push("campaigns.organizationId -> linkedinOrganizationId");
+    }
+  }
+  return renamed;
+}
+
+
+/**
+ * Moves content off the fixed `Blog.domain` enum ("rhinonlabs" | "uppercurve")
+ * and onto per-org Sites.
+ *
+ * Those two were never tenants — they are two brands of ONE organization. The
+ * platform org keeps both, with its existing posts mapped by their old domain
+ * value so both live marketing sites keep serving. Every other workspace is
+ * seeded with a single default site, so a tenant writing a blog never sees a
+ * brand picker.
+ */
+/**
+ * Uppercurve's real public origin. The site row was seeded before anyone had
+ * confirmed the domain, so it sat null and "view live" had nothing to point at;
+ * the brand pickers show this URL too now. Still overridable by env in case the
+ * domain moves, but it no longer defaults to nothing.
+ */
+const UPPERCURVE_SITE_URL = process.env.UPPERCURVE_SITE_URL || "https://uppercurve.in";
+
+async function migrateContentSites(): Promise<{ sitesCreated: number; contentMapped: number }> {
+  await Site.sync();
+
+  // Site.sync() creates the table but never adds a column to an existing one —
+  // only syncDatabase()'s alter does, and that runs AFTER this. So any column
+  // this migration itself reads has to be added here by hand, or the very next
+  // Site query dies on a column that does not exist yet.
+  if (await tableExists("sites")) {
+    await sequelize.query(`ALTER TABLE "sites" ADD COLUMN IF NOT EXISTS "sendingDomain" VARCHAR(255)`);
+  }
+
+  // The content tables need the column before anything can be mapped onto it.
+  for (const table of ["blogs", "case_studies", "events"]) {
+    if (!(await tableExists(table))) continue;
+    await sequelize.query(`ALTER TABLE "${table}" ADD COLUMN IF NOT EXISTS "siteId" UUID`);
+    await sequelize.query(
+      `CREATE INDEX IF NOT EXISTS "idx_${table}_siteId" ON "${table}" ("siteId")`
+    );
+  }
+
+  let sitesCreated = 0;
+  let contentMapped = 0;
+
+  const orgs = await Organization.findAll();
+  for (const org of orgs) {
+    const wanted = org.isPlatform
+      ? [
+          { name: "Rhinon Labs", slug: "rhinonlabs", siteUrl: "https://www.rhinonlabs.com", isDefault: true, supportsEvents: false, supportsCaseStudies: true },
+          { name: "Uppercurve", slug: "uppercurve", siteUrl: UPPERCURVE_SITE_URL, isDefault: false, supportsEvents: true, supportsCaseStudies: false },
+        ]
+      : [{ name: org.name, slug: "main", siteUrl: null, isDefault: true, supportsEvents: true, supportsCaseStudies: true }];
+
+    for (const def of wanted) {
+      const [, created] = await Site.findOrCreate({
+        where: { organizationId: org.id, slug: def.slug } as never,
+        defaults: { ...def, organizationId: org.id } as never,
+      });
+      if (created) sitesCreated++;
+    }
+
+    // Repair: an earlier build seeded a "main" site for EVERY org, including the
+    // platform org that already had rhinonlabs + uppercurve, leaving two rows
+    // flagged isDefault. Drop the stray only when it holds no content.
+    if (org.isPlatform) {
+      const stray = await Site.findOne({ where: { organizationId: org.id, slug: "main" } as never });
+      if (stray) {
+        const [used] = await sequelize.query<{ count: string }>(
+          `SELECT (
+             (SELECT count(*) FROM "blogs" WHERE "siteId" = :id) +
+             (SELECT count(*) FROM "case_studies" WHERE "siteId" = :id) +
+             (SELECT count(*) FROM "events" WHERE "siteId" = :id)
+           )::text AS count`,
+          { type: QueryTypes.SELECT, replacements: { id: stray.id } }
+        );
+        if (Number(used?.count ?? 0) === 0) await stray.destroy();
+      }
+    }
+
+    const sites = await Site.findAll({ where: { organizationId: org.id } as never });
+
+    // Backfill the URL onto an Uppercurve row seeded before the domain was
+    // confirmed. Only fills a blank — a deliberately set URL is left alone.
+    const uppercurve = sites.find((site) => site.slug === "uppercurve");
+    if (uppercurve && !uppercurve.siteUrl) await uppercurve.update({ siteUrl: UPPERCURVE_SITE_URL });
+
+    // Exactly one default, or resolveSite() picks non-deterministically.
+    const defaults = sites.filter((site) => site.isDefault);
+    if (defaults.length !== 1 && sites.length > 0) {
+      const keep = defaults[0] ?? sites[0];
+      for (const site of sites) {
+        const shouldBeDefault = site.id === keep.id;
+        if (site.isDefault !== shouldBeDefault) await site.update({ isDefault: shouldBeDefault });
+      }
+    }
+    const bySlug = new Map(sites.map((site) => [site.slug, site.id]));
+    const fallback = bySlug.get(org.isPlatform ? "rhinonlabs" : "main");
+    if (!fallback) continue;
+
+    // Blogs carry the legacy enum, so map by it; everything else falls back.
+    // Compare as text: a tenant's "main" slug is not a valid enum value, and
+    // Postgres rejects the literal outright instead of matching nothing.
+    if (await tableExists("blogs")) {
+      for (const [slug, siteId] of bySlug) {
+        const [, meta] = await sequelize.query(
+          `UPDATE "blogs" SET "siteId" = :siteId
+            WHERE "organizationId" = :orgId AND "siteId" IS NULL AND "domain"::text = :slug`,
+          { replacements: { siteId, orgId: org.id, slug } }
+        );
+        contentMapped += (meta as { rowCount?: number })?.rowCount ?? 0;
+      }
+    }
+
+    // Case studies have no domain column — they belong to the default site.
+    // Events were Uppercurve-only, so they go to the events-capable site.
+    const eventsSite = sites.find((site) => site.supportsEvents)?.id ?? fallback;
+    for (const [table, target] of [["blogs", fallback], ["case_studies", fallback], ["events", eventsSite]] as const) {
+      if (!(await tableExists(table))) continue;
+      const [, meta] = await sequelize.query(
+        `UPDATE "${table}" SET "siteId" = :siteId WHERE "organizationId" = :orgId AND "siteId" IS NULL`,
+        { replacements: { siteId: target, orgId: org.id } }
+      );
+      contentMapped += (meta as { rowCount?: number })?.rowCount ?? 0;
+    }
+  }
+
+  return { sitesCreated, contentMapped };
+}
+
+/**
+ * Tables that split by brand as well as by tenant.
+ *
+ * Content went first (blogs/case studies/events); these are the rest of the
+ * modules a multi-brand workspace runs separately — Inbox, CRM, Outreach,
+ * Automation and Analytics. Everything that exists today predates the split, so
+ * it is adopted by each org's DEFAULT site: that is where the Rhinon Labs
+ * pipeline, inbox and traffic already belonged, and leaving the column NULL
+ * would have made those rows invisible the moment a brand filter was applied.
+ */
+const SITE_SCOPED_TABLES = [
+  "inbox_conversations", "inbox_messages", "inbox_emails",
+  "leads", "accounts", "deals", "activities",
+  "campaigns", "campaign_templates", "contact_groups",
+  "workflows", "workflow_enrollments",
+  "page_views", "visitors",
+];
+
+async function migrateModuleSites(): Promise<number> {
+  for (const table of SITE_SCOPED_TABLES) {
+    if (!(await tableExists(table))) continue;
+    await sequelize.query(`ALTER TABLE "${table}" ADD COLUMN IF NOT EXISTS "siteId" UUID`);
+    await sequelize.query(
+      `CREATE INDEX IF NOT EXISTS "idx_${table}_siteId" ON "${table}" ("siteId")`
+    );
+  }
+
+  let mapped = 0;
+  const orgs = await Organization.findAll();
+  for (const org of orgs) {
+    const sites = await Site.findAll({ where: { organizationId: org.id } as never });
+    if (!sites.length) continue;
+    const fallback = (sites.find((site) => site.isDefault) ?? sites[0]).id;
+
+    for (const table of SITE_SCOPED_TABLES) {
+      if (!(await tableExists(table))) continue;
+      const [, meta] = await sequelize.query(
+        `UPDATE "${table}" SET "siteId" = :siteId WHERE "organizationId" = :orgId AND "siteId" IS NULL`,
+        { replacements: { siteId: fallback, orgId: org.id } }
+      );
+      mapped += (meta as { rowCount?: number })?.rowCount ?? 0;
+    }
+  }
+
+  return mapped;
+}
+
+export async function runTenancyMigration(): Promise<{
+  defaultOrgId: string;
+  columnsAdded: number;
+  rowsBackfilled: number;
+  uniquesDropped: string[];
+  columnsRenamed: string[];
+  sitesCreated: number;
+  contentMapped: number;
+  moduleRowsMapped: number;
+}> {
+  // 0. Move any pre-existing column that happens to be called organizationId
+  //    but means something else. Must run before step 3 creates the real one.
+  const columnsRenamed = await renameCollidingColumns();
+
+  // 1. The organizations table must exist before anything can reference it.
+  await Organization.sync();
+
+  // 2. The platform org — everything that exists today belongs to it.
+  const [org] = await Organization.findOrCreate({
+    where: { slug: PLATFORM_ORG.slug },
+    defaults: {
+      name: PLATFORM_ORG.name,
+      slug: PLATFORM_ORG.slug,
+      emailDomain: PLATFORM_ORG.emailDomain,
+      isPlatform: true,
+      status: "active",
+      plan: "enterprise",
+      sesStatus: "verified",
+      settings: { displayName: PLATFORM_ORG.name, legalName: "Rhinon Tech Private Limited" },
+    },
+  });
+
+  let columnsAdded = 0;
+  let rowsBackfilled = 0;
+
+  // 3 + 4. Add the column wherever it is missing, then adopt every orphan row.
+  for (const model of TENANT_MODELS) {
+    const table = model.getTableName() as string;
+    if (!(await tableExists(table))) continue; // new model — sync will create it
+
+    const before = await sequelize.query<{ count: string }>(
+      `SELECT count(*)::text AS count FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = :table
+          AND column_name = 'organizationId'`,
+      { type: QueryTypes.SELECT, replacements: { table } }
+    );
+    if (Number(before[0]?.count ?? 0) === 0) {
+      await sequelize.query(`ALTER TABLE "${table}" ADD COLUMN "organizationId" UUID`);
+      columnsAdded++;
+    }
+
+    const [, meta] = await sequelize.query(
+      `UPDATE "${table}" SET "organizationId" = :orgId WHERE "organizationId" IS NULL`,
+      { replacements: { orgId: org.id } }
+    );
+    rowsBackfilled += (meta as { rowCount?: number })?.rowCount ?? 0;
+
+    // Every query in the app now filters on this column — without an index that
+    // is a sequential scan per request on tables like tasks and leads.
+    await sequelize.query(
+      `CREATE INDEX IF NOT EXISTS "idx_${table}_organizationId" ON "${table}" ("organizationId")`
+    );
+  }
+
+  // 4b. Content brands. Runs after the org backfill, since it groups by org.
+  const { sitesCreated, contentMapped } = await migrateContentSites();
+
+  // 4b. Same treatment for the rest of the brand-split modules. Runs after
+  //     migrateContentSites because it needs the Sites those rows map onto.
+  const moduleRowsMapped = await migrateModuleSites();
+
+  // 5. Retire the global uniques. Composite replacements are on the models and
+  //    get created by the syncDatabase() that runs straight after this.
+  const uniquesDropped: string[] = [];
+  for (const { table, column } of LEGACY_UNIQUES) {
+    if (!(await tableExists(table))) continue;
+    const dropped = await dropSingleColumnUnique(table, column);
+    uniquesDropped.push(...dropped.map((name) => `${table}.${column} (${name})`));
+  }
+
+  return {
+    defaultOrgId: org.id, columnsAdded, rowsBackfilled,
+    uniquesDropped, columnsRenamed, sitesCreated, contentMapped, moduleRowsMapped,
+  };
+}
+
+/**
+ * Reports rows that never got an owner. Deliberately a warning, not a NOT NULL
+ * constraint: on a live database a missed system-context insert should surface
+ * as a loud log line, not a 500. Set TENANCY_ENFORCE_NOT_NULL=true to tighten
+ * once the warning count has sat at zero.
+ */
+export async function auditOrphanRows(): Promise<{ table: string; orphans: number }[]> {
+  const orphaned: { table: string; orphans: number }[] = [];
+
+  for (const model of TENANT_MODELS) {
+    const table = model.getTableName() as string;
+    if (!(await tableExists(table))) continue;
+
+    const rows = await sequelize.query<{ count: string }>(
+      `SELECT count(*)::text AS count FROM "${table}" WHERE "organizationId" IS NULL`,
+      { type: QueryTypes.SELECT }
+    );
+    const orphans = Number(rows[0]?.count ?? 0);
+    if (orphans > 0) orphaned.push({ table, orphans });
+  }
+
+  if (process.env.TENANCY_ENFORCE_NOT_NULL === "true" && orphaned.length === 0) {
+    for (const model of TENANT_MODELS) {
+      const table = model.getTableName() as string;
+      if (!(await tableExists(table))) continue;
+      await sequelize.query(
+        `ALTER TABLE "${table}" ALTER COLUMN "organizationId" SET NOT NULL`
+      );
+    }
+  }
+
+  return orphaned;
+}

@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import multer from "multer";
 import { Op } from "sequelize";
-import { User, Role, Document } from "../models";
+import { User, Role, Document, MailboxAddress } from "../models";
 import type { ExitReason } from "../models/User";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 import { finalizeOffboarding, todayIST } from "../services/offboarding";
@@ -123,7 +123,10 @@ router.post("/", authorize("employees:write"), async (req: AuthRequest, res: Res
     return;
   }
 
-  const companyEmail = `${emailPrefix.toLowerCase()}@rhinontech.in`;
+  // The org's own email subdomain — aman@swiggy.rhinontech.in — not a hardcoded
+  // company domain. emailDomain is resolved from the DB user by authenticate(),
+  // so a request cannot pick someone else's domain by editing its token.
+  const companyEmail = `${emailPrefix.toLowerCase()}@${req.user!.emailDomain}`;
 
   // Check companyEmail uniqueness
   const emailTaken = await User.findOne({ where: { companyEmail } });
@@ -131,13 +134,19 @@ router.post("/", authorize("employees:write"), async (req: AuthRequest, res: Res
     res.status(409).json({ message: `${companyEmail} is already taken. Choose a different prefix.` });
     return;
   }
+  if (await MailboxAddress.findOne({ where: { localPart: emailPrefix.toLowerCase() } })) {
+    res.status(409).json({ message: `${companyEmail} is a shared address (Team → Email addresses). Choose a different prefix.` });
+    return;
+  }
 
-  // Enforce one superadmin
+  // One superadmin PER ORGANIZATION. The User query is tenant-scoped by the
+  // Sequelize hooks, so this counts only this workspace's owners — the old
+  // global check would have stopped the second org from ever having one.
   const role = await Role.findByPk(roleId);
   if (role?.slug === "superadmin") {
     const existing = await User.findOne({ include: [{ model: Role, as: "role", where: { slug: "superadmin" } }] });
     if (existing) {
-      res.status(400).json({ message: "A Super Admin already exists. Only one superadmin is allowed." });
+      res.status(400).json({ message: "A Super Admin already exists for this workspace. Only one superadmin is allowed." });
       return;
     }
   }
@@ -258,7 +267,7 @@ router.post("/", authorize("employees:write"), async (req: AuthRequest, res: Res
           tempPassword,
           onboardingUrl: `${frontendUrl}/onboard?token=${onboardingToken}`,
         });
-    await sendEmail({ to: personalEmail, via: "gmail", subject: template.subject, html: template.html, text: template.text });
+    await sendEmail({ to: personalEmail, via: "ses", subject: template.subject, html: template.html, text: template.text });
     welcomeEmailSent = true;
   } catch (err) {
     console.error("Failed to send welcome email:", err);
@@ -320,13 +329,14 @@ router.put("/:id", authorize("employees:write"), async (req: AuthRequest, res: R
     res.status(404).json({ message: "Employee not found" });
     return;
   }
-  // Enforce one superadmin — if changing someone else's role TO superadmin, block it
+  // One superadmin per workspace — block promoting a second one. Tenant-scoped
+  // by the query hooks, so this is now a per-org check.
   if (req.body.roleId) {
     const role = await Role.findByPk(req.body.roleId);
     if (role?.slug === "superadmin" && employee.roleId !== req.body.roleId) {
       const existing = await User.findOne({ include: [{ model: Role, as: "role", where: { slug: "superadmin" } }] });
       if (existing && existing.id !== employee.id) {
-        res.status(400).json({ message: "A Super Admin already exists. Only one superadmin is allowed." });
+        res.status(400).json({ message: "A Super Admin already exists for this workspace. Only one superadmin is allowed." });
         return;
       }
     }
@@ -606,7 +616,7 @@ router.post("/:id/resend-onboarding", authorize("employees:write"), async (req: 
       onboardingUrl,
       signingUrl,
     });
-    await sendEmail({ to: employee.personalEmail, via: "gmail", subject, html, text });
+    await sendEmail({ to: employee.personalEmail, via: "ses", subject, html, text });
   } catch (err) {
     console.error("Failed to resend welcome email:", err);
     res.status(502).json({ message: "Could not send the invite email. Check email configuration." });
@@ -704,7 +714,7 @@ router.post("/:id/documents/resend", authorize("employees:write"), async (req: A
       signingUrl,
       updated: true,
     });
-    await sendEmail({ to: employee.personalEmail, via: "gmail", subject, html, text });
+    await sendEmail({ to: employee.personalEmail, via: "ses", subject, html, text });
 
     res.json({ message: "Documents updated and re-sent for signing.", regenerated, sentTo: employee.personalEmail });
   } catch (err) {
@@ -729,7 +739,7 @@ router.post("/:id/send-reset", authorize("employees:write"), async (req: AuthReq
   try {
     const resetUrl = `${env.frontendUrl}/auth/reset-password?token=${resetToken}`;
     const { subject, html, text } = resetPasswordEmail({ fullName: employee.fullName, resetUrl });
-    await sendEmail({ to: employee.personalEmail, via: "gmail", subject, html, text });
+    await sendEmail({ to: employee.personalEmail, via: "ses", subject, html, text });
   } catch (err) {
     console.error("Failed to send reset email:", err);
     res.status(502).json({ message: "Could not send the reset email. Check email configuration." });

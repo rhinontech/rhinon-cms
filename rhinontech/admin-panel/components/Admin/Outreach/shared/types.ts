@@ -51,7 +51,8 @@ export interface Campaign {
     generatedAt?: string;
   } | null;
   platformPostId?: string | null;
-  organizationId?: string | null;
+  /** LinkedIn company page URN to post as — not the tenant. */
+  linkedinOrganizationId?: string | null;
   socialStats?: { likes: number; comments: number; shares: number; impressions: number; lastUpdated?: string } | null;
   createdAt?: string;
 }

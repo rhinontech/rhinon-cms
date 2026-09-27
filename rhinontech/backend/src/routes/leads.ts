@@ -2,6 +2,7 @@ import { Router, Response } from "express";
 import { Lead, Campaign, CampaignActivity, ContactGroup, ContactGroupMember, Account, Deal, PipelineStage, Activity, User, Task, InboxEmail, WorkflowEnrollment } from "../models";
 import { findOrCreateAccountForLead } from "./accounts";
 import { authenticate, authorizeAny, AuthRequest } from "../middleware/authenticate";
+import { resolveSiteContext } from "../middleware/siteContext";
 import { enrichLeadWithAI } from "../services/gemini";
 import { fetchWebsiteText } from "../services/research";
 import { sequelize } from "../config/database";
@@ -13,6 +14,8 @@ import { normalizeEmail, isValidEmail } from "../utils/email";
 const router = Router();
 
 router.use(authenticate);
+// Brand-split module: the [domain] the admin is showing scopes every read below.
+router.use(resolveSiteContext);
 
 const OWNER_ATTRS = ["id", "fullName", "companyEmail"];
 const LIST_INCLUDES = [

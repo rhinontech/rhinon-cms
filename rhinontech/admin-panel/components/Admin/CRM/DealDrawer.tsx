@@ -5,13 +5,13 @@ import {
   TbX, TbTrash, TbTrophy, TbCircleX, TbRotateClockwise, TbBuilding, TbUser, TbBriefcase,
 } from "react-icons/tb";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import type { Deal, PipelineStage, UserRef } from "./types";
 import { Timeline } from "./Timeline";
 import { RelatedTasks } from "./RelatedTasks";
 import { StageDot, TBtn, formatDate, formatMoney, relativeTime } from "./ui";
+import { useModuleBase } from "@/lib/sites";
 
 const INPUT =
   "w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40";
@@ -34,8 +34,7 @@ export function DealDrawer({
   onClose: () => void;
   onChanged: () => void;
 }) {
-  const pathname = usePathname();
-  const crmBase = `/${pathname.split("/")[1]}/crm`;
+  const crmBase = useModuleBase();
   const [deal, setDeal] = useState<Deal | null>(null);
   const [handingOff, setHandingOff] = useState(false);
   const [project, setProject] = useState<{ id: string; name: string } | null>(null);

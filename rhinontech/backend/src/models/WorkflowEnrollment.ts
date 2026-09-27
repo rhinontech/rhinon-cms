@@ -3,6 +3,9 @@ import { sequelize } from "../config/database";
 
 export interface WorkflowEnrollmentAttributes {
   id: string;
+  /** The brand this row belongs to. Injected for every site model by
+   *  models/siteScope.ts; declared here so route code can read it. */
+  siteId?: string | null;
   workflowId: string;
   leadId?: string | null;
   leadName: string;
@@ -20,13 +23,14 @@ export interface WorkflowEnrollmentAttributes {
 }
 
 export interface WorkflowEnrollmentCreationAttributes
-  extends Optional<WorkflowEnrollmentAttributes, "id" | "leadId" | "status" | "nextStepAt" | "executionLogs" | "trackingState" | "enrolledAt" | "completedAt"> {}
+  extends Optional<WorkflowEnrollmentAttributes, "siteId" | "id" | "leadId" | "status" | "nextStepAt" | "executionLogs" | "trackingState" | "enrolledAt" | "completedAt"> {}
 
 export class WorkflowEnrollment
   extends Model<WorkflowEnrollmentAttributes, WorkflowEnrollmentCreationAttributes>
   implements WorkflowEnrollmentAttributes
 {
   declare id: string;
+  declare siteId: string | null;
   declare workflowId: string;
   declare leadId: string | null;
   declare leadName: string;
@@ -49,6 +53,7 @@ WorkflowEnrollment.init(
       type: DataTypes.STRING,
       primaryKey: true,
     },
+    siteId: { type: DataTypes.UUID, allowNull: true },
     workflowId: {
       type: DataTypes.STRING,
       allowNull: false,

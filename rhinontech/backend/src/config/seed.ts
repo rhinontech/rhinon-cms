@@ -1,3 +1,4 @@
+import { QueryTypes } from "sequelize";
 import { sequelize } from "./database";
 import { Role, Permission, User, syncDatabase } from "../models";
 import { PERMISSION_CATALOG, DEFAULT_ROLE_GRANTS } from "./permissions";
@@ -5,6 +6,26 @@ import bcrypt from "bcryptjs";
 
 async function seed() {
   await sequelize.authenticate();
+
+  // This script predates multi-tenancy: it looks roles up by bare slug and
+  // creates the superadmin with no organization, so on a tenanted database it
+  // produces rows that belong to nobody — and `setPermissions` would replace
+  // the grants of whichever org's role it happened to match first.
+  const [tenanted] = await sequelize.query<{ count: string }>(
+    `SELECT count(*)::text AS count FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_name = 'organizations'`,
+    { type: QueryTypes.SELECT }
+  );
+  if (Number(tenanted?.count ?? 0) > 0) {
+    console.error(
+      "Refusing to run: this database is multi-tenant.\n" +
+        "  - platform superadmin -> npm run db:bootstrap\n" +
+        "  - a new workspace     -> POST /auth/signup\n" +
+        "  - role permissions    -> provisionOrganizationDefaults(), which runs at boot"
+    );
+    process.exit(1);
+  }
+
   await syncDatabase();
 
   // Permissions

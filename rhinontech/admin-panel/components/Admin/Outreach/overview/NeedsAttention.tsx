@@ -1,15 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { TbCircleCheck, TbClockPause, TbSparkles } from "react-icons/tb";
 import { EmptyState } from "../shared/EmptyState";
 import { isLinkedInChannel } from "../shared/ChannelIcon";
 import type { Campaign } from "../shared/types";
+import { useModuleBase } from "@/lib/sites";
 
 export function NeedsAttention({ campaigns, loading }: { campaigns: Campaign[]; loading: boolean }) {
-  const pathname = usePathname();
-  const roleSlug = pathname.split("/")[1];
+  const base = useModuleBase();
 
   const paused = campaigns.filter((c) => c.stage === "Paused" && !isLinkedInChannel(c.channel));
   const unpublished = campaigns.filter((c) => isLinkedInChannel(c.channel) && !c.platformPostId && c.aiDraft);
@@ -17,14 +16,14 @@ export function NeedsAttention({ campaigns, loading }: { campaigns: Campaign[]; 
   const items = [
     ...paused.map((c) => ({
       key: `paused-${c.id}`,
-      href: `/${roleSlug}/outreach/campaigns/${c.id}`,
+      href: `${base}/campaigns/${c.id}`,
       icon: <TbClockPause size={15} className="text-muted-foreground" />,
       title: c.name,
       hint: "Paused — resume when ready",
     })),
     ...unpublished.map((c) => ({
       key: `unpub-${c.id}`,
-      href: `/${roleSlug}/outreach/publishing/${c.id}`,
+      href: `${base}/publishing/${c.id}`,
       icon: <TbSparkles size={15} className="text-blue-500 dark:text-blue-400" />,
       title: c.name,
       hint: "Draft ready — publish to LinkedIn",

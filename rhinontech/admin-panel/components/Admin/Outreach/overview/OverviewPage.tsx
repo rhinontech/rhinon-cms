@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { TbBrandLinkedin, TbMailOpened, TbMessageCircle, TbPlus, TbTarget, TbUsers, TbSpeakerphone } from "react-icons/tb";
 import { apiFetch } from "@/lib/api";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
@@ -12,6 +11,7 @@ import { OutreachChart } from "./OutreachChart";
 import { NeedsAttention } from "./NeedsAttention";
 import { ActivityFeed } from "./ActivityFeed";
 import type { Campaign } from "../shared/types";
+import { useModuleBase } from "@/lib/sites";
 
 interface Stats {
   totalLeads: number;
@@ -37,8 +37,7 @@ interface Activity {
 }
 
 export function OverviewPage() {
-  const pathname = usePathname();
-  const roleSlug = pathname.split("/")[1];
+  const base = useModuleBase();
 
   const [stats, setStats] = useState<Stats | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -87,13 +86,13 @@ export function OverviewPage() {
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <Button size="sm" variant="outline" className="px-2.5 sm:px-3 text-xs" asChild>
-            <Link href={`/${roleSlug}/outreach/publishing`}>
+            <Link href={`${base}/publishing`}>
               <TbBrandLinkedin size={15} />
               <span className="hidden xs:inline sm:inline">Publish</span>
             </Link>
           </Button>
           <Button size="sm" className="px-2.5 sm:px-3 text-xs" asChild>
-            <Link href={`/${roleSlug}/outreach/campaigns`}>
+            <Link href={`${base}/campaigns`}>
               <TbPlus size={15} />
               <span><span className="hidden xs:inline sm:inline">New </span>Campaign</span>
             </Link>

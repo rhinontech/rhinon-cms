@@ -1,9 +1,9 @@
 "use client";
 
-import { BlogEditorPage } from "@/components/Admin/Content/BlogEditor/BlogEditorPage";
 import { useParams } from "next/navigation";
+import EventEditor from "@/components/Admin/Content/Event/Editor/EventEditor";
 
-export default function EditEventRoute() {
+export default function EventDetailRoute() {
   const params = useParams();
-  return <BlogEditorPage id={params.id as string} resource="events" />;
+  return <EventEditor eventId={params.id as string} />;
 }

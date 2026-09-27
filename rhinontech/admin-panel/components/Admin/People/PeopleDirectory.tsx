@@ -13,6 +13,7 @@ import { LetterEnvelope } from "@/components/Admin/People/LetterEnvelope";
 import { RewriteToolbar } from "@/components/Admin/People/RewriteToolbar";
 import { NewTemplateDialog } from "@/components/Admin/People/NewTemplateDialog";
 import type { LetterBlock } from "@/types/letterBlocks";
+import { useOrganization } from "@/lib/useOrganization";
 
 // Splices local (unsaved) block-level edits onto a freshly-resolved preview —
 // mirrors backend applyBlockOverrides so an AI edit survives a form-field
@@ -494,6 +495,9 @@ function FormSelect({
 }
 
 export function PeopleDirectory() {
+  // Company addresses live on the workspace's own subdomain, so the suffix in
+  // the Add-Employee form has to come from the org, not a hardcoded constant.
+  const { emailDomain } = useOrganization();
   const { isExpanded: isSubNavExpanded } = useSideNav();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [attachDocs, setAttachDocs] = useState(true);
@@ -1512,7 +1516,7 @@ export function PeopleDirectory() {
                             className="flex-1 px-3 py-2 text-sm font-normal focus:outline-none"
                             required
                           />
-                          <span className="px-3 py-2 bg-muted/40 text-muted-foreground text-sm border-l border-border select-none whitespace-nowrap">@rhinontech.in</span>
+                          <span className="px-3 py-2 bg-muted/40 text-muted-foreground text-sm border-l border-border select-none whitespace-nowrap">@{emailDomain || "…"}</span>
                         </div>
                         <p className="text-xs text-muted-foreground font-normal">A welcome email with login credentials will be sent to their personal email.</p>
                       </label>

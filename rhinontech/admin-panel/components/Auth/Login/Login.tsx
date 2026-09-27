@@ -85,7 +85,7 @@ export function Login({
                 <Input
                   id="email"
                   type="email"
-                  placeholder="you@rhinontech.in"
+                  placeholder="you@company.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -120,6 +120,16 @@ export function Login({
               <Button type="submit" className="mt-1 w-full" disabled={loading}>
                 {loading ? "Signing in..." : "Sign in"}
               </Button>
+
+              <p className="text-center text-sm text-muted-foreground">
+                New here?{" "}
+                <Link
+                  href="/auth/signup"
+                  className="underline underline-offset-4 hover:text-primary"
+                >
+                  Create a workspace
+                </Link>
+              </p>
             </form>
           </div>
         </CardContent>

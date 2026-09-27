@@ -6,7 +6,7 @@ import {
   TbExternalLink, TbTargetArrow, TbChevronDown, TbBuilding, TbDownload, TbCopyCheck,
 } from "react-icons/tb";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { apiFetch, apiDownload } from "@/lib/api";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
@@ -24,6 +24,7 @@ import {
   Avatar, DataRow, EmptyState, HeaderRow, OutreachStatus,
   Pagination, SkeletonRows, TableShell, TBtn, relativeTime,
 } from "./ui";
+import { useModuleBase } from "@/lib/sites";
 
 /**
  * Two column sets. With the detail panel open the table has roughly 550px to
@@ -39,10 +40,8 @@ type PanelMode = "view" | "create" | "edit";
 
 export function LeadsPage() {
   const { isExpanded: isSubNavExpanded, toggleSideNav } = useSideNav();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
-  const roleSlug = pathname.split("/")[1];
-  const crmBase = `/${roleSlug}/crm`;
+  const crmBase = useModuleBase();
   // Scoped from an account row: /crm?accountId=… lists just that company.
   const accountFilter = searchParams.get("accountId");
   const [leads, setLeads] = useState<Lead[]>([]);

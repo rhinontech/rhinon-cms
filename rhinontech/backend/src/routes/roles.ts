@@ -1,5 +1,6 @@
 import { Router, Response } from "express";
 import { Role, Permission, User } from "../models";
+import { permissionsForOrg } from "../config/permissions";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 
 const router = Router();
@@ -54,8 +55,21 @@ router.put("/:id/permissions", authorize("settings:write"), async (req: AuthRequ
     res.status(400).json({ message: "Super Admin always has every permission and cannot be edited." });
     return;
   }
+  // A workspace cannot grant itself a platform module. The route guards would
+  // refuse it anyway, but a granted permission puts the sidebar item back and
+  // makes the role screen claim access that does not exist.
   const { permissionIds } = req.body as { permissionIds: string[] };
-  await (role as any).setPermissions(permissionIds);
+  const allowed = new Set(permissionsForOrg(Boolean(req.user?.isPlatformOrg)));
+  const requested = await Permission.findAll({ where: { id: permissionIds ?? [] } });
+  const granted = requested.filter((p) => allowed.has(p.name));
+  const refused = requested.filter((p) => !allowed.has(p.name));
+  if (refused.length) {
+    res.status(403).json({
+      message: `Not available to this workspace: ${refused.map((p) => p.name).join(", ")}`,
+    });
+    return;
+  }
+  await (role as any).setPermissions(granted.map((p) => p.id));
   const updated = await Role.findByPk(req.params.id, { include: [Permission] });
   res.json(updated);
 });

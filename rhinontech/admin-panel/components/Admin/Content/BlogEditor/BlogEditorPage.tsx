@@ -11,7 +11,7 @@ import { ParagraphBlock } from "./ParagraphBlock";
 import { FaqEditor } from "./FaqEditor";
 import { BlogPreview } from "./BlogPreview";
 import { legacyMarkdownToHtml } from "./legacyMarkdown";
-import { getDomainConfig } from "../domains";
+import { useDomainConfig } from "../domains";
 import {
   type Blog,
   type BlogFaq,
@@ -48,7 +48,7 @@ export function BlogEditorPage({ id, resource = "blogs" }: { id?: string; resour
   const params = useParams();
   const roleSlug = pathname.split("/")[1];
   const domain = params.domain as string;
-  const domainConfig = getDomainConfig(domain);
+  const { config: domainConfig } = useDomainConfig(domain);
   const domainBase = `/${roleSlug}/content/${domain}`;
   // Blogs live at the domain root; other resources (events, case studies) get their own segment.
   const listPath = resource === "blogs" ? domainBase : `${domainBase}/${resource}`;

@@ -72,7 +72,7 @@ export function ForgotPassword() {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="you@rhinontech.in"
+                    placeholder="you@company.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required

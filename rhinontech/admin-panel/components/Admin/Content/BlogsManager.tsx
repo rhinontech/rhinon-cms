@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { useSideNav } from "@/context/SideNavContext";
-import { getDomainConfig, type ContentResource } from "./domains";
+import { useDomainConfig, type ContentResource } from "./domains";
 import type { Blog } from "./BlogEditor/types";
 
 const RESOURCE_COPY: Record<ContentResource, { title: string; newLabel: string; empty: string }> = {
@@ -23,7 +23,7 @@ export function BlogsManager({ resource = "blogs" }: { resource?: "blogs" | "eve
   const params = useParams();
   const roleSlug = pathname.split("/")[1];
   const domain = params.domain as string;
-  const domainConfig = getDomainConfig(domain);
+  const { config: domainConfig } = useDomainConfig(domain);
   const copy = RESOURCE_COPY[resource];
   const basePath = `/${roleSlug}/content/${domain}`;
 

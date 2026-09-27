@@ -6,7 +6,7 @@ import {
   TbCalendarTime, TbCalendarStats, TbUsers, TbTarget,
   TbCalendarOff, TbCalendarEvent, TbCheck,
   TbChartBar, TbStar, TbRefresh,
-  TbFiles, TbFolders, TbFileAlert,
+  TbFiles, TbFolders, TbFileAlert, TbAt,
 } from "react-icons/tb";
 import { CollapsibleSubNav, type SubNavItem } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { usePermissions } from "@/context/PermissionsContext";
@@ -19,7 +19,7 @@ import { usePermissions } from "@/context/PermissionsContext";
 export function TeamSubNav() {
   const pathname = usePathname();
   const roleSlug = pathname.split("/")[1];
-  const { has } = usePermissions();
+  const { has, effectiveRoleSlug } = usePermissions();
 
   const attendanceBase = `/${roleSlug}/attendance`;
   const leaveBase = `/${roleSlug}/leave`;
@@ -32,6 +32,10 @@ export function TeamSubNav() {
 
   const items: SubNavItem[] = [
     { label: "Directory", href: `/${roleSlug}/employees`, icon: <TbUserCircle size={18} />, exact: true },
+    // Handing out hello@ / support@ is the Super Admin's call alone.
+    ...(effectiveRoleSlug === "superadmin"
+      ? [{ label: "Email addresses", href: `/${roleSlug}/employees/addresses`, icon: <TbAt size={18} /> } satisfies SubNavItem]
+      : []),
     ...(has("attendance:read")
       ? [
           {

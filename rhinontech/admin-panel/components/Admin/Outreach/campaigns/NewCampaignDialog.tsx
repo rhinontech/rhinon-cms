@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { TbLoader } from "react-icons/tb";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Campaign } from "../shared/types";
+import { useModuleBase } from "@/lib/sites";
 
 /**
  * Creates a bare Draft campaign immediately, then routes to its detail page
@@ -19,8 +20,7 @@ import type { Campaign } from "../shared/types";
  */
 export function NewCampaignDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const router = useRouter();
-  const pathname = usePathname();
-  const roleSlug = pathname.split("/")[1];
+  const base = useModuleBase();
 
   const [name, setName] = useState("");
   const [channel, setChannel] = useState<"Email" | "Cold Email">("Email");
@@ -36,7 +36,7 @@ export function NewCampaignDialog({ open, onOpenChange }: { open: boolean; onOpe
       });
       onOpenChange(false);
       setName("");
-      router.push(`/${roleSlug}/outreach/campaigns/${campaign.id}`);
+      router.push(`${base}/campaigns/${campaign.id}`);
     } catch (err: any) {
       toast.error(err.message || "Failed to create campaign");
     } finally {

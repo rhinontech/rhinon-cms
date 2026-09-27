@@ -102,7 +102,7 @@ export function PublishComposer({
           templateId: templateId || null,
           articleUrl: channel === "LinkedIn Article" ? articleUrl || null : null,
           visibility,
-          organizationId: organizationId === "personal" ? null : organizationId,
+          linkedinOrganizationId: organizationId === "personal" ? null : organizationId,
         }),
       });
       toast.success("Draft created — generate the post, then publish when ready.");

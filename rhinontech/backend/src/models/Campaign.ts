@@ -12,6 +12,9 @@ export type CampaignChannel = "Email" | "Cold Email" | "LinkedIn DM" | "LinkedIn
 
 interface CampaignAttributes {
   id: string;
+  /** The brand this row belongs to. Injected for every site model by
+   *  models/siteScope.ts; declared here so route code can read it. */
+  siteId?: string | null;
   name: string;
   channel: CampaignChannel;
   templateId?: string | null;
@@ -57,7 +60,8 @@ interface CampaignAttributes {
   } | null;
   slug?: string | null;
   platformPostId?: string | null;
-  organizationId?: string | null;
+  /** LinkedIn company page URN to post as (urn:li:organization:<id>). */
+  linkedinOrganizationId?: string | null;
   socialStats?: {
     likes: number;
     comments: number;
@@ -70,10 +74,11 @@ interface CampaignAttributes {
   updatedAt?: Date;
 }
 
-interface CampaignCreationAttributes extends Optional<CampaignAttributes, "id" | "channel" | "templateId" | "stage" | "subject" | "body" | "senderEmail" | "senderName" | "autoSend" | "startDate" | "runTime" | "leadsTotal" | "leadsProcessed" | "objective" | "notes" | "mediaUrl" | "aiDraft" | "visibility" | "mediaTitle" | "mediaDescription" | "articleUrl" | "postType" | "postAudience" | "topic" | "sourceFacts" | "postMeta" | "slug" | "platformPostId" | "organizationId" | "socialStats"> {}
+interface CampaignCreationAttributes extends Optional<CampaignAttributes, "siteId" | "id" | "channel" | "templateId" | "stage" | "subject" | "body" | "senderEmail" | "senderName" | "autoSend" | "startDate" | "runTime" | "leadsTotal" | "leadsProcessed" | "objective" | "notes" | "mediaUrl" | "aiDraft" | "visibility" | "mediaTitle" | "mediaDescription" | "articleUrl" | "postType" | "postAudience" | "topic" | "sourceFacts" | "postMeta" | "slug" | "platformPostId" | "linkedinOrganizationId" | "socialStats"> {}
 
 export class Campaign extends Model<CampaignAttributes, CampaignCreationAttributes> implements CampaignAttributes {
   declare id: string;
+  declare siteId: string | null;
   declare name: string;
   declare channel: CampaignChannel;
   declare templateId: string | null;
@@ -102,7 +107,7 @@ export class Campaign extends Model<CampaignAttributes, CampaignCreationAttribut
   declare postMeta: any;
   declare slug: string | null;
   declare platformPostId: string | null;
-  declare organizationId: string | null;
+  declare linkedinOrganizationId: string | null;
   declare socialStats: any;
   declare createdById: string;
   declare readonly createdAt: Date;
@@ -112,6 +117,7 @@ export class Campaign extends Model<CampaignAttributes, CampaignCreationAttribut
 Campaign.init(
   {
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    siteId: { type: DataTypes.UUID, allowNull: true },
     name: { type: DataTypes.STRING, allowNull: false },
     templateId: { type: DataTypes.UUID, allowNull: true },
     stage: {
@@ -146,11 +152,14 @@ Campaign.init(
     topic: { type: DataTypes.TEXT, allowNull: true },
     sourceFacts: { type: DataTypes.TEXT, allowNull: true },
     postMeta: { type: DataTypes.JSONB, allowNull: true },
-    slug: { type: DataTypes.STRING, allowNull: true, unique: true },
+    slug: { type: DataTypes.STRING, allowNull: true },
     platformPostId: { type: DataTypes.STRING, allowNull: true },
-    organizationId: { type: DataTypes.STRING, allowNull: true },
+    linkedinOrganizationId: { type: DataTypes.STRING, allowNull: true },
     socialStats: { type: DataTypes.JSONB, allowNull: true },
     createdById: { type: DataTypes.UUID, allowNull: false },
   },
-  { sequelize, tableName: "campaigns", timestamps: true }
+  { sequelize, tableName: "campaigns", timestamps: true,
+    // Scoped per tenant. Campaign slugs only have to be unique inside one org.
+    indexes: [{ unique: true, fields: ["organizationId", "slug"] }],
+  }
 );

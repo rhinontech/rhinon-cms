@@ -18,7 +18,9 @@ export function AdminDashboardShell({
           <Sidebar />
           <main className="flex min-h-0 min-w-0 flex-col m-2 gap-2 w-full">
             <SiteHeader />
-            <div className={`min-h-0 flex-1 overflow-hidden ${className ?? ""}`}>{children}</div>
+            {/* Rounded here, not per page, so whatever a page's edge is — a collapsed
+                sub-nav, a sticky header — the content panel keeps its corners. */}
+            <div className={`min-h-0 flex-1 overflow-hidden rounded-xl ${className ?? ""}`}>{children}</div>
           </main>
         </div>
       </ConfirmDialogProvider>

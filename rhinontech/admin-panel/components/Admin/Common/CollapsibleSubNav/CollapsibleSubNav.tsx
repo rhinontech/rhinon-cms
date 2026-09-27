@@ -28,11 +28,13 @@ export function CollapsibleSubNav({ title, items }: CollapsibleSubNavProps) {
   const pathname = usePathname();
   // Full-screen detail pages take over the whole module area — the sub-nav hides itself there.
   const lastSegment = pathname.split("/").pop();
+  // Every brand-split module carries a /[domain]/ segment between the module and
+  // the tab — /admin/outreach/rhinonlabs/campaigns/<id> — so these match on the
+  // tab and its trailing id rather than on "/outreach/campaigns/".
   const isFullScreenDetail =
-    (pathname.includes("/outreach/campaigns/") && lastSegment !== "campaigns") ||
-    (pathname.includes("/outreach/publishing/") && lastSegment !== "publishing") ||
-    (pathname.includes("/content/") &&
-      /\/content\/[^/]+\/(blogs|case-studies|events)\//.test(pathname) &&
+    (/\/outreach\/[^/]+\/campaigns\//.test(pathname) && lastSegment !== "campaigns") ||
+    (/\/outreach\/[^/]+\/publishing\//.test(pathname) && lastSegment !== "publishing") ||
+    (/\/content\/[^/]+\/(blogs|case-studies|events)\//.test(pathname) &&
       !["blogs", "case-studies", "events"].includes(lastSegment || ""));
   const showNav = isExpanded && !isFullScreenDetail;
 

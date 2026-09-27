@@ -1,11 +1,14 @@
 import { Router, Response } from "express";
 import { User } from "../models";
-import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
+import { authenticate, authorize, requirePlatformOrg, AuthRequest } from "../middleware/authenticate";
 import { env } from "../config/env";
 
 const router = Router();
 
-router.use(authenticate, authorize("provisioning:read"));
+// Slack and GitHub invites go out on ONE server-level token each — Rhinon's own
+// workspace and org. A tenant reaching this would be adding strangers to our
+// internal systems, so it is platform-only regardless of permissions.
+router.use(authenticate, requirePlatformOrg, authorize("provisioning:read"));
 
 router.post("/:id/slack", authorize("provisioning:write"), async (req: AuthRequest, res: Response) => {
   const employee = await User.findByPk(req.params.id);

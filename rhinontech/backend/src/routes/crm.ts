@@ -4,9 +4,12 @@ import { User, Deal, PipelineStage, Lead, Activity, PageView, Account, SavedView
 import { isIpCompanyLookupEnabled } from "../services/ipCompany";
 import { sequelize } from "../config/database";
 import { authenticate, authorizeAny, AuthRequest } from "../middleware/authenticate";
+import { resolveSiteContext } from "../middleware/siteContext";
 
 const router = Router();
 router.use(authenticate);
+// Brand-split module: the [domain] the admin is showing scopes every read below.
+router.use(resolveSiteContext);
 
 const readAccess = authorizeAny("crm:read", "outreach:read");
 const writeAccess = authorizeAny("crm:write", "outreach:write");

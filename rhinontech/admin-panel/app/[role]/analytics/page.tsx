@@ -1,7 +1,12 @@
 "use client";
 
-import { AnalyticsDashboard } from "@/components/Admin/Analytics/AnalyticsDashboard";
+import { SitePickerGate } from "@/components/Admin/Common/Sites/SiteGate";
 
 export default function AnalyticsPage() {
-  return <AnalyticsDashboard />;
+  return (
+    <SitePickerGate
+      title="Which brand's traffic?"
+      description="Each brand's site reports its own visitors, sources and pages."
+    />
+  );
 }

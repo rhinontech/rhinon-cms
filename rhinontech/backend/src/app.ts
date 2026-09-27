@@ -1,7 +1,12 @@
-import express from "express";
+// First import: patches Express so rejected async handlers reach the error
+// middleware at the bottom of this file instead of the process.
+import "./middleware/asyncErrors";
+import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { env } from "./config/env";
 import { requestLogger } from "./middleware/requestLogger";
+import { runAsSystem } from "./services/tenantContext";
+import { publicTenantContext } from "./services/publicTenant";
 import authRoutes from "./routes/auth";
 import rolesRoutes from "./routes/roles";
 import permissionsRoutes from "./routes/permissions";
@@ -9,6 +14,7 @@ import employeesRoutes from "./routes/employees";
 import letterTemplatesRoutes from "./routes/letterTemplates";
 import provisioningRoutes from "./routes/provisioning";
 import inboxRoutes from "./routes/inbox";
+import mailboxAddressesRoutes from "./routes/mailboxAddresses";
 import payrollRoutes from "./routes/payroll";
 import peopleRoutes from "./routes/people";
 import tasksRoutes from "./routes/tasks";
@@ -33,6 +39,7 @@ import documentsRoutes from "./routes/documents";
 import linkedinRoutes from "./routes/linkedin";
 import aiRoutes from "./routes/ai";
 import contentRoutes from "./routes/content";
+import sitesRoutes from "./routes/sites";
 import analyticsRoutes from "./routes/analytics";
 import docsAccessRoutes from "./routes/docs-access";
 import brandingRoutes from "./routes/branding";
@@ -43,6 +50,7 @@ import meetingsRoutes from "./routes/meetings";
 import scheduleCallRoutes from "./routes/scheduleCall";
 import startupIdeasRoutes from "./routes/startupIdeas";
 import deployRoutes from "./routes/deploy";
+import eventsRoutes from "./routes/events";
 
 const app = express();
 
@@ -81,6 +89,7 @@ app.use("/employees", employeesRoutes);
 app.use("/letter-templates", letterTemplatesRoutes);
 app.use("/provisioning", provisioningRoutes);
 app.use("/inbox", inboxRoutes);
+app.use("/mailbox-addresses", mailboxAddressesRoutes);
 app.use("/payroll", payrollRoutes);
 app.use("/people", peopleRoutes);
 app.use("/tasks", tasksRoutes);
@@ -105,6 +114,9 @@ app.use("/google-calendar", googleCalendarSettingsRoutes);
 app.use("/meetings", meetingsRoutes);
 app.use("/ai", aiRoutes);
 app.use("/content", contentRoutes);
+app.use("/events", eventsRoutes);
+// The workspace's brands. Every brand-split module reads this before it renders.
+app.use("/sites", sitesRoutes);
 app.use("/analytics", analyticsRoutes);
 app.use("/startup-ideas", startupIdeasRoutes);
 app.use("/deploy", deployRoutes);
@@ -114,14 +126,62 @@ app.use("/branding", brandingRoutes);
 app.use("/document-signing", documentSigningRoutes);
 
 // Use text parser for SNS webhooks since AWS SNS sends content-type text/plain
-app.use("/webhooks", express.text({ type: ["application/json", "text/plain"] }), webhooksRoutes);
+
+/**
+ * Unauthenticated routers resolve their own tenant (an API key, a slug, an
+ * inbound recipient address) or genuinely serve all of them, so they cannot
+ * enter a tenant context up front. Declaring system mode keeps the tenancy
+ * hooks quiet HERE and loud everywhere else — an unscoped query on an
+ * authenticated route stays a warning rather than blending in.
+ *
+ * Scoping these down to a resolved organization is Phase 4.
+ */
+const systemContext = (label: string): express.RequestHandler =>
+  (_req, _res, next) => runAsSystem(label, next);
+
+app.use("/webhooks", systemContext("webhooks"), express.text({ type: ["application/json", "text/plain"] }), webhooksRoutes);
 
 // Public unauthenticated routes
-app.use("/public", publicRoutes);
-app.use("/public", scheduleCallRoutes);
+/**
+ * The public API is mounted twice against the SAME routers.
+ *
+ * Bare `/public/...` resolves an x-api-key header, and failing that the
+ * platform org — a compatibility requirement, not a convenience: rhinonlabs.com
+ * already calls /public/blogs with no key and would go blank without it.
+ * `/public/:orgSlug/...` names the workspace in the path instead.
+ *
+ * Order matters, and the intuitive order is wrong. Mounting the :orgSlug form
+ * first makes "/public/blogs" match it with orgSlug="blogs", so every existing
+ * unprefixed call 404s. Mounting bare first is what works: "/public/blogs"
+ * matches a real route there, while "/public/swiggy/blogs" matches nothing and
+ * falls through to the :orgSlug mount below.
+ */
+app.use("/public", publicTenantContext(), publicRoutes);
+app.use("/public", publicTenantContext(), scheduleCallRoutes);
+app.use("/public/:orgSlug", publicTenantContext(), publicRoutes);
+app.use("/public/:orgSlug", publicTenantContext(), scheduleCallRoutes);
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
+});
+
+/**
+ * Last-resort error handler.
+ *
+ * Without one, a rejected handler took the whole process down: GET
+ * /inbox/conversations matched /inbox/:id, Postgres rejected "conversations" as
+ * a uuid, and the backend exited — every in-flight request of every tenant with
+ * it. Any signed-in user could do that with a typo'd URL.
+ *
+ * A malformed id is the caller's mistake, so it answers 400 rather than 500.
+ */
+app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  const badInput = err?.parent?.code === "22P02" || err?.original?.code === "22P02";
+  if (!badInput) console.error("[Unhandled]", err?.stack || err?.message || err);
+  if (res.headersSent) return;
+  res.status(badInput ? 400 : 500).json({
+    message: badInput ? "Malformed identifier in the request." : "Something went wrong.",
+  });
 });
 
 export default app;

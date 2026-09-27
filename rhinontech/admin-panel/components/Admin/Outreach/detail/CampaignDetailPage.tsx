@@ -17,6 +17,7 @@ import { ActivityTab } from "./ActivityTab";
 import { SettingsTab } from "./SettingsTab";
 import { EnrollLeadsSheet } from "./EnrollLeadsSheet";
 import type { Campaign, CampaignLead, CampaignStats } from "../shared/types";
+import { useModuleBase } from "@/lib/sites";
 
 type TabKey = "setup" | "leads" | "inbox" | "activity" | "settings";
 
@@ -33,6 +34,7 @@ export function CampaignDetailPage({ id }: { id: string }) {
   const pathname = usePathname();
   const confirm = useConfirm();
   const roleSlug = pathname.split("/")[1];
+  const base = useModuleBase();
 
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [leads, setLeads] = useState<CampaignLead[]>([]);
@@ -53,7 +55,7 @@ export function CampaignDetailPage({ id }: { id: string }) {
       ]);
       // LinkedIn campaigns live under Publishing — bounce there.
       if (isLinkedInChannel(data.channel)) {
-        router.replace(`/${roleSlug}/outreach/publishing/${id}`);
+        router.replace(`${base}/publishing/${id}`);
         return;
       }
       setCampaign(data);
@@ -74,7 +76,7 @@ export function CampaignDetailPage({ id }: { id: string }) {
     fetchAll();
   }, [fetchAll]);
 
-  const handleBack = () => router.push(`/${roleSlug}/outreach/campaigns`);
+  const handleBack = () => router.push(`${base}/campaigns`);
 
   const handleRunNow = async () => {
     setRunning(true);

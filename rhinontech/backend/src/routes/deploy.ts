@@ -5,7 +5,7 @@ import fsp from "fs/promises";
 import path from "path";
 import os from "os";
 import { Deployment } from "../models";
-import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
+import { authenticate, authorize, requirePlatformOrg, AuthRequest } from "../middleware/authenticate";
 import {
   DEPLOY_TARGETS,
   DEPLOY_ENABLED,
@@ -33,6 +33,11 @@ import {
  */
 const router = Router();
 router.use(authenticate);
+// Restarting pm2 processes and running deploy scripts is platform
+// machinery, not a workspace feature.
+// authorize() waves every superadmin through, and each tenant owner IS a
+// superadmin — so the permission check alone would not keep customers out.
+router.use(requirePlatformOrg);
 
 const SCRIPTS_DIR = path.join(__dirname, "..", "..", "scripts");
 const SCRIPT_FOR: Record<DeployKind, string> = {

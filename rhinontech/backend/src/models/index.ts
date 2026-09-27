@@ -30,9 +30,15 @@ import { LinkedInToken } from "./LinkedInToken";
 import { Subtask } from "./Subtask";
 import { TaskComment } from "./TaskComment";
 import { TaskTag } from "./TaskTag";
+import { Site } from "./Site";
 import { Blog } from "./Blog";
 import { CaseStudy } from "./CaseStudy";
 import { Event } from "./Event";
+import { EventGuest } from "./EventGuest";
+import { EventEmailTemplate } from "./EventEmailTemplate";
+import { EventEnrollmentEmail } from "./EventEnrollmentEmail";
+import { EventCertificateTemplate } from "./EventCertificateTemplate";
+import { MailboxAddress } from "./MailboxAddress";
 import { PageView } from "./PageView";
 import { DocsAccess } from "./DocsAccess";
 import { Page } from "./Page";
@@ -59,8 +65,11 @@ import { TimeEntry } from "./TimeEntry";
 import { TaskActivity } from "./TaskActivity";
 import { StartupIdea } from "./StartupIdea";
 import { Deployment } from "./Deployment";
+import { Organization } from "./Organization";
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/database";
+import { TENANT_MODELS, installTenantScope, assertTenantColumns } from "./tenantScope";
+import { SITE_MODELS, installSiteScope, assertSiteColumns } from "./siteScope";
 
 // RolePermission join table
 const RolePermission = sequelize.define(
@@ -266,12 +275,35 @@ ContactGroupMember.belongsTo(Lead, { foreignKey: "leadId", as: "lead" });
 ContactGroupMember.belongsTo(ContactGroup, { foreignKey: "contactGroupId", as: "group" });
 
 // Content (CMS) Associations
+// Sites are brands within one org (rhinonlabs / uppercurve), not tenants.
+Site.hasMany(Blog, { foreignKey: "siteId", as: "blogs" });
+Blog.belongsTo(Site, { foreignKey: "siteId", as: "site" });
+Site.hasMany(CaseStudy, { foreignKey: "siteId", as: "caseStudies" });
+CaseStudy.belongsTo(Site, { foreignKey: "siteId", as: "site" });
+Site.hasMany(Event, { foreignKey: "siteId", as: "events" });
+Event.belongsTo(Site, { foreignKey: "siteId", as: "site" });
+
 Blog.belongsTo(User, { foreignKey: "createdById", as: "author" });
 User.hasMany(Blog, { foreignKey: "createdById", as: "blogs" });
 CaseStudy.belongsTo(User, { foreignKey: "createdById", as: "author" });
 User.hasMany(CaseStudy, { foreignKey: "createdById", as: "caseStudies" });
 Event.belongsTo(User, { foreignKey: "createdById", as: "author" });
 User.hasMany(Event, { foreignKey: "createdById", as: "events" });
+
+Event.hasMany(EventGuest, { foreignKey: "eventId", as: "guests", onDelete: "CASCADE" });
+EventGuest.belongsTo(Event, { foreignKey: "eventId", as: "event" });
+EventGuest.belongsTo(User, { foreignKey: "userId", as: "user" });
+User.hasMany(EventGuest, { foreignKey: "userId", as: "eventRegistrations" });
+Event.hasMany(EventEmailTemplate, { foreignKey: "eventId", as: "emailTemplates", onDelete: "CASCADE" });
+EventEmailTemplate.belongsTo(Event, { foreignKey: "eventId", as: "event" });
+Event.hasMany(EventEnrollmentEmail, { foreignKey: "eventId", as: "enrollmentEmails", onDelete: "CASCADE" });
+EventEnrollmentEmail.belongsTo(Event, { foreignKey: "eventId", as: "event" });
+Event.hasOne(EventCertificateTemplate, { foreignKey: "eventId", as: "certificateTemplate", onDelete: "CASCADE" });
+EventCertificateTemplate.belongsTo(Event, { foreignKey: "eventId", as: "event" });
+
+// Extra addresses (hello@, support@) handed to one employee each.
+User.hasMany(MailboxAddress, { foreignKey: "assignedUserId", as: "mailboxAddresses", onDelete: "SET NULL" });
+MailboxAddress.belongsTo(User, { foreignKey: "assignedUserId", as: "assignee", onDelete: "SET NULL" });
 
 // Pages (Notion-like docs) Associations
 Page.belongsTo(User, { foreignKey: "ownerId", as: "owner" });
@@ -340,7 +372,44 @@ Deal.hasMany(Task, { foreignKey: "dealId", as: "tasks" });
 Task.belongsTo(Account, { foreignKey: "accountId", as: "account" });
 Account.hasMany(Task, { foreignKey: "accountId", as: "tasks" });
 
+// ---------------------------------------------------------------------------
+// Multi-tenancy
+// ---------------------------------------------------------------------------
+// installTenantScope() injects the organizationId column and the query hooks at
+// runtime, so the association loop below can stay generic instead of repeating
+// 60 near-identical hasMany lines — and so a model added later cannot quietly
+// skip tenancy (assertTenantColumns fails the boot if it does).
+installTenantScope();
+
+// Aliased "tenant" rather than "organization": StartupIdea already has an
+// `organization` attribute (the company name typed into the /build form), and
+// Sequelize refuses an association that shadows a column.
+for (const model of TENANT_MODELS) {
+  Organization.hasMany(model, { foreignKey: "organizationId" });
+  model.belongsTo(Organization, { foreignKey: "organizationId", as: "tenant" });
+}
+
+assertTenantColumns();
+
+// ---------------------------------------------------------------------------
+// Per-brand (site) scoping
+// ---------------------------------------------------------------------------
+// The second axis: one workspace, several public brands. Same runtime-injection
+// trick as tenancy, but filtering is opt-in — see models/siteScope.ts.
+installSiteScope();
+
+for (const model of SITE_MODELS) {
+  Site.hasMany(model, { foreignKey: "siteId" });
+  // Aliased "site", not "brand": InboxConversation already has a `brand`
+  // column (the channel a conversation came in on) and Sequelize refuses an
+  // association that shadows one.
+  model.belongsTo(Site, { foreignKey: "siteId", as: "site" });
+}
+
+assertSiteColumns();
+
 export {
+  Organization,
   Role, Permission, RolePermission,
   User,
   InboxConversation, InboxMessage, InboxEmail,
@@ -369,9 +438,15 @@ export {
   Subtask,
   TaskComment,
   TaskTag,
+  Site,
   Blog,
   CaseStudy,
   Event,
+  EventGuest,
+  EventEmailTemplate,
+  EventEnrollmentEmail,
+  EventCertificateTemplate,
+  MailboxAddress,
   PageView,
   DocsAccess,
   Page,
@@ -401,6 +476,61 @@ export {
 };
 
 export async function syncDatabase(force = false) {
+  try {
+    // Pre-sync migration: Ensure new event columns exist with safe defaults and backfill legacy rows
+    // This prevents Postgres 23502 (NOT NULL constraint violation) when adding columns to existing tables with rows
+    await sequelize.query(`
+      DO $$
+      DECLARE
+        r RECORD;
+      BEGIN
+        IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'events') THEN
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "eventSlug" VARCHAR(255);
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "eventTitle" VARCHAR(255);
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "eventSubtitle" VARCHAR(255);
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "eventStartDate" VARCHAR(255) DEFAULT '';
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "eventEndDate" VARCHAR(255) DEFAULT '';
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "eventStartTime" VARCHAR(255);
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "eventEndTime" VARCHAR(255);
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "speakers" JSONB DEFAULT '[]'::jsonb;
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "numberOfAttendees" INTEGER DEFAULT 0;
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "eventCreativeUrl" TEXT;
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "isPublished" BOOLEAN DEFAULT false;
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "eventCategory" VARCHAR(255) DEFAULT 'Normal';
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "location" TEXT;
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "locationType" TEXT;
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "tags" TEXT[] DEFAULT ARRAY[]::TEXT[];
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "eventDetails" JSONB DEFAULT '{}'::jsonb;
+          ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "canAcceptResponse" BOOLEAN DEFAULT false;
+
+          -- Drop NOT NULL from all columns except id, createdAt, updatedAt
+          -- so new event creation never violates legacy blog-like constraints (publishedAt, authorName, domain, readTime, etc.)
+          FOR r IN 
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_schema = 'public' 
+              AND table_name = 'events' 
+              AND is_nullable = 'NO' 
+              AND column_name NOT IN ('id', 'createdAt', 'updatedAt')
+          LOOP
+            EXECUTE 'ALTER TABLE public.events ALTER COLUMN "' || r.column_name || '" DROP NOT NULL;';
+          END LOOP;
+
+          IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'events' AND column_name = 'slug') THEN
+            UPDATE public.events SET "eventSlug" = slug WHERE ("eventSlug" IS NULL OR "eventSlug" = '') AND slug IS NOT NULL;
+          END IF;
+          IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'events' AND column_name = 'title') THEN
+            UPDATE public.events SET "eventTitle" = title WHERE ("eventTitle" IS NULL OR "eventTitle" = '') AND title IS NOT NULL;
+          END IF;
+          UPDATE public.events SET "eventSlug" = id::text WHERE "eventSlug" IS NULL OR "eventSlug" = '';
+          UPDATE public.events SET "eventTitle" = 'Untitled Event' WHERE "eventTitle" IS NULL OR "eventTitle" = '';
+        END IF;
+      END $$;
+    `);
+  } catch (preSyncErr) {
+    console.warn("[syncDatabase] Pre-sync migration check:", preSyncErr);
+  }
+
   // alter: { drop: false } — adds new columns/tables but never drops constraints,
   // avoiding the SequelizeUnknownConstraintError on PostgreSQL when FK constraints
   // don't already exist and Sequelize tries to DROP them before re-adding.

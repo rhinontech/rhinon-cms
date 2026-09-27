@@ -37,7 +37,7 @@ LetterTemplate.init(
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
     // Free-form unique slug (was a fixed 3-value enum) — admins can create
     // additional offer_letter-category templates beyond the seeded defaults.
-    key: { type: DataTypes.STRING, allowNull: false, unique: true },
+    key: { type: DataTypes.STRING, allowNull: false },
     category: { type: DataTypes.ENUM("offer_letter", "nda"), allowNull: false },
     title: { type: DataTypes.STRING, allowNull: false },
     blocks: { type: DataTypes.JSONB, allowNull: false, defaultValue: [] },
@@ -48,5 +48,7 @@ LetterTemplate.init(
     sequelize,
     tableName: "letter_templates",
     timestamps: true,
+    // Each org seeds its own offer_letter/nda templates under the same keys.
+    indexes: [{ unique: true, fields: ["organizationId", "key"] }],
   }
 );

@@ -1,11 +1,12 @@
-import Inbox from "@/components/Admin/Inbox/Inbox";
+"use client";
 
-const page = () => {
+import { SitePickerGate } from "@/components/Admin/Common/Sites/SiteGate";
+
+export default function InboxPage() {
   return (
-    <>
-      <Inbox />
-    </>
+    <SitePickerGate
+      title="Which brand's inbox?"
+      description="Mail is kept separate per brand, so a reply lands where the conversation started."
+    />
   );
-};
-
-export default page;
+}

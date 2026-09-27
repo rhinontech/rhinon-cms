@@ -6,6 +6,9 @@ export type TrafficChannel = "Organic Search" | "Direct" | "Social" | "Referral"
 
 interface PageViewAttributes {
   id: string;
+  /** The brand this row belongs to. Injected for every site model by
+   *  models/siteScope.ts; declared here so route code can read it. */
+  siteId?: string | null;
   // Anonymous first-party ids generated on the marketing site (no PII, no cross-site cookies).
   visitorId: string; // stable per browser (localStorage) — used for unique-visitor counts
   sessionId: string; // per browsing session (sessionStorage)
@@ -37,7 +40,7 @@ interface PageViewAttributes {
 interface PageViewCreationAttributes
   extends Optional<
     PageViewAttributes,
-    | "id" | "title" | "referrer" | "referrerHost" | "utmSource" | "utmMedium"
+    "siteId" | "id" | "title" | "referrer" | "referrerHost" | "utmSource" | "utmMedium"
     | "utmCampaign" | "utmTerm" | "utmContent" | "userAgent" | "isBot"
     | "companyName" | "companyDomain"
     | "country" | "region" | "city" | "latitude" | "longitude"
@@ -45,6 +48,7 @@ interface PageViewCreationAttributes
 
 export class PageView extends Model<PageViewAttributes, PageViewCreationAttributes> implements PageViewAttributes {
   declare id: string;
+  declare siteId: string | null;
   declare visitorId: string;
   declare sessionId: string;
   declare path: string;
@@ -73,6 +77,7 @@ export class PageView extends Model<PageViewAttributes, PageViewCreationAttribut
 PageView.init(
   {
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    siteId: { type: DataTypes.UUID, allowNull: true },
     visitorId: { type: DataTypes.STRING, allowNull: false },
     sessionId: { type: DataTypes.STRING, allowNull: false },
     path: { type: DataTypes.STRING, allowNull: false },

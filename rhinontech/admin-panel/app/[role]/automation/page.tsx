@@ -1,20 +1,12 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { SitePickerGate } from "@/components/Admin/Common/Sites/SiteGate";
 
-export default function AutomationIndexPage() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const roleSlug = pathname.split("/")[1] || "admin";
-
-  useEffect(() => {
-    router.replace(`/${roleSlug}/automation/workflows`);
-  }, [router, roleSlug]);
-
+export default function AutomationPage() {
   return (
-    <div className="flex h-full items-center justify-center p-8 text-muted-foreground">
-      Redirecting to Workflows...
-    </div>
+    <SitePickerGate
+      title="Which brand's automations?"
+      description="Workflows and their enrollments run per brand."
+    />
   );
 }

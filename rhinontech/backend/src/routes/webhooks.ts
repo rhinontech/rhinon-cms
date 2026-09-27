@@ -6,6 +6,7 @@ import { InboxEmail, Lead, CampaignActivity, Activity } from "../models";
 import { stopEnrollmentsForLead } from "../services/workflowEngine";
 import { uploadBuffer } from "../services/storage";
 import { env } from "../config/env";
+import { siteIdForRecipient } from "../services/siteSender";
 
 const router = Router();
 
@@ -160,6 +161,11 @@ router.post("/ses-inbound", async (req: Request, res: Response) => {
             inReplyTo,
             campaignId: repliedLead?.campaignId ?? null,
             leadId: repliedLead?.id ?? null,
+            // Who it was addressed to decides the brand: mail to
+            // hello@uppercurve.in is Uppercurve's whether or not we know the
+            // sender. The replying lead's brand is the fallback for the shared
+            // platform domain, where the recipient alone cannot tell us.
+            siteId: (await siteIdForRecipient(recipient)) ?? repliedLead?.siteId ?? null,
             sentAt: parsed.date || new Date(),
           });
         }

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import Image from "next/image";
 import { MdDashboard } from "react-icons/md";
 import { FaUserGroup } from "react-icons/fa6";
 import { RiSettings3Fill } from "react-icons/ri";
@@ -12,14 +11,23 @@ import { TbBriefcase, TbCash, TbSpeakerphone, TbNews, TbBook, TbTargetArrow, TbC
 import { BsPinAngleFill, BsPinAngle } from "react-icons/bs";
 import { cn } from "@/lib/utils";
 import { useDashboard } from "../../../Common/DashboardProvider/DashboardProvider";
-import adminImages from "@/constants/admin/images";
 import { usePermissions } from "@/context/PermissionsContext";
 import { apiFetch } from "@/lib/api";
+import { SITE_SCOPED_MODULES, useActiveBrand, type SiteScopedModule } from "@/lib/sites";
+import { BrandSwitcher } from "@/components/Admin/Common/Sites/BrandSwitcher";
+
+/** The module a sidebar href points at: /admin/outreach -> "outreach". */
+function moduleKeyOf(href: string): string {
+  return href.split("/")[2] ?? "";
+}
 
 export function Sidebar() {
   const pathname = usePathname();
   const { sidebarExpanded, setSidebarExpanded, isHovering, setIsHovering, mobileNavOpen, setMobileNavOpen } = useDashboard();
   const { has } = usePermissions();
+  // Which brand the whole admin is viewed as. Every module is available under
+  // every brand; this only decides which brand's data the split ones show.
+  const { slug: brandSlug } = useActiveBrand();
   // Built from the URL, not the async PermissionsContext state, so the very
   // first client render (and hydration) matches the server-rendered HTML —
   // effectiveRoleSlug starts empty until /auth/me resolves, which would
@@ -63,7 +71,16 @@ export function Sidebar() {
     { title: "Meetings",   icon: <TbCalendarEvent size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/meetings`,   permissions: ["meetings:read"] },
     { title: "Analytics",  icon: <TbChartArcs size={20} className="h-5 w-5 flex-shrink-0" />,     href: `/${roleSlug}/analytics`,  permissions: ["analytics:read"] },
     { title: "Settings",   icon: <RiSettings3Fill size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/settings`,   permissions: ["settings:read", "docsAccess:read", "provisioning:read"] },
-  ].filter((item) => has(...item.permissions)) as Array<{
+  ]
+    .filter((item) => has(...item.permissions))
+    // Link straight into the active brand for the modules that are split by
+    // one, so switching brand and clicking Inbox does not bounce through the
+    // brand picker every time.
+    .map((item) => {
+      const key = moduleKeyOf(item.href);
+      const scoped = SITE_SCOPED_MODULES.includes(key as SiteScopedModule);
+      return scoped && brandSlug ? { ...item, href: `${item.href}/${brandSlug}` } : item;
+    }) as Array<{
     title: string;
     icon: React.ReactNode;
     href: string;
@@ -88,16 +105,14 @@ export function Sidebar() {
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >
-      {/* Logo */}
+      {/* Brand switcher — takes the logo's place, because which brand you are in
+          decides what every brand-split module below is showing. */}
       <div className="flex h-14 items-center justify-center border-border w-full">
         {expanded ? (
-          <div className="flex items-center justify-between w-full px-3">
-            <Link href="/">
-              {/* Both marks render; CSS picks one. Swapping via useTheme()
-                  would flash the wrong logo before hydration resolves. */}
-              <Image src={adminImages.Logo_Rhinon_Tech_Dark} alt="Rhinon Tech" priority className="h-10 w-full object-cover dark:hidden" />
-              <Image src={adminImages.Logo_Rhinon_Tech_White} alt="Rhinon Tech" priority className="hidden h-10 w-full object-cover dark:block" />
-            </Link>
+          <div className="flex items-center gap-1 w-full px-2">
+            <div className="min-w-0 flex-1">
+              <BrandSwitcher expanded />
+            </div>
             <button
               onClick={() => setSidebarExpanded(!sidebarExpanded)}
               className="p-1 rounded bg-card/50 hover:bg-card/70 transition-all shrink-0"
@@ -106,10 +121,7 @@ export function Sidebar() {
             </button>
           </div>
         ) : (
-          <Link href="/">
-            <Image src={adminImages.blueLogo} alt="Rhinon Tech" priority className="h-8 w-8 object-cover dark:hidden" />
-            <Image src={adminImages.whiteLogo} alt="Rhinon Tech" priority className="hidden h-8 w-8 object-cover dark:block" />
-          </Link>
+          <BrandSwitcher expanded={false} />
         )}
       </div>
 

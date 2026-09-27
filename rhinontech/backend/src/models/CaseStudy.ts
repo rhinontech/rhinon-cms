@@ -30,6 +30,8 @@ interface CaseStudyAttributes {
   stats: CaseStudyStat[];
   displayOrder: number;
   status: CaseStudyStatus;
+  /** Publishing brand within the org (rhinonlabs / uppercurve / a tenant's own). */
+  siteId?: string | null;
   createdById?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
@@ -38,6 +40,7 @@ interface CaseStudyAttributes {
 interface CaseStudyCreationAttributes
   extends Optional<
     CaseStudyAttributes,
+    | "siteId"
     | "id" | "content" | "contentBlocks" | "client" | "industry" | "category" | "timeline" | "liveLink" | "date"
     | "result" | "quote" | "image" | "images"
     | "stats" | "displayOrder" | "status" | "createdById"
@@ -66,6 +69,7 @@ export class CaseStudy
   declare stats: CaseStudyStat[];
   declare displayOrder: number;
   declare status: CaseStudyStatus;
+  declare siteId: string | null;
   declare createdById: string | null;
   declare readonly createdAt: Date;
   declare readonly updatedAt: Date;
@@ -78,7 +82,7 @@ CaseStudy.init(
     description: { type: DataTypes.TEXT, allowNull: false },
     content: { type: DataTypes.TEXT, allowNull: true },
     contentBlocks: { type: DataTypes.JSONB, allowNull: false, defaultValue: [] },
-    slug: { type: DataTypes.STRING, allowNull: false, unique: true },
+    slug: { type: DataTypes.STRING, allowNull: false },
     client: { type: DataTypes.STRING, allowNull: true },
     industry: { type: DataTypes.STRING, allowNull: true },
     category: { type: DataTypes.STRING, allowNull: true },
@@ -92,7 +96,11 @@ CaseStudy.init(
     stats: { type: DataTypes.JSONB, allowNull: false, defaultValue: [] },
     displayOrder: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
     status: { type: DataTypes.ENUM("Draft", "Published"), allowNull: false, defaultValue: "Draft" },
+    siteId: { type: DataTypes.UUID, allowNull: true },
     createdById: { type: DataTypes.UUID, allowNull: true },
   },
-  { sequelize, tableName: "case_studies", timestamps: true }
+  { sequelize, tableName: "case_studies", timestamps: true,
+    // Scoped per tenant. Two orgs may both publish the same case-study slug.
+    indexes: [{ unique: true, fields: ["organizationId", "slug"] }],
+  }
 );

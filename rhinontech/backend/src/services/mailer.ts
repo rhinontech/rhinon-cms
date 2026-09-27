@@ -1,6 +1,8 @@
 import nodemailer from "nodemailer";
 import MailComposer from "nodemailer/lib/mail-composer";
 import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
+import { oneClickUnsubscribeUrl } from "./unsubscribeToken";
+import { brandSender, ensureSendingDomains, knownSendingDomains } from "./siteSender";
 
 type SendEmailPayload = {
   to: string | string[];
@@ -8,9 +10,10 @@ type SendEmailPayload = {
   from?: string;
   fromName?: string;
   replyTo?: string;
-  // Transport policy: "gmail" = the shared info@ Gmail account (onboarding
-  // emails only); "ses" = send as the user's own domain address. Default keeps
-  // the old preference (SES when configured, else Gmail).
+  // Transport policy: "ses" = send as a domain address on the authenticated
+  // sending domain; "gmail" = the legacy shared Gmail account, which is on an
+  // unauthenticated domain and is no longer used by any caller. Default is SES
+  // when configured.
   via?: "gmail" | "ses";
   subject: string;
   html?: string;
@@ -22,10 +25,23 @@ type SendEmailPayload = {
   icalEvent?: { method: string; content: string; filename?: string };
   /** Send through this specific mailbox instead of the shared transport. */
   smtpAuth?: { user: string; pass: string; host?: string; port?: number };
+  /**
+   * Marks this as bulk mail and attaches RFC 8058 one-click unsubscribe headers
+   * for the given recipient.
+   *
+   * Gmail and Yahoo require these of bulk senders — a link in the footer does
+   * not satisfy it, and mail without them is filtered regardless of how clean
+   * the content is. Deliberately opt-in: transactional mail (onboarding,
+   * password resets) must NOT carry them.
+   */
+  unsubscribeFor?: string;
 };
 
 const sesRegion = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION;
-const sesFromEmail = process.env.AWS_SES_FROM_EMAIL || process.env.GMAIL_USER || process.env.SMTP_FROM_EMAIL;
+// Deliberately does NOT fall back to GMAIL_USER: that account is on a
+// different domain, and silently sending as it is how unauthenticated mail
+// got out in the first place.
+const sesFromEmail = process.env.AWS_SES_FROM_EMAIL || process.env.SMTP_FROM_EMAIL;
 const smtpUser = process.env.GMAIL_USER || process.env.SMTP_USER;
 const smtpPass = process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASSWORD;
 const fromName = process.env.MAIL_FROM_NAME || "Rhinon Labs";
@@ -76,6 +92,35 @@ function toArray(value: string | string[]) {
   return Array.isArray(value) ? value : [value];
 }
 
+/**
+ * Is this address on a domain we actually authenticate?
+ *
+ * The platform domain and its subdomains are DKIM-signed and SPF-aligned, so a
+ * tenant address (aman@swiggy.rhinontech.in) passes. A brand may also have its
+ * own sending domain (uppercurve.in), which counts only once it has been
+ * configured on the Site — that column is not meant to be set until the domain
+ * is a verified SES identity.
+ *
+ * Sending from an unauthenticated domain is what put this system's mail in the
+ * spam folder, so it is worth a loud line in the log rather than a silent
+ * delivery failure nobody sees.
+ */
+function isAuthenticatedSender(address: string): boolean {
+  const platform = (process.env.PLATFORM_EMAIL_DOMAIN || "rhinontech.in").toLowerCase();
+  const domain = address.split("@")[1]?.toLowerCase() ?? "";
+  if (domain === platform || domain.endsWith(`.${platform}`)) return true;
+  return knownSendingDomains().includes(domain);
+}
+
+/** RFC 8058 headers. Both are required — the URL alone is not enough. */
+function unsubscribeHeaders(email?: string): Record<string, string> {
+  if (!email) return {};
+  return {
+    "List-Unsubscribe": `<${oneClickUnsubscribeUrl(email)}>`,
+    "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+  };
+}
+
 export async function sendEmail({
   to,
   cc = [],
@@ -89,9 +134,23 @@ export async function sendEmail({
   attachments,
   icalEvent,
   smtpAuth,
+  unsubscribeFor,
 }: SendEmailPayload) {
   const toAddresses = toArray(to);
-  const fromAddress = from || sesFromEmail;
+  // Prime the brand cache before the synchronous check below reads it.
+  await ensureSendingDomains();
+  if (from && !isAuthenticatedSender(from)) {
+    console.warn(
+      `[Mailer] Sending as ${from}, which is not on the authenticated sending ` +
+        `domain — this mail will not be DKIM-signed or SPF-aligned and is likely to be filtered.`
+    );
+  }
+  const listHeaders = unsubscribeHeaders(unsubscribeFor);
+  const hasListHeaders = Object.keys(listHeaders).length > 0;
+  // No explicit sender: fall back to the configured default, rewritten onto
+  // the active brand. Outside a brand-split module there is no site
+  // context, so HR and account mail keeps the platform domain.
+  const fromAddress = from || (await brandSender(sesFromEmail)) || sesFromEmail;
   const displayName = customFromName || fromName;
   // A dedicated mailbox is the whole point of rotation, so it overrides the
   // usual SES/SMTP selection rather than being folded into it.
@@ -107,6 +166,7 @@ export async function sendEmail({
       text,
       attachments,
       icalEvent,
+      ...(hasListHeaders ? { headers: listHeaders } : {}),
     } as any);
     return;
   }
@@ -137,6 +197,7 @@ export async function sendEmail({
         text,
         attachments,
         icalEvent,
+        ...(hasListHeaders ? { headers: listHeaders } : {}),
       })
         .compile()
         .build();
@@ -158,6 +219,7 @@ export async function sendEmail({
       text,
       attachments,
       icalEvent,
+      ...(hasListHeaders ? { headers: listHeaders } : {}),
     });
     return;
   }
@@ -172,6 +234,9 @@ export async function sendEmail({
       },
       Content: {
         Simple: {
+          ...(hasListHeaders
+            ? { Headers: Object.entries(listHeaders).map(([Name, Value]) => ({ Name, Value })) }
+            : {}),
           Subject: { Data: subject, Charset: "UTF-8" },
           Body: {
             ...(html ? { Html: { Data: html, Charset: "UTF-8" } } : {}),
@@ -192,6 +257,7 @@ export async function sendEmail({
       subject,
       html,
       text,
+      ...(hasListHeaders ? { headers: listHeaders } : {}),
     });
     return;
   }

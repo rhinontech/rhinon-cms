@@ -2,9 +2,12 @@ import { Router, Response } from "express";
 import { Op, fn, col } from "sequelize";
 import { Deal, PipelineStage, Account, Lead, User, Activity, Task, Project } from "../models";
 import { authenticate, authorizeAny, AuthRequest } from "../middleware/authenticate";
+import { resolveSiteContext } from "../middleware/siteContext";
 
 const router = Router();
 router.use(authenticate);
+// Brand-split module: the [domain] the admin is showing scopes every read below.
+router.use(resolveSiteContext);
 
 const readAccess = authorizeAny("crm:read", "outreach:read");
 const writeAccess = authorizeAny("crm:write", "outreach:write");

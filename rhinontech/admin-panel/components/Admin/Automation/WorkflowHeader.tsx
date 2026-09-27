@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { TbArrowLeft, TbPlayerPause, TbPlayerPlay, TbCopy, TbArchive, TbExclamationMark, TbRocket } from "react-icons/tb";
 import { WorkflowItem } from "@/types/automation";
+import { useModuleBase } from "@/lib/sites";
 
 interface WorkflowHeaderProps {
   workflow: WorkflowItem;
@@ -24,6 +25,7 @@ export function WorkflowHeader({
   onRunWorkflow,
   roleSlug,
 }: WorkflowHeaderProps) {
+  const base = useModuleBase();
   const tabs = [
     { name: "Editor", count: null },
     { name: "Trigger", count: null },
@@ -38,7 +40,7 @@ export function WorkflowHeader({
         {/* Left Title & Status */}
         <div className="flex items-center gap-3">
           <Link
-            href={`/${roleSlug}/automation/workflows`}
+            href={`${base}/workflows`}
             className="p-2 rounded-lg text-muted-foreground hover:text-foreground/85 hover:bg-muted transition-colors"
           >
             <TbArrowLeft size={20} />

@@ -33,12 +33,15 @@ Role.init(
     slug: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
     },
   },
   {
     sequelize,
     tableName: "roles",
     timestamps: true,
+    // Every org gets its own superadmin/hr/employee/collaborator roles, so the
+    // slug can only be unique within a tenant — a global unique here meant the
+    // SECOND organization to sign up could never be provisioned at all.
+    indexes: [{ unique: true, fields: ["organizationId", "slug"] }],
   }
 );
