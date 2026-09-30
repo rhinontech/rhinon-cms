@@ -7,9 +7,9 @@ import Countdown from "../Countdown";
 
 function Stat({ value, label }: { value: string; label: string }) {
   return (
-    <div className="px-5 first:pl-0">
+    <div className="pl-3 sm:pl-5 border-l-2 border-[#E2E8F0] sm:border-l-0 sm:px-5 sm:first:pl-0 min-w-0">
       <p className="text-2xl sm:text-[28px] font-extrabold text-[#0B1B3D] tracking-tight leading-none">{value}</p>
-      <p className="mt-1.5 text-[12px] font-semibold tracking-[0.12em] uppercase text-[#94A3B8]">{label}</p>
+      <p className="mt-1 text-[11px] sm:text-[12px] font-semibold tracking-[0.12em] uppercase text-[#94A3B8]">{label}</p>
     </div>
   );
 }
@@ -32,7 +32,7 @@ function Spotlight({ next, after }: { next: EventDetailModel; after?: EventDetai
 
       <Link
         href={`/events/${next.slug}`}
-        className="group relative block rounded-[26px] bg-white border border-[#E6EAF2] overflow-hidden shadow-[0_50px_90px_-40px_rgba(11,27,61,0.55)] transition-transform duration-500 hover:-translate-y-1"
+        className="group relative block rounded-2xl sm:rounded-[26px] bg-white border border-[#E6EAF2] overflow-hidden shadow-[0_20px_40px_-20px_rgba(11,27,61,0.35)] sm:shadow-[0_50px_90px_-40px_rgba(11,27,61,0.55)] transition-transform duration-500 hover:-translate-y-1"
       >
         <div className="relative aspect-[16/11] bg-[#0B1B3D] overflow-hidden">
           {next.bannerUrl ? (
@@ -48,26 +48,26 @@ function Spotlight({ next, after }: { next: EventDetailModel; after?: EventDetai
             <div className="absolute inset-0 bg-gradient-to-tr from-[#021338] via-[#052b82] to-[#0d59eb]" />
           )}
           <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-[#06102B]/90 via-[#06102B]/25 to-transparent" />
-          <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold text-[#0B1B3D] shadow-sm">
+          <div className="absolute top-3 sm:top-4 left-3 sm:left-4 right-3 sm:right-4 flex items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2 sm:px-2.5 py-1 text-[10.5px] sm:text-[11px] font-bold text-[#0B1B3D] shadow-sm shrink-0">
               <span className={`w-1.5 h-1.5 rounded-full ${config.accent.dot}`} aria-hidden />
               {config.label}
             </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#0052FF] px-2.5 py-1 text-[11px] font-bold tracking-wide text-white">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#0052FF] px-2 sm:px-2.5 py-1 text-[10.5px] sm:text-[11px] font-bold tracking-wide text-white shrink-0">
               <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" aria-hidden />
               Next up
             </span>
           </div>
           {next.startsAt ? (
-            <div className="absolute inset-x-4 bottom-4">
+            <div className="absolute inset-x-3 sm:inset-x-4 bottom-3 sm:bottom-4">
               <Countdown startsAt={next.startsAt} />
             </div>
           ) : null}
         </div>
 
-        <div className="p-5 sm:p-6">
-          <p className="text-[19px] font-extrabold text-[#0B1B3D] leading-snug tracking-tight">{next.title}</p>
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[13px] text-[#475569]">
+        <div className="p-4 sm:p-6">
+          <p className="text-[17px] sm:text-[19px] font-extrabold text-[#0B1B3D] leading-snug tracking-tight">{next.title}</p>
+          <div className="mt-2.5 sm:mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[12.5px] sm:text-[13px] text-[#475569]">
             <span className="inline-flex items-center gap-1.5">
               <CalendarDays className="w-3.5 h-3.5 text-[#94A3B8]" aria-hidden />
               {next.dateLabel}
@@ -81,7 +81,7 @@ function Spotlight({ next, after }: { next: EventDetailModel; after?: EventDetai
               {next.mode}
             </span>
           </div>
-          <div className="mt-5 pt-5 border-t border-[#EEF1F6] flex items-center justify-between gap-4">
+          <div className="mt-4 sm:mt-5 pt-4 sm:pt-5 border-t border-[#EEF1F6] flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 sm:gap-4">
             {host ? (
               <div className="flex items-center gap-2.5 min-w-0">
                 <span className="relative w-8 h-8 rounded-full overflow-hidden bg-[#E2E8F0] shrink-0">
@@ -116,53 +116,53 @@ export default function LandingHero({ upcoming }: { upcoming: EventDetailModel[]
 
   return (
     <section className="relative overflow-hidden bg-white">
-      <div aria-hidden className="pointer-events-none absolute inset-0">
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute inset-x-0 top-0 h-[640px] bg-[radial-gradient(ellipse_70%_60%_at_30%_0%,#E4EEFF_0%,rgba(255,255,255,0)_70%)]" />
         <div className="absolute -right-40 top-10 w-[560px] h-[560px] rounded-full bg-[radial-gradient(circle,rgba(0,194,255,0.14),transparent_65%)]" />
         <div className="absolute inset-0 opacity-40 [background-image:radial-gradient(#C9D6EE_1px,transparent_1px)] [background-size:24px_24px] [mask-image:radial-gradient(ellipse_65%_55%_at_35%_10%,black,transparent)]" />
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-12 sm:pt-20 pb-16 sm:pb-24">
-        <div className="grid lg:grid-cols-12 gap-14 lg:gap-12 items-center">
-          <div className="lg:col-span-7">
-            <p className="inline-flex items-center gap-2 rounded-full border border-[#D6E4FF] bg-white/80 backdrop-blur px-3.5 py-1.5 text-[12px] font-semibold text-[#0B1B3D] shadow-sm">
-              <span className="relative flex w-2 h-2">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-10 sm:pt-20 pb-12 sm:pb-24">
+        <div className="grid lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+          <div className="lg:col-span-7 min-w-0">
+            <p className="inline-flex items-center gap-2 rounded-full border border-[#D6E4FF] bg-white/80 backdrop-blur px-3.5 py-1.5 text-[12px] font-semibold text-[#0B1B3D] shadow-sm max-w-full">
+              <span className="relative flex w-2 h-2 shrink-0">
                 <span className="absolute inline-flex h-full w-full rounded-full bg-[#0052FF] opacity-60 animate-ping" />
                 <span className="relative inline-flex w-2 h-2 rounded-full bg-[#0052FF]" />
               </span>
-              UpperCurve Events · {where}
+              <span className="truncate">UpperCurve Events · {where}</span>
             </p>
 
-            <h1 className="mt-7 text-[40px] sm:text-6xl lg:text-[68px] font-extrabold text-[#0B1B3D] tracking-tight leading-[1.06]">
-              <span className="bg-[#EBF3FF] px-3 sm:px-4 py-0.5 rounded-2xl mr-2 sm:mr-3 inline-block shadow-sm">Live</span>
+            <h1 className="mt-5 sm:mt-7 text-3xl sm:text-5xl lg:text-[68px] font-extrabold text-[#0B1B3D] tracking-tight leading-[1.12] sm:leading-[1.06] break-words">
+              <span className="bg-[#EBF3FF] px-2.5 sm:px-4 py-0.5 rounded-xl sm:rounded-2xl mr-2 sm:mr-3 inline-block shadow-sm">Live</span>
               AI events that end with{" "}
               <span className="bg-gradient-to-r from-[#0052FF] via-[#0077FF] to-[#00C2FF] bg-clip-text text-transparent">
                 something you built.
               </span>
             </h1>
 
-            <p className="mt-7 text-base sm:text-lg text-[#334155] leading-relaxed max-w-xl">
+            <p className="mt-4 sm:mt-7 text-[15px] sm:text-lg text-[#334155] leading-relaxed max-w-xl">
               Workshops, assessed micro-certificates and one-day builds for educators and builders — taught by
               practitioners, not presenters.
             </p>
 
-            <div className="mt-9 flex flex-wrap items-center gap-3">
+            <div className="mt-7 sm:mt-9 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <a
                 href="#events"
-                className="inline-flex items-center gap-2 bg-[#0052FF] hover:bg-[#0043CC] text-white font-bold text-xs sm:text-[13px] tracking-wider uppercase px-7 py-3.5 rounded-[4px] shadow-[0_10px_24px_-10px_rgba(0,82,255,0.6)] transition-all active:scale-[0.98]"
+                className="inline-flex items-center justify-center gap-2 bg-[#0052FF] hover:bg-[#0043CC] text-white font-bold text-xs sm:text-[13px] tracking-wider uppercase px-7 py-3.5 rounded-[4px] shadow-[0_10px_24px_-10px_rgba(0,82,255,0.6)] transition-all active:scale-[0.98] text-center"
               >
                 Browse events <ArrowRight className="w-4 h-4" aria-hidden />
               </a>
               <Link
                 href="/community"
-                className="inline-flex items-center gap-2 border border-[#0B1B3D]/80 text-[#0B1B3D] hover:bg-[#0B1B3D] hover:text-white font-bold text-xs sm:text-[13px] tracking-wider uppercase px-7 py-3.5 rounded-[4px] transition-colors"
+                className="inline-flex items-center justify-center gap-2 border border-[#0B1B3D]/80 text-[#0B1B3D] hover:bg-[#0B1B3D] hover:text-white font-bold text-xs sm:text-[13px] tracking-wider uppercase px-7 py-3.5 rounded-[4px] transition-colors text-center"
               >
                 Join the community
               </Link>
             </div>
 
             {upcoming.length ? (
-              <div className="mt-12 flex divide-x divide-[#E2E8F0]">
+              <div className="mt-9 sm:mt-12 grid grid-cols-2 sm:grid-cols-4 gap-y-5 gap-x-4 sm:gap-0 sm:divide-x sm:divide-[#E2E8F0] pt-6 sm:pt-0 border-t border-[#EEF1F6] sm:border-t-0">
                 <Stat value={String(upcoming.length)} label="Upcoming" />
                 <Stat value={String(formats)} label={formats === 1 ? "Format" : "Formats"} />
                 {attending > 0 ? <Stat value={`${attending.toLocaleString("en-IN")}+`} label="Attending" /> : null}
@@ -171,7 +171,7 @@ export default function LandingHero({ upcoming }: { upcoming: EventDetailModel[]
             ) : null}
           </div>
 
-          <div className="lg:col-span-5">
+          <div className="lg:col-span-5 min-w-0">
             {next ? (
               <Spotlight next={next} after={after} />
             ) : (
