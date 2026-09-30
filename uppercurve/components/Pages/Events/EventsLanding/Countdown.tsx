@@ -46,16 +46,16 @@ export default function Countdown({ startsAt }: { startsAt: string }) {
   ];
 
   return (
-    <div className="grid grid-cols-4 gap-2" role="timer" aria-live="off">
+    <div className="grid grid-cols-4 gap-1.5 sm:gap-2" role="timer" aria-live="off">
       {cells.map(([label, value]) => (
         <div
           key={label}
-          className="rounded-xl bg-white/12 border border-white/20 backdrop-blur-md px-2 py-2 text-center"
+          className="rounded-xl bg-white/12 border border-white/20 backdrop-blur-md px-1.5 sm:px-2 py-1.5 sm:py-2 text-center"
         >
-          <p className="text-[22px] sm:text-2xl font-extrabold text-white tabular-nums leading-none">
+          <p className="text-xl sm:text-2xl font-extrabold text-white tabular-nums leading-none">
             {value === undefined ? "--" : String(value).padStart(2, "0")}
           </p>
-          <p className="mt-1 text-[10px] font-semibold tracking-[0.18em] uppercase text-white/70">{label}</p>
+          <p className="mt-1 text-[9px] sm:text-[10px] font-semibold tracking-[0.14em] sm:tracking-[0.18em] uppercase text-white/70">{label}</p>
         </div>
       ))}
     </div>
