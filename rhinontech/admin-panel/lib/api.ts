@@ -26,17 +26,57 @@ export function authHeaders(): Record<string, string> {
   };
 }
 
+/**
+ * An API failure that keeps what the server said, not just the message.
+ *
+ * Still an `Error` with the server's message, so every existing
+ * `catch (err) { toast.error(err.message) }` keeps working unchanged. Code that
+ * cares — the plan-limit notice, the email-verification prompt — reads `status`
+ * and `code`.
+ */
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+    /** The server's machine-readable reason, e.g. PLAN_LIMIT, TRIAL_EXPIRED, EMAIL_NOT_VERIFIED. */
+    public code?: string,
+    public data?: Record<string, unknown>
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
+/** Fired when the plan (not the user's mistake) is what stopped a request. */
+export const PLAN_BLOCKED_EVENT = "rhinon:plan-blocked";
+export interface PlanBlockedDetail {
+  message: string;
+  code?: string;
+}
+
+async function toApiError(res: Response, fallback: string): Promise<ApiError> {
+  const body = await res.json().catch(() => ({ message: fallback }));
+  // Some routes answer { error } rather than { message } (events, among
+  // others); without this the real reason — "slug already in use" — was lost.
+  const message = body.message || body.error || fallback;
+
+  // 402 is always "your plan", and EMAIL_NOT_VERIFIED is the one 403 with a fix
+  // the user can apply. Announce both so a banner can offer the way out, rather
+  // than each of ~200 call sites inventing its own copy for the same situation.
+  if (typeof window !== "undefined" && (res.status === 402 || body.code === "EMAIL_NOT_VERIFIED")) {
+    window.dispatchEvent(
+      new CustomEvent<PlanBlockedDetail>(PLAN_BLOCKED_EVENT, { detail: { message, code: body.code } })
+    );
+  }
+  return new ApiError(message, res.status, body.code, body);
+}
+
 export async function apiFetch<T = unknown>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     ...init,
     headers: { ...authHeaders(), ...(init?.headers as Record<string, string> | undefined) },
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ message: "Request failed" }));
-    // Some routes answer { error } rather than { message } (events, among
-    // others); without this the real reason — "slug already in use" — was lost.
-    throw new Error(err.message || err.error || "Request failed");
-  }
+  if (!res.ok) throw await toApiError(res, "Request failed");
   return res.json() as Promise<T>;
 }
 
@@ -49,10 +89,7 @@ export async function apiFetch<T = unknown>(path: string, init?: RequestInit): P
  */
 export async function apiDownload(path: string, fallbackName: string): Promise<void> {
   const res = await fetch(`${API_URL}${path}`, { headers: authHeaders() });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ message: "Download failed" }));
-    throw new Error(err.message || "Download failed");
-  }
+  if (!res.ok) throw await toApiError(res, "Download failed");
 
   // Prefer the server's filename when it sent one.
   const disposition = res.headers.get("Content-Disposition") || "";
@@ -81,10 +118,7 @@ export async function apiUpload<T = unknown>(path: string, file: File, field = "
     headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...siteHeader() },
     body: form,
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ message: "Upload failed" }));
-    throw new Error(err.message || "Upload failed");
-  }
+  if (!res.ok) throw await toApiError(res, "Upload failed");
   return res.json() as Promise<T>;
 }
 

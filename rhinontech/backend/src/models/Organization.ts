@@ -43,6 +43,8 @@ export interface OrganizationSettings {
   termsVersion?: string;
   termsAcceptedAt?: string;
   termsAcceptedBy?: string;
+  /** Set when the owner asks for a different plan; cleared once platform staff change it. */
+  upgradeRequest?: { plan: string; note: string | null; at: string; by: string };
   /** The workspace's own sending domains and their verification progress (services/customDomain.ts). */
   emailDomains?: {
     domain: string;

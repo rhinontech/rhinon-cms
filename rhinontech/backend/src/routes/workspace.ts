@@ -5,6 +5,7 @@ import { rateLimit } from "../middleware/rateLimit";
 import { Organization } from "../models/Organization";
 import { User } from "../models/User";
 import { auditRequest, clientIp } from "../services/audit";
+import { generateApiKey } from "../services/orgProvisioning";
 import {
   streamWorkspaceExport, scheduleDeletion, cancelDeletion, deletionState, DELETION_GRACE_DAYS,
 } from "../services/workspaceLifecycle";
@@ -78,6 +79,32 @@ router.delete("/deletion", requireOwner, async (req: AuthRequest, res: Response)
   const org = await Organization.findByPk(req.user!.organizationId);
   if (!org) { res.status(404).json({ message: "Workspace not found" }); return; }
   res.json(await cancelDeletion(org, { id: req.user!.userId, name: req.user!.fullName, ip: clientIp(req) }));
+});
+
+// ── Public API key ───────────────────────────────────────────────────────────
+// The key headless consumers (a marketing site reading blogs, say) send as
+// `x-api-key`. Only its hash is stored, so it can be shown exactly once — when it
+// is created or rotated. These endpoints show which key is live, and replace it.
+
+router.get("/api-key", requireOwner, async (req: AuthRequest, res: Response) => {
+  const org = await Organization.findByPk(req.user!.organizationId);
+  if (!org) { res.status(404).json({ message: "Workspace not found" }); return; }
+  res.json({ prefix: org.apiKeyPrefix, rotatedAt: org.apiKeyRotatedAt, exists: !!org.apiKeyHash, slug: org.slug });
+});
+
+const rotateLimiter = rateLimit({ name: "api-key-rotate", windowMs: 60 * 60_000, max: 10 });
+
+router.post("/api-key/rotate", requireOwner, rotateLimiter, async (req: AuthRequest, res: Response) => {
+  const org = await Organization.findByPk(req.user!.organizationId);
+  if (!org) { res.status(404).json({ message: "Workspace not found" }); return; }
+
+  const key = generateApiKey();
+  const rotatedAt = new Date();
+  await org.update({ apiKeyHash: key.hash, apiKeyPrefix: key.prefix, apiKeyRotatedAt: rotatedAt });
+  void auditRequest(req, "workspace.api_key_rotated", { entityType: "organization", entityId: org.id });
+
+  // The previous key stops working the moment this returns. Shown once, never again.
+  res.json({ apiKey: key.key, prefix: key.prefix, rotatedAt });
 });
 
 export default router;

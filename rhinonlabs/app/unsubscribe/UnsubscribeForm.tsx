@@ -28,6 +28,8 @@ const PRESET_REASONS = [
 export default function UnsubscribeForm() {
   const searchParams = useSearchParams();
   const emailParam = searchParams.get("email") || "";
+  // The signature in the email's link covers that exact address.
+  const signature = searchParams.get("t") || "";
 
   const [email, setEmail] = useState("");
   const [selectedReason, setSelectedReason] = useState<string>("");
@@ -76,6 +78,9 @@ export default function UnsubscribeForm() {
       await submitUnsubscribe({
         email: trimmedEmail,
         reason: finalReason,
+        // Only valid for the address the link was made for; if the person typed a
+        // different one, send it unsigned rather than have it refused.
+        ...(signature && trimmedEmail.toLowerCase() === emailParam.trim().toLowerCase() ? { t: signature } : {}),
       });
       setSubmitted(true);
     } catch (err: any) {

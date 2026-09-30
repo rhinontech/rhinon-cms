@@ -176,6 +176,8 @@ export async function bookScheduleCall(payload: ScheduleCallPayload): Promise<Sc
 export interface UnsubscribePayload {
   email: string;
   reason: string;
+  /** Signature carried by the link in the email (?t=). Proves the address is the one we mailed. */
+  t?: string;
 }
 
 export async function submitUnsubscribe(payload: UnsubscribePayload): Promise<{ success: boolean; message?: string }> {

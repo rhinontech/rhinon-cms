@@ -11,6 +11,34 @@ interface RoleWithPermissions {
   Permissions: { name: string }[];
 }
 
+/** What /auth/me says about the workspace the user is signed into. */
+export interface AccountStatus {
+  organization: {
+    id: string;
+    name: string;
+    slug: string;
+    emailDomain: string;
+    status: "active" | "trial" | "suspended";
+    plan: "free" | "starter" | "enterprise";
+    isPlatform: boolean;
+  } | null;
+  /** The owner has not yet clicked the link we emailed at signup. */
+  emailVerificationPending: boolean;
+  trialEndsAt: string | null;
+  trialExpired: boolean;
+  termsVersion: string | null;
+  termsAccepted: boolean;
+}
+
+const EMPTY_ACCOUNT: AccountStatus = {
+  organization: null,
+  emailVerificationPending: false,
+  trialEndsAt: null,
+  trialExpired: false,
+  termsVersion: null,
+  termsAccepted: true, // unknown is not "unaccepted": never nag before the answer arrives
+};
+
 type PermissionsContextType = {
   /** The signed-in user's own permissions (ignoring any preview). */
   permissions: string[];
@@ -24,6 +52,12 @@ type PermissionsContextType = {
   department: string | null;
   /** True while previewing another role's URL as superadmin. */
   isPreviewing: boolean;
+  /** The workspace owner (its superadmin), acting as themselves rather than previewing a role. */
+  isOwner: boolean;
+  /** The platform workspace's owner — the only person who can manage other workspaces. */
+  isPlatformOwner: boolean;
+  /** Workspace, trial, verification and terms state, from the same /auth/me call. */
+  account: AccountStatus;
   /** The role currently in effect for gating decisions — the previewed role's
    *  slug while superadmin is browsing another role's URL, else roleSlug. */
   effectiveRoleSlug: string;
@@ -61,6 +95,7 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
   const [ready, setReady] = useState(false);
   const [tick, setTick] = useState(0);
   const [previewRolePermissions, setPreviewRolePermissions] = useState<string[] | null>(null);
+  const [account, setAccount] = useState<AccountStatus>(EMPTY_ACCOUNT);
 
   const urlRoleSlug = pathname.split("/")[1] || "";
   const isPreviewing = roleSlug === "superadmin" && urlRoleSlug !== "superadmin" && urlRoleSlug !== "";
@@ -79,6 +114,12 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
       id?: string;
       fullName?: string;
       department?: string | null;
+      organization?: AccountStatus["organization"];
+      emailVerificationPending?: boolean;
+      trialEndsAt?: string | null;
+      trialExpired?: boolean;
+      termsVersion?: string | null;
+      termsAccepted?: boolean;
     }>("/auth/me")
       .then((data) => {
         if (cancelled) return;
@@ -87,6 +128,14 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
         setUserId(data.id ?? null);
         setFullName(data.fullName || "");
         setDepartment(data.department ?? null);
+        setAccount({
+          organization: data.organization ?? null,
+          emailVerificationPending: !!data.emailVerificationPending,
+          trialEndsAt: data.trialEndsAt ?? null,
+          trialExpired: !!data.trialExpired,
+          termsVersion: data.termsVersion ?? null,
+          termsAccepted: data.termsAccepted ?? true,
+        });
         setReady(true);
         // Keep the cookie warm as the fast-path hint for the next page load.
         Cookies.set("permissions", JSON.stringify(data.permissions || []), { expires: 7 });
@@ -131,10 +180,12 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
   };
 
   const effectiveRoleSlug = isPreviewing ? urlRoleSlug : roleSlug;
+  const isOwner = roleSlug === "superadmin" && !isPreviewing;
+  const isPlatformOwner = isOwner && !!account.organization?.isPlatform;
 
   return (
     <PermissionsContext.Provider
-      value={{ permissions, roleSlug, userId, fullName, department, isPreviewing, effectiveRoleSlug, ready, has, refresh: () => setTick((t) => t + 1) }}
+      value={{ permissions, roleSlug, userId, fullName, department, isPreviewing, isOwner, isPlatformOwner, account, effectiveRoleSlug, ready, has, refresh: () => setTick((t) => t + 1) }}
     >
       {children}
     </PermissionsContext.Provider>

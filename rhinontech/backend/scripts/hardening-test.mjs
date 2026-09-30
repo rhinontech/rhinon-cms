@@ -506,6 +506,54 @@ check("signup reports email verification pending", A.res.json?.emailVerification
   check("a customer cannot read that detail", noAccess.status === 403, `status ${noAccess.status}`);
   await db.query(`UPDATE organizations SET "isPlatform"=false WHERE id=$1`, [P2.org.id]);
 
+}
+
+
+// ── 18. API key + upgrade requests (the settings screens' endpoints) ────────
+{
+  const info = await call("/workspace/api-key", { token: B.token });
+  check("owner can see which API key is live (prefix only)", info.status === 200 && /^rh_live_/.test(info.json?.prefix ?? "") && !("apiKey" in (info.json ?? {})), info.text.slice(0, 100));
+
+  const rot = await call("/workspace/api-key/rotate", { method: "POST", token: B.token });
+  const newKey = rot.json?.apiKey;
+  check("rotating returns a new key exactly once", rot.status === 200 && /^rh_live_/.test(newKey ?? ""), `status ${rot.status}`);
+  probes.push(newKey);
+  const info2 = await call("/workspace/api-key", { token: B.token });
+  check("...and afterwards only the prefix is ever shown again", info2.json?.prefix === newKey?.slice(0, 16) && !JSON.stringify(info2.json).includes(newKey ?? "zzz"));
+  const pub = await call("/public/blogs", { headers: { "x-api-key": newKey } });
+  check("the new key works on the public API", pub.status === 200, `status ${pub.status}`);
+  const stored = (await db.query(`SELECT "apiKeyHash" FROM organizations WHERE id=$1`, [B.org.id])).rows[0].apiKeyHash;
+  check("only a hash of the key is stored", !!stored && stored !== newKey && !stored.includes("rh_live"));
+  const oldKey = (await call("/public/blogs", { headers: { "x-api-key": "rh_live_thisWasNeverIssuedXXXXXXXXXXXXXXXX" } }));
+  check("a key that is not the current one is refused", oldKey.status === 404, `status ${oldKey.status}`);
+
+  const bad = await call("/billing/upgrade-request", { method: "POST", token: B.token, body: { plan: "gold" } });
+  check("an upgrade request needs a real plan", bad.status === 400, `status ${bad.status}`);
+  const same = await call("/billing/upgrade-request", { method: "POST", token: B.token, body: { plan: "free" } });
+  check("asking for the plan you are on is refused", same.status === 400, `status ${same.status}`);
+  const noMail = await call("/billing/upgrade-request", { method: "POST", token: B.token, body: { plan: "starter", note: "We are 12 people" } });
+  const recorded = (await db.query(`SELECT settings->'upgradeRequest' AS r FROM organizations WHERE id=$1`, [B.org.id])).rows[0].r;
+  check("if the request cannot be emailed, it is reported and NOT recorded as sent", noMail.status === 502 && recorded === null, `status ${noMail.status} recorded=${JSON.stringify(recorded)}`);
+
+  // Platform staff see a pending request, and changing the plan answers it.
+  await db.query(`UPDATE organizations SET settings = settings || '{"upgradeRequest":{"plan":"starter","note":null,"at":"2026-10-01T00:00:00Z","by":"x"}}'::jsonb WHERE id=$1`, [B.org.id]);
+  const P3 = await mkOrg("u");
+  await db.query(`UPDATE organizations SET "isPlatform"=true WHERE id=$1`, [P3.org.id]);
+  const listed = await call("/platform/organizations", { token: P3.token });
+  const row = (listed.json ?? []).find?.((o) => o.id === B.org.id);
+  check("platform staff see the pending upgrade request in the list", row?.upgradeRequest?.plan === "starter", JSON.stringify(row?.upgradeRequest));
+  await call(`/platform/organizations/${B.org.id}`, { method: "PATCH", token: P3.token, body: { plan: "starter" } });
+  const cleared = (await db.query(`SELECT settings->'upgradeRequest' AS r FROM organizations WHERE id=$1`, [B.org.id])).rows[0].r;
+  check("changing the plan clears the request", cleared === null, JSON.stringify(cleared));
+  await db.query(`UPDATE organizations SET "isPlatform"=false WHERE id=$1`, [P3.org.id]);
+
+  const employeeTry = await call("/workspace/api-key/rotate", { method: "POST" });
+  check("rotating needs a signed-in owner", employeeTry.status === 401, `status ${employeeTry.status}`);
+}
+
+
+// ── 19. Nothing secret reached the server log (runs last so it sees every secret generated) ──
+{
   if (process.env.SERVER_LOG) {
     await new Promise((r) => setTimeout(r, 300));
     const log = fs.readFileSync(process.env.SERVER_LOG, "utf8");

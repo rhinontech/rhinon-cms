@@ -39,6 +39,8 @@ const view = (org: Organization, seats?: number) => {
     trialEndsAt: state.trialEndsAt,
     trialExpired: state.trialExpired,
     emailVerificationPending: !!org.settings?.pendingEmailVerification,
+    upgradeRequest: org.settings?.upgradeRequest ?? null,
+    deletionScheduledFor: org.settings?.deletionScheduledFor ?? null,
     createdAt: org.createdAt,
     ...(seats !== undefined ? { seats } : {}),
   };

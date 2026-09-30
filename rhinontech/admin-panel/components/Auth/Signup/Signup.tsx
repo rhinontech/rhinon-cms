@@ -9,6 +9,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { useLegal } from "@/lib/legal";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
@@ -39,6 +40,8 @@ export function Signup({ className, ...props }: React.ComponentProps<"div">) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [slugState, setSlugState] = useState<SlugState>({ kind: "idle" });
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const legal = useLegal();
 
   // The workspace name writes the slug until the user takes it over, so the
   // common path is one field, not two.
@@ -96,6 +99,9 @@ export function Signup({ className, ...props }: React.ComponentProps<"div">) {
           password,
           organizationName,
           organizationSlug: slug,
+          // Recorded against the workspace with the version in force. The backend
+          // can be told to refuse signups without it (REQUIRE_TERMS_ACCEPTANCE).
+          acceptTerms: acceptedTerms,
         }),
       });
 
@@ -243,10 +249,27 @@ export function Signup({ className, ...props }: React.ComponentProps<"div">) {
                 </p>
               )}
 
+              <label className="flex cursor-pointer items-start gap-2.5 text-sm text-muted-foreground">
+                <input
+                  type="checkbox"
+                  id="acceptTerms"
+                  data-testid="accept-terms"
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  className="mt-0.5 size-4 shrink-0 cursor-pointer rounded border-input accent-primary"
+                />
+                <span className="leading-snug *:[a]:underline *:[a]:underline-offset-2 *:[a]:hover:text-primary">
+                  I agree to the{" "}
+                  {legal?.termsUrl ? <a href={legal.termsUrl} target="_blank" rel="noreferrer">Terms of Service</a> : "Terms of Service"}{" "}
+                  and{" "}
+                  {legal?.privacyUrl ? <a href={legal.privacyUrl} target="_blank" rel="noreferrer">Privacy Policy</a> : "Privacy Policy"}.
+                </span>
+              </label>
+
               <Button
                 type="submit"
                 className="mt-1 w-full"
-                disabled={loading || slugState.kind === "taken" || slugState.kind === "checking"}
+                disabled={loading || !acceptedTerms || slugState.kind === "taken" || slugState.kind === "checking"}
               >
                 {loading ? "Creating workspace..." : "Create workspace"}
               </Button>
@@ -264,9 +287,8 @@ export function Signup({ className, ...props }: React.ComponentProps<"div">) {
           </div>
         </CardContent>
       </Card>
-      <div className="text-muted-foreground text-center text-xs text-balance *:[a]:underline *:[a]:underline-offset-4 *:[a]:hover:text-primary">
-        By creating a workspace, you agree to our <a href="#">Terms of Service</a>{" "}
-        and <a href="#">Privacy Policy</a>.
+      <div className="text-muted-foreground text-center text-xs text-balance">
+        We will email a confirmation link to the address above. Sending from your workspace switches on once you click it.
       </div>
     </div>
   );

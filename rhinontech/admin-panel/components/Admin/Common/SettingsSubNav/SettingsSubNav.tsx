@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { TbSettings, TbShieldLock, TbBooks, TbBook, TbFileText, TbCalendarEvent, TbRocket } from "react-icons/tb";
+import { TbSettings, TbShieldLock, TbBooks, TbBook, TbFileText, TbCalendarEvent, TbRocket, TbCreditCard, TbAt, TbCode, TbHistory, TbDatabaseExport } from "react-icons/tb";
 import { MdOutlineCloud } from "react-icons/md";
 import { CollapsibleSubNav, type SubNavItem } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { usePermissions } from "@/context/PermissionsContext";
@@ -11,10 +11,20 @@ export function SettingsSubNav() {
   const pathname = usePathname();
   const roleSlug = pathname.split("/")[1];
   const base = `/${roleSlug}/settings`;
-  const { has } = usePermissions();
+  const { has, isOwner } = usePermissions();
 
   const items: SubNavItem[] = [
     { label: "General", href: base, icon: <TbSettings size={18} />, exact: true },
+    // Workspace-level: plan, sending domain, API access, the activity trail, your data.
+    ...(has("settings:read")
+      ? [
+          { label: "Plan & usage", href: `${base}/billing`, icon: <TbCreditCard size={18} /> },
+          { label: "Email domain", href: `${base}/email-domain`, icon: <TbAt size={18} /> },
+        ]
+      : []),
+    ...(isOwner ? [{ label: "Developers", href: `${base}/developers`, icon: <TbCode size={18} /> }] : []),
+    ...(has("settings:write") ? [{ label: "Activity log", href: `${base}/audit-log`, icon: <TbHistory size={18} /> }] : []),
+    ...(has("settings:read") ? [{ label: "Data & privacy", href: `${base}/data`, icon: <TbDatabaseExport size={18} /> }] : []),
     ...(has("settings:write")
       ? [
           { label: "Roles & Permissions", href: `${base}/roles`, icon: <TbShieldLock size={18} /> },

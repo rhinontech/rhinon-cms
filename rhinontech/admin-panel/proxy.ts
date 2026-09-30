@@ -34,9 +34,13 @@ export function proxy(request: NextRequest) {
       const payload = decodeJWTPayload(authToken);
       if (payload?.roleSlug) {
         const guest = payload.userType === "guest" || payload.roleSlug === "collaborator";
-        return NextResponse.redirect(
-          new URL(guest ? "/portal" : `/${payload.roleSlug}/dashboard`, request.url)
-        );
+        const target = new URL(guest ? "/portal" : `/${payload.roleSlug}/dashboard`, request.url);
+        // The emailed confirmation link lands on /auth/login?verified=… — and the
+        // person who just signed up is already signed in. Keep the outcome so the
+        // dashboard can tell them it worked instead of silently dropping it.
+        const verified = request.nextUrl.searchParams.get("verified");
+        if (verified && !guest) target.searchParams.set("verified", verified);
+        return NextResponse.redirect(target);
       }
     }
     return NextResponse.next();

@@ -28,6 +28,8 @@ export async function applyPlan(organizationId: string, change: PlanChange): Pro
       if (change.trialEndsAt === null) delete settings.trialEndsAt;
       else settings.trialEndsAt = change.trialEndsAt.toISOString();
     }
+    // A plan change answers any pending upgrade request.
+    if (change.plan) delete settings.upgradeRequest;
     // Moving onto a paid state ends the trial clock.
     if (change.status === "active") delete settings.trialEndsAt;
     // Falling back onto a trial without a deadline would be unlimited free use.
