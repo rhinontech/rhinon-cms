@@ -35,6 +35,8 @@ jobs:
       CRON_SECRET: ci-test-cron
       NODE_ENV: test
       TENANT_STRICT: "true"
+      # The suites create many workspaces from one address; production keeps the default of 5/hour.
+      RATE_LIMIT_SIGNUP_MAX: "100"
       AWS_ACCESS_KEY_ID: ci
       AWS_SECRET_ACCESS_KEY: ci
       AWS_S3_BUCKET: ci
@@ -59,15 +61,19 @@ jobs:
           for i in $(seq 1 60); do curl -sf localhost:5099/health && exit 0; sleep 1; done
           cat /tmp/server.log; exit 1
       - name: Hardening suite
-        run: node scripts/hardening-test.mjs
+        run: SERVER_LOG=/tmp/server.log node scripts/hardening-test.mjs
       # The signup rate limit is per process: restart for a fresh counter.
-      - name: Restart API for the isolation suite
+      - name: Restart API for the sweep and isolation suites
         run: |
           pkill -f dist/server.js || true; sleep 1
           cd /tmp/ci-run
           node "$GITHUB_WORKSPACE/rhinontech/backend/dist/server.js" > /tmp/server2.log 2>&1 &
           for i in $(seq 1 60); do curl -sf localhost:5099/health && exit 0; sleep 1; done
           cat /tmp/server2.log; exit 1
+      - name: Custom-domain flow (fake SES)
+        run: npm run verify:customdomain
+      - name: Strict-tenancy sweep (every route, reads and writes)
+        run: SWEEP_WRITES=1 SERVER_LOG=/tmp/server2.log node scripts/strict-sweep.mjs
       - name: Tenant isolation suite
         run: node scripts/isolation-test.mjs
       - if: failure()

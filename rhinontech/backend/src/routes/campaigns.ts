@@ -15,6 +15,7 @@ import { defaultSenderName, fallbackFromAddress, getCompanyProfile } from "../se
 import { brandSender } from "../services/siteSender";
 import { outboundBlockedReason } from "../services/emailVerification";
 import { currentOrganizationId, runAsSystem, runForOrg } from "../services/tenantContext";
+import { reserveUsage } from "../services/usage";
 
 const router = Router();
 
@@ -127,7 +128,7 @@ router.post("/generate", authorize("outreach:write"), async (req: AuthRequest, r
     const draft = await generateAIEmailDraft(lead, template, "", senderName);
     res.json({ subject: draft.subject, body: draft.body });
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(error?.status === 402 ? 402 : 500).json({ message: error.message });
   }
 });
 
@@ -276,6 +277,11 @@ export async function dispatchLeadEmail(
     });
     return { result: "skipped", reason: "unsubscribed" };
   }
+
+  // Count this send against the plan's daily allowance. Transient: the lead stays
+  // sendable and goes out on a later run once the allowance resets.
+  const quotaBlock = await reserveUsage("email");
+  if (quotaBlock) return fail(quotaBlock, false);
 
   const subject = campaign.subject
     ? fillPlaceholders(campaign.subject, lead, senderName)
@@ -436,7 +442,7 @@ router.post("/:id/process", authorize("outreach:write"), async (req: AuthRequest
         await campaign.update(updates);
         res.json({ success: true, processed: 1, total: 1, post: result, message: "Draft generated." });
       } catch (err: any) {
-        res.status(500).json({ message: "Failed to generate social draft.", details: err.message });
+        res.status(err?.status === 402 ? 402 : 500).json({ message: err?.status === 402 ? err.message : "Failed to generate social draft.", details: err.message });
       }
     }
   } catch (error: any) {
@@ -1011,7 +1017,7 @@ router.post("/templates/generate", authorize("outreach:write"), async (req: Auth
     }
     res.json(result);
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(error?.status === 402 ? 402 : 500).json({ message: error.message });
   }
 });
 

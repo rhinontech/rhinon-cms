@@ -10,6 +10,7 @@ import { brandSender } from "../services/siteSender";
 import { defaultSenderName } from "../services/companyProfile";
 import { outboundBlockedReason } from "../services/emailVerification";
 import { findMailbox, mailboxesFor, ownerVariants, type UserMailbox } from "../services/userMailboxes";
+import { reserveUsage } from "../services/usage";
 
 type Att = { key: string; name: string; size: number; mimeType: string };
 
@@ -289,6 +290,8 @@ router.post("/", authorize("inbox:write"), async (req: AuthRequest, res: Respons
   if (!isDraft) {
     const blocked = await outboundBlockedReason();
     if (blocked) { res.status(403).json({ message: blocked, code: "EMAIL_NOT_VERIFIED" }); return; }
+    const quotaBlock = await reserveUsage("email");
+    if (quotaBlock) { res.status(402).json({ message: quotaBlock, code: "PLAN_LIMIT", limit: "emailsPerDay" }); return; }
   }
 
   if (!isDraft) {

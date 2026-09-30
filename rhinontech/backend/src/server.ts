@@ -19,6 +19,8 @@ import { provisionAllOrganizations } from "./services/orgProvisioning";
 import { runAsSystem } from "./services/tenantContext";
 import { refreshSendingDomains } from "./services/siteSender";
 import { dispatchDueEventEmails } from "./services/eventReminderJob";
+import { purgeDueWorkspaces } from "./services/workspaceLifecycle";
+import { beat } from "./services/heartbeat";
 
 async function autoClockOut() {
   const now = new Date();
@@ -191,6 +193,16 @@ function listen() {
       }
     }, { timezone: "Asia/Kolkata" });
 
+    // Workspaces whose owner asked for deletion and whose grace period has ended
+    // are purged here. 2:30 AM IST is the quietest hour.
+    cron.schedule("30 2 * * *", async () => {
+      try {
+        await runAsSystem("cron:purge-workspaces", purgeDueWorkspaces);
+      } catch (err: any) {
+        console.error("[Cron] Workspace purge failed:", err.message);
+      }
+    }, { timezone: "Asia/Kolkata" });
+
     // Scheduled offboardings: shortly after midnight IST, deactivate anyone whose
     // last working day has ended
     cron.schedule("5 0 * * *", async () => {
@@ -206,6 +218,7 @@ function listen() {
     // match right now. Each matching campaign is triggered independently so one
     // campaign's schedule can never cause another Active campaign to be sent.
     cron.schedule("* * * * *", async () => {
+      beat("scheduler");
       const now = new Date();
       const hh = now.getHours().toString().padStart(2, "0");
       const mm = now.getMinutes().toString().padStart(2, "0");

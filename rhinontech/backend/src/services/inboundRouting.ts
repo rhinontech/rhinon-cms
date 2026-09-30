@@ -38,7 +38,12 @@ export async function resolveInboundRecipient(rawAddress: string | null | undefi
   return runAsSystem("inbound:resolve-recipient", async () => {
     // 1. A workspace's own mail domain: <slug>.rhinontech.in, or its custom domain.
     let org = await Organization.findOne({ where: { emailDomain: domain } });
-    if (!org) org = await Organization.findOne({ where: { customDomain: domain } });
+    if (!org) {
+      // Only a VERIFIED custom domain routes mail: a claim nobody has proved they
+      // own (no DKIM published) must not be able to receive anything.
+      const claimed = await Organization.findOne({ where: { customDomain: domain } });
+      if (claimed?.settings?.emailDomains?.some((e) => e.domain === domain && e.status === "verified")) org = claimed;
+    }
 
     // 2. The bare platform domain belongs to the platform workspace.
     if (!org && domain === platformDomain()) {

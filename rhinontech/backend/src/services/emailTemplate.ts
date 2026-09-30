@@ -3,7 +3,7 @@
 // either the campaign composer or a workflow's "Send email" node) renders
 // consistently, with the same cross-client list-style fixes and branding.
 
-import { unsubscribePageUrl } from "./unsubscribeToken";
+import { unsubscribePageUrl, signUnsubscribe } from "./unsubscribeToken";
 
 export const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:5003";
 export const FRONTEND_URL = process.env.SITE_URL || process.env.RHINONLABS_URL || process.env.FRONTEND_URL || "https://rhinonlabs.com";
@@ -130,7 +130,7 @@ function buildContext(
   const unsubscribeUrl = !brand.isPlatform && email
     ? unsubscribePageUrl(email, brand.organizationId)
     : email
-      ? `https://www.rhinonlabs.com/unsubscribe?email=${encodeURIComponent(email)}`
+      ? `https://www.rhinonlabs.com/unsubscribe?email=${encodeURIComponent(email)}&t=${signUnsubscribe(email)}`
       : `https://www.rhinonlabs.com/unsubscribe`;
 
   return {

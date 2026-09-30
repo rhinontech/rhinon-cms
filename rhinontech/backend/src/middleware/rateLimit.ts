@@ -85,7 +85,7 @@ export const loginLimiters = [
 
 /** Workspace creation — each signup provisions roles, stages and an SES identity. */
 export const signupLimiters = [
-  rateLimit({ name: "signup-ip", windowMs: hour, max: 5, message: "Too many workspaces created from this network. Try again later." }),
+  rateLimit({ name: "signup-ip", windowMs: hour, max: Number(process.env.RATE_LIMIT_SIGNUP_MAX) || 5, message: "Too many workspaces created from this network. Try again later." }),
 ];
 
 /** Anything that sends an email or checks a one-time token. */

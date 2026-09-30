@@ -20,6 +20,10 @@ import { provisionOrgEmailDomain } from "../services/sesProvisioning";
 import { transactionalBrand } from "../services/companyProfile";
 import { sendVerificationEmail, readVerifyToken } from "../services/emailVerification";
 import { emailFlowLimiter } from "../middleware/rateLimit";
+import { trialEndDate, planState } from "../services/usage";
+import { recordAudit, auditRequest, clientIp } from "../services/audit";
+import { legal } from "../config/legal";
+import { generateSecret, encryptSecret, decryptSecret, verifyCode, otpauthUrl, generateRecoveryCodes, consumeRecoveryCode, mfaLocked, mfaMiss, mfaClear } from "../services/totp";
 
 const router = Router();
 
@@ -80,6 +84,12 @@ router.post("/signup", async (req: Request, res: Response) => {
   const pwProblem = passwordProblem(String(password));
   if (pwProblem) { res.status(400).json({ message: pwProblem }); return; }
 
+  const acceptedTerms = req.body?.acceptTerms === true;
+  if (legal.requireAcceptance && !acceptedTerms) {
+    res.status(400).json({ message: "You must accept the Terms of Service and Privacy Policy to create a workspace." });
+    return;
+  }
+
   const slugCheck = validateSlug(slug);
   if (!slugCheck.ok) { res.status(400).json({ message: slugCheck.reason }); return; }
 
@@ -109,7 +119,12 @@ router.post("/signup", async (req: Request, res: Response) => {
           apiKeyHash: apiKey.hash,
           apiKeyPrefix: apiKey.prefix,
           apiKeyRotatedAt: new Date(),
-          settings: { displayName: String(organizationName).trim(), pendingEmailVerification: true },
+          settings: {
+            displayName: String(organizationName).trim(),
+            pendingEmailVerification: true,
+            trialEndsAt: trialEndDate().toISOString(),
+            ...(acceptedTerms ? { termsVersion: legal.termsVersion, termsAcceptedAt: new Date().toISOString() } : {}),
+          },
         },
         { transaction }
       )
@@ -273,14 +288,33 @@ router.post("/login", async (req: Request, res: Response) => {
 
   const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) {
+    // The account is known here, so a failed attempt belongs in its workspace's trail.
+    void recordAudit({ organizationId: organization.id, actorId: user.id, actorName: user.fullName, action: "auth.login_failed", ip: clientIp(req) });
     res.status(401).json({ message: "Invalid email or password" });
     return;
   }
+  void recordAudit({ organizationId: organization.id, actorId: user.id, actorName: user.fullName, action: "auth.login", ip: clientIp(req) });
 
+  // Second factor: the password alone does not open a session for an account
+  // that has 2FA on. Hand back a short-lived, single-purpose token instead; the
+  // client exchanges it (plus a code) at /auth/login/mfa.
+  if (user.totpEnabled) {
+    const mfaToken = jwt.sign({ userId: user.id, purpose: "mfa" }, env.jwtSecret, { expiresIn: "5m" });
+    res.json({ mfaRequired: true, mfaToken });
+    return;
+  }
+
+  res.json(buildSession(user, organization));
+});
+
+/**
+ * The response for a successful sign-in: the session token plus what the client
+ * needs to route. Shared by password sign-in and the 2FA step so the two cannot
+ * drift apart.
+ */
+function buildSession(user: User, organization: Organization) {
   const role = (user as any).role as Role & { Permissions: Permission[] };
-  const permissions = (role.Permissions || []).map(
-    (p: any) => `${p.resource}:${p.action}`
-  );
+  const permissions = (role.Permissions || []).map((p: any) => `${p.resource}:${p.action}`);
 
   const token = jwt.sign(
     {
@@ -302,7 +336,7 @@ router.post("/login", async (req: Request, res: Response) => {
 
   // userType lets the client route external collaborators to the portal rather
   // than the internal admin shell, which the API would refuse anyway.
-  res.json({
+  return {
     token,
     roleSlug: role.slug,
     userType: user.userType,
@@ -317,7 +351,131 @@ router.post("/login", async (req: Request, res: Response) => {
       plan: organization.plan,
       isPlatform: organization.isPlatform,
     },
-  });
+  };
+}
+
+// Second step of sign-in for accounts with 2FA: trade the mfaToken + a code (or a
+// recovery code) for a real session.
+router.post("/login/mfa", async (req: Request, res: Response) => {
+  const { mfaToken, code, recoveryCode } = req.body ?? {};
+
+  let userId: string;
+  try {
+    const payload = jwt.verify(String(mfaToken ?? ""), env.jwtSecret) as { userId?: string; purpose?: string };
+    if (payload.purpose !== "mfa" || !payload.userId) throw new Error("wrong token");
+    userId = payload.userId;
+  } catch {
+    res.status(401).json({ message: "This sign-in has expired. Start again." });
+    return;
+  }
+
+  if (mfaLocked(userId)) {
+    res.status(429).json({ message: "Too many incorrect codes. Try again in 15 minutes." });
+    return;
+  }
+
+  const user = await runAsSystem("login:mfa-user", () =>
+    User.unscoped().findByPk(userId, {
+      include: [
+        { model: Role, as: "role", include: [{ model: Permission }] },
+        { model: Organization, as: "tenant" },
+      ],
+    })
+  );
+  const organization = (user as any)?.tenant as Organization | undefined;
+  if (!user || !organization || user.status !== "active" || !user.totpEnabled || !user.totpSecret) {
+    res.status(401).json({ message: "This sign-in has expired. Start again." });
+    return;
+  }
+  if (organization.status === "suspended") {
+    res.status(403).json({ message: "This workspace has been suspended." });
+    return;
+  }
+
+  let ok = false;
+  if (recoveryCode) {
+    const remaining = consumeRecoveryCode(user.totpRecoveryCodes, String(recoveryCode));
+    if (remaining) {
+      await runForOrg(organization.id, () => user.update({ totpRecoveryCodes: remaining }));
+      ok = true;
+      void recordAudit({ organizationId: organization.id, actorId: user.id, actorName: user.fullName, action: "auth.recovery_code_used", ip: clientIp(req), metadata: { remaining: remaining.length } });
+    }
+  } else {
+    const step = verifyCode(decryptSecret(user.totpSecret), String(code ?? ""), user.totpLastStep);
+    if (step !== null) {
+      await runForOrg(organization.id, () => user.update({ totpLastStep: step }));
+      ok = true;
+    }
+  }
+
+  if (!ok) {
+    mfaMiss(userId);
+    void recordAudit({ organizationId: organization.id, actorId: user.id, actorName: user.fullName, action: "auth.mfa_failed", ip: clientIp(req) });
+    res.status(401).json({ message: "That code is not correct." });
+    return;
+  }
+
+  mfaClear(userId);
+  void recordAudit({ organizationId: organization.id, actorId: user.id, actorName: user.fullName, action: "auth.login", ip: clientIp(req), metadata: { mfa: true } });
+  res.json(buildSession(user, organization));
+});
+
+// ── Two-factor management (signed-in user, their own account) ───────────────
+
+router.get("/2fa/status", authenticate, async (req: AuthRequest, res: Response) => {
+  const user = await User.unscoped().findByPk(req.user!.userId, { attributes: ["id", "totpEnabled", "totpRecoveryCodes"] });
+  res.json({ enabled: !!user?.totpEnabled, recoveryCodesLeft: user?.totpRecoveryCodes?.length ?? 0 });
+});
+
+// Step 1: mint a secret and show it (as text and as an otpauth:// link for a QR).
+// Nothing is switched on until a code from the authenticator app proves it works.
+router.post("/2fa/setup", authenticate, async (req: AuthRequest, res: Response) => {
+  const user = await User.unscoped().findByPk(req.user!.userId, { attributes: ["id", "companyEmail", "totpEnabled"] });
+  if (!user) { res.status(404).json({ message: "User not found" }); return; }
+  if (user.totpEnabled) { res.status(409).json({ message: "Two-factor authentication is already on." }); return; }
+
+  const secret = generateSecret();
+  await user.update({ totpSecret: encryptSecret(secret), totpLastStep: null });
+  const org = await Organization.findByPk(req.user!.organizationId, { attributes: ["name"] });
+  res.json({ secret, otpauthUrl: otpauthUrl(secret, user.companyEmail, org?.name || "Workspace") });
+});
+
+// Step 2: confirm with a code, switch it on, and show the recovery codes once.
+router.post("/2fa/enable", authenticate, async (req: AuthRequest, res: Response) => {
+  const user = await User.unscoped().findByPk(req.user!.userId, { attributes: ["id", "totpSecret", "totpEnabled", "totpLastStep"] });
+  if (!user?.totpSecret) { res.status(400).json({ message: "Start setup first." }); return; }
+  if (user.totpEnabled) { res.status(409).json({ message: "Two-factor authentication is already on." }); return; }
+  if (mfaLocked(user.id)) { res.status(429).json({ message: "Too many incorrect codes. Try again in 15 minutes." }); return; }
+
+  const step = verifyCode(decryptSecret(user.totpSecret), String(req.body?.code ?? ""), user.totpLastStep);
+  if (step === null) { mfaMiss(user.id); res.status(400).json({ message: "That code is not correct." }); return; }
+
+  mfaClear(user.id);
+  const { codes, hashes } = generateRecoveryCodes();
+  await user.update({ totpEnabled: true, totpRecoveryCodes: hashes, totpLastStep: step });
+  void auditRequest(req, "auth.mfa_enabled", { entityType: "user", entityId: user.id });
+  res.json({ enabled: true, recoveryCodes: codes, message: "Save these recovery codes somewhere safe. They are shown only once." });
+});
+
+// Turning it off needs the password AND a current code (or recovery code): a
+// stolen session alone must not be able to strip the second factor.
+router.post("/2fa/disable", authenticate, async (req: AuthRequest, res: Response) => {
+  const user = await User.unscoped().findByPk(req.user!.userId);
+  if (!user?.totpEnabled || !user.totpSecret) { res.status(400).json({ message: "Two-factor authentication is not on." }); return; }
+  if (mfaLocked(user.id)) { res.status(429).json({ message: "Too many incorrect codes. Try again in 15 minutes." }); return; }
+  if (!(await bcrypt.compare(String(req.body?.password ?? ""), user.passwordHash))) {
+    res.status(401).json({ message: "Password is incorrect." });
+    return;
+  }
+
+  const byCode = req.body?.code ? verifyCode(decryptSecret(user.totpSecret), String(req.body.code), user.totpLastStep) !== null : false;
+  const byRecovery = !byCode && req.body?.recoveryCode ? consumeRecoveryCode(user.totpRecoveryCodes, String(req.body.recoveryCode)) !== null : false;
+  if (!byCode && !byRecovery) { mfaMiss(user.id); res.status(401).json({ message: "That code is not correct." }); return; }
+
+  mfaClear(user.id);
+  await user.update({ totpEnabled: false, totpSecret: null, totpRecoveryCodes: null, totpLastStep: null });
+  void auditRequest(req, "auth.mfa_disabled", { entityType: "user", entityId: user.id });
+  res.json({ enabled: false });
 });
 
 /**
@@ -368,6 +526,26 @@ router.post("/resend-verification", authenticate, emailFlowLimiter, async (req: 
   }
 });
 
+// The owner accepts the current terms (for workspaces created before they were
+// recorded, or after the terms change).
+router.post("/accept-terms", authenticate, async (req: AuthRequest, res: Response) => {
+  if (req.user!.roleSlug !== "superadmin") {
+    res.status(403).json({ message: "Only the workspace owner can accept the terms for the workspace." });
+    return;
+  }
+  if (req.body?.version !== legal.termsVersion) {
+    res.status(400).json({ message: "These terms have been updated. Reload to read the current version.", termsVersion: legal.termsVersion });
+    return;
+  }
+  const org = await Organization.findByPk(req.user!.organizationId);
+  if (!org) { res.status(404).json({ message: "Workspace not found" }); return; }
+  await org.update({
+    settings: { ...org.settings, termsVersion: legal.termsVersion, termsAcceptedAt: new Date().toISOString(), termsAcceptedBy: req.user!.userId },
+  });
+  void auditRequest(req, "legal.terms_accepted", { entityType: "organization", entityId: org.id, metadata: { version: legal.termsVersion } });
+  res.json({ termsVersion: legal.termsVersion, termsAccepted: true });
+});
+
 router.post("/logout", (_req: Request, res: Response) => {
   res.json({ message: "Logged out" });
 });
@@ -391,6 +569,10 @@ router.get("/me", authenticate, async (req: AuthRequest, res: Response) => {
     roleSlug: req.user!.roleSlug,
     organization: organization ? orgFields : organization,
     emailVerificationPending: !!settings?.pendingEmailVerification,
+    termsVersion: legal.termsVersion,
+    termsAccepted: settings?.termsVersion === legal.termsVersion,
+    trialEndsAt: settings?.trialEndsAt ?? null,
+    trialExpired: organization ? planState(organization).trialExpired : false,
   });
 });
 
@@ -436,6 +618,7 @@ router.put("/me/password", authenticate, async (req: AuthRequest, res: Response)
   if (!valid) { res.status(401).json({ message: "Current password is incorrect" }); return; }
   const passwordHash = await bcrypt.hash(newPassword, 10);
   await user.update({ passwordHash });
+  void auditRequest(req, "auth.password_changed", { entityType: "user", entityId: req.user!.userId });
   res.json({ message: "Password changed successfully" });
 });
 

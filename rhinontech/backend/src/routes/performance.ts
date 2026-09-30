@@ -1,6 +1,7 @@
 import { Router as ExpressRouter, Response } from "express";
 import { ReviewCycle, ReviewGoal, ReviewSubmission, Role, User } from "../models";
 import { authenticate, hasPermission, AuthRequest } from "../middleware/authenticate";
+import { statusFor } from "../utils/httpErrors";
 
 const router = ExpressRouter();
 router.use(authenticate);
@@ -30,7 +31,7 @@ router.get("/cycles", async (req: AuthRequest, res: Response) => {
     });
     res.json(cycles);
   } catch (err: any) {
-    res.status(500).json({ message: err.message });
+    res.status(statusFor(err)).json({ message: err.message });
   }
 });
 
@@ -55,7 +56,7 @@ router.post("/cycles", async (req: AuthRequest, res: Response) => {
 
     res.status(201).json(cycle);
   } catch (err: any) {
-    res.status(500).json({ message: err.message });
+    res.status(statusFor(err)).json({ message: err.message });
   }
 });
 
@@ -69,7 +70,7 @@ router.put("/cycles/:id", async (req: AuthRequest, res: Response) => {
     await cycle.update({ name, status, startDate, endDate });
     res.json(cycle);
   } catch (err: any) {
-    res.status(500).json({ message: err.message });
+    res.status(statusFor(err)).json({ message: err.message });
   }
 });
 
@@ -89,7 +90,7 @@ router.get("/cycles/:id/team", async (req: AuthRequest, res: Response) => {
 
     res.json({ cycle, submissions });
   } catch (err: any) {
-    res.status(500).json({ message: err.message });
+    res.status(statusFor(err)).json({ message: err.message });
   }
 });
 
@@ -113,7 +114,7 @@ router.get("/goals", async (req: AuthRequest, res: Response) => {
     });
     res.json(goals);
   } catch (err: any) {
-    res.status(500).json({ message: err.message });
+    res.status(statusFor(err)).json({ message: err.message });
   }
 });
 
@@ -128,7 +129,7 @@ router.post("/goals", async (req: AuthRequest, res: Response) => {
     });
     res.status(201).json(goal);
   } catch (err: any) {
-    res.status(500).json({ message: err.message });
+    res.status(statusFor(err)).json({ message: err.message });
   }
 });
 
@@ -144,7 +145,7 @@ router.put("/goals/:id", async (req: AuthRequest, res: Response) => {
     await goal.update({ title, description, status, progress, targetDate, cycleId });
     res.json(goal);
   } catch (err: any) {
-    res.status(500).json({ message: err.message });
+    res.status(statusFor(err)).json({ message: err.message });
   }
 });
 
@@ -159,7 +160,7 @@ router.delete("/goals/:id", async (req: AuthRequest, res: Response) => {
     await goal.destroy();
     res.json({ success: true });
   } catch (err: any) {
-    res.status(500).json({ message: err.message });
+    res.status(statusFor(err)).json({ message: err.message });
   }
 });
 
@@ -186,7 +187,7 @@ router.get("/reviews", async (req: AuthRequest, res: Response) => {
     });
     res.json({ selfReviews, managerReviews });
   } catch (err: any) {
-    res.status(500).json({ message: err.message });
+    res.status(statusFor(err)).json({ message: err.message });
   }
 });
 
@@ -207,7 +208,7 @@ router.get("/reviews/:id", async (req: AuthRequest, res: Response) => {
     }
     res.json(submission);
   } catch (err: any) {
-    res.status(500).json({ message: err.message });
+    res.status(statusFor(err)).json({ message: err.message });
   }
 });
 
@@ -230,7 +231,7 @@ router.put("/reviews/:id", async (req: AuthRequest, res: Response) => {
     }
     res.json(submission);
   } catch (err: any) {
-    res.status(500).json({ message: err.message });
+    res.status(statusFor(err)).json({ message: err.message });
   }
 });
 
@@ -282,7 +283,7 @@ router.get("/team", async (req: AuthRequest, res: Response) => {
 
     res.json(result);
   } catch (err: any) {
-    res.status(500).json({ message: err.message });
+    res.status(statusFor(err)).json({ message: err.message });
   }
 });
 

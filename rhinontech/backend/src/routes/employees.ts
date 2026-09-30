@@ -13,6 +13,7 @@ import { welcomeEmail, signDocumentsEmail, resetPasswordEmail } from "../service
 import { env } from "../config/env";
 import { uploadBuffer, deleteObject, getPresignedReadUrl, getPresignedUploadUrl } from "../services/storage";
 import { transactionalBrand } from "../services/companyProfile";
+import { seatBlockedReason } from "../services/usage";
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
@@ -123,6 +124,10 @@ router.post("/", authorize("employees:write"), async (req: AuthRequest, res: Res
     res.status(400).json({ message: "Email prefix can only contain letters, numbers, dots, hyphens, and underscores" });
     return;
   }
+
+  // Plan seat limit (and an expired trial) is checked before anything is created.
+  const seatBlock = await seatBlockedReason();
+  if (seatBlock) { res.status(402).json({ message: seatBlock, code: "PLAN_LIMIT", limit: "seats" }); return; }
 
   // The org's own email subdomain — aman@swiggy.rhinontech.in — not a hardcoded
   // company domain. emailDomain is resolved from the DB user by authenticate(),

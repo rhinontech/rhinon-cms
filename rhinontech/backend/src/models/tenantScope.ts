@@ -68,6 +68,8 @@ import { Deal } from "./Deal";
 import { Activity } from "./Activity";
 import { SavedView } from "./SavedView";
 import { Unsubscribe } from "./Unsubscribe";
+import { UsageCounter } from "./UsageCounter";
+import { AuditLog } from "./AuditLog";
 import { DocsAccess } from "./DocsAccess";
 import { StartupIdea } from "./StartupIdea";
 import { Deployment } from "./Deployment";
@@ -100,7 +102,7 @@ export const TENANT_MODELS: ModelStatic<any>[] = [
   Page, PageShare, PageAttachment,
   Workflow, WorkflowEnrollment,
   Account, PipelineStage, Deal, Activity, SavedView,
-  Unsubscribe, DocsAccess,
+  Unsubscribe, UsageCounter, AuditLog, DocsAccess,
   StartupIdea, Deployment,
   PageView, Visitor,
 ];

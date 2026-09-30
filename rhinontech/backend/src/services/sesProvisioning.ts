@@ -48,6 +48,8 @@ export interface DnsRecord {
   value: string;
   priority?: number;
   purpose: string;
+  /** Not needed for sending; explained in `purpose` (e.g. inbound mail). */
+  optional?: boolean;
 }
 
 export function sesMode(): SesMode {
@@ -58,7 +60,7 @@ function region(): string {
   return process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || "ap-south-1";
 }
 
-function client(): SESv2Client | null {
+export function client(): SESv2Client | null {
   if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) return null;
   return new SESv2Client({ region: region() });
 }

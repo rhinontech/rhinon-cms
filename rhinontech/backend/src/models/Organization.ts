@@ -29,6 +29,30 @@ export interface OrganizationSettings {
    * blasting mail would spend everyone's sender reputation.
    */
   pendingEmailVerification?: boolean;
+  /**
+   * ISO timestamp the trial ends. While status is "trial" and this has passed,
+   * the workspace is read-only and metered features refuse. Absent = no deadline
+   * (workspaces that predate plans are grandfathered).
+   */
+  trialEndsAt?: string;
+  /** Set when the owner asks for the workspace to be deleted; purged once it passes. */
+  deletionRequestedAt?: string;
+  deletionScheduledFor?: string;
+  deletionRequestedBy?: string;
+  /** Legal acceptance, recorded at signup or when the owner accepts a newer version. */
+  termsVersion?: string;
+  termsAcceptedAt?: string;
+  termsAcceptedBy?: string;
+  /** The workspace's own sending domains and their verification progress (services/customDomain.ts). */
+  emailDomains?: {
+    domain: string;
+    status: "pending" | "verified" | "failed";
+    dkimTokens: string[];
+    /** The brand (Site) this domain sends for. */
+    siteId: string | null;
+    requestedAt: string;
+    verifiedAt?: string;
+  }[];
 }
 
 interface OrganizationAttributes {

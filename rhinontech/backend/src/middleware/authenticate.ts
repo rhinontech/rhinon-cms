@@ -4,6 +4,7 @@ import { env } from "../config/env";
 import { User, Role, Permission, Organization } from "../models";
 import { enterTenantContext, runAsSystem } from "../services/tenantContext";
 import { permissionsForOrg } from "../config/permissions";
+import { planState } from "../services/usage";
 
 export interface AuthRequest extends Request {
   user?: {
@@ -43,10 +44,18 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
     return;
   }
 
-  let payload: { userId: string };
+  let payload: { userId: string; purpose?: string };
   try {
-    payload = jwt.verify(token, env.jwtSecret) as { userId: string };
+    payload = jwt.verify(token, env.jwtSecret) as { userId: string; purpose?: string };
   } catch {
+    res.status(401).json({ message: "Invalid or expired token" });
+    return;
+  }
+
+  // Tokens minted for a single step (the pending-2FA token) share the signing key
+  // but are NOT sessions. Without this, the token issued after a correct password
+  // would itself open the API and the second factor would be decorative.
+  if (payload.purpose) {
     res.status(401).json({ message: "Invalid or expired token" });
     return;
   }
@@ -84,6 +93,21 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
     }
     if (org.status === "suspended") {
       res.status(403).json({ message: "This workspace has been suspended." });
+      return;
+    }
+
+    // An expired trial is read-only, not locked: people can still sign in, read
+    // and export what they have, but cannot create or change anything until the
+    // workspace is upgraded. /auth (password, verification), /billing and /workspace (export, deletion) stay open.
+    if (
+      planState(org).trialExpired &&
+      !["GET", "HEAD", "OPTIONS"].includes(req.method) &&
+      !["/auth", "/billing", "/workspace"].includes(req.baseUrl)
+    ) {
+      res.status(402).json({
+        message: "Your trial has ended. Upgrade your plan to make changes.",
+        code: "TRIAL_EXPIRED",
+      });
       return;
     }
 
@@ -130,6 +154,15 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
  */
 export function requirePlatformOrg(req: AuthRequest, res: Response, next: NextFunction) {
   if (!req.user?.isPlatformOrg) {
+    res.status(403).json({ message: "This module is not available to your workspace." });
+    return;
+  }
+  next();
+}
+
+/** Platform operators only: the platform workspace AND its superadmin role. */
+export function requirePlatformSuperadmin(req: AuthRequest, res: Response, next: NextFunction) {
+  if (!req.user?.isPlatformOrg || req.user.roleSlug !== "superadmin") {
     res.status(403).json({ message: "This module is not available to your workspace." });
     return;
   }

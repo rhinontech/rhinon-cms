@@ -49,6 +49,8 @@ import { WorkflowEnrollment } from "./WorkflowEnrollment";
 import { Visitor } from "./Visitor";
 import { GoogleCalendarToken } from "./GoogleCalendarToken";
 import { Unsubscribe } from "./Unsubscribe";
+import { UsageCounter } from "./UsageCounter";
+import { AuditLog } from "./AuditLog";
 import { Account } from "./Account";
 import { PipelineStage } from "./PipelineStage";
 import { Deal } from "./Deal";
@@ -457,6 +459,8 @@ export {
   Visitor,
   GoogleCalendarToken,
   Unsubscribe,
+  UsageCounter,
+  AuditLog,
   Account,
   PipelineStage,
   Deal,

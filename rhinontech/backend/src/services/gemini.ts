@@ -2,6 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import axios from "axios";
 import { env } from "../config/env";
 import { getCompanyProfile, type CompanyProfile } from "./companyProfile";
+import { requireUsage } from "./usage";
 import {
   AUDIENCE_BRIEFS,
   DEFAULT_LINKEDIN_PLAYBOOK,
@@ -55,6 +56,7 @@ function playbookFor(profile: CompanyProfile): string {
 }
 
 export async function generateAIEmailDraft(leadData: any, templateData: any = null, customPrompt: string = "", senderName: string = "") {
+  await requireUsage("ai");
   const profile = await getCompanyProfile();
   senderName = senderName || `${profile.name} Team`;
   let prompt = `
@@ -130,6 +132,7 @@ export async function generateAIEmailDraft(leadData: any, templateData: any = nu
 }
 
 export async function generateTemplateWithAI(prompt: string, channel = "Email") {
+  await requireUsage("ai");
   const profile = await getCompanyProfile();
   const isSocial = ["LinkedIn Post", "LinkedIn Video", "LinkedIn Article", "LinkedIn DM", "LinkedIn Connection"].includes(channel);
 
@@ -190,6 +193,7 @@ export async function generateTemplateWithAI(prompt: string, channel = "Email") 
 }
 
 export async function generateImagePromptForCampaign(campaignName: string, channel: string, draft: string): Promise<string> {
+  await requireUsage("ai");
   const profile = await getCompanyProfile();
   const prompt = `
     You are a visual art director for ${profile.name}.
@@ -213,6 +217,7 @@ export async function generateImagePromptForCampaign(campaignName: string, chann
 // complete, well-formed replacement rather than the caller having to splice
 // a fragment back into **bold**/{{token}} markup itself.
 export async function rewriteLetterSentence(blockFullText: string, selectedText: string, instruction: string): Promise<string> {
+  await requireUsage("ai");
   const prompt = `
     You are editing one paragraph of a formal HR document (an offer letter or
     NDA clause). Apply the requested change ONLY to the
@@ -252,6 +257,7 @@ export async function enrichLeadWithAI(
     websiteText?: string | null;
   } = {}
 ) {
+  await requireUsage("ai");
   const profile = await getCompanyProfile();
   const signals = [
     context.title ? `Role: ${context.title}` : "",
@@ -327,6 +333,7 @@ export interface LinkedInPostResult {
 }
 
 export async function generateLinkedInPost(req: LinkedInPostRequest): Promise<LinkedInPostResult> {
+  await requireUsage("ai");
   const profile = await getCompanyProfile();
   const brief = POST_TYPE_BRIEFS[req.postType];
   // The audience briefs describe the platform's own two markets, so they only

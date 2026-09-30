@@ -9,6 +9,7 @@ import { brandSender } from "./siteSender";
 import { runForOrg } from "./tenantContext";
 import { getCompanyProfile } from "./companyProfile";
 import { outboundBlockedReason } from "./emailVerification";
+import { reserveUsage } from "./usage";
 
 const UUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 function isUuid(val: any): boolean {
@@ -396,6 +397,16 @@ async function executeEnrollmentSteps(
           step: `Email skipped: ${enrollment.leadEmail} is in the unsubscribe list.`,
         });
       } else {
+        // Plan allowance. Defer to tomorrow instead of dropping the step.
+        const quotaBlock = await reserveUsage("email");
+        if (quotaBlock) {
+          const tomorrow = new Date();
+          tomorrow.setHours(24, 5, 0, 0);
+          logs.push({ timestamp: new Date().toISOString(), step: `Send deferred: ${quotaBlock}` });
+          await enrollment.update({ currentNodeId: currNodeId, nextStepAt: tomorrow, executionLogs: logs });
+          break;
+        }
+
         const profile = await getCompanyProfile();
         const subjectTemplate = config.subject || `Updates from ${profile.name}`;
         const bodyTemplate =

@@ -4,6 +4,8 @@ import {
   DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  ListObjectsV2Command,
+  DeleteObjectsCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import crypto from "crypto";
@@ -174,4 +176,32 @@ export async function getObjectBuffer(key: string): Promise<Buffer | null> {
   } catch {
     return null;
   }
+}
+
+/** Top-level folders that hold per-workspace objects (see namespacedKey). */
+const ORG_FOLDERS = ["avatars", "documents", "content", "inbox", "pages", "tasks", "branding"];
+
+/**
+ * Deletes every object a workspace owns — everything under `<folder>/<orgId>/`.
+ * Returns how many were removed. Only namespaced keys are touched, so a
+ * workspace's purge can never reach legacy platform files or another tenant's.
+ */
+export async function deleteOrgObjects(organizationId: string): Promise<number> {
+  if (!/^[0-9a-f-]{36}$/i.test(organizationId)) throw new Error("deleteOrgObjects needs a workspace id");
+  let deleted = 0;
+  for (const folder of ORG_FOLDERS) {
+    let token: string | undefined;
+    do {
+      const page = await s3.send(
+        new ListObjectsV2Command({ Bucket: BUCKET, Prefix: `${folder}/${organizationId}/`, ContinuationToken: token })
+      );
+      const keys = (page.Contents ?? []).map((o) => ({ Key: o.Key! }));
+      if (keys.length) {
+        await s3.send(new DeleteObjectsCommand({ Bucket: BUCKET, Delete: { Objects: keys, Quiet: true } }));
+        deleted += keys.length;
+      }
+      token = page.IsTruncated ? page.NextContinuationToken : undefined;
+    } while (token);
+  }
+  return deleted;
 }

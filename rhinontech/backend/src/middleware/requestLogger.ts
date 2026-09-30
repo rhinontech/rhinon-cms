@@ -13,14 +13,20 @@ import type { AuthRequest } from "./authenticate";
  *
  * Controlled by env:
  *   LOG_REQUESTS=off      disable entirely (default: on)
- *   LOG_BODY=off          never log request bodies (default: on in dev, off in production)
+ *   LOG_BODY=on|off       request bodies (default: on in local dev/test, off everywhere else)
  *   LOG_SKIP=/health,/x   extra path prefixes to mute, comma-separated
  *   LOG_SLOW_MS=1000      threshold above which the duration is highlighted (default 1000)
  */
 
+import { isDevOrTest } from "../config/env";
+import crypto from "crypto";
+
 const isProd = process.env.NODE_ENV === "production";
 const enabled = (process.env.LOG_REQUESTS || "on").toLowerCase() !== "off";
-const logBody = (process.env.LOG_BODY || (isProd ? "off" : "on")).toLowerCase() !== "off";
+// Bodies carry employee, payroll and customer data, so they are logged only in local
+// development. NODE_ENV is not reliably set on our servers, so "not production" is
+// the wrong test here — anything that is not explicitly dev/test counts as live.
+const logBody = (process.env.LOG_BODY || (isDevOrTest ? "on" : "off")).toLowerCase() !== "off";
 const slowMs = parseInt(process.env.LOG_SLOW_MS || "1000", 10);
 
 // Colour only when a human is watching — piped output (pm2 logs, files) stays clean.
@@ -44,7 +50,7 @@ const skipPrefixes = [
 
 /** Never print these, at any nesting depth — they end up in scrollback and log files. */
 const SECRET_KEYS =
-  /^(password|newPassword|currentPassword|confirmPassword|token|accessToken|refreshToken|apiKey|api_key|secret|clientSecret|authorization|jwt|otp|resetToken|signature)$/i;
+  /^(password|newPassword|currentPassword|confirmPassword|token|accessToken|refreshToken|apiKey|api_key|secret|clientSecret|authorization|jwt|otp|resetToken|signature|code|mfaToken|recoveryCode|confirmSlug|t)$/i;
 
 /** Fields that are legitimately huge and never worth reading inline. */
 const BULKY_KEYS = /^(image|imageData|base64|file|fileData|content|html|pdf|buffer|websiteText|mediaData)$/i;
@@ -112,6 +118,23 @@ function formatDuration(ms: number): string {
   return ms >= slowMs ? c("33", padded) : dim(padded);
 }
 
+/**
+ * Gives every request an id, echoes it in the `X-Request-Id` response header and
+ * shows it in the log line. When a customer reports a failure, the id from their
+ * browser's network tab finds the exact line — no guessing by time and user.
+ * A caller-supplied id (from nginx or a client) is kept if it is well-formed.
+ */
+export function requestId(req: AuthRequest, res: Response, next: NextFunction) {
+  const incoming = req.headers["x-request-id"];
+  const id = typeof incoming === "string" && /^[\w-]{8,64}$/.test(incoming) ? incoming : crypto.randomUUID();
+  (req as any).id = id;
+  res.setHeader("X-Request-Id", id);
+  next();
+}
+
+/** Secrets that travel in query strings (verification and unsubscribe links). */
+const redactQuery = (q: string) => q.replace(/([?&](?:token|t|key|secret|code)=)[^&]*/gi, "$1***");
+
 export function requestLogger(req: AuthRequest, res: Response, next: NextFunction) {
   if (!enabled || skipPrefixes.some((p) => req.path.startsWith(p))) return next();
 
@@ -133,9 +156,10 @@ export function requestLogger(req: AuthRequest, res: Response, next: NextFunctio
 
   res.on("finish", () => {
     const ms = Number(process.hrtime.bigint() - started) / 1e6;
-    const query = req.originalUrl.includes("?") ? dim(req.originalUrl.slice(req.originalUrl.indexOf("?"))) : "";
+    const query = req.originalUrl.includes("?") ? dim(redactQuery(req.originalUrl.slice(req.originalUrl.indexOf("?")))) : "";
 
     const parts = [
+      dim(String((req as any).id ?? "").slice(0, 8)),
       c(methodColor(req.method), req.method.padEnd(6)),
       c(statusColor(res.statusCode), bold(String(res.statusCode))),
       formatDuration(ms),

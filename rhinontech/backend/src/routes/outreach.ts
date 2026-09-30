@@ -7,6 +7,7 @@ import { sendEmail } from "../services/mailer";
 import { sequelize } from "../config/database";
 import { defaultSenderName, fallbackFromAddress } from "../services/companyProfile";
 import { outboundBlockedReason } from "../services/emailVerification";
+import { reserveUsage } from "../services/usage";
 
 const router = Router();
 
@@ -26,6 +27,8 @@ router.post("/send", authorize("outreach:write"), async (req: AuthRequest, res: 
   try {
     const blocked = await outboundBlockedReason();
     if (blocked) { res.status(403).json({ message: blocked, code: "EMAIL_NOT_VERIFIED" }); return; }
+    const quotaBlock = await reserveUsage("email");
+    if (quotaBlock) { res.status(402).json({ message: quotaBlock, code: "PLAN_LIMIT", limit: "emailsPerDay" }); return; }
 
     const lead = await Lead.findByPk(leadId);
     if (!lead) {

@@ -14,6 +14,7 @@ import { classifyChannel, parseHost, isBotUserAgent } from "../services/analytic
 import { enrollRealtimeLead } from "../services/workflowEngine";
 import { extractClientIp, lookupIpLocation, lookupIpLocationCached } from "../services/geolocation";
 import { runForOrg } from "../services/tenantContext";
+import { legal } from "../config/legal";
 
 const router = Router();
 
@@ -1070,12 +1071,33 @@ router.post("/unsubscribe/page", express.urlencoded({ extended: false }), async 
   }
 });
 
+/** Where the legal documents live and which version is current, for the signup form. */
+router.get("/legal", (_req: Request, res: Response) => {
+  res.json({
+    termsVersion: legal.termsVersion,
+    termsUrl: legal.termsUrl || null,
+    privacyUrl: legal.privacyUrl || null,
+    dpaUrl: legal.dpaUrl || null,
+    acceptanceRequired: legal.requireAcceptance,
+  });
+});
+
 router.post("/unsubscribe", async (req: Request, res: Response) => {
   try {
     const b = req.body || {};
     const emailRaw = (b.email ?? "").toString().trim();
     const email = emailRaw.toLowerCase();
     const reason = (b.reason ?? "").toString().trim();
+    const token = (b.t ?? "").toString();
+
+    // Links now carry a signature over the address. Forms that send one must
+    // get it right; forms that do not (the marketing-site page until it is
+    // updated to forward ?t=) still work, since the worst an unsigned request
+    // can do is add an address to the platform's own suppression list.
+    if (token && !verifyUnsubscribe(email, token)) {
+      res.status(403).json({ message: "Invalid unsubscribe link" });
+      return;
+    }
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       res.status(400).json({ message: "A valid email address is required" });
@@ -1087,9 +1109,11 @@ router.post("/unsubscribe", async (req: Request, res: Response) => {
       return;
     }
 
-    const unsubscribeEntry = await Unsubscribe.create({
-      email,
-      reason,
+    // One row per address: repeat submissions (or a bot replaying the form) must
+    // not grow the table.
+    const [unsubscribeEntry] = await Unsubscribe.findOrCreate({
+      where: { email },
+      defaults: { email, reason } as never,
     });
 
     // Optionally update lead status if lead exists with this email

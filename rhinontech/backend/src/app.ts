@@ -51,6 +51,15 @@ import scheduleCallRoutes from "./routes/scheduleCall";
 import startupIdeasRoutes from "./routes/startupIdeas";
 import deployRoutes from "./routes/deploy";
 import eventsRoutes from "./routes/events";
+import billingRoutes from "./routes/billing";
+import platformOrgsRoutes from "./routes/platformOrgs";
+import auditLogRoutes from "./routes/auditLog";
+import workspaceRoutes from "./routes/workspace";
+import emailDomainRoutes from "./routes/emailDomain";
+import { auditMutations } from "./services/audit";
+import { heartbeat, uptimeSeconds } from "./services/heartbeat";
+import { sequelize } from "./config/database";
+import { requestId } from "./middleware/requestLogger";
 import { rateLimit, securityHeaders, loginLimiters, signupLimiters, emailFlowLimiter, tokenLimiter } from "./middleware/rateLimit";
 
 const app = express();
@@ -60,6 +69,7 @@ const app = express();
 // trusting more would let a client choose its own address via X-Forwarded-For.
 app.set("trust proxy", 1);
 app.disable("x-powered-by");
+app.use(requestId);
 app.use(securityHeaders);
 
 const allowedOrigins = [
@@ -86,12 +96,14 @@ app.use(express.json({ limit: "20mb" }));
 // One line per request, after the body parser so payloads are readable and before
 // the routes so nothing escapes it. Tune with LOG_REQUESTS / LOG_BODY / LOG_SKIP.
 app.use(requestLogger);
+app.use(auditMutations);
 
 // Abuse protection for the unauthenticated entry points. Mounted after the body
 // parser (login limiting keys on the account being attempted) and before the
 // routers so a rejected request never reaches bcrypt or the database.
 app.post("/auth/login", ...loginLimiters);
 app.post("/auth/signup", ...signupLimiters);
+app.post("/auth/login/mfa", tokenLimiter);
 app.get("/auth/signup/slug/:slug", tokenLimiter);
 app.post("/auth/forgot-password", emailFlowLimiter);
 app.post("/auth/reset-password", tokenLimiter);
@@ -138,6 +150,11 @@ app.use("/content", contentRoutes);
 app.use("/events", eventsRoutes);
 // The workspace's brands. Every brand-split module reads this before it renders.
 app.use("/sites", sitesRoutes);
+app.use("/billing", billingRoutes);
+app.use("/audit-log", auditLogRoutes);
+app.use("/workspace", workspaceRoutes);
+app.use("/email-domain", emailDomainRoutes);
+app.use("/platform/organizations", platformOrgsRoutes);
 app.use("/analytics", analyticsRoutes);
 app.use("/startup-ideas", startupIdeasRoutes);
 app.use("/deploy", deployRoutes);
@@ -187,6 +204,32 @@ app.get("/health", (_req, res) => {
 });
 
 /**
+ * Health for a status page or uptime monitor: is the database reachable, and are
+ * the background jobs (outreach scheduler, automation engine) still running? The
+ * plain /health above only proves the process is up. Public and read-only; it
+ * reports nothing a customer could not already infer from the product working.
+ */
+app.get("/health/deep", rateLimit({ name: "health-deep", windowMs: 60_000, max: 60 }), async (_req, res) => {
+  const started = Date.now();
+  let db = { ok: false, ms: 0 };
+  try {
+    await sequelize.query("SELECT 1");
+    db = { ok: true, ms: Date.now() - started };
+  } catch {
+    db = { ok: false, ms: Date.now() - started };
+  }
+  // The scheduler ticks every minute; allow two missed ticks before calling it stale.
+  const scheduler = heartbeat("scheduler", 150);
+  const ok = db.ok && scheduler.ok;
+  res.status(ok ? 200 : 503).json({
+    status: ok ? "ok" : "degraded",
+    uptimeSeconds: uptimeSeconds(),
+    database: db,
+    scheduler,
+  });
+});
+
+/**
  * Last-resort error handler.
  *
  * Without one, a rejected handler took the whole process down: GET
@@ -197,6 +240,10 @@ app.get("/health", (_req, res) => {
  * A malformed id is the caller's mistake, so it answers 400 rather than 500.
  */
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  if (err?.name === "PlanLimitError") {
+    if (!res.headersSent) res.status(402).json({ message: err.message, code: "PLAN_LIMIT", limit: err.limit });
+    return;
+  }
   const badInput = err?.parent?.code === "22P02" || err?.original?.code === "22P02";
   if (!badInput) console.error("[Unhandled]", err?.stack || err?.message || err);
   if (res.headersSent) return;

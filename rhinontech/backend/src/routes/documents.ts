@@ -2,6 +2,7 @@ import { Router, Response } from "express";
 import { authenticate, hasPermission, AuthRequest } from "../middleware/authenticate";
 import { Document } from "../models/Document";
 import { User } from "../models/User";
+import { statusFor } from "../utils/httpErrors";
 import {
   getPresignedUploadUrl,
   getPresignedReadUrl,
@@ -145,7 +146,7 @@ router.post("/", async (req: AuthRequest, res: Response) => {
     res.status(201).json(doc);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Failed to create document" });
+    res.status(statusFor(err)).json({ message: "Failed to create document" });
   }
 });
 
@@ -177,7 +178,7 @@ router.post("/request", async (req: AuthRequest, res: Response) => {
     res.status(201).json(doc);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Failed to create document request" });
+    res.status(statusFor(err)).json({ message: "Failed to create document request" });
   }
 });
 
