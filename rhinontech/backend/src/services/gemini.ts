@@ -1,9 +1,10 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import axios from "axios";
 import { env } from "../config/env";
-import { getSalesMemory } from "../config/salesMemory";
+import { getCompanyProfile, type CompanyProfile } from "./companyProfile";
 import {
   AUDIENCE_BRIEFS,
+  DEFAULT_LINKEDIN_PLAYBOOK,
   getLinkedInPlaybook,
   POST_TYPE_BRIEFS,
   type LinkedInAudience,
@@ -33,15 +34,34 @@ async function generateGroundedContent(prompt: string): Promise<string> {
   return (await r.response).text();
 }
 
-// Backwards-compatible alias: the agent's knowledge now comes from the editable sales memory.
-export const RHINON_KNOWLEDGE = getSalesMemory();
+/** Swaps the platform's own name out of bundled copy for the workspace's. */
+function rebrand(text: string, profile: CompanyProfile): string {
+  return profile.isPlatform ? text : text.replace(/Rhinon Labs|Rhinon Tech|Rhinon/g, () => profile.name);
+}
 
-export async function generateAIEmailDraft(leadData: any, templateData: any = null, customPrompt: string = "", senderName: string = "Rhinon Professional") {
+/**
+ * The LinkedIn playbook for a workspace. The platform uses the live guide (or
+ * its bundled default); everyone else gets the generic rules — voice, proof
+ * discipline, hooks — with the Rhinon identity paragraph replaced by their own.
+ */
+function playbookFor(profile: CompanyProfile): string {
+  if (profile.isPlatform) return getLinkedInPlaybook();
+  const generic = DEFAULT_LINKEDIN_PLAYBOOK.replace(
+    /## Identity[\s\S]*?(?=## The only five post types)/,
+    () =>
+      `## Identity\nYou are the LinkedIn content strategist for ${profile.name}. Your job is to create high-quality, human,\nfounder-led LinkedIn content that generates trust and qualified B2B conversations.\n\nCOMPANY KNOWLEDGE:\n${profile.knowledge}\n\n`
+  );
+  return rebrand(generic, profile);
+}
+
+export async function generateAIEmailDraft(leadData: any, templateData: any = null, customPrompt: string = "", senderName: string = "") {
+  const profile = await getCompanyProfile();
+  senderName = senderName || `${profile.name} Team`;
   let prompt = `
-    You are an expert sales copywriter for Rhinon Tech. 
+    You are an expert sales copywriter for ${profile.name}.
 
-    RHINON COMPANY KNOWLEDGE:
-    ${RHINON_KNOWLEDGE}
+    ${profile.name.toUpperCase()} COMPANY KNOWLEDGE:
+    ${profile.knowledge}
 
     LEAD CONTEXT:
     Name: ${leadData.name}
@@ -106,18 +126,19 @@ export async function generateAIEmailDraft(leadData: any, templateData: any = nu
     console.error("Failed to parse AI JSON response:", text);
   }
 
-  return { body: text, subject: `Scaling ${leadData.company}'s operations` };
+  return { body: text, subject: `A quick question for ${leadData.company}` };
 }
 
 export async function generateTemplateWithAI(prompt: string, channel = "Email") {
+  const profile = await getCompanyProfile();
   const isSocial = ["LinkedIn Post", "LinkedIn Video", "LinkedIn Article", "LinkedIn DM", "LinkedIn Connection"].includes(channel);
 
   const fullPrompt = isSocial
     ? `
-    You are an expert social media content strategist for Rhinon Tech.
+    You are an expert social media content strategist for ${profile.name}.
 
-    RHINON COMPANY KNOWLEDGE:
-    ${RHINON_KNOWLEDGE}
+    ${profile.name.toUpperCase()} COMPANY KNOWLEDGE:
+    ${profile.knowledge}
 
     CHANNEL: ${channel}
     USER REQUEST: ${prompt}
@@ -134,10 +155,10 @@ export async function generateTemplateWithAI(prompt: string, channel = "Email") 
     Do not include any surrounding text. Only return valid JSON.
   `
     : `
-    You are an expert sales copywriter for Rhinon Tech, a high-end data automation and business intelligence platform.
+    You are an expert sales copywriter for ${profile.name}.
 
-    RHINON COMPANY KNOWLEDGE:
-    ${RHINON_KNOWLEDGE}
+    ${profile.name.toUpperCase()} COMPANY KNOWLEDGE:
+    ${profile.knowledge}
 
     USER REQUEST: ${prompt}
 
@@ -169,14 +190,15 @@ export async function generateTemplateWithAI(prompt: string, channel = "Email") 
 }
 
 export async function generateImagePromptForCampaign(campaignName: string, channel: string, draft: string): Promise<string> {
+  const profile = await getCompanyProfile();
   const prompt = `
-    You are a visual art director for Rhinon Tech, a premium data automation company.
+    You are a visual art director for ${profile.name}.
 
     Campaign: "${campaignName}" (${channel})
     Post content summary: ${draft.slice(0, 300)}
 
     Generate a concise, vivid image generation prompt (under 80 words) for a professional LinkedIn post image.
-    Style: clean, modern, tech-forward, dark background with cyan/blue accents, no text in image.
+    Style: ${profile.isPlatform ? "clean, modern, tech-forward, dark background with cyan/blue accents" : "clean, modern, professional, on-brand"}, no text in image.
     Return ONLY the image prompt text, nothing else.
   `;
 
@@ -193,7 +215,7 @@ export async function generateImagePromptForCampaign(campaignName: string, chann
 export async function rewriteLetterSentence(blockFullText: string, selectedText: string, instruction: string): Promise<string> {
   const prompt = `
     You are editing one paragraph of a formal HR document (an offer letter or
-    NDA clause) for Rhinon Tech. Apply the requested change ONLY to the
+    NDA clause). Apply the requested change ONLY to the
     selected portion, keeping the rest of the passage exactly as-is.
 
     FULL PASSAGE:
@@ -230,6 +252,7 @@ export async function enrichLeadWithAI(
     websiteText?: string | null;
   } = {}
 ) {
+  const profile = await getCompanyProfile();
   const signals = [
     context.title ? `Role: ${context.title}` : "",
     context.industry ? `Industry: ${context.industry}` : "",
@@ -251,7 +274,11 @@ export async function enrichLeadWithAI(
     Return a JSON object with the following fields:
     - companyDescription: A short, factual summary of what they actually do (based on their site / search).
     - recentNews: Any recent, verifiable launch, project, funding, or event. Empty string if none found.
-    - potentialPainPoint: One concrete operational inefficiency they likely have that custom dashboards / workflow automation could fix, tied to their actual business.
+    - potentialPainPoint: ${
+      profile.isPlatform
+        ? "One concrete operational inefficiency they likely have that custom dashboards / workflow automation could fix, tied to their actual business."
+        : `One concrete operational challenge they likely have that ${profile.name} could plausibly help with, tied to their actual business.`
+    }
     - linkedinDiscoveryHint: How to find this person's specific LinkedIn profile.
 
     Only return the JSON.
@@ -300,11 +327,14 @@ export interface LinkedInPostResult {
 }
 
 export async function generateLinkedInPost(req: LinkedInPostRequest): Promise<LinkedInPostResult> {
+  const profile = await getCompanyProfile();
   const brief = POST_TYPE_BRIEFS[req.postType];
-  const audienceBrief = req.audience ? AUDIENCE_BRIEFS[req.audience] : null;
+  // The audience briefs describe the platform's own two markets, so they only
+  // apply to it — a workspace steers audience through its topic and knowledge.
+  const audienceBrief = req.audience && profile.isPlatform ? AUDIENCE_BRIEFS[req.audience] : null;
 
   const prompt = `
-${getLinkedInPlaybook()}
+${playbookFor(profile)}
 
 ---
 
@@ -314,10 +344,10 @@ POST TYPE (already decided — do not reclassify): ${req.postType} — ${brief.l
 OBJECTIVE: ${brief.objective}
 
 REQUIRED STRUCTURE for this type, in order:
-${brief.structure.map((s, i) => `${i + 1}. ${s}`).join("\n")}
+${brief.structure.map((s, i) => `${i + 1}. ${rebrand(s, profile)}`).join("\n")}
 
 TYPE-SPECIFIC RULES:
-${brief.rules}
+${rebrand(brief.rules, profile)}
 
 ${audienceBrief ? `TARGET AUDIENCE:\n${audienceBrief}\n` : ""}
 ${req.topic ? `TOPIC / ANGLE:\n${req.topic}\n` : ""}

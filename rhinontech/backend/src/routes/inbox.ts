@@ -5,17 +5,25 @@ import { InboxEmailFolder } from "../models/InboxEmail";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 import { resolveSiteContext } from "../middleware/siteContext";
 import { sendEmail } from "../services/mailer";
-import { getPresignedUploadUrl, getPresignedReadUrl, getObjectBuffer } from "../services/storage";
+import { getPresignedUploadUrl, getPresignedReadUrl, getObjectBuffer, isOwnKey } from "../services/storage";
 import { brandSender } from "../services/siteSender";
+import { defaultSenderName } from "../services/companyProfile";
+import { outboundBlockedReason } from "../services/emailVerification";
 import { findMailbox, mailboxesFor, ownerVariants, type UserMailbox } from "../services/userMailboxes";
 
 type Att = { key: string; name: string; size: number; mimeType: string };
 
-function cleanAttachments(input: unknown): Att[] {
+// Keys come from the client, so each one is checked against the caller's own
+// workspace prefix — otherwise an attachment list is a way to read, presign or
+// email any object in the bucket.
+async function cleanAttachments(input: unknown): Promise<Att[]> {
   if (!Array.isArray(input)) return [];
-  return input
+  const shaped = input
     .filter((a) => a && typeof a.key === "string" && typeof a.name === "string")
-    .slice(0, 10)
+    .slice(0, 10);
+  const owned = await Promise.all(shaped.map((a) => isOwnKey(a.key)));
+  return shaped
+    .filter((_, i) => owned[i])
     .map((a) => ({ key: a.key, name: a.name, size: Number(a.size) || 0, mimeType: a.mimeType || "application/octet-stream" }));
 }
 
@@ -174,7 +182,7 @@ router.post("/attachments/presign", authorize("inbox:write"), async (req: AuthRe
 // Internal note — pinned to the thread for the team, never emailed.
 router.post("/:id/note", authorize("inbox:write"), async (req: AuthRequest, res: Response) => {
   const body = typeof req.body.body === "string" ? req.body.body.trim() : "";
-  const attachments = cleanAttachments(req.body.attachments);
+  const attachments = await cleanAttachments(req.body.attachments);
   if (!body && attachments.length === 0) {
     res.status(400).json({ message: "Note body or an attachment is required" });
     return;
@@ -190,7 +198,7 @@ router.post("/:id/note", authorize("inbox:write"), async (req: AuthRequest, res:
   const note = await InboxEmail.create({
     threadKey: original.threadKey,
     folder: original.folder,
-    fromName: req.user?.fullName || "Rhinon",
+    fromName: req.user?.fullName || (await defaultSenderName()),
     fromEmail: mailbox,
     toEmails: [],
     ccEmails: [],
@@ -259,7 +267,7 @@ router.get("/:id", authorize("inbox:read"), async (req: AuthRequest, res: Respon
 
 router.post("/", authorize("inbox:write"), async (req: AuthRequest, res: Response) => {
   const { toEmails, ccEmails = [], subject, body, folder = "sent" } = req.body;
-  const attachments = cleanAttachments(req.body.attachments);
+  const attachments = await cleanAttachments(req.body.attachments);
 
   if (!Array.isArray(toEmails) || toEmails.length === 0 || !subject || !body) {
     res.status(400).json({ message: "To, subject and body are required" });
@@ -275,6 +283,13 @@ router.post("/", authorize("inbox:write"), async (req: AuthRequest, res: Respons
   // Sent from the brand the user is working in — the [domain] in the URL.
   const fromEmail = (await brandSender(sender.address)) || sender.address;
   const isDraft = folder === "drafts";
+
+  // New outbound mail from an unverified workspace is held back. Replies to mail
+  // someone already sent us are not gated — that is a conversation, not a blast.
+  if (!isDraft) {
+    const blocked = await outboundBlockedReason();
+    if (blocked) { res.status(403).json({ message: blocked, code: "EMAIL_NOT_VERIFIED" }); return; }
+  }
 
   if (!isDraft) {
     try {
@@ -298,7 +313,7 @@ router.post("/", authorize("inbox:write"), async (req: AuthRequest, res: Respons
   const email = await InboxEmail.create({
     threadKey,
     folder: isDraft ? "drafts" : "sent",
-    fromName: sender.name || req.user?.fullName || "Rhinon",
+    fromName: sender.name || req.user?.fullName || (await defaultSenderName()),
     fromEmail,
     toEmails,
     ccEmails,
@@ -318,7 +333,7 @@ router.post("/", authorize("inbox:write"), async (req: AuthRequest, res: Respons
 
 router.post("/:id/reply", authorize("inbox:write"), async (req: AuthRequest, res: Response) => {
   const { body } = req.body;
-  const attachments = cleanAttachments(req.body.attachments);
+  const attachments = await cleanAttachments(req.body.attachments);
 
   if ((!body || typeof body !== "string" || !body.trim()) && attachments.length === 0) {
     res.status(400).json({ message: "Reply body or an attachment is required" });
@@ -346,7 +361,7 @@ router.post("/:id/reply", authorize("inbox:write"), async (req: AuthRequest, res
   const reply = await InboxEmail.create({
     threadKey: original.threadKey,
     folder: "sent",
-    fromName: sender.name || req.user?.fullName || "Rhinon",
+    fromName: sender.name || req.user?.fullName || (await defaultSenderName()),
     fromEmail: replyFrom,
     toEmails: [original.fromEmail],
     ccEmails: [],

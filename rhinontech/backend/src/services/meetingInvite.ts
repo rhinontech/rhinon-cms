@@ -1,12 +1,32 @@
 import { createEvent, DateArray, ParticipationStatus } from "ics";
 import { sendEmail } from "./mailer";
-import { toEmailHtml, stripHtml } from "./emailTemplate";
+import { toEmailHtml, stripHtml, type EmailBrand } from "./emailTemplate";
 import { CALENDAR_TIMEZONE, type MeetingEvent } from "./googleCalendar";
+import { getCompanyProfile } from "./companyProfile";
+import { GoogleCalendarToken } from "../models";
 
 // The calendar these events live on. It's always the ORGANIZER, regardless of which
 // teammate created the meeting — they're recorded as SENT-BY instead.
-const ORGANIZER_NAME = "Rhinon Labs";
-const ORGANIZER_EMAIL = process.env.GOOGLE_CALENDAR_ORGANIZER_EMAIL || "support@rhinon.tech";
+const PLATFORM_ORGANIZER_NAME = "Rhinon Labs";
+const PLATFORM_ORGANIZER_EMAIL = process.env.GOOGLE_CALENDAR_ORGANIZER_EMAIL || "support@rhinon.tech";
+
+export interface InviteOrganizer {
+  name: string;
+  email: string;
+}
+
+/**
+ * Who appears as the organizer of the invite. The platform's own shared calendar
+ * for Rhinon; for a workspace, its own name and the Google account it connected —
+ * falling back to the sender, never to a Rhinon address, so a customer's
+ * invite does not name us as the host.
+ */
+async function organizerFor(sender: InviteSender): Promise<InviteOrganizer & { brand: Awaited<ReturnType<typeof getCompanyProfile>> }> {
+  const brand = await getCompanyProfile();
+  if (brand.isPlatform) return { name: PLATFORM_ORGANIZER_NAME, email: PLATFORM_ORGANIZER_EMAIL, brand };
+  const token = await GoogleCalendarToken.findOne({ where: { isActive: true }, attributes: ["connectedEmail"] });
+  return { name: brand.name, email: token?.connectedEmail || sender.email, brand };
+}
 
 export type InviteKind = "request" | "cancel";
 
@@ -33,7 +53,7 @@ function formatWhen(start: Date, end: Date): string {
   return `${date}, ${time(start)} – ${time(end)} IST`;
 }
 
-export function buildMeetingIcs(event: MeetingEvent, kind: InviteKind, sender: InviteSender): string {
+export function buildMeetingIcs(event: MeetingEvent, kind: InviteKind, sender: InviteSender, organizer: InviteOrganizer): string {
   const start = new Date(event.start!);
   const end = new Date(event.end!);
   const durationMinutes = Math.max(1, Math.round((end.getTime() - start.getTime()) / 60000));
@@ -59,7 +79,7 @@ export function buildMeetingIcs(event: MeetingEvent, kind: InviteKind, sender: I
     startOutputType: "utc",
     duration: { minutes: durationMinutes },
     productId: "rhinon-cms/meetings",
-    organizer: { name: ORGANIZER_NAME, email: ORGANIZER_EMAIL, sentBy: sender.email },
+    organizer: { name: organizer.name, email: organizer.email, sentBy: sender.email },
     attendees: event.attendees.map((a) => ({
       // Without a name, `ics` writes CN="Unnamed attendee" — the address reads better.
       name: a.email,
@@ -74,7 +94,7 @@ export function buildMeetingIcs(event: MeetingEvent, kind: InviteKind, sender: I
   return value;
 }
 
-function buildBody(event: MeetingEvent, kind: InviteKind, sender: InviteSender) {
+function buildBody(event: MeetingEvent, kind: InviteKind, sender: InviteSender, organizer: InviteOrganizer, brand: EmailBrand) {
   const when = formatWhen(new Date(event.start!), new Date(event.end!));
   const cancelled = kind === "cancel";
 
@@ -102,12 +122,12 @@ function buildBody(event: MeetingEvent, kind: InviteKind, sender: InviteSender) 
         ? "It has been removed from your calendar."
         : "The invite is attached — accept it to add this to your calendar."
     }</p>
-    <p>— ${ORGANIZER_NAME}</p>
+    <p>— ${organizer.name}</p>
   `;
 
   return {
     subject: cancelled ? `Cancelled: ${event.summary}` : `Invitation: ${event.summary} — ${when}`,
-    html: toEmailHtml(html),
+    html: toEmailHtml(html, undefined, undefined, undefined, undefined, brand),
     text: stripHtml(html),
   };
 }
@@ -127,13 +147,20 @@ export async function sendMeetingInvite(
   if (recipients.length === 0) return false;
   if (!event.start || !event.end) return false;
 
-  const ics = buildMeetingIcs(event, kind, sender);
-  const { subject, html, text } = buildBody(event, kind, sender);
+  const organizer = await organizerFor(sender);
+  const emailBrand: EmailBrand = {
+    name: organizer.brand.name,
+    isPlatform: organizer.brand.isPlatform,
+    organizationId: organizer.brand.organizationId,
+    address: organizer.brand.address,
+  };
+  const ics = buildMeetingIcs(event, kind, sender, organizer);
+  const { subject, html, text } = buildBody(event, kind, sender, organizer, emailBrand);
 
   await sendEmail({
     to: recipients,
     from: sender.email,
-    fromName: `${sender.name} (${ORGANIZER_NAME})`,
+    fromName: `${sender.name} (${organizer.name})`,
     replyTo: sender.email,
     via: "ses",
     subject,

@@ -6,6 +6,7 @@ import {
   getPresignedUploadUrl,
   getPresignedReadUrl,
   deleteObject,
+  isOwnKey,
 } from "../services/storage";
 
 const router = Router();
@@ -117,6 +118,10 @@ router.post("/presign", async (req: AuthRequest, res: Response) => {
 router.post("/", async (req: AuthRequest, res: Response) => {
   try {
     const { title, category, fileKey, fileName, fileSize, mimeType } = req.body;
+    if (fileKey && !(await isOwnKey(fileKey))) {
+      res.status(400).json({ message: "Invalid file key" });
+      return;
+    }
     const userId = req.user!.userId;
     const employeeId = req.body.employeeId === "self" ? userId : req.body.employeeId;
 
@@ -198,6 +203,10 @@ router.put("/:id/upload", async (req: AuthRequest, res: Response) => {
     }
 
     const { fileKey, fileName, fileSize, mimeType } = req.body;
+    if (!(await isOwnKey(fileKey))) {
+      res.status(400).json({ message: "Invalid file key" });
+      return;
+    }
 
     await doc.update({ fileKey, fileName, fileSize, mimeType, isRequest: false });
     res.json(doc);

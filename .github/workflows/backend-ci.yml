@@ -1,0 +1,74 @@
+name: Backend CI
+
+# Builds the API and runs the tenant-isolation and hardening suites against a
+# throwaway Postgres, with strict tenancy on. A route that reaches another
+# workspace's data, or an inbound-mail/unsubscribe/verification regression,
+# fails the build instead of reaching a customer.
+
+on:
+  push:
+    branches: [main, beta]
+  pull_request:
+    paths:
+      - "rhinontech/backend/**"
+      - ".github/workflows/backend-ci.yml"
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rhinontech/backend
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: rhinon_ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ci" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://ci:ci@localhost:5432/rhinon_ci
+      JWT_SECRET: ci-test-secret
+      CRON_SECRET: ci-test-cron
+      NODE_ENV: test
+      TENANT_STRICT: "true"
+      AWS_ACCESS_KEY_ID: ci
+      AWS_SECRET_ACCESS_KEY: ci
+      AWS_S3_BUCKET: ci
+      PORT: "5099"
+      PUBLIC_API_URL: http://localhost:5099
+      TEST_API: http://localhost:5099
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: rhinontech/backend/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - run: npm run verify:tenancy
+      - name: Start API
+        run: |
+          # Run from a directory with no .env so nothing real can load.
+          mkdir -p /tmp/ci-run && cd /tmp/ci-run
+          node "$GITHUB_WORKSPACE/rhinontech/backend/dist/server.js" > /tmp/server.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf localhost:5099/health && exit 0; sleep 1; done
+          cat /tmp/server.log; exit 1
+      - name: Hardening suite
+        run: node scripts/hardening-test.mjs
+      # The signup rate limit is per process: restart for a fresh counter.
+      - name: Restart API for the isolation suite
+        run: |
+          pkill -f dist/server.js || true; sleep 1
+          cd /tmp/ci-run
+          node "$GITHUB_WORKSPACE/rhinontech/backend/dist/server.js" > /tmp/server2.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf localhost:5099/health && exit 0; sleep 1; done
+          cat /tmp/server2.log; exit 1
+      - name: Tenant isolation suite
+        run: node scripts/isolation-test.mjs
+      - if: failure()
+        run: tail -100 /tmp/server.log /tmp/server2.log 2>/dev/null || true

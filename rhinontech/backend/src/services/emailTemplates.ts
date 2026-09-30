@@ -1,6 +1,27 @@
+/**
+ * Who an account email comes from. Omitted, it is the platform's own branding —
+ * what every email said before workspaces existed. A tenant passes its own name
+ * (and optional postal address) so its employees never see "Rhinon Tech" on a
+ * password reset from their own company's workspace.
+ */
+export interface TransactionalBrand {
+  name: string;
+  isPlatform: boolean;
+  address?: string | null;
+}
+
+const PLATFORM_TX: TransactionalBrand = { name: "Rhinon Tech", isPlatform: true };
+
+const escapeText = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
 const logoImg = `<img src="https://api.rhinontech.in/static/logo-white.png" alt="Rhinon Tech" width="36" height="36" style="display:block;" />`;
 
-function emailWrapper(headerContent: string, bodyContent: string) {
+function emailWrapper(headerContent: string, bodyContent: string, brand: TransactionalBrand = PLATFORM_TX) {
+  const brandName = escapeText(brand.name);
+  const logoCell = brand.isPlatform ? `<td style="vertical-align:middle;padding-right:12px;">${logoImg}</td>` : "";
+  const footerLine = brand.isPlatform
+    ? "Rhinon Tech · Hyderabad, Telangana, India"
+    : [brandName, brand.address ? escapeText(brand.address) : ""].filter(Boolean).join(" · ");
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,9 +39,9 @@ function emailWrapper(headerContent: string, bodyContent: string) {
             <td style="background-color:#1c1917;border-radius:12px 12px 0 0;padding:24px 32px;">
               <table cellpadding="0" cellspacing="0">
                 <tr>
-                  <td style="vertical-align:middle;padding-right:12px;">${logoImg}</td>
+                  ${logoCell}
                   <td style="vertical-align:middle;">
-                    <span style="font-size:16px;font-weight:700;color:#ffffff;letter-spacing:-0.3px;">Rhinon Tech</span>
+                    <span style="font-size:16px;font-weight:700;color:#ffffff;letter-spacing:-0.3px;">${brandName}</span>
                   </td>
                 </tr>
               </table>
@@ -39,7 +60,7 @@ function emailWrapper(headerContent: string, bodyContent: string) {
           <tr>
             <td style="padding:20px 0 0;text-align:center;">
               <p style="margin:0;font-size:12px;color:#a8a29e;">
-                Rhinon Tech · Hyderabad, Telangana, India
+                ${footerLine}
               </p>
               <p style="margin:6px 0 0;font-size:11px;color:#d6d3d1;">
                 If you need assistance, please reach out to your HR team.
@@ -58,6 +79,7 @@ function emailWrapper(headerContent: string, bodyContent: string) {
 // ─── Collaborator invite ─────────────────────────────────────────────────────
 
 interface CollaboratorInviteOptions {
+  brand?: TransactionalBrand;
   fullName: string;
   projectName: string;
   invitedByName: string;
@@ -66,8 +88,9 @@ interface CollaboratorInviteOptions {
 }
 
 export function collaboratorInviteEmail({
-  fullName, projectName, invitedByName, loginEmail, onboardingUrl,
+  fullName, projectName, invitedByName, loginEmail, onboardingUrl, brand,
 }: CollaboratorInviteOptions) {
+  const b = brand ?? PLATFORM_TX;
   const firstName = fullName.split(" ")[0];
   const subject = `${invitedByName} invited you to collaborate on ${projectName}`;
 
@@ -105,12 +128,13 @@ Sign in with: ${loginEmail}
 
 This link expires in 48 hours.`;
 
-  return { subject, html: emailWrapper(headerContent, bodyContent), text };
+  return { subject, html: emailWrapper(headerContent, bodyContent, b), text };
 }
 
 // ─── Welcome / Onboarding ────────────────────────────────────────────────────
 
 interface WelcomeEmailOptions {
+  brand?: TransactionalBrand;
   fullName: string;
   companyEmail: string;
   tempPassword: string;
@@ -118,19 +142,20 @@ interface WelcomeEmailOptions {
   signingUrl?: string;
 }
 
-export function welcomeEmail({ fullName, companyEmail, tempPassword, onboardingUrl, signingUrl }: WelcomeEmailOptions) {
+export function welcomeEmail({ fullName, companyEmail, tempPassword, onboardingUrl, signingUrl, brand }: WelcomeEmailOptions) {
+  const b = brand ?? PLATFORM_TX;
   const firstName = fullName.split(" ")[0];
-  const subject = `Welcome to Rhinon Tech — Set up your account`;
+  const subject = `Welcome to ${b.name} — Set up your account`;
 
   const header = `
     <p style="margin:16px 0 0;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.4px;">
-      You've been invited to<br/>Rhinon Tech
+      You've been invited to<br/>${escapeText(b.name)}
     </p>`;
 
   const body = `
     <p style="margin:0 0 6px;font-size:15px;font-weight:600;color:#1c1917;">Hi ${firstName},</p>
     <p style="margin:0 0 28px;font-size:14px;color:#78716c;line-height:1.7;">
-      Your account has been created on the Rhinon Tech Admin Panel. Use the credentials below to get started.
+      Your account has been created on the ${escapeText(b.name)} Admin Panel. Use the credentials below to get started.
     </p>
 
     <!-- Credentials card -->
@@ -195,9 +220,9 @@ export function welcomeEmail({ fullName, companyEmail, tempPassword, onboardingU
       </td></tr>
     </table>` : ""}`;
 
-  const html = emailWrapper(header, body);
+  const html = emailWrapper(header, body, b);
 
-  const text = `Welcome to Rhinon Tech, ${firstName}!
+  const text = `Welcome to ${b.name}, ${firstName}!
 
 Your account has been created.
 
@@ -218,6 +243,7 @@ ${signingUrl ? `\nPlease also review and sign your Offer Letter and Non-Disclosu
 // both documents are signed — see routes/documentSigning.ts.
 
 interface SignDocumentsEmailOptions {
+  brand?: TransactionalBrand;
   fullName: string;
   roleTitle?: string;
   signingUrl: string;
@@ -227,10 +253,11 @@ interface SignDocumentsEmailOptions {
   updated?: boolean;
 }
 
-export function signDocumentsEmail({ fullName, roleTitle, signingUrl, updated }: SignDocumentsEmailOptions) {
+export function signDocumentsEmail({ fullName, roleTitle, signingUrl, updated, brand }: SignDocumentsEmailOptions) {
+  const b = brand ?? PLATFORM_TX;
   const firstName = fullName.split(" ")[0];
   const roleBit = roleTitle ? ` as ${roleTitle}` : "";
-  const subject = updated ? `Your Offer Letter has been updated — Rhinon Tech` : `Congratulations — Welcome to Rhinon Tech`;
+  const subject = updated ? `Your Offer Letter has been updated — ${b.name}` : `Congratulations — Welcome to ${b.name}`;
 
   const header = updated
     ? `
@@ -244,10 +271,10 @@ export function signDocumentsEmail({ fullName, roleTitle, signingUrl, updated }:
 
   const intro = updated
     ? `<p style="margin:0 0 24px;font-size:14px;color:#78716c;line-height:1.7;">
-      We've made an update to your onboarding documents at <strong style="color:#1c1917;">Rhinon Tech</strong>${roleBit}. Please review the latest version below.
+      We've made an update to your onboarding documents at <strong style="color:#1c1917;">${escapeText(b.name)}</strong>${roleBit}. Please review the latest version below.
     </p>`
     : `<p style="margin:0 0 24px;font-size:14px;color:#78716c;line-height:1.7;">
-      Congratulations on joining <strong style="color:#1c1917;">Rhinon Tech</strong>${roleBit}! We're excited to have you on the team.
+      Congratulations on joining <strong style="color:#1c1917;">${escapeText(b.name)}</strong>${roleBit}! We're excited to have you on the team.
     </p>`;
 
   const body = `
@@ -285,14 +312,14 @@ export function signDocumentsEmail({ fullName, roleTitle, signingUrl, updated }:
       </td></tr>
     </table>`;
 
-  const html = emailWrapper(header, body);
+  const html = emailWrapper(header, body, b);
 
   const text = updated
-    ? `Hi ${firstName}, we've updated your onboarding documents at Rhinon Tech${roleBit}.
+    ? `Hi ${firstName}, we've updated your onboarding documents at ${b.name}${roleBit}.
 
 Please review and e-sign your Offer Letter and Non-Disclosure Agreement (NDA):
 ${signingUrl}`
-    : `Congratulations, ${firstName} — welcome to Rhinon Tech${roleBit}!
+    : `Congratulations, ${firstName} — welcome to ${b.name}${roleBit}!
 
 Your first step: review and e-sign your Offer Letter and Non-Disclosure Agreement (NDA):
 ${signingUrl}`;
@@ -309,14 +336,16 @@ What happens next? As soon as both documents are signed, we'll automatically ema
 // ─── Password Reset ──────────────────────────────────────────────────────────
 
 interface ResetPasswordEmailOptions {
+  brand?: TransactionalBrand;
   fullName: string;
   resetUrl: string;
   expiresInLabel?: string; // e.g. "1 hour"
 }
 
-export function resetPasswordEmail({ fullName, resetUrl, expiresInLabel = "1 hour" }: ResetPasswordEmailOptions) {
+export function resetPasswordEmail({ fullName, resetUrl, expiresInLabel = "1 hour", brand }: ResetPasswordEmailOptions) {
+  const b = brand ?? PLATFORM_TX;
   const firstName = fullName.split(" ")[0];
-  const subject = `Reset your Rhinon Tech password`;
+  const subject = `Reset your ${b.name} password`;
 
   const header = `
     <p style="margin:16px 0 0;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.4px;">
@@ -326,7 +355,7 @@ export function resetPasswordEmail({ fullName, resetUrl, expiresInLabel = "1 hou
   const body = `
     <p style="margin:0 0 6px;font-size:15px;font-weight:600;color:#1c1917;">Hi ${firstName},</p>
     <p style="margin:0 0 24px;font-size:14px;color:#78716c;line-height:1.7;">
-      We received a request to reset the password for your Rhinon Tech account. Click below to choose a new one.
+      We received a request to reset the password for your ${escapeText(b.name)} account. Click below to choose a new one.
     </p>
 
     <!-- CTA -->
@@ -349,11 +378,11 @@ export function resetPasswordEmail({ fullName, resetUrl, expiresInLabel = "1 hou
       <a href="${resetUrl}" style="color:#78716c;word-break:break-all;">${resetUrl}</a>
     </p>`;
 
-  const html = emailWrapper(header, body);
+  const html = emailWrapper(header, body, b);
 
   const text = `Hi ${firstName},
 
-We received a request to reset your Rhinon Tech password.
+We received a request to reset your ${b.name} password.
 
 Reset your password: ${resetUrl}
 
@@ -367,6 +396,7 @@ This link expires in ${expiresInLabel}. If you didn't request this, ignore this 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
 interface PayslipPaidEmailOptions {
+  brand?: TransactionalBrand;
   fullName: string;
   companyEmail: string;
   netPay: number;
@@ -377,7 +407,8 @@ interface PayslipPaidEmailOptions {
   payslipUrl: string;
 }
 
-export function payslipPaidEmail({ fullName, companyEmail, netPay, grossPay, month, year, bankAccountNumber, payslipUrl }: PayslipPaidEmailOptions) {
+export function payslipPaidEmail({ fullName, companyEmail, netPay, grossPay, month, year, bankAccountNumber, payslipUrl, brand }: PayslipPaidEmailOptions) {
+  const b = brand ?? PLATFORM_TX;
   const firstName = fullName.split(" ")[0];
   const period = `${MONTHS[month - 1]} ${year}`;
   const fmt = (n: number) => Number(n).toLocaleString("en-IN", { minimumFractionDigits: 0 });
@@ -461,7 +492,7 @@ export function payslipPaidEmail({ fullName, companyEmail, netPay, grossPay, mon
       If you have any questions about your payslip, please contact your HR team.
     </p>`;
 
-  const html = emailWrapper(header, body);
+  const html = emailWrapper(header, body, b);
 
   const text = `Hi ${firstName},
 
@@ -477,4 +508,52 @@ View your payslip: ${payslipUrl}
 If you have questions, contact your HR team.`;
 
   return { subject, html, text };
+}
+
+
+// ─── Verify email (workspace owner) ──────────────────────────────────────────
+
+interface VerifyEmailOptions {
+  brand?: TransactionalBrand;
+  fullName: string;
+  verifyUrl: string;
+  workspaceName: string;
+}
+
+export function verifyEmailEmail({ brand, fullName, verifyUrl, workspaceName }: VerifyEmailOptions) {
+  const b = brand ?? PLATFORM_TX;
+  const firstName = fullName.split(" ")[0];
+  const subject = `Confirm your email to start sending from ${workspaceName}`;
+
+  const header = `
+    <p style="margin:16px 0 0;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.4px;">
+      Confirm your<br/>email address
+    </p>`;
+
+  const body = `
+    <p style="margin:0 0 6px;font-size:15px;font-weight:600;color:#1c1917;">Hi ${escapeText(firstName)},</p>
+    <p style="margin:0 0 24px;font-size:14px;color:#78716c;line-height:1.7;">
+      Your workspace <strong style="color:#1c1917;">${escapeText(workspaceName)}</strong> is ready. Confirm this address to turn on email sending for outreach and automations.
+    </p>
+    <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+      <tr>
+        <td style="background:#1c1917;border-radius:8px;">
+          <a href="${verifyUrl}" style="display:inline-block;padding:12px 24px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;">
+            Confirm email
+          </a>
+        </td>
+      </tr>
+    </table>
+    <p style="margin:0;font-size:12px;line-height:18px;color:#a8a29e;">
+      This link expires in 48 hours. If you didn't create this workspace you can ignore this message.
+    </p>`;
+
+  const text = `Hi ${firstName},
+
+Your workspace ${workspaceName} is ready. Confirm your email to turn on sending:
+${verifyUrl}
+
+This link expires in 48 hours. If you didn't create this workspace, ignore this message.`;
+
+  return { subject, html: emailWrapper(header, body, b), text };
 }

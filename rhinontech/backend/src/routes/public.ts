@@ -13,6 +13,7 @@ import { env } from "../config/env";
 import { classifyChannel, parseHost, isBotUserAgent } from "../services/analytics";
 import { enrollRealtimeLead } from "../services/workflowEngine";
 import { extractClientIp, lookupIpLocation, lookupIpLocationCached } from "../services/geolocation";
+import { runForOrg } from "../services/tenantContext";
 
 const router = Router();
 
@@ -983,23 +984,34 @@ router.post("/startup-ideas", async (req: Request, res: Response) => {
  * because otherwise anyone could POST arbitrary addresses and suppress a whole
  * list; the separate /unsubscribe form below stays as the human-facing path.
  */
+/** Records an opt-out inside the organization that sent the mail. */
+async function recordUnsubscribe(email: string, organizationId: string | null, reason: string) {
+  const run = async () => {
+    const [entry, created] = await Unsubscribe.findOrCreate({
+      where: { email },
+      defaults: { email, reason } as never,
+    });
+    if (!created && !entry.reason) await entry.update({ reason });
+  };
+  // With an org the row lands in that workspace's list; without one (links sent
+  // before workspaces existed) it lands in whatever the public context resolved,
+  // which is the platform workspace.
+  if (organizationId) await runForOrg(organizationId, run, { label: "unsubscribe" });
+  else await run();
+}
+
 router.post("/unsubscribe/one-click", async (req: Request, res: Response) => {
   const email = String(req.query.email ?? "").trim().toLowerCase();
   const token = String(req.query.t ?? "");
+  const organizationId = req.query.o ? String(req.query.o) : null;
 
-  if (!verifyUnsubscribe(email, token)) {
+  if (!verifyUnsubscribe(email, token, organizationId)) {
     res.status(403).json({ message: "Invalid unsubscribe link" });
     return;
   }
 
   try {
-    const [entry, created] = await Unsubscribe.findOrCreate({
-      where: { email },
-      defaults: { email, reason: "One-click unsubscribe (RFC 8058)" } as never,
-    });
-    if (!created && !entry.reason) {
-      await entry.update({ reason: "One-click unsubscribe (RFC 8058)" });
-    }
+    await recordUnsubscribe(email, organizationId, "One-click unsubscribe (RFC 8058)");
   } catch (err: any) {
     console.error("[Unsubscribe] one-click failed:", err.message);
   }
@@ -1007,6 +1019,55 @@ router.post("/unsubscribe/one-click", async (req: Request, res: Response) => {
   // Always 200: a provider that sees an error may keep retrying or downgrade
   // the sender's reputation.
   res.status(200).json({ message: "Unsubscribed" });
+});
+
+const escapeHtml = (v: string) =>
+  v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+function unsubscribePage(body: string): string {
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Email preferences</title><style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#18181b}main{background:#fff;max-width:420px;margin:16px;padding:32px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.1)}h1{font-size:20px;margin:0 0 12px}p{line-height:1.6;color:#52525b;margin:0 0 20px}button{background:#18181b;color:#fff;border:0;border-radius:8px;padding:10px 18px;font-size:15px;cursor:pointer}</style></head><body><main>${body}</main></body></html>`;
+}
+
+/**
+ * Human unsubscribe page. GET only shows a confirm button and changes nothing:
+ * mail security scanners and link-preview bots fetch every URL in a message, and
+ * an unsubscribe that fired on GET would silently opt recipients out.
+ */
+router.get("/unsubscribe/page", async (req: Request, res: Response) => {
+  const email = String(req.query.email ?? "").trim().toLowerCase();
+  const token = String(req.query.t ?? "");
+  const organizationId = req.query.o ? String(req.query.o) : null;
+
+  if (!verifyUnsubscribe(email, token, organizationId)) {
+    res.status(403).type("html").send(unsubscribePage("<h1>Link not valid</h1><p>This unsubscribe link is invalid or has been altered.</p>"));
+    return;
+  }
+
+  res.type("html").send(
+    unsubscribePage(
+      `<h1>Unsubscribe</h1><p>Stop sending emails to <strong>${escapeHtml(email)}</strong>?</p>` +
+        `<form method="post" action=""><input type="hidden" name="email" value="${escapeHtml(email)}"><input type="hidden" name="t" value="${escapeHtml(token)}">${organizationId ? `<input type="hidden" name="o" value="${escapeHtml(organizationId)}">` : ""}<button type="submit">Confirm unsubscribe</button></form>`
+    )
+  );
+});
+
+router.post("/unsubscribe/page", express.urlencoded({ extended: false }), async (req: Request, res: Response) => {
+  const email = String(req.body?.email ?? "").trim().toLowerCase();
+  const token = String(req.body?.t ?? "");
+  const organizationId = req.body?.o ? String(req.body.o) : null;
+
+  if (!verifyUnsubscribe(email, token, organizationId)) {
+    res.status(403).type("html").send(unsubscribePage("<h1>Link not valid</h1><p>This unsubscribe link is invalid or has been altered.</p>"));
+    return;
+  }
+
+  try {
+    await recordUnsubscribe(email, organizationId, "Unsubscribed via email footer link");
+    res.type("html").send(unsubscribePage(`<h1>You're unsubscribed</h1><p><strong>${escapeHtml(email)}</strong> will no longer receive these emails.</p>`));
+  } catch (err: any) {
+    console.error("[Unsubscribe] page failed:", err.message);
+    res.status(500).type("html").send(unsubscribePage("<h1>Something went wrong</h1><p>Please try again in a moment.</p>"));
+  }
 });
 
 router.post("/unsubscribe", async (req: Request, res: Response) => {

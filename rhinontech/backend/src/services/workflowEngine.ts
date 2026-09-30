@@ -6,6 +6,9 @@ import { sendEmail } from "./mailer";
 import { toEmailHtml, stripHtml, BACKEND_URL } from "./emailTemplate";
 import { isRotationEnabled, pickMailbox } from "./mailboxes";
 import { brandSender } from "./siteSender";
+import { runForOrg } from "./tenantContext";
+import { getCompanyProfile } from "./companyProfile";
+import { outboundBlockedReason } from "./emailVerification";
 
 const UUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 function isUuid(val: any): boolean {
@@ -205,31 +208,40 @@ export async function runWorkflowEngineCycle() {
     const now = new Date();
 
     for (const workflow of activeWorkflows) {
-      // Auto-enroll any newly added leads from targeted static lists or sources
-      await enrollStaticListLeads(workflow.id);
+      // The cycle sweeps every workspace, so each workflow runs inside its own
+      // organization: the lists it enrolls, the unsubscribe list it honours and
+      // every row it writes belong to that tenant alone.
+      const organizationId = (workflow as any).organizationId as string | null;
+      const runWorkflow = async () => {
+        // Auto-enroll any newly added leads from targeted static lists or sources
+        await enrollStaticListLeads(workflow.id);
 
-      const batchSize = Number(workflow.triggerConfig?.batchSize) || 100;
+        const batchSize = Number(workflow.triggerConfig?.batchSize) || 100;
 
-      // Find active enrollments eligible to run (nextStepAt <= now or null)
-      const enrollments = await WorkflowEnrollment.findAll({
-        where: {
-          workflowId: workflow.id,
-          status: "active",
-          [Op.or]: [{ nextStepAt: null }, { nextStepAt: { [Op.lte]: now } }],
-        },
-        limit: batchSize,
-      });
+        // Find active enrollments eligible to run (nextStepAt <= now or null)
+        const enrollments = await WorkflowEnrollment.findAll({
+          where: {
+            workflowId: workflow.id,
+            status: "active",
+            [Op.or]: [{ nextStepAt: null }, { nextStepAt: { [Op.lte]: now } }],
+          },
+          limit: batchSize,
+        });
 
-      if (enrollments.length === 0) continue;
+        if (enrollments.length === 0) return;
 
-      const nodesMap = new Map((workflow.nodes || []).map((n: any) => [n.id, n]));
-      const edges = workflow.edges || [];
+        const nodesMap = new Map((workflow.nodes || []).map((n: any) => [n.id, n]));
+        const edges = workflow.edges || [];
 
-      for (const enrollment of enrollments) {
-        await executeEnrollmentSteps(enrollment, nodesMap, edges, workflow);
-      }
+        for (const enrollment of enrollments) {
+          await executeEnrollmentSteps(enrollment, nodesMap, edges, workflow);
+        }
 
-      await updateWorkflowStats(workflow.id);
+        await updateWorkflowStats(workflow.id);
+    
+      };
+      if (organizationId) await runForOrg(organizationId, runWorkflow, { label: "cron:workflow" });
+      else await runWorkflow();
     }
   } catch (err: any) {
     console.error("[Workflow Engine] Execution cycle error:", err.message);
@@ -352,6 +364,16 @@ async function executeEnrollmentSteps(
         }
       }
 
+      // An unverified workspace may not send. Defer rather than drop, so the
+      // sequence resumes by itself once the owner confirms their address.
+      const blocked = await outboundBlockedReason();
+      if (blocked) {
+        const retryAt = new Date(Date.now() + 60 * 60 * 1000);
+        logs.push({ timestamp: new Date().toISOString(), step: `Send deferred: ${blocked}` });
+        await enrollment.update({ currentNodeId: currNodeId, nextStepAt: retryAt, executionLogs: logs });
+        break;
+      }
+
       // Volume cap. Deferring rather than dropping means the cadence survives a
       // busy day instead of silently losing a step.
       const dailyCap = Number(workflow.triggerConfig?.dailySendCap ?? process.env.WORKFLOW_DAILY_SEND_CAP ?? 0);
@@ -374,14 +396,15 @@ async function executeEnrollmentSteps(
           step: `Email skipped: ${enrollment.leadEmail} is in the unsubscribe list.`,
         });
       } else {
-        const subjectTemplate = config.subject || "Updates from Rhinon Labs";
+        const profile = await getCompanyProfile();
+        const subjectTemplate = config.subject || `Updates from ${profile.name}`;
         const bodyTemplate =
           config.emailBody || "Hi {{name}},\n\nThank you for choosing us!";
 
-        const subject = parseMergeTags(subjectTemplate, enrollment);
+        const subject = parseMergeTags(subjectTemplate, enrollment, profile.name);
         // .replace(/\n/g, "<br/>") only matters for the plain-text fallback
         // above — real content from the rich-text editor is already HTML.
-        let richHtml = parseMergeTags(bodyTemplate, enrollment).replace(/\n/g, "<br/>");
+        let richHtml = parseMergeTags(bodyTemplate, enrollment, profile.name).replace(/\n/g, "<br/>");
 
         // Rewrite links for click tracking
         richHtml = richHtml.replace(/<a\s+(?:[^>]*?\s+)?href=["']([^"']+)["']/gi, (match, url) => {
@@ -397,7 +420,12 @@ async function executeEnrollmentSteps(
         // needs to render across email clients, instead of going out as bare
         // unstyled HTML. Also carries the open-tracking pixel.
         const trackingPixelUrl = `${BACKEND_URL}/public/track/open?e=${enrollment.id}&n=${encodeURIComponent(currNodeId)}`;
-        const htmlBody = toEmailHtml(richHtml, undefined, trackingPixelUrl, enrollment.leadEmail);
+        const htmlBody = toEmailHtml(richHtml, undefined, trackingPixelUrl, enrollment.leadEmail, undefined, {
+          name: profile.name,
+          isPlatform: profile.isPlatform,
+          organizationId: profile.organizationId,
+          address: profile.address,
+        });
 
         // An explicit From on the node always wins; rotation only fills the gap.
         let fromEmail: string | undefined = config.fromEmail;
@@ -431,7 +459,7 @@ async function executeEnrollmentSteps(
           await sendEmail({
             to: enrollment.leadEmail,
             from: brandedFrom,
-            fromName: fromName || "Rhinon Automation",
+            fromName: fromName || profile.name,
             smtpAuth,
             subject,
             html: htmlBody,
@@ -726,13 +754,13 @@ async function executeEnrollmentSteps(
   }
 }
 
-function parseMergeTags(text: string, enrollment: WorkflowEnrollment): string {
+function parseMergeTags(text: string, enrollment: WorkflowEnrollment, companyName = "Rhinon Labs"): string {
   if (!text) return "";
   return text
     .replace(/\{\{\s*name\s*\}\}/gi, enrollment.leadName || "Valued Lead")
     .replace(/\{\{\s*email\s*\}\}/gi, enrollment.leadEmail || "")
     .replace(/\{\{\s*source\s*\}\}/gi, enrollment.source || "Direct")
-    .replace(/\{\{\s*company\s*\}\}/gi, "Rhinon Labs");
+    .replace(/\{\{\s*company\s*\}\}/gi, () => companyName);
 }
 
 async function updateWorkflowStats(workflowId: string) {

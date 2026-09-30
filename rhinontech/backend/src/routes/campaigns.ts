@@ -11,14 +11,17 @@ import { sendEmail } from "../services/mailer";
 import { stripHtml, toEmailHtml, BACKEND_URL } from "../services/emailTemplate";
 import { Op } from "sequelize";
 import { normalizeEmail, isValidEmail } from "../utils/email";
+import { defaultSenderName, fallbackFromAddress, getCompanyProfile } from "../services/companyProfile";
 import { brandSender } from "../services/siteSender";
+import { outboundBlockedReason } from "../services/emailVerification";
+import { currentOrganizationId, runAsSystem, runForOrg } from "../services/tenantContext";
 
 const router = Router();
 
 // Internal/Cron auth check helper
 const isCronAuthorized = (req: any) => {
   const authHeader = req.headers.get?.("Authorization") || req.headers["authorization"];
-  return authHeader === `Bearer ${env.cronSecret}` || process.env.NODE_ENV === "development";
+  return authHeader === `Bearer ${env.cronSecret}`;
 };
 
 router.use((req, res, next) => {
@@ -120,7 +123,7 @@ router.post("/generate", authorize("outreach:write"), async (req: AuthRequest, r
       template = await CampaignTemplate.findByPk(templateId);
     }
 
-    const senderName = req.user!.fullName || "Rhinon Team";
+    const senderName = req.user!.fullName || (await defaultSenderName());
     const draft = await generateAIEmailDraft(lead, template, "", senderName);
     res.json({ subject: draft.subject, body: draft.body });
   } catch (error: any) {
@@ -257,6 +260,11 @@ export async function dispatchLeadEmail(
   // lead is clean for any future campaign, not just this send.
   if (email !== lead.email) await lead.update({ email: email! });
 
+  // Unverified workspaces cannot send. Transient, so the lead stays sendable and
+  // goes out on the next run once the owner confirms their address.
+  const blocked = await outboundBlockedReason();
+  if (blocked) return fail(blocked, false);
+
   const isUnsubscribed = await Unsubscribe.findOne({ where: { email: email! } });
   if (isUnsubscribed) {
     await lead.update({ status: "Unsubscribed" });
@@ -272,7 +280,13 @@ export async function dispatchLeadEmail(
   const subject = campaign.subject
     ? fillPlaceholders(campaign.subject, lead, senderName)
     : `Optimizing ${lead.company}'s potential`;
-  const htmlBody = toEmailHtml(lead.aiDraft, undefined, openTrackingPixelUrl(lead.id, campaign.id), email!);
+  const profile = await getCompanyProfile();
+  const htmlBody = toEmailHtml(lead.aiDraft, undefined, openTrackingPixelUrl(lead.id, campaign.id), email!, undefined, {
+    name: profile.name,
+    isPlatform: profile.isPlatform,
+    organizationId: profile.organizationId,
+    address: profile.address,
+  });
   const plainText = stripHtml(lead.aiDraft);
 
   try {
@@ -349,7 +363,7 @@ router.post("/:id/process", authorize("outreach:write"), async (req: AuthRequest
         where: { campaignId: campaign.id, status: ["Enrolled", "New"] },
       });
 
-      const senderName = campaign.senderName || req.user!.fullName || "Rhinon Team";
+      const senderName = campaign.senderName || req.user!.fullName || (await defaultSenderName());
       let processedCount = 0;
 
       for (const lead of leads) {
@@ -543,7 +557,7 @@ export async function runEmailSend(
       lead,
       senderName,
       fromEmail,
-      "Campaign outreach email delivered via Rhinon Engine."
+      "Campaign outreach email delivered by the outreach engine."
     );
     if (outcome.result === "sent") {
       sentCount++;
@@ -600,8 +614,8 @@ router.post("/:id/send", authorize("outreach:write"), async (req: AuthRequest, r
 
     if (isEmail) {
       const summary = await runEmailSend(campaign, {
-        senderName: campaign.senderName || req.user!.fullName || "Rhinon Team",
-        fromEmail: campaign.senderEmail || req.user!.companyEmail || "admin@rhinontech.in",
+        senderName: campaign.senderName || req.user!.fullName || (await defaultSenderName()),
+        fromEmail: campaign.senderEmail || req.user!.companyEmail || (await fallbackFromAddress()),
         resend: req.body?.resend === true,
       });
 
@@ -697,14 +711,14 @@ router.post("/:id/send/stream", authorize("outreach:write"), async (req: AuthReq
     // Rewritten onto the campaign's brand domain, so an Uppercurve campaign
     // leaves as <user>@uppercurve.in rather than the platform domain.
     const fromEmail =
-      (await brandSender(campaign.senderEmail || req.user!.companyEmail || "admin@rhinontech.in", campaign.siteId)) ||
-      "admin@rhinontech.in";
+      (await brandSender(campaign.senderEmail || req.user!.companyEmail || (await fallbackFromAddress()), campaign.siteId)) ||
+      (await fallbackFromAddress());
     write({ type: "log", level: "info", message: `Campaign "${campaign.name}" — sending as ${fromEmail}` });
 
     await runEmailSend(
       campaign,
       {
-        senderName: campaign.senderName || req.user!.fullName || "Rhinon Team",
+        senderName: campaign.senderName || req.user!.fullName || (await defaultSenderName()),
         fromEmail,
         resend: req.body?.resend === true,
       },
@@ -740,84 +754,96 @@ router.get("/cron/run", async (req, res) => {
     const where: any = { stage: "Active" };
     if (campaignId) where.id = campaignId;
 
-    const activeCampaigns = await Campaign.findAll({ where });
+    // Called with the cron secret this sweeps every workspace; called by a
+    // signed-in user it is already scoped to theirs.
+    const activeCampaigns = currentOrganizationId()
+      ? await Campaign.findAll({ where })
+      : await runAsSystem("cron:campaigns", () => Campaign.findAll({ where }));
 
     logs.push(`Found ${activeCampaigns.length} active campaign(s) ready to process.`);
 
     for (const campaign of activeCampaigns) {
-      logs.push(`\n--- Processing Campaign: ${campaign.name} ---`);
+      // Every campaign runs inside its own organization, so its leads, drafts,
+      // activity rows and the unsubscribe list it honours are that tenant's.
+      const organizationId = (campaign as any).organizationId as string | null;
+      const processCampaign = async () => {
+        logs.push(`\n--- Processing Campaign: ${campaign.name} ---`);
 
-      // PHASE A: Draft generation — mail-merge only, no AI rewrite
-      const enrolledLeads = await Lead.findAll({
-        where: {
-          campaignId: campaign.id,
-          status: [...NEEDS_DRAFT_STATUSES],
-          aiDraft: { [Op.or]: [null, ""] } as any,
-        },
-      });
-
-      const campaignCreator = await User.findByPk(campaign.createdById);
-      const senderName = campaign.senderName || campaignCreator?.fullName || "Rhinon Team";
-
-      for (const lead of enrolledLeads) {
-        try {
-          const rawBody = campaign.body || "Hi {{lead.name}},\n\nWe'd love to connect.\n\nBest,\n{{sender.name}}";
-          const draftBody = fillPlaceholders(rawBody, lead, senderName);
-
-          await lead.update({ aiDraft: draftBody, status: "Interested" });
-          await CampaignActivity.create({
-            leadId: lead.id,
+        // PHASE A: Draft generation — mail-merge only, no AI rewrite
+        const enrolledLeads = await Lead.findAll({
+          where: {
             campaignId: campaign.id,
-            type: "DraftGenerated",
-            content: "Template draft prepared (mail-merge).",
-            generatedContent: draftBody,
-          });
-          logs.push(`   [Draft Ready] Template draft for ${lead.email}`);
-        } catch (err: any) {
-          logs.push(`   [Draft Error] Failed for ${lead.email}: ${err.message}`);
+            status: [...NEEDS_DRAFT_STATUSES],
+            aiDraft: { [Op.or]: [null, ""] } as any,
+          },
+        });
+
+        const campaignCreator = await User.findByPk(campaign.createdById);
+        const senderName = campaign.senderName || campaignCreator?.fullName || (await defaultSenderName());
+
+        for (const lead of enrolledLeads) {
+          try {
+            const rawBody = campaign.body || "Hi {{lead.name}},\n\nWe'd love to connect.\n\nBest,\n{{sender.name}}";
+            const draftBody = fillPlaceholders(rawBody, lead, senderName);
+
+            await lead.update({ aiDraft: draftBody, status: "Interested" });
+            await CampaignActivity.create({
+              leadId: lead.id,
+              campaignId: campaign.id,
+              type: "DraftGenerated",
+              content: "Template draft prepared (mail-merge).",
+              generatedContent: draftBody,
+            });
+            logs.push(`   [Draft Ready] Template draft for ${lead.email}`);
+          } catch (err: any) {
+            logs.push(`   [Draft Error] Failed for ${lead.email}: ${err.message}`);
+          }
         }
-      }
 
-      // PHASE B: Email Dispatch — one-shot, sends the entire ready batch (no daily cap)
-      const leadsReadyToSend = await Lead.findAll({
-        where: {
-          campaignId: campaign.id,
-          status: "Interested",
-          aiDraft: { [Op.ne]: null } as any,
-        },
-      });
+        // PHASE B: Email Dispatch — one-shot, sends the entire ready batch (no daily cap)
+        const leadsReadyToSend = await Lead.findAll({
+          where: {
+            campaignId: campaign.id,
+            status: "Interested",
+            aiDraft: { [Op.ne]: null } as any,
+          },
+        });
 
-      // Send from the campaign's chosen sender — SES is domain-verified, so any
-      // assigned company email works as a real "From" address.
-      // The cron has no ambient brand, so the campaign names its own.
-      const fromEmail =
-        (await brandSender(campaign.senderEmail || campaignCreator?.companyEmail || "admin@rhinontech.in", campaign.siteId)) ||
-        "admin@rhinontech.in";
+        // Send from the campaign's chosen sender — SES is domain-verified, so any
+        // assigned company email works as a real "From" address.
+        // The cron has no ambient brand, so the campaign names its own.
+        const fromEmail =
+          (await brandSender(campaign.senderEmail || campaignCreator?.companyEmail || (await fallbackFromAddress()), campaign.siteId)) ||
+          (await fallbackFromAddress());
 
-      for (const lead of leadsReadyToSend) {
-        const outcome = await dispatchLeadEmail(
-          campaign,
-          lead,
-          senderName,
-          fromEmail,
-          "Automated campaign outreach email delivered."
+        for (const lead of leadsReadyToSend) {
+          const outcome = await dispatchLeadEmail(
+            campaign,
+            lead,
+            senderName,
+            fromEmail,
+            "Automated campaign outreach email delivered."
+          );
+          if (outcome.result === "sent") logs.push(`   [Email Sent] Delivered to ${lead.email}`);
+          else if (outcome.result === "skipped") logs.push(`   [Email Skipped] ${lead.email} is in the unsubscribe list.`);
+          else logs.push(
+            `   [Email Failed] ${lead.email} — ${outcome.reason}` +
+            (outcome.permanent ? " (marked Bounced)" : " (will retry next run)")
+          );
+
+        }
+
+        await syncCampaignCounts(campaign);
+        const completed = await maybeCompleteCampaign(campaign);
+        logs.push(
+          completed
+            ? `   [Done] All leads processed — campaign marked Completed.`
+            : `   [Done] Campaign cycle complete. Staying Active for future runs.`
         );
-        if (outcome.result === "sent") logs.push(`   [Email Sent] Delivered to ${lead.email}`);
-        else if (outcome.result === "skipped") logs.push(`   [Email Skipped] ${lead.email} is in the unsubscribe list.`);
-        else logs.push(
-          `   [Email Failed] ${lead.email} — ${outcome.reason}` +
-          (outcome.permanent ? " (marked Bounced)" : " (will retry next run)")
-        );
-
-      }
-
-      await syncCampaignCounts(campaign);
-      const completed = await maybeCompleteCampaign(campaign);
-      logs.push(
-        completed
-          ? `   [Done] All leads processed — campaign marked Completed.`
-          : `   [Done] Campaign cycle complete. Staying Active for future runs.`
-      );
+    
+      };
+      if (organizationId) await runForOrg(organizationId, processCampaign, { label: "cron:campaign" });
+      else await processCampaign();
     }
 
     res.json({ success: true, logs });

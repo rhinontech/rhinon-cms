@@ -3,8 +3,8 @@
 // either the campaign composer or a workflow's "Send email" node) renders
 // consistently, with the same cross-client list-style fixes and branding.
 
-const BRAND_LOGO_URL = process.env.BRAND_LOGO_URL || "https://www.rhinonlabs.com/Logo_Rhinon_Labs_Light.png";
-const COMPANY_ADDRESS = process.env.COMPANY_ADDRESS || ""; // registered address for compliant footer
+import { unsubscribePageUrl } from "./unsubscribeToken";
+
 export const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:5003";
 export const FRONTEND_URL = process.env.SITE_URL || process.env.RHINONLABS_URL || process.env.FRONTEND_URL || "https://rhinonlabs.com";
 
@@ -79,7 +79,22 @@ function inlineListStyles(html: string, textColor: string = "#18181b"): string {
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
+/**
+ * Who the mail is sent on behalf of. Footers, titles and the unsubscribe link
+ * all follow it; without one the platform's own branding is used, which is what
+ * every caller did before workspaces existed.
+ */
+export interface EmailBrand {
+  name: string;
+  isPlatform: boolean;
+  organizationId: string | null;
+  address?: string | null;
+}
+
+const PLATFORM_BRAND: EmailBrand = { name: "Rhinon Labs", isPlatform: true, organizationId: null };
+
 interface RenderContext {
+  brandName: string;
   richTextHtml: string;
   preheader: string;
   imageBlock: string;
@@ -92,11 +107,12 @@ function buildContext(
   imageUrl?: string,
   trackingPixelUrl?: string,
   email?: string,
-  textColor: string = "#18181b"
+  textColor: string = "#18181b",
+  brand: EmailBrand = PLATFORM_BRAND
 ): RenderContext {
   const preparedHtml = inlineListStyles(richTextHtml, textColor);
   const plain = stripHtml(preparedHtml);
-  const firstLine = plain.split(/\n/).find((l) => l.trim()) || "A quick note from Rhinon Labs";
+  const firstLine = plain.split(/\n/).find((l) => l.trim()) || `A quick note from ${brand.name}`;
   const preheader = esc(firstLine.slice(0, 120));
 
   const trackingPixel = trackingPixelUrl
@@ -107,11 +123,18 @@ function buildContext(
     ? `<tr><td style="padding:0 0 20px 0;"><img src="${imageUrl}" alt="" width="580" style="display:block;width:100%;max-width:580px;height:auto;border-radius:6px;border:0;" /></td></tr>`
     : "";
 
-  const unsubscribeUrl = email
-    ? `https://www.rhinonlabs.com/unsubscribe?email=${encodeURIComponent(email)}`
-    : `https://www.rhinonlabs.com/unsubscribe`;
+  // The platform keeps its own branded page on rhinonlabs.com; every other
+  // workspace gets a signed link to a neutral page hosted by the API, so a
+  // tenant's recipients are never sent to someone else's website — and the
+  // opt-out is recorded against the workspace that actually sent the mail.
+  const unsubscribeUrl = !brand.isPlatform && email
+    ? unsubscribePageUrl(email, brand.organizationId)
+    : email
+      ? `https://www.rhinonlabs.com/unsubscribe?email=${encodeURIComponent(email)}`
+      : `https://www.rhinonlabs.com/unsubscribe`;
 
   return {
+    brandName: esc(brand.name),
     richTextHtml: preparedHtml,
     preheader,
     imageBlock,
@@ -132,7 +155,7 @@ export function renderTemplate1(ctx: RenderContext): string {
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="color-scheme" content="light dark">
   <meta name="supported-color-schemes" content="light dark">
-  <title>Rhinon Labs</title>
+  <title>${ctx.brandName}</title>
   <!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
   <style>
     :root { color-scheme: light dark; supported-color-schemes: light dark; }
@@ -176,7 +199,7 @@ export function renderTemplate1(ctx: RenderContext): string {
           <tr>
             <td class="border-line" style="border-top:1px solid #f0f0f2;padding-top:20px;text-align:left;">
               <p class="text-muted" style="margin:0;font-size:12px;line-height:1.6;color:#a1a1aa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-                Rhinon Labs · <a href="${ctx.unsubscribeUrl}" target="_blank" style="color:#71717a;text-decoration:underline;">Unsubscribe</a>
+                ${ctx.brandName} · <a href="${ctx.unsubscribeUrl}" target="_blank" style="color:#71717a;text-decoration:underline;">Unsubscribe</a>
               </p>
             </td>
           </tr>
@@ -202,7 +225,7 @@ export function renderTemplate2(ctx: RenderContext): string {
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="color-scheme" content="light dark">
   <meta name="supported-color-schemes" content="light dark">
-  <title>Rhinon Labs</title>
+  <title>${ctx.brandName}</title>
   <!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
   <style>
     :root { color-scheme: light dark; supported-color-schemes: light dark; }
@@ -272,7 +295,7 @@ export function renderTemplate2(ctx: RenderContext): string {
           <tr>
             <td class="footer-bg" style="padding:18px 32px 22px 32px;border-top:1px solid #f1f5f9;background:#fafafa;text-align:center;">
               <p class="text-muted" style="margin:0;font-size:12px;line-height:1.5;color:#64748b;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-                Sent with precision from Rhinon Labs · <a href="${ctx.unsubscribeUrl}" target="_blank" style="color:#64748b;text-decoration:underline;">Unsubscribe</a>
+                Sent with precision from ${ctx.brandName} · <a href="${ctx.unsubscribeUrl}" target="_blank" style="color:#64748b;text-decoration:underline;">Unsubscribe</a>
               </p>
             </td>
           </tr>
@@ -299,7 +322,7 @@ export function renderTemplate3(ctx: RenderContext): string {
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="color-scheme" content="only light">
   <meta name="supported-color-schemes" content="light">
-  <title>Rhinon Labs Memo</title>
+  <title>${ctx.brandName}</title>
   <!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
   <style>
     :root { color-scheme: only light; supported-color-schemes: light; }
@@ -380,7 +403,7 @@ export function renderTemplate3(ctx: RenderContext): string {
           <tr>
             <td class="memo-footer bg-white-locked card-border" bgcolor="#ffffff" style="padding:20px 36px 24px 36px;border-top:1px solid #f3f4f6;background:#ffffff !important;background-color:#ffffff !important;text-align:left;">
               <p class="text-sub" style="margin:0;font-size:11px;line-height:1.6;color:#6b7280 !important;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-                Confidential &amp; Proprietary · Rhinon Labs<br/>
+                Confidential &amp; Proprietary · ${ctx.brandName}<br/>
                 <a href="${ctx.unsubscribeUrl}" target="_blank" style="color:#6b7280 !important;font-weight:normal;text-decoration:underline;">Unsubscribe from this thread</a>
               </p>
             </td>
@@ -408,7 +431,7 @@ export function renderTemplate4(ctx: RenderContext): string {
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="color-scheme" content="light dark">
   <meta name="supported-color-schemes" content="light dark">
-  <title>Rhinon Labs</title>
+  <title>${ctx.brandName}</title>
   <!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
   <style>
     :root { color-scheme: light dark; supported-color-schemes: light dark; }
@@ -458,7 +481,7 @@ export function renderTemplate4(ctx: RenderContext): string {
           <tr>
             <td class="divider-line" style="padding:18px 36px 26px 36px;border-top:1px solid #f4f1eb;text-align:center;">
               <p class="text-muted" style="margin:0;font-size:12px;line-height:1.6;color:#a8a29e;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-                Sent from Rhinon Labs · <a href="${ctx.unsubscribeUrl}" target="_blank" style="color:#78716c;text-decoration:underline;">Unsubscribe</a>
+                Sent from ${ctx.brandName} · <a href="${ctx.unsubscribeUrl}" target="_blank" style="color:#78716c;text-decoration:underline;">Unsubscribe</a>
               </p>
             </td>
           </tr>
@@ -485,7 +508,7 @@ export function renderDefaultTemplate(ctx: RenderContext): string {
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="color-scheme" content="light dark">
   <meta name="supported-color-schemes" content="light dark">
-  <title>Rhinon Labs</title>
+  <title>${ctx.brandName}</title>
   <!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
   <style>
     :root { color-scheme: light dark; supported-color-schemes: light dark; }
@@ -554,6 +577,7 @@ export function renderEmailTemplate(
     imageUrl?: string;
     trackingPixelUrl?: string;
     email?: string;
+    brand?: EmailBrand;
   }
 ): string {
   const normalized = (templateId || "").toLowerCase().trim();
@@ -568,7 +592,8 @@ export function renderEmailTemplate(
     options.imageUrl,
     options.trackingPixelUrl,
     options.email,
-    textColor
+    textColor,
+    options.brand
   );
 
   switch (normalized) {
@@ -611,7 +636,8 @@ export function toEmailHtml(
   imageUrl?: string,
   trackingPixelUrl?: string,
   email?: string,
-  template?: string
+  template?: string,
+  brand?: EmailBrand
 ): string {
   const selectedTemplate = template || process.env.EMAIL_TEMPLATE || "template1";
   return renderEmailTemplate(selectedTemplate, {
@@ -619,5 +645,6 @@ export function toEmailHtml(
     imageUrl,
     trackingPixelUrl,
     email,
+    brand,
   });
 }

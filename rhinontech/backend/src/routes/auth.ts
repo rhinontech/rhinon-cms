@@ -17,6 +17,9 @@ import {
   provisionOrganizationDefaults,
 } from "../services/orgProvisioning";
 import { provisionOrgEmailDomain } from "../services/sesProvisioning";
+import { transactionalBrand } from "../services/companyProfile";
+import { sendVerificationEmail, readVerifyToken } from "../services/emailVerification";
+import { emailFlowLimiter } from "../middleware/rateLimit";
 
 const router = Router();
 
@@ -106,7 +109,7 @@ router.post("/signup", async (req: Request, res: Response) => {
           apiKeyHash: apiKey.hash,
           apiKeyPrefix: apiKey.prefix,
           apiKeyRotatedAt: new Date(),
-          settings: { displayName: String(organizationName).trim() },
+          settings: { displayName: String(organizationName).trim(), pendingEmailVerification: true },
         },
         { transaction }
       )
@@ -146,6 +149,12 @@ router.post("/signup", async (req: Request, res: Response) => {
       return null;
     });
 
+    // Also after the commit, for the same reason. Not awaited into the response:
+    // a slow mailer must not hold up a signup that already succeeded.
+    sendVerificationEmail(created, organization.id, organization.name).catch((err) =>
+      console.error("[Signup] Verification email failed:", err.message)
+    );
+
     const token = jwt.sign(
       {
         userId: created.id,
@@ -174,6 +183,7 @@ router.post("/signup", async (req: Request, res: Response) => {
         plan: organization.plan,
       },
       companyEmail: created.companyEmail,
+      emailVerificationPending: true,
       // Shown once. Only the hash is stored.
       apiKey: apiKey.key,
       email: email
@@ -310,6 +320,54 @@ router.post("/login", async (req: Request, res: Response) => {
   });
 });
 
+/**
+ * Email-verification link target. A plain GET that redirects to the login page:
+ * the token is signed, expires, and clearing the flag is idempotent, so a link
+ * scanner fetching it early does no harm.
+ */
+router.get("/verify-email", async (req: Request, res: Response) => {
+  const parsed = readVerifyToken(String(req.query.token ?? ""));
+  const target = (status: string) => res.redirect(`${env.frontendUrl}/auth/login?verified=${status}`);
+  if (!parsed) { target("invalid"); return; }
+
+  try {
+    const user = await runAsSystem("verify-email:resolve", () =>
+      User.unscoped().findByPk(parsed.userId, { attributes: ["id", "organizationId"] })
+    );
+    const organizationId = (user as any)?.organizationId as string | undefined;
+    if (!organizationId) { target("invalid"); return; }
+
+    const org = await runAsSystem("verify-email:org", () => Organization.findByPk(organizationId));
+    if (org?.settings?.pendingEmailVerification) {
+      const settings = { ...org.settings };
+      delete settings.pendingEmailVerification;
+      await org.update({ settings });
+    }
+    target("1");
+  } catch (err: any) {
+    console.error("[Auth] Email verification failed:", err.message);
+    target("error");
+  }
+});
+
+// Re-send the verification link to the signed-in owner.
+router.post("/resend-verification", authenticate, emailFlowLimiter, async (req: AuthRequest, res: Response) => {
+  const org = await Organization.findByPk(req.user!.organizationId);
+  if (!org?.settings?.pendingEmailVerification) {
+    res.json({ message: "Your email is already confirmed." });
+    return;
+  }
+  const user = await User.unscoped().findByPk(req.user!.userId, { attributes: ["id", "fullName", "personalEmail"] });
+  if (!user) { res.status(404).json({ message: "User not found" }); return; }
+  try {
+    await sendVerificationEmail(user, org.id, org.name);
+    res.json({ message: "Verification email sent." });
+  } catch (err: any) {
+    console.error("[Auth] Resend verification failed:", err.message);
+    res.status(500).json({ message: "Could not send the verification email." });
+  }
+});
+
 router.post("/logout", (_req: Request, res: Response) => {
   res.json({ message: "Logged out" });
 });
@@ -324,13 +382,15 @@ router.get("/me", authenticate, async (req: AuthRequest, res: Response) => {
   // frozen JWT claim) — this is what the client polls to stay in sync without
   // requiring a re-login after a permission or role change.
   const organization = await Organization.findByPk(req.user!.organizationId, {
-    attributes: ["id", "name", "slug", "emailDomain", "status", "plan", "isPlatform", "sesStatus"],
+    attributes: ["id", "name", "slug", "emailDomain", "status", "plan", "isPlatform", "sesStatus", "settings"],
   });
+  const { settings, ...orgFields } = (organization?.toJSON() ?? {}) as Record<string, any>;
   res.json({
     ...user.toJSON(),
     permissions: req.user!.permissions,
     roleSlug: req.user!.roleSlug,
-    organization,
+    organization: organization ? orgFields : organization,
+    emailVerificationPending: !!settings?.pendingEmailVerification,
   });
 });
 
@@ -401,7 +461,7 @@ router.post("/forgot-password", async (req: Request, res: Response) => {
     await user.update({ resetToken, resetTokenExpiry });
     try {
       const resetUrl = `${env.frontendUrl}/auth/reset-password?token=${resetToken}`;
-      const { subject, html, text } = resetPasswordEmail({ fullName: user.fullName, resetUrl });
+      const { subject, html, text } = resetPasswordEmail({ brand: await transactionalBrand((user as any).organizationId), fullName: user.fullName, resetUrl });
       await sendEmail({ to: user.personalEmail, subject, html, text });
     } catch (err) {
       console.error("Failed to send reset email:", err);

@@ -2,7 +2,7 @@ import PDFDocument from "pdfkit";
 import fs from "fs";
 import path from "path";
 import { User, LetterTemplate } from "../models";
-import { getObjectBuffer, SIGNATURE_KEY } from "./storage";
+import { getSignatureBuffer } from "./storage";
 import type { LetterBlock, LetterTemplateKey, LetterTokenMap } from "../types/letterBlocks";
 
 export type LetterType = "relieving" | "experience";
@@ -63,7 +63,7 @@ function letterParagraphs(type: LetterType, user: User): { salutation: string; p
 export async function generateLetterPdf(type: LetterType, user: User): Promise<Buffer> {
   // Fetched once per letter — cheap, and lets a newly-uploaded signature apply
   // immediately without redeploying.
-  const signatureBuffer = await getObjectBuffer(SIGNATURE_KEY).catch(() => null);
+  const signatureBuffer = await getSignatureBuffer().catch(() => null);
 
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ size: "A4", margins: { top: 64, bottom: 64, left: 64, right: 64 } });
@@ -446,7 +446,7 @@ export async function generateOfferLetterPdf(
   signature?: LetterSignature,
   contentBlocks?: LetterBlock[]
 ): Promise<Buffer> {
-  const signatureBuffer = await getObjectBuffer(SIGNATURE_KEY).catch(() => null);
+  const signatureBuffer = await getSignatureBuffer().catch(() => null);
   // Resolved+edited content, if provided (e.g. from Document.contentBlocks at
   // signing time), takes precedence over resolving the live template fresh —
   // that's what makes a pre-send AI edit survive to the signed PDF.
@@ -523,7 +523,7 @@ export async function generateNdaPdf(
   signature?: LetterSignature,
   contentBlocks?: LetterBlock[]
 ): Promise<Buffer> {
-  const signatureBuffer = await getObjectBuffer(SIGNATURE_KEY).catch(() => null);
+  const signatureBuffer = await getSignatureBuffer().catch(() => null);
   const blocks = contentBlocks ?? (await resolveLetterBlocks("nda", user)).blocks;
 
   return new Promise((resolve, reject) => {

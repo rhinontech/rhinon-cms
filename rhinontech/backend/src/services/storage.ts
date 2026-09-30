@@ -8,6 +8,8 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import crypto from "crypto";
 import path from "path";
+import { currentOrganizationId, runAsSystem } from "./tenantContext";
+import { Organization } from "../models/Organization";
 
 const s3 = new S3Client({
   region: process.env.AWS_REGION || "ap-south-1",
@@ -20,9 +22,82 @@ const s3 = new S3Client({
 const BUCKET = process.env.AWS_S3_BUCKET!;
 const REGION = process.env.AWS_REGION || "ap-south-1";
 
-// Fixed key — a single company signature, overwritten on re-upload. Used to sign
-// relieving/experience letters (services/letters.ts) once uploaded via /branding.
-export const SIGNATURE_KEY = "branding/signature.png";
+/**
+ * Object keys are namespaced per workspace: `<folder>/<organizationId>/<uuid>.<ext>`.
+ *
+ * The UUID alone is unguessable, but a namespace is what makes the rest possible:
+ * exporting or deleting one tenant's files is a prefix operation, and any key a
+ * client hands back to us can be checked against the caller's own prefix instead
+ * of being trusted. Keys written before this change have no org segment
+ * (`<folder>/<uuid>.<ext>`); they all belong to the platform workspace, which was
+ * the only one that existed, and isOwnKey() treats them that way.
+ */
+function namespacedKey(folder: string, ext: string): string {
+  const orgId = currentOrganizationId();
+  return orgId
+    ? `${folder}/${orgId}/${crypto.randomUUID()}${ext}`
+    : `${folder}/${crypto.randomUUID()}${ext}`;
+}
+
+let platformOrgId: string | null | undefined;
+async function isPlatformOrg(orgId: string): Promise<boolean> {
+  if (platformOrgId === undefined) {
+    const org = await runAsSystem("storage:platform-org", () =>
+      Organization.findOne({ where: { isPlatform: true }, attributes: ["id"] })
+    );
+    platformOrgId = org?.id ?? null;
+  }
+  return platformOrgId === orgId;
+}
+
+/**
+ * Whether the calling workspace may touch `key`. Use this on any key that
+ * arrives in a request body — never presign, read or attach a client-supplied
+ * key without it, or the request becomes a read oracle over other tenants' files.
+ */
+export async function isOwnKey(key: unknown): Promise<boolean> {
+  const orgId = currentOrganizationId();
+  if (typeof key !== "string" || !orgId || key.includes("..")) return false;
+  const parts = key.split("/");
+  if (parts.length === 3) return parts[1] === orgId;
+  if (parts.length === 2) return isPlatformOrg(orgId); // legacy, pre-namespacing
+  return false;
+}
+
+// Company signature used to sign relieving/experience letters (services/letters.ts),
+// uploaded via /branding. One per workspace — this used to be a single global key,
+// so one tenant's upload replaced every other tenant's signature on their letters.
+const LEGACY_SIGNATURE_KEY = "branding/signature.png";
+
+export function signatureKey(): string {
+  const orgId = currentOrganizationId();
+  if (!orgId) throw new Error("signatureKey() needs a tenant context");
+  return `branding/${orgId}/signature.png`;
+}
+
+/** The workspace's own signature key if present, else the legacy one for the platform org. */
+export async function resolveSignatureKey(): Promise<string | null> {
+  const own = signatureKey();
+  if (await objectExists(own)) return own;
+  const orgId = currentOrganizationId();
+  if (orgId && (await isPlatformOrg(orgId)) && (await objectExists(LEGACY_SIGNATURE_KEY))) {
+    return LEGACY_SIGNATURE_KEY;
+  }
+  return null;
+}
+
+export async function getSignatureBuffer(): Promise<Buffer | null> {
+  const key = await resolveSignatureKey();
+  return key ? getObjectBuffer(key) : null;
+}
+
+/** Every key a signature could live at for this workspace, for deletion. */
+export async function signatureKeysToDelete(): Promise<string[]> {
+  const keys = [signatureKey()];
+  const orgId = currentOrganizationId();
+  if (orgId && (await isPlatformOrg(orgId))) keys.push(LEGACY_SIGNATURE_KEY);
+  return keys;
+}
 
 // Stable, permanent S3 URL for objects under a publicly-readable prefix (e.g. content/).
 export function publicUrl(key: string): string {
@@ -40,7 +115,7 @@ export async function uploadBuffer(
   mimeType: string
 ): Promise<string> {
   const ext = path.extname(originalName) || "";
-  const key = `${folder}/${crypto.randomUUID()}${ext}`;
+  const key = namespacedKey(folder, ext);
 
   await s3.send(
     new PutObjectCommand({
@@ -61,7 +136,7 @@ export async function getPresignedUploadUrl(
   expiresIn = 300
 ): Promise<{ uploadUrl: string; key: string }> {
   const ext = path.extname(filename) || "";
-  const key = `${folder}/${crypto.randomUUID()}${ext}`;
+  const key = namespacedKey(folder, ext);
 
   const uploadUrl = await getSignedUrl(
     s3,

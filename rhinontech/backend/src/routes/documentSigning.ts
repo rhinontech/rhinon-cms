@@ -7,8 +7,37 @@ import { generateOfferLetterPdf, generateNdaPdf, LetterSignature } from "../serv
 import { uploadBuffer, deleteObject, getPresignedReadUrl } from "../services/storage";
 import { sendEmail } from "../services/mailer";
 import { welcomeEmail } from "../services/emailTemplates";
+import { runAsSystem, runForOrg } from "../services/tenantContext";
+import { transactionalBrand } from "../services/companyProfile";
 
 const router = Router();
+
+/**
+ * These routes are public — the signing token is the credential — so there is no
+ * session to say which workspace a request is for. Resolve it from the token,
+ * then run everything below inside that workspace so every later query (the
+ * employee, the letter blocks, the signature image) is tenant-scoped rather than
+ * reading across organizations.
+ */
+router.use("/:token", async (req, res, next) => {
+  try {
+    const row = await runAsSystem("document-signing:resolve-token", () =>
+      Document.unscoped().findOne({
+        where: { signingToken: req.params.token, signingTokenExpiry: { [Op.gt]: new Date() } },
+        attributes: ["id", "organizationId"],
+      })
+    );
+    const orgId = (row as any)?.organizationId as string | undefined;
+    if (!orgId) {
+      res.status(404).json({ message: "This signing link has expired or is invalid." });
+      return;
+    }
+    runForOrg(orgId, next, { label: "document-signing" });
+  } catch (err: any) {
+    console.error("[DocumentSigning] Token resolution failed:", err.message);
+    res.status(500).json({ message: "Could not load this signing session." });
+  }
+});
 
 // Offer letter is reviewed/signed before the NDA, regardless of DB row order —
 // alphabetically "nda" < "offer_letter", so this must be explicit.
@@ -164,7 +193,7 @@ router.post("/:token/documents/:documentId/sign", async (req: Request, res: Resp
       await user.update({ passwordHash, onboardingToken, onboardingTokenExpiry });
 
       const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:4200";
-      const { subject, html, text } = welcomeEmail({
+      const { subject, html, text } = welcomeEmail({ brand: await transactionalBrand(),
         fullName: user.fullName,
         companyEmail: user.companyEmail,
         tempPassword,

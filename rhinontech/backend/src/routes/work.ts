@@ -9,6 +9,7 @@ import { sendEmail } from "../services/mailer";
 import { collaboratorInviteEmail } from "../services/emailTemplates";
 import { ensureCollaboratorRole } from "../services/collaboratorRole";
 import { env } from "../config/env";
+import { transactionalBrand } from "../services/companyProfile";
 import {
   canAccessProject,
   canUseVisibility,
@@ -428,7 +429,7 @@ router.post("/projects/:id/collaborators", requireInternal, async (req: AuthRequ
 
     try {
       const frontendUrl = env.frontendUrls[0];
-      const { subject, html, text } = collaboratorInviteEmail({
+      const { subject, html, text } = collaboratorInviteEmail({ brand: await transactionalBrand(),
         fullName: guest.fullName,
         projectName: project.name,
         invitedByName: req.user!.fullName,

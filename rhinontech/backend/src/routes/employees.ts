@@ -12,6 +12,7 @@ import { sendEmail } from "../services/mailer";
 import { welcomeEmail, signDocumentsEmail, resetPasswordEmail } from "../services/emailTemplates";
 import { env } from "../config/env";
 import { uploadBuffer, deleteObject, getPresignedReadUrl, getPresignedUploadUrl } from "../services/storage";
+import { transactionalBrand } from "../services/companyProfile";
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
@@ -260,8 +261,8 @@ router.post("/", authorize("employees:write"), async (req: AuthRequest, res: Res
   let welcomeEmailSent = false;
   try {
     const template = signingUrl
-      ? signDocumentsEmail({ fullName, roleTitle: employee.roleTitle || undefined, signingUrl })
-      : welcomeEmail({
+      ? signDocumentsEmail({ brand: await transactionalBrand(), fullName, roleTitle: employee.roleTitle || undefined, signingUrl })
+      : welcomeEmail({ brand: await transactionalBrand(),
           fullName,
           companyEmail,
           tempPassword,
@@ -609,7 +610,7 @@ router.post("/:id/resend-onboarding", authorize("employees:write"), async (req: 
 
   try {
     const onboardingUrl = `${frontendUrl}/onboard?token=${onboardingToken}`;
-    const { subject, html, text } = welcomeEmail({
+    const { subject, html, text } = welcomeEmail({ brand: await transactionalBrand(),
       fullName: employee.fullName,
       companyEmail: employee.companyEmail,
       tempPassword,
@@ -708,7 +709,7 @@ router.post("/:id/documents/resend", authorize("employees:write"), async (req: A
 
     const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:4200";
     const signingUrl = `${frontendUrl}/sign-documents?token=${signingToken}`;
-    const { subject, html, text } = signDocumentsEmail({
+    const { subject, html, text } = signDocumentsEmail({ brand: await transactionalBrand(),
       fullName: employee.fullName,
       roleTitle: employee.roleTitle || undefined,
       signingUrl,
@@ -738,7 +739,7 @@ router.post("/:id/send-reset", authorize("employees:write"), async (req: AuthReq
 
   try {
     const resetUrl = `${env.frontendUrl}/auth/reset-password?token=${resetToken}`;
-    const { subject, html, text } = resetPasswordEmail({ fullName: employee.fullName, resetUrl });
+    const { subject, html, text } = resetPasswordEmail({ brand: await transactionalBrand(), fullName: employee.fullName, resetUrl });
     await sendEmail({ to: employee.personalEmail, via: "ses", subject, html, text });
   } catch (err) {
     console.error("Failed to send reset email:", err);

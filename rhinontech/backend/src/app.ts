@@ -51,8 +51,16 @@ import scheduleCallRoutes from "./routes/scheduleCall";
 import startupIdeasRoutes from "./routes/startupIdeas";
 import deployRoutes from "./routes/deploy";
 import eventsRoutes from "./routes/events";
+import { rateLimit, securityHeaders, loginLimiters, signupLimiters, emailFlowLimiter, tokenLimiter } from "./middleware/rateLimit";
 
 const app = express();
+
+// One reverse proxy (nginx) sits in front of this process. Trusting exactly one
+// hop makes req.ip the real client address, which the rate limiters key on;
+// trusting more would let a client choose its own address via X-Forwarded-For.
+app.set("trust proxy", 1);
+app.disable("x-powered-by");
+app.use(securityHeaders);
 
 const allowedOrigins = [
   ...env.frontendUrls,
@@ -78,6 +86,19 @@ app.use(express.json({ limit: "20mb" }));
 // One line per request, after the body parser so payloads are readable and before
 // the routes so nothing escapes it. Tune with LOG_REQUESTS / LOG_BODY / LOG_SKIP.
 app.use(requestLogger);
+
+// Abuse protection for the unauthenticated entry points. Mounted after the body
+// parser (login limiting keys on the account being attempted) and before the
+// routers so a rejected request never reaches bcrypt or the database.
+app.post("/auth/login", ...loginLimiters);
+app.post("/auth/signup", ...signupLimiters);
+app.get("/auth/signup/slug/:slug", tokenLimiter);
+app.post("/auth/forgot-password", emailFlowLimiter);
+app.post("/auth/reset-password", tokenLimiter);
+app.use("/auth/onboard", tokenLimiter);
+app.use("/document-signing", tokenLimiter);
+app.use("/public/unsubscribe", tokenLimiter);
+app.post("/public/web-leads", rateLimit({ name: "web-leads", windowMs: 60 * 60_000, max: 30 }));
 
 import workflowsRoutes from "./routes/workflows";
 
