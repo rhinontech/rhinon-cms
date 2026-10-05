@@ -552,7 +552,99 @@ check("signup reports email verification pending", A.res.json?.emailVerification
 }
 
 
-// ── 19. Nothing secret reached the server log (runs last so it sees every secret generated) ──
+// ── 20. Customer analytics: snippet, keyed collector, domain allow-list ─────
+{
+  const script = await call("/t.js");
+  check("the tracker script is served as JavaScript", script.status === 200 && /javascript/.test(script.headers.get("content-type") ?? "") && script.text.includes("/collect") && script.text.includes("data-key"), `status ${script.status}`);
+
+  const overview = await call("/analytics/overview", { token: B.token });
+  check("a customer workspace can read its own analytics", overview.status === 200, `status ${overview.status}`);
+
+  const setup = await call("/analytics/setup", { token: B.token });
+  const key = setup.json?.key;
+  check("setup issues a public tracking key", setup.status === 200 && /^rt_[0-9a-f]{24}$/.test(key ?? ""), setup.text.slice(0, 120));
+  check("...but withholds the snippet until a domain is registered", setup.json?.snippet === null && setup.json?.domains?.length === 0);
+  const siteB = (await db.query(`SELECT id FROM sites WHERE "organizationId"=$1 AND "isDefault"=true`, [B.org.id])).rows[0].id;
+  const views = async (siteId) => Number((await db.query(`SELECT count(*) FROM page_views WHERE "siteId"=$1`, [siteId])).rows[0].count);
+  const beacon = (k, origin, extra = {}) => call("/collect", {
+    method: "POST", raw: true,
+    body: JSON.stringify({ k, visitorId: "v-" + crypto.randomUUID(), sessionId: "s1", path: "/pricing?x=1", title: "Pricing", referrer: "https://www.google.com/", ...extra }),
+    headers: { "Content-Type": "text/plain", ...(origin ? { Origin: origin } : {}) },
+  });
+
+  const before = await beacon(key, "https://shop-b.example.com");
+  check("nothing is recorded before a domain is registered", before.status === 204 && (await views(siteB)) === 0);
+
+  const unauth = await call("/analytics/setup/domains", { method: "PUT", body: { domains: ["x.com"] } });
+  check("changing domains needs a signed-in user", unauth.status === 401, `status ${unauth.status}`);
+  const badDomain = await call("/analytics/setup/domains", { method: "PUT", token: B.token, body: { domains: ["not a domain"] } });
+  check("a malformed domain is rejected", badDomain.status === 400, `status ${badDomain.status}`);
+  const tooMany = await call("/analytics/setup/domains", { method: "PUT", token: B.token, body: { domains: Array.from({ length: 11 }, (_, i) => `d${i}.example.com`) } });
+  check("a site cannot register an unbounded domain list", tooMany.status === 400, `status ${tooMany.status}`);
+
+  const saved = await call("/analytics/setup/domains", { method: "PUT", token: B.token, body: { domains: ["https://www.Shop-B.example.com/pricing?x=1", "shop-b.example.com"] } });
+  check("domains are normalised and de-duplicated", saved.status === 200 && JSON.stringify(saved.json?.domains) === JSON.stringify(["shop-b.example.com"]), JSON.stringify(saved.json?.domains));
+  check("the snippet names the key and the script URL", saved.json?.snippet?.includes(`data-key="${key}"`) && saved.json?.snippet?.includes("/t.js"), saved.json?.snippet);
+
+  const ok = await beacon(key, "https://shop-b.example.com");
+  const sub = await beacon(key, "https://www.shop-b.example.com");
+  const deep = await beacon(key, "https://blog.shop-b.example.com");
+  const viaReferer = await call("/collect", { method: "POST", raw: true, body: JSON.stringify({ k: key, visitorId: "vr", sessionId: "s", path: "/a" }), headers: { "Content-Type": "text/plain", Referer: "https://shop-b.example.com/a" } });
+  check("a beacon from the registered domain (and its subdomains) is recorded", [ok, sub, deep, viaReferer].every((r) => r.status === 204) && (await views(siteB)) === 4, `rows ${await views(siteB)}`);
+
+  const evil = await beacon(key, "https://evil.com");
+  const lookalike = await beacon(key, "https://shop-b.example.com.evil.com");
+  const suffix = await beacon(key, "https://notshop-b.example.com");
+  const noOrigin = await beacon(key, null);
+  check("beacons from any other host, a look-alike or no origin are dropped", [evil, lookalike, suffix, noOrigin].every((r) => r.status === 204) && (await views(siteB)) === 4, `rows ${await views(siteB)}`);
+
+  const row = (await db.query(`SELECT * FROM page_views WHERE "siteId"=$1 ORDER BY "createdAt" LIMIT 1`, [siteB])).rows[0];
+  check("the row belongs to this workspace and site, path has no query string", row.organizationId === B.org.id && row.path === "/pricing" && row.channel === "Organic Search", JSON.stringify({ o: row.organizationId, p: row.path, c: row.channel }));
+  check("customer traffic is never run through the visiting-company lookup", row.companyName === null && row.companyDomain === null);
+
+  const afterEvil = await call("/analytics/setup", { token: B.token });
+  check("setup reports the last host that was refused, so a typo is diagnosable", afterEvil.json?.rejected?.host === "(no origin)" || !!afterEvil.json?.rejected?.host, JSON.stringify(afterEvil.json?.rejected));
+  check("...and that traffic has arrived", afterEvil.json?.events24h === 4 && !!afterEvil.json?.lastEventAt, JSON.stringify([afterEvil.json?.events24h, afterEvil.json?.lastEventAt]));
+
+  const bogus = await beacon("rt_000000000000000000000000", "https://shop-b.example.com");
+  check("an unknown key records nothing and reveals nothing", bogus.status === 204 && bogus.text === "");
+
+  // Another workspace's key cannot write into this one, and its numbers stay apart.
+  const aSetup = await call("/analytics/setup", { token: A.token });
+  await call("/analytics/setup/domains", { method: "PUT", token: A.token, body: { domains: ["shop-a.example.com"] } });
+  const cross = await beacon(aSetup.json?.key, "https://shop-b.example.com");
+  check("one workspace's key does not accept another workspace's domain", cross.status === 204 && (await views(siteB)) === 4);
+  await beacon(aSetup.json?.key, "https://shop-a.example.com");
+  const aRows = (await db.query(`SELECT count(*) FROM page_views WHERE "organizationId"=$1`, [A.org.id])).rows[0].count;
+  check("each workspace only gets its own pageviews", Number(aRows) === 1 && (await views(siteB)) === 4, `a=${aRows}`);
+  const aOverview = await call("/analytics/overview", { token: A.token });
+  const bOverview = await call("/analytics/overview", { token: B.token });
+  check("the dashboards agree", JSON.stringify(aOverview.json).includes("1") && aOverview.text !== bOverview.text, `${aOverview.text.slice(0, 120)} | ${bOverview.text.slice(0, 120)}`);
+
+  // Rotating the key kills the old snippet at once.
+  const rotated = await call("/analytics/setup/rotate-key", { method: "POST", token: B.token });
+  check("rotating issues a different key", rotated.status === 200 && rotated.json?.key !== key && /^rt_/.test(rotated.json?.key ?? ""));
+  const stale = await beacon(key, "https://shop-b.example.com");
+  const fresh = await beacon(rotated.json?.key, "https://shop-b.example.com");
+  check("the old snippet stops collecting and the new one works", stale.status === 204 && fresh.status === 204 && (await views(siteB)) === 5, `rows ${await views(siteB)}`);
+
+  // A suspended workspace stops collecting (key resolved after the status change, so not cached).
+  const C2 = await mkOrg("susp");
+  const cSetup = await call("/analytics/setup", { token: C2.token });
+  await call("/analytics/setup/domains", { method: "PUT", token: C2.token, body: { domains: ["suspended.example.com"] } });
+  await db.query(`UPDATE organizations SET status='suspended' WHERE id=$1`, [C2.org.id]);
+  const susp = await beacon(cSetup.json?.key, "https://suspended.example.com");
+  const suspRows = (await db.query(`SELECT count(*) FROM page_views WHERE "organizationId"=$1`, [C2.org.id])).rows[0].count;
+  check("a suspended workspace records nothing", susp.status === 204 && Number(suspRows) === 0, `rows ${suspRows}`);
+
+  // rhinonlabs.com keeps working exactly as before: no key, resolved to the platform workspace.
+  const platformBefore = Number((await db.query(`SELECT count(*) FROM page_views p JOIN organizations o ON o.id=p."organizationId" WHERE o."isPlatform"`)).rows[0].count);
+  const legacy = await call("/public/track", { method: "POST", body: { visitorId: "legacy-v", sessionId: "legacy-s", path: "/blogs?x=1", referrer: "https://www.linkedin.com/" } });
+  const platformAfter = Number((await db.query(`SELECT count(*) FROM page_views p JOIN organizations o ON o.id=p."organizationId" WHERE o."isPlatform"`)).rows[0].count);
+  check("the legacy /public/track beacon still lands on the platform workspace", legacy.status === 204 && platformAfter === platformBefore + 1, `${platformBefore} -> ${platformAfter}`);
+}
+
+// ── 21. Nothing secret reached the server log (runs last so it sees every secret generated) ──
 {
   if (process.env.SERVER_LOG) {
     await new Promise((r) => setTimeout(r, 300));

@@ -15,6 +15,7 @@ import { enrollRealtimeLead } from "../services/workflowEngine";
 import { extractClientIp, lookupIpLocation, lookupIpLocationCached } from "../services/geolocation";
 import { runForOrg } from "../services/tenantContext";
 import { legal } from "../config/legal";
+import { parseBeaconBody, recordPageview, enrichGeoInBackground } from "../services/pageviewIngest";
 
 const router = Router();
 
@@ -322,111 +323,15 @@ router.post("/platform-leads", async (req: Request, res: Response) => {
 // always returns fast and never lets a tracking failure surface to the visitor.
 router.post("/track", express.text({ type: ["text/plain"] }), async (req: Request, res: Response) => {
   try {
-    // express.json handled application/json; express.text handled text/plain (a JSON string).
-    let b: any = req.body;
-    if (typeof b === "string") {
-      try { b = JSON.parse(b); } catch { b = {}; }
-    }
-    b = b || {};
-
-    const str = (v: any, max = 512): string | null => {
-      const s = (v ?? "").toString().trim();
-      return s === "" ? null : s.slice(0, max);
-    };
-
-    // Path is required; strip any querystring/hash so grouping by page is clean.
-    let path = str(b.path, 512);
-    if (path) path = path.split("?")[0].split("#")[0];
-    if (!path || !path.startsWith("/")) {
-      res.status(204).end(); // ignore junk silently
-      return;
-    }
-
-    const visitorId = str(b.visitorId, 64);
-    const sessionId = str(b.sessionId, 64);
-    if (!visitorId || !sessionId) {
-      res.status(204).end();
-      return;
-    }
-
-    const referrer = str(b.referrer, 1024);
-    const referrerHost = parseHost(referrer);
-    const userAgent = str(req.headers["user-agent"], 1024);
-    // Treat both the configured site host and the host that sent this beacon as "us",
-    // so internal navigation reads as Direct (not Referral) on localhost and in prod.
-    const originHost = parseHost((req.headers.origin as string) || null);
-    const selfHosts = [parseHost(env.siteUrl), originHost];
-
-    const utmSource = str(b.utmSource, 256);
-    const utmMedium = str(b.utmMedium, 256);
-    const utmCampaign = str(b.utmCampaign, 256);
-    const utmTerm = str(b.utmTerm, 256);
-    const utmContent = str(b.utmContent, 256);
-
-    const channel = classifyChannel({ referrerHost, utmMedium, selfHosts });
-    const isBot = isBotUserAgent(userAgent);
-
-    // Resolve the visiting organisation from the request IP, then let the IP go.
-    // Bots are skipped — they'd burn lookup quota for no signal.
-    let companyName: string | null = null;
-    let companyDomain: string | null = null;
-    if (!isBot && isIpCompanyLookupEnabled()) {
-      const ip = clientIpFrom(req.headers as any, req.socket?.remoteAddress);
-      const hit = await lookupCompanyByIp(ip);
-      if (hit) {
-        companyName = hit.name;
-        companyDomain = hit.domain;
-      }
-    }
-
     // Which brand's traffic this is. The beacon may name a site (`domain`), and
     // the Uppercurve front-end does; rhinonlabs.com sends nothing and falls
     // through to the workspace's default site, which is Rhinon Labs.
+    const b = parseBeaconBody(req.body);
     const site = await resolvePublicSite(b.site ?? b.domain ?? req.query.domain);
 
-    const view = await PageView.create({
-      siteId: site?.id ?? null,
-      visitorId,
-      sessionId,
-      path,
-      companyName,
-      companyDomain,
-      title: str(b.title, 512),
-      referrer,
-      referrerHost,
-      channel,
-      utmSource,
-      utmMedium,
-      utmCampaign,
-      utmTerm,
-      utmContent,
-      userAgent,
-      isBot,
-    });
-
-    res.status(204).end();
-
-    // Geo is resolved AFTER responding: the beacon must never wait on a third-party
-    // lookup. Bots are skipped — they only burn the rate limit. The lookup is cached
-    // per IP, so a visitor reading several pages costs one call.
-    if (!isBot) {
-      void (async () => {
-        try {
-          const ip = extractClientIp(req);
-          const geo = await lookupIpLocationCached(ip);
-          if (!geo || (geo.latitude == null && geo.country == null)) return;
-          await view.update({
-            country: geo.country ?? null,
-            region: geo.region ?? null,
-            city: geo.city ?? null,
-            latitude: geo.latitude ?? null,
-            longitude: geo.longitude ?? null,
-          });
-        } catch (err) {
-          console.error("Pageview geo enrichment failed:", err);
-        }
-      })();
-    }
+    const view = await recordPageview(req, b, { siteId: site?.id ?? null, companyLookup: true });
+    res.status(204).end(); // junk is ignored silently, and so are failures below
+    if (view) enrichGeoInBackground(req, view);
   } catch (err) {
     console.error("Failed to record pageview:", err);
     res.status(204).end(); // never surface tracking errors to the visitor

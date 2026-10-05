@@ -41,6 +41,7 @@ import aiRoutes from "./routes/ai";
 import contentRoutes from "./routes/content";
 import sitesRoutes from "./routes/sites";
 import analyticsRoutes from "./routes/analytics";
+import collectRoutes from "./routes/collect";
 import docsAccessRoutes from "./routes/docs-access";
 import brandingRoutes from "./routes/branding";
 import documentSigningRoutes from "./routes/documentSigning";
@@ -89,7 +90,7 @@ const restrictedCors = cors({
   credentials: true,
 });
 app.use((req, res, next) =>
-  req.path.startsWith("/public") ? openCors(req, res, next) : restrictedCors(req, res, next)
+  req.path.startsWith("/public") || req.path === "/collect" || req.path === "/t.js" ? openCors(req, res, next) : restrictedCors(req, res, next)
 );
 app.use(express.json({ limit: "20mb" }));
 
@@ -156,6 +157,8 @@ app.use("/workspace", workspaceRoutes);
 app.use("/email-domain", emailDomainRoutes);
 app.use("/platform/organizations", platformOrgsRoutes);
 app.use("/analytics", analyticsRoutes);
+// Customer tracking snippet (/t.js) and its ingest (/collect): keyed, not tenant-resolved.
+app.use(collectRoutes);
 app.use("/startup-ideas", startupIdeasRoutes);
 app.use("/deploy", deployRoutes);
 app.use("/docs-access", docsAccessRoutes);

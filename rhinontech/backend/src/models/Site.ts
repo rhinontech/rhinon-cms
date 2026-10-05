@@ -39,6 +39,14 @@ interface SiteAttributes {
   supportsEvents: boolean;
   supportsCaseStudies: boolean;
   settings: Record<string, unknown>;
+  /**
+   * Public write-only key embedded in the tracking snippet. It only lets a page
+   * ADD a pageview to this site; it reads nothing, so it is safe in page source.
+   * Null until analytics is first set up for the site.
+   */
+  analyticsKey: string | null;
+  /** Hostnames allowed to report under analyticsKey (subdomains included). */
+  trackedDomains: string[];
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -46,7 +54,7 @@ interface SiteAttributes {
 interface SiteCreationAttributes
   extends Optional<
     SiteAttributes,
-    "id" | "siteUrl" | "sendingDomain" | "isDefault" | "supportsEvents" | "supportsCaseStudies" | "settings"
+    "id" | "siteUrl" | "sendingDomain" | "isDefault" | "supportsEvents" | "supportsCaseStudies" | "settings" | "analyticsKey" | "trackedDomains"
   > {}
 
 export class Site
@@ -62,6 +70,8 @@ export class Site
   declare supportsEvents: boolean;
   declare supportsCaseStudies: boolean;
   declare settings: Record<string, unknown>;
+  declare analyticsKey: string | null;
+  declare trackedDomains: string[];
   declare readonly createdAt: Date;
   declare readonly updatedAt: Date;
 }
@@ -77,6 +87,8 @@ Site.init(
     supportsEvents: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
     supportsCaseStudies: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
     settings: { type: DataTypes.JSONB, allowNull: false, defaultValue: {} },
+    analyticsKey: { type: DataTypes.STRING, allowNull: true },
+    trackedDomains: { type: DataTypes.ARRAY(DataTypes.STRING), allowNull: false, defaultValue: [] },
   },
   {
     sequelize,
@@ -84,6 +96,10 @@ Site.init(
     timestamps: true,
     // Slugs only have to be unique inside a workspace: two tenants may both
     // call their site "blog".
-    indexes: [{ unique: true, fields: ["organizationId", "slug"] }],
+    indexes: [
+      { unique: true, fields: ["organizationId", "slug"] },
+      // Looked up on every tracked pageview, across workspaces.
+      { unique: true, fields: ["analyticsKey"] },
+    ],
   }
 );

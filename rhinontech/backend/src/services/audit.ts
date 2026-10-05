@@ -70,7 +70,7 @@ const AUDITED_MOUNTS = new Set([
   "/roles", "/permissions", "/employees", "/payroll", "/people", "/branding",
   "/billing", "/letter-templates", "/mailbox-addresses", "/provisioning",
   "/google-calendar", "/linkedin", "/sites", "/documents", "/leave", "/performance",
-  "/workspace", "/email-domain",
+  "/workspace", "/email-domain", "/analytics",
 ]);
 
 export function auditMutations(req: Request, res: Response, next: NextFunction) {
