@@ -2,11 +2,12 @@ import { Router, Request, Response } from "express";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { simpleParser } from "mailparser";
 import { Op } from "sequelize";
-import { InboxEmail, Lead, CampaignActivity, Activity } from "../models";
+import { InboxEmail, Lead, CampaignActivity, Activity, Site } from "../models";
 import { stopEnrollmentsForLead } from "../services/workflowEngine";
 import { uploadBuffer } from "../services/storage";
 import { env } from "../config/env";
-import { siteIdForRecipient } from "../services/siteSender";
+import { resolveInboundRecipient, InboundTarget } from "../services/inboundRecipient";
+import { runForOrg } from "../services/tenantContext";
 
 const router = Router();
 
@@ -95,6 +96,28 @@ router.post("/ses-inbound", async (req: Request, res: Response) => {
         const htmlBody = parsed.html || parsed.textAsHtml || parsed.text || "";
         const snippet = parsed.text ? parsed.text.substring(0, 160) : "";
 
+        // The envelope recipients are the addresses SES actually accepted for us, so a
+        // Cc/Bcc/list delivery counts; the headers are only the fallback.
+        const envelope: string[] = Array.isArray(receipt.recipients) ? receipt.recipients : [];
+        const wanted = new Set<string>(
+          (envelope.length ? envelope : [...toEmails, ...ccEmails]).map((r: string) => (r || "").toLowerCase()).filter(Boolean)
+        );
+        const byOrg = new Map<string, InboundTarget[]>();
+        for (const recipient of wanted) {
+          const target = await resolveInboundRecipient(recipient);
+          if (target) byOrg.set(target.organizationId, [...(byOrg.get(target.organizationId) ?? []), target]);
+        }
+        if (byOrg.size === 0) {
+          console.warn(`[Webhook] Dropped inbound mail for ${[...wanted].join(", ")}: no matching workspace`);
+          res.status(200).send("OK");
+          return;
+        }
+
+        // One pass per workspace, inside its own tenant context, so every read and
+        // write below is scoped to (and stamped with) that organization.
+        for (const [organizationId, orgTargets] of byOrg) {
+          await runForOrg(organizationId, async () => {
+
         // Store attachments to S3 once; every recipient copy shares the keys.
         const attachments: { key: string; name: string; size: number; mimeType: string }[] = [];
         for (const att of parsed.attachments ?? []) {
@@ -141,11 +164,15 @@ router.post("/ses-inbound", async (req: Request, res: Response) => {
 
         // SES can send emails to multiple recipients in our domain.
         // We should create a copy in the inbox for each valid internal recipient.
-        for (const recipient of toEmails) {
+        const orgDefaultSite = (await Site.findOne({ where: { isDefault: true }, attributes: ["id"] }))?.id ?? null;
+        for (const target of orgTargets) {
+          // SNS delivers at-least-once; a redelivery must not double-file.
+          const already = await InboxEmail.findOne({ where: { messageId, ownerEmail: target.address }, attributes: ["id"] });
+          if (already) continue;
           await InboxEmail.create({
             threadKey,
             folder: "inbox",
-            ownerEmail: recipient.toLowerCase(),
+            ownerEmail: target.address,
             fromName: fromName,
             fromEmail: fromEmail,
             toEmails: toEmails,
@@ -165,7 +192,7 @@ router.post("/ses-inbound", async (req: Request, res: Response) => {
             // hello@uppercurve.in is Uppercurve's whether or not we know the
             // sender. The replying lead's brand is the fallback for the shared
             // platform domain, where the recipient alone cannot tell us.
-            siteId: (await siteIdForRecipient(recipient)) ?? repliedLead?.siteId ?? null,
+            siteId: target.siteId ?? repliedLead?.siteId ?? orgDefaultSite,
             sentAt: parsed.date || new Date(),
           });
         }
@@ -200,6 +227,8 @@ router.post("/ses-inbound", async (req: Request, res: Response) => {
             body: snippet || null,
             metadata: { source: "reply-webhook", campaignId: repliedLead.campaignId },
           });
+        }
+          }, { label: "ses-inbound" });
         }
       }
       res.status(200).send("OK");
