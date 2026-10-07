@@ -1,12 +1,17 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import type { Course } from "@/components/Pages/Courses/courseData";
 import { DarkGrid, GradientText, PrimaryCta } from "@/components/Pages/Courses/CourseLanding/ui";
+import CourseEnrollModal from "@/components/Pages/Courses/CourseEnrollModal";
 
 /** Card colours for the fanned deck, matching the course page's module stack. */
 const DECK = ["bg-[#EBF3FF] text-[#0B1B3D]", "bg-[#A9E4FF] text-[#0B1B3D]", "bg-[#0052FF] text-white", "bg-[#052B82] text-white"];
 
 /** The flagship course, pitched in one block, with its modules fanned out like a deck. */
 export default function FeaturedCourse({ course }: { course: Course }) {
+  const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false);
   const deck = course.modules.slice(0, DECK.length);
   return (
     <section className="relative overflow-hidden bg-[#06102B] text-white">
@@ -19,10 +24,11 @@ export default function FeaturedCourse({ course }: { course: Course }) {
             New · {course.title} {course.titleAccent}
           </p>
           <h2 className="mt-6 text-[40px] sm:text-6xl lg:text-[68px] font-extrabold tracking-[-0.04em] leading-[1]">
-            Go from 0 to 1 in <GradientText>agentic AI.</GradientText>
+            Go from 0 to 1 in <GradientText>Agentic AI.</GradientText>
           </h2>
           <p className="mt-6 text-lg text-white/65 leading-relaxed max-w-lg">
-            A six-week live cohort. You won&apos;t just understand agents — you&apos;ll build fifteen of them, and launch one of your own on Demo Day.
+            6-Weeks Live Hands-On Program. You build & ship 10+ AI Agents, from No-Code Automations to Multi-Agent Systems, with a Mentor Guidance.
+
           </p>
 
           <dl className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-y-6 max-w-lg">
@@ -36,7 +42,7 @@ export default function FeaturedCourse({ course }: { course: Course }) {
           </dl>
 
           <div className="mt-10 flex flex-wrap items-center gap-3">
-            <PrimaryCta href={`/courses/${course.slug}#pricing`}>Enroll now</PrimaryCta>
+            <PrimaryCta onClick={() => setIsEnrollModalOpen(true)}>Enroll now</PrimaryCta>
             <Link
               href={`/courses/${course.slug}#curriculum`}
               className="inline-flex items-center gap-2 border border-white/25 text-white hover:bg-white hover:text-[#0B1B3D] font-bold text-xs sm:text-[13px] tracking-wider uppercase px-7 py-4 rounded-[4px] transition-colors"
@@ -82,6 +88,12 @@ export default function FeaturedCourse({ course }: { course: Course }) {
           </span>
         </Link>
       </div>
+
+      <CourseEnrollModal
+        isOpen={isEnrollModalOpen}
+        onClose={() => setIsEnrollModalOpen(false)}
+        courseTitle={`${course.title} ${course.titleAccent || ""}`.trim()}
+      />
     </section>
   );
 }

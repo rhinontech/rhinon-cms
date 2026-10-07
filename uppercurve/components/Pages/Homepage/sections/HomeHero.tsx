@@ -100,22 +100,23 @@ export default function HomeHero({ course, nextEvent }: { course: Course; nextEv
               <span className="absolute inline-flex h-full w-full rounded-full bg-[#00C2FF] opacity-70 animate-ping" />
               <span className="relative inline-flex w-2 h-2 rounded-full bg-[#00C2FF]" />
             </span>
-            Career growth for the AI era
+            LIVE LEARNING FOR THE AI ERA
           </p>
           <h1 className="mt-7 text-[48px] sm:text-7xl lg:text-[84px] font-extrabold tracking-[-0.045em] leading-[0.98]">
-            Move beyond your <GradientText>learning curve.</GradientText>
+            Move beyond your <GradientText>Learning Curve.</GradientText>
           </h1>
           <p className="mt-7 text-lg sm:text-xl text-white/70 leading-relaxed max-w-xl">
-            Learn practical AI skills live, build real projects, and meet the people who move careers forward.
+            Live, Hands-on Programs where you build real AI Projects, Learn from people who do this at work & Meet the community that moves careers forward.
+
           </p>
           <p className="mt-5 font-mono text-[12px] tracking-[0.24em] uppercase text-[#7DD3FC]">Learn · Build · Grow</p>
           <div className="mt-10 flex flex-wrap items-center gap-3">
             <PrimaryCta href={`/courses/${course.slug}`}>Explore the course</PrimaryCta>
             <Link
-              href="/events"
+              href="/community"
               className="inline-flex items-center gap-2 border border-white/25 text-white hover:bg-white hover:text-[#0B1B3D] font-bold text-xs sm:text-[13px] tracking-wider uppercase px-7 py-4 rounded-[4px] transition-colors"
             >
-              Browse free events
+              Join WhatsApp community
             </Link>
           </div>
         </div>
