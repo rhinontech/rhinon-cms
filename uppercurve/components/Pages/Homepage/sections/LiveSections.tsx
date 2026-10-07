@@ -31,8 +31,8 @@ export function UpcomingEvents({ upcoming }: { upcoming: EventDetailModel[] }) {
         <div className="flex flex-wrap items-end justify-between gap-6">
           <CourseHeading
             eyebrow="Upcoming events"
-            title="Learn live. It's free."
-            description="Join a session, build alongside the host, and meet people moving in the same direction."
+            title="Free Certification Events:"
+            description="Join a Session, build alongside the host & Meet people heading in the same direction."
           />
           {upcoming.length ? <SeeAll href="/events">Discover all events</SeeAll> : null}
         </div>

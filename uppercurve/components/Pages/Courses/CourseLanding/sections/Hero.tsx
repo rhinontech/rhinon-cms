@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Check } from "lucide-react";
 import type { Course } from "../../courseData";
 import { DarkGrid, GradientText, PrimaryCta } from "../ui";
+import ToolLogo from "./ToolLogo";
 
 /**
  * Dark opener: the pitch on the left, the enrolment card on the right, the
@@ -52,7 +53,7 @@ export default function Hero({ course }: { course: Course }) {
               <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 font-mono text-[10.5px] tracking-[0.18em] uppercase">
                 <span className="inline-flex items-center gap-2 text-emerald-300">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" aria-hidden />
-                  Enrolling now
+                  Enrolling now: Limited Seats
                 </span>
                 <span className="text-white/45">{course.cohortLabel}</span>
               </div>
@@ -72,12 +73,12 @@ export default function Hero({ course }: { course: Course }) {
                   ))}
                 </ul>
                 <PrimaryCta href="#pricing" className="mt-7 w-full">
-                  Claim your seat
+                  CLAIM YOUR SEAT
                 </PrimaryCta>
                 <p className="mt-4 text-center text-[13px] text-white/45">
                   Not ready?{" "}
                   <Link href={course.tasterHref} className="text-white/75 underline underline-offset-4 hover:text-white">
-                    Try a free live workshop
+                    Try a Free Live Workshop
                   </Link>
                 </p>
               </div>
@@ -97,10 +98,10 @@ export default function Hero({ course }: { course: Course }) {
               <span
                 key={`${tool}-${index}`}
                 aria-hidden={index >= course.tools.length}
-                className="inline-flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 font-mono text-[13px] text-white/80 whitespace-nowrap"
+                className="inline-flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 font-mono text-[13px] text-white/80 whitespace-nowrap hover:border-white/20 transition-colors"
               >
-                <span className="grid place-items-center w-6 h-6 rounded-md bg-white text-[#0B1B3D] text-[11px] font-bold font-sans">
-                  {tool.charAt(0)}
+                <span className="grid place-items-center w-6 h-6 rounded-md bg-white/[0.06] p-1 shrink-0">
+                  <ToolLogo tool={tool} className="w-4 h-4" />
                 </span>
                 {tool}
               </span>
@@ -114,11 +115,11 @@ export default function Hero({ course }: { course: Course }) {
         <p className="max-w-5xl text-[34px] sm:text-5xl lg:text-[64px] font-extrabold tracking-[-0.035em] leading-[1.06]">
           <span className="text-white/35">Everyone is</span> talking <span className="text-white/35">to AI.</span>{" "}
           <span className="inline bg-[#0052FF] px-2 -mx-0.5 rounded-md box-decoration-clone">Almost no one</span>{" "}
-          <span className="text-white/35">is</span> deploying <span className="text-white/35">it.</span>
+          <span className="text-white/35">is</span> Building <span className="text-white/35">with AI.</span>
         </p>
         <p className="mt-8 text-lg sm:text-xl text-white/65">
-          Learn to <span className="text-white font-semibold">build, deploy and ship</span> production-ready AI agents
-          in <span className="text-[#7DD3FC] font-semibold">six weeks</span>.
+          Learn to <span className="text-white font-semibold">Build, Deploy and Ship</span> production-ready AI agents
+          in <span className="text-[#7DD3FC] font-semibold">6-Weeks</span>.
         </p>
       </div>
     </section>
