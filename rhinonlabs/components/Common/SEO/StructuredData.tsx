@@ -7,8 +7,8 @@ export default function StructuredData() {
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "Rhinon Labs",
-    "url": "https://rhinonlabs.com",
-    "logo": "https://rhinonlabs.com/favicon.ico",
+    "url": "https://www.rhinonlabs.com",
+    "logo": "https://www.rhinonlabs.com/favicon.ico",
     "address": {
       "@type": "PostalAddress",
       "addressLocality": "Bhubaneswar",
@@ -96,7 +96,7 @@ export default function StructuredData() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "Rhinon Labs",
-    "url": "https://rhinonlabs.com",
+    "url": "https://www.rhinonlabs.com",
     "description": "Ship Your Product 3x Faster Without Hiring a Tech Team"
   };
 

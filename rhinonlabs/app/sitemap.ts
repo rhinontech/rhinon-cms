@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 import { getBlogs, getCaseStudies } from '@/lib/api';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://rhinonlabs.com';
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.rhinonlabs.com';
 
     const staticRoutes: MetadataRoute.Sitemap = [
         {

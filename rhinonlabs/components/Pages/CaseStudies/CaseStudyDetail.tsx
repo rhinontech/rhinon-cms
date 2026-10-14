@@ -8,7 +8,7 @@ import { BlogSideRail } from "@/components/Common/Blog/BlogSideRail";
 import { extractToc } from "@/components/Common/Blog/blocks";
 import StickyCallButton from "@/components/Common/CTA/StickyCallButton";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://rhinonlabs.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinonlabs.com";
 
 export default function CaseStudyDetail({ caseStudy }: { caseStudy: CaseStudy }) {
   const category = caseStudy.category || caseStudy.industry || "Case Study";

@@ -14,7 +14,7 @@ import StickyCallButton from "@/components/Common/CTA/StickyCallButton";
 
 export const dynamic = "force-dynamic";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://rhinonlabs.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinonlabs.com";
 
 interface PageProps {
   params: Promise<{ slug: string }>;

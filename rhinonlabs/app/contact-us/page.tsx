@@ -1,7 +1,7 @@
 import ContactUs from "@/components/Pages/ContactUs/ContactUs";
 import { Metadata } from "next";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://rhinonlabs.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinonlabs.com";
 
 export const metadata: Metadata = {
   title: "Contact Us | Rhinon Labs",

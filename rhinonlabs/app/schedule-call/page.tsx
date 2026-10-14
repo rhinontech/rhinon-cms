@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import SchedulerCore from "@/components/Common/CTA/SchedulerCore";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://rhinonlabs.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinonlabs.com";
 
 export const metadata: Metadata = {
   title: "Schedule a Call | Rhinon Labs",
