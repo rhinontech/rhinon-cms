@@ -4,7 +4,8 @@ import { sequelize } from "../config/database";
 export type PayslipStatus = "draft" | "paid";
 export type PayslipType = "regular" | "fnf";
 // Non-taxable bill reimbursements (internet etc.) — paid on top of net, outside gross
-export interface PayslipReimbursement { label: string; amount: number }
+// claimId is set when the line came from an approved ReimbursementClaim
+export interface PayslipReimbursement { label: string; amount: number; claimId?: string }
 
 interface PayslipAttributes {
   id: string;

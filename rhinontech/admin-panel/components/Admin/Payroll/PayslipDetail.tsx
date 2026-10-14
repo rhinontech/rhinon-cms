@@ -26,7 +26,7 @@ interface PayslipData {
   noticeRecovery?: number;
   otherDeductions: number;
   totalDeductions: number;
-  reimbursements?: { label: string; amount: number }[];
+  reimbursements?: { label: string; amount: number; claimId?: string }[];
   reimbursementTotal?: number;
   netPay: number;
   paymentDate: string | null;
@@ -82,9 +82,10 @@ type ReimbursementDraft = { label: string; amount: string };
 
 function ReimbursementEditor({ slip, onSaved }: { slip: PayslipData; onSaved: (patch: Partial<PayslipData>) => void }) {
   const [rows, setRows] = useState<ReimbursementDraft[]>(
-    (slip.reimbursements ?? []).map((r) => ({ label: r.label, amount: String(r.amount) })),
+    (slip.reimbursements ?? []).filter((r) => !r.claimId).map((r) => ({ label: r.label, amount: String(r.amount) })),
   );
   const [saving, setSaving] = useState(false);
+  const claimLines = (slip.reimbursements ?? []).filter((r) => r.claimId);
   const set = (i: number, patch: Partial<ReimbursementDraft>) =>
     setRows((prev) => prev.map((r, j) => (j === i ? { ...r, ...patch } : r)));
 
@@ -119,8 +120,18 @@ function ReimbursementEditor({ slip, onSaved }: { slip: PayslipData; onSaved: (p
         </button>
       </div>
       <p className="text-xs text-muted-foreground mb-3">Bills paid back to the employee (e.g. internet). Added to net pay, not taxable salary.</p>
+      {claimLines.length > 0 && (
+        <div className="mb-3 flex flex-col gap-1">
+          {claimLines.map((r) => (
+            <div key={r.claimId} className="flex items-center justify-between text-sm px-3 py-1.5 rounded-lg bg-muted/40">
+              <span className="text-foreground/80">{r.label} <span className="text-xs text-muted-foreground">· approved claim</span></span>
+              <span className="text-foreground">₹{fmt(r.amount)}</span>
+            </div>
+          ))}
+        </div>
+      )}
       {rows.length === 0 ? (
-        <p className="text-xs text-muted-foreground">None.</p>
+        claimLines.length === 0 && <p className="text-xs text-muted-foreground">None.</p>
       ) : (
         <div className="flex flex-col gap-2">
           {rows.map((r, i) => (

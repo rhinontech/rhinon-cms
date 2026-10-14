@@ -6,6 +6,7 @@ import { InboxMessage } from "./InboxMessage";
 import { InboxEmail } from "./InboxEmail";
 import { Payroll } from "./Payroll";
 import { Payslip } from "./Payslip";
+import { ReimbursementClaim } from "./ReimbursementClaim";
 import { Task } from "./Task";
 import { Attendance } from "./Attendance";
 import { Project } from "./Project";
@@ -101,6 +102,9 @@ Payslip.belongsTo(Payroll, { foreignKey: "payrollId", as: "payroll" });
 Payslip.belongsTo(User, { foreignKey: "userId", as: "employee" });
 User.hasMany(Payslip, { foreignKey: "userId", as: "payslips" });
 Payroll.belongsTo(User, { foreignKey: "processedById", as: "processedBy" });
+ReimbursementClaim.belongsTo(User, { foreignKey: "userId", as: "employee" });
+ReimbursementClaim.belongsTo(User, { foreignKey: "reviewedById", as: "reviewer" });
+ReimbursementClaim.belongsTo(Payslip, { foreignKey: "payslipId", as: "payslip" });
 
 // Tasks — two separate associations to User
 Task.belongsTo(User, { foreignKey: "assigneeId", as: "assignee" });
@@ -413,7 +417,7 @@ export {
   Role, Permission, RolePermission,
   User,
   InboxConversation, InboxMessage, InboxEmail,
-  Payroll, Payslip,
+  Payroll, Payslip, ReimbursementClaim,
   Task,
   Attendance,
   Project,

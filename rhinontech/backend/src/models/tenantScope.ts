@@ -14,6 +14,7 @@ import { InboxMessage } from "./InboxMessage";
 import { InboxEmail } from "./InboxEmail";
 import { Payroll } from "./Payroll";
 import { Payslip } from "./Payslip";
+import { ReimbursementClaim } from "./ReimbursementClaim";
 import { Task } from "./Task";
 import { Subtask } from "./Subtask";
 import { TaskComment } from "./TaskComment";
@@ -85,7 +86,7 @@ import { Visitor } from "./Visitor";
 export const TENANT_MODELS: ModelStatic<any>[] = [
   User, Role,
   InboxConversation, InboxMessage, InboxEmail,
-  Payroll, Payslip,
+  Payroll, Payslip, ReimbursementClaim,
   Task, Subtask, TaskComment, TaskTag, TaskDependency, TaskAttachment, TaskActivity, TimeEntry,
   Attendance, AttendanceRequest, AttendancePolicy,
   Project, ProjectMember, ClientRequest, Team, TeamMember, WorkflowStatus, FieldDefinition,

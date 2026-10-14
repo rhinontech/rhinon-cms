@@ -1,6 +1,7 @@
 import { Router, Response } from "express";
 import { Op } from "sequelize";
-import { Payroll, Payslip, User, Role } from "../models";
+import { Payroll, Payslip, User, Role, ReimbursementClaim } from "../models";
+import { attachApprovedClaims, markClaimsPaid, detachClaims, setPayslipReimbursements, syncPayrollTotals } from "../services/reimbursementClaims";
 import type { PayslipReimbursement } from "../models/Payslip";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 import { sendEmail } from "../services/mailer";
@@ -25,16 +26,6 @@ function parseReimbursements(raw: unknown): PayslipReimbursement[] | null {
   return out;
 }
 
-async function syncPayrollTotals(payrollId: string) {
-  const slips = await Payslip.findAll({ where: { payrollId } });
-  await Payroll.update(
-    {
-      totalGross: slips.reduce((s, p) => s + Number(p.grossPay), 0),
-      totalNet: slips.reduce((s, p) => s + Number(p.netPay), 0),
-    },
-    { where: { id: payrollId } },
-  );
-}
 router.use(authenticate);
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -154,7 +145,13 @@ router.get("/admin/investment", authorize("payroll:write"), async (_req: AuthReq
   const totalGrossPaid = paidPayslips.reduce((sum, slip) => sum + Number(slip.grossPay || 0), 0);
   const totalNetPaid = paidPayslips.reduce((sum, slip) => sum + Number(slip.netPay || 0), 0);
   const totalEmployerPfPaid = paidPayslips.reduce((sum, slip) => sum + Number(slip.pfEmployer || 0), 0);
-  const totalCompanyCostPaid = totalGrossPaid + totalEmployerPfPaid;
+  // Reimbursements are company spend too: lines on paid payslips + claims settled outside payroll
+  const payslipReimbursementsPaid = paidPayslips.reduce((sum, slip) => sum + Number(slip.reimbursementTotal || 0), 0);
+  const directReimbursementsPaid = Number(
+    (await ReimbursementClaim.sum("amount", { where: { status: "paid", payout: "direct" } })) || 0,
+  );
+  const totalReimbursementsPaid = payslipReimbursementsPaid + directReimbursementsPaid;
+  const totalCompanyCostPaid = totalGrossPaid + totalEmployerPfPaid + totalReimbursementsPaid;
 
   const activeSalaryEmployees = activeEmployees.filter((employee) => Number(employee.basicSalary || 0) > 0);
   const monthlyCommittedGross = activeSalaryEmployees.reduce((sum, employee) => {
@@ -171,6 +168,7 @@ router.get("/admin/investment", authorize("payroll:write"), async (_req: AuthReq
     totalNetPaid,
     totalEmployerPfPaid,
     totalCompanyCostPaid,
+    totalReimbursementsPaid,
     monthlyCommittedGross,
     paidPayslipCount: paidPayslips.length,
     activeEmployeeCount: activeEmployees.length,
@@ -186,7 +184,7 @@ router.get("/admin/payslips", authorize("payroll:write"), async (req: AuthReques
     where,
     include: [
       { model: Payroll, as: "payroll", attributes: ["id", "month", "year", "status"] },
-      { model: User, as: "employee", attributes: ["id", "fullName", "companyEmail", "department"] },
+      { model: User, as: "employee", attributes: ["id", "fullName", "companyEmail", "department", "exitDate"] },
     ],
     order: [
       [{ model: Payroll, as: "payroll" }, "year", "DESC"],
@@ -296,7 +294,7 @@ router.post("/admin/run", authorize("payroll:write"), async (req: AuthRequest, r
     const totalDeductions = pfEmployee + professionalTax + tds + otherDeductions;
     const netPay          = grossPay - totalDeductions;
 
-    await Payslip.create({
+    const created = await Payslip.create({
       payrollId: payroll.id,
       userId: emp.id,
       basicSalary,
@@ -314,9 +312,10 @@ router.post("/admin/run", authorize("payroll:write"), async (req: AuthRequest, r
       netPay,
       status: "draft",
     });
+    await attachApprovedClaims(created);
 
     totalGross += grossPay;
-    totalNet   += netPay;
+    totalNet   += Number(created.netPay);
   }
 
   // Totals cover every slip in the period, including F&F slips created beforehand
@@ -583,6 +582,7 @@ router.post("/admin/settlements/:userId", authorize("payroll:write"), async (req
     status: markPaid ? "paid" : "draft",
     ...(markPaid ? { paymentDate: new Date() } : {}),
   });
+  await attachApprovedClaims(payslip);
 
   // Keep payroll totals in sync
   const allSlips = await Payslip.findAll({ where: { payrollId: payroll.id } });
@@ -619,8 +619,22 @@ router.post("/admin/runs/:id/pay", authorize("payroll:write"), async (req: AuthR
   if (!payroll) { res.status(404).json({ message: "Payroll not found" }); return; }
   if (payroll.status === "paid") { res.status(400).json({ message: "Already paid" }); return; }
 
+  // Leavers exiting in/before this month must go through Final Settlements, not the run
+  const endOfMonth = `${payroll.year}-${String(payroll.month).padStart(2, "0")}-${String(new Date(payroll.year, payroll.month, 0).getDate()).padStart(2, "0")}`;
+  const leaverSlips = await Payslip.findAll({
+    where: { payrollId: payroll.id, type: "regular", status: { [Op.ne]: "paid" } },
+    include: [{ model: User, as: "employee", attributes: ["fullName"], where: { exitDate: { [Op.lte]: endOfMonth } }, required: true }],
+  });
+  if (leaverSlips.length > 0) {
+    const names = leaverSlips.map((p) => (p as any).employee.fullName).join(", ");
+    res.status(400).json({ message: `${names} left this month — open the payslips and use Run Settlement first.` });
+    return;
+  }
+
   const paymentDate = new Date();
   await Payslip.update({ status: "paid", paymentDate }, { where: { payrollId: payroll.id } });
+  const runSlipIds = (await Payslip.findAll({ where: { payrollId: payroll.id }, attributes: ["id"] })).map((p) => p.id);
+  await markClaimsPaid(runSlipIds, paymentDate);
   await payroll.update({ status: "paid", processedById: req.user!.userId, processedAt: paymentDate });
 
   // Send salary credited emails to all employees in this payroll run
@@ -665,14 +679,48 @@ router.put("/admin/payslips/:id/reimbursements", authorize("payroll:write"), asy
   if (!slip) { res.status(404).json({ message: "Payslip not found" }); return; }
   if (slip.status === "paid") { res.status(400).json({ message: "Paid payslips can't be edited" }); return; }
 
-  const reimbursements = parseReimbursements(req.body.reimbursements);
-  if (!reimbursements) { res.status(400).json({ message: "Each reimbursement needs a label and a positive amount" }); return; }
-  const reimbursementTotal = round2(reimbursements.reduce((s, r) => s + r.amount, 0));
-  const netPay = round2(Number(slip.grossPay) - Number(slip.totalDeductions) + reimbursementTotal);
-
-  await slip.update({ reimbursements, reimbursementTotal, netPay });
+  const manual = parseReimbursements(req.body.reimbursements);
+  if (!manual) { res.status(400).json({ message: "Each reimbursement needs a label and a positive amount" }); return; }
+  // Lines that came from approved claims are managed from the Reimbursements page, not here
+  const claimLines = (slip.reimbursements ?? []).filter((r) => r.claimId);
+  await setPayslipReimbursements(slip, [...claimLines, ...manual]);
   await syncPayrollTotals(slip.payrollId);
-  res.json({ reimbursements, reimbursementTotal, netPay });
+  res.json({ reimbursements: slip.reimbursements, reimbursementTotal: slip.reimbursementTotal, netPay: slip.netPay });
+});
+
+// Pull a leaver's unpaid regular payslip out of its run so the exit month is paid
+// through Final Settlements instead. Only allowed when they exit in/before that month.
+router.delete("/admin/payslips/:id/move-to-settlement", authorize("payroll:write"), async (req: AuthRequest, res: Response) => {
+  const slip = await Payslip.findByPk(req.params.id, {
+    include: [
+      { model: Payroll, as: "payroll" },
+      { model: User, as: "employee", attributes: ["id", "fullName", "exitDate"] },
+    ],
+  });
+  if (!slip) { res.status(404).json({ message: "Payslip not found" }); return; }
+  if (slip.status === "paid") { res.status(400).json({ message: "Paid payslips can't be moved" }); return; }
+  if (slip.type !== "regular") { res.status(400).json({ message: "This is already a settlement payslip" }); return; }
+
+  const payroll = (slip as any).payroll as Payroll;
+  const emp = (slip as any).employee;
+  const endOfMonth = `${payroll.year}-${String(payroll.month).padStart(2, "0")}-${String(new Date(payroll.year, payroll.month, 0).getDate()).padStart(2, "0")}`;
+  if (!emp?.exitDate || String(emp.exitDate) > endOfMonth) {
+    res.status(400).json({ message: "Offboard this employee with a last working day in or before this month first." });
+    return;
+  }
+
+  await detachClaims(slip.id);
+  await slip.destroy();
+  await syncPayrollTotals(payroll.id);
+
+  // If everyone left in the run is already paid, the run is done
+  const remaining = await Payslip.count({ where: { payrollId: payroll.id } });
+  const unpaid = await Payslip.count({ where: { payrollId: payroll.id, status: { [Op.ne]: "paid" } } });
+  if (remaining > 0 && unpaid === 0 && payroll.status !== "paid") {
+    await payroll.update({ status: "paid", processedById: req.user!.userId, processedAt: new Date() });
+  }
+
+  res.json({ message: `${emp.fullName}'s payslip moved to Final Settlements`, userId: emp.id });
 });
 
 // Mark a single payslip as paid; closes the run once every payslip in it is paid
@@ -693,6 +741,7 @@ router.post("/admin/payslips/:id/pay", authorize("payroll:write"), async (req: A
 
   const paymentDate = new Date();
   await slip.update({ status: "paid", paymentDate });
+  await markClaimsPaid([slip.id], paymentDate);
 
   const payroll = (slip as any).payroll as Payroll | null;
   if (payroll && payroll.status !== "paid") {

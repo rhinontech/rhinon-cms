@@ -16,6 +16,7 @@ import {
   TbId,
   TbFilePlus,
   TbUserMinus,
+  TbReceipt,
 } from "react-icons/tb";
 import { usePermissions } from "@/context/PermissionsContext";
 
@@ -33,11 +34,13 @@ function PayrollLayoutContent({ children }: { children: React.ReactNode }) {
     { label: "Payslip Entry", href: `${base}/entry`,     icon: <TbFilePlus size={18} /> },
     { label: "Settlements",   href: `${base}/settlements`, icon: <TbUserMinus size={18} /> },
     { label: "All Payslips",  href: `${base}/payslips`,  icon: <TbFileInvoice size={18} /> },
+    { label: "Reimbursements", href: `${base}/reimbursements`, icon: <TbReceipt size={18} /> },
   ];
 
   const employeeItems = [
     { label: "Overview",       href: `${base}/overview`,   icon: <MdOutlineDashboard size={18} /> },
     { label: "My Payslips",    href: `${base}/payslips`,   icon: <TbFileInvoice size={18} /> },
+    { label: "Reimbursements", href: `${base}/reimbursements`, icon: <TbReceipt size={18} /> },
     { label: "Salary Details", href: `${base}/salary`,     icon: <TbId size={18} /> },
     { label: "Deductions",     href: `${base}/deductions`, icon: <TbArrowsTransferDown size={18} /> },
     { label: "Benefits",       href: `${base}/benefits`,   icon: <TbGift size={18} /> },
