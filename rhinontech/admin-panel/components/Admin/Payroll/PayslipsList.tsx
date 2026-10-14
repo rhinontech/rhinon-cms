@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { TbFileInvoice, TbDownload } from "react-icons/tb";
+import { TbFileInvoice, TbDownload, TbEye, TbCircleCheck } from "react-icons/tb";
+import { toast } from "sonner";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { usePermissions } from "@/context/PermissionsContext";
 
@@ -26,6 +27,27 @@ export function PayslipsList() {
   const roleSlug = pathname.split("/")[1];
   const { has } = usePermissions();
   const isAdminView = has("payroll:write");
+  const [payingId, setPayingId] = useState<string | null>(null);
+
+  const markPaid = async (slip: Payslip) => {
+    if (!confirm(`Mark ${slip.employee?.fullName ?? "this"} payslip as paid? The employee will be emailed.`)) return;
+    const token = document.cookie.split("; ").find((row) => row.startsWith("authToken="))?.split("=")[1];
+    setPayingId(slip.id);
+    try {
+      const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/payroll/admin/payslips/${slip.id}/pay`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.message || "Failed to mark paid");
+      setPayslips((prev) => prev.map((p) => (p.id === slip.id ? { ...p, status: "paid" } : p)));
+      toast.success("Payslip marked as paid");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setPayingId(null);
+    }
+  };
 
   useEffect(() => {
     const token = document.cookie
@@ -75,11 +97,23 @@ export function PayslipsList() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${slip.payroll.status === "paid" ? "bg-green-100 dark:bg-green-400/15 text-green-700 dark:text-green-300" : "bg-yellow-100 dark:bg-yellow-400/15 text-yellow-700 dark:text-yellow-300"}`}>
-                    {slip.payroll.status}
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${slip.status === "paid" ? "bg-green-100 dark:bg-green-400/15 text-green-700 dark:text-green-300" : "bg-yellow-100 dark:bg-yellow-400/15 text-yellow-700 dark:text-yellow-300"}`}>
+                    {slip.status}
                   </span>
+                  {isAdminView && slip.status !== "paid" && (
+                    <button
+                      onClick={() => markPaid(slip)}
+                      disabled={payingId === slip.id}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-700 dark:text-green-300 border border-green-300 dark:border-green-400/30 rounded-lg hover:bg-green-50 dark:hover:bg-green-400/10 transition-colors disabled:opacity-50"
+                    >
+                      <TbCircleCheck size={14} /> {payingId === slip.id ? "Marking…" : "Mark Paid"}
+                    </button>
+                  )}
                   <Link href={`/${roleSlug}/payroll/payslips/${slip.id}`} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-foreground/85 border border-border rounded-lg hover:bg-muted/40 transition-colors">
-                    <TbDownload size={14} /> View
+                    <TbEye size={14} /> View
+                  </Link>
+                  <Link href={`/${roleSlug}/payroll/payslips/${slip.id}?download=1`} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-foreground/85 border border-border rounded-lg hover:bg-muted/40 transition-colors">
+                    <TbDownload size={14} /> Download
                   </Link>
                 </div>
               </div>

@@ -3,6 +3,8 @@ import { sequelize } from "../config/database";
 
 export type PayslipStatus = "draft" | "paid";
 export type PayslipType = "regular" | "fnf";
+// Non-taxable bill reimbursements (internet etc.) — paid on top of net, outside gross
+export interface PayslipReimbursement { label: string; amount: number }
 
 interface PayslipAttributes {
   id: string;
@@ -26,6 +28,8 @@ interface PayslipAttributes {
   noticeRecovery: number;
   otherDeductions: number;
   totalDeductions: number;
+  reimbursements: PayslipReimbursement[];
+  reimbursementTotal: number;
   // Net
   netPay: number;
   paymentDate?: Date;
@@ -37,7 +41,7 @@ interface PayslipAttributes {
 interface PayslipCreationAttributes
   extends Optional<
     PayslipAttributes,
-    "id" | "type" | "hra" | "ta" | "medicalAllowance" | "otherAllowances" | "leaveEncashment" | "pfEmployer" | "tds" | "professionalTax" | "noticeRecovery" | "otherDeductions" | "status"
+    "id" | "type" | "hra" | "ta" | "medicalAllowance" | "otherAllowances" | "leaveEncashment" | "pfEmployer" | "tds" | "professionalTax" | "noticeRecovery" | "otherDeductions" | "reimbursements" | "reimbursementTotal" | "status"
   > {}
 
 export class Payslip
@@ -62,6 +66,8 @@ export class Payslip
   declare noticeRecovery: number;
   declare otherDeductions: number;
   declare totalDeductions: number;
+  declare reimbursements: PayslipReimbursement[];
+  declare reimbursementTotal: number;
   declare netPay: number;
   declare paymentDate?: Date;
   declare status: PayslipStatus;
@@ -89,6 +95,8 @@ Payslip.init(
     noticeRecovery: { type: DataTypes.DECIMAL(12, 2), defaultValue: 0 },
     otherDeductions: { type: DataTypes.DECIMAL(12, 2), defaultValue: 0 },
     totalDeductions: { type: DataTypes.DECIMAL(12, 2), allowNull: false },
+    reimbursements: { type: DataTypes.JSONB, allowNull: false, defaultValue: [] },
+    reimbursementTotal: { type: DataTypes.DECIMAL(12, 2), allowNull: false, defaultValue: 0 },
     netPay: { type: DataTypes.DECIMAL(12, 2), allowNull: false },
     paymentDate: { type: DataTypes.DATEONLY, allowNull: true },
     status: { type: DataTypes.ENUM("draft", "paid"), defaultValue: "draft" },

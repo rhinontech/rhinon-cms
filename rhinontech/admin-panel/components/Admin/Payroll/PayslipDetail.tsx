@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
-import { TbArrowLeft, TbPrinter } from "react-icons/tb";
+import { TbArrowLeft, TbPrinter, TbPlus, TbTrash } from "react-icons/tb";
+import { toast } from "sonner";
 import adminImages from "@/constants/admin/images";
 import Image from "next/image";
 import { usePermissions } from "@/context/PermissionsContext";
@@ -25,6 +26,8 @@ interface PayslipData {
   noticeRecovery?: number;
   otherDeductions: number;
   totalDeductions: number;
+  reimbursements?: { label: string; amount: number }[];
+  reimbursementTotal?: number;
   netPay: number;
   paymentDate: string | null;
   status: string;
@@ -75,6 +78,87 @@ function TaxRow({ label, gross, exempted, taxable, bold }: { label: string; gros
   );
 }
 
+type ReimbursementDraft = { label: string; amount: string };
+
+function ReimbursementEditor({ slip, onSaved }: { slip: PayslipData; onSaved: (patch: Partial<PayslipData>) => void }) {
+  const [rows, setRows] = useState<ReimbursementDraft[]>(
+    (slip.reimbursements ?? []).map((r) => ({ label: r.label, amount: String(r.amount) })),
+  );
+  const [saving, setSaving] = useState(false);
+  const set = (i: number, patch: Partial<ReimbursementDraft>) =>
+    setRows((prev) => prev.map((r, j) => (j === i ? { ...r, ...patch } : r)));
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/payroll/admin/payslips/${slip.id}/reimbursements`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${Cookies.get("authToken")}` },
+        body: JSON.stringify({ reimbursements: rows.map((x) => ({ label: x.label.trim(), amount: Number(x.amount) })) }),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.message || "Failed to save");
+      onSaved(data);
+      toast.success("Reimbursements saved");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="max-w-3xl mx-auto mb-6 glass-card-solid rounded-2xl p-5 print:hidden">
+      <div className="flex items-center justify-between mb-1">
+        <p className="text-sm font-semibold text-foreground">Reimbursements</p>
+        <button
+          onClick={() => setRows((prev) => [...prev, { label: "", amount: "" }])}
+          className="flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-300 hover:underline"
+        >
+          <TbPlus size={14} /> Add
+        </button>
+      </div>
+      <p className="text-xs text-muted-foreground mb-3">Bills paid back to the employee (e.g. internet). Added to net pay, not taxable salary.</p>
+      {rows.length === 0 ? (
+        <p className="text-xs text-muted-foreground">None.</p>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {rows.map((r, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <input
+                value={r.label}
+                onChange={(e) => set(i, { label: e.target.value })}
+                placeholder="Internet – Aug 2026"
+                className="flex-1 px-3 py-1.5 text-sm bg-card border border-border rounded-lg"
+              />
+              <input
+                type="number"
+                min="0"
+                value={r.amount}
+                onChange={(e) => set(i, { amount: e.target.value })}
+                placeholder="Amount"
+                className="w-32 px-3 py-1.5 text-sm bg-card border border-border rounded-lg text-right"
+              />
+              <button onClick={() => setRows((prev) => prev.filter((_, j) => j !== i))} className="p-1.5 text-muted-foreground hover:text-red-500">
+                <TbTrash size={16} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="flex justify-end mt-3">
+        <button
+          onClick={save}
+          disabled={saving}
+          className="px-4 py-1.5 text-xs font-medium rounded-lg bg-foreground text-background disabled:opacity-50"
+        >
+          {saving ? "Saving…" : "Save"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function PayslipDetail({ id }: { id: string }) {
   const [slip, setSlip] = useState<PayslipData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -97,6 +181,13 @@ export function PayslipDetail({ id }: { id: string }) {
       .finally(() => setLoading(false));
   }, [id, isAdminView]);
 
+  // Opened via the list's Download button → open the save-as-PDF dialog once loaded
+  useEffect(() => {
+    if (!slip || new URLSearchParams(window.location.search).get("download") !== "1") return;
+    const t = setTimeout(() => window.print(), 300);
+    return () => clearTimeout(t);
+  }, [slip]);
+
   if (loading) return <div className="h-full flex items-center justify-center text-sm text-muted-foreground">Loading…</div>;
   if (!slip) return <div className="h-full flex items-center justify-center text-sm text-muted-foreground">Payslip not found.</div>;
 
@@ -105,6 +196,7 @@ export function PayslipDetail({ id }: { id: string }) {
   const jobTitle = emp.roleTitle || emp.role?.name || emp.department;
   const periodLabel = `${MONTHS[slip.payroll.month - 1]} ${slip.payroll.year}`;
   const isFnf = slip.type === "fnf";
+  const reimbursements = slip.reimbursements ?? [];
 
   // Annual figures (× 12)
   const annualBasic    = Number(slip.basicSalary)       * 12;
@@ -161,6 +253,10 @@ export function PayslipDetail({ id }: { id: string }) {
           <TbPrinter size={16} /> Print / Download
         </button>
       </div>
+
+      {isAdminView && slip.status !== "paid" && (
+        <ReimbursementEditor slip={slip} onSaved={(patch) => setSlip((prev) => (prev ? { ...prev, ...patch } : prev))} />
+      )}
 
       {/* Payslip card */}
       <div id="payslip-print" className="bg-card rounded-2xl border border-border max-w-3xl mx-auto overflow-hidden">
@@ -222,6 +318,12 @@ export function PayslipDetail({ id }: { id: string }) {
             <span className="text-xs font-semibold text-red-700 dark:text-red-300 uppercase tracking-wide">Deductions (B)</span>
             <span className="text-red-700 dark:text-red-300 font-bold">− ₹{fmt(slip.totalDeductions)}</span>
           </div>
+          {reimbursements.length > 0 && (
+            <div className="flex items-center gap-2 rounded-xl border border-blue-200 dark:border-blue-400/25 bg-blue-50 dark:bg-blue-400/10 px-4 py-2.5">
+              <span className="text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wide">Reimbursements (R)</span>
+              <span className="text-blue-700 dark:text-blue-300 font-bold">+ ₹{fmt(slip.reimbursementTotal ?? 0)}</span>
+            </div>
+          )}
         </div>
 
         {/* Earnings */}
@@ -274,6 +376,28 @@ export function PayslipDetail({ id }: { id: string }) {
             </tfoot>
           </table>
         </div>
+
+        {reimbursements.length > 0 && (
+          <div className="px-8 pt-2 pb-4">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+              Reimbursements (R) <span className="normal-case font-normal text-muted-foreground">— Expenses paid back; not part of taxable salary</span>
+            </p>
+            <table className="w-full mt-3 rounded-xl overflow-hidden border border-border">
+              <thead className="bg-muted/40 text-xs text-muted-foreground uppercase">
+                <tr>
+                  <th className="py-2.5 px-4 text-left font-medium">Reimbursement</th>
+                  <th className="py-2.5 px-4 text-right font-medium">Amount (₹)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {reimbursements.map((r, i) => <TableRow key={i} label={r.label} amount={Number(r.amount)} />)}
+              </tbody>
+              <tfoot className="border-t-2 border-border">
+                <TableRow label="Total Reimbursements" amount={Number(slip.reimbursementTotal ?? 0)} bold />
+              </tfoot>
+            </table>
+          </div>
+        )}
 
         {/* Yearly projections don't apply to a pro-rated final-settlement month */}
         {isFnf ? (

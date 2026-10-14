@@ -1,12 +1,40 @@
 import { Router, Response } from "express";
 import { Op } from "sequelize";
 import { Payroll, Payslip, User, Role } from "../models";
+import type { PayslipReimbursement } from "../models/Payslip";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 import { sendEmail } from "../services/mailer";
 import { payslipPaidEmail } from "../services/emailTemplates";
 import { env } from "../config/env";
 
 const router = Router();
+
+const round2 = (v: number) => Math.round(v * 100) / 100;
+
+// Validates [{label, amount}] from the client; returns null when malformed
+function parseReimbursements(raw: unknown): PayslipReimbursement[] | null {
+  if (raw == null) return [];
+  if (!Array.isArray(raw)) return null;
+  const out: PayslipReimbursement[] = [];
+  for (const r of raw) {
+    const label = String(r?.label ?? "").trim();
+    const amount = round2(Number(r?.amount));
+    if (!label || !Number.isFinite(amount) || amount <= 0) return null;
+    out.push({ label, amount });
+  }
+  return out;
+}
+
+async function syncPayrollTotals(payrollId: string) {
+  const slips = await Payslip.findAll({ where: { payrollId } });
+  await Payroll.update(
+    {
+      totalGross: slips.reduce((s, p) => s + Number(p.grossPay), 0),
+      totalNet: slips.reduce((s, p) => s + Number(p.netPay), 0),
+    },
+    { where: { id: payrollId } },
+  );
+}
 router.use(authenticate);
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -312,6 +340,9 @@ router.post("/admin/payslips/manual", authorize("payroll:write"), async (req: Au
     basicSalary, hra = 0, ta = 0, medicalAllowance = 0, otherAllowances = 0,
     pfEnabled = true, ptAmount = 200, tdsAmount = 0,
   } = req.body;
+  const reimbursements = parseReimbursements(req.body.reimbursements);
+  if (!reimbursements) { res.status(400).json({ message: "Each reimbursement needs a label and a positive amount" }); return; }
+  const reimbursementTotal = round2(reimbursements.reduce((s, r) => s + r.amount, 0));
 
   if (!userId || !month || !year || !basicSalary || Number(basicSalary) <= 0) {
     res.status(400).json({ message: "userId, month, year, and basicSalary are required" });
@@ -342,7 +373,7 @@ router.post("/admin/payslips/manual", authorize("payroll:write"), async (req: Au
   const professionalTax = Number(ptAmount);
   const tds             = Number(tdsAmount);
   const totalDeductions = pfEmployee + professionalTax + tds;
-  const netPay          = gross - totalDeductions;
+  const netPay          = gross - totalDeductions + reimbursementTotal;
 
   const payslip = await Payslip.create({
     payrollId:       payroll.id,
@@ -359,6 +390,8 @@ router.post("/admin/payslips/manual", authorize("payroll:write"), async (req: Au
     professionalTax,
     otherDeductions: 0,
     totalDeductions,
+    reimbursements,
+    reimbursementTotal,
     netPay,
     status: "paid",
   });
@@ -624,6 +657,69 @@ router.post("/admin/runs/:id/pay", authorize("payroll:write"), async (req: AuthR
   }
 
   res.json({ message: "Payroll marked as paid" });
+});
+
+// Replace a draft payslip's reimbursements; net pay moves with them, gross does not
+router.put("/admin/payslips/:id/reimbursements", authorize("payroll:write"), async (req: AuthRequest, res: Response) => {
+  const slip = await Payslip.findByPk(req.params.id);
+  if (!slip) { res.status(404).json({ message: "Payslip not found" }); return; }
+  if (slip.status === "paid") { res.status(400).json({ message: "Paid payslips can't be edited" }); return; }
+
+  const reimbursements = parseReimbursements(req.body.reimbursements);
+  if (!reimbursements) { res.status(400).json({ message: "Each reimbursement needs a label and a positive amount" }); return; }
+  const reimbursementTotal = round2(reimbursements.reduce((s, r) => s + r.amount, 0));
+  const netPay = round2(Number(slip.grossPay) - Number(slip.totalDeductions) + reimbursementTotal);
+
+  await slip.update({ reimbursements, reimbursementTotal, netPay });
+  await syncPayrollTotals(slip.payrollId);
+  res.json({ reimbursements, reimbursementTotal, netPay });
+});
+
+// Mark a single payslip as paid; closes the run once every payslip in it is paid
+router.post("/admin/payslips/:id/pay", authorize("payroll:write"), async (req: AuthRequest, res: Response) => {
+  const slip = await Payslip.findByPk(req.params.id, {
+    include: [
+      { model: Payroll, as: "payroll" },
+      {
+        model: User,
+        as: "employee",
+        attributes: ["fullName", "personalEmail", "companyEmail", "bankAccountNumber"],
+        include: [{ model: Role, as: "role", attributes: ["slug"] }],
+      },
+    ],
+  });
+  if (!slip) { res.status(404).json({ message: "Payslip not found" }); return; }
+  if (slip.status === "paid") { res.status(400).json({ message: "Already paid" }); return; }
+
+  const paymentDate = new Date();
+  await slip.update({ status: "paid", paymentDate });
+
+  const payroll = (slip as any).payroll as Payroll | null;
+  if (payroll && payroll.status !== "paid") {
+    const unpaid = await Payslip.count({ where: { payrollId: payroll.id, status: { [Op.ne]: "paid" } } });
+    if (unpaid === 0) await payroll.update({ status: "paid", processedById: req.user!.userId, processedAt: paymentDate });
+  }
+
+  const emp = (slip as any).employee;
+  const emailTo = emp?.personalEmail || emp?.companyEmail;
+  if (emp && emailTo && payroll) {
+    const roleSlug = emp.role?.slug || "employee";
+    const mail = payslipPaidEmail({
+      fullName: emp.fullName,
+      companyEmail: emp.companyEmail,
+      netPay: Number(slip.netPay),
+      grossPay: Number(slip.grossPay),
+      month: payroll.month,
+      year: payroll.year,
+      bankAccountNumber: emp.bankAccountNumber,
+      payslipUrl: `${env.frontendUrl}/${roleSlug}/payroll/payslips/${slip.id}`,
+    });
+    sendEmail({ to: emailTo, ...mail }).catch((err: Error) =>
+      console.error(`Failed to send payslip email to ${emailTo}:`, err.message)
+    );
+  }
+
+  res.json({ message: "Payslip marked as paid", status: "paid", paymentDate, payrollStatus: payroll?.status });
 });
 
 export default router;
