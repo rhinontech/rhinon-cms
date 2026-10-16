@@ -666,6 +666,36 @@ export function PeopleDirectory() {
   // signed document is left untouched server-side; only unsigned ones are
   // regenerated, but there's still just one email either way, never one per
   // document, so re-sending doesn't spam the employee with duplicate emails.
+  // Arrived from Hiring → "Confirm & convert to employee": open Add member prefilled
+  // from the candidate; after the employee is created the candidate is marked hired.
+  const [fromCandidateId, setFromCandidateId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!canManage) return;
+    const candidateId = new URLSearchParams(window.location.search).get("fromCandidate");
+    if (!candidateId) return;
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/hiring/candidates/${candidateId}`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((c) => {
+        if (!c) return;
+        openCreate();
+        setFromCandidateId(c.id);
+        setForm({
+          ...emptyForm,
+          fullName: c.fullName,
+          personalEmail: c.email,
+          department: c.opening?.department ?? "",
+          roleTitle: c.opening?.title ?? "",
+          legalName: c.fullName,
+          employmentType: c.opening?.employmentType ?? emptyForm.employmentType,
+          joiningDate: c.joiningDate ?? "",
+          annualCompensation: c.offeredCtc != null ? String(Number(c.offeredCtc)) : "",
+        });
+        setMessage(`Prefilled from candidate ${c.fullName} — set role and salary, then add.`);
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canManage]);
+
   const resendDocuments = async () => {
     if (!selectedEmployee) return;
     if (!confirm(`Regenerate and re-send the offer letter and/or NDA to ${selectedEmployee.personalEmail} for signing?\n\nOne email is sent covering whichever documents are still unsigned, rebuilt from the current template and this employee's current details, plus any edits shown in the previews right now. Already-signed documents are left untouched. Edits from an earlier resend that aren't reflected in the preview won't carry over automatically.`)) return;
@@ -931,6 +961,16 @@ export function PeopleDirectory() {
     }
 
     const savedEmployee = await res.json().catch(() => null);
+
+    if (mode === "create" && fromCandidateId && savedEmployee?.id) {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/hiring/candidates/${fromCandidateId}/hired`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ userId: savedEmployee.id }),
+      }).catch(() => {});
+      setFromCandidateId(null);
+      window.history.replaceState(null, "", window.location.pathname);
+    }
 
     // Creation succeeds even when the welcome email doesn't go out — never let
     // that failure pass silently (strict false: older responses omit the flag).

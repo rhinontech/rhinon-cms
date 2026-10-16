@@ -1,6 +1,7 @@
 import { Router, Response } from "express";
 import { Op } from "sequelize";
 import multer from "multer";
+import { keepTenantContext } from "../services/tenantContext";
 import { ClientRequest, Project, Subtask, Task, TaskActivity, TaskAttachment, TaskComment, TaskDependency, TaskTag, TimeEntry, User, WorkflowStatus } from "../models";
 import { uploadBuffer, getPresignedReadUrl, deleteObject } from "../services/storage";
 import { legacyStatusFor, defaultStatusFor } from "../services/taskStatus";
@@ -631,7 +632,7 @@ router.get("/:id/attachments", async (req: AuthRequest, res: Response) => {
   } catch { res.status(500).json({ message: "Failed to fetch attachments" }); }
 });
 
-router.post("/:id/attachments", upload.single("file"), async (req: AuthRequest, res: Response) => {
+router.post("/:id/attachments", keepTenantContext(upload.single("file")), async (req: AuthRequest, res: Response) => {
   try {
     if (!req.file) { res.status(400).json({ message: "No file provided" }); return; }
     // uploadBuffer generates its own collision-free key and returns it.

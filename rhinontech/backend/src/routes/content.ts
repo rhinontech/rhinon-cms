@@ -1,6 +1,7 @@
 import { Router, Response } from "express";
 import { Op } from "sequelize";
 import multer from "multer";
+import { keepTenantContext } from "../services/tenantContext";
 import { Blog, CaseStudy, Event, Site } from "../models";
 import type { BlogDomain } from "../models/Blog";
 import { authenticate, authorize, requirePlatformOrg, AuthRequest } from "../middleware/authenticate";
@@ -55,7 +56,7 @@ router.get("/sites", authorize("content:read"), async (_req: AuthRequest, res: R
 });
 
 // POST /content/upload-image — upload a blog/case-study image to S3 (public), returns a permanent URL
-router.post("/upload-image", authorize("content:write"), upload.single("image"), async (req: AuthRequest, res: Response) => {
+router.post("/upload-image", authorize("content:write"), keepTenantContext(upload.single("image")), async (req: AuthRequest, res: Response) => {
   if (!req.file) {
     res.status(400).json({ message: "No file provided" });
     return;

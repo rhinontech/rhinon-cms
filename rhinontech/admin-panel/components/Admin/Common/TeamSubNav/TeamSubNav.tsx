@@ -7,6 +7,7 @@ import {
   TbCalendarOff, TbCalendarEvent, TbCheck,
   TbChartBar, TbStar, TbRefresh,
   TbFiles, TbFolders, TbFileAlert, TbAt,
+  TbBriefcase, TbMessages,
 } from "react-icons/tb";
 import { CollapsibleSubNav, type SubNavItem } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { usePermissions } from "@/context/PermissionsContext";
@@ -25,6 +26,7 @@ export function TeamSubNav() {
   const leaveBase = `/${roleSlug}/leave`;
   const performanceBase = `/${roleSlug}/performance`;
   const documentsBase = `/${roleSlug}/documents`;
+  const hiringBase = `/${roleSlug}/employees/hiring`;
 
   const isLeaveAdmin = has("leave:write");
   const isPerformanceAdmin = has("performance:write");
@@ -36,6 +38,20 @@ export function TeamSubNav() {
     ...(effectiveRoleSlug === "superadmin"
       ? [{ label: "Email addresses", href: `/${roleSlug}/employees/addresses`, icon: <TbAt size={18} /> } satisfies SubNavItem]
       : []),
+    // Everyone sees "My interviews" (they may be an interviewer); openings are admin-only
+    {
+      label: "Hiring",
+      href: has("employees:write") ? hiringBase : `${hiringBase}/interviews`,
+      icon: <TbBriefcase size={18} />,
+      isCollapsible: true,
+      isExpanded: pathname.startsWith(hiringBase),
+      children: [
+        ...(has("employees:write")
+          ? [{ label: "Openings", href: hiringBase, icon: <TbBriefcase size={16} />, exact: true }]
+          : []),
+        { label: "My interviews", href: `${hiringBase}/interviews`, icon: <TbMessages size={16} /> },
+      ],
+    } satisfies SubNavItem,
     ...(has("attendance:read")
       ? [
           {

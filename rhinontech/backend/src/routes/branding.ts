@@ -1,5 +1,6 @@
 import { Router, Response } from "express";
 import multer from "multer";
+import { keepTenantContext } from "../services/tenantContext";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 import { uploadFixedObject, deleteObject, getPresignedReadUrl, objectExists, SIGNATURE_KEY } from "../services/storage";
 
@@ -14,7 +15,7 @@ router.get("/signature", authorize("settings:read"), async (_req: AuthRequest, r
   res.json({ url });
 });
 
-router.post("/signature", authorize("settings:write"), upload.single("signature"), async (req: AuthRequest, res: Response) => {
+router.post("/signature", authorize("settings:write"), keepTenantContext(upload.single("signature")), async (req: AuthRequest, res: Response) => {
   if (!req.file) { res.status(400).json({ message: "No file provided" }); return; }
   if (req.file.mimetype !== "image/png") {
     res.status(400).json({ message: "Signature must be a PNG (ideally with a transparent background)" });

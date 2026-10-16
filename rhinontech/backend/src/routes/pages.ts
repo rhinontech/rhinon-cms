@@ -1,6 +1,7 @@
 import { Router, Response } from "express";
 import { Op } from "sequelize";
 import multer from "multer";
+import { keepTenantContext } from "../services/tenantContext";
 import { Page, PageShare, PageAttachment, User } from "../models";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 import { sequelize } from "../config/database";
@@ -238,7 +239,7 @@ router.get("/:id/attachments", async (req: AuthRequest, res: Response) => {
 });
 
 // POST /pages/:id/attachments — upload a file of any type, requires edit access.
-router.post("/:id/attachments", authorize("pages:write"), upload.single("file"), async (req: AuthRequest, res: Response) => {
+router.post("/:id/attachments", authorize("pages:write"), keepTenantContext(upload.single("file")), async (req: AuthRequest, res: Response) => {
   const userId = req.user!.userId;
   const page = await requireAccess(req.params.id, userId, "edit");
   if (!page) { res.status(403).json({ message: "You don't have edit access to this page" }); return; }

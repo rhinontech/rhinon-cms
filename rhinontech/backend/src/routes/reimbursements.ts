@@ -1,5 +1,6 @@
 import { Router, Response } from "express";
 import multer from "multer";
+import { keepTenantContext } from "../services/tenantContext";
 import { ReimbursementClaim, User } from "../models";
 import { authenticate, authorize, hasPermission, AuthRequest } from "../middleware/authenticate";
 import { uploadBuffer, getPresignedReadUrl } from "../services/storage";
@@ -60,7 +61,7 @@ router.get("/me", authorize("payslips:read"), async (req: AuthRequest, res: Resp
   res.json(claims);
 });
 
-router.post("/me", authorize("payslips:read"), upload.single("receipt"), async (req: AuthRequest, res: Response) => {
+router.post("/me", authorize("payslips:read"), keepTenantContext(upload.single("receipt")), async (req: AuthRequest, res: Response) => {
   const claim = await createClaim(req, res, req.user!.userId);
   if (claim) res.status(201).json(claim);
 });
@@ -97,7 +98,7 @@ router.get("/admin", authorize("payroll:write"), async (req: AuthRequest, res: R
 });
 
 // Admin records a claim on someone's behalf (e.g. bills the company already knows about)
-router.post("/admin", authorize("payroll:write"), upload.single("receipt"), async (req: AuthRequest, res: Response) => {
+router.post("/admin", authorize("payroll:write"), keepTenantContext(upload.single("receipt")), async (req: AuthRequest, res: Response) => {
   const user = await User.findByPk(req.body.userId);
   if (!user) { res.status(404).json({ message: "Employee not found" }); return; }
   const claim = await createClaim(req, res, user.id);

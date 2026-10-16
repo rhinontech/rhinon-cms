@@ -478,3 +478,121 @@ If you have questions, contact your HR team.`;
 
   return { subject, html, text };
 }
+
+// ─── Hiring: interview scheduled ─────────────────────────────────────────────
+
+const escHtml = (s: string) =>
+  s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+
+function detailRows(rows: [string, string][]) {
+  return `
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#fafaf9;border:1px solid #e7e5e4;border-radius:10px;margin-bottom:24px;">
+      ${rows.map(([k, v], i) => `
+      <tr>
+        <td style="padding:12px 16px;font-size:12px;color:#a8a29e;text-transform:uppercase;letter-spacing:0.4px;width:110px;${i ? "border-top:1px solid #e7e5e4;" : ""}">${k}</td>
+        <td style="padding:12px 16px;font-size:14px;font-weight:600;color:#1c1917;${i ? "border-top:1px solid #e7e5e4;" : ""}">${v}</td>
+      </tr>`).join("")}
+    </table>`;
+}
+
+function ctaButton(href: string, label: string) {
+  return `
+    <table cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      <tr>
+        <td style="background-color:#1c1917;border-radius:8px;">
+          <a href="${escHtml(href)}" style="display:inline-block;padding:13px 28px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:-0.1px;">
+            ${label}
+          </a>
+        </td>
+      </tr>
+    </table>`;
+}
+
+interface InterviewEmailOptions {
+  candidateName: string;
+  jobTitle: string;
+  roundName: string;
+  whenLabel: string;
+  durationMins: number;
+  meetingLink?: string | null;
+}
+
+export function interviewScheduledEmail({ candidateName, jobTitle, roundName, whenLabel, durationMins, meetingLink }: InterviewEmailOptions) {
+  const firstName = escHtml(candidateName.split(" ")[0]);
+  const subject = `Interview scheduled: ${jobTitle} — ${roundName}`;
+
+  const header = `
+    <p style="margin:16px 0 0;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.4px;">
+      Your interview is<br/>scheduled
+    </p>`;
+
+  const body = `
+    <p style="margin:0 0 6px;font-size:15px;font-weight:600;color:#1c1917;">Hi ${firstName},</p>
+    <p style="margin:0 0 24px;font-size:14px;color:#78716c;line-height:1.7;">
+      Thanks for your interest in joining Rhinon Tech. Here are the details of your next conversation with us.
+    </p>
+    ${detailRows([
+      ["Role", escHtml(jobTitle)],
+      ["Round", escHtml(roundName)],
+      ["When", escHtml(whenLabel)],
+      ["Duration", `${durationMins} minutes`],
+    ])}
+    ${meetingLink ? ctaButton(meetingLink, "Join the meeting →") : ""}
+    <p style="margin:0 0 20px;font-size:13px;color:#78716c;line-height:1.7;">
+      A calendar invite is attached. If the time doesn't work for you, just reply to this email and we'll find another slot.
+    </p>
+    <p style="margin:0;font-size:13px;color:#1c1917;line-height:1.7;">
+      Looking forward to speaking with you,<br/><strong>Team Rhinon Tech</strong>
+    </p>`;
+
+  const text = `Hi ${candidateName.split(" ")[0]},
+
+Your ${roundName} interview for ${jobTitle} at Rhinon Tech is scheduled.
+
+When: ${whenLabel}
+Duration: ${durationMins} minutes
+${meetingLink ? `Join: ${meetingLink}\n` : ""}
+If the time doesn't work, reply to this email.
+
+Team Rhinon Tech`;
+
+  return { subject, html: emailWrapper(header, body), text };
+}
+
+export function interviewerAssignedEmail({ interviewerName, candidateName, jobTitle, roundName, whenLabel, durationMins, meetingLink, feedbackUrl }: InterviewEmailOptions & { interviewerName: string; feedbackUrl: string }) {
+  const firstName = escHtml(interviewerName.split(" ")[0]);
+  const subject = `You're interviewing ${candidateName} — ${roundName}`;
+
+  const header = `
+    <p style="margin:16px 0 0;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.4px;">
+      New interview<br/>assigned to you
+    </p>`;
+
+  const body = `
+    <p style="margin:0 0 6px;font-size:15px;font-weight:600;color:#1c1917;">Hi ${firstName},</p>
+    <p style="margin:0 0 24px;font-size:14px;color:#78716c;line-height:1.7;">
+      You're the interviewer for the round below. The resume is available in Team → Hiring → My interviews.
+    </p>
+    ${detailRows([
+      ["Candidate", escHtml(candidateName)],
+      ["Role", escHtml(jobTitle)],
+      ["Round", escHtml(roundName)],
+      ["When", escHtml(whenLabel)],
+      ["Duration", `${durationMins} minutes`],
+    ])}
+    ${meetingLink ? ctaButton(meetingLink, "Join the meeting →") : ""}
+    <p style="margin:0;font-size:13px;color:#78716c;line-height:1.7;">
+      After the interview, <a href="${escHtml(feedbackUrl)}" style="color:#1c1917;font-weight:600;">leave your feedback</a> — rating, recommendation and notes.
+    </p>`;
+
+  const text = `Hi ${interviewerName.split(" ")[0]},
+
+You're interviewing ${candidateName} for ${jobTitle} (${roundName}).
+
+When: ${whenLabel}
+Duration: ${durationMins} minutes
+${meetingLink ? `Join: ${meetingLink}\n` : ""}
+Leave feedback afterwards: ${feedbackUrl}`;
+
+  return { subject, html: emailWrapper(header, body), text };
+}
