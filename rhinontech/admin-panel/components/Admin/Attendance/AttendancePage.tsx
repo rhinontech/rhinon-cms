@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { useSideNav } from "@/context/SideNavContext";
 import { apiFetch } from "@/lib/api";
 import { usePermissions } from "@/context/PermissionsContext";
+import { alertDialog } from "@/components/ui/dialogs";
 
 // ─── Shared helpers ────────────────────────────────────────────────────────────
 
@@ -437,9 +438,9 @@ function PersonalTimesheetPage() {
       setShowRegModal(false);
       setRegTime("");
       setRegReason("");
-      alert("Request submitted successfully.");
+      alertDialog("Request submitted successfully.");
     } catch {
-      alert("Failed to submit request.");
+      alertDialog("Failed to submit request.");
     }
   };
 

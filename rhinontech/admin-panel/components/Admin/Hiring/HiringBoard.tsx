@@ -11,6 +11,7 @@ import { OpeningDialog } from "./OpeningDialog";
 import { AddCandidateDialog } from "./AddCandidateDialog";
 import { CandidatePanel } from "./CandidatePanel";
 
+import { NativeSelect } from "@/components/ui/native-select";
 type Column = { key: string; title: string; stage: Candidate["stage"]; roundIndex?: number };
 
 function avgRating(c: Candidate) {
@@ -105,11 +106,11 @@ export function HiringBoard({ id }: { id: string }) {
             {[opening.department, opening.location, `${opening.positions} position${opening.positions === 1 ? "" : "s"}`].filter(Boolean).join(" · ")}
           </p>
         </div>
-        <select value={opening.status} onChange={(e) => setStatus(e.target.value as Opening["status"])} className="px-2 py-1.5 text-xs border border-border rounded-lg bg-card">
+        <NativeSelect value={opening.status} onChange={(e) => setStatus(e.target.value as Opening["status"])} className="px-2 py-1.5 text-xs border border-border rounded-lg bg-card">
           <option value="open">Open</option>
           <option value="on_hold">On hold</option>
           <option value="closed">Closed</option>
-        </select>
+        </NativeSelect>
         <button onClick={() => { setAdding(false); setOpenId(null); setEditing(true); }} className="p-2 text-muted-foreground hover:text-foreground border border-border rounded-lg" aria-label="Edit opening"><TbPencil size={15} /></button>
         <button onClick={() => { setEditing(false); setOpenId(null); setAdding(true); }} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90">
           <TbPlus size={14} /> <span className="hidden sm:inline">Add candidate</span>

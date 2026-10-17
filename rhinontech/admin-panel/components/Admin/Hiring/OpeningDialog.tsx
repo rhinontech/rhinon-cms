@@ -6,6 +6,7 @@ import { TbPlus, TbTrash, TbArrowUp, TbArrowDown, TbLoader2 } from "react-icons/
 import { hiringApi, jsonInit, inputCls, labelCls, type Opening } from "./shared";
 import { HiringAside } from "./HiringAside";
 
+import { NativeSelect } from "@/components/ui/native-select";
 const DEFAULT_ROUNDS = ["Screening call", "Technical round", "Founder round", "HR discussion"];
 
 export function OpeningDialog({ opening, onClose, onSaved }: { opening?: Opening; onClose: () => void; onSaved: (o: Opening) => void }) {
@@ -73,9 +74,9 @@ export function OpeningDialog({ opening, onClose, onSaved }: { opening?: Opening
           </label>
           <label className={labelCls}>
             Employment type
-            <select value={employmentType} onChange={(e) => setEmploymentType(e.target.value)} className={inputCls}>
+            <NativeSelect value={employmentType} onChange={(e) => setEmploymentType(e.target.value)} className={inputCls}>
               {["Full-Time", "Part-Time", "Contract", "Intern"].map((t) => <option key={t}>{t}</option>)}
-            </select>
+            </NativeSelect>
           </label>
           <label className={labelCls}>
             Positions to fill
@@ -93,10 +94,10 @@ export function OpeningDialog({ opening, onClose, onSaved }: { opening?: Opening
 
         <label className={labelCls}>
           Hiring manager
-          <select value={hiringManagerId} onChange={(e) => setHiringManagerId(e.target.value)} className={inputCls}>
+          <NativeSelect value={hiringManagerId} onChange={(e) => setHiringManagerId(e.target.value)} className={inputCls}>
             <option value="">None</option>
             {people.map((p) => <option key={p.id} value={p.id}>{p.fullName}</option>)}
-          </select>
+          </NativeSelect>
         </label>
 
         <div className="space-y-2">

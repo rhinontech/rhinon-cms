@@ -16,6 +16,8 @@ import { RichDescription } from "./RichDescription";
 import { STATUS_CHIP } from "./constants";
 import type { PersonOption, ProjectTask, TaskRow, WorkflowStatus } from "./types";
 
+import { NativeSelect } from "@/components/ui/native-select";
+import { confirmDialog } from "@/components/ui/dialogs";
 interface Comment {
   id: string;
   body: string;
@@ -240,7 +242,7 @@ export function TaskDetailDrawer({
       <div className="flex h-14 shrink-0 items-center gap-2 border-b glass-header px-4">
         <span className="truncate text-sm font-semibold text-foreground">Task</span>
         <button
-          onClick={() => { if (window.confirm(`Delete "${task.title}"?`)) { onDelete(task.id); onClose(); } }}
+          onClick={async () => { if ((await confirmDialog(`Delete "${task.title}"?`))) { onDelete(task.id); onClose(); } }}
           className="ml-auto rounded-lg p-2 text-muted-foreground hover:bg-red-50 dark:hover:bg-red-400/10 hover:text-red-600 dark:hover:text-red-300"
           title="Delete task"
         >
@@ -268,7 +270,7 @@ export function TaskDetailDrawer({
         <div className="grid grid-cols-2 gap-2">
           <label className="block">
             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Status</span>
-            <select
+            <NativeSelect
               value={task.statusId ?? ""}
               onChange={(e) => patchAndRefresh(task.id, { statusId: e.target.value || null })}
               className={cn(
@@ -278,18 +280,18 @@ export function TaskDetailDrawer({
             >
               <option value="">—</option>
               {statuses.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
+            </NativeSelect>
           </label>
           <label className="block">
             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Assignee</span>
-            <select
+            <NativeSelect
               value={task.assigneeId ?? ""}
               onChange={(e) => patchAndRefresh(task.id, { assigneeId: e.target.value || null })}
               className="mt-1 w-full rounded-lg border border-border px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Unassigned</option>
               {people.map((p) => <option key={p.id} value={p.id}>{p.fullName}</option>)}
-            </select>
+            </NativeSelect>
           </label>
           <label className="block">
             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Start</span>

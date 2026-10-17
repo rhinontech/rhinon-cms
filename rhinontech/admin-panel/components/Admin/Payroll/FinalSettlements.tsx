@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { TbAlertCircle, TbChevronRight, TbLoader2, TbX } from "react-icons/tb";
+import { confirmDialog } from "@/components/ui/dialogs";
 
 interface SettlementItem {
   id: string;
@@ -159,7 +160,7 @@ export function FinalSettlements() {
     const confirmText = markPaid
       ? `Create the final settlement for ${selected.fullName} and mark it PAID (${INR(totals.net)} net)? A salary-credited email will be sent.`
       : `Create a DRAFT final settlement for ${selected.fullName} (${INR(totals.net)} net)?`;
-    if (!confirm(confirmText)) return;
+    if (!(await confirmDialog(confirmText))) return;
 
     setSaving(true);
     setError("");

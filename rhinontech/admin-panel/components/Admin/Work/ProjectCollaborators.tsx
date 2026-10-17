@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 import { TbMail, TbPlus, TbUserOff, TbUsersPlus, TbX } from "react-icons/tb";
 
+import { NativeSelect } from "@/components/ui/native-select";
+import { confirmDialog } from "@/components/ui/dialogs";
 interface Collaborator {
   id: string;
   userId: string;
@@ -57,7 +59,7 @@ export function ProjectCollaborators({ projectId }: { projectId: string }) {
   };
 
   const revoke = async (userId: string, name: string) => {
-    if (!window.confirm(`Remove ${name} from this project? They lose access immediately.`)) return;
+    if (!(await confirmDialog(`Remove ${name} from this project? They lose access immediately.`))) return;
     try {
       await apiFetch(`/work/projects/${projectId}/collaborators/${userId}`, { method: "DELETE" });
       await load();
@@ -98,14 +100,14 @@ export function ProjectCollaborators({ projectId }: { projectId: string }) {
             required
             className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
           />
-          <select
+          <NativeSelect
             value={form.access}
             onChange={(e) => setForm((f) => ({ ...f, access: e.target.value }))}
             className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="collaborate">Can comment and add tasks</option>
             <option value="view">View only</option>
-          </select>
+          </NativeSelect>
           <label className="flex items-start gap-2 text-xs text-foreground/70">
             <input
               type="checkbox"

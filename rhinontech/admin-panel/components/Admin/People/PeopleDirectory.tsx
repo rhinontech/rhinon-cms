@@ -15,6 +15,8 @@ import { NewTemplateDialog } from "@/components/Admin/People/NewTemplateDialog";
 import type { LetterBlock } from "@/types/letterBlocks";
 import { useOrganization } from "@/lib/useOrganization";
 
+import { NativeSelect } from "@/components/ui/native-select";
+import { confirmDialog, alertDialog } from "@/components/ui/dialogs";
 // Splices local (unsaved) block-level edits onto a freshly-resolved preview —
 // mirrors backend applyBlockOverrides so an AI edit survives a form-field
 // change that re-triggers the debounced preview fetch.
@@ -289,13 +291,13 @@ function OffboardDialog({
           </label>
           <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
             Reason
-            <select
+            <NativeSelect
               value={exitReason}
               onChange={(e) => setExitReason(e.target.value)}
               className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               {EXIT_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
-            </select>
+            </NativeSelect>
           </label>
           <label className="col-span-2 flex flex-col gap-1 text-sm font-medium text-foreground/85">
             Notes <span className="font-normal text-muted-foreground">(optional)</span>
@@ -478,7 +480,7 @@ function FormSelect({
   return (
     <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
       {label}
-      <select
+      <NativeSelect
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="rounded-lg border border-border px-3 py-2 font-normal bg-card focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -489,7 +491,7 @@ function FormSelect({
             {opt}
           </option>
         ))}
-      </select>
+      </NativeSelect>
     </label>
   );
 }
@@ -698,7 +700,7 @@ export function PeopleDirectory() {
 
   const resendDocuments = async () => {
     if (!selectedEmployee) return;
-    if (!confirm(`Regenerate and re-send the offer letter and/or NDA to ${selectedEmployee.personalEmail} for signing?\n\nOne email is sent covering whichever documents are still unsigned, rebuilt from the current template and this employee's current details, plus any edits shown in the previews right now. Already-signed documents are left untouched. Edits from an earlier resend that aren't reflected in the preview won't carry over automatically.`)) return;
+    if (!(await confirmDialog(`Regenerate and re-send the offer letter and/or NDA to ${selectedEmployee.personalEmail} for signing?\n\nOne email is sent covering whichever documents are still unsigned, rebuilt from the current template and this employee's current details, plus any edits shown in the previews right now. Already-signed documents are left untouched. Edits from an earlier resend that aren't reflected in the preview won't carry over automatically.`))) return;
 
     setResendingDoc(true);
     try {
@@ -713,12 +715,12 @@ export function PeopleDirectory() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        alert(data.message || "Could not resend the documents.");
+        alertDialog(data.message || "Could not resend the documents.");
         return;
       }
       setOfferOverrides([]);
       setNdaOverrides([]);
-      alert(`Updated and re-sent to ${data.sentTo || selectedEmployee.personalEmail} (${(data.regenerated || []).join(", ") || "no changes"}).`);
+      alertDialog(`Updated and re-sent to ${data.sentTo || selectedEmployee.personalEmail} (${(data.regenerated || []).join(", ") || "no changes"}).`);
       fetch(`${process.env.NEXT_PUBLIC_API_URL}/employees/${selectedEmployee.id}/documents/status`, {
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -726,7 +728,7 @@ export function PeopleDirectory() {
         .then((d) => setDocStatus(d))
         .catch(() => { });
     } catch {
-      alert("Could not resend the documents. Please try again.");
+      alertDialog("Could not resend the documents. Please try again.");
     } finally {
       setResendingDoc(false);
     }
@@ -765,7 +767,7 @@ export function PeopleDirectory() {
 
   const resendInvite = async () => {
     if (!selectedEmployee) return;
-    if (!confirm(`Resend the setup invite to ${selectedEmployee.fullName}?\n\nThis generates a new temporary password and setup link, emails it to ${selectedEmployee.personalEmail}, and replaces their current password.`)) return;
+    if (!(await confirmDialog(`Resend the setup invite to ${selectedEmployee.fullName}?\n\nThis generates a new temporary password and setup link, emails it to ${selectedEmployee.personalEmail}, and replaces their current password.`))) return;
     setResending(true);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/employees/${selectedEmployee.id}/resend-onboarding`, {
@@ -774,12 +776,12 @@ export function PeopleDirectory() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        alert(data.message || "Could not resend the invite.");
+        alertDialog(data.message || "Could not resend the invite.");
         return;
       }
-      alert(`Invite re-sent to ${data.sentTo || selectedEmployee.personalEmail}.`);
+      alertDialog(`Invite re-sent to ${data.sentTo || selectedEmployee.personalEmail}.`);
     } catch {
-      alert("Could not resend the invite. Please try again.");
+      alertDialog("Could not resend the invite. Please try again.");
     } finally {
       setResending(false);
     }
@@ -787,7 +789,7 @@ export function PeopleDirectory() {
 
   const sendReset = async () => {
     if (!selectedEmployee) return;
-    if (!confirm(`Email a password reset link to ${selectedEmployee.fullName}?\n\nThis sends a reset link to ${selectedEmployee.personalEmail} and does NOT change their current password.`)) return;
+    if (!(await confirmDialog(`Email a password reset link to ${selectedEmployee.fullName}?\n\nThis sends a reset link to ${selectedEmployee.personalEmail} and does NOT change their current password.`))) return;
     setResending(true);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/employees/${selectedEmployee.id}/send-reset`, {
@@ -796,12 +798,12 @@ export function PeopleDirectory() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        alert(data.message || "Could not send the reset link.");
+        alertDialog(data.message || "Could not send the reset link.");
         return;
       }
-      alert(`Reset link sent to ${data.sentTo || selectedEmployee.personalEmail}.`);
+      alertDialog(`Reset link sent to ${data.sentTo || selectedEmployee.personalEmail}.`);
     } catch {
-      alert("Could not send the reset link. Please try again.");
+      alertDialog("Could not send the reset link. Please try again.");
     } finally {
       setResending(false);
     }
@@ -818,13 +820,13 @@ export function PeopleDirectory() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        alert(data.message || "Could not offboard this member.");
+        alertDialog(data.message || "Could not offboard this member.");
         return;
       }
       setShowOffboard(false);
       await fetchEmployees();
     } catch {
-      alert("Could not offboard this member. Please try again.");
+      alertDialog("Could not offboard this member. Please try again.");
     } finally {
       setOffboardBusy(false);
     }
@@ -836,7 +838,7 @@ export function PeopleDirectory() {
     const prompt = scheduled
       ? `Cancel the scheduled exit for ${selectedEmployee.fullName}? They will stay active.`
       : `Reactivate ${selectedEmployee.fullName}? They will be able to log in and will appear in payroll runs again.`;
-    if (!confirm(prompt)) return;
+    if (!(await confirmDialog(prompt))) return;
     setOffboardBusy(true);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/employees/${selectedEmployee.id}/reactivate`, {
@@ -845,12 +847,12 @@ export function PeopleDirectory() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        alert(data.message || "Could not reactivate this member.");
+        alertDialog(data.message || "Could not reactivate this member.");
         return;
       }
       await fetchEmployees();
     } catch {
-      alert("Could not reactivate. Please try again.");
+      alertDialog("Could not reactivate. Please try again.");
     } finally {
       setOffboardBusy(false);
     }
@@ -911,13 +913,13 @@ export function PeopleDirectory() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        alert(data.message || `Could not send the ${label}.`);
+        alertDialog(data.message || `Could not send the ${label}.`);
         return;
       }
       closeLetterPreview();
-      alert(data.message);
+      alertDialog(data.message);
     } catch {
-      alert(`Could not send the ${label}. Please try again.`);
+      alertDialog(`Could not send the ${label}. Please try again.`);
     } finally {
       setLetterSending(false);
     }
@@ -975,7 +977,7 @@ export function PeopleDirectory() {
     // Creation succeeds even when the welcome email doesn't go out — never let
     // that failure pass silently (strict false: older responses omit the flag).
     if (mode === "create" && savedEmployee?.welcomeEmailSent === false) {
-      alert(`${savedEmployee.fullName || "The member"} was created, but the welcome email could NOT be sent.\n\nOpen their profile and use "Resend invite" to send the credentials and signing link again.`);
+      alertDialog(`${savedEmployee.fullName || "The member"} was created, but the welcome email could NOT be sent.\n\nOpen their profile and use "Resend invite" to send the credentials and signing link again.`);
     }
 
     const nextEmployees = await fetchEmployees();
@@ -1499,10 +1501,10 @@ export function PeopleDirectory() {
                     </label>
                     <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                       Role
-                      <select value={form.roleId} onChange={(e) => updateForm("roleId", e.target.value)} className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                      <NativeSelect value={form.roleId} onChange={(e) => updateForm("roleId", e.target.value)} className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                         <option value="">Select role</option>
                         {roles.map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}
-                      </select>
+                      </NativeSelect>
                     </label>
                     <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                       Department
@@ -1645,7 +1647,7 @@ export function PeopleDirectory() {
 
                   {previewTab === "offer" && (
                     <div className="flex items-center gap-2 mb-3">
-                      <select
+                      <NativeSelect
                         value={offerTemplateKey}
                         onChange={(e) => {
                           setOfferTemplateKey(e.target.value);
@@ -1658,7 +1660,7 @@ export function PeopleDirectory() {
                             {t.title}
                           </option>
                         ))}
-                      </select>
+                      </NativeSelect>
                       <button
                         type="button"
                         onClick={() => setShowNewTemplateDialog(true)}

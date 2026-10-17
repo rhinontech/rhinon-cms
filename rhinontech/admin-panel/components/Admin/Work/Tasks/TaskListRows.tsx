@@ -7,6 +7,7 @@ import { LIST_GRID, PRIORITY_COLORS, STATUSES, STATUS_STYLES, TAG_COLOR_STYLES }
 import { DueBadge, isDueToday, isOverdue, ordinalDate } from "./utils";
 import type { ApiTask, GroupMode, PersonOption, ProjectOption, TaskPatch, TaskStatus } from "./types";
 
+import { NativeSelect } from "@/components/ui/native-select";
 /** Pill-shaped select that never bubbles a click up into the row. */
 function InlineSelect({
   value, onChange, className, children, disabled,
@@ -18,7 +19,7 @@ function InlineSelect({
   disabled?: boolean;
 }) {
   return (
-    <select
+    <NativeSelect
       value={value}
       disabled={disabled}
       onClick={(e) => e.stopPropagation()}
@@ -29,7 +30,7 @@ function InlineSelect({
       )}
     >
       {children}
-    </select>
+    </NativeSelect>
   );
 }
 

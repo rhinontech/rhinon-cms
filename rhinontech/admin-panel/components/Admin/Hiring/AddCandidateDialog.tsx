@@ -6,13 +6,14 @@ import { TbPaperclip, TbLoader2 } from "react-icons/tb";
 import { hiringApi, inputCls, labelCls } from "./shared";
 import { HiringAside } from "./HiringAside";
 
+import { NativeSelect } from "@/components/ui/native-select";
 const SOURCES = ["LinkedIn", "Referral", "Naukri", "Website", "Instagram", "Other"];
 
 export function AddCandidateDialog({ openingId, onClose, onAdded }: { openingId: string; onClose: () => void; onAdded: () => void }) {
   const [f, setF] = useState({ fullName: "", email: "", phone: "", source: "LinkedIn", linkedinUrl: "", currentCtc: "", expectedCtc: "", noticePeriod: "", notes: "" });
   const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
-  const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setF((p) => ({ ...p, [k]: e.target.value }));
+  const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF((p) => ({ ...p, [k]: e.target.value }));
 
   const submit = async () => {
     if (!f.fullName.trim() || !f.email.trim()) { toast.error("Name and email are required"); return; }
@@ -38,7 +39,7 @@ export function AddCandidateDialog({ openingId, onClose, onAdded }: { openingId:
           <label className={labelCls}>Phone<input value={f.phone} onChange={set("phone")} className={inputCls} /></label>
           <label className={labelCls}>
             Source
-            <select value={f.source} onChange={set("source")} className={inputCls}>{SOURCES.map((s) => <option key={s}>{s}</option>)}</select>
+            <NativeSelect value={f.source} onChange={set("source")} className={inputCls}>{SOURCES.map((s) => <option key={s}>{s}</option>)}</NativeSelect>
           </label>
           <label className={labelCls}>Current CTC (₹/yr)<input type="number" min={0} value={f.currentCtc} onChange={set("currentCtc")} className={inputCls} /></label>
           <label className={labelCls}>Expected CTC (₹/yr)<input type="number" min={0} value={f.expectedCtc} onChange={set("expectedCtc")} className={inputCls} /></label>

@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { TbLayoutSidebarFilled, TbLayoutSidebarRightFilled, TbPlus, TbCheck, TbExternalLink, TbCheckbox, TbAlertTriangle } from "react-icons/tb";
 
+import { NativeSelect } from "@/components/ui/native-select";
 type RequestType = "Bug" | "Change request";
 type RequestStatus = "Open" | "In review" | "In progress" | "Done";
 type RequestPriority = "Low" | "Medium" | "High";
@@ -297,7 +298,7 @@ export function WorkChangesPage() {
         <div className="flex-1 overflow-auto p-4">
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">
-              <select
+              <NativeSelect
                 value={projectFilter}
                 onChange={(event) => setProjectFilter(event.target.value)}
                 className="w-[220px] rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
@@ -308,7 +309,7 @@ export function WorkChangesPage() {
                     {project.name}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
               {projectFilter !== "all" && (
                 <a
                   href={`/p/${projectFilter}`}
@@ -322,7 +323,7 @@ export function WorkChangesPage() {
                 </a>
               )}
             </div>
-            <select
+            <NativeSelect
               value={typeFilter}
               onChange={(event) => setTypeFilter(event.target.value as RequestType | "All")}
               className="w-[180px] rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
@@ -330,8 +331,8 @@ export function WorkChangesPage() {
               <option>All</option>
               <option>Bug</option>
               <option>Change request</option>
-            </select>
-            <select
+            </NativeSelect>
+            <NativeSelect
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value as RequestStatus | "All")}
               className="w-[180px] rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
@@ -341,7 +342,7 @@ export function WorkChangesPage() {
               <option>In review</option>
               <option>In progress</option>
               <option>Done</option>
-            </select>
+            </NativeSelect>
           </div>
 
           {selectedIds.size > 0 && (
@@ -530,7 +531,7 @@ export function WorkChangesPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                     Project
-                    <select
+                    <NativeSelect
                       value={form.projectId}
                       onChange={(event) => setForm((current) => ({ ...current, projectId: event.target.value }))}
                       className="rounded-lg border border-border bg-card px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
@@ -541,11 +542,11 @@ export function WorkChangesPage() {
                           {project.name}
                         </option>
                       ))}
-                    </select>
+                    </NativeSelect>
                   </label>
                   <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                     Reported by
-                    <select
+                    <NativeSelect
                       value={form.reportedBy}
                       onChange={(event) => setForm((current) => ({ ...current, reportedBy: event.target.value }))}
                       className="rounded-lg border border-border bg-card px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
@@ -556,7 +557,7 @@ export function WorkChangesPage() {
                           {employee.fullName}
                         </option>
                       ))}
-                    </select>
+                    </NativeSelect>
                   </label>
                   <SelectField label="Type" value={form.type} onChange={(value) => setForm((current) => ({ ...current, type: value as RequestType }))} options={["Bug", "Change request"]} />
                   <SelectField label="Status" value={form.status} onChange={(value) => setForm((current) => ({ ...current, status: value as RequestStatus }))} options={["Open", "In review", "In progress", "Done"]} />
@@ -606,7 +607,7 @@ function SelectField({ label, value, onChange, options }: { label: string; value
   return (
     <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
       {label}
-      <select
+      <NativeSelect
         value={value}
         onChange={(event) => onChange(event.target.value)}
         className="rounded-lg border border-border bg-card px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
@@ -616,7 +617,7 @@ function SelectField({ label, value, onChange, options }: { label: string; value
             {option}
           </option>
         ))}
-      </select>
+      </NativeSelect>
     </label>
   );
 }
@@ -633,7 +634,7 @@ function InlineBadgeSelect({
   onChange: (value: string) => void;
 }) {
   return (
-    <select
+    <NativeSelect
       value={value}
       onClick={(event) => event.stopPropagation()}
       onChange={(event) => {
@@ -651,6 +652,6 @@ function InlineBadgeSelect({
           {option}
         </option>
       ))}
-    </select>
+    </NativeSelect>
   );
 }

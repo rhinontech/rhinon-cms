@@ -7,6 +7,7 @@ import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useSideNav } from "@/context/SideNavContext";
 import type { PageNode } from "@/components/Admin/Pages/types";
+import { alertDialog } from "@/components/ui/dialogs";
 
 export default function PagesIndexPage() {
   const router = useRouter();
@@ -28,7 +29,7 @@ export default function PagesIndexPage() {
       const page = await apiFetch<{ id: string }>("/pages", { method: "POST", body: JSON.stringify({ title: "Untitled" }) });
       router.push(`/${roleSlug}/pages/${page.id}`);
     } catch (err: any) {
-      alert(err.message || "Failed to create page");
+      alertDialog(err.message || "Failed to create page");
     }
   };
 

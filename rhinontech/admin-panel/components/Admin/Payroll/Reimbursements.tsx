@@ -7,6 +7,8 @@ import { TbPlus, TbX, TbPaperclip, TbLoader2, TbReceipt } from "react-icons/tb";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { usePermissions } from "@/context/PermissionsContext";
 
+import { NativeSelect } from "@/components/ui/native-select";
+import { confirmDialog } from "@/components/ui/dialogs";
 type ClaimStatus = "pending" | "approved" | "rejected" | "paid";
 
 interface Claim {
@@ -107,19 +109,19 @@ function NewClaimDialog({ isAdmin, onClose, onCreated }: { isAdmin: boolean; onC
         {isAdmin && (
           <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
             Employee
-            <select value={userId} onChange={(e) => setUserId(e.target.value)} className={input}>
+            <NativeSelect value={userId} onChange={(e) => setUserId(e.target.value)} className={input}>
               <option value="">Select employee</option>
               {employees.map((e) => <option key={e.id} value={e.id}>{e.fullName}</option>)}
-            </select>
+            </NativeSelect>
           </label>
         )}
 
         <div className="grid grid-cols-2 gap-3">
           <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
             Category
-            <select value={category} onChange={(e) => setCategory(e.target.value)} className={input}>
+            <NativeSelect value={category} onChange={(e) => setCategory(e.target.value)} className={input}>
               {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
-            </select>
+            </NativeSelect>
           </label>
           <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
             Amount
@@ -127,15 +129,15 @@ function NewClaimDialog({ isAdmin, onClose, onCreated }: { isAdmin: boolean; onC
           </label>
           <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
             Expense month
-            <select value={month} onChange={(e) => setMonth(Number(e.target.value))} className={input}>
+            <NativeSelect value={month} onChange={(e) => setMonth(Number(e.target.value))} className={input}>
               {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
-            </select>
+            </NativeSelect>
           </label>
           <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
             Year
-            <select value={year} onChange={(e) => setYear(Number(e.target.value))} className={input}>
+            <NativeSelect value={year} onChange={(e) => setYear(Number(e.target.value))} className={input}>
               {years.map((y) => <option key={y}>{y}</option>)}
-            </select>
+            </NativeSelect>
           </label>
         </div>
 
@@ -252,7 +254,7 @@ export function Reimbursements() {
   useEffect(() => { load(); }, [load]);
 
   const withdraw = async (c: Claim) => {
-    if (!confirm("Withdraw this claim?")) return;
+    if (!(await confirmDialog("Withdraw this claim?"))) return;
     const r = await api(`/reimbursements/me/${c.id}`, { method: "DELETE" });
     if (r.ok) { toast.success("Claim withdrawn"); load(); } else toast.error("Couldn't withdraw claim");
   };

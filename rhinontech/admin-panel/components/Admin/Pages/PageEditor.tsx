@@ -32,6 +32,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { TbUpload, TbLoader } from "react-icons/tb";
+import { alertDialog } from "@/components/ui/dialogs";
 
 type SaveStatus = "idle" | "saving" | "saved" | "conflict" | "error";
 
@@ -156,7 +157,7 @@ export function PageEditor({ id }: { id: string }) {
           body: JSON.stringify({ title: "Untitled", parentId: idRef.current }),
         });
       } catch (err: any) {
-        alert(err.message || "Failed to create page");
+        alertDialog(err.message || "Failed to create page");
         return null;
       }
     },
@@ -285,7 +286,7 @@ export function PageEditor({ id }: { id: string }) {
       });
       router.push(`/${roleSlug}/pages/${child.id}`);
     } catch (err: any) {
-      alert(err.message || "Failed to create sub-page");
+      alertDialog(err.message || "Failed to create sub-page");
     }
   };
 
@@ -319,7 +320,7 @@ export function PageEditor({ id }: { id: string }) {
       await apiFetch(`/pages/${id}`, { method: "PUT", body: JSON.stringify({ visibility, expectedUpdatedAt: lastUpdatedAtRef.current }) });
       load(id);
     } catch (err: any) {
-      alert(err.message || "Failed to update visibility");
+      alertDialog(err.message || "Failed to update visibility");
     }
   };
 
@@ -492,7 +493,7 @@ function IconPicker({
       onChange(url);
       setOpen(false);
     } catch (err: any) {
-      alert(err.message || "Icon upload failed");
+      alertDialog(err.message || "Icon upload failed");
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";

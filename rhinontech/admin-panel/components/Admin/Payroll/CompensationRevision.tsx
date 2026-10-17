@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { toast } from "sonner";
 import { TbLoader2, TbArrowRight, TbTrendingUp } from "react-icons/tb";
+import { confirmDialog } from "@/components/ui/dialogs";
 
 type Snapshot = {
   roleTitle: string | null;
@@ -215,7 +216,7 @@ export function RevisionHistory({ userId, refreshKey }: { userId: string; refres
   useEffect(() => { load(); }, [userId, refreshKey]);
 
   const cancel = async (id: string) => {
-    if (!confirm("Cancel this scheduled revision?")) return;
+    if (!(await confirmDialog("Cancel this scheduled revision?"))) return;
     const r = await api(`/${id}/cancel`, { method: "POST" });
     if (r.ok) { toast.success("Revision cancelled"); load(); } else toast.error("Couldn't cancel");
   };

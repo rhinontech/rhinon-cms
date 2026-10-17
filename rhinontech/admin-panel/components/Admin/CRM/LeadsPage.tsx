@@ -26,6 +26,8 @@ import {
 } from "./ui";
 import { useModuleBase } from "@/lib/sites";
 
+import { NativeSelect } from "@/components/ui/native-select";
+import { confirmDialog } from "@/components/ui/dialogs";
 /**
  * Two column sets. With the detail panel open the table has roughly 550px to
  * work with, so all eight columns overflow and clip the right-hand edge. The
@@ -224,7 +226,7 @@ export function LeadsPage() {
   };
 
   const remove = async (id: string) => {
-    if (!confirm("Delete this lead?")) return;
+    if (!(await confirmDialog("Delete this lead?"))) return;
     try {
       await apiFetch(`/leads/${id}`, { method: "DELETE" });
       if (selected?.id === id) setSelected(null);
@@ -235,7 +237,7 @@ export function LeadsPage() {
   };
 
   const bulkDelete = async () => {
-    if (!confirm(`Delete ${selectedIds.size} lead(s)? This cannot be undone.`)) return;
+    if (!(await confirmDialog(`Delete ${selectedIds.size} lead(s)? This cannot be undone.`))) return;
     try {
       await apiFetch("/leads/bulk-delete", { method: "POST", body: JSON.stringify({ ids: [...selectedIds] }) });
       setSelectedIds(new Set());
@@ -486,19 +488,19 @@ export function LeadsPage() {
 
                   {/* Inline stage edit — the single most-changed field. */}
                   <span onClick={(e) => e.stopPropagation()}>
-                    <select
+                    <NativeSelect
                       value={lead.lifecycleStage}
                       onChange={(e) => patchLead(lead.id, { lifecycleStage: e.target.value as LifecycleStage })}
                       className="w-full cursor-pointer appearance-none rounded bg-transparent text-[11px] outline-none"
                     >
                       {LIFECYCLE_STAGES.map((s) => <option key={s} value={s}>{s}</option>)}
-                    </select>
+                    </NativeSelect>
                   </span>
 
                   <span onClick={(e) => e.stopPropagation()} className="flex min-w-0 items-center gap-1.5">
                     <Avatar name={lead.owner?.fullName} size={18} />
                     {!compact && (
-                      <select
+                      <NativeSelect
                         value={lead.ownerId || ""}
                         onChange={(e) => patchLead(lead.id, { ownerId: e.target.value || null })}
                         // Unassigned reads as a quiet dash rather than the word
@@ -510,7 +512,7 @@ export function LeadsPage() {
                       >
                         <option value="">—</option>
                         {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}
-                      </select>
+                      </NativeSelect>
                     )}
                   </span>
 
@@ -585,24 +587,24 @@ export function LeadsPage() {
                     <div className="mt-2.5 grid grid-cols-2 gap-2">
                       <label className="flex flex-col gap-1">
                         <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Stage</span>
-                        <select
+                        <NativeSelect
                           value={selected.lifecycleStage}
                           onChange={(e) => patchLead(selected.id, { lifecycleStage: e.target.value as LifecycleStage })}
                           className="w-full cursor-pointer rounded border border-border bg-card px-2 py-1 text-[12px] outline-none focus:ring-2 focus:ring-blue-500/40"
                         >
                           {LIFECYCLE_STAGES.map((st) => <option key={st} value={st}>{st}</option>)}
-                        </select>
+                        </NativeSelect>
                       </label>
                       <label className="flex flex-col gap-1">
                         <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Owner</span>
-                        <select
+                        <NativeSelect
                           value={selected.ownerId || ""}
                           onChange={(e) => patchLead(selected.id, { ownerId: e.target.value || null })}
                           className="w-full cursor-pointer rounded border border-border bg-card px-2 py-1 text-[12px] outline-none focus:ring-2 focus:ring-blue-500/40"
                         >
                           <option value="">Unassigned</option>
                           {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}
-                        </select>
+                        </NativeSelect>
                       </label>
                     </div>
 
@@ -773,13 +775,13 @@ export function LeadsPage() {
 
 function Select({ value, onChange, children }: { value: string; onChange: (v: string) => void; children: React.ReactNode }) {
   return (
-    <select
+    <NativeSelect
       value={value}
       onChange={(e) => onChange(e.target.value)}
       className="rounded-md border border-border bg-card/70 px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500/40"
     >
       {children}
-    </select>
+    </NativeSelect>
   );
 }
 

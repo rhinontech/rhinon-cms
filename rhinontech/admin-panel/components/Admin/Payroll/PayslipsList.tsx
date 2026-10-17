@@ -7,6 +7,7 @@ import { TbFileInvoice, TbDownload, TbEye, TbCircleCheck, TbUserMinus } from "re
 import { toast } from "sonner";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { usePermissions } from "@/context/PermissionsContext";
+import { confirmDialog } from "@/components/ui/dialogs";
 
 interface Payslip {
   id: string;
@@ -40,7 +41,7 @@ export function PayslipsList() {
   };
 
   const moveToSettlement = async (slip: Payslip) => {
-    if (!confirm(`Remove ${slip.employee?.fullName}'s payslip from this payroll and run a final settlement instead?`)) return;
+    if (!(await confirmDialog(`Remove ${slip.employee?.fullName}'s payslip from this payroll and run a final settlement instead?`))) return;
     const token = document.cookie.split("; ").find((row) => row.startsWith("authToken="))?.split("=")[1];
     setPayingId(slip.id);
     try {
@@ -59,7 +60,7 @@ export function PayslipsList() {
   };
 
   const markPaid = async (slip: Payslip) => {
-    if (!confirm(`Mark ${slip.employee?.fullName ?? "this"} payslip as paid? The employee will be emailed.`)) return;
+    if (!(await confirmDialog(`Mark ${slip.employee?.fullName ?? "this"} payslip as paid? The employee will be emailed.`))) return;
     const token = document.cookie.split("; ").find((row) => row.startsWith("authToken="))?.split("=")[1];
     setPayingId(slip.id);
     try {

@@ -9,6 +9,7 @@ import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/Collap
 import { useSideNav } from "@/context/SideNavContext";
 import { useDomainConfig, type ContentResource } from "./domains";
 import type { Blog } from "./BlogEditor/types";
+import { confirmDialog, alertDialog } from "@/components/ui/dialogs";
 
 const RESOURCE_COPY: Record<ContentResource, { title: string; newLabel: string; empty: string }> = {
   blogs: { title: "Blogs", newLabel: "New Blog", empty: "No blogs yet. Create your first post." },
@@ -47,12 +48,12 @@ export function BlogsManager({ resource = "blogs" }: { resource?: "blogs" | "eve
   }, [fetchBlogs]);
 
   const handleDelete = async (id: string) => {
-    if (!confirm(`Delete this ${resource === "events" ? "event" : "post"}?`)) return;
+    if (!(await confirmDialog(`Delete this ${resource === "events" ? "event" : "post"}?`))) return;
     try {
       await apiFetch(`/content/${resource}/${id}`, { method: "DELETE" });
       fetchBlogs();
     } catch {
-      alert("Delete failed");
+      alertDialog("Delete failed");
     }
   };
 

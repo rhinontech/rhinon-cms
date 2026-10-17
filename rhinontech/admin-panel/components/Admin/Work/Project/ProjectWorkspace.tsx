@@ -19,6 +19,7 @@ import { GanttView } from "./GanttView";
 import { TableView } from "./TableView";
 import { useProjectWorkspace } from "./useProjectWorkspace";
 import type { ProjectTask } from "./types";
+import { promptDialog } from "@/components/ui/dialogs";
 
 type Tab = "table" | "board" | "gantt" | "files" | "analytics" | "calendar";
 
@@ -241,8 +242,8 @@ export function ProjectWorkspace({
           <CalendarView
             rows={ws.rows}
             onOpenTask={setOpenTask}
-            onCreateOnDate={(date) => {
-              const title = window.prompt(`New task on ${date.toDateString()}`);
+            onCreateOnDate={async (date) => {
+              const title = (await promptDialog(`New task on ${date.toDateString()}`));
               if (title?.trim()) ws.createOnDate(title, date);
             }}
           />

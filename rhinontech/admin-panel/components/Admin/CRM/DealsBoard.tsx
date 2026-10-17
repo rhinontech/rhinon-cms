@@ -19,6 +19,7 @@ import { StageSettingsDialog } from "./StageSettingsDialog";
 import { Avatar, StageDot, TBtn, formatMoney, formatDate } from "./ui";
 import { useModuleBase } from "@/lib/sites";
 
+import { NativeSelect } from "@/components/ui/native-select";
 interface BoardResponse {
   stages: BoardStage[];
   unstaged: Deal[];
@@ -145,14 +146,14 @@ export function DealsBoard() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <select
+          <NativeSelect
             value={ownerFilter}
             onChange={(e) => setOwnerFilter(e.target.value)}
             className="rounded-md border border-border bg-card/70 px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500/40"
           >
             <option value="All">All owners</option>
             {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}
-          </select>
+          </NativeSelect>
           <TBtn onClick={() => setShowStages(true)} title="Manage pipeline stages"><TbSettings size={14} /> Stages</TBtn>
           <TBtn variant="solid" onClick={() => setShowNew(true)}><TbPlus size={14} /> New deal</TBtn>
         </div>
@@ -498,20 +499,20 @@ function NewDealDialog({
               />
             </Field>
             <Field label="Currency">
-              <select value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className={INPUT}>
+              <NativeSelect value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className={INPUT}>
                 <option value="INR">INR</option>
                 <option value="USD">USD</option>
                 <option value="EUR">EUR</option>
                 <option value="GBP">GBP</option>
-              </select>
+              </NativeSelect>
             </Field>
           </div>
 
           <div className="grid grid-cols-2 gap-2.5">
             <Field label="Stage">
-              <select value={form.stageId} onChange={(e) => setForm({ ...form, stageId: e.target.value })} className={INPUT}>
+              <NativeSelect value={form.stageId} onChange={(e) => setForm({ ...form, stageId: e.target.value })} className={INPUT}>
                 {stages.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
+              </NativeSelect>
             </Field>
             <Field label="Expected close">
               <input
@@ -524,16 +525,16 @@ function NewDealDialog({
 
           <div className="grid grid-cols-2 gap-2.5">
             <Field label="Account">
-              <select value={form.accountId} onChange={(e) => setForm({ ...form, accountId: e.target.value })} className={INPUT}>
+              <NativeSelect value={form.accountId} onChange={(e) => setForm({ ...form, accountId: e.target.value })} className={INPUT}>
                 <option value="">—</option>
                 {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-              </select>
+              </NativeSelect>
             </Field>
             <Field label="Owner">
-              <select value={form.ownerId} onChange={(e) => setForm({ ...form, ownerId: e.target.value })} className={INPUT}>
+              <NativeSelect value={form.ownerId} onChange={(e) => setForm({ ...form, ownerId: e.target.value })} className={INPUT}>
                 <option value="">Me</option>
                 {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}
-              </select>
+              </NativeSelect>
             </Field>
           </div>
         </div>

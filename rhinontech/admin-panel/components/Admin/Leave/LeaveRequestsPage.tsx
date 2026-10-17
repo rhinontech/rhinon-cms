@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { useSideNav } from "@/context/SideNavContext";
+import { confirmDialog, alertDialog } from "@/components/ui/dialogs";
 
 interface LeaveRequest {
   id: string;
@@ -74,14 +75,14 @@ export function LeaveRequestsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this leave request?")) return;
+    if (!(await confirmDialog("Delete this leave request?"))) return;
     setDeleting(id);
     try {
       await apiFetch(`/leave/requests/${id}`, { method: "DELETE" });
       setRequests(prev => prev.filter(r => r.id !== id));
       if (selected?.id === id) { setSelected(null); setIsPanelOpen(false); setMobileDetail(false); }
     } catch (err: any) {
-      alert(err?.message || "Failed to delete request");
+      alertDialog(err?.message || "Failed to delete request");
     } finally {
       setDeleting(null);
     }

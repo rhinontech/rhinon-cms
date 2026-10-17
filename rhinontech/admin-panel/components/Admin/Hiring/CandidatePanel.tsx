@@ -11,6 +11,8 @@ import {
 import { FeedbackForm } from "./FeedbackForm";
 import { HiringAside } from "./HiringAside";
 
+import { NativeSelect } from "@/components/ui/native-select";
+import { confirmDialog, promptDialog } from "@/components/ui/dialogs";
 function toLocalInput(d: Date) {
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -53,16 +55,16 @@ function ScheduleForm({ candidate, rounds, onDone }: { candidate: Candidate; rou
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <label className={labelCls}>
           Round
-          <select value={roundIndex} onChange={(e) => setRoundIndex(Number(e.target.value))} className={inputCls}>
+          <NativeSelect value={roundIndex} onChange={(e) => setRoundIndex(Number(e.target.value))} className={inputCls}>
             {rounds.map((r, i) => <option key={i} value={i}>{i + 1}. {r.name}</option>)}
-          </select>
+          </NativeSelect>
         </label>
         <label className={labelCls}>
           Interviewer
-          <select value={interviewerId} onChange={(e) => setInterviewerId(e.target.value)} className={inputCls}>
+          <NativeSelect value={interviewerId} onChange={(e) => setInterviewerId(e.target.value)} className={inputCls}>
             <option value="">Select</option>
             {people.map((p) => <option key={p.id} value={p.id}>{p.fullName}</option>)}
-          </select>
+          </NativeSelect>
         </label>
         <label className={labelCls}>
           Date & time
@@ -134,9 +136,9 @@ function RescheduleForm({ interview, onDone, onCancel }: { interview: Interview;
         </label>
         <label className={labelCls}>
           Interviewer
-          <select value={interviewerId} onChange={(e) => setInterviewerId(e.target.value)} className={inputCls}>
+          <NativeSelect value={interviewerId} onChange={(e) => setInterviewerId(e.target.value)} className={inputCls}>
             {people.map((p) => <option key={p.id} value={p.id}>{p.fullName}</option>)}
-          </select>
+          </NativeSelect>
         </label>
         <label className={labelCls}>
           Meeting link
@@ -198,7 +200,7 @@ function InterviewCard({ interview, onChanged }: { interview: Interview; onChang
             </button>
           )}
           <button onClick={() => setStatus("no_show")} className="text-muted-foreground hover:text-foreground">No-show</button>
-          <button onClick={() => confirm("Cancel this interview? The candidate and interviewer will be emailed and it's removed from the calendar.") && setStatus("cancelled")} className="text-muted-foreground hover:text-red-500">Cancel</button>
+          <button onClick={async () => (await confirmDialog("Cancel this interview? The candidate and interviewer will be emailed and it's removed from the calendar.")) && setStatus("cancelled")} className="text-muted-foreground hover:text-red-500">Cancel</button>
         </div>
       )}
       {rescheduling && <RescheduleForm interview={interview} onCancel={() => setRescheduling(false)} onDone={() => { setRescheduling(false); onChanged(); }} />}
@@ -237,8 +239,8 @@ export function CandidatePanel({ candidateId, rounds, onClose, onChanged }: { ca
     refresh();
   };
 
-  const reject = (stage: "rejected" | "withdrawn") => {
-    const reason = prompt(stage === "rejected" ? "Reason for rejecting (optional)" : "Why did they withdraw? (optional)");
+  const reject = async (stage: "rejected" | "withdrawn") => {
+    const reason = (await promptDialog(stage === "rejected" ? "Reason for rejecting (optional)" : "Why did they withdraw? (optional)"));
     if (reason === null) return;
     move(stage, { reason });
   };
@@ -315,7 +317,7 @@ export function CandidatePanel({ candidateId, rounds, onClose, onChanged }: { ca
                   Make offer
                 </button>
               )}
-              <select value="" onChange={(e) => {
+              <NativeSelect value="" onChange={(e) => {
                 const v = e.target.value;
                 if (!v) return;
                 if (v.startsWith("round:")) move("interview", { roundIndex: Number(v.slice(6)) });
@@ -326,7 +328,7 @@ export function CandidatePanel({ candidateId, rounds, onClose, onChanged }: { ca
                 <option value="shortlisted">Shortlisted</option>
                 {rounds.map((r, i) => <option key={i} value={`round:${i}`}>{r.name}</option>)}
                 <option value="offer">Offer</option>
-              </select>
+              </NativeSelect>
               <button onClick={() => reject("rejected")} className="px-3 py-1.5 text-xs font-medium rounded-lg border border-red-300 dark:border-red-400/30 text-red-600 dark:text-red-300">Reject</button>
               <button onClick={() => reject("withdrawn")} className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">Withdrawn</button>
             </div>

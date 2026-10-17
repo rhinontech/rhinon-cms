@@ -10,6 +10,8 @@ import { apiFetch } from "@/lib/api";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { useSideNav } from "@/context/SideNavContext";
 
+import { NativeSelect } from "@/components/ui/native-select";
+import { alertDialog } from "@/components/ui/dialogs";
 /* ────────── shared types ────────── */
 interface LeaveType {
   id: string;
@@ -259,7 +261,7 @@ function EmployeeLeaveOverview({ isSubNavExpanded }: { isSubNavExpanded: boolean
       setForm(f => ({ ...f, startDate: "", endDate: "", reason: "" }));
       fetchData();
     } catch (err: any) {
-      alert(err?.message || "Failed to submit leave request");
+      alertDialog(err?.message || "Failed to submit leave request");
     } finally {
       setSubmitting(false);
     }
@@ -374,14 +376,14 @@ function EmployeeLeaveOverview({ isSubNavExpanded }: { isSubNavExpanded: boolean
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Leave Type</label>
-                <select
+                <NativeSelect
                   value={form.leaveTypeId}
                   onChange={e => setForm(f => ({ ...f, leaveTypeId: e.target.value }))}
                   className="w-full px-4 py-2 text-sm rounded-xl border border-border bg-muted/40 focus:ring-2 focus:ring-ring outline-none"
                   required
                 >
                   {leaveTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                </select>
+                </NativeSelect>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">

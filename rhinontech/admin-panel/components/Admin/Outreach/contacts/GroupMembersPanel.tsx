@@ -25,6 +25,7 @@ import Link from "next/link";
 import { useModuleBase } from "@/lib/sites";
 import { LeadPicker } from "../shared/LeadPicker";
 import type { ContactGroupSummary, ContactLead } from "./types";
+import { promptDialog } from "@/components/ui/dialogs";
 
 const LEAD_STATUSES = ["New", "Enriched", "Enrolled", "Emailed", "Interested", "Replied", "Bounced", "Unsubscribed"];
 
@@ -189,8 +190,8 @@ export function GroupMembersPanel({
     }
   };
 
-  const saveCurrentAsView = () => {
-    const name = window.prompt("Name this view:");
+  const saveCurrentAsView = async () => {
+    const name = (await promptDialog("Name this view:"));
     if (!name || !name.trim()) return;
     const view: SavedView = { id: crypto.randomUUID(), name: name.trim(), search, status: statusFilter, source: sourceFilter };
     const next = [...savedViews, view];

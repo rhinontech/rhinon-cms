@@ -6,6 +6,7 @@ import {
   TbTable, TbSeparator, TbPhoto, TbAlignJustified, TbListCheck, TbLink, TbFileText,
 } from "react-icons/tb";
 import { apiFetch, apiUpload } from "@/lib/api";
+import { alertDialog } from "@/components/ui/dialogs";
 
 interface SlashItem {
   title: string;
@@ -77,7 +78,7 @@ function buildItems(roleSlug: string, handlersRef: { current: SlashPageHandlers 
             const { url } = await apiUpload<{ url: string }>("/content/upload-image", file);
             editor.chain().focus().setImage({ src: url }).run();
           } catch {
-            alert("Image upload failed");
+            alertDialog("Image upload failed");
           }
         };
         input.click();

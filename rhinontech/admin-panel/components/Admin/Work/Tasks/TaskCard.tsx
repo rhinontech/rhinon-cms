@@ -8,6 +8,7 @@ import { PRIORITY_COLORS, STATUSES, TAG_COLOR_STYLES } from "./constants";
 import { DueBadge, initials, isOverdue, ordinalDate } from "./utils";
 import type { ApiTask, GroupMode, PersonOption, ProjectOption, TaskPatch, TaskStatus } from "./types";
 
+import { NativeSelect } from "@/components/ui/native-select";
 function CardBody({ task, groupMode }: { task: ApiTask; groupMode: GroupMode }) {
   const done = task.subtasks?.filter((s) => s.done).length ?? 0;
   const total = task.subtasks?.length ?? 0;
@@ -105,14 +106,14 @@ export function TaskCard({
           triage job. */}
       {canEdit && quickAssign && (
         <div className="mt-2" onPointerDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
-          <select
+          <NativeSelect
             value=""
             onChange={(e) => e.target.value && onPatch(task.id, { assigneeId: e.target.value })}
             className="w-full cursor-pointer rounded-md border border-blue-200 dark:border-blue-400/25 bg-blue-50 dark:bg-blue-400/10 px-1.5 py-1 text-[11px] font-medium text-blue-700 dark:text-blue-300 outline-none hover:bg-blue-100 dark:hover:bg-blue-400/15"
           >
             <option value="">Assign to…</option>
             {people.map((p) => <option key={p.id} value={p.id}>{p.fullName}</option>)}
-          </select>
+          </NativeSelect>
         </div>
       )}
 
@@ -121,34 +122,34 @@ export function TaskCard({
           opening the detail panel. */}
       {canEdit && (
         <div className="mt-2 flex gap-1.5 sm:hidden" onPointerDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
-          <select
+          <NativeSelect
             value={task.status}
             onChange={(e) => onPatch(task.id, { status: e.target.value as TaskStatus })}
             className="min-w-0 flex-1 rounded border border-border bg-card px-1 py-0.5 text-[10px]"
           >
             {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
+          </NativeSelect>
           {/* quickAssign already renders an assignee picker above — don't repeat it. */}
           {groupMode === "person" ? (
             !quickAssign && (
-              <select
+              <NativeSelect
                 value={task.assigneeId ?? ""}
                 onChange={(e) => onPatch(task.id, { assigneeId: e.target.value || null })}
                 className="min-w-0 flex-1 rounded border border-border bg-card px-1 py-0.5 text-[10px]"
               >
                 <option value="">Unassigned</option>
                 {people.map((p) => <option key={p.id} value={p.id}>{p.fullName}</option>)}
-              </select>
+              </NativeSelect>
             )
           ) : (
-            <select
+            <NativeSelect
               value={task.project?.id ?? ""}
               onChange={(e) => onPatch(task.id, { projectId: e.target.value || null })}
               className="min-w-0 flex-1 rounded border border-border bg-card px-1 py-0.5 text-[10px]"
             >
               <option value="">No project</option>
               {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
+            </NativeSelect>
           )}
         </div>
       )}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { TbTrash, TbPlus, TbBook, TbRefresh } from "react-icons/tb";
 import { apiFetch } from "@/lib/api";
+import { confirmDialog } from "@/components/ui/dialogs";
 
 interface DocsAccessEntry {
   id: string;
@@ -62,7 +63,7 @@ export function DocsAccessManager() {
   };
 
   const remove = async (id: string, addr: string) => {
-    if (!window.confirm(`Revoke developer-docs access for ${addr}?`)) return;
+    if (!(await confirmDialog(`Revoke developer-docs access for ${addr}?`))) return;
     setError(null);
     setNotice(null);
     try {

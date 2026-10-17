@@ -15,6 +15,7 @@ import {
 } from "./ui";
 import { useModuleBase } from "@/lib/sites";
 
+import { NativeSelect } from "@/components/ui/native-select";
 const COLS = "minmax(180px,2fr) minmax(120px,1.2fr) 110px 120px 96px 96px 34px";
 const LIMIT = 50;
 
@@ -207,12 +208,12 @@ export function DealsListPage() {
 
 function Sel({ value, onChange, children }: { value: string; onChange: (v: string) => void; children: React.ReactNode }) {
   return (
-    <select
+    <NativeSelect
       value={value}
       onChange={(e) => onChange(e.target.value)}
       className="rounded-md border border-border bg-card/70 px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500/40"
     >
       {children}
-    </select>
+    </NativeSelect>
   );
 }

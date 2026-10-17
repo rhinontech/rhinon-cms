@@ -7,6 +7,7 @@ import { apiFetch } from "@/lib/api";
 import type { UserRef } from "./types";
 import { Avatar, TBtn, formatDate } from "./ui";
 
+import { NativeSelect } from "@/components/ui/native-select";
 interface CrmTask {
   id: string;
   title: string;
@@ -123,14 +124,14 @@ export function RelatedTasks({
               onChange={(e) => setDueDate(e.target.value)}
               className="rounded border border-border bg-card px-2 py-1 text-[11px] outline-none focus:ring-2 focus:ring-blue-500/40"
             />
-            <select
+            <NativeSelect
               value={assigneeId}
               onChange={(e) => setAssigneeId(e.target.value)}
               className="rounded border border-border bg-card px-2 py-1 text-[11px] outline-none focus:ring-2 focus:ring-blue-500/40"
             >
               <option value="">Me</option>
               {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}
-            </select>
+            </NativeSelect>
             <span className="flex-1" />
             <TBtn onClick={() => setAdding(false)}>Cancel</TBtn>
             <TBtn variant="solid" onClick={create} disabled={saving || !title.trim()}>

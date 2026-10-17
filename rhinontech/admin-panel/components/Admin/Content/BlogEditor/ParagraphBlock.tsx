@@ -64,6 +64,8 @@ import {
 import { cn } from "@/lib/utils";
 import { apiUpload } from "@/lib/api";
 
+import { NativeSelect } from "@/components/ui/native-select";
+import { alertDialog, promptDialog } from "@/components/ui/dialogs";
 const CustomImage = Image.extend({
   addAttributes() {
     return {
@@ -171,7 +173,7 @@ function InsertImageButton({ editor }: { editor: Editor }) {
       editor.chain().focus().setImage({ src: uploadedUrl }).run();
       setOpen(false);
     } catch (err: any) {
-      alert(err.message || "Upload failed");
+      alertDialog(err.message || "Upload failed");
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -391,9 +393,9 @@ export function ParagraphBlock({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [html, editor]);
 
-  const setLink = useCallback((ed: Editor) => {
+  const setLink = useCallback(async (ed: Editor) => {
     const previous = ed.getAttributes("link").href as string | undefined;
-    const url = window.prompt("Link URL", previous || "https://");
+    const url = (await promptDialog("Link URL", previous || "https://"));
     if (url === null) return;
     if (url === "" || url === "https://") {
       ed.chain().focus().extendMarkRange("link").unsetLink().run();
@@ -425,7 +427,7 @@ export function ParagraphBlock({
     <div className="rounded-lg border border-border bg-card focus-within:ring-2 focus-within:ring-ring transition-shadow">
       <div className="flex flex-wrap items-center gap-0.5 border-b border-border px-2 py-1.5">
         {/* Font family */}
-        <select
+        <NativeSelect
           title="Font"
           value={fontValue}
           onChange={(e) => {
@@ -438,10 +440,10 @@ export function ParagraphBlock({
           {FONTS.map((f) => (
             <option key={f.label} value={f.value}>{f.label}</option>
           ))}
-        </select>
+        </NativeSelect>
 
         {/* Paragraph style */}
-        <select
+        <NativeSelect
           title="Paragraph style"
           value={styleValue}
           onChange={(e) => {
@@ -456,7 +458,7 @@ export function ParagraphBlock({
           <option value="h2">Heading 2</option>
           <option value="h3">Heading 3</option>
           <option value="h4">Heading 4</option>
-        </select>
+        </NativeSelect>
 
         <Divider />
 

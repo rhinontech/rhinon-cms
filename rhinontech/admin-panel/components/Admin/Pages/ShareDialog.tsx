@@ -6,6 +6,8 @@ import { TbTrash, TbWorld, TbLock } from "react-icons/tb";
 import { apiFetch } from "@/lib/api";
 import type { PageShareEntry } from "./types";
 
+import { NativeSelect } from "@/components/ui/native-select";
+import { alertDialog } from "@/components/ui/dialogs";
 interface Member {
   id: string;
   fullName: string;
@@ -69,7 +71,7 @@ export function ShareDialog({
       });
       onOpenChange(false);
     } catch (err: any) {
-      alert(err.message || "Failed to update sharing");
+      alertDialog(err.message || "Failed to update sharing");
     } finally {
       setSaving(false);
     }
@@ -100,7 +102,7 @@ export function ShareDialog({
             </button>
 
             <div className="flex gap-2">
-              <select
+              <NativeSelect
                 value={pickUserId}
                 onChange={(e) => setPickUserId(e.target.value)}
                 className="flex-1 rounded-lg border border-border bg-card px-2.5 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
@@ -109,7 +111,7 @@ export function ShareDialog({
                 {availableMembers.map((m) => (
                   <option key={m.id} value={m.id}>{m.fullName}</option>
                 ))}
-              </select>
+              </NativeSelect>
               <button
                 onClick={addShare}
                 disabled={!pickUserId}
@@ -127,14 +129,14 @@ export function ShareDialog({
                   <div key={s.userId} className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
                     <span className="truncate text-sm text-foreground">{memberName(s.userId)}</span>
                     <div className="flex items-center gap-2">
-                      <select
+                      <NativeSelect
                         value={s.access}
                         onChange={(e) => setAccess(s.userId, e.target.value as "view" | "edit")}
                         className="rounded border border-border bg-card px-1.5 py-1 text-xs outline-none"
                       >
                         <option value="view">Can view</option>
                         <option value="edit">Can edit</option>
-                      </select>
+                      </NativeSelect>
                       <button onClick={() => removeShare(s.userId)} className="text-muted-foreground/70 hover:text-red-600 dark:hover:text-red-300">
                         <TbTrash size={14} />
                       </button>

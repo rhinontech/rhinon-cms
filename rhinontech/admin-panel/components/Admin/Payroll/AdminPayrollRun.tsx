@@ -10,6 +10,8 @@ import { MdOutlinePlayCircle } from "react-icons/md";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { NativeSelect } from "@/components/ui/native-select";
+import { confirmDialog } from "@/components/ui/dialogs";
 interface Employee {
   id: string;
   fullName: string;
@@ -82,7 +84,7 @@ export function AdminPayrollRun() {
   useEffect(() => { setRunExists(false); setError(""); }, [month, year]);
 
   const run = async (recalculate = false) => {
-    if (recalculate && !confirm(`Recalculate ${MONTHS[month - 1]} ${year}?\n\nUnpaid payslips are rebuilt from current salaries. Paid payslips stay as they are; reimbursements carry over.`)) return;
+    if (recalculate && !(await confirmDialog(`Recalculate ${MONTHS[month - 1]} ${year}?\n\nUnpaid payslips are rebuilt from current salaries. Paid payslips stay as they are; reimbursements carry over.`))) return;
     setRunning(true);
     setError("");
     setRunExists(false);
@@ -166,17 +168,17 @@ export function AdminPayrollRun() {
             <div className="flex flex-wrap sm:flex-nowrap gap-3 sm:gap-4">
               <div className="flex flex-col gap-1.5 flex-1 min-w-[140px]">
                 <label className="text-xs text-muted-foreground">Month</label>
-                <select
+                <NativeSelect
                   value={month}
                   onChange={(e) => setMonth(Number(e.target.value))}
                   className="px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card"
                 >
                   {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
-                </select>
+                </NativeSelect>
               </div>
               <div className="flex flex-col gap-1.5 flex-1 min-w-[140px]">
                 <label className="text-xs text-muted-foreground">Year</label>
-                <select
+                <NativeSelect
                   value={year}
                   onChange={(e) => setYear(Number(e.target.value))}
                   className="px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card"
@@ -184,7 +186,7 @@ export function AdminPayrollRun() {
                   {[now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1].map((y) => (
                     <option key={y} value={y}>{y}</option>
                   ))}
-                </select>
+                </NativeSelect>
               </div>
             </div>
           </div>

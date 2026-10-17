@@ -17,6 +17,7 @@ import {
   TbSearch,
 } from "react-icons/tb";
 
+import { NativeSelect } from "@/components/ui/native-select";
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type Category = "offer_letter" | "contract" | "id_proof" | "appraisal" | "nda" | "other";
@@ -137,7 +138,7 @@ function UploadForEmployeeModal({ employees, onClose, onSuccess }: UploadForEmpl
         <form onSubmit={handleSubmit} className="p-4 sm:p-5 flex flex-col gap-3.5 sm:gap-4 overflow-y-auto">
           <div className="flex flex-col gap-1.5">
             <label className="text-xs text-muted-foreground">Employee</label>
-            <select
+            <NativeSelect
               className="border rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-full"
               value={employeeId}
               onChange={e => setEmployeeId(e.target.value)}
@@ -147,7 +148,7 @@ function UploadForEmployeeModal({ employees, onClose, onSuccess }: UploadForEmpl
               {employees.map(emp => (
                 <option key={emp.id} value={emp.id}>{emp.fullName}</option>
               ))}
-            </select>
+            </NativeSelect>
           </div>
           <div className="flex flex-col gap-1.5">
             <label className="text-xs text-muted-foreground">Title</label>
@@ -161,7 +162,7 @@ function UploadForEmployeeModal({ employees, onClose, onSuccess }: UploadForEmpl
           </div>
           <div className="flex flex-col gap-1.5">
             <label className="text-xs text-muted-foreground">Category</label>
-            <select
+            <NativeSelect
               className="border rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-full"
               value={category}
               onChange={e => setCategory(e.target.value as Category)}
@@ -169,7 +170,7 @@ function UploadForEmployeeModal({ employees, onClose, onSuccess }: UploadForEmpl
               {ALL_CATEGORIES.map(c => (
                 <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
               ))}
-            </select>
+            </NativeSelect>
           </div>
           <div className="flex flex-col gap-1.5">
             <label className="text-xs text-muted-foreground">File</label>
@@ -430,7 +431,7 @@ export function AllDocumentsPage() {
         <div className="flex-1 min-h-0 min-w-0 overflow-auto p-3 sm:p-5 flex flex-col gap-3.5 sm:gap-4 max-w-full">
           {/* Filters */}
           <div className="flex flex-wrap gap-2 sm:gap-3 w-full">
-            <select
+            <NativeSelect
               className="border rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-card focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto max-w-full"
               value={employeeFilter}
               onChange={e => setEmployeeFilter(e.target.value)}
@@ -439,8 +440,8 @@ export function AllDocumentsPage() {
               {employees.map(e => (
                 <option key={e.id} value={e.id}>{e.fullName} ({e.documentCount})</option>
               ))}
-            </select>
-            <select
+            </NativeSelect>
+            <NativeSelect
               className="border rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-card focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto max-w-full"
               value={categoryFilter}
               onChange={e => setCategoryFilter(e.target.value as "all" | Category)}
@@ -449,7 +450,7 @@ export function AllDocumentsPage() {
               {ALL_CATEGORIES.map(c => (
                 <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
               ))}
-            </select>
+            </NativeSelect>
             <div className="flex-1 min-w-[180px] max-w-full relative">
               <TbSearch size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input

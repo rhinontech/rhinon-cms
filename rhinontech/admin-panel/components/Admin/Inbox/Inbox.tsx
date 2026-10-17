@@ -9,6 +9,8 @@ import {
   TbInfoCircle, TbMail, TbArchive, TbTrash, TbSend, TbArrowLeft,
 } from "react-icons/tb";
 
+import { NativeSelect } from "@/components/ui/native-select";
+import { alertDialog } from "@/components/ui/dialogs";
 type Folder = "inbox" | "sent" | "archive" | "trash";
 
 interface Att { key: string; name: string; size: number; mimeType: string; url?: string }
@@ -43,7 +45,7 @@ function FromSelect({ addresses, value, onChange, compact = false }: { addresses
   return (
     <label className={cn("flex min-w-0 items-center gap-2 text-xs text-muted-foreground", compact ? "" : "rounded-lg border px-3 py-2")}>
       <span className="shrink-0">From</span>
-      <select
+      <NativeSelect
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="min-w-0 flex-1 truncate bg-transparent text-sm font-medium text-foreground focus:outline-none"
@@ -54,7 +56,7 @@ function FromSelect({ addresses, value, onChange, compact = false }: { addresses
             {a.name ? `${a.name} <${a.address}>` : a.address}
           </option>
         ))}
-      </select>
+      </NativeSelect>
     </label>
   );
 }
@@ -295,7 +297,7 @@ export default function Inbox() {
     if (!files?.length) return;
     setUploading(true);
     try { for (const f of Array.from(files)) { const a = await uploadAttachment(f); setPending((p) => [...p, a]); } }
-    catch (err: any) { alert(err.message || "Upload failed."); }
+    catch (err: any) { alertDialog(err.message || "Upload failed."); }
     finally { setUploading(false); }
   };
 
@@ -309,7 +311,7 @@ export default function Inbox() {
       });
       setDraft(""); setPending([]);
       await fetchDetail(detail.id);
-    } catch (err: any) { alert(err.message || "Could not send."); }
+    } catch (err: any) { alertDialog(err.message || "Could not send."); }
     finally { setSending(false); }
   };
 
@@ -357,7 +359,7 @@ export default function Inbox() {
             <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search subject, name or email" className="w-full rounded-lg border border-border py-2 pl-9 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           {multi && (
-            <select
+            <NativeSelect
               value={mailbox}
               onChange={(e) => setMailbox(e.target.value)}
               aria-label="Which address"
@@ -367,7 +369,7 @@ export default function Inbox() {
               {addresses.map((a) => (
                 <option key={a.address} value={a.address}>{a.address}{a.shared ? "" : " (you)"}</option>
               ))}
-            </select>
+            </NativeSelect>
           )}
           <div className="flex gap-1">
             {FOLDERS.map((f) => (

@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { useSideNav } from "@/context/SideNavContext";
+import { confirmDialog, alertDialog } from "@/components/ui/dialogs";
 
 type Status = "Draft" | "Published";
 
@@ -48,12 +49,12 @@ export function CaseStudiesManager() {
   }, [fetchItems]);
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this case study?")) return;
+    if (!(await confirmDialog("Delete this case study?"))) return;
     try {
       await apiFetch(`/content/case-studies/${id}`, { method: "DELETE" });
       fetchItems();
     } catch {
-      alert("Delete failed");
+      alertDialog("Delete failed");
     }
   };
 

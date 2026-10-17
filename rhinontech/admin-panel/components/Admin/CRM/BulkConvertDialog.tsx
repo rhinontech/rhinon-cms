@@ -7,6 +7,7 @@ import { apiFetch } from "@/lib/api";
 import type { PipelineStage, UserRef } from "./types";
 import { TBtn } from "./ui";
 
+import { NativeSelect } from "@/components/ui/native-select";
 const INPUT =
   "w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40";
 
@@ -112,9 +113,9 @@ export function BulkConvertDialog({
             <div className="space-y-2.5">
               <label className="block">
                 <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Starting stage</span>
-                <select value={form.stageId} onChange={(e) => setForm({ ...form, stageId: e.target.value })} className={INPUT}>
+                <NativeSelect value={form.stageId} onChange={(e) => setForm({ ...form, stageId: e.target.value })} className={INPUT}>
                   {stages.filter((s) => s.type === "Open").map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
+                </NativeSelect>
               </label>
 
               <div className="grid grid-cols-2 gap-2.5">
@@ -129,9 +130,9 @@ export function BulkConvertDialog({
                 </label>
                 <label className="block">
                   <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Currency</span>
-                  <select value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className={INPUT}>
+                  <NativeSelect value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className={INPUT}>
                     {["INR", "USD", "EUR", "GBP"].map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
+                  </NativeSelect>
                 </label>
               </div>
 
@@ -142,10 +143,10 @@ export function BulkConvertDialog({
                 </label>
                 <label className="block">
                   <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Owner</span>
-                  <select value={form.ownerId} onChange={(e) => setForm({ ...form, ownerId: e.target.value })} className={INPUT}>
+                  <NativeSelect value={form.ownerId} onChange={(e) => setForm({ ...form, ownerId: e.target.value })} className={INPUT}>
                     <option value="">Keep lead owner</option>
                     {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}
-                  </select>
+                  </NativeSelect>
                 </label>
               </div>
             </div>

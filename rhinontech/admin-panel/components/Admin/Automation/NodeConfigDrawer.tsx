@@ -6,6 +6,7 @@ import { WorkflowNode, NodeConfig } from "@/types/automation";
 import { apiFetch } from "@/lib/api";
 import { EmailBodyEditor } from "@/components/Admin/Outreach/shared/EmailBodyEditor";
 
+import { NativeSelect } from "@/components/ui/native-select";
 interface NodeConfigDrawerProps {
   node: WorkflowNode | null;
   onClose: () => void;
@@ -126,7 +127,7 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
           <>
             <div>
               <label className="block text-xs font-semibold text-foreground/85 mb-1">From email</label>
-              <select
+              <NativeSelect
                 value={config.fromEmail || SHARED_SENDER}
                 onChange={(e) => setConfig({ ...config, fromEmail: e.target.value })}
                 className="w-full rounded-lg border border-border px-3 py-2 text-sm bg-card font-medium text-foreground focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
@@ -135,7 +136,7 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
                 {currentUserEmail && currentUserEmail !== SHARED_SENDER && (
                   <option value={currentUserEmail}>{currentUserEmail} (you)</option>
                 )}
-              </select>
+              </NativeSelect>
               <p className="text-[11px] text-muted-foreground mt-1">Send as the shared inbox, or your own address.</p>
             </div>
 
@@ -224,7 +225,7 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
                   }}
                   className="w-1/2 rounded-lg border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                 />
-                <select
+                <NativeSelect
                   value={
                     config.delayUnit ||
                     (config.delayMinutes ? "minutes" : config.delayDays ? "days" : "hours")
@@ -253,7 +254,7 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
                   <option value="minutes">Minutes</option>
                   <option value="hours">Hours</option>
                   <option value="days">Days</option>
-                </select>
+                </NativeSelect>
               </div>
               <p className="text-[11px] text-muted-foreground mt-1.5">
                 The workflow will pause for this duration before executing the next step.
@@ -301,7 +302,7 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
               </div>
               <div>
                 <label className="block text-xs font-semibold text-foreground/85 mb-1">Priority</label>
-                <select
+                <NativeSelect
                   value={config.priority || "Medium"}
                   onChange={(e) => setConfig({ ...config, priority: e.target.value as NodeConfig["priority"] })}
                   className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none bg-card font-medium text-foreground"
@@ -309,7 +310,7 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
                   <option value="Low">Low</option>
                   <option value="Medium">Medium</option>
                   <option value="High">High</option>
-                </select>
+                </NativeSelect>
               </div>
             </div>
 
@@ -353,14 +354,14 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-foreground/85 mb-1">Condition Rule</label>
-              <select
+              <NativeSelect
                 value={config.conditionType || "email_opened"}
                 onChange={(e) => setConfig({ ...config, conditionType: e.target.value as NodeConfig["conditionType"] })}
                 className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none bg-card font-medium text-foreground"
               >
                 <option value="email_opened">Previous email was opened</option>
                 <option value="link_clicked">Link inside previous email was clicked</option>
-              </select>
+              </NativeSelect>
             </div>
 
             <div>
@@ -392,7 +393,7 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
                   }}
                   className="w-1/2 rounded-lg border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                 />
-                <select
+                <NativeSelect
                   value={
                     config.checkDelayUnit ||
                     (config.checkDelayMinutes ? "minutes" : config.checkDelayDays ? "days" : "hours")
@@ -421,7 +422,7 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
                   <option value="minutes">Minutes</option>
                   <option value="hours">Hours</option>
                   <option value="days">Days</option>
-                </select>
+                </NativeSelect>
               </div>
               <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
                 The workflow will pause for this duration to give the recipient time to interact. If they open/click during this window, they take the <span className="font-semibold text-emerald-600 dark:text-emerald-300">YES</span> path; otherwise, they take the <span className="font-semibold text-rose-600 dark:text-rose-300">NO</span> path.

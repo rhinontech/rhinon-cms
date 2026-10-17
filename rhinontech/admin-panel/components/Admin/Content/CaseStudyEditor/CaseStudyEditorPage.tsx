@@ -10,6 +10,7 @@ import { ContentImageInput } from "../ContentImageInput";
 import { ParagraphBlock } from "../BlogEditor/ParagraphBlock";
 import { legacyMarkdownToHtml } from "../BlogEditor/legacyMarkdown";
 import { newBlockId, slugifyTitle, type BlogBlock } from "../BlogEditor/types";
+import { alertDialog } from "@/components/ui/dialogs";
 
 type Status = "Draft" | "Published";
 
@@ -144,7 +145,7 @@ export function CaseStudyEditorPage({ id }: { id?: string }) {
       const { url } = await apiUpload<{ url: string }>("/content/upload-image", file);
       setImages((imgs) => [...imgs, url]);
     } catch (err: any) {
-      alert(err.message || "Upload failed");
+      alertDialog(err.message || "Upload failed");
     } finally {
       setGalleryUploading(false);
       if (galleryInputRef.current) galleryInputRef.current.value = "";

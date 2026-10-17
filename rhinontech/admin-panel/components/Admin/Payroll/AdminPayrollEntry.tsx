@@ -6,6 +6,7 @@ import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/Collap
 import { TbCheck, TbLoader2, TbPlus, TbChevronDown, TbTrash } from "react-icons/tb";
 import { cn } from "@/lib/utils";
 
+import { NativeSelect } from "@/components/ui/native-select";
 interface Employee {
   id: string;
   fullName: string;
@@ -194,28 +195,26 @@ export function AdminPayrollEntry() {
                   <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                     Month
                     <div className="relative">
-                      <select
+                      <NativeSelect
                         value={month}
                         onChange={(e) => setMonth(Number(e.target.value))}
                         className="w-full appearance-none border border-border rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card"
                       >
                         {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
-                      </select>
-                      <TbChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                      </NativeSelect>
                     </div>
                   </label>
 
                   <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                     Year
                     <div className="relative">
-                      <select
+                      <NativeSelect
                         value={year}
                         onChange={(e) => setYear(Number(e.target.value))}
                         className="w-full appearance-none border border-border rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card"
                       >
                         {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
-                      </select>
-                      <TbChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                      </NativeSelect>
                     </div>
                   </label>
                 </div>
@@ -223,7 +222,7 @@ export function AdminPayrollEntry() {
                 <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                   Employee
                   <div className="relative">
-                    <select
+                    <NativeSelect
                       value={selectedId}
                       onChange={(e) => handleEmployeeChange(e.target.value)}
                       className="w-full appearance-none border border-border rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card"
@@ -232,8 +231,7 @@ export function AdminPayrollEntry() {
                       {employees.map((e) => (
                         <option key={e.id} value={e.id}>{e.fullName} — {e.department}</option>
                       ))}
-                    </select>
-                    <TbChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                    </NativeSelect>
                   </div>
                   {selectedEmployee && (
                     <p className="text-xs text-muted-foreground mt-0.5">

@@ -28,6 +28,7 @@ import type {
   ApiTask, DropData, PanelMode, TaskComment, TaskFormState, TaskPatch,
   TaskScope, TaskSection as Section, TaskStatus,
 } from "./types";
+import { confirmDialog } from "@/components/ui/dialogs";
 
 export function TasksPage() {
   const { isExpanded: isSubNavExpanded } = useSideNav();
@@ -181,7 +182,7 @@ export function TasksPage() {
   };
 
   const deleteTask = async (id: string) => {
-    if (!confirm("Delete this task?")) return;
+    if (!(await confirmDialog("Delete this task?"))) return;
     await removeTask(id);
     if (selectedTask?.id === id) { setSelectedTask(null); setAsideOpen(false); }
   };
