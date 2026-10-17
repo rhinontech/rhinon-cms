@@ -1,10 +1,11 @@
+import { FaqSchema } from "@/components/Common/SEO/PageSchemas";
 import ContactUs from "@/components/Pages/ContactUs/ContactUs";
 import { Metadata } from "next";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinonlabs.com";
 
 export const metadata: Metadata = {
-  title: "Contact Us | Rhinon Labs",
+  title: "Contact Us",
   description:
     "Request a discovery call to discuss your internal tools, AI automation, and MVP development challenges. 24-hour response time.",
   alternates: {
@@ -60,6 +61,7 @@ export default function page() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(contactPageSchema) }}
       />
+      <FaqSchema />
       <ContactUs />
     </>
   );

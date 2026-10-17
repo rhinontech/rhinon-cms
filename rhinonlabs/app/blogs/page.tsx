@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinonlabs.com";
 
 export const metadata: Metadata = {
-  title: "Blogs & Insights | Rhinon Labs",
+  title: "Blog — Startup, Automation & AI Insights",
   description:
     "Deep dives into MVP development, AI engineering, internal tools, and rapid growth strategies for modern founders.",
   alternates: {

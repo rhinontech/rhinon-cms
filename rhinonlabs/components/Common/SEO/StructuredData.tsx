@@ -2,13 +2,15 @@
 
 import React from 'react';
 
+// Site-wide schema only (every page). Page-specific schema — FAQPage, Service,
+// BlogPosting — lives with the page that shows that content.
 export default function StructuredData() {
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "Rhinon Labs",
     "url": "https://www.rhinonlabs.com",
-    "logo": "https://www.rhinonlabs.com/favicon.ico",
+    "logo": "https://www.rhinonlabs.com/Logo_Rhinon_Labs_Light.png",
     "address": {
       "@type": "PostalAddress",
       "addressLocality": "Bhubaneswar",
@@ -16,10 +18,11 @@ export default function StructuredData() {
       "postalCode": "751001",
       "addressCountry": "IN"
     },
+    // Same profiles the footer links to
     "sameAs": [
-      "https://linkedin.com/company/rhinon-labs",
-      "https://twitter.com/rhinonlabs",
-      "https://github.com/rhinon-labs"
+      "https://www.linkedin.com/company/rhinonlabs",
+      "https://x.com/RhinonLabs",
+      "https://www.instagram.com/rhinonlabs/"
     ],
     "contactPoint": {
       "@type": "ContactPoint",
@@ -28,68 +31,6 @@ export default function StructuredData() {
       "areaServed": ["Worldwide", "IN"],
       "availableLanguage": "English"
     }
-  };
-
-  const serviceSchema = {
-    "@context": "https://schema.org",
-    "@type": "Service",
-    "serviceType": "MVP Development & AI Automation",
-    "provider": {
-      "@type": "Organization",
-      "name": "Rhinon Labs"
-    },
-    "description": "We help founders and SMBs design, build and launch websites, apps and AI products fast with affordable pricing.",
-    "areaServed": "Worldwide",
-    "hasOfferCatalog": {
-      "@type": "OfferCatalog",
-      "name": "Development Services",
-      "itemListElement": [
-        {
-          "@type": "Offer",
-          "itemOffered": {
-            "@type": "Service",
-            "name": "Custom Internal Dashboards"
-          }
-        },
-        {
-          "@type": "Offer",
-          "itemOffered": {
-            "@type": "Service",
-            "name": "Workflow Automation"
-          }
-        },
-        {
-          "@type": "Offer",
-          "itemOffered": {
-            "@type": "Service",
-            "name": "AI Agents & Smart Systems"
-          }
-        }
-      ]
-    }
-  };
-
-  const faqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      {
-        "@type": "Question",
-        "name": "Do we need to be technical to work with you?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Not at all. We handle the technical side end-to-end. We build it, we deploy it, we maintain it. You just run your business."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "How long does it take to build a system?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "It depends on complexity, but most projects are scoped and delivered within 2-4 weeks. You’ll get a clear timeline before we begin."
-        }
-      }
-    ]
   };
 
   const websiteSchema = {
@@ -109,14 +50,6 @@ export default function StructuredData() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
     </>
   );

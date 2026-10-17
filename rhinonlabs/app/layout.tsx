@@ -108,9 +108,6 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  alternates: {
-    canonical: "https://www.rhinonlabs.com",
-  },
   other: {
     "geo.region": "IN-OR",
     "geo.placename": "Bhubaneswar",

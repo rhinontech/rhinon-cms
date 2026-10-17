@@ -22,7 +22,9 @@ const slotLabel = (iso: string, timezone: string, is24h: boolean) =>
     timeZone: timezone,
   });
 
-export default function SchedulerCore({ onClose }: SchedulerCoreProps) {
+export default function SchedulerCore({ onClose, headingLevel = "h3" }: SchedulerCoreProps & { headingLevel?: "h1" | "h3" }) {
+  // The standalone /schedule-call page needs this as its <h1>; inside the modal it stays an h3
+  const Heading = headingLevel;
   const [step, setStep] = useState(1); // 1: Date & Time, 2: Form, 3: Success
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -252,9 +254,9 @@ export default function SchedulerCore({ onClose }: SchedulerCoreProps) {
             </div>
           </div>
 
-          <h3 className="text-xl md:text-2xl font-bold tracking-tight text-white mb-4">
+          <Heading className="text-xl md:text-2xl font-bold tracking-tight text-white mb-4">
             {step === 3 ? "Call Scheduled!" : "Pick Your Time. See Rhinon Labs in Action"}
-          </h3>
+          </Heading>
           <p className="text-white/60 text-sm leading-relaxed mb-6">
             See our purpose-built, high-performance dashboards, AI integrations, and MVP build workflows in action, customized exactly for your business needs.
           </p>
