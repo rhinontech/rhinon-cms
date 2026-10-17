@@ -58,7 +58,7 @@ import {
 } from "@/components/ui/chart";
 import { useModuleBase } from "@/lib/sites";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://rhinonlabs.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinonlabs.com";
 
 type Metrics = { pageviews: number; visitors: number; sessions: number };
 interface Overview {

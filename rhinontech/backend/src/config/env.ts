@@ -17,7 +17,7 @@ export const env = {
   frontendUrl,
   frontendUrls: Array.from(new Set([frontendUrl, ...parseCsv(process.env.FRONTEND_URLS)])),
   // Public marketing site origin — used to treat same-site referrers as Direct in analytics.
-  siteUrl: process.env.SITE_URL || "https://rhinonlabs.com",
+  siteUrl: process.env.SITE_URL || "https://www.rhinonlabs.com",
   slack: {
     botToken: process.env.SLACK_BOT_TOKEN || "",
   },

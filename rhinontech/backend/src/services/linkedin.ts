@@ -199,7 +199,8 @@ export async function postToLinkedIn(
 
     let finalArticleUrl = articleUrl;
     if (channel === "LinkedIn Article" && !finalArticleUrl && (slug || campaignId)) {
-      finalArticleUrl = `https://rhinonlabs.com/articles/${slug || campaignId}`;
+      // Canonical host + the real blog path (/articles/ never existed and 404s)
+      finalArticleUrl = `https://www.rhinonlabs.com/blogs/${slug || campaignId}`;
     }
 
     let shareMediaCategory = "NONE";

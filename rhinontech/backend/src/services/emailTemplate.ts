@@ -6,7 +6,7 @@
 const BRAND_LOGO_URL = process.env.BRAND_LOGO_URL || "https://www.rhinonlabs.com/Logo_Rhinon_Labs_Light.png";
 const COMPANY_ADDRESS = process.env.COMPANY_ADDRESS || ""; // registered address for compliant footer
 export const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:5003";
-export const FRONTEND_URL = process.env.SITE_URL || process.env.RHINONLABS_URL || process.env.FRONTEND_URL || "https://rhinonlabs.com";
+export const FRONTEND_URL = process.env.SITE_URL || process.env.RHINONLABS_URL || process.env.FRONTEND_URL || "https://www.rhinonlabs.com";
 
 export type EmailTemplateId = "default" | "template1" | "template2" | "template3" | "template4";
 

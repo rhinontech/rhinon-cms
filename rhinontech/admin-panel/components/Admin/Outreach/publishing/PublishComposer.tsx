@@ -286,7 +286,7 @@ export function PublishComposer({
                     type="url"
                     value={articleUrl}
                     onChange={(e) => setArticleUrl(e.target.value)}
-                    placeholder="https://rhinonlabs.com/blogs/..."
+                    placeholder="https://www.rhinonlabs.com/blogs/..."
                   />
                 </div>
               )}
