@@ -131,7 +131,8 @@ export default function RootLayout({
           <PageviewTracker />
         </Suspense>
         <Navbar />
-        {children}
+        {/* The single <main> landmark for every page (pages use plain containers) */}
+        <main id="main">{children}</main>
         <Footer />
 
         {/* <div

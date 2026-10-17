@@ -36,8 +36,8 @@ export const metadata: Metadata = {
 
 export default function ScheduleCallPage() {
   return (
-    <main className="min-h-screen w-full flex items-center justify-center p-4 bg-[#0B0F19]">
+    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-[#0B0F19]">
       <SchedulerCore headingLevel="h1" />
-    </main>
+    </div>
   );
 }

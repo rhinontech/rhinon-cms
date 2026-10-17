@@ -46,11 +46,11 @@ export default function CaseStudiesIndex({ caseStudies }: { caseStudies: CaseStu
   const displayedAll = searchQuery ? filteredAll : caseStudies.slice(2);
 
   return (
-    <main className="blog-theme min-h-screen bg-background relative selection:bg-primary/50 flex flex-col pt-32 pb-24 overflow-hidden">
+    <div className="blog-theme min-h-screen bg-background relative selection:bg-primary/50 flex flex-col pt-32 pb-24 overflow-hidden">
       {/* Background Image with Mask matching Home Page theme */}
       <div className="absolute inset-0 top-64 max-sm:top-52 -z-10 opacity-30 pointer-events-none">
         <div className="mask-[linear-gradient(to_bottom,transparent,white_30%,white_60%,transparent)] mask-mode:luminance relative w-full h-full">
-          <img
+          <img loading="lazy" decoding="async"
             src="/images/background/background.jpg"
             className="w-full h-full object-cover"
             alt="Background Grid Texture"
@@ -267,6 +267,6 @@ export default function CaseStudiesIndex({ caseStudies }: { caseStudies: CaseStu
         }}
       />
       <SchedulerModal isOpen={isSchedulerOpen} onClose={() => setIsSchedulerOpen(false)} />
-    </main>
+    </div>
   );
 }

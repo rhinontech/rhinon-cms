@@ -26,10 +26,11 @@ const Hero1 = () => {
     <div id="hero" className="overflow-hidden relative min-h-screen flex flex-col justify-center">
       <motion.div
         className="absolute inset-0 top-64 max-sm:top-52 -z-10"
-        initial={{ opacity: 0 }}
+        // Starts partly visible with no delay: an opacity-0 image isn't counted as
+        // painted, so a full fade-from-zero pushed mobile LCP out by ~2.5s
+        initial={{ opacity: 0.35 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 1.8, ease: "easeOut", delay: 0.6 }}
-        viewport={{ once: true }}
+        transition={{ duration: 1.2, ease: "easeOut" }}
       >
         <div
           className="mask-[linear-gradient(to_bottom,transparent,white_30%,white_60%,transparent)]
@@ -95,13 +96,13 @@ const Hero1 = () => {
             {/* Avatar Stack */}
             <div className="flex -space-x-4">
               <div className="w-12 h-12 rounded-full bg-gray-600 border-2 border-black flex items-center justify-center">
-                <img src="https://i.pinimg.com/736x/4d/8a/f4/4d8af495cd54aec459d51da422f73247.jpg" alt="User 1" className="w-full h-full rounded-full object-cover" />
+                <img src="/assets/avatars/1.webp" alt="" width={48} height={48} className="w-full h-full rounded-full object-cover" />
               </div>
               <div className="w-12 h-12 rounded-full bg-gray-600 border-2 border-black flex items-center justify-center">
-                <img src="https://i.pinimg.com/1200x/3b/df/69/3bdf69f30479a92ba0f8cafcaf3807fb.jpg" alt="User 2" className="w-full h-full rounded-full object-cover" />
+                <img src="/assets/avatars/2.webp" alt="" width={48} height={48} className="w-full h-full rounded-full object-cover" />
               </div>
               <div className="w-12 h-12 rounded-full bg-gray-600 border-2 border-black flex items-center justify-center">
-                <img src="https://i.pinimg.com/736x/92/ff/f7/92fff756cf08535878d1fdb008a9d8fc.jpg" alt="User 3" className="w-full h-full rounded-full object-cover" />
+                <img src="/assets/avatars/3.webp" alt="" width={48} height={48} className="w-full h-full rounded-full object-cover" />
               </div>
             </div>
 

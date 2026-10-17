@@ -81,9 +81,9 @@ export default function ServiceDetail({ service, blogs }: { service: Service; bl
       <section className="overflow-hidden relative min-h-[88vh] flex flex-col justify-center">
         <motion.div
           className="absolute inset-0 top-48 -z-10"
-          initial={{ opacity: 0 }}
+          initial={{ opacity: 0.35 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 1.8, ease: "easeOut", delay: 0.4 }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
         >
           <div className="mask-[linear-gradient(to_bottom,transparent,white_30%,white_60%,transparent)] relative w-full h-full">
             <Image src="/images/background/background.jpg" fill className="object-cover" alt="" priority sizes="100vw" />
@@ -257,7 +257,7 @@ export default function ServiceDetail({ service, blogs }: { service: Service; bl
                 >
                   <div className="aspect-16/10 overflow-hidden relative bg-white/5">
                     {blog.coverImage ? (
-                      <img src={blog.coverImage} alt={blog.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                      <img loading="lazy" decoding="async" src={blog.coverImage} alt={blog.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center"><BookOpen className="w-8 h-8 text-white/30" /></div>
                     )}

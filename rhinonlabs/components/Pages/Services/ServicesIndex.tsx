@@ -31,9 +31,9 @@ export default function ServicesIndex() {
       <section className="overflow-hidden relative flex flex-col justify-center">
         <motion.div
           className="absolute inset-0 top-40 -z-10"
-          initial={{ opacity: 0 }}
+          initial={{ opacity: 0.35 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 1.8, ease: "easeOut", delay: 0.4 }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
         >
           <div className="mask-[linear-gradient(to_bottom,transparent,white_30%,white_60%,transparent)] relative w-full h-full">
             <Image src="/images/background/background.jpg" fill className="object-cover" alt="" priority sizes="100vw" />

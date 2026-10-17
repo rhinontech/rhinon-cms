@@ -70,7 +70,7 @@ const ContactUs = () => {
     };
 
     return (
-        <main className="min-h-screen bg-background relative selection:bg-primary/50 flex flex-col">
+        <div className="min-h-screen bg-background relative selection:bg-primary/50 flex flex-col">
 
             <div className="grow pt-32 pb-24 relative overflow-hidden flex flex-col items-center">
 
@@ -298,7 +298,7 @@ const ContactUs = () => {
             <FAQ />
 
             
-        </main>
+        </div>
     );
 };
 

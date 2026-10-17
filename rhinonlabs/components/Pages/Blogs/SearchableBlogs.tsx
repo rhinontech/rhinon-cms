@@ -54,11 +54,11 @@ export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) 
   const displayedAllBlogs = searchQuery ? filteredAll : initialBlogs.slice(2);
 
   return (
-    <main className="blog-theme min-h-screen bg-background relative selection:bg-primary/50 flex flex-col pt-32 pb-24 overflow-hidden">
+    <div className="blog-theme min-h-screen bg-background relative selection:bg-primary/50 flex flex-col pt-32 pb-24 overflow-hidden">
       {/* Background Image with Mask matching Home Page theme */}
       <div className="absolute inset-0 top-64 max-sm:top-52 -z-10 opacity-30 pointer-events-none">
         <div className="mask-[linear-gradient(to_bottom,transparent,white_30%,white_60%,transparent)] mask-mode:luminance relative w-full h-full">
-          <img
+          <img loading="lazy" decoding="async"
             src="/images/background/background.jpg"
             className="w-full h-full object-cover"
             alt="Background Grid Texture"
@@ -152,7 +152,7 @@ export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) 
 
                     <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <img
+                        <img loading="lazy" decoding="async"
                           src={blog.authorAvatar || "https://github.com/prabhatpk.png"}
                           alt={blog.authorName}
                           className="w-8 h-8 rounded-full border border-white/10 object-cover"
@@ -223,7 +223,7 @@ export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) 
 
                     <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
-                        <img
+                        <img loading="lazy" decoding="async"
                           src={blog.authorAvatar || "https://github.com/prabhatpk.png"}
                           alt={blog.authorName}
                           className="w-6 h-6 rounded-full border border-white/10 object-cover"
@@ -259,6 +259,6 @@ export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) 
         }}
       />
       <SchedulerModal isOpen={isSchedulerOpen} onClose={() => setIsSchedulerOpen(false)} />
-    </main>
+    </div>
   );
 }

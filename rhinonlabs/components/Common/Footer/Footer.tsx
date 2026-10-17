@@ -60,7 +60,7 @@ export function Footer() {
                 {/* Top Row: Logo & Socials */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-16 gap-8">
                     {/* Mockup Logo */}
-                    <Link href="/" className="flex items-center gap-2 text-white/90 group">
+                    <Link href="/" aria-label="Rhinon Labs home" className="flex items-center gap-2 text-white/90 group">
                         <Image
                             src="/Logo_Rhinon_Labs_Light.png"
                             alt="Rhinon Labs"
@@ -73,9 +73,9 @@ export function Footer() {
 
                     {/* Social Icons */}
                     <div className="flex items-center gap-6 text-white/50">
-                        <a href="https://x.com/RhinonLabs" target="_blank" className="hover:text-white transition-colors"><CustomXIcon /></a>
-                        <a href="https://www.instagram.com/rhinonlabs/" target="_blank" className="hover:text-white transition-colors"><CustomInstagramIcon /></a>
-                        <a href="https://www.linkedin.com/company/rhinonlabs" target="_blank" className="hover:text-white transition-colors"><CustomLinkedInIcon /></a>
+                        <a href="https://x.com/RhinonLabs" target="_blank" rel="noopener noreferrer" aria-label="Rhinon Labs on X" className="hover:text-white transition-colors"><CustomXIcon /></a>
+                        <a href="https://www.instagram.com/rhinonlabs/" target="_blank" rel="noopener noreferrer" aria-label="Rhinon Labs on Instagram" className="hover:text-white transition-colors"><CustomInstagramIcon /></a>
+                        <a href="https://www.linkedin.com/company/rhinonlabs" target="_blank" rel="noopener noreferrer" aria-label="Rhinon Labs on LinkedIn" className="hover:text-white transition-colors"><CustomLinkedInIcon /></a>
                     </div>
                 </div>
 
