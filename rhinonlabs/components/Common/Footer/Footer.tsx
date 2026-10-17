@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { services } from '@/lib/services';
 import Link from 'next/link';
 import { Mail } from 'lucide-react';
 import Image from 'next/image';
@@ -43,7 +44,9 @@ export const CustomLinkedInIcon = () => (
 );
 
 const navLinks = [
-    { name: 'Services', href: '/#services' },
+    { name: 'Services', href: '/services' },
+    { name: 'Case Studies', href: '/case-studies' },
+    { name: 'Blog', href: '/blogs' },
     { name: 'Contact', href: '/contact-us' },
     { name: 'Privacy & Terms', href: '/privacy-terms' },
 ];
@@ -74,6 +77,15 @@ export function Footer() {
                         <a href="https://www.instagram.com/rhinonlabs/" target="_blank" className="hover:text-white transition-colors"><CustomInstagramIcon /></a>
                         <a href="https://www.linkedin.com/company/rhinonlabs" target="_blank" className="hover:text-white transition-colors"><CustomLinkedInIcon /></a>
                     </div>
+                </div>
+
+                {/* Service pages — crawlable links from every page */}
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-3 mb-8">
+                    {services.map((s) => (
+                        <Link key={s.slug} href={`/services/${s.slug}`} className="text-[14px] text-white/50 hover:text-white transition-colors">
+                            {s.name}
+                        </Link>
+                    ))}
                 </div>
 
                 {/* Middle Row: Navigation Links */}

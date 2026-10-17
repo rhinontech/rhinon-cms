@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Minus, ChevronDown, MessageSquareMore, ArrowRight, ArrowUpRight, CircleQuestionMarkIcon } from 'lucide-react';
+import { Plus, Minus, ChevronDown, MessageSquareMore, ArrowUpRight, CircleQuestionMarkIcon } from 'lucide-react';
 import { motion, Variants } from 'framer-motion';
 import Link from 'next/link';
 import { faqs } from './faqs';
@@ -13,11 +13,11 @@ const scrollVariant: Variants = {
     visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } }
 };
 
-export function FAQ() {
+export function FAQ({ items = faqs }: { items?: { question: string; answer: string }[] } = {}) {
     const [openIndex, setOpenIndex] = useState<number | null>(0);
     const [showAll, setShowAll] = useState(false);
 
-    const visibleFaqs = showAll ? faqs : faqs.slice(0, 5);
+    const visibleFaqs = showAll ? items : items.slice(0, 5);
 
     return (
         <section id="faqs" className="py-24 relative overflow-hidden">
@@ -34,7 +34,7 @@ export function FAQ() {
                     <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-md">
                         <MessageSquareMore className="w-4 h-4 text-white" />
                         <span className="text-xs font-semibold tracking-widest text-[#A3B8CC] uppercase font-sans">
-                            FAQ's
+                            FAQ&apos;s
                         </span>
                     </div>
                 </motion.div>

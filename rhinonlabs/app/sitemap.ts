@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import { getBlogs, getCaseStudies } from '@/lib/api';
+import { services } from '@/lib/services';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.rhinonlabs.com';
@@ -53,6 +54,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             changeFrequency: 'yearly',
             priority: 0.3,
         },
+        {
+            url: `${baseUrl}/services`,
+            lastModified: new Date(),
+            changeFrequency: 'monthly',
+            priority: 0.9,
+        },
+        ...services.map((s) => ({
+            url: `${baseUrl}/services/${s.slug}`,
+            lastModified: new Date(),
+            changeFrequency: 'monthly' as const,
+            priority: 0.9,
+        })),
     ];
 
     try {

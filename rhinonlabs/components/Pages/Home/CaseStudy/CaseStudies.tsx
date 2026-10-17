@@ -7,7 +7,8 @@ import { getCaseStudies, type CaseStudy } from '@/lib/api';
 
 const PLACEHOLDER_IMG = "https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=800&auto=format&fit=crop";
 
-export function CaseStudies() {
+/** `slugs` limits the grid to related work (service pages); omitted → every case study. */
+export function CaseStudies({ slugs }: { slugs?: string[] } = {}) {
     const [caseStudies, setCaseStudies] = useState<CaseStudy[]>([]);
 
     useEffect(() => {
@@ -18,8 +19,13 @@ export function CaseStudies() {
         return () => { active = false; };
     }, []);
 
+    const related = slugs?.length
+        ? slugs.map((s) => caseStudies.find((cs) => cs.slug === s)).filter((cs): cs is CaseStudy => Boolean(cs))
+        : [];
+    const shown = related.length ? related : caseStudies;
+
     // Nothing published (or everything deleted in the CMS) — hide the section entirely.
-    if (caseStudies.length === 0) return null;
+    if (shown.length === 0) return null;
 
     return (
         <section id="case-studies" className="py-24 relative overflow-hidden">
@@ -42,14 +48,14 @@ export function CaseStudies() {
                 </div>
 
                 {/* Clickable grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
-                    {caseStudies.map((cs) => {
+                <div className="flex flex-wrap justify-center gap-6 w-full">
+                    {shown.map((cs) => {
                         const cover = cs.image || cs.images?.[0] || PLACEHOLDER_IMG;
                         return (
                             <Link
                                 key={cs.id}
                                 href={`/case-studies/${cs.slug}`}
-                                className="group flex flex-col rounded-[16px] border border-border/7 bg-background overflow-hidden shadow-[inset_0_2px_1px_rgba(207,231,255,0.2)] hover:border-white/20 transition-all"
+                                className="w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] group flex flex-col rounded-[16px] border border-border/7 bg-background overflow-hidden shadow-[inset_0_2px_1px_rgba(207,231,255,0.2)] hover:border-white/20 transition-all"
                             >
                                 <div className="aspect-[16/10] overflow-hidden relative">
                                     <img
