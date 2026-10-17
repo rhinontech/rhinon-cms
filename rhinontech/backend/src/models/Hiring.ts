@@ -168,6 +168,8 @@ interface InterviewAttributes {
   // Event on the shared Google Calendar (Meetings page); null when the calendar isn't connected
   calendarEventId?: string | null;
   calendarICalUID?: string | null;
+  // Bumped on every reschedule so emailed .ics updates replace the old invite
+  sequence: number;
   status: InterviewStatus;
   rating?: number | null;
   recommendation?: Recommendation | null;
@@ -178,7 +180,7 @@ interface InterviewAttributes {
 }
 
 export class Interview
-  extends Model<InterviewAttributes, Optional<InterviewAttributes, "id" | "durationMins" | "meetingLink" | "calendarEventId" | "calendarICalUID" | "status" | "rating" | "recommendation" | "feedback" | "feedbackAt">>
+  extends Model<InterviewAttributes, Optional<InterviewAttributes, "id" | "durationMins" | "meetingLink" | "calendarEventId" | "calendarICalUID" | "sequence" | "status" | "rating" | "recommendation" | "feedback" | "feedbackAt">>
   implements InterviewAttributes
 {
   declare id: string;
@@ -191,6 +193,7 @@ export class Interview
   declare meetingLink: string | null;
   declare calendarEventId: string | null;
   declare calendarICalUID: string | null;
+  declare sequence: number;
   declare status: InterviewStatus;
   declare rating: number | null;
   declare recommendation: Recommendation | null;
@@ -212,6 +215,7 @@ Interview.init(
     meetingLink: { type: DataTypes.STRING(1000), allowNull: true },
     calendarEventId: { type: DataTypes.STRING, allowNull: true },
     calendarICalUID: { type: DataTypes.STRING, allowNull: true },
+    sequence: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
     status: { type: DataTypes.ENUM("scheduled", "completed", "cancelled", "no_show"), allowNull: false, defaultValue: "scheduled" },
     rating: { type: DataTypes.INTEGER, allowNull: true },
     recommendation: { type: DataTypes.ENUM("strong_yes", "yes", "no", "strong_no"), allowNull: true },

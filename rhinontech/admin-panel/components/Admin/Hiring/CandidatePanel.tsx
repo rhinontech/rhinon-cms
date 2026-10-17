@@ -96,8 +96,70 @@ function ScheduleForm({ candidate, rounds, onDone }: { candidate: Candidate; rou
   );
 }
 
+function RescheduleForm({ interview, onDone, onCancel }: { interview: Interview; onDone: () => void; onCancel: () => void }) {
+  const [people, setPeople] = useState<{ id: string; fullName: string }[]>([]);
+  const [when, setWhen] = useState(toLocalInput(new Date(interview.scheduledAt)));
+  const [durationMins, setDurationMins] = useState(String(interview.durationMins));
+  const [interviewerId, setInterviewerId] = useState(interview.interviewerId);
+  const [meetingLink, setMeetingLink] = useState(interview.meetingLink ?? "");
+  const [notify, setNotify] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    hiringApi("/interviewers").then((r) => r.json()).then((d) => setPeople(Array.isArray(d) ? d : [])).catch(() => {});
+  }, []);
+
+  const save = async () => {
+    setSaving(true);
+    const r = await hiringApi(`/interviews/${interview.id}`, jsonInit("PUT", {
+      scheduledAt: new Date(when).toISOString(), durationMins, interviewerId, meetingLink, notify,
+    }));
+    const data = await r.json().catch(() => ({}));
+    setSaving(false);
+    if (!r.ok) { toast.error(data.message || "Couldn't reschedule"); return; }
+    toast.success(notify ? "Rescheduled — updates emailed" : "Rescheduled");
+    onDone();
+  };
+
+  return (
+    <div className="space-y-3 pt-1">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <label className={labelCls}>
+          New date & time
+          <input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} className={inputCls} />
+        </label>
+        <label className={labelCls}>
+          Duration (min)
+          <input type="number" min={10} value={durationMins} onChange={(e) => setDurationMins(e.target.value)} className={inputCls} />
+        </label>
+        <label className={labelCls}>
+          Interviewer
+          <select value={interviewerId} onChange={(e) => setInterviewerId(e.target.value)} className={inputCls}>
+            {people.map((p) => <option key={p.id} value={p.id}>{p.fullName}</option>)}
+          </select>
+        </label>
+        <label className={labelCls}>
+          Meeting link
+          <input value={meetingLink} onChange={(e) => setMeetingLink(e.target.value)} className={inputCls} />
+        </label>
+      </div>
+      <label className="flex items-center gap-2 text-sm text-foreground/85">
+        <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} />
+        Email the candidate and interviewer about the change
+      </label>
+      <div className="flex justify-end gap-2">
+        <button onClick={onCancel} className="px-3 py-1.5 text-xs rounded-lg border border-border hover:bg-muted/40">Back</button>
+        <button onClick={save} disabled={saving} className="px-4 py-1.5 text-xs font-medium rounded-lg bg-primary text-primary-foreground disabled:opacity-50">
+          {saving ? "Saving…" : "Reschedule"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function InterviewCard({ interview, onChanged }: { interview: Interview; onChanged: () => void }) {
   const [giving, setGiving] = useState(false);
+  const [rescheduling, setRescheduling] = useState(false);
   const setStatus = async (status: Interview["status"]) => {
     const r = await hiringApi(`/interviews/${interview.id}`, jsonInit("PUT", { status }));
     if (r.ok) onChanged(); else toast.error("Couldn't update interview");
@@ -126,18 +188,20 @@ function InterviewCard({ interview, onChanged }: { interview: Interview; onChang
         </a>
       )}
       {interview.feedback && <p className="text-sm text-foreground/80 whitespace-pre-wrap">{interview.feedback}</p>}
-      {interview.status === "scheduled" && !giving && (
+      {interview.status === "scheduled" && !giving && !rescheduling && (
         <div className="flex flex-wrap gap-3 text-xs">
           <button onClick={() => setGiving(true)} className="font-medium text-blue-600 dark:text-blue-300 hover:underline">Add feedback</button>
+          <button onClick={() => setRescheduling(true)} className="font-medium text-foreground/80 hover:text-foreground">Reschedule</button>
           {!interview.calendarEventId && (
             <button onClick={() => setStatus("scheduled")} className="text-muted-foreground hover:text-foreground" title="Put this interview on the shared Meetings calendar">
               Add to calendar
             </button>
           )}
           <button onClick={() => setStatus("no_show")} className="text-muted-foreground hover:text-foreground">No-show</button>
-          <button onClick={() => confirm("Cancel this interview?") && setStatus("cancelled")} className="text-muted-foreground hover:text-red-500">Cancel</button>
+          <button onClick={() => confirm("Cancel this interview? The candidate and interviewer will be emailed and it's removed from the calendar.") && setStatus("cancelled")} className="text-muted-foreground hover:text-red-500">Cancel</button>
         </div>
       )}
+      {rescheduling && <RescheduleForm interview={interview} onCancel={() => setRescheduling(false)} onDone={() => { setRescheduling(false); onChanged(); }} />}
       {giving && <FeedbackForm interview={interview} onSaved={() => { setGiving(false); onChanged(); }} />}
     </div>
   );

@@ -8,6 +8,7 @@ import { Payroll } from "./Payroll";
 import { Payslip } from "./Payslip";
 import { ReimbursementClaim } from "./ReimbursementClaim";
 import { JobOpening, Candidate, Interview } from "./Hiring";
+import { CompensationRevision } from "./CompensationRevision";
 import { Task } from "./Task";
 import { Attendance } from "./Attendance";
 import { Project } from "./Project";
@@ -106,6 +107,11 @@ Payroll.belongsTo(User, { foreignKey: "processedById", as: "processedBy" });
 ReimbursementClaim.belongsTo(User, { foreignKey: "userId", as: "employee" });
 ReimbursementClaim.belongsTo(User, { foreignKey: "reviewedById", as: "reviewer" });
 ReimbursementClaim.belongsTo(Payslip, { foreignKey: "payslipId", as: "payslip" });
+
+// Salary revisions / promotions
+CompensationRevision.belongsTo(User, { foreignKey: "userId", as: "employee" });
+CompensationRevision.belongsTo(User, { foreignKey: "createdById", as: "createdBy" });
+CompensationRevision.belongsTo(Document, { foreignKey: "documentId", as: "document" });
 
 // Hiring
 JobOpening.hasMany(Candidate, { foreignKey: "openingId", as: "candidates", onDelete: "CASCADE" });
@@ -427,7 +433,7 @@ export {
   User,
   InboxConversation, InboxMessage, InboxEmail,
   Payroll, Payslip, ReimbursementClaim,
-  JobOpening, Candidate, Interview,
+  JobOpening, Candidate, Interview, CompensationRevision,
   Task,
   Attendance,
   Project,

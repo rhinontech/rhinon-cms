@@ -596,3 +596,121 @@ export async function generateNdaPdf(
   });
 }
 
+
+// ─── Salary revision / promotion letter ──────────────────────────────────────
+
+export interface RevisionLetterInput {
+  kind: "increment" | "promotion";
+  effectiveDate: string;
+  before: { roleTitle: string | null; department: string | null; basicSalary: number; hra: number; ta: number; medicalAllowance: number; otherAllowances: number; annualCompensation: number };
+  after: RevisionLetterInput["before"];
+}
+
+export function revisionLetterTitle(kind: RevisionLetterInput["kind"]) {
+  return kind === "promotion" ? "Promotion Letter" : "Salary Revision Letter";
+}
+
+const monthlyGross = (s: RevisionLetterInput["before"]) =>
+  Number(s.basicSalary) + Number(s.hra) + Number(s.ta) + Number(s.medicalAllowance) + Number(s.otherAllowances);
+
+export async function generateRevisionLetterPdf(user: User, rev: RevisionLetterInput, signature?: LetterSignature): Promise<Buffer> {
+  const signatureBuffer = await getObjectBuffer(SIGNATURE_KEY).catch(() => null);
+  const name = user.legalName || user.fullName;
+  // Non-breaking spaces: justified lines must not pull the date apart
+  const effective = fmtDate(rev.effectiveDate).replace(/ /g, "\u00A0");
+  const { before: p, after: n } = rev;
+  const titleChanged = (p.roleTitle || "") !== (n.roleTitle || "");
+  const deptChanged = (p.department || "") !== (n.department || "");
+  const prevAnnual = Number(p.annualCompensation) || monthlyGross(p) * 12;
+  const nextAnnual = Number(n.annualCompensation) || monthlyGross(n) * 12;
+  const hike = prevAnnual > 0 ? ((nextAnnual - prevAnnual) / prevAnnual) * 100 : null;
+
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ size: "A4", margins: { top: 100, bottom: 60, left: 60, right: 60 } });
+    const chunks: Buffer[] = [];
+    doc.on("data", (c: Buffer) => chunks.push(c));
+    doc.on("end", () => resolve(Buffer.concat(chunks)));
+    doc.on("error", reject);
+    const pageWidth = doc.page.width - 120;
+
+    useLetterhead(doc);
+
+    doc.font("Helvetica-Bold").fontSize(12).fillColor("#005085").text("PRIVATE & CONFIDENTIAL", { align: "center" });
+    doc.moveDown(0.75);
+
+    const today = new Date();
+    doc.fillColor("#222222").font("Helvetica").fontSize(10);
+    doc.text(`${today.getDate()}${getOrdinal(today.getDate())} ${today.toLocaleDateString("en-US", { month: "long" })}, ${today.getFullYear()}`, { lineGap: 2 });
+    doc.font("Helvetica-Bold").text(name, { lineGap: 2 });
+    doc.font("Helvetica").text([n.roleTitle, n.department].filter(Boolean).join(", ") || "Rhinon Tech", { lineGap: 2 });
+    doc.moveDown(0.75);
+
+    const subject = rev.kind === "promotion" ? "Promotion and Revision of Compensation" : "Revision of Compensation";
+    doc.font("Helvetica-Bold").text(`Subject: ${subject}`);
+    doc.moveDown(0.6);
+    doc.font("Helvetica").text(`Dear ${user.fullName.split(" ")[0]},`);
+    doc.moveDown(0.5);
+
+    const opening = rev.kind === "promotion" && titleChanged
+      ? `In recognition of your performance and contribution to Rhinon Tech, we are pleased to inform you that you have been promoted from **${p.roleTitle || "your current role"}** to **${n.roleTitle}**${deptChanged && n.department ? ` in the **${n.department}** department` : ""}, effective **${effective}**.`
+      : `In recognition of your performance and contribution to Rhinon Tech, we are pleased to inform you that your compensation has been revised, effective **${effective}**.`;
+    drawFormattedText(doc, opening, { width: pageWidth, moveDown: 0.6 });
+    drawFormattedText(doc,
+      `Your revised annual compensation will be **${money(nextAnnual)}**${hike != null && hike > 0 ? `, an increase of **${hike.toFixed(1)}%**` : ""}. The monthly breakdown is below.`,
+      { width: pageWidth, moveDown: 0.8 });
+
+    // Current vs revised table
+    ensureRoom(doc, 200);
+    const cols = [60, 60 + pageWidth * 0.46, 60 + pageWidth * 0.73];
+    const colW = [pageWidth * 0.46, pageWidth * 0.27, pageWidth * 0.27];
+    const amt = (v: unknown) => Number(v || 0).toLocaleString("en-IN");
+    const row = (cells: string[], opts: { bold?: boolean; shade?: boolean } = {}) => {
+      const y = doc.y;
+      if (opts.shade) doc.rect(60, y - 4, pageWidth, 20).fill("#f2f5f8");
+      doc.fillColor("#222222").font(opts.bold ? "Helvetica-Bold" : "Helvetica").fontSize(10);
+      cells.forEach((c, i) => doc.text(c, cols[i], y, { width: colW[i] - 8, align: i === 0 ? "left" : "right" }));
+      doc.x = 60;
+      doc.y = y + 20;
+    };
+    row(["Component (monthly, INR)", "Current", "Revised"], { bold: true, shade: true });
+    const lines: [string, keyof RevisionLetterInput["before"]][] = [
+      ["Basic Salary", "basicSalary"], ["House Rent Allowance", "hra"], ["Transport Allowance", "ta"],
+      ["Medical Allowance", "medicalAllowance"], ["Other Allowances", "otherAllowances"],
+    ];
+    for (const [label, key] of lines) {
+      if (!Number(p[key]) && !Number(n[key])) continue;
+      row([label, amt(p[key] as number), amt(n[key] as number)]);
+    }
+    doc.moveTo(60, doc.y - 4).lineTo(60 + pageWidth, doc.y - 4).lineWidth(0.5).strokeColor("#cccccc").stroke();
+    row(["Gross monthly", amt(monthlyGross(p)), amt(monthlyGross(n))], { bold: true });
+    row(["Annual compensation", amt(prevAnnual), amt(nextAnnual)], { bold: true, shade: true });
+    doc.moveDown(0.8);
+
+    drawFormattedText(doc,
+      "All other terms and conditions of your employment remain unchanged. This letter and its contents are confidential and must not be shared.",
+      { width: pageWidth, moveDown: 0.6 });
+    drawFormattedText(doc, "Congratulations, and we look forward to your continued contribution.", { width: pageWidth, moveDown: 1 });
+
+    ensureRoom(doc, 100);
+    doc.font("Helvetica").fontSize(10).text("Best regards,", { lineGap: 2 });
+    doc.moveDown(0.3);
+    if (signatureBuffer) {
+      doc.image(signatureBuffer, 60, doc.y, { fit: [110, 40] });
+      doc.y += 44;
+    } else {
+      doc.moveDown(1);
+    }
+    doc.font("Helvetica-Bold").text("Prabhat Patra (Founder)");
+
+    doc.addPage();
+    doc.font("Helvetica-Bold").fontSize(12).fillColor("#005085").text("Acknowledgment", { align: "center" });
+    doc.moveDown(0.75);
+    doc.fillColor("#222222").font("Helvetica").fontSize(10);
+    drawFormattedText(doc,
+      `I, **${name}**, acknowledge receipt of this ${revisionLetterTitle(rev.kind).toLowerCase()} and accept the revised ${rev.kind === "promotion" ? "role and " : ""}compensation effective **${effective}**.`,
+      { width: pageWidth, moveDown: 1 });
+    drawSignatureLine(doc, signature, shortDate(new Date()));
+
+    doc.end();
+  });
+}

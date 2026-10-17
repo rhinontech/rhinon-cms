@@ -306,8 +306,22 @@ async function syncInterviewCalendar(
   }
 }
 
-async function notifyInterview(interview: Interview, candidate: Candidate, opening: JobOpening, interviewer: User) {
+type NotifyVariant = "scheduled" | "rescheduled" | "cancelled";
+
+/**
+ * Emails one party about an interview, with a matching calendar invite
+ * (REQUEST for scheduled/rescheduled, CANCEL for cancelled — same UID, so the
+ * recipient's calendar updates or removes the existing event).
+ */
+async function notifyParty(
+  who: "candidate" | "interviewer",
+  variant: NotifyVariant,
+  interview: Interview, candidate: Candidate, opening: JobOpening, interviewer: User,
+  previousWhenLabel?: string | null,
+) {
   const interviewerEmail = interviewer.companyEmail || (interviewer as any).personalEmail || null;
+  const to = who === "candidate" ? candidate.email : interviewerEmail;
+  if (!to) return;
   const base = {
     candidateName: candidate.fullName,
     jobTitle: opening.title,
@@ -315,46 +329,54 @@ async function notifyInterview(interview: Interview, candidate: Candidate, openi
     whenLabel: fmtWhen(interview.scheduledAt, interview.durationMins),
     durationMins: interview.durationMins,
     meetingLink: interview.meetingLink,
+    variant,
+    previousWhenLabel,
   };
+  const mail = who === "candidate"
+    ? interviewScheduledEmail(base)
+    : interviewerAssignedEmail({
+        ...base,
+        interviewerName: interviewer.fullName,
+        feedbackUrl: `${env.frontendUrl}/${(interviewer as any).role?.slug || "employee"}/employees/hiring/interviews`,
+      });
 
-  // One invite per recipient so "Add to Calendar" / RSVP works in Gmail & Outlook
-  const ics = (attendee: string) => {
-    try {
-      return buildMeetingIcs({
-        id: interview.id,
-        iCalUID: interview.calendarICalUID || `interview-${interview.id}@rhinontech.in`,
-        sequence: 0,
-        summary: `Interview: ${opening.title} — ${interview.roundName}${attendee === candidate.email ? "" : ` (${candidate.fullName})`}`,
-        description: interview.meetingLink ? `Join: ${interview.meetingLink}` : null,
-        location: interview.meetingLink,
-        start: interview.scheduledAt.toISOString(),
-        end: new Date(interview.scheduledAt.getTime() + interview.durationMins * 60000).toISOString(),
-        allDay: false,
-        meetLink: interview.meetingLink,
-        htmlLink: null,
-        organizer: null,
-        attendees: [{ email: attendee, responseStatus: null }],
-      } as any, "request", { email: interviewerEmail || attendee, name: interviewer.fullName });
-    } catch (err) {
-      console.error("[Hiring] Couldn't build calendar invite:", (err as Error).message);
-      return null;
-    }
-  };
-  const withInvite = (to: string, mail: { subject: string; html: string; text: string }) => {
-    const content = ics(to);
-    return sendEmail({ to, ...mail, ...(content ? { icalEvent: { method: "REQUEST", content, filename: "interview.ics" } } : {}) });
-  };
-
-  const sends = [withInvite(candidate.email, interviewScheduledEmail(base))];
-  if (interviewerEmail) {
-    sends.push(withInvite(interviewerEmail, interviewerAssignedEmail({
-      ...base,
-      interviewerName: interviewer.fullName,
-      feedbackUrl: `${env.frontendUrl}/${(interviewer as any).role?.slug || "employee"}/employees/hiring/interviews`,
-    })));
+  let content: string | null = null;
+  try {
+    content = buildMeetingIcs({
+      id: interview.id,
+      iCalUID: interview.calendarICalUID || `interview-${interview.id}@rhinontech.in`,
+      sequence: interview.sequence ?? 0,
+      summary: `Interview: ${opening.title} — ${interview.roundName}${who === "candidate" ? "" : ` (${candidate.fullName})`}`,
+      description: interview.meetingLink ? `Join: ${interview.meetingLink}` : null,
+      location: interview.meetingLink,
+      start: interview.scheduledAt.toISOString(),
+      end: interviewEnd(interview).toISOString(),
+      allDay: false,
+      meetLink: interview.meetingLink,
+      htmlLink: null,
+      organizer: null,
+      attendees: [{ email: to, responseStatus: null }],
+    } as any, variant === "cancelled" ? "cancel" : "request", { email: interviewerEmail || to, name: interviewer.fullName });
+  } catch (err) {
+    console.error("[Hiring] Couldn't build calendar invite:", (err as Error).message);
   }
-  const results = await Promise.allSettled(sends);
-  results.forEach((r) => r.status === "rejected" && console.error("[Hiring] Interview email failed:", (r.reason as Error)?.message));
+
+  try {
+    await sendEmail({
+      to,
+      ...mail,
+      ...(content ? { icalEvent: { method: variant === "cancelled" ? "CANCEL" : "REQUEST", content, filename: "interview.ics" } } : {}),
+    });
+  } catch (err) {
+    console.error(`[Hiring] Interview ${variant} email to ${who} failed:`, (err as Error).message);
+  }
+}
+
+async function notifyInterview(interview: Interview, candidate: Candidate, opening: JobOpening, interviewer: User) {
+  await Promise.all([
+    notifyParty("candidate", "scheduled", interview, candidate, opening, interviewer),
+    notifyParty("interviewer", "scheduled", interview, candidate, opening, interviewer),
+  ]);
 }
 
 router.post("/candidates/:id/interviews", authorize(ADMIN), async (req: AuthRequest, res: Response) => {
@@ -391,31 +413,82 @@ router.post("/candidates/:id/interviews", authorize(ADMIN), async (req: AuthRequ
   res.status(201).json(interview);
 });
 
+// Reschedule (time / duration / interviewer / link) or change status.
+// Emails go to whoever is affected unless notify === false.
 router.put("/interviews/:id", authorize(ADMIN), async (req: AuthRequest, res: Response) => {
   const interview = await Interview.findByPk(req.params.id);
   if (!interview) { res.status(404).json({ message: "Interview not found" }); return; }
+  const notify = req.body.notify !== false;
+  const wasScheduled = interview.status === "scheduled";
+  const before = {
+    scheduledAt: interview.scheduledAt,
+    durationMins: interview.durationMins,
+    meetingLink: interview.meetingLink,
+    interviewerId: interview.interviewerId,
+    whenLabel: fmtWhen(interview.scheduledAt, interview.durationMins),
+  };
+
   const patch: any = {};
   if (req.body.scheduledAt) {
     const d = new Date(req.body.scheduledAt);
     if (Number.isNaN(d.getTime())) { res.status(400).json({ message: "Invalid date" }); return; }
     patch.scheduledAt = d;
   }
-  if (req.body.interviewerId) patch.interviewerId = req.body.interviewerId;
+  if (req.body.interviewerId) {
+    if (!(await User.findByPk(req.body.interviewerId))) { res.status(400).json({ message: "Pick an interviewer" }); return; }
+    patch.interviewerId = req.body.interviewerId;
+  }
   if (req.body.meetingLink !== undefined) patch.meetingLink = str(req.body.meetingLink, 1000);
   if (req.body.durationMins) patch.durationMins = Math.min(480, Math.max(10, Math.floor(Number(req.body.durationMins))));
   if (["scheduled", "completed", "cancelled", "no_show"].includes(req.body.status)) patch.status = req.body.status;
+
+  const timeChanged = (patch.scheduledAt && +patch.scheduledAt !== +before.scheduledAt)
+    || (patch.durationMins && patch.durationMins !== before.durationMins)
+    || (patch.meetingLink !== undefined && patch.meetingLink !== before.meetingLink);
+  const interviewerChanged = patch.interviewerId && patch.interviewerId !== before.interviewerId;
+  if ((timeChanged || interviewerChanged) && wasScheduled) patch.sequence = (interview.sequence ?? 0) + 1;
   await interview.update(patch);
 
-  if (interview.status === "cancelled" || interview.status === "no_show") {
-    if (interview.status === "cancelled" && interview.calendarEventId) {
+  const candidate = await Candidate.findByPk(interview.candidateId, { include: [{ model: JobOpening, as: "opening" }] });
+  const opening = (candidate as any)?.opening as JobOpening | undefined;
+  const roleInclude = [{ model: Role, as: "role", attributes: ["slug"] }];
+  const interviewer = await User.findByPk(interview.interviewerId, { include: roleInclude });
+  if (!candidate || !opening || !interviewer) { res.json(interview); return; }
+
+  if (interview.status === "cancelled" && wasScheduled) {
+    if (interview.calendarEventId) {
       await deleteEvent(interview.calendarEventId).catch((err) => console.error("[Hiring] Calendar delete failed:", err.message));
       await interview.update({ calendarEventId: null });
     }
-  } else if (patch.scheduledAt || patch.interviewerId || patch.meetingLink !== undefined || patch.durationMins || !interview.calendarEventId) {
-    const candidate = await Candidate.findByPk(interview.candidateId, { include: [{ model: JobOpening, as: "opening" }] });
-    const interviewer = await User.findByPk(interview.interviewerId);
-    if (candidate && interviewer && interview.status === "scheduled") {
-      await syncInterviewCalendar(interview, candidate, (candidate as any).opening, interviewer);
+    if (notify) {
+      await Promise.all([
+        notifyParty("candidate", "cancelled", interview, candidate, opening, interviewer),
+        notifyParty("interviewer", "cancelled", interview, candidate, opening, interviewer),
+      ]);
+    }
+  } else if (interview.status === "scheduled") {
+    if (timeChanged || interviewerChanged || !interview.calendarEventId) {
+      await syncInterviewCalendar(interview, candidate, opening, interviewer);
+    }
+    if (notify && (timeChanged || interviewerChanged)) {
+      const sends: Promise<void>[] = [];
+      // The candidate only cares about time / link changes, not who interviews them
+      if (timeChanged) sends.push(notifyParty("candidate", "rescheduled", interview, candidate, opening, interviewer, before.whenLabel));
+      if (interviewerChanged) {
+        const old = await User.findByPk(before.interviewerId, { include: roleInclude });
+        if (old) {
+          // Old interviewer: cancel their copy (as it was), new interviewer: fresh assignment
+          const asBefore = {
+            id: interview.id, roundName: interview.roundName, calendarICalUID: interview.calendarICalUID,
+            sequence: interview.sequence, scheduledAt: before.scheduledAt, durationMins: before.durationMins, meetingLink: before.meetingLink,
+          } as Interview;
+          sends.push(notifyParty("interviewer", "cancelled", asBefore, candidate, opening, old));
+        }
+        sends.push(notifyParty("interviewer", "scheduled", interview, candidate, opening, interviewer));
+      } else {
+        sends.push(notifyParty("interviewer", "rescheduled", interview, candidate, opening, interviewer, before.whenLabel));
+      }
+      await Promise.all(sends);
     }
   }
   res.json(interview);

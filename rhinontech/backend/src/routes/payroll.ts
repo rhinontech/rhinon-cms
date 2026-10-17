@@ -7,6 +7,7 @@ import { authenticate, authorize, AuthRequest } from "../middleware/authenticate
 import { sendEmail } from "../services/mailer";
 import { payslipPaidEmail } from "../services/emailTemplates";
 import { env } from "../config/env";
+import { applyDueRevisions } from "../services/compensationRevisions";
 
 const router = Router();
 
@@ -73,7 +74,7 @@ router.get("/admin/employees", authorize("payroll:write"), async (_req: AuthRequ
     where: { userType: "internal", status: "active" },
     attributes: [
       "id", "fullName", "companyEmail", "department", "joiningDate", "exitDate",
-      "employmentType", "workLocation",
+      "employmentType", "workLocation", "roleTitle", "annualCompensation",
       "basicSalary", "hra", "ta", "medicalAllowance", "otherAllowances",
       "pfEnabled", "ptAmount", "tdsAmount",
     ],
@@ -235,12 +236,36 @@ router.post("/admin/run", authorize("payroll:write"), async (req: AuthRequest, r
   // A payroll row may already exist for the period if a final settlement was created
   // first — that's fine, we append to it. Only block if the regular run itself
   // already happened (i.e., the period has regular payslips).
+  // Make sure revisions effective by today are on the employee before salaries are read
+  await applyDueRevisions();
+
   const exists = await Payroll.findOne({ where: { month, year } });
+  // recalculate: rebuild the run's UNPAID regular payslips from current salaries
+  // (e.g. after a revision). Paid slips are never touched; reimbursements carry over.
+  const recalculate = req.body.recalculate === true;
+  const paidUserIds = new Set<string>();
+  const carriedLines = new Map<string, PayslipReimbursement[]>();
   if (exists) {
-    const regularCount = await Payslip.count({ where: { payrollId: exists.id, type: "regular" } });
-    if (regularCount > 0) {
-      res.status(409).json({ message: `Payroll for this period already exists (status: ${exists.status})` });
+    const regular = await Payslip.findAll({ where: { payrollId: exists.id, type: "regular" } });
+    if (regular.length > 0 && !recalculate) {
+      res.status(409).json({
+        code: "RUN_EXISTS",
+        status: exists.status,
+        message: `Payroll for this period already exists (status: ${exists.status})`,
+      });
       return;
+    }
+    if (exists.status === "paid") {
+      res.status(400).json({ message: "This payroll is already paid — it can't be recalculated." });
+      return;
+    }
+    for (const slip of regular) {
+      if (slip.status === "paid") { paidUserIds.add(slip.userId); continue; }
+      // Manual lines are re-added as-is; claim lines re-attach via attachApprovedClaims
+      const manual = (slip.reimbursements ?? []).filter((r) => !r.claimId);
+      if (manual.length) carriedLines.set(slip.userId, manual);
+      await detachClaims(slip.id);
+      await slip.destroy();
     }
   }
 
@@ -257,7 +282,7 @@ router.post("/admin/run", authorize("payroll:write"), async (req: AuthRequest, r
     attributes: ["id", "joiningDate", "basicSalary", "hra", "ta", "medicalAllowance", "otherAllowances", "pfEnabled", "ptAmount", "tdsAmount"],
   });
 
-  const eligible = employees.filter((e) => e.basicSalary && Number(e.basicSalary) > 0);
+  const eligible = employees.filter((e) => e.basicSalary && Number(e.basicSalary) > 0 && !paidUserIds.has(e.id));
   if (eligible.length === 0) {
     res.status(400).json({ message: "No active employees have a salary structure configured." });
     return;
@@ -312,6 +337,8 @@ router.post("/admin/run", authorize("payroll:write"), async (req: AuthRequest, r
       netPay,
       status: "draft",
     });
+    const carried = carriedLines.get(emp.id);
+    if (carried) await setPayslipReimbursements(created, carried);
     await attachApprovedClaims(created);
 
     totalGross += grossPay;
@@ -327,7 +354,9 @@ router.post("/admin/run", authorize("payroll:write"), async (req: AuthRequest, r
   await payroll.update({ totalGross, totalNet });
 
   res.status(201).json({
-    message: `Payroll run complete. ${eligible.length} payslips generated.`,
+    message: recalculate
+      ? `Payroll recalculated. ${eligible.length} payslip${eligible.length === 1 ? "" : "s"} rebuilt from current salaries${paidUserIds.size ? `, ${paidUserIds.size} already-paid left unchanged` : ""}.`
+      : `Payroll run complete. ${eligible.length} payslips generated.`,
     payroll: { id: payroll.id, month, year, status: payroll.status, totalGross, totalNet, count: eligible.length },
   });
 });

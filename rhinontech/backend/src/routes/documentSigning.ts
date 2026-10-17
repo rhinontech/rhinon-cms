@@ -2,8 +2,8 @@ import { Router, Request, Response } from "express";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { Op } from "sequelize";
-import { Document, User } from "../models";
-import { generateOfferLetterPdf, generateNdaPdf, LetterSignature } from "../services/letters";
+import { Document, User, CompensationRevision } from "../models";
+import { generateOfferLetterPdf, generateNdaPdf, generateRevisionLetterPdf, LetterSignature } from "../services/letters";
 import { uploadBuffer, deleteObject, getPresignedReadUrl } from "../services/storage";
 import { sendEmail } from "../services/mailer";
 import { welcomeEmail } from "../services/emailTemplates";
@@ -122,9 +122,20 @@ router.post("/:token/documents/:documentId/sign", async (req: Request, res: Resp
   // would silently discard those edits. Legacy documents created before this
   // column existed (contentBlocks null) fall back to a fresh generation.
   const blocks = doc.contentBlocks ?? undefined;
-  const newPdf = doc.category === "nda"
-    ? await generateNdaPdf(user, signature, blocks)
-    : await generateOfferLetterPdf(user, signature, blocks);
+  let newPdf: Buffer;
+  if (doc.category === "appraisal") {
+    // Increment / promotion letter — re-rendered from the revision it was issued for
+    const revision = await CompensationRevision.findOne({ where: { documentId: doc.id } });
+    if (!revision) {
+      res.status(404).json({ message: "The revision for this letter no longer exists." });
+      return;
+    }
+    newPdf = await generateRevisionLetterPdf(user, revision, signature);
+  } else {
+    newPdf = doc.category === "nda"
+      ? await generateNdaPdf(user, signature, blocks)
+      : await generateOfferLetterPdf(user, signature, blocks);
+  }
 
   const newKey = await uploadBuffer(newPdf, doc.fileName || `${doc.category}.pdf`, "documents", "application/pdf");
 

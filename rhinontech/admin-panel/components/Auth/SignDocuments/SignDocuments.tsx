@@ -10,7 +10,7 @@ type Stage = "loading" | "invalid" | "signing" | "done";
 
 interface SigningDocument {
   id: string;
-  category: "offer_letter" | "nda";
+  category: "offer_letter" | "nda" | "appraisal";
   title: string;
   fileName: string | null;
   signed: boolean;
@@ -21,6 +21,7 @@ interface SigningDocument {
 
 const CATEGORY_LABEL: Record<string, string> = {
   offer_letter: "Offer Letter",
+  appraisal: "Revision Letter",
   nda: "Non-Disclosure Agreement",
 };
 
@@ -31,6 +32,7 @@ export function SignDocuments() {
   const [stage, setStage] = useState<Stage>("loading");
   const [employeeName, setEmployeeName] = useState("");
   const [documents, setDocuments] = useState<SigningDocument[]>([]);
+  const isRevision = documents.length > 0 && documents.every((d) => d.category === "appraisal");
   const [activeIndex, setActiveIndex] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -132,8 +134,13 @@ export function SignDocuments() {
         {stage === "signing" && activeDoc && (
           <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
             <div className="bg-primary px-6 py-5">
-              <p className="text-primary-foreground font-semibold text-lg">Welcome, {employeeName.split(" ")[0] || "there"}!</p>
-              <p className="text-primary-foreground/70 text-sm mt-0.5">Review and sign your documents to complete onboarding</p>
+              {/* Increment / promotion letters reuse this page for existing employees */}
+              <p className="text-primary-foreground font-semibold text-lg">
+                {isRevision ? "Congratulations" : "Welcome"}, {employeeName.split(" ")[0] || "there"}!
+              </p>
+              <p className="text-primary-foreground/70 text-sm mt-0.5">
+                {isRevision ? "Review and sign your letter" : "Review and sign your documents to complete onboarding"}
+              </p>
             </div>
 
             <div className="flex flex-col lg:flex-row">
