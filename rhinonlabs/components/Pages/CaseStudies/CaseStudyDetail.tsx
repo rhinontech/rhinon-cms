@@ -8,6 +8,7 @@ import { BlogSideRail } from "@/components/Common/Blog/BlogSideRail";
 import { extractToc } from "@/components/Common/Blog/blocks";
 import StickyCallButton from "@/components/Common/CTA/StickyCallButton";
 
+import { SCHEMA_IDS } from "@/lib/site";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinonlabs.com";
 
 export default function CaseStudyDetail({ caseStudy }: { caseStudy: CaseStudy }) {
@@ -28,6 +29,7 @@ export default function CaseStudyDetail({ caseStudy }: { caseStudy: CaseStudy })
     ...(caseStudy.date ? { datePublished: caseStudy.date } : {}),
     creator: {
       "@type": "Organization",
+      "@id": SCHEMA_IDS.organization,
       name: "Rhinon Labs",
       url: SITE_URL,
     },

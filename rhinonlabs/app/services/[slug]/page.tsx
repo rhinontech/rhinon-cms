@@ -4,6 +4,7 @@ import ServiceDetail from "@/components/Pages/Services/ServiceDetail";
 import { getService, services } from "@/lib/services";
 import { getBlogs } from "@/lib/api";
 
+import { SCHEMA_IDS } from "@/lib/site";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinonlabs.com";
 
 // Pages are static; related blogs/case studies refresh hourly
@@ -57,12 +58,13 @@ export default async function Page({ params }: PageProps) {
     {
       "@context": "https://schema.org",
       "@type": "Service",
+      "@id": `${url}#service`,
       name: service.name,
       serviceType: service.name,
       description: service.metaDescription,
       url,
       areaServed: "Worldwide",
-      provider: { "@type": "Organization", name: "Rhinon Labs", url: SITE_URL },
+      provider: { "@id": SCHEMA_IDS.organization },
     },
     {
       "@context": "https://schema.org",

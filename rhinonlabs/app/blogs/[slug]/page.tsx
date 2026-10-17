@@ -12,6 +12,7 @@ import { BlogSideRail } from "@/components/Common/Blog/BlogSideRail";
 import { extractToc, extractTocFromMarkdown } from "@/components/Common/Blog/blocks";
 import StickyCallButton from "@/components/Common/CTA/StickyCallButton";
 
+import { SCHEMA_IDS } from "@/lib/site";
 export const dynamic = "force-dynamic";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinonlabs.com";
@@ -88,6 +89,7 @@ export default async function BlogDetailsPage({ params }: PageProps) {
     },
     publisher: {
       "@type": "Organization",
+      "@id": SCHEMA_IDS.organization,
       name: "Rhinon Labs",
       url: SITE_URL,
     },

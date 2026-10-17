@@ -1,5 +1,6 @@
 import { faqs } from "@/components/Common/FAQ/faqs";
 
+import { SCHEMA_IDS } from "@/lib/site";
 const json = (data: unknown) => ({ __html: JSON.stringify(data) });
 
 /** FAQPage for pages that render the <FAQ /> section (Google requires the Q&A to be visible). */
@@ -29,7 +30,7 @@ export function ServiceSchema() {
         "@context": "https://schema.org",
         "@type": "Service",
         serviceType: "MVP Development & AI Automation",
-        provider: { "@type": "Organization", name: "Rhinon Labs", url: "https://www.rhinonlabs.com" },
+        provider: { "@id": SCHEMA_IDS.organization },
         description:
           "We help founders and SMBs design, build and launch websites, apps and AI products fast with affordable pricing.",
         areaServed: "Worldwide",
