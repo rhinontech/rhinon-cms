@@ -1,0 +1,180 @@
+.why {
+  padding-top: 220px;
+  padding-bottom: 180px;
+}
+
+.head {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.title {
+  margin-top: 30px;
+}
+
+.row {
+  margin-top: 95px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 600px;
+}
+
+.teamCell {
+  justify-content: space-between;
+  padding: 40px;
+}
+
+.teamTop {
+  position: relative;
+}
+
+.teamLabel {
+  font-weight: 500;
+  font-size: 24px;
+  letter-spacing: -0.03em;
+}
+
+.logo {
+  width: 78px;
+  margin-top: 14px;
+  color: rgba(23, 23, 23, 0.4);
+}
+
+.grip {
+  position: absolute;
+  right: 0;
+  top: 2px;
+  width: 8px;
+  color: var(--ink-faint);
+}
+
+.teamBottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.teamBottom .mono {
+  text-align: right;
+  max-width: 120px;
+  min-width: 0;
+}
+
+.avatars {
+  display: flex;
+  align-items: center;
+}
+
+.avatars img,
+.avatars span {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  margin-right: -12px;
+  border: 2px solid var(--bg);
+  object-fit: cover;
+}
+
+.avatars span {
+  display: grid;
+  place-items: center;
+  margin-right: 0;
+  background: #f8f8f8;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--gradient);
+  transform-origin: left;
+}
+
+.label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 26px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.text {
+  margin: 40px 40px 0;
+  font-weight: 500;
+  font-size: 24px;
+  line-height: 1.35;
+  letter-spacing: -0.03em;
+}
+
+.metric {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin: auto 40px 40px;
+}
+
+.metric .mono {
+  max-width: 100px;
+  text-align: right;
+  margin-bottom: 8px;
+}
+
+.value {
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 64px;
+  line-height: 1;
+  letter-spacing: -0.07em;
+}
+
+@media (max-width: 1199px) {
+  .text {
+    font-size: 19px;
+    margin: 28px 20px 0;
+  }
+  .metric {
+    flex-direction: column;
+    align-items: flex-start;
+    margin: auto 20px 24px;
+    gap: 8px;
+  }
+  .metric .mono {
+    text-align: left;
+  }
+  .teamCell {
+    padding: 24px 20px;
+  }
+  .value {
+    font-size: 48px;
+  }
+}
+
+@media (max-width: 809px) {
+  .why {
+    padding-top: 110px;
+    padding-bottom: 100px;
+  }
+  .cell {
+    min-height: 340px;
+    border-bottom: 1px solid var(--line);
+  }
+}

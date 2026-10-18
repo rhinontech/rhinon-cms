@@ -1,0 +1,60 @@
+.footer {
+  padding-top: 50px;
+  padding-bottom: 50px;
+  background: #121212;
+}
+
+.inner {
+  align-items: center;
+}
+
+.links {
+  display: flex;
+  gap: 32px;
+}
+
+.links a,
+.copy,
+.credit {
+  font-size: 12px;
+  transition: color 0.3s;
+}
+
+.links a:hover,
+.credit:hover {
+  color: var(--ink);
+}
+
+.copy {
+  text-align: right;
+  max-width: 180px;
+  justify-self: end;
+}
+
+.credit {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.credit img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+
+@media (max-width: 809px) {
+  .inner {
+    gap: 20px;
+    justify-items: start;
+  }
+  .inner > span {
+    display: none;
+  }
+  .copy,
+  .credit {
+    justify-self: start;
+    text-align: left;
+  }
+}

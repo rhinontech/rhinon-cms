@@ -1,0 +1,155 @@
+.header {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 100;
+  height: 90px;
+  display: flex;
+  align-items: flex-start;
+  pointer-events: none;
+  color: #f5f5f5;
+  mix-blend-mode: difference;
+}
+
+.logo {
+  position: absolute;
+  left: 30px;
+  top: 28px;
+  width: 123px;
+  pointer-events: auto;
+}
+
+.logo svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.toggle {
+  position: absolute;
+  left: calc(var(--gutter) + var(--col) * 2);
+  top: 44px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  pointer-events: auto;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+.toggleIcon {
+  position: relative;
+  width: 11px;
+  height: 11px;
+}
+
+.toggleIcon span {
+  position: absolute;
+  left: 0;
+  top: 5px;
+  width: 11px;
+  height: 1.5px;
+  background: currentColor;
+  transition: transform 0.45s var(--ease-out);
+}
+
+.toggleIcon span:last-child {
+  transform: rotate(90deg);
+}
+
+.toggleOpen span:first-child {
+  transform: rotate(45deg);
+}
+
+.toggleOpen span:last-child {
+  transform: rotate(135deg);
+}
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 98;
+}
+
+.panel {
+  position: fixed;
+  z-index: 99;
+  top: 90px;
+  left: calc(var(--gutter) + var(--col) * 2);
+  width: 320px;
+  padding: 34px;
+  background: #121212;
+  color: #f5f5f5;
+}
+
+.panelLogo {
+  width: 80px;
+  display: block;
+}
+
+.links {
+  list-style: none;
+  margin: 46px 0 52px;
+  display: grid;
+  gap: 14px;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+.contact {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.email {
+  align-self: stretch;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 24px;
+  letter-spacing: -0.05em;
+  text-transform: uppercase;
+}
+
+.phone {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: rgba(245, 245, 245, 0.6);
+}
+
+.socials {
+  display: flex;
+  gap: 12px;
+  margin-top: 52px;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.socials a {
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+
+@media (max-width: 809px) {
+  .logo {
+    left: var(--gutter);
+    top: 24px;
+    width: 104px;
+  }
+  .toggle {
+    left: auto;
+    right: var(--gutter);
+    top: 28px;
+  }
+  .panel {
+    left: var(--gutter);
+    right: var(--gutter);
+    width: auto;
+    top: 70px;
+  }
+}
