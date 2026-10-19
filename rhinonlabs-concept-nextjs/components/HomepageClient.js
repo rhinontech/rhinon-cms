@@ -234,6 +234,7 @@ export default function HomepageClient() {
     const log = $("#log");
     let evIndex = 0;
     const pushEvent = () => {
+      if (!log) return;
       const [name, ...steps] = events[evIndex++ % events.length];
       const li = document.createElement("li");
       li.innerHTML = `<time>${hms.format(
@@ -447,7 +448,7 @@ export default function HomepageClient() {
         const r = fillEl.getBoundingClientRect();
         if (r.bottom > -vh && r.top < vh * 1.5) {
           const p = clamp(
-            (vh * 0.82 - r.top) / (r.height + vh * 0.3),
+            (vh * 0.85 - r.top) / (r.height + vh * 0.55),
             0,
             1
           );

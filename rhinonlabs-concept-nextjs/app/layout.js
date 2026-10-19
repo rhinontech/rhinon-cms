@@ -1,4 +1,5 @@
 import "./globals.css";
+import "@/components/web/web.css";
 
 export const metadata = {
   title: "Rhinon Labs — Homepage Concept",
