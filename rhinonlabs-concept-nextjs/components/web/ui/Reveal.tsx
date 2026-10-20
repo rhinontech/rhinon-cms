@@ -2,6 +2,7 @@
 
 import type { CSSProperties, ReactNode } from "react";
 import { motion } from "motion/react";
+import { cn } from "@/lib/utils";
 
 const spring = { type: "spring", damping: 27, mass: 0.3, stiffness: 219 } as const;
 
@@ -47,12 +48,13 @@ export function CurtainImage({ src, alt = "", className, position = "center", de
     ? { animate: "show" }
     : { whileInView: "show", viewport: { once: true, amount: 0.2 } };
   return (
-    <motion.div className={className} style={{ position: "relative", overflow: "hidden" }} initial="hidden" {...trigger}>
+    <motion.div className={cn("relative overflow-hidden", className)} initial="hidden" {...trigger}>
       <motion.img
         src={src}
         alt={alt}
         loading={immediate ? "eager" : "lazy"}
-        style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: position, display: "block" }}
+        className="block size-full object-cover"
+        style={{ objectPosition: position }}
         variants={{
           hidden: { scale: 1.4, opacity: 0 },
           show: { scale: 1, opacity: 1, transition: { duration: 1.6, ease: [0.68, 0, 0, 1], delay } },
@@ -60,7 +62,7 @@ export function CurtainImage({ src, alt = "", className, position = "center", de
       />
       <motion.span
         aria-hidden="true"
-        style={{ position: "absolute", inset: 0, background: "var(--bg)", transformOrigin: "center top", pointerEvents: "none" }}
+        className="pointer-events-none absolute inset-0 origin-top bg-sec-bg"
         variants={{
           hidden: { scaleY: 1 },
           show: { scaleY: 0, transition: { duration: 1.2, ease: [0.68, 0, 0, 1], delay } },

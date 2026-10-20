@@ -30,7 +30,7 @@ export default function ScrollText({ text, as = "p", className, offset = ["start
       {text.split(" ").map((word, wi) => (
         <Fragment key={wi}>
           {wi > 0 && " "}
-          <span aria-hidden="true" style={{ display: "inline-block" }}>
+          <span aria-hidden="true" className="inline-block">
             {[...word].map((char, ci) => {
               const start = index / total;
               index += 1;

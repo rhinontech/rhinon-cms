@@ -2,6 +2,7 @@
 
 import { motion } from "motion/react";
 import { toneWords, plain } from "./Rich";
+import { muted } from "./styles";
 
 type Props = {
   text: string;
@@ -15,7 +16,7 @@ type Props = {
 };
 
 // Headline that rises in word by word, each word clipped by its own mask.
-export default function SplitText({ text, as = "h2", className, mutedClass = "muted", delay = 0, stagger = 0.05, onMount = false }: Props) {
+export default function SplitText({ text, as = "h2", className, mutedClass = muted, delay = 0, stagger = 0.05, onMount = false }: Props) {
   const Tag = motion[as];
   const words = toneWords(text);
   const trigger = onMount ? { animate: "show" } : { whileInView: "show", viewport: { once: true, amount: 0.4 } };
@@ -26,11 +27,10 @@ export default function SplitText({ text, as = "h2", className, mutedClass = "mu
         <span
           key={i}
           aria-hidden="true"
-          style={{ display: "inline-block", overflow: "hidden", verticalAlign: "top", paddingBottom: "0.08em", marginBottom: "-0.08em" }}
+          className="-mb-[0.08em] inline-block overflow-hidden pb-[0.08em] align-top"
         >
           <motion.span
-            className={tone === "muted" ? mutedClass : undefined}
-            style={{ display: "inline-block", whiteSpace: "pre" }}
+            className={tone === "muted" ? `inline-block whitespace-pre ${mutedClass}` : "inline-block whitespace-pre"}
             variants={{
               hidden: { y: "110%" },
               show: { y: "0%", transition: { type: "spring", damping: 26, stiffness: 160, mass: 0.6, delay: delay + i * stagger } },

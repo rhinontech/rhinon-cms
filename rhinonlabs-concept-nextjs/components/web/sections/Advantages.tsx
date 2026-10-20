@@ -11,7 +11,10 @@ import Rich from "@/components/web/ui/Rich";
 import Logo from "@/components/web/ui/Logo";
 import { Calendar } from "@/components/web/ui/Icons";
 import { advantages } from "@/lib/web/content";
-import styles from "./Advantages.module.css";
+import { display, grid4, hLg, lead, mono, section } from "@/components/web/ui/styles";
+import { cn } from "@/lib/utils";
+
+const titleMuted = "text-ink/40";
 
 function BrandMark({ className }: { className?: string }) {
   return (
@@ -30,81 +33,82 @@ export default function Advantages() {
   const glowScale = useTransform(scrollYProgress, [0, 0.6], [0.85, 1.15]);
 
   return (
-    <section className={`section ${styles.advantages}`}>
+    <section data-theme="light" className={cn(section, "theme-light py-[99px] max-[809px]:pt-[61px] max-[809px]:pb-[55px]")}>
       <GridLines crosses />
 
-      <div className={`grid4 ${styles.top}`}>
-        <div className={styles.left}>
+      <div className={cn(grid4, "items-start")}>
+        <div className="col-[1/span_2] max-[809px]:col-start-1">
           <Eyebrow index={advantages.index} label={advantages.label} />
-          <SplitText text={advantages.title} className={`display ${styles.title}`} mutedClass={styles.titleMuted} />
+          <SplitText text={advantages.title} className={cn(display, "mt-10")} mutedClass={titleMuted} />
           <Reveal delay={0.2}>
-            <p className={`lead ${styles.lead}`}>{advantages.lead}</p>
+            <p className={cn(lead, "mt-[70px] max-w-[260px] max-[809px]:mt-[30px] max-[809px]:mb-[60px]")}>{advantages.lead}</p>
           </Reveal>
         </div>
 
-        <div className={styles.right}>
+        <div className="col-[3/span_2] max-[809px]:col-start-1">
           <motion.div
             initial={{ opacity: 0, scale: 0.6, rotate: -30 }}
             whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
             viewport={{ once: true }}
             transition={{ type: "spring", bounce: 0.35, duration: 1 }}
           >
-            <BrandMark className={styles.mark} />
+            <BrandMark className="w-[79px] text-ink/10" />
           </motion.div>
-          <SplitText text={advantages.listTitle} as="h3" className={styles.listTitle} mutedClass={styles.titleMuted} />
-          <ul className={styles.list}>
+          <SplitText text={advantages.listTitle} as="h3" className="mt-[61px] font-display text-[clamp(24px,2.2vw,32px)] font-bold tracking-[-0.06em] uppercase max-[809px]:mt-10" mutedClass={titleMuted} />
+          <ul className="mt-[50px] border-t border-sec-line">
             {advantages.items.map((item, i) => (
               <motion.li
                 key={item}
+                className="relative flex h-[73px] items-center gap-[18px] border-b border-sec-line pl-5"
                 initial={{ opacity: 0, x: 30 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true, amount: 0.8 }}
                 transition={{ type: "spring", damping: 26, stiffness: 180, delay: i * 0.08 }}
               >
                 <Cross style={{ left: 0, top: "100%" }} />
-                <span className={styles.badge}>{String(i + 1).padStart(2, "0")}</span>
-                <span className={`mono ${styles.item}`}>
+                <span className="grid size-8 place-items-center rounded-full bg-paper-2 font-mono text-[11px] text-sec-muted">{String(i + 1).padStart(2, "0")}</span>
+                <span className={cn(mono, "text-sm")}>
                   <Rich text={item} />
                 </span>
               </motion.li>
             ))}
           </ul>
-          <Reveal className={`mono ${styles.source}`} y={10}>
-            <span>{advantages.source.label}</span>
+          <Reveal className={cn(mono, "mt-[60px] flex items-center")} y={10}>
+            <span className="w-[148px]">{advantages.source.label}</span>
             <strong>{advantages.source.value}</strong>
-            <span className={styles.date}>
-              <Calendar className={styles.calendar} />
+            <span className="ml-auto inline-flex items-center gap-2">
+              <Calendar className="w-[18px] text-sec-muted" />
               <strong>{advantages.source.date}</strong>
             </span>
           </Reveal>
         </div>
       </div>
 
-      <div className={styles.panel} ref={phoneRef}>
-        <div className={styles.stats}>
+      <div ref={phoneRef} className="relative z-1 mt-[99px] h-[600px] overflow-hidden bg-paper-2 max-[809px]:-mx-(--wgutter) max-[809px]:mt-[100px] max-[809px]:h-[900px]">
+        <div className="absolute top-[60px] right-0 left-[60px] grid grid-cols-[calc(var(--col)-60px)_var(--col)_var(--col)] max-[809px]:left-5 max-[809px]:grid-cols-1 max-[809px]:gap-5">
           {advantages.stats.map((s) => (
-            <div key={s.label} className={styles.stat}>
-              <CountUp value={s.value} prefix={s.prefix} suffix={s.suffix} className={styles.statValue} />
-              <span className="mono">{s.label}</span>
+            <div key={s.label} className="flex items-center gap-3">
+              <CountUp value={s.value} prefix={s.prefix} suffix={s.suffix} className="font-display text-[46px] leading-none font-semibold tracking-[-0.07em]" />
+              <span className={mono}>{s.label}</span>
             </div>
           ))}
         </div>
 
-        <div className={styles.mobileCopy}>
+        <div className="absolute bottom-[60px] left-[60px] w-[calc(var(--col)*2-120px)] max-[1199px]:w-[calc(var(--col)*2)] max-[809px]:top-[260px] max-[809px]:right-5 max-[809px]:bottom-auto max-[809px]:left-5 max-[809px]:w-auto">
           <Eyebrow label={advantages.mobile.label} />
-          <SplitText text={advantages.mobile.title} className={`h-lg ${styles.mobileTitle}`} />
+          <SplitText text={advantages.mobile.title} className={cn(hLg, "mt-[30px] mb-[50px]")} />
           <Reveal delay={0.15}>
-            <p className="lead">{advantages.mobile.lead}</p>
+            <p className={lead}>{advantages.mobile.lead}</p>
           </Reveal>
         </div>
 
-        <Logo className={styles.panelLogo} />
+        <Logo className="absolute bottom-[60px] left-[calc(var(--col)*2)] w-[78px] text-ink/40 max-[809px]:hidden" />
 
-        <motion.img src="/images/phone-glow.png" alt="" className={styles.glow} style={{ scale: glowScale }} />
+        <motion.img src="/images/phone-glow.png" alt="" className="absolute right-0 bottom-0 w-[660px] origin-bottom-right [filter:hue-rotate(-75deg)_saturate(1.3)]" style={{ scale: glowScale }} />
         <motion.img
           src="/images/phone-hand.png"
           alt="Hand holding a phone"
-          className={styles.phone}
+          className="absolute right-[150px] -bottom-10 w-[360px] max-[1199px]:right-10 max-[1199px]:w-[300px] max-[809px]:right-5 max-[809px]:w-[240px]"
           style={{ y: phoneY, rotate: phoneRotate }}
         />
       </div>

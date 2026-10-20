@@ -1,10 +1,11 @@
 import { Fragment } from "react";
+import { muted } from "./styles";
 
 export type Tone = "base" | "strong" | "muted";
 const MARKERS = /(\*[^*]+\*|_[^_]+_)/g;
 
 // Renders copy with *strong* and _muted_ markers (see lib/content.ts).
-export default function Rich({ text, mutedClass = "muted" }: { text: string; mutedClass?: string }) {
+export default function Rich({ text, mutedClass = muted }: { text: string; mutedClass?: string }) {
   const parts = text.split(MARKERS).filter(Boolean);
   return (
     <>

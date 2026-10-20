@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 // Small inline icons recreated from the original export.
 
 type IconProps = { className?: string };
@@ -93,9 +94,9 @@ export function GripDots({ className }: IconProps) {
 /** Row of 1–4 dots used in card label bars. */
 export function Dots({ count = 1, className }: IconProps & { count?: number }) {
   return (
-    <span className={className} aria-hidden="true" style={{ display: "inline-flex", gap: 3 }}>
+    <span className={cn("inline-flex gap-[3px]", className)} aria-hidden="true">
       {Array.from({ length: count }, (_, i) => (
-        <span key={i} style={{ width: 4, height: 4, borderRadius: 4, background: "currentColor", opacity: 0.45 }} />
+        <span key={i} className="size-1 rounded-full bg-current opacity-45" />
       ))}
     </span>
   );
