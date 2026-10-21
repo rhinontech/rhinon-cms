@@ -267,7 +267,7 @@ router.get("/visitors", canRead, async (_req, res) => {
 router.get("/conversations", canRead, async (req: AuthRequest, res) => {
   const bot = await currentBot(res);
   if (!bot) return;
-  const where: WhereOptions = { chatbotId: bot.id };
+  const where: WhereOptions = { chatbotId: bot.id, visitorId: { [Op.notLike]: "admin-test-%" } };
   const status = str(req.query.status, 10);
   if (status === "open" || status === "closed") Object.assign(where, { status });
   const mode = str(req.query.mode, 10);

@@ -5,7 +5,7 @@ import { ChatConversation } from "../../models/ChatConversation";
 import { Site } from "../../models/Site";
 import { findOrMergeLead } from "../leadCapture";
 import { reserveUsage } from "../usage";
-import { appendMessage, realEmail, serializeConversation, stripHtml, type ResolvedBot } from "./chatStore";
+import { appendMessage, isTestVisitor, realEmail, serializeConversation, stripHtml, type ResolvedBot } from "./chatStore";
 import { embedQuery } from "./embeddings";
 import { emitToOrg } from "./realtime";
 import { searchChunks } from "./vectorStore";
@@ -175,7 +175,8 @@ export async function* answer(
       visitor: { name: conv.visitorName, email: conv.visitorEmail, phone: conv.visitorPhone },
       turns: Math.floor(prior.length / 2),
     }),
-    tools: [{ functionDeclarations: tools }],
+    // Test chats from the admin answer normally but never write leads.
+    ...(isTestVisitor(conv.visitorId) ? {} : { tools: [{ functionDeclarations: tools }] }),
     generationConfig: { temperature: 0.3, maxOutputTokens: 800 },
   });
 

@@ -16,7 +16,8 @@ import { timeAgo } from "@/lib/dates";
 import { useModuleBase } from "@/lib/sites";
 import { cn } from "@/lib/utils";
 import { LoadingRows, Notice, Pill, SettingsCard, SettingsFrame, Spinner } from "@/components/Admin/Settings/parts";
-import { errorText, useChatEvents, type ChatbotSource, type TrainingState } from "./chatbotApi";
+import { errorText, useChatbot, useChatEvents, type ChatbotSource, type TrainingState } from "./chatbotApi";
+import { WidgetPreview } from "./WidgetPreview";
 
 type Tab = "website" | "files" | "notes";
 
@@ -46,6 +47,8 @@ export function ChatbotTraining() {
   const [error, setError] = useState<string | null>(null);
   const [missing, setMissing] = useState(false);
   const [tab, setTab] = useState<Tab>("website");
+  const { state: botState } = useChatbot();
+  const [testRun, setTestRun] = useState(0);
 
   const load = useCallback(async () => {
     try {
@@ -137,6 +140,7 @@ export function ChatbotTraining() {
 
   return (
     <SettingsFrame
+      wide
       title="Training"
       description="What the bot answers from. It never makes up facts beyond these."
       actions={
@@ -150,6 +154,8 @@ export function ChatbotTraining() {
     >
       {error && <Notice tone="danger">{error}</Notice>}
 
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
+      <div className="flex min-w-0 flex-col gap-4">
       {running && training && (
         <SettingsCard testId="training-progress">
           <div className="flex items-center justify-between text-sm">
@@ -251,6 +257,24 @@ export function ChatbotTraining() {
           </ul>
         )}
       </SettingsCard>
+      </div>
+
+      {botState?.chatbot && (
+        <div className="xl:sticky xl:top-0 xl:self-start" data-testid="test-bot">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Test your bot</p>
+              <p className="text-[11px] text-muted-foreground">Real answers from its training. Test chats stay out of Live chats and the CRM.</p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => setTestRun((n) => n + 1)} title="Start a fresh test chat">
+              <TbRefresh size={14} /> New chat
+            </Button>
+          </div>
+          {trained.length === 0 && <div className="mb-2"><Notice tone="info">Train at least one source first — until then it can only say it doesn&apos;t know.</Notice></div>}
+          <WidgetPreview key={testRun} appId={botState.chatbot.publicId} config={botState.chatbot.config} forms={botState.chatbot.forms} page="Chats" testing />
+        </div>
+      )}
+      </div>
     </SettingsFrame>
   );
 }

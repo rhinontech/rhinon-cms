@@ -40,6 +40,9 @@ export function withBot<T>(resolved: ResolvedBot, fn: () => T, label = "chatbot"
   return runForOrg(resolved.organizationId, () => runForSite(resolved.site, true, fn), { label });
 }
 
+/** Chats from the admin's "test your bot" panel: kept out of Live chats and the CRM. */
+export const isTestVisitor = (visitorId: string) => visitorId.startsWith("admin-test-");
+
 export function newPublicKey(): string {
   return crypto.randomBytes(16).toString("hex");
 }
@@ -73,7 +76,7 @@ export async function findOrCreateConversation(
     visitorEmail: email,
     meta: extra.meta ?? {},
   });
-  emitToOrg(resolved.organizationId, "chat:conversation", serializeConversation(conversation));
+  if (!isTestVisitor(visitorId)) emitToOrg(resolved.organizationId, "chat:conversation", serializeConversation(conversation));
   return conversation;
 }
 
@@ -116,7 +119,7 @@ export async function appendMessage(
   });
 
   const payload = serializeMessage(message);
-  emitToOrg(resolved.organizationId, "chat:message", { conversation: serializeConversation(conversation), message: payload });
+  if (!isTestVisitor(conversation.visitorId)) emitToOrg(resolved.organizationId, "chat:message", { conversation: serializeConversation(conversation), message: payload });
   // The widget's own shape, for whoever is in the conversation room.
   emitToConversation(conversation.id, "message", {
     role: line.role,

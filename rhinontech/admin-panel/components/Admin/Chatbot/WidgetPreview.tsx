@@ -43,11 +43,14 @@ export function WidgetPreview({
   config,
   forms,
   page = "Home",
+  testing = false,
 }: {
   appId: string;
   config: ChatbotConfig;
   forms?: ChatbotForms;
   page?: "Home" | "Chats" | "Help";
+  /** Real answers from the trained bot; chats are tagged as tests server-side. */
+  testing?: boolean;
 }) {
   const frame = useRef<HTMLDivElement>(null);
   const instance = useRef<ReturnType<RhinonBotFn> | null>(null);
@@ -56,6 +59,7 @@ export function WidgetPreview({
   const widgetConfig = {
     app_id: appId,
     admin: true,
+    adminTestingMode: testing,
     chatbot_config: {
       ...config,
       selectedPage: page,

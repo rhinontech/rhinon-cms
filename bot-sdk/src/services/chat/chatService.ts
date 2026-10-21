@@ -1,5 +1,5 @@
 // Chat service - handles AI conversations
-import { aiApi, getAiApiUrl } from '../api';
+import { aiApi, getAiApiUrl, asVisitorId } from '../api';
 import { ENDPOINTS } from '../api/endpoints';
 import type { ChatWithAssistantRequest, GetChatHistoryRequest, Message } from '@/types';
 
@@ -29,7 +29,7 @@ export const chatWithAssistant = async (
     // Transform request to match backend format
     const backendPayload = {
       chatbot_id: requestBody.chatbot_id,
-      user_id: requestBody.user_id,
+      user_id: asVisitorId(String(requestBody.user_id ?? '')),
       user_email: requestBody.user_email,
       prompt: requestBody.prompt,
       conversation_id: requestBody.conversation_id,
@@ -100,7 +100,7 @@ export const chatWithAssistant = async (
  * Get chat history for a conversation
  */
 export const getChatHistory = async (requestBody: GetChatHistoryRequest) => {
-  const response = await aiApi.post(ENDPOINTS.CHAT_HISTORY, requestBody);
+  const response = await aiApi.post(ENDPOINTS.CHAT_HISTORY, { ...requestBody, user_id: asVisitorId(String((requestBody as any).user_id ?? '')) });
   return response.data;
 };
 
@@ -109,7 +109,7 @@ export const getChatHistory = async (requestBody: GetChatHistoryRequest) => {
  */
 export const getConversationByUserId = async (userId: string, appId: string) => {
   const response = await aiApi.post(ENDPOINTS.CONVERSATION_BY_USER_ID, {
-    user_id: userId,
+    user_id: asVisitorId(userId),
     chatbot_id: appId,
   });
   return response.data;

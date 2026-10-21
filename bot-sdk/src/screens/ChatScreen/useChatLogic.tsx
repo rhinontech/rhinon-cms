@@ -519,7 +519,8 @@ export const useChatLogic = ({
       return;
     }
 
-    if (!isEmailAvailable && !userEmail) {
+    // The admin's "test your bot" panel talks to the AI straight away.
+    if (!(isAdmin && adminTestingMode) && !isEmailAvailable && !userEmail) {
       const messageText = text || message;
       setMessage('');
       if (messageText.trim() === '') {

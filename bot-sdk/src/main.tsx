@@ -2,7 +2,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import Messenger from './Messenger/Messenger';
-import { setCurrentAppId } from './services/api';
+import { setCurrentAppId, setTestingMode } from './services/api';
 
 export interface SalesziumConfig {
   app_id: string;
@@ -58,6 +58,7 @@ let manuallyInitialized = false;
 function initSaleszium(config: SalesziumConfig): ChatBotElement {
   manuallyInitialized = true;
   setCurrentAppId(config.app_id);
+  setTestingMode(!!(config as any).admin && !!(config as any).adminTestingMode);
 
   const chatBotElement = document.createElement('chat-bot') as ChatBotElement;
 

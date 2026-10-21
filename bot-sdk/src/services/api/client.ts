@@ -78,6 +78,13 @@ export const setCurrentAppId = (appId: string) => {
 };
 export const getCurrentAppId = (): string => currentAppId;
 
+/** Admin "test your bot" mode: chats are tagged so they stay out of Live chats and the CRM. */
+let testingMode = false;
+export const setTestingMode = (on: boolean) => {
+  testingMode = on;
+};
+export const asVisitorId = (id: string): string => (testingMode && !id.startsWith('admin-test-') ? `admin-test-${id}` : id);
+
 const attachAppId = (config: any) => {
   if (!currentAppId) return config;
   config.params = { chatbot_id: currentAppId, ...(config.params || {}) };
