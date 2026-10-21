@@ -7,7 +7,7 @@ import { MdDashboard } from "react-icons/md";
 import { FaUserGroup } from "react-icons/fa6";
 import { RiSettings3Fill } from "react-icons/ri";
 import { HiInbox } from "react-icons/hi2";
-import { TbBriefcase, TbCash, TbSpeakerphone, TbNews, TbBook, TbTargetArrow, TbChartArcs, TbHierarchy, TbCalendarEvent, TbBulb, TbBuildingCommunity } from "react-icons/tb";
+import { TbBriefcase, TbCash, TbSpeakerphone, TbNews, TbBook, TbTargetArrow, TbChartArcs, TbHierarchy, TbCalendarEvent, TbBulb, TbBuildingCommunity, TbMessageChatbot } from "react-icons/tb";
 import { BsPinAngleFill, BsPinAngle } from "react-icons/bs";
 import { cn } from "@/lib/utils";
 import { useDashboard } from "../../../Common/DashboardProvider/DashboardProvider";
@@ -62,6 +62,7 @@ export function Sidebar() {
     { title: "Pages",      icon: <TbBook size={20} className="h-5 w-5 flex-shrink-0" />,          href: `/${roleSlug}/pages`,      permissions: ["pages:read"] },
     { title: "CRM",        icon: <TbTargetArrow size={20} className="h-5 w-5 flex-shrink-0" />,   href: `/${roleSlug}/crm`,        permissions: ["crm:read"] },
     { title: "Outreach",   icon: <TbSpeakerphone size={20} className="h-5 w-5 flex-shrink-0" />,  href: `/${roleSlug}/outreach`,   permissions: ["outreach:read"] },
+    { title: "Chatbot",    icon: <TbMessageChatbot size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/chatbot`,    permissions: ["chatbot:read"] },
     { title: "Automation", icon: <TbHierarchy size={20} className="h-5 w-5 flex-shrink-0" />,    href: `/${roleSlug}/automation`, permissions: ["outreach:read", "crm:read", "dashboard:read"] },
     { title: "Work",       icon: <TbBriefcase size={20} className="h-5 w-5 flex-shrink-0" />,     href: `/${roleSlug}/work`,       permissions: ["work:read"] },
     { title: "Team",       icon: <FaUserGroup size={20} className="h-5 w-5 flex-shrink-0" />,     href: `/${roleSlug}/employees`,  permissions: ["people:read", "attendance:read", "leave:read", "performance:read", "documents:read"] },

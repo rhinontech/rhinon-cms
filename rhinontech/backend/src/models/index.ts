@@ -71,6 +71,10 @@ import { TaskActivity } from "./TaskActivity";
 import { StartupIdea } from "./StartupIdea";
 import { BlogTopic } from "./BlogTopic";
 import { Deployment } from "./Deployment";
+import { Chatbot } from "./Chatbot";
+import { ChatbotSource } from "./ChatbotSource";
+import { ChatConversation } from "./ChatConversation";
+import { ChatMessage } from "./ChatMessage";
 import { Organization } from "./Organization";
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/database";
@@ -499,6 +503,10 @@ export {
   StartupIdea,
   BlogTopic,
   Deployment,
+  Chatbot,
+  ChatbotSource,
+  ChatConversation,
+  ChatMessage,
 };
 
 export async function syncDatabase(force = false) {

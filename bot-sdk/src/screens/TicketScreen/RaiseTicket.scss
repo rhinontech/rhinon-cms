@@ -1,0 +1,150 @@
+.ticket-screen {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  /* take full width of parent */
+  background: var(--bg-primary);
+  overflow: hidden;
+  font-family: "Inter", sans-serif;
+  max-height: 400px;
+  width: calc(100% - 40px);
+  border-radius: 16px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.25);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.ticket-body {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border-radius: 0 0 25px 25px;
+  flex: 1;
+  max-height: 370px;
+  gap: 10px;
+  padding: 15px;
+  min-height: 0;
+}
+
+
+.ticket-info {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.ticket-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  max-height: 370px;
+  gap: 10px;
+  min-height: 0;
+}
+
+.ticket-inputs {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 10px 0 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  #{'&::-webkit-scrollbar'} {
+    display: none;
+  }
+}
+
+.ticket-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+
+    .required {
+      color: red;
+      margin-left: 4px;
+    }
+  }
+
+  input,
+  textarea {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 14px;
+    outline: none;
+    background: var(--bg-primary);
+    transition: all 0.2s;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+
+    &:focus {
+      border-color: var(--primary-color, #007bff);
+      box-shadow: 0px 2px 6px rgba(62, 104, 252, 0.2);
+    }
+  }
+
+  textarea {
+    min-height: 100px;
+    resize: vertical;
+  }
+}
+
+.ticket-input-group input::placeholder,
+.ticket-input-group textarea::placeholder {
+  font-family: "DM Sans", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-tertiary);
+  /* or whatever color you want */
+  opacity: 1;
+  /* ensure consistency across browsers */
+}
+
+.ticket-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.ticket-submit {
+  background: var(--primary-color, #007bff);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 20px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: color-mix(in srgb, var(--primary-color, #007bff) 90%, black);
+  }
+}
+
+.ticket-cancel {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 20px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: var(--bg-tertiary);
+  }
+}

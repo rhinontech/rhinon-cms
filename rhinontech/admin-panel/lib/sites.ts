@@ -43,6 +43,7 @@ export const SITE_SCOPED_MODULES = [
   "outreach",
   "automation",
   "analytics",
+  "chatbot",
 ] as const;
 
 export type SiteScopedModule = (typeof SITE_SCOPED_MODULES)[number];

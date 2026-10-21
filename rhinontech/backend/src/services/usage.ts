@@ -46,9 +46,19 @@ export function planState(org: Organization): OrgPlanState {
   const trialExpired = !org.isPlatform && org.status === "trial" && !!trialEndsAt && trialEndsAt.getTime() < Date.now();
   // Platform is unlimited whatever its plan column says.
   const limits: PlanLimits = org.isPlatform
-    ? { label: "Platform", seats: null, emailsPerDay: null, aiPerDay: null, customDomains: null }
+    ? { label: "Platform", seats: null, emailsPerDay: null, aiPerDay: null, customDomains: null, chatbots: null, botRepliesPerDay: null }
     : PLAN_LIMITS[org.plan] ?? PLAN_LIMITS.free;
   return { organizationId: org.id, isPlatform: org.isPlatform, plan: org.plan, status: org.status, limits, trialEndsAt, trialExpired };
+}
+
+/** Why this workspace may not add another brand's chatbot, or null when it may. */
+export async function chatbotSlotBlockedReason(existing: number, organizationId: string | null = currentOrganizationId()): Promise<string | null> {
+  if (!organizationId) return null;
+  const state = await loadState(organizationId);
+  if (!state || state.limits.chatbots === null) return null;
+  return existing >= state.limits.chatbots
+    ? `The ${state.limits.label} plan includes a chatbot on ${state.limits.chatbots} brand${state.limits.chatbots === 1 ? "" : "s"}. Upgrade to add more.`
+    : null;
 }
 
 async function loadState(organizationId: string): Promise<OrgPlanState | null> {
@@ -70,6 +80,8 @@ const FOREVER = 2_147_483_647;
  * midnight IST, which is when an Indian business expects "today" to reset.
  * Returns null when allowed, or a human reason when not.
  */
+const LIMIT_FOR = { email: "emailsPerDay", ai: "aiPerDay", bot: "botRepliesPerDay" } as const;
+
 export async function reserveUsage(kind: UsageKind, organizationId: string | null = currentOrganizationId()): Promise<string | null> {
   if (!organizationId) return null;
   const state = await loadState(organizationId);
@@ -77,7 +89,7 @@ export async function reserveUsage(kind: UsageKind, organizationId: string | nul
 
   if (state.trialExpired) return "Your trial has ended. Upgrade your plan to continue.";
 
-  const limit = kind === "email" ? state.limits.emailsPerDay : state.limits.aiPerDay;
+  const limit = state.limits[LIMIT_FOR[kind]];
   const rows = await sequelize.query<{ count: number }>(
     `INSERT INTO usage_counters (id, "organizationId", kind, day, count, "createdAt", "updatedAt")
      VALUES (:id, :org, :kind, (now() AT TIME ZONE 'Asia/Kolkata')::date, 1, now(), now())
@@ -89,14 +101,14 @@ export async function reserveUsage(kind: UsageKind, organizationId: string | nul
   );
 
   if (rows.length > 0) return null;
-  const what = kind === "email" ? "outbound emails" : "AI generations";
+  const what = { email: "outbound emails", ai: "AI generations", bot: "chatbot replies" }[kind];
   return `Daily limit of ${limit} ${what} reached for the ${state.limits.label} plan. It resets at midnight IST.`;
 }
 
 /** Throwing form of reserveUsage, for code that has no natural way to return a reason. */
 export async function requireUsage(kind: UsageKind): Promise<void> {
   const reason = await reserveUsage(kind);
-  if (reason) throw new PlanLimitError(reason, kind === "email" ? "emailsPerDay" : "aiPerDay");
+  if (reason) throw new PlanLimitError(reason, LIMIT_FOR[kind]);
 }
 
 /** Null when one more active employee fits the plan, else the reason it does not. */

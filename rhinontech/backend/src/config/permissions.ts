@@ -41,6 +41,8 @@ export const PERMISSION_CATALOG = [
   { name: "startupIdeas:write", resource: "startupIdeas", action: "write" },
   { name: "meetings:read",      resource: "meetings",     action: "read"  },
   { name: "meetings:write",     resource: "meetings",     action: "write" },
+  { name: "chatbot:read",       resource: "chatbot",      action: "read"  },
+  { name: "chatbot:write",      resource: "chatbot",      action: "write" },
   // Deploy: read = see the build history, trigger = restart a backend.
   { name: "deploy:read",        resource: "deploy",       action: "read"  },
   { name: "deploy:trigger",     resource: "deploy",       action: "trigger" },

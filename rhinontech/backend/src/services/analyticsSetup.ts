@@ -16,7 +16,7 @@ import { runAsSystem } from "./tenantContext";
 
 export const MAX_TRACKED_DOMAINS = 10;
 
-const apiBase = () => (process.env.PUBLIC_API_URL || "https://api.rhinontech.in").replace(/\/+$/, "");
+export const apiBase = () => (process.env.PUBLIC_API_URL || "https://api.rhinontech.in").replace(/\/+$/, "");
 
 export const trackerScriptUrl = () => `${apiBase()}/t.js`;
 

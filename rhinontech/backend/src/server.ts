@@ -22,6 +22,8 @@ import { dispatchDueEventEmails } from "./services/eventReminderJob";
 import { purgeDueWorkspaces } from "./services/workspaceLifecycle";
 import { beat } from "./services/heartbeat";
 import { applyDueRevisions } from "./services/compensationRevisions";
+import { attachChatSocket } from "./services/chatbot/realtime";
+import { ensureVectorSchema } from "./services/chatbot/vectorStore";
 
 async function autoClockOut() {
   const now = new Date();
@@ -91,6 +93,14 @@ async function bootstrap() {
 
   await syncDatabase();
   console.log("Models synced");
+
+  // pgvector for the website chatbot. Failing here must not take the API down:
+  // everything except bot training and answers keeps working without it.
+  try {
+    await ensureVectorSchema();
+  } catch (err: any) {
+    console.error("[Chatbot] Vector store unavailable:", err.message);
+  }
 
   const orphans = await auditOrphanRows();
   if (orphans.length) {
@@ -163,8 +173,11 @@ async function bootstrap() {
 }
 
 function listen() {
-  app.listen(env.port, () => {
+  const server = app.listen(env.port, () => {
     console.log(`Server running on http://localhost:${env.port}`);
+    // Live chat for the website widget rides on the same port, so nginx only
+    // needs to allow the WebSocket upgrade on the API host.
+    attachChatSocket(server);
 
     // Stale-intel refresh: nightly at 3:30 AM IST, well clear of the outreach
     // scheduler. No-ops unless LEAD_REENRICH_ENABLED=true.

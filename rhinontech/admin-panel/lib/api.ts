@@ -122,6 +122,20 @@ export async function apiUpload<T = unknown>(path: string, file: File, field = "
   return res.json() as Promise<T>;
 }
 
+/** Several files in one multipart request, under the same field name. */
+export async function apiUploadMany<T = unknown>(path: string, files: File[], field = "files"): Promise<T> {
+  const token = Cookies.get("authToken");
+  const form = new FormData();
+  for (const file of files) form.append(field, file);
+  const res = await fetch(`${API_URL}${path}`, {
+    method: "POST",
+    headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...siteHeader() },
+    body: form,
+  });
+  if (!res.ok) throw await toApiError(res, "Upload failed");
+  return res.json() as Promise<T>;
+}
+
 /**
  * POSTs to an endpoint that answers with NDJSON and invokes `onEvent` for each
  * line as it arrives.

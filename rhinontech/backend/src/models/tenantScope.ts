@@ -24,6 +24,10 @@ import { TaskTag } from "./TaskTag";
 import { TaskDependency } from "./TaskDependency";
 import { TaskAttachment } from "./TaskAttachment";
 import { TaskActivity } from "./TaskActivity";
+import { Chatbot } from "./Chatbot";
+import { ChatbotSource } from "./ChatbotSource";
+import { ChatConversation } from "./ChatConversation";
+import { ChatMessage } from "./ChatMessage";
 import { TimeEntry } from "./TimeEntry";
 import { Attendance } from "./Attendance";
 import { AttendanceRequest } from "./AttendanceRequest";
@@ -110,6 +114,7 @@ export const TENANT_MODELS: ModelStatic<any>[] = [
   Unsubscribe, UsageCounter, AuditLog, DocsAccess,
   StartupIdea, Deployment, BlogTopic,
   PageView, Visitor,
+  Chatbot, ChatbotSource, ChatConversation, ChatMessage,
 ];
 
 const TENANT_MODEL_NAMES = new Set(TENANT_MODELS.map((m) => m.name));

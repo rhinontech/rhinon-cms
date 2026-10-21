@@ -1,0 +1,83 @@
+.voice-container {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.voice-status {
+  margin-bottom: 16px;
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.voice-main-ui {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.voice-circle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  /* make room */
+}
+
+.voice-wave {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: #1403ac;
+  /* mic circle color */
+  transition: transform 0.5s ease-in-out, box-shadow 0.5s ease-in-out;
+  box-shadow: 0 0 20px rgba(20, 3, 172, 0.5);
+}
+
+.voice-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.voice-btn {
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  border: none;
+  background: none;
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: var(--bg-tertiary);
+  }
+
+  &.close-btn {
+    background: #e02f2f;
+
+    &:hover {
+      background: #b22222;
+    }
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}

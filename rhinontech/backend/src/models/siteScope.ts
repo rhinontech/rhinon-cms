@@ -19,6 +19,8 @@ import { Workflow } from "./Workflow";
 import { WorkflowEnrollment } from "./WorkflowEnrollment";
 import { PageView } from "./PageView";
 import { Visitor } from "./Visitor";
+import { Chatbot } from "./Chatbot";
+import { ChatConversation } from "./ChatConversation";
 
 /**
  * Site-owned models, by module:
@@ -28,6 +30,7 @@ import { Visitor } from "./Visitor";
  *   Outreach    Campaign, CampaignTemplate, ContactGroup
  *   Automation  Workflow, WorkflowEnrollment
  *   Analytics   PageView, Visitor
+ *   Chatbot     Chatbot, ChatConversation
  *
  * Deliberately NOT here:
  *   - Blog / CaseStudy / Event — already carry siteId and are filtered
@@ -45,6 +48,7 @@ export const SITE_MODELS: ModelStatic<any>[] = [
   Campaign, CampaignTemplate, ContactGroup,
   Workflow, WorkflowEnrollment,
   PageView, Visitor,
+  Chatbot, ChatConversation,
 ];
 
 const SITE_MODEL_NAMES = new Set(SITE_MODELS.map((m) => m.name));

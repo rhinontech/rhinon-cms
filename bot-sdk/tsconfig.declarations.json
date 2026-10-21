@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "declarationMap": true,
+    "outDir": "dist",
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "isolatedModules": true
+  },
+  "include": [
+    "src/types.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "tools"
+  ]
+}

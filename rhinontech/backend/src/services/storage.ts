@@ -113,7 +113,7 @@ export async function getPresignedReadUrl(key: string, expiresIn = 3600): Promis
 export async function uploadBuffer(
   buffer: Buffer,
   originalName: string,
-  folder: "avatars" | "documents" | "content" | "inbox" | "pages" | "tasks" | "reimbursements" | "resumes",
+  folder: "avatars" | "documents" | "content" | "inbox" | "pages" | "tasks" | "reimbursements" | "resumes" | "chatbot",
   mimeType: string
 ): Promise<string> {
   const ext = path.extname(originalName) || "";
