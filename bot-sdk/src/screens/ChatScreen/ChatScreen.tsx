@@ -17,6 +17,7 @@ import {
   PreChatForm,
   PostChatForm,
 } from './ChatComponents';
+import { scrollWithin } from '@/utils/scrollWithin';
 
 // ====== Main ChatScreen Component ======
 const ChatScreen: React.FC<ChatScreenProps> = (props) => {
@@ -395,7 +396,7 @@ const ChatScreen: React.FC<ChatScreenProps> = (props) => {
 
   // ====== Auto-scroll on new messages ======
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    scrollWithin(bottomRef.current);
   }, [chatMessages, message]);
 
   // ====== Fetch chats on conversation change ======
@@ -427,7 +428,7 @@ const ChatScreen: React.FC<ChatScreenProps> = (props) => {
 
   useEffect(() => {
     if (showTyping && typingRef.current) {
-      typingRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      scrollWithin(typingRef.current);
     }
   }, [showTyping]);
 
@@ -624,7 +625,7 @@ const ChatScreen: React.FC<ChatScreenProps> = (props) => {
 
   // ====== Scroll to bottom on new messages ======
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    scrollWithin(bottomRef.current);
   }, [chatMessages, message]);
 
   // ====== Fetch chats on conversation change ======
@@ -658,7 +659,7 @@ const ChatScreen: React.FC<ChatScreenProps> = (props) => {
 
   useEffect(() => {
     if (showTyping && typingRef.current) {
-      typingRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      scrollWithin(typingRef.current);
     }
   }, [showTyping]);
 

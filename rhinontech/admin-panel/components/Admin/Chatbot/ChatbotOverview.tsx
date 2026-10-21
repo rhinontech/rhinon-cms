@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { TbCircleCheck, TbClockHour4, TbMessages, TbPlugConnected, TbSchool, TbBrush } from "react-icons/tb";
+import {
+  TbArrowRight, TbBrush, TbCheck, TbCode, TbEye, TbEyeOff, TbMessageChatbot, TbMessages, TbSchool, TbTrash, TbUserCheck, TbUsers,
+} from "react-icons/tb";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useConfirm } from "@/components/Admin/Common/ConfirmDialog";
@@ -11,10 +13,20 @@ import { usePermissions } from "@/context/PermissionsContext";
 import { apiFetch } from "@/lib/api";
 import { timeAgo } from "@/lib/dates";
 import { useCurrentSite, useModuleBase } from "@/lib/sites";
-import { CopyButton, LoadingRows, Notice, Pill, SettingsCard, SettingsFrame, Spinner } from "@/components/Admin/Settings/parts";
+import { cn } from "@/lib/utils";
+import { CopyButton, LoadingRows, Notice, Spinner } from "@/components/Admin/Settings/parts";
 import { InstallGuide } from "./InstallGuide";
+import { Chip, EmptyState, PageShell, Panel, Stat } from "./ui";
 import { errorText, useChatbot, useChatEvents, type Chatbot } from "./chatbotApi";
 
+interface Stats {
+  chatsToday: number;
+  chatsWeek: number;
+  leadsWeek: number;
+  waiting: number;
+  answersToday: number;
+  onlineNow: number;
+}
 
 export function ChatbotOverview() {
   const base = useModuleBase();
@@ -23,9 +35,19 @@ export function ChatbotOverview() {
   const { has } = usePermissions();
   const canEdit = has("chatbot:write");
   const { state, error, reload, save, setState } = useChatbot();
+  const [stats, setStats] = useState<Stats | null>(null);
   const [busy, setBusy] = useState(false);
+  const [installMode, setInstallMode] = useState<"tag" | "guide">("tag");
 
-  // The snippet going live flips "Waiting for your site" without a refresh.
+  const bot = state?.chatbot ?? null;
+
+  const loadStats = useCallback(() => {
+    apiFetch<Stats>("/chatbots/stats").then(setStats).catch(() => undefined);
+  }, []);
+  useEffect(() => {
+    if (bot) loadStats();
+  }, [bot?.id, loadStats]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useChatEvents({
     "chatbot:installed": () => void reload(),
     "chatbot:training": (e: { chatbotId: string; status: Chatbot["trainingStatus"]; progress: number; message: string }) =>
@@ -34,6 +56,8 @@ export function ChatbotOverview() {
           ? { ...prev, chatbot: { ...prev.chatbot, trainingStatus: e.status, trainingProgress: e.progress, trainingMessage: e.message } }
           : prev
       ),
+    "chat:visitor": () => loadStats(),
+    "chat:conversation": () => loadStats(),
   });
 
   const create = async () => {
@@ -61,7 +85,7 @@ export function ChatbotOverview() {
   const remove = async () => {
     const ok = await confirm({
       title: "Delete this chatbot?",
-      description: "Its training, every conversation and the install snippet are deleted. Leads it captured stay in the CRM. This cannot be undone.",
+      description: "Its training, every conversation and the install code are deleted. Leads it captured stay in the CRM. This cannot be undone.",
       confirmLabel: "Delete chatbot",
       destructive: true,
     });
@@ -75,136 +99,208 @@ export function ChatbotOverview() {
     }
   };
 
-  const bot = state?.chatbot ?? null;
+  const accent = (bot?.config.primaryColor as string) || "#1c1917";
+  const customised = !!bot && (!!bot.config.persona || accent.toLowerCase() !== "#1c1917" || !!bot.config.primaryLogo);
+  const steps = bot
+    ? [
+        { done: true, label: "Create your chatbot", href: undefined },
+        { done: !!bot.lastTrainedAt, label: "Train it on your website or documents", href: `${base}/training` },
+        { done: customised, label: "Make it yours — colour, greeting, tone", href: `${base}/appearance` },
+        { done: !!bot.installedAt, label: "Add it to your website", href: "#install" },
+      ]
+    : [];
+  const doneCount = steps.filter((s) => s.done).length;
 
   return (
-    <SettingsFrame title="Chatbot" description={site ? `The website assistant for ${site.name}` : undefined}>
+    <PageShell title="Overview" subtitle={site ? `Website chatbot for ${site.name}` : undefined}>
       {error && <Notice tone="danger">{error}</Notice>}
       {!state && !error && <LoadingRows rows={4} />}
 
       {state && !bot && (
-        <SettingsCard
-          testId="chatbot-empty"
-          title="Add a chatbot to your website"
-          description="It answers visitors from your own pages and documents, collects their details into the CRM, and hands them to your team when they want a person."
-        >
-          {state.plan.blockedReason ? (
-            <Notice tone="warning" testId="chatbot-plan-blocked">{state.plan.blockedReason}</Notice>
-          ) : canEdit ? (
-            <Button onClick={create} disabled={busy} data-testid="create-chatbot">
-              {busy ? <Spinner /> : <TbMessages size={16} />} Create chatbot
-            </Button>
-          ) : (
-            <p className="text-sm text-muted-foreground">Ask a workspace admin to create one.</p>
-          )}
-        </SettingsCard>
+        <Panel testId="chatbot-empty">
+          <EmptyState
+            icon={<TbMessageChatbot size={24} />}
+            title="Add an AI chatbot to your website"
+            body="It answers visitors from your own pages and documents, saves their details to the CRM, and hands them to your team when they want a person."
+            action={
+              state.plan.blockedReason ? (
+                <Notice tone="warning" testId="chatbot-plan-blocked">{state.plan.blockedReason}</Notice>
+              ) : canEdit ? (
+                <Button size="lg" onClick={create} disabled={busy} data-testid="create-chatbot">
+                  {busy ? <Spinner /> : <TbMessageChatbot size={18} />} Create chatbot
+                </Button>
+              ) : (
+                <p className="text-sm text-muted-foreground">Ask a workspace admin to create one.</p>
+              )
+            }
+          />
+        </Panel>
       )}
 
       {bot && (
         <>
-          <div className="grid gap-3 sm:grid-cols-3" data-testid="chatbot-status">
-            <StatusTile
-              icon={<TbPlugConnected size={18} />}
-              label="Installed"
-              value={bot.installedAt ? `Since ${timeAgo(bot.installedAt)}` : "Waiting for your site"}
-              ok={!!bot.installedAt}
-            />
-            <StatusTile
-              icon={<TbSchool size={18} />}
-              label="Training"
-              value={
-                bot.trainingStatus === "training"
-                  ? `${bot.trainingProgress}% — ${bot.trainingMessage ?? "training"}`
-                  : bot.lastTrainedAt
-                    ? `Last trained ${timeAgo(bot.lastTrainedAt)}`
-                    : "Not trained yet"
-              }
-              ok={!!bot.lastTrainedAt && bot.trainingStatus !== "failed"}
-            />
-            <StatusTile
-              icon={<TbMessages size={18} />}
-              label="On your site"
-              value={bot.isActive ? "Showing to visitors" : "Hidden"}
-              ok={bot.isActive}
+          {/* Identity */}
+          <Panel padded={false} testId="chatbot-hero">
+            <div className="flex flex-wrap items-center gap-4 p-6">
+              <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl text-white shadow-sm" style={{ background: accent }}>
+                <TbMessageChatbot size={28} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <h2 className="truncate text-lg font-semibold tracking-tight">{(bot.config.chatbotName as string) || "Assistant"}</h2>
+                <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                  {bot.isActive ? <Chip tone="green"><TbEye size={12} /> Showing on your site</Chip> : <Chip><TbEyeOff size={12} /> Hidden</Chip>}
+                  {bot.installedAt ? <Chip tone="green"><TbCheck size={12} /> Installed {timeAgo(bot.installedAt)}</Chip> : <Chip tone="amber">Not installed yet</Chip>}
+                  {bot.trainingStatus === "training" ? (
+                    <Chip tone="blue">Training {bot.trainingProgress}%</Chip>
+                  ) : bot.lastTrainedAt ? (
+                    <Chip>Trained {timeAgo(bot.lastTrainedAt)}</Chip>
+                  ) : (
+                    <Chip tone="amber">Not trained</Chip>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button variant="outline" asChild>
+                  <Link href={`${base}/training`}><TbMessageChatbot size={16} /> Test it</Link>
+                </Button>
+                <label className="flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm">
+                  <span className="text-muted-foreground">Live</span>
+                  <Switch checked={bot.isActive} onCheckedChange={toggleActive} disabled={!canEdit} data-testid="toggle-active" />
+                </label>
+              </div>
+            </div>
+          </Panel>
+
+          {/* Setup checklist, until everything is done */}
+          {doneCount < steps.length && (
+            <Panel title="Get set up" description={`${doneCount} of ${steps.length} done`} testId="setup-checklist">
+              <div className="mb-4 h-1.5 overflow-hidden rounded-full bg-muted">
+                <div className="h-full rounded-full transition-all" style={{ width: `${(doneCount / steps.length) * 100}%`, background: accent }} />
+              </div>
+              <ol className="grid gap-2 sm:grid-cols-2">
+                {steps.map((s, i) => {
+                  const body = (
+                    <>
+                      <span
+                        className={cn(
+                          "flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold",
+                          s.done ? "bg-emerald-500 text-white" : "border border-border text-muted-foreground"
+                        )}
+                      >
+                        {s.done ? <TbCheck size={14} /> : i + 1}
+                      </span>
+                      <span className={cn("flex-1 text-sm", s.done ? "text-muted-foreground line-through decoration-muted-foreground/40" : "font-medium text-foreground")}>{s.label}</span>
+                      {!s.done && s.href && <TbArrowRight size={15} className="text-muted-foreground" />}
+                    </>
+                  );
+                  const cls = "flex items-center gap-3 rounded-xl border border-border/70 px-3.5 py-3";
+                  return (
+                    <li key={s.label}>
+                      {!s.done && s.href ? (
+                        <a href={s.href} onClick={s.href === "#install" ? () => setInstallMode("tag") : undefined} className={cn(cls, "transition-colors hover:border-foreground/25 hover:bg-muted/40")}>{body}</a>
+                      ) : (
+                        <div className={cls}>{body}</div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ol>
+            </Panel>
+          )}
+
+          {/* Numbers */}
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" data-testid="chatbot-stats">
+            <Stat icon={<TbUsers size={18} />} tone="green" label="On your site now" value={stats?.onlineNow ?? "—"} hint={<Link href={`${base}/visitors`} className="hover:underline">See live visitors →</Link>} />
+            <Stat icon={<TbMessages size={18} />} tone="blue" label="Chats today" value={stats?.chatsToday ?? "—"} hint={stats ? `${stats.chatsWeek} this week` : undefined} />
+            <Stat icon={<TbUserCheck size={18} />} tone="violet" label="Leads captured" value={stats?.leadsWeek ?? "—"} hint="Last 7 days" />
+            <Stat
+              icon={<TbMessageChatbot size={18} />}
+              tone={stats?.waiting ? "amber" : "neutral"}
+              label={stats?.waiting ? "Waiting for a reply" : "AI answers today"}
+              value={stats ? (stats.waiting || stats.answersToday) : "—"}
+              hint={stats?.waiting ? <Link href={`${base}/chats`} className="hover:underline">Open live chats →</Link> : "Answered by the bot"}
             />
           </div>
 
-          {!bot.lastTrainedAt && (
-            <Notice tone="info" testId="train-first">
-              Until it is trained, the bot can only say it doesn&apos;t know.{" "}
-              <Link href={`${base}/training`} className="font-medium underline underline-offset-2">Add your website or documents →</Link>
-            </Notice>
-          )}
-
-          <SettingsCard
-            title="Install on your website"
-            description="One line, on every page. The bot appears in the bottom-right corner."
-          >
-            <div className="relative rounded-lg border border-border bg-card" data-testid="snippet-box">
-              <pre className="whitespace-pre-wrap break-all p-3 pr-24 text-xs leading-relaxed" data-testid="snippet"><code>{state?.snippet}</code></pre>
-              <CopyButton text={state?.snippet ?? ""} label="Snippet" testId="copy-snippet" className="absolute right-2 top-2 bg-card" />
-            </div>
-            <div className="mt-3 flex items-center gap-2 text-xs">
-              {bot.installedAt ? (
-                <Pill tone="green"><TbCircleCheck size={12} /> Seen on your site</Pill>
+          {/* Install */}
+          <div id="install" className="scroll-mt-4">
+            <Panel
+              icon={<TbCode size={18} />}
+              title="Install on your website"
+              description="Add it once; it shows on every page in the bottom-right corner."
+              actions={
+                <div className="inline-flex rounded-lg bg-muted p-0.5 text-xs">
+                  {(["tag", "guide"] as const).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setInstallMode(m)}
+                      className={cn("rounded-md px-2.5 py-1 font-medium", installMode === m ? "bg-background shadow-sm" : "text-muted-foreground")}
+                    >
+                      {m === "tag" ? "One line" : "By platform"}
+                    </button>
+                  ))}
+                </div>
+              }
+            >
+              {installMode === "tag" ? (
+                <>
+                  <div className="relative overflow-hidden rounded-xl border border-border bg-muted/40" data-testid="snippet-box">
+                    <pre className="whitespace-pre-wrap break-all p-4 pr-24 font-mono text-xs leading-relaxed" data-testid="snippet"><code>{state?.snippet}</code></pre>
+                    <CopyButton text={state?.snippet ?? ""} label="Copy" testId="copy-snippet" className="absolute right-3 top-3 bg-background" />
+                  </div>
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    Paste it just before <code className="font-mono">&lt;/body&gt;</code>. Using React, WordPress, Shopify…?{" "}
+                    <button type="button" className="font-medium text-foreground underline underline-offset-2" onClick={() => setInstallMode("guide")}>
+                      Step-by-step for your platform
+                    </button>
+                  </p>
+                </>
               ) : (
-                <Pill tone="amber"><TbClockHour4 size={12} /> Not seen yet — this updates by itself once a page with the snippet loads</Pill>
+                <InstallGuide src={state?.widgetUrl ?? ""} apiUrl={state?.apiUrl ?? ""} appId={bot.publicId} />
               )}
-            </div>
-          </SettingsCard>
+            </Panel>
+          </div>
 
-          <SettingsCard
-            title="Step-by-step for your platform"
-            description="Pick what your site is built with for the exact file and code."
-          >
-            <InstallGuide src={state?.widgetUrl ?? ""} apiUrl={state?.apiUrl ?? ""} appId={bot.publicId} />
-          </SettingsCard>
-
-          <SettingsCard
-            title="Show on your website"
-            description="Turn it off to hide the bot from visitors without removing the snippet. Training and chats are kept."
-            actions={<Switch checked={bot.isActive} onCheckedChange={toggleActive} disabled={!canEdit} data-testid="toggle-active" />}
-          />
-
+          {/* Shortcuts */}
           <div className="grid gap-3 sm:grid-cols-3">
-            <QuickLink href={`${base}/chats`} icon={<TbMessages size={18} />} title="Live chats" body="Watch conversations and take over from the bot." />
-            <QuickLink href={`${base}/training`} icon={<TbSchool size={18} />} title="Training" body="Websites, documents and notes it answers from." />
-            <QuickLink href={`${base}/appearance`} icon={<TbBrush size={18} />} title="Appearance" body="Name, colours, greeting and tone." />
+            <Shortcut href={`${base}/chats`} icon={<TbMessages size={18} />} title="Live chats" body="Read conversations and take over from the bot." />
+            <Shortcut href={`${base}/training`} icon={<TbSchool size={18} />} title="Training" body="The websites, documents and notes it answers from." />
+            <Shortcut href={`${base}/appearance`} icon={<TbBrush size={18} />} title="Appearance" body="Name, colour, greeting and tone of voice." />
           </div>
 
           {canEdit && (
-            <SettingsCard tone="danger" title="Delete chatbot" description="Removes its training, conversations and snippet for this brand.">
-              <Button variant="outline" className="text-red-600 hover:text-red-700" onClick={remove} data-testid="delete-chatbot">
-                Delete chatbot
-              </Button>
-            </SettingsCard>
+            <Panel
+              tone="danger"
+              title="Delete chatbot"
+              description="Removes its training, conversations and install code for this brand."
+              actions={
+                <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700" onClick={remove} data-testid="delete-chatbot">
+                  <TbTrash size={15} /> Delete
+                </Button>
+              }
+            />
           )}
         </>
       )}
-    </SettingsFrame>
+    </PageShell>
   );
 }
 
-function StatusTile({ icon, label, value, ok }: { icon: React.ReactNode; label: string; value: string; ok: boolean }) {
+function Shortcut({ href, icon, title, body }: { href: string; icon: React.ReactNode; title: string; body: string }) {
   return (
-    <div className="rounded-xl glass-card p-4">
-      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-        <span className={ok ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}>{icon}</span>
-        {label}
+    <Link
+      href={href}
+      className="group flex items-start gap-3 rounded-2xl border border-[var(--glass-card-border)] bg-[var(--glass-card-solid-bg)] p-4 transition-all hover:-translate-y-0.5 hover:shadow-md"
+    >
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground/70">{icon}</span>
+      <div className="min-w-0 flex-1">
+        <p className="flex items-center gap-1 text-sm font-semibold text-foreground">
+          {title}
+          <TbArrowRight size={14} className="opacity-0 transition-opacity group-hover:opacity-100" />
+        </p>
+        <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{body}</p>
       </div>
-      <p className="mt-1.5 text-sm font-medium text-foreground">{value}</p>
-    </div>
-  );
-}
-
-function QuickLink({ href, icon, title, body }: { href: string; icon: React.ReactNode; title: string; body: string }) {
-  return (
-    <Link href={href} className="rounded-xl glass-card p-4 transition-colors hover:border-foreground/20">
-      <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-        {icon}
-        {title}
-      </div>
-      <p className="mt-1 text-xs text-muted-foreground">{body}</p>
     </Link>
   );
 }

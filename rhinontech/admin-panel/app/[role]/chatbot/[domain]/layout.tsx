@@ -1,7 +1,7 @@
 "use client";
 
 import { CollapsibleSubNav } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
-import { TbBrush, TbForms, TbLayoutDashboard, TbMessages, TbSchool } from "react-icons/tb";
+import { TbBrush, TbForms, TbLayoutDashboard, TbMessages, TbSchool, TbUsers } from "react-icons/tb";
 import { SiteScopeGuard } from "@/components/Admin/Common/Sites/SiteGate";
 import { useCurrentSite, useModuleBase } from "@/lib/sites";
 
@@ -12,6 +12,7 @@ function ChatbotDomainNav({ children }: { children: React.ReactNode }) {
 
   const items = [
     { label: "Overview", href: base, icon: <TbLayoutDashboard size={18} />, exact: true },
+    { label: "Live visitors", href: `${base}/visitors`, icon: <TbUsers size={18} /> },
     { label: "Live chats", href: `${base}/chats`, icon: <TbMessages size={18} /> },
     { label: "Training", href: `${base}/training`, icon: <TbSchool size={18} /> },
     { label: "Appearance", href: `${base}/appearance`, icon: <TbBrush size={18} /> },

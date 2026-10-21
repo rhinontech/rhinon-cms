@@ -31,8 +31,24 @@ export const connectToSocket = (appId: string): Socket => {
       visitor_id: getVisitorId(),
       user_email: userEmail || 'New Customer',
       is_visitor: 'true',
+      page_url: window.location.href,
+      page_title: document.title,
+      referrer: document.referrer,
     },
     transports: ['websocket'],
+  });
+
+  // Single-page sites change the URL without reloading. Checking every couple
+  // of seconds catches pushState, replaceState and back/forward alike without
+  // patching the site's history API.
+  let lastUrl = window.location.href;
+  const watch = window.setInterval(() => {
+    if (window.location.href === lastUrl) return;
+    lastUrl = window.location.href;
+    socket.emit('visitor:page', { url: lastUrl, title: document.title });
+  }, 2000);
+  socket.on('disconnect', () => {
+    if (!socket.active) window.clearInterval(watch);
   });
 
   socket.on('open_chat', ({ conversationId }) => {

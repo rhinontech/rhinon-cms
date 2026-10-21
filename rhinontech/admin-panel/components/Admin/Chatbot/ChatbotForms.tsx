@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { usePermissions } from "@/context/PermissionsContext";
 import { useModuleBase } from "@/lib/sites";
-import { LoadingRows, Notice, SettingsCard, SettingsFrame, Spinner } from "@/components/Admin/Settings/parts";
+import {LoadingRows, Notice, Spinner } from "@/components/Admin/Settings/parts";
+import { PageShell, Panel } from "./ui";
 import { errorText, useChatbot, type ChatbotForms as Forms, type FormField } from "./chatbotApi";
 
 /** Field types the widget renders, per form. */
@@ -63,18 +64,18 @@ export function ChatbotForms() {
 
   if (state && !bot) {
     return (
-      <SettingsFrame title="Forms">
+      <PageShell title="Forms">
         <Notice tone="info">
           Create the chatbot first. <Link href={base} className="font-medium underline underline-offset-2">Go to Overview →</Link>
         </Notice>
-      </SettingsFrame>
+      </PageShell>
     );
   }
 
   return (
-    <SettingsFrame
+    <PageShell
       title="Forms"
-      description="What the bot asks visitors before a chat, after it, and when they raise a ticket."
+      subtitle="What the bot asks visitors before a chat, after it, and when they raise a ticket."
       actions={
         canEdit && (
           <Button onClick={submit} disabled={!dirty || saving} data-testid="save-forms">
@@ -88,14 +89,14 @@ export function ChatbotForms() {
 
       {draft && (
         <fieldset className="flex flex-col gap-4" disabled={!canEdit}>
-          <SettingsCard
+          <Panel
             title="Before the chat"
             description="Asked when a visitor starts talking to your team. Answers become a lead in the CRM. The AI also asks for name and email on its own after a few messages."
           >
             <FieldList fields={draft.pre_chat_form} types={CONTACT_TYPES} onChange={(pre_chat_form) => setDraft({ ...draft, pre_chat_form })} testId="pre-chat" />
-          </SettingsCard>
+          </Panel>
 
-          <SettingsCard
+          <Panel
             title="After the chat"
             description="A short review when a live chat with your team closes. Answers show beside the chat in Live chats."
             actions={
@@ -114,14 +115,14 @@ export function ChatbotForms() {
                 testId="post-chat"
               />
             )}
-          </SettingsCard>
+          </Panel>
 
-          <SettingsCard title="Raise a ticket" description="For questions that need a follow-up by email. Tickets appear in Live chats, marked as tickets.">
+          <Panel title="Raise a ticket" description="For questions that need a follow-up by email. Tickets appear in Live chats, marked as tickets.">
             <FieldList fields={draft.ticket_form} types={TICKET_TYPES} onChange={(ticket_form) => setDraft({ ...draft, ticket_form })} testId="ticket" />
-          </SettingsCard>
+          </Panel>
         </fieldset>
       )}
-    </SettingsFrame>
+    </PageShell>
   );
 }
 

@@ -40,12 +40,60 @@ export function emitToVisitor(chatbotId: string, visitorId: string, event: strin
   io?.to(visitorRoom(chatbotId, visitorId)).emit(event, data);
 }
 
-/** Who is on a page with the widget open right now, per bot. In memory: a t2.micro
- *  should not write a row every time a tab opens or closes. */
-const presence = new Map<string, Map<string, { visitorId: string; email: string | null; since: string; sockets: number }>>();
+/**
+ * Live visitors, per bot: who is on the site now, where from (IP → city), which
+ * page, how long. Kept in memory — a t2.micro should not write a row every time
+ * a tab opens — and visitors who left in the last 30 minutes stay listed, marked
+ * offline, so the team can still follow up.
+ */
+export interface LiveVisitor {
+  visitorId: string;
+  email: string | null;
+  online: boolean;
+  since: string;
+  lastSeenAt: string;
+  pageUrl: string | null;
+  pageTitle: string | null;
+  referrer: string | null;
+  pageViews: number;
+  ip: string | null;
+  city: string | null;
+  region: string | null;
+  country: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  userAgent: string | null;
+  sockets: number;
+}
+
+const RECENT_MS = 30 * 60_000;
+const presence = new Map<string, Map<string, LiveVisitor>>();
+
+function prune(chatbotId: string) {
+  const list = presence.get(chatbotId);
+  if (!list) return;
+  const cutoff = Date.now() - RECENT_MS;
+  for (const [id, v] of list) if (!v.online && Date.parse(v.lastSeenAt) < cutoff) list.delete(id);
+}
+
+/** Online first, then most recently seen. */
+export function liveVisitors(chatbotId: string): LiveVisitor[] {
+  prune(chatbotId);
+  return Array.from(presence.get(chatbotId)?.values() ?? []).sort(
+    (a, b) => Number(b.online) - Number(a.online) || Date.parse(b.lastSeenAt) - Date.parse(a.lastSeenAt)
+  );
+}
 
 export function onlineVisitors(chatbotId: string) {
-  return Array.from(presence.get(chatbotId)?.values() ?? []);
+  return liveVisitors(chatbotId).filter((v) => v.online);
+}
+
+const str = (v: unknown, max: number) => (typeof v === "string" && v.trim() ? v.trim().slice(0, max) : null);
+
+function clientIp(socket: Socket): string | null {
+  const forwarded = socket.handshake.headers["x-forwarded-for"];
+  const first = (Array.isArray(forwarded) ? forwarded[0] : forwarded)?.split(",")[0]?.trim();
+  return (first || socket.handshake.address || "").replace(/^::ffff:/, "") || null;
 }
 
 interface AgentIdentity {
@@ -166,19 +214,84 @@ async function handleVisitor(socket: Socket) {
   // already went away during the lookup, or it would stay "online" forever.
   if (q.is_visitor === "true" && socket.connected) {
     socket.join(visitorRoom(botId, visitorId));
-    const online = presence.get(botId) ?? new Map();
-    presence.set(botId, online);
-    const entry = online.get(visitorId) ?? { visitorId, email: store.realEmail(q.user_email), since: new Date().toISOString(), sockets: 0 };
+    const list = presence.get(botId) ?? new Map<string, LiveVisitor>();
+    presence.set(botId, list);
+    const now = new Date().toISOString();
+    const ip = clientIp(socket);
+    const previous = list.get(visitorId);
+    const entry: LiveVisitor = previous ?? {
+      visitorId,
+      email: null,
+      online: true,
+      since: now,
+      lastSeenAt: now,
+      pageUrl: null,
+      pageTitle: null,
+      referrer: str(q.referrer, 500),
+      pageViews: 0,
+      ip,
+      city: null,
+      region: null,
+      country: null,
+      latitude: null,
+      longitude: null,
+      userAgent: str(socket.handshake.headers["user-agent"], 300),
+      sockets: 0,
+    };
+    // A visitor back within 30 minutes continues the same visit.
+    if (!entry.online) entry.since = now;
+    entry.online = true;
     entry.sockets += 1;
-    online.set(visitorId, entry);
-    emitToOrg(resolved.organizationId, "chat:visitor", { chatbotId: botId, type: "online", visitor: entry });
+    entry.lastSeenAt = now;
+    entry.email = store.realEmail(q.user_email) ?? entry.email;
+    const page = str(q.page_url, 1000);
+    if (page && page !== entry.pageUrl) {
+      entry.pageUrl = page;
+      entry.pageTitle = str(q.page_title, 300);
+      entry.pageViews += 1;
+    }
+    list.set(visitorId, entry);
+    const announce = (type: "online" | "offline" | "update") =>
+      emitToOrg(resolved.organizationId, "chat:visitor", { chatbotId: botId, type, visitor: entry });
+    announce("online");
+
+    // City/country from the IP, server-side (Saleszium asked a third party from
+    // the visitor's browser). Cached, and never blocks the connection.
+    if (ip && !entry.country) {
+      void import("../geolocation").then(async ({ lookupIpLocationCached, isPrivateOrLocalIp }) => {
+        if (isPrivateOrLocalIp(ip)) return;
+        const geo = await lookupIpLocationCached(ip);
+        if (!geo) return;
+        Object.assign(entry, {
+          city: geo.city ?? null,
+          region: geo.region ?? null,
+          country: geo.country ?? null,
+          latitude: geo.latitude ?? null,
+          longitude: geo.longitude ?? null,
+        });
+        announce("update");
+      });
+    }
+
+    // Single-page sites change URL without reloading; the widget reports it.
+    socket.on("visitor:page", (data: Record<string, unknown> = {}) => {
+      if (rateLimited(socket, 60)) return;
+      const url = str(data.url, 1000);
+      if (!url || url === entry.pageUrl) return;
+      entry.pageUrl = url;
+      entry.pageTitle = str(data.title, 300);
+      entry.pageViews += 1;
+      entry.lastSeenAt = new Date().toISOString();
+      announce("update");
+    });
+
     socket.on("disconnect", () => {
-      const current = online.get(visitorId);
-      if (!current) return;
-      current.sockets -= 1;
-      if (current.sockets <= 0) {
-        online.delete(visitorId);
-        emitToOrg(resolved.organizationId, "chat:visitor", { chatbotId: botId, type: "offline", visitor: current });
+      entry.sockets -= 1;
+      entry.lastSeenAt = new Date().toISOString();
+      if (entry.sockets <= 0) {
+        entry.sockets = 0;
+        entry.online = false;
+        announce("offline");
       }
     });
   }

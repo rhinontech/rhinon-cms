@@ -15,7 +15,7 @@ import { deleteObject, getPresignedReadUrl, uploadBuffer } from "../services/sto
 import { analyzeUrl, TRAINABLE_EXTENSIONS } from "../services/chatbot/extract";
 import { isTraining, startTraining } from "../services/chatbot/training";
 import { deleteChatbotChunks, deleteSourceChunks } from "../services/chatbot/vectorStore";
-import { onlineVisitors, emitToConversation, emitToOrg } from "../services/chatbot/realtime";
+import { liveVisitors, onlineVisitors, emitToConversation, emitToOrg } from "../services/chatbot/realtime";
 import { apiBase } from "../services/analyticsSetup";
 import { appendMessage, serializeConversation, serializeMessage, type ResolvedBot } from "../services/chatbot/chatStore";
 
@@ -258,12 +258,59 @@ router.get("/sources/:sourceId/file", canRead, async (req, res) => {
   res.json({ url: await getPresignedReadUrl(source.fileKey, 600) });
 });
 
+// ── Overview numbers ────────────────────────────────────────────────────
+
+router.get("/stats", canRead, async (_req, res) => {
+  const bot = await currentBot(res);
+  if (!bot) return;
+  const notTest = { [Op.notLike]: "admin-test-%" };
+  // Days start at midnight IST, like every other "today" in the product.
+  const todayIst = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date()); // YYYY-MM-DD
+  const startOfToday = new Date(`${todayIst}T00:00:00+05:30`);
+  const weekAgo = new Date(Date.now() - 7 * 24 * 3600_000);
+
+  const base = { chatbotId: bot.id, visitorId: notTest };
+  const [chatsToday, chatsWeek, leadsWeek, waiting, convIdsToday] = await Promise.all([
+    ChatConversation.count({ where: { ...base, createdAt: { [Op.gte]: startOfToday } } }),
+    ChatConversation.count({ where: { ...base, createdAt: { [Op.gte]: weekAgo } } }),
+    ChatConversation.count({ where: { ...base, leadId: { [Op.ne]: null }, createdAt: { [Op.gte]: weekAgo } } }),
+    ChatConversation.count({ where: { ...base, status: "open", unreadCount: { [Op.gt]: 0 }, mode: "human" } }),
+    ChatConversation.findAll({ where: { ...base, lastMessageAt: { [Op.gte]: startOfToday } }, attributes: ["id"] }),
+  ]);
+  const answersToday = convIdsToday.length
+    ? await ChatMessage.count({ where: { conversationId: { [Op.in]: convIdsToday.map((c) => c.id) }, role: "bot", createdAt: { [Op.gte]: startOfToday } } })
+    : 0;
+  res.json({ chatsToday, chatsWeek, leadsWeek, waiting, answersToday, onlineNow: onlineVisitors(bot.id).length });
+});
+
 // ── Live chats ──────────────────────────────────────────────────────────
 
 router.get("/visitors", canRead, async (_req, res) => {
   const bot = await currentBot(res);
   if (!bot) return;
-  res.json({ visitors: onlineVisitors(bot.id) });
+  const visitors = liveVisitors(bot.id).map(({ sockets, ...v }) => v);
+  // Each visitor's latest chat, so the list can say "chatting" / "ready" / none.
+  const ids = visitors.map((v) => v.visitorId);
+  const convs = ids.length
+    ? await ChatConversation.findAll({
+        where: { chatbotId: bot.id, visitorId: { [Op.in]: ids } },
+        order: [["lastMessageAt", "DESC"]],
+        attributes: ["id", "visitorId", "mode", "status", "visitorName", "visitorEmail", "lastMessageAt", "unreadCount"],
+      })
+    : [];
+  const latest = new Map<string, ChatConversation>();
+  for (const c of convs) if (!latest.has(c.visitorId)) latest.set(c.visitorId, c);
+  res.json({
+    visitors: visitors.map((v) => {
+      const c = latest.get(v.visitorId);
+      return {
+        ...v,
+        name: c?.visitorName ?? null,
+        email: v.email ?? c?.visitorEmail ?? null,
+        conversation: c ? { id: c.id, mode: c.mode, status: c.status, lastMessageAt: c.lastMessageAt, unreadCount: c.unreadCount } : null,
+      };
+    }),
+  });
 });
 
 router.get("/conversations", canRead, async (req: AuthRequest, res) => {

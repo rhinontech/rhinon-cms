@@ -12,7 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { usePermissions } from "@/context/PermissionsContext";
 import { useModuleBase } from "@/lib/sites";
 import { cn } from "@/lib/utils";
-import { LoadingRows, Notice, SettingsCard, SettingsFrame, Spinner } from "@/components/Admin/Settings/parts";
+import {LoadingRows, Notice, Spinner } from "@/components/Admin/Settings/parts";
+import { PageShell, Panel } from "./ui";
 import { errorText, useChatbot, type ChatbotConfig } from "./chatbotApi";
 import { WidgetPreview } from "./WidgetPreview";
 
@@ -51,21 +52,21 @@ export function ChatbotAppearance() {
 
   if (state && !bot) {
     return (
-      <SettingsFrame title="Appearance">
+      <PageShell title="Appearance">
         <Notice tone="info">
           Create the chatbot first. <Link href={base} className="font-medium underline underline-offset-2">Go to Overview →</Link>
         </Notice>
-      </SettingsFrame>
+      </PageShell>
     );
   }
 
   const greetings = draft?.greetings ?? [];
 
   return (
-    <SettingsFrame
-      wide
+    <PageShell
+      width="wide"
       title="Appearance"
-      description="How the bot looks and sounds on your site."
+      subtitle="How the bot looks and sounds on your site."
       actions={
         canEdit && (
           <Button onClick={submit} disabled={!dirty || saving} data-testid="save-appearance">
@@ -80,7 +81,7 @@ export function ChatbotAppearance() {
       {draft && bot && (
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_440px]">
           <fieldset className="flex flex-col gap-4" disabled={!canEdit}>
-            <SettingsCard title="Identity">
+            <Panel title="Identity">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="grid gap-1.5">
                   <Label htmlFor="bot-name">Bot name</Label>
@@ -91,9 +92,9 @@ export function ChatbotAppearance() {
                   <Input id="bot-logo" value={draft.primaryLogo?.includes("/widget/assets/") ? "" : draft.primaryLogo ?? ""} placeholder="https://…/logo.png" onChange={(e) => set("primaryLogo", e.target.value.trim() || undefined)} />
                 </div>
               </div>
-            </SettingsCard>
+            </Panel>
 
-            <SettingsCard title="Colours">
+            <Panel title="Colours">
               <div className="flex flex-col gap-4">
                 <div>
                   <Label>Main colour</Label>
@@ -138,9 +139,9 @@ export function ChatbotAppearance() {
                   <Switch checked={!!draft.isBackgroundImage} onCheckedChange={(v) => set("isBackgroundImage", v)} />
                 </label>
               </div>
-            </SettingsCard>
+            </Panel>
 
-            <SettingsCard title="Greeting" description="The two lines visitors see when they open the chat.">
+            <Panel title="Greeting" description="The two lines visitors see when they open the chat.">
               <div className="grid gap-3 sm:grid-cols-2">
                 {[0, 1].map((i) => (
                   <Input
@@ -161,9 +162,9 @@ export function ChatbotAppearance() {
                 <Label htmlFor="bot-popup">Pop-up message <span className="font-normal text-muted-foreground">(shown beside the button before the chat is opened)</span></Label>
                 <Input id="bot-popup" value={draft.popupMessage ?? ""} maxLength={120} placeholder="Questions? Ask me anything." onChange={(e) => set("popupMessage", e.target.value)} />
               </div>
-            </SettingsCard>
+            </Panel>
 
-            <SettingsCard title="How it answers" description="Instructions for the AI on top of your training. It still only states facts from what it was trained on.">
+            <Panel title="How it answers" description="Instructions for the AI on top of your training. It still only states facts from what it was trained on.">
               <Textarea
                 value={draft.persona ?? ""}
                 onChange={(e) => set("persona", e.target.value)}
@@ -172,7 +173,7 @@ export function ChatbotAppearance() {
                 data-testid="persona"
                 placeholder="E.g. Friendly and concise. Always suggest booking a call for project quotes. Never discuss competitors."
               />
-            </SettingsCard>
+            </Panel>
           </fieldset>
 
           <div className="lg:sticky lg:top-0 lg:self-start">
@@ -190,6 +191,6 @@ export function ChatbotAppearance() {
           </div>
         </div>
       )}
-    </SettingsFrame>
+    </PageShell>
   );
 }

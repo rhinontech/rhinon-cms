@@ -15,7 +15,8 @@ import { apiFetch, apiUploadMany } from "@/lib/api";
 import { timeAgo } from "@/lib/dates";
 import { useModuleBase } from "@/lib/sites";
 import { cn } from "@/lib/utils";
-import { LoadingRows, Notice, Pill, SettingsCard, SettingsFrame, Spinner } from "@/components/Admin/Settings/parts";
+import {LoadingRows, Notice, Pill, Spinner } from "@/components/Admin/Settings/parts";
+import { IconChip, PageShell, Panel, Stat } from "./ui";
 import { errorText, useChatbot, useChatEvents, type ChatbotSource, type TrainingState } from "./chatbotApi";
 import { WidgetPreview } from "./WidgetPreview";
 
@@ -130,19 +131,19 @@ export function ChatbotTraining() {
 
   if (missing) {
     return (
-      <SettingsFrame title="Training">
+      <PageShell title="Training">
         <Notice tone="info">
           Create the chatbot first. <Link href={base} className="font-medium underline underline-offset-2">Go to Overview →</Link>
         </Notice>
-      </SettingsFrame>
+      </PageShell>
     );
   }
 
   return (
-    <SettingsFrame
-      wide
+    <PageShell
+      width="wide"
       title="Training"
-      description="What the bot answers from. It never makes up facts beyond these."
+      subtitle="What the bot answers from. It never makes up facts beyond these."
       actions={
         canEdit && (
           <Button onClick={train} disabled={running || pending === 0} data-testid="train-now">
@@ -156,19 +157,27 @@ export function ChatbotTraining() {
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
       <div className="flex min-w-0 flex-col gap-4">
+      {sources && sources.length > 0 && (
+        <div className="grid gap-3 sm:grid-cols-3" data-testid="training-stats">
+          <Stat icon={<TbSchool size={18} />} tone="green" label="Sources trained" value={`${trained.length} / ${sources.length}`} hint={pending ? `${pending} waiting to train` : "All up to date"} />
+          <Stat icon={<TbNotes size={18} />} tone="blue" label="Passages learned" value={chunkTotal.toLocaleString()} hint="What answers are drawn from" />
+          <Stat icon={<TbWorld size={18} />} tone="violet" label="Pages read" value={trained.reduce((n, s) => n + s.pageCount, 0).toLocaleString()} hint={training?.lastTrainedAt ? `Last trained ${timeAgo(training.lastTrainedAt)}` : undefined} />
+        </div>
+      )}
+
       {running && training && (
-        <SettingsCard testId="training-progress">
+        <Panel testId="training-progress">
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium">{training.message || "Training…"}</span>
             <span className="tabular-nums text-muted-foreground">{training.progress}%</span>
           </div>
           <Progress value={training.progress} className="mt-3" />
           <p className="mt-2 text-xs text-muted-foreground">You can leave this page — training carries on and the bot uses each source as soon as it is done.</p>
-        </SettingsCard>
+        </Panel>
       )}
 
       {canEdit && (
-        <SettingsCard title="Add a source">
+        <Panel title="Add a source">
           <div className="mb-4 inline-flex rounded-lg border border-border p-0.5" role="tablist">
             {(
               [
@@ -197,10 +206,10 @@ export function ChatbotTraining() {
           {tab === "website" && <AddWebsite onAdded={added} />}
           {tab === "files" && <AddFiles onAdded={added} />}
           {tab === "notes" && <AddNote onAdded={added} />}
-        </SettingsCard>
+        </Panel>
       )}
 
-      <SettingsCard
+      <Panel
         title="Sources"
         description={
           sources && sources.length
@@ -217,8 +226,8 @@ export function ChatbotTraining() {
         {sources && sources.length > 0 && (
           <ul className="divide-y divide-border" data-testid="source-list">
             {sources.map((s) => (
-              <li key={s.id} className="flex items-start gap-3 py-3" data-testid={`source-${s.id}`}>
-                <span className="mt-0.5 text-muted-foreground">{KIND_ICON[s.kind]}</span>
+              <li key={s.id} className="flex items-center gap-3 py-3.5" data-testid={`source-${s.id}`}>
+                <IconChip tone={s.kind === "file" ? "violet" : s.kind === "text" ? "amber" : "blue"}>{KIND_ICON[s.kind]}</IconChip>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="truncate text-sm font-medium text-foreground" title={s.url ?? s.title}>{s.title}</span>
@@ -256,7 +265,7 @@ export function ChatbotTraining() {
             ))}
           </ul>
         )}
-      </SettingsCard>
+      </Panel>
       </div>
 
       {botState?.chatbot && (
@@ -275,7 +284,7 @@ export function ChatbotTraining() {
         </div>
       )}
       </div>
-    </SettingsFrame>
+    </PageShell>
   );
 }
 
