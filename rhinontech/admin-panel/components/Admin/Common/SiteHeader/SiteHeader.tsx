@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import Cookies from "js-cookie";
+import { clearPermissionsCache } from "@/context/PermissionsContext";
 import { useEffect, useState } from "react";
 import { LogOut } from "lucide-react";
 import { TbUser, TbChevronDown, TbBell, TbEye, TbMenu2 } from "react-icons/tb";
@@ -72,6 +73,7 @@ export function SiteHeader() {
   const logOut = () => {
     Cookies.remove("authToken");
     Cookies.remove("permissions");
+    clearPermissionsCache();
     router.push("/auth/login");
   };
 
