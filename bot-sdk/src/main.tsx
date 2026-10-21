@@ -2,17 +2,24 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import Messenger from './Messenger/Messenger';
-import { setCurrentAppId, setTestingMode } from './services/api';
+import { setApiBase, setCurrentAppId, setTestingMode } from './services/api';
 
-export interface SalesziumConfig {
+export interface RhinonChatConfig {
   app_id: string;
+  /** Backend for this bot, e.g. "https://api.rhinontech.in/widget". Defaults to production. */
+  api_url?: string;
   admin?: boolean;
-  container?: HTMLElement; // Add container option
+  adminTestingMode?: boolean;
+  container?: HTMLElement;
+  chatbot_config?: Record<string, unknown>;
 }
+/** Older names, kept so code written for earlier versions keeps compiling. */
+export type SalesziumConfig = RhinonChatConfig;
+export type RhinontechConfig = RhinonChatConfig;
 
 // Create custom element
 export class ChatBotElement extends HTMLElement {
-  private config: SalesziumConfig | null = null;
+  private config: RhinonChatConfig | null = null;
   private root: any = null;
 
   connectedCallback() {
@@ -37,7 +44,7 @@ export class ChatBotElement extends HTMLElement {
     this.root.render(<Messenger config={this.config} />);
   }
 
-  setConfig(config: SalesziumConfig) {
+  setConfig(config: RhinonChatConfig) {
     console.log('[Messenger] Setting config:', config);
     this.config = config;
     if (this.root) {
@@ -55,8 +62,9 @@ if (!customElements.get('chat-bot')) {
 let manuallyInitialized = false;
 
 // Updated initialization function with container support
-function initSaleszium(config: SalesziumConfig): ChatBotElement {
+function initRhinonChat(config: RhinonChatConfig): ChatBotElement {
   manuallyInitialized = true;
+  if (config.api_url) setApiBase(config.api_url);
   setCurrentAppId(config.app_id);
   setTestingMode(!!(config as any).admin && !!(config as any).adminTestingMode);
 
@@ -152,7 +160,7 @@ function autoInit() {
         //   ],
         // },
       };
-      initSaleszium(defaultConfig);
+      initRhinonChat(defaultConfig);
     }
   }
 }
@@ -166,12 +174,14 @@ if (process.env.NODE_ENV === 'development') {
   }
 }
 
-// Export for package consumers
-export { initSaleszium };
-export default initSaleszium;
+// Export for package consumers. initRhinontech/initSaleszium: names used by
+// earlier @rhinon/botsdk and @saleszium/botsdk releases.
+export { initRhinonChat, initRhinonChat as initRhinontech, initRhinonChat as initSaleszium };
+export default initRhinonChat;
 
 if (typeof window !== 'undefined') {
-  (window as any).RhinonBot = initSaleszium;
+  (window as any).RhinonChat = initRhinonChat;
+  (window as any).RhinonBot = initRhinonChat; // snippets from before the rename
 }
 
 /**
@@ -185,7 +195,7 @@ const installTag =
 const tagAppId = installTag?.getAttribute('data-app-id');
 if (tagAppId && process.env.NODE_ENV !== 'development') {
   const start = () => {
-    if (!manuallyInitialized && !document.querySelector('chat-bot')) initSaleszium({ app_id: tagAppId });
+    if (!manuallyInitialized && !document.querySelector('chat-bot')) initRhinonChat({ app_id: tagAppId });
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
   else start();

@@ -56,6 +56,8 @@ export interface ChatbotState {
   chatbot: Chatbot | null;
   snippet: string | null;
   widgetUrl: string;
+  /** What npm installs pass as api_url. */
+  apiUrl: string;
   plan: { used: number; blockedReason: string | null };
 }
 

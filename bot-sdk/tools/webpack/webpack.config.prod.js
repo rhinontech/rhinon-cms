@@ -14,11 +14,13 @@ module.exports = {
   },
   output: {
     path: path.resolve(__dirname, '../../dist'),
-    filename: 'rhinonbot.js',
+    filename: 'rhinon-chat.js',
+    // All exports (default + initRhinonChat + the old initRhinontech/initSaleszium
+    // names) for npm users. The UMD global gets its own name: main.tsx sets
+    // window.RhinonChat to the function itself, which script-tag users call.
     library: {
-      name: 'RhinonBot',
+      name: 'RhinonChatSDK',
       type: 'umd',
-      export: 'default',
     },
     globalObject: 'this',
     clean: true,

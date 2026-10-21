@@ -68,7 +68,7 @@ async function currentBot(res: Response): Promise<Chatbot | null> {
 
 /** One tag: the widget starts itself from data-app-id. */
 export function installSnippet(publicId: string) {
-  return `<script async src="${apiBase()}/widget/rhinonbot.js" data-app-id="${publicId}"></script>`;
+  return `<script async src="${apiBase()}/widget/rhinon-chat.js" data-app-id="${publicId}"></script>`;
 }
 
 function resolvedFor(req: AuthRequest, bot: Chatbot): ResolvedBot {
@@ -87,7 +87,8 @@ router.get("/", canRead, async (req: AuthRequest, res) => {
   res.json({
     chatbot: bot,
     snippet: bot ? installSnippet(bot.publicId) : null,
-    widgetUrl: `${apiBase()}/widget/rhinonbot.js`,
+    widgetUrl: `${apiBase()}/widget/rhinon-chat.js`,
+    apiUrl: `${apiBase()}/widget`,
     training: bot ? { running: isTraining(bot.id) } : null,
     plan: await usage(req.user!.organizationId),
   });

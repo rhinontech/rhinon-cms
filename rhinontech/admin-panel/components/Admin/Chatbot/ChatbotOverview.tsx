@@ -157,7 +157,7 @@ export function ChatbotOverview() {
             title="Step-by-step for your platform"
             description="Pick what your site is built with for the exact file and code."
           >
-            <InstallGuide src={state?.widgetUrl ?? ""} appId={bot.publicId} />
+            <InstallGuide src={state?.widgetUrl ?? ""} apiUrl={state?.apiUrl ?? ""} appId={bot.publicId} />
           </SettingsCard>
 
           <SettingsCard

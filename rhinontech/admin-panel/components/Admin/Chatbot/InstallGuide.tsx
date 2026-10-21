@@ -12,10 +12,10 @@ import { CopyButton } from "@/components/Admin/Settings/parts";
 /**
  * Per-framework install instructions, as Saleszium's Messenger settings had.
  *
- * Saleszium's versions installed an npm package; ours all load the one hosted
- * script, so a widget release reaches every site without anyone redeploying.
- * The widget reads data-app-id from its own tag, so every variant is just
- * "get that tag onto every page, client side".
+ * JavaScript frameworks install the @rhinon/chat package (with api_url, so a
+ * beta bot talks to beta). Plain HTML and site builders paste the hosted
+ * script tag, which reads data-app-id from itself and always serves the
+ * latest release.
  */
 
 interface Step {
@@ -28,10 +28,11 @@ interface Framework {
   id: string;
   label: string;
   icon: React.ReactNode;
-  steps: (src: string, appId: string) => Step[];
+  steps: (src: string, appId: string, apiUrl: string) => Step[];
 }
 
 const ICON = "size-4";
+const INSTALL = "npm install @rhinon/chat";
 
 const FRAMEWORKS: Framework[] = [
   {
@@ -46,37 +47,20 @@ const FRAMEWORKS: Framework[] = [
     id: "react",
     label: "React",
     icon: <SiReact className={ICON} />,
-    steps: (src, id) => [
+    steps: (src, id, api) => [
+      { title: "Install the package.", file: "Terminal", code: INSTALL },
       {
-        title: "Create a component that adds the script once.",
-        file: "src/components/Chatbot.tsx",
-        code: `import { useEffect } from "react";
-
-export default function Chatbot() {
-  useEffect(() => {
-    if (document.querySelector('script[data-app-id="${id}"]')) return;
-    const script = document.createElement("script");
-    script.src = "${src}";
-    script.async = true;
-    script.dataset.appId = "${id}";
-    document.body.appendChild(script);
-  }, []);
-
-  return null;
-}`,
-      },
-      {
-        title: "Render it once, in your root component.",
+        title: "Start it once, from your root component.",
         file: "src/App.tsx",
-        code: `import Chatbot from "./components/Chatbot";
+        code: `import { useEffect } from "react";
+import RhinonChat from "@rhinon/chat";
 
 export default function App() {
-  return (
-    <>
-      {/* …your app… */}
-      <Chatbot />
-    </>
-  );
+  useEffect(() => {
+    RhinonChat({ app_id: "${id}", api_url: "${api}" });
+  }, []);
+
+  return <>{/* …your app… */}</>;
 }`,
       },
     ],
@@ -85,35 +69,39 @@ export default function App() {
     id: "nextjs",
     label: "Next.js",
     icon: <SiNextdotjs className={ICON} />,
-    steps: (src, id) => [
+    steps: (src, id, api) => [
+      { title: "Install the package.", file: "Terminal", code: INSTALL },
       {
-        title: "App Router: add it to the root layout with next/script.",
+        title: "Create a client component that starts the chat in the browser.",
+        file: "components/RhinonChat.tsx",
+        code: `"use client";
+
+import { useEffect } from "react";
+
+export default function RhinonChatLoader() {
+  useEffect(() => {
+    // Imported here so it never runs during server rendering.
+    import("@rhinon/chat").then(({ default: RhinonChat }) => {
+      RhinonChat({ app_id: "${id}", api_url: "${api}" });
+    });
+  }, []);
+
+  return null;
+}`,
+      },
+      {
+        title: "Render it once in the root layout (App Router) — or in pages/_app.tsx with the Pages Router.",
         file: "app/layout.tsx",
-        code: `import Script from "next/script";
+        code: `import RhinonChatLoader from "@/components/RhinonChat";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
         {children}
-        <Script src="${src}" data-app-id="${id}" strategy="afterInteractive" />
+        <RhinonChatLoader />
       </body>
     </html>
-  );
-}`,
-      },
-      {
-        title: "Pages Router instead? Put the same tag in _app.",
-        file: "pages/_app.tsx",
-        code: `import Script from "next/script";
-import type { AppProps } from "next/app";
-
-export default function App({ Component, pageProps }: AppProps) {
-  return (
-    <>
-      <Component {...pageProps} />
-      <Script src="${src}" data-app-id="${id}" strategy="afterInteractive" />
-    </>
   );
 }`,
       },
@@ -123,18 +111,15 @@ export default function App({ Component, pageProps }: AppProps) {
     id: "nuxt",
     label: "Nuxt",
     icon: <SiNuxtdotjs className={ICON} />,
-    steps: (src, id) => [
+    steps: (src, id, api) => [
+      { title: "Install the package.", file: "Terminal", code: INSTALL },
       {
-        title: "Add it to every page from the Nuxt config.",
-        file: "nuxt.config.ts",
-        code: `export default defineNuxtConfig({
-  app: {
-    head: {
-      script: [
-        { src: "${src}", async: true, "data-app-id": "${id}", tagPosition: "bodyClose" },
-      ],
-    },
-  },
+        title: "Add a client-only plugin. Nuxt loads files ending in .client automatically.",
+        file: "plugins/rhinon-chat.client.ts",
+        code: `import RhinonChat from "@rhinon/chat";
+
+export default defineNuxtPlugin(() => {
+  RhinonChat({ app_id: "${id}", api_url: "${api}" });
 });`,
       },
     ],
@@ -143,9 +128,10 @@ export default function App({ Component, pageProps }: AppProps) {
     id: "vue",
     label: "Vue",
     icon: <SiVuedotjs className={ICON} />,
-    steps: (src, id) => [
+    steps: (src, id, api) => [
+      { title: "Install the package.", file: "Terminal", code: INSTALL },
       {
-        title: "Load it once when the root component mounts.",
+        title: "Start it once when the root component mounts.",
         file: "src/App.vue",
         code: `<template>
   <router-view />
@@ -153,28 +139,23 @@ export default function App({ Component, pageProps }: AppProps) {
 
 <script setup>
 import { onMounted } from "vue";
+import RhinonChat from "@rhinon/chat";
 
 onMounted(() => {
-  if (document.querySelector('script[data-app-id="${id}"]')) return;
-  const script = document.createElement("script");
-  script.src = "${src}";
-  script.async = true;
-  script.dataset.appId = "${id}";
-  document.body.appendChild(script);
+  RhinonChat({ app_id: "${id}", api_url: "${api}" });
 });
 </script>`,
       },
-      { title: "Or, simpler: paste the tag before </body> in index.html.", file: "index.html", code: `<script async src="${src}" data-app-id="${id}"></script>` },
     ],
   },
   {
     id: "angular",
     label: "Angular",
     icon: <SiAngular className={ICON} />,
-    steps: (src, id) => [
-      { title: "Paste the tag before </body> — it runs in the browser only, so SSR is unaffected.", file: "src/index.html", code: `<script async src="${src}" data-app-id="${id}"></script>` },
+    steps: (src, id, api) => [
+      { title: "Install the package.", file: "Terminal", code: INSTALL },
       {
-        title: "Prefer code? Load it from the root component, browser-side only.",
+        title: "Start it from the root component, in the browser only (safe with SSR).",
         file: "src/app/app.component.ts",
         code: `import { AfterViewInit, Component, Inject, PLATFORM_ID } from "@angular/core";
 import { isPlatformBrowser } from "@angular/common";
@@ -185,12 +166,9 @@ export class AppComponent implements AfterViewInit {
 
   ngAfterViewInit() {
     if (!isPlatformBrowser(this.platformId)) return;
-    if (document.querySelector('script[data-app-id="${id}"]')) return;
-    const script = document.createElement("script");
-    script.src = "${src}";
-    script.async = true;
-    script.dataset["appId"] = "${id}";
-    document.body.appendChild(script);
+    import("@rhinon/chat").then(({ default: RhinonChat }) => {
+      RhinonChat({ app_id: "${id}", api_url: "${api}" });
+    });
   }
 }`,
       },
@@ -200,16 +178,41 @@ export class AppComponent implements AfterViewInit {
     id: "svelte",
     label: "SvelteKit",
     icon: <SiSvelte className={ICON} />,
-    steps: (src, id) => [
-      { title: "Paste the tag inside <body> of the app shell.", file: "src/app.html", code: `<script async src="${src}" data-app-id="${id}"></script>` },
+    steps: (src, id, api) => [
+      { title: "Install the package.", file: "Terminal", code: INSTALL },
+      {
+        title: "Start it from the root layout once the page is in the browser.",
+        file: "src/routes/+layout.svelte",
+        code: `<script>
+  import { onMount } from "svelte";
+
+  onMount(async () => {
+    const { default: RhinonChat } = await import("@rhinon/chat");
+    RhinonChat({ app_id: "${id}", api_url: "${api}" });
+  });
+</script>
+
+<slot />`,
+      },
     ],
   },
   {
     id: "ember",
     label: "Ember",
     icon: <SiEmberdotjs className={ICON} />,
-    steps: (src, id) => [
-      { title: "Paste the tag before </body>. FastBoot never runs it on the server.", file: "app/index.html", code: `<script async src="${src}" data-app-id="${id}"></script>` },
+    steps: (src, id, api) => [
+      { title: "Install the package.", file: "Terminal", code: INSTALL },
+      {
+        title: "Add an instance initializer — it never runs under FastBoot.",
+        file: "app/instance-initializers/rhinon-chat.js",
+        code: `export async function initialize() {
+  if (typeof FastBoot !== "undefined") return;
+  const { default: RhinonChat } = await import("@rhinon/chat");
+  RhinonChat({ app_id: "${id}", api_url: "${api}" });
+}
+
+export default { initialize };`,
+      },
     ],
   },
   {
@@ -316,10 +319,10 @@ bootstrap();`,
   },
 ];
 
-export function InstallGuide({ src, appId }: { src: string; appId: string }) {
+export function InstallGuide({ src, appId, apiUrl }: { src: string; appId: string; apiUrl: string }) {
   const [selected, setSelected] = useState(FRAMEWORKS[0].id);
   const framework = FRAMEWORKS.find((f) => f.id === selected) ?? FRAMEWORKS[0];
-  const steps = framework.steps(src, appId);
+  const steps = framework.steps(src, appId, apiUrl);
 
   return (
     <div data-testid="install-guide">
@@ -366,7 +369,7 @@ export function InstallGuide({ src, appId }: { src: string; appId: string }) {
         ))}
       </ol>
       <p className="mt-4 text-xs text-muted-foreground">
-        Every option loads the same script, so updates to the bot reach your site without you changing anything. The status above turns green the first time a page with it loads.
+        Script-tag installs always get the latest widget. Package installs update with <code className="font-mono">npm update @rhinon/chat</code>. Either way, the status above turns green the first time a page with it loads.
       </p>
     </div>
   );

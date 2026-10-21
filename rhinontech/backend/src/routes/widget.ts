@@ -36,12 +36,13 @@ import { emitToOrg } from "../services/chatbot/realtime";
 const router = Router();
 
 /**
- * The widget itself. Built on a dev machine from /bot-sdk (`npm run release`)
+ * The widget itself (the @rhinon/chat package). Built on a dev machine from /bot-sdk (`npm run release`)
  * and committed under backend/public, because running webpack on the t2.micro
  * would compete with the API for its 1 GB. Same path from src/ and dist/.
  */
-const WIDGET_FILE = nodePath.resolve(__dirname, "../../public/widget/rhinonbot.js");
-router.get("/rhinonbot.js", (req, res) => {
+const WIDGET_FILE = nodePath.resolve(__dirname, "../../public/widget/rhinon-chat.js");
+// rhinonbot.js: the name snippets used before the @rhinon/chat rename.
+router.get(["/rhinon-chat.js", "/rhinonbot.js"], (req, res) => {
   if (!fs.existsSync(WIDGET_FILE)) return void res.status(404).type("text/plain").send("// widget not built");
   res.type("application/javascript; charset=utf-8");
   // Short cache: a release reaches customers' sites within ten minutes.

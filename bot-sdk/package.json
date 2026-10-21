@@ -1,12 +1,12 @@
 {
-  "name": "@rhinontech/chat-widget",
+  "name": "@rhinon/chat",
   "version": "1.0.0",
-  "description": "",
+  "description": "Rhinon website chat: an AI assistant trained on your site, with live hand-off to your team.",
   "license": "MIT",
   "publishConfig": {
     "access": "public"
   },
-  "main": "dist/rhinonbot.js",
+  "main": "dist/rhinon-chat.js",
   "types": "dist/types.d.ts",
   "scripts": {
     "dev": "cross-env NODE_ENV=development webpack serve --config tools/webpack/webpack.config.dev.js",
@@ -15,10 +15,13 @@
     "build:types": "tsc --project tsconfig.declarations.json",
     "serve": "cross-env NODE_ENV=production webpack --config tools/webpack/webpack.config.prod.js && cross-env serve dist/",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx src/",
-    "release": "npm run build:webpack && cp dist/rhinonbot.js ../rhinontech/backend/public/widget/rhinonbot.js && gzip -9 -k -f ../rhinontech/backend/public/widget/rhinonbot.js && echo 'Copied rhinonbot.js (+ .gz) to rhinontech/backend/public/widget \u2014 commit both and deploy the backend.'"
+    "release": "npm run build && cp dist/rhinon-chat.js ../rhinontech/backend/public/widget/rhinon-chat.js && gzip -9 -k -f ../rhinontech/backend/public/widget/rhinon-chat.js && echo 'Copied rhinon-chat.js (+ .gz) to rhinontech/backend/public/widget \u2014 commit and deploy the backend. To publish to npm: npm publish'",
+    "prepublishOnly": "npm run build"
   },
   "files": [
-    "dist/"
+    "dist/rhinon-chat.js",
+    "dist/rhinon-chat.js.LICENSE.txt",
+    "dist/types.d.ts"
   ],
   "devDependencies": {
     "@marshallofsound/webpack-asset-relocator-loader": "^0.5.0",
@@ -68,5 +71,11 @@
     "sass-loader": "^16.0.5",
     "socket.io-client": "^4.8.1",
     "zustand": "^5.0.7"
-  }
+  },
+  "keywords": [
+    "chatbot",
+    "live chat",
+    "ai assistant",
+    "rhinon"
+  ]
 }

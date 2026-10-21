@@ -13,7 +13,7 @@ module.exports = {
   },
   output: {
     path: path.resolve(__dirname, '../../dist'),
-    filename: 'rhinonbot.js',
+    filename: 'rhinon-chat.js',
     library: {
       name: 'SalesziumBot',
       type: 'umd',

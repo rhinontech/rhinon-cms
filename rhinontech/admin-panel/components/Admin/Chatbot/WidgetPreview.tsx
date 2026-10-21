@@ -7,7 +7,7 @@ import type { ChatbotConfig, ChatbotForms } from "./chatbotApi";
 /**
  * The real widget, in its admin-preview mode, inside a framed box.
  *
- * The same rhinonbot.js customers embed is loaded from our backend, so the
+ * The same rhinon-chat.js customers embed is loaded from our backend, so the
  * preview cannot drift from what visitors see. The widget positions itself
  * `fixed`; the `transform` on the frame makes that frame its containing block,
  * so it stays in the box instead of floating over the admin.
@@ -18,14 +18,14 @@ type RhinonBotFn = (config: Record<string, unknown>) => HTMLElement & { setConfi
 let loading: Promise<RhinonBotFn> | null = null;
 
 function loadWidget(): Promise<RhinonBotFn> {
-  const existing = (window as unknown as { RhinonBot?: RhinonBotFn }).RhinonBot;
+  const existing = (window as unknown as { RhinonChat?: RhinonBotFn }).RhinonChat;
   if (existing) return Promise.resolve(existing);
   loading ??= new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = `${API_URL}/widget/rhinonbot.js`;
+    script.src = `${API_URL}/widget/rhinon-chat.js`;
     script.async = true;
     script.onload = () => {
-      const fn = (window as unknown as { RhinonBot?: RhinonBotFn }).RhinonBot;
+      const fn = (window as unknown as { RhinonChat?: RhinonBotFn }).RhinonChat;
       if (fn) resolve(fn);
       else reject(new Error("Widget did not load"));
     };

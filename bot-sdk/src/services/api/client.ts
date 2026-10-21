@@ -2,25 +2,32 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
 /**
- * Where the backend is. A production build carries no URL: it is served by the
- * backend itself (/widget/rhinonbot.js), so the script's own address says which
- * one — prod, beta or local — and a build can never point at the wrong server.
+ * Where the backend is, in order:
+ *   1. `api_url` passed to RhinonChat({ … }) — see setApiBase, applied at init;
+ *   2. the script's own address, when loaded as the hosted
+ *      /widget/rhinon-chat.js (or the old /widget/rhinonbot.js) — so the same
+ *      file served by prod, beta or a laptop talks to that same server;
+ *   3. production, for the npm package (bundled into the customer's own app,
+ *      where `currentScript` is their bundle, not ours).
  * `currentScript` is only set while the bundle executes, which is when this runs.
  */
+const PRODUCTION_API = 'https://api.rhinontech.in/widget';
+
 const scriptBase = (() => {
   try {
     const src = (typeof document !== 'undefined' && (document.currentScript as HTMLScriptElement | null)?.src) || '';
-    if (!src) return '';
     const url = new URL(src);
-    return `${url.origin}${url.pathname.replace(/\/rhinonbot\.js$/, '')}`;
+    if (!/\/(rhinon-chat|rhinonbot)\.js$/.test(url.pathname)) return '';
+    return `${url.origin}${url.pathname.replace(/\/(rhinon-chat|rhinonbot)\.js$/, '')}`;
   } catch {
     return '';
   }
 })();
 
-const API_BASE_URL = process.env.REACT_APP_NEW_SERVER_API_URL || scriptBase;
-const AI_API_URL = process.env.REACT_APP_API_URL_AI || scriptBase;
-const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || (scriptBase ? new URL(scriptBase).origin : '');
+const normalizeBase = (base: string) => base.replace(/\/+$/, '');
+let API_BASE_URL = normalizeBase(process.env.REACT_APP_NEW_SERVER_API_URL || scriptBase || PRODUCTION_API);
+let AI_API_URL = normalizeBase(process.env.REACT_APP_API_URL_AI || API_BASE_URL);
+let SOCKET_URL = process.env.REACT_APP_SOCKET_URL || new URL(API_BASE_URL).origin;
 
 // Create axios instance for main server API
 export const serverApi: AxiosInstance = axios.create({
@@ -92,6 +99,15 @@ const attachAppId = (config: any) => {
 };
 serverApi.interceptors.request.use(attachAppId);
 aiApi.interceptors.request.use(attachAppId);
+
+/** Point the widget at a specific backend (RhinonChat({ api_url })). Call before it renders. */
+export const setApiBase = (base: string) => {
+  API_BASE_URL = normalizeBase(base);
+  AI_API_URL = API_BASE_URL;
+  SOCKET_URL = new URL(API_BASE_URL).origin;
+  serverApi.defaults.baseURL = API_BASE_URL;
+  aiApi.defaults.baseURL = AI_API_URL;
+};
 
 export const getSocketUrl = (): string => SOCKET_URL;
 export const getAiApiUrl = (): string => AI_API_URL;
