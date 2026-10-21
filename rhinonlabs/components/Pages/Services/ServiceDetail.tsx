@@ -5,11 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { format } from "date-fns";
 import { motion, Variants } from "framer-motion";
-import {
-  ArrowRight, BarChart3, BookOpen, Calendar, CheckCircle2, ClipboardList, Clock, Code2, Cog, Database,
-  FileText, Globe, Layers, LayoutDashboard, Mail, MousePointerClick, Plug, Rocket, Shield, Smartphone,
-  Sparkles, Target, UserPlus, Users, Workflow,
-} from "lucide-react";
+import { ArrowRight, BookOpen, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Spotlight } from "@/components/ui/spotlight";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
@@ -18,15 +14,8 @@ import { ElevateCTA } from "@/components/Common/CTA/ElevateCTA";
 import { FAQ } from "@/components/Common/FAQ/FAQ";
 import { CaseStudies } from "@/components/Pages/Home/CaseStudy/CaseStudies";
 import type { Service } from "@/lib/services";
-import { services, serviceBanner } from "@/lib/services";
+import { services } from "@/lib/services";
 import type { Blog } from "@/lib/api";
-
-const SERVICE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  globe: Globe, smartphone: Smartphone, sparkles: Sparkles, mouse: MousePointerClick, mail: Mail, target: Target,
-  file: FileText, cog: Cog, plug: Plug, userplus: UserPlus, clock: Clock, chart: BarChart3, layout: LayoutDashboard,
-  users: Users, shield: Shield, database: Database, rocket: Rocket, code: Code2, calendar: Calendar,
-  clipboard: ClipboardList, layers: Layers,
-};
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 30 },
@@ -78,7 +67,7 @@ export default function ServiceDetail({ service, blogs }: { service: Service; bl
   return (
     <div className="relative flex flex-col gap-10 selection:bg-[#1c2bff]/50 overflow-x-clip">
       {/* ── Hero — same composition as the homepage hero ─────────────────── */}
-      <section className="overflow-hidden relative min-h-[88vh] flex flex-col justify-center">
+      <section className="overflow-hidden relative flex flex-col justify-center">
         <motion.div
           className="absolute inset-0 top-48 -z-10"
           initial={{ opacity: 0.35 }}
@@ -137,27 +126,10 @@ export default function ServiceDetail({ service, blogs }: { service: Service; bl
           >
             Fast Delivery • Affordable Pricing • AI-Powered Development
           </motion.p>
+
         </div>
       </section>
 
-      {/* ── Banner ───────────────────────────────────────────────────────── */}
-      <section className="px-5 pb-8 relative">
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-60px" }}
-          variants={fadeUp}
-          className="relative max-w-[1200px] mx-auto aspect-[16/9] overflow-hidden rounded-3xl border border-white/10 shadow-[0_0_80px_-20px_rgba(77,107,255,0.35)]"
-        >
-          <Image
-            src={serviceBanner(service.slug)}
-            alt={`${service.name} by Rhinon Labs`}
-            fill
-            sizes="(min-width: 1200px) 1200px, 100vw"
-            className="object-cover"
-          />
-        </motion.div>
-      </section>
 
       {/* ── Who it's for ─────────────────────────────────────────────────── */}
       <section className="py-24 relative overflow-hidden">
@@ -184,16 +156,18 @@ export default function ServiceDetail({ service, blogs }: { service: Service; bl
         <div className="max-w-[1200px] mx-auto px-6 relative z-10">
           <SectionHeader badge="What We Build" lead={`${service.name},`} accent="built around you" />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {service.builds.map((b) => {
-              const Icon = SERVICE_ICONS[b.icon] ?? Workflow;
+            {service.builds.map((b, i) => {
               return (
                 <motion.div key={b.title} {...inView}>
                 <SpotlightCard className="group h-full"><div className="p-5 flex flex-col gap-5">
-                  <div className="relative overflow-hidden flex justify-center items-center p-10 rounded-lg shadow-[inset_0_1px_1px_rgba(207,231,255,0.2)]">
-                    <div className="relative z-10"><IconTile><Icon className="w-6 h-6 text-white/80" /></IconTile></div>
-                    <div
-                      className="absolute top-0 right-0 pointer-events-none"
-                      style={{ width: 437, height: 306, background: "radial-gradient(circle, rgba(184, 199, 217, 0.5) 0%, rgba(184, 199, 217, 0) 100%)", opacity: 0.1, transform: "translate(50%, -50%)" }}
+                  {/* Gemini-generated illustration per build, public/assets/services/builds/<slug>-<n>.webp */}
+                  <div className="relative overflow-hidden aspect-[4/3] rounded-lg shadow-[inset_0_1px_1px_rgba(207,231,255,0.2)]">
+                    <Image
+                      src={`/assets/services/builds/${service.slug}-${i + 1}.webp`}
+                      alt={`${b.title} illustration`}
+                      fill
+                      sizes="(min-width: 1024px) 280px, (min-width: 640px) 50vw, 100vw"
+                      className="object-cover group-hover:scale-105 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
                     />
                   </div>
                   <div className="text-center px-2 pb-2">
