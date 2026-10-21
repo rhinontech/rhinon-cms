@@ -85,7 +85,7 @@ const ContactUs = () => {
                             CONTACT
                         </span>
                     </div>
-                    <h1 className="text-4xl md:text-5xl font-medium tracking-tight text-transparent bg-clip-text bg-linear-to-b from-white/90 to-white/50 mb-4">
+                    <h1 className="text-4xl md:text-5xl font-medium tracking-tight text-transparent bg-clip-text bg-linear-to-b from-white to-white/80 mb-4">
                         We’d love to hear <span className="font-serif italic text-transparent bg-clip-text">from you!</span>
                     </h1>
                     <p className="opacity-60 max-w-md">
@@ -138,13 +138,13 @@ const ContactUs = () => {
                                 Let's collaborate on custom solutions or discuss product insights
                             </p>
                             <div className="flex items-center gap-4 mb-8">
-                                <a href="https://x.com/RhinonLabs" target="_blank" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors text-white">
+                                <a href="https://x.com/RhinonLabs" target="_blank" rel="noopener noreferrer" aria-label="Rhinon Labs on X" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors text-white">
                                     <CustomXIcon />
                                 </a>
-                                <a href="https://www.instagram.com/rhinonlabs/" target="_blank" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors">
+                                <a href="https://www.instagram.com/rhinonlabs/" target="_blank" rel="noopener noreferrer" aria-label="Rhinon Labs on Instagram" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors">
                                     <Instagram className="w-5 h-5 text-white/80" />
                                 </a>
-                                <a href="https://www.linkedin.com/company/rhinonlabs" target="_blank" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors">
+                                <a href="https://www.linkedin.com/company/rhinonlabs" target="_blank" rel="noopener noreferrer" aria-label="Rhinon Labs on LinkedIn" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors">
                                     <Linkedin className="w-5 h-5 text-white/80" />
                                 </a>
                             </div>
@@ -192,7 +192,7 @@ const ContactUs = () => {
                                             required
                                             value={formData.name}
                                             onChange={handleChange}
-                                            className="w-full mt-1.5 border border-border/7 rounded-[8px] px-4 py-3.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors bg-transparent"
+                                            className="w-full mt-1.5 border border-border/7 rounded-[8px] px-4 py-3.5 text-sm text-white placeholder:text-white/60 focus:outline-none focus:border-white/20 transition-colors bg-transparent"
                                             placeholder="Enter your full name"
                                         />
                                     </div>
@@ -205,7 +205,7 @@ const ContactUs = () => {
                                             required
                                             value={formData.email}
                                             onChange={handleChange}
-                                            className="w-full mt-1.5 border border-border/7 rounded-[8px] px-4 py-3.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors bg-transparent"
+                                            className="w-full mt-1.5 border border-border/7 rounded-[8px] px-4 py-3.5 text-sm text-white placeholder:text-white/60 focus:outline-none focus:border-white/20 transition-colors bg-transparent"
                                             placeholder="Enter your email"
                                         />
                                     </div>
@@ -217,7 +217,7 @@ const ContactUs = () => {
                                             name="whatsapp"
                                             value={formData.whatsapp}
                                             onChange={handleChange}
-                                            className="w-full mt-1.5 border border-border/7 rounded-[8px] px-4 py-3.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors bg-transparent"
+                                            className="w-full mt-1.5 border border-border/7 rounded-[8px] px-4 py-3.5 text-sm text-white placeholder:text-white/60 focus:outline-none focus:border-white/20 transition-colors bg-transparent"
                                             placeholder="Enter your WhatsApp number"
                                         />
                                     </div>
@@ -229,7 +229,7 @@ const ContactUs = () => {
                                             name="company"
                                             value={formData.company}
                                             onChange={handleChange}
-                                            className="w-full mt-1.5 border border-border/7 rounded-[8px] px-4 py-3.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors bg-transparent"
+                                            className="w-full mt-1.5 border border-border/7 rounded-[8px] px-4 py-3.5 text-sm text-white placeholder:text-white/60 focus:outline-none focus:border-white/20 transition-colors bg-transparent"
                                             placeholder="Enter your company name"
                                         />
                                     </div>
@@ -242,7 +242,7 @@ const ContactUs = () => {
                                             rows={3}
                                             value={formData.message}
                                             onChange={handleChange}
-                                            className="w-full mt-1.5 border border-border/7 rounded-[8px] px-4 py-3.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors resize-none bg-transparent"
+                                            className="w-full mt-1.5 border border-border/7 rounded-[8px] px-4 py-3.5 text-sm text-white placeholder:text-white/60 focus:outline-none focus:border-white/20 transition-colors resize-none bg-transparent"
                                             placeholder="Enter your message"
                                         />
                                     </div>

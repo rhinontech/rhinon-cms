@@ -4,6 +4,7 @@ import { getBlog } from "@/lib/api";
 import { format } from "date-fns";
 import { Minus, ShieldCheck, Sparkles } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { MarkdownRenderer } from "@/components/Common/Markdown/MarkdownRenderer";
 import { BlockRenderer } from "@/components/Common/Blog/BlockRenderer";
 import { TableOfContents } from "@/components/Common/Blog/TableOfContents";
@@ -218,8 +219,15 @@ export default async function BlogDetailsPage({ params }: PageProps) {
 
             {/* Feature Image */}
             {blog.coverImage && (
-              <div className="mb-14 aspect-video w-full overflow-hidden rounded-3xl border border-white/10">
-                <img src={blog.coverImage} alt={blog.title} className="h-full w-full object-cover" />
+              <div className="relative mb-14 aspect-video w-full overflow-hidden rounded-3xl border border-white/10">
+                <Image
+                  src={blog.coverImage}
+                  alt={blog.title}
+                  fill
+                  priority
+                  sizes="(min-width: 1280px) 760px, (min-width: 1024px) 60vw, 100vw"
+                  className="object-cover"
+                />
               </div>
             )}
 

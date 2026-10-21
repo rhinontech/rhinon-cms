@@ -9,7 +9,7 @@ import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { ElevateCTA } from "@/components/Common/CTA/ElevateCTA";
 import { CaseStudies } from "@/components/Pages/Home/CaseStudy/CaseStudies";
 import { FAQ } from "@/components/Common/FAQ/FAQ";
-import { services } from "@/lib/services";
+import { services, serviceBanner } from "@/lib/services";
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   "mvp-development": Rocket,
@@ -36,7 +36,12 @@ export default function ServicesIndex() {
           transition={{ duration: 1.2, ease: "easeOut" }}
         >
           <div className="mask-[linear-gradient(to_bottom,transparent,white_30%,white_60%,transparent)] relative w-full h-full">
-            <Image src="/images/background/background.jpg" fill className="object-cover" alt="" priority sizes="100vw" />
+            <div
+            aria-hidden="true"
+            // Decorative only: a CSS background, not an <img>, so search engines
+            // never pick it as the page's thumbnail (they did, in Google results).
+            className="site-bg absolute inset-0 bg-cover bg-center"
+          />
           </div>
         </motion.div>
         <Spotlight className="-top-40 left-0 md:-top-20 md:left-60" fill="#A3B8CC" />
@@ -46,7 +51,7 @@ export default function ServicesIndex() {
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
             <span className="text-xs font-medium tracking-widest text-[#A3B8CC] uppercase font-sans">Our Services</span>
           </div>
-          <h1 className="text-[40px] text-center sm:text-5xl md:text-[72px] font-sans font-normal leading-[1.1] tracking-[-0.02em] max-w-4xl py-2 text-transparent bg-clip-text bg-linear-to-b from-white/90 to-white/50 mb-6">
+          <h1 className="text-[40px] text-center sm:text-5xl md:text-[72px] font-sans font-normal leading-[1.1] tracking-[-0.02em] max-w-4xl py-2 text-transparent bg-clip-text bg-linear-to-b from-white to-white/80 mb-6">
             Everything you need to <br className="hidden sm:block" />
             <span className="font-serif italic text-transparent bg-clip-text">ship and scale</span>
           </h1>
@@ -72,9 +77,16 @@ export default function ServicesIndex() {
                 <Link href={`/services/${s.slug}`} className="block h-full">
                   <SpotlightCard className="group h-full">
                     <div className="p-5 flex flex-col gap-5 h-full">
-                      <div className="relative overflow-hidden flex justify-center items-center p-12 rounded-lg shadow-[inset_0_1px_1px_rgba(207,231,255,0.2)]">
-                        <div className="relative z-10 rounded-xl border-t-2 border-white/10 bg-[#10131c] p-4 group-hover:scale-110 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]">
-                          <Icon className="w-7 h-7 text-white/80" />
+                      <div className="relative overflow-hidden aspect-[16/9] rounded-lg shadow-[inset_0_1px_1px_rgba(207,231,255,0.2)]">
+                        <Image
+                          src={serviceBanner(s.slug)}
+                          alt={`${s.name} illustration`}
+                          fill
+                          sizes="(min-width: 1024px) 380px, (min-width: 768px) 50vw, 100vw"
+                          className="object-cover group-hover:scale-105 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                        />
+                        <div className="absolute left-3 top-3 z-10 rounded-xl border-t-2 border-white/10 bg-[#10131c]/80 backdrop-blur-sm p-2.5">
+                          <Icon className="w-5 h-5 text-white/80" />
                         </div>
                         <div
                           className="absolute top-0 right-0 pointer-events-none"
@@ -82,7 +94,7 @@ export default function ServicesIndex() {
                         />
                       </div>
                       <div className="px-2 pb-2 flex flex-col flex-1">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-white/45 mb-2">{s.eyebrow}</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-white/60 mb-2">{s.eyebrow}</span>
                         <h2 className="text-[22px] font-semibold text-white mb-2 tracking-tight">{s.name}</h2>
                         <p className="text-white/50 text-[15px] leading-relaxed mb-6">{s.headline} {s.headlineAccent}.</p>
                         <span className="mt-auto inline-flex items-center gap-2 text-sm font-medium text-white/80 group-hover:text-white transition-colors">

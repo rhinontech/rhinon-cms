@@ -326,3 +326,26 @@ body {
   font-family: var(--font-mulish), sans-serif;
 }
 
+
+/* ---------- Site-wide hero background ----------
+ * A CSS background (not an <img>) so search engines don't use it as the page
+ * thumbnail. AVIF/WebP at two widths: phones get a ~20 KB file instead of the
+ * 300 KB JPEG — it is the largest element on most pages, so it decides LCP.
+ * app/layout.tsx preloads the matching file at high priority.
+ */
+.site-bg {
+  background-image: url(/images/background/background-1920.webp);
+  background-image: image-set(
+    url(/images/background/background-1920.avif) type("image/avif"),
+    url(/images/background/background-1920.webp) type("image/webp")
+  );
+}
+@media (max-width: 767px) {
+  .site-bg {
+    background-image: url(/images/background/background-960.webp);
+    background-image: image-set(
+      url(/images/background/background-960.avif) type("image/avif"),
+      url(/images/background/background-960.webp) type("image/webp")
+    );
+  }
+}

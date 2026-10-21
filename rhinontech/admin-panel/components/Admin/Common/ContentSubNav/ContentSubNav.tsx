@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useParams } from "next/navigation";
-import { TbArticle, TbTrophy, TbCalendarEvent } from "react-icons/tb";
+import { TbArticle, TbTrophy, TbCalendarEvent, TbSparkles } from "react-icons/tb";
 import { CollapsibleSubNav, type SubNavItem } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { useDomainConfig, type ContentResource } from "@/components/Admin/Content/domains";
 
@@ -25,6 +25,8 @@ export function ContentSubNav() {
     icon: RESOURCE_ICON[r.key],
     exact: r.key === "blogs",
   }));
+  // AI drafting sits right under Blogs: topics in, draft posts out.
+  items.splice(1, 0, { label: "AI Writer", href: `${base}/ai-writer`, icon: <TbSparkles size={18} /> });
 
   return <CollapsibleSubNav title={config?.label || "Content"} items={items} />;
 }

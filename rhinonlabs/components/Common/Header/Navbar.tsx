@@ -69,7 +69,7 @@ export function Navbar() {
                         alt="Rhinon Labs"
                         width={70}
                         height={70}
-                        className="w-38 object-contain transition-transform"
+                        className="w-38 object-contain opacity-75 transition-opacity group-hover:opacity-100"
                     />
                     {/* <span className="text-2xl font-serif italic tracking-wide">Rhinon Labs</span> */}
                 </Link>

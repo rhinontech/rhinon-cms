@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ServiceDetail from "@/components/Pages/Services/ServiceDetail";
-import { getService, services } from "@/lib/services";
+import { getService, services, serviceBanner } from "@/lib/services";
 import { getBlogs } from "@/lib/api";
 
 import { SCHEMA_IDS } from "@/lib/site";
@@ -31,13 +31,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       description: service.metaDescription,
       url,
       type: "website",
-      images: [{ url: `${SITE_URL}/og-image.jpg`, width: 1200, height: 630, alt: service.name }],
+      images: [{ url: `${SITE_URL}${serviceBanner(service.slug)}`, width: 1376, height: 768, alt: service.name }],
     },
     twitter: {
       card: "summary_large_image",
       title: `${service.metaTitle} | Rhinon Labs`,
       description: service.metaDescription,
-      images: [`${SITE_URL}/og-image.jpg`],
+      images: [`${SITE_URL}${serviceBanner(service.slug)}`],
     },
   };
 }

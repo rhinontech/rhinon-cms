@@ -70,7 +70,9 @@ export const HeroHeader = () => {
                     alt="Rhinon Labs Logo"
                     width={110}
                     height={110}
-                    className="object-contain h-9 w-auto"
+                    // Slightly under full white so the page headline, not the
+                    // logo, is the brightest thing on screen.
+                    className="object-contain h-9 w-auto opacity-75 hover:opacity-100 transition-opacity"
                   />
                 </Link>
               </div>

@@ -68,11 +68,11 @@ export function Hero() {
                     {/* Main Heading */}
                     <motion.h1
                         variants={fadeUpVariant}
-                        className="text-[42px] sm:text-5xl md:text-[80px] font-sans font-normal leading-[1.1] tracking-[-0.02em] max-w-4xl mx-auto py-2 text-transparent bg-clip-text bg-linear-to-b from-white/90 to-white/50 mb-6"
+                        className="text-[42px] sm:text-5xl md:text-[80px] font-sans font-normal leading-[1.1] tracking-[-0.02em] max-w-4xl mx-auto py-2 text-transparent bg-clip-text bg-linear-to-b from-white to-white/80 mb-6"
                     >
                         Scale Your Operations, <br className="sm:hidden" /> <span className="font-serif italic text-transparent bg-clip-text">Not Your Headcount.</span>
                     </motion.h1>
-                    {/* <h2 className="text-4xl md:text-5xl font-medium tracking-tight text-transparent bg-clip-text bg-linear-to-b from-white/90 to-white/50 mb-4">
+                    {/* <h2 className="text-4xl md:text-5xl font-medium tracking-tight text-transparent bg-clip-text bg-linear-to-b from-white to-white/80 mb-4">
                         Our Simple & <span className="font-serif italic text-transparent bg-clip-text">Smart Process</span>
                     </h2> */}
 

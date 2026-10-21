@@ -36,13 +36,11 @@ const Hero1 = () => {
           className="mask-[linear-gradient(to_bottom,transparent,white_30%,white_60%,transparent)]
                 mask-mode:luminance relative w-full h-full"
         >
-          <Image
-            src="/images/background/background.jpg"
-            fill
-            className="object-cover"
-            alt="Hero Background"
-            priority
-            sizes="100vw"
+          <div
+            aria-hidden="true"
+            // Decorative only: a CSS background, not an <img>, so search engines
+            // never pick it as the page's thumbnail (they did, in Google results).
+            className="site-bg absolute inset-0 bg-cover bg-center"
           />
         </div>
       </motion.div>
@@ -66,9 +64,9 @@ const Hero1 = () => {
           {/* Main Heading */}
           <motion.h1
             variants={fadeUpVariant}
-            className="text-[42px] text-center sm:text-5xl md:text-[80px] font-sans font-normal leading-[1.1] tracking-[-0.02em] max-w-4xl mx-auto py-2 text-transparent bg-clip-text bg-linear-to-b from-white/90 to-white/50 mb-6"
+            className="text-[42px] text-center sm:text-5xl md:text-[80px] font-sans font-normal leading-[1.1] tracking-[-0.02em] max-w-4xl mx-auto py-2 text-transparent bg-clip-text bg-linear-to-b from-white to-white/80 mb-6"
           >
-            Scale Your Operations, <br className="sm:hidden" /> <span className="font-serif italic text-transparent bg-clip-text">Not Your Headcount.</span>
+            Scale Your Operations, <br className="sm:hidden" /> <span className="font-serif italic text-transparent bg-clip-text bg-linear-to-r from-[#c7d4ff] via-[#8fa6ff] to-[#5b7bff] pr-2">Not Your Headcount.</span>
           </motion.h1>
           {/* Subtitle */}
           <motion.p variants={fadeUpVariant} className="text-white/70 text-center sm:text-lg max-w-2xl mx-auto mb-8 sm:mb-10 px-4 sm:px-0">

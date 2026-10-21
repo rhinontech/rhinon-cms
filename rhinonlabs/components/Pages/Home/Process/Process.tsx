@@ -59,7 +59,7 @@ export function Process() {
                     </span>
                 </div>
 
-                <h2 className="text-4xl md:text-5xl font-medium tracking-tight text-transparent bg-clip-text bg-linear-to-b from-white/90 to-white/50 ">
+                <h2 className="text-4xl md:text-5xl font-medium tracking-tight text-transparent bg-clip-text bg-linear-to-b from-white to-white/80 ">
                     How we <span className="font-serif italic text-transparent bg-clip-text">Work</span>
                 </h2>
                 {/* <p className=" max-w-xl">
@@ -135,8 +135,8 @@ export function Process() {
                                             {/* Dashboard Mock Window */}
                                             <div className="absolute left-[-5%] md:left-10 lg:left-0 top-[0%] md:top-[10%] w-[90%] md:w-[60%] lg:w-[320px] aspect-[4/3] bg-[#0c0c0e] rounded-xl border border-white/5 shadow-2xl flex flex-col p-4 opacity-80 scale-95">
                                                 <div className="flex justify-between items-center mb-6">
-                                                    <div className="text-[10px] text-white/40 font-medium">Activity</div>
-                                                    <div className="text-[10px] text-white/40 font-medium">Month</div>
+                                                    <div className="text-[10px] text-white/60 font-medium">Activity</div>
+                                                    <div className="text-[10px] text-white/60 font-medium">Month</div>
                                                 </div>
                                                 {/* Fake Bar Chart */}
                                                 <div className="flex-1 flex items-end justify-between gap-2 px-2 pb-4 border-b border-white/5">
@@ -159,7 +159,7 @@ export function Process() {
                                             {/* Floating Code Mock Window */}
                                             <div className="absolute right-[-5%] md:right-10 lg:right-[-20px] bottom-[0%] md:bottom-[10%] w-[95%] md:w-[70%] lg:w-[400px] bg-[#121214]/95 backdrop-blur-xl rounded-xl border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.5)] p-5 z-20">
                                                 <div className="font-mono text-[10px] md:text-[11px] leading-relaxed text-[#a1a1aa] overflow-hidden whitespace-nowrap">
-                                                    <div className="text-white/30 mb-2">// Build & Implement -&gt;</div>
+                                                    <div className="text-white/60 mb-2">// Build & Implement -&gt;</div>
                                                     <div><span className="text-[#c678dd]">async function</span> <span className="text-[#61afef]">generate</span>(prompt) {'{'}</div>
                                                     <div className="pl-4"><span className="text-[#c678dd]">const</span> res = <span className="text-[#c678dd]">await</span> <span className="text-[#56b6c2]">fetch</span>(<span className="text-[#98c379]">'https://api...'</span>, {'{'}</div>
                                                     <div className="pl-8">method: <span className="text-[#98c379]">'POST'</span>,</div>
@@ -184,7 +184,7 @@ export function Process() {
                                                 </svg>
                                             </div>
                                             <div className="text-white font-medium text-lg">System Deployed</div>
-                                            <div className="text-white/40 text-sm mt-1">100% Uptime Operational</div>
+                                            <div className="text-white/60 text-sm mt-1">100% Uptime Operational</div>
                                         </div>
                                     )}
                                 </div>

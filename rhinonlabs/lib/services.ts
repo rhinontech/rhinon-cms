@@ -294,3 +294,6 @@ export const services: Service[] = [
 ];
 
 export const getService = (slug: string) => services.find((s) => s.slug === slug);
+
+/** 16:9 banner for a service (Gemini-generated, in public/assets/services). Also its social share image. */
+export const serviceBanner = (slug: string) => `/assets/services/${slug}.jpg`;

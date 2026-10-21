@@ -71,7 +71,7 @@ export function MvpExamples() {
                 className={`flex-1 min-w-[120px] py-4 rounded-[10px] text-xs font-bold tracking-[0.12em] uppercase transition-all duration-300 border ${
                   index === active
                     ? "bg-gradient-to-r from-blue-500/25 to-violet-500/25 border-violet-400/40 text-white"
-                    : "bg-white/[0.03] border-white/5 text-white/45 hover:text-white/70 hover:bg-white/[0.06]"
+                    : "bg-white/[0.03] border-white/5 text-white/60 hover:text-white/70 hover:bg-white/[0.06]"
                 }`}
               >
                 {ex.tab}
@@ -89,14 +89,14 @@ export function MvpExamples() {
               className="p-8 md:p-12 flex flex-col gap-8"
             >
               <div className="flex flex-col gap-2">
-                <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-white/35">Idea</span>
+                <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-white/60">Idea</span>
                 <p className="text-xl md:text-2xl font-medium bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">
                   {current.idea}
                 </p>
               </div>
 
               <div className="flex flex-col gap-4">
-                <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-white/35">
+                <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-white/60">
                   What the MVP includes
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

@@ -18,7 +18,7 @@ import { ElevateCTA } from "@/components/Common/CTA/ElevateCTA";
 import { FAQ } from "@/components/Common/FAQ/FAQ";
 import { CaseStudies } from "@/components/Pages/Home/CaseStudy/CaseStudies";
 import type { Service } from "@/lib/services";
-import { services } from "@/lib/services";
+import { services, serviceBanner } from "@/lib/services";
 import type { Blog } from "@/lib/api";
 
 const SERVICE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -86,7 +86,12 @@ export default function ServiceDetail({ service, blogs }: { service: Service; bl
           transition={{ duration: 1.2, ease: "easeOut" }}
         >
           <div className="mask-[linear-gradient(to_bottom,transparent,white_30%,white_60%,transparent)] relative w-full h-full">
-            <Image src="/images/background/background.jpg" fill className="object-cover" alt="" priority sizes="100vw" />
+            <div
+            aria-hidden="true"
+            // Decorative only: a CSS background, not an <img>, so search engines
+            // never pick it as the page's thumbnail (they did, in Google results).
+            className="site-bg absolute inset-0 bg-cover bg-center"
+          />
           </div>
         </motion.div>
 
@@ -105,7 +110,7 @@ export default function ServiceDetail({ service, blogs }: { service: Service; bl
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
               <span className="text-xs font-medium tracking-widest text-[#A3B8CC] uppercase font-sans">{service.eyebrow}</span>
             </div>
-            <h1 className="text-[38px] text-center sm:text-5xl md:text-[64px] font-sans font-normal leading-[1.1] tracking-[-0.02em] max-w-5xl mx-auto text-balance py-2 text-transparent bg-clip-text bg-linear-to-b from-white/90 to-white/50 mb-6">
+            <h1 className="text-[38px] text-center sm:text-5xl md:text-[64px] font-sans font-normal leading-[1.1] tracking-[-0.02em] max-w-5xl mx-auto text-balance py-2 text-transparent bg-clip-text bg-linear-to-b from-white to-white/80 mb-6">
               {service.headline} <br className="hidden sm:block" />
               <span className="font-serif italic text-transparent bg-clip-text">{service.headlineAccent}</span>
             </h1>
@@ -133,6 +138,25 @@ export default function ServiceDetail({ service, blogs }: { service: Service; bl
             Fast Delivery • Affordable Pricing • AI-Powered Development
           </motion.p>
         </div>
+      </section>
+
+      {/* ── Banner ───────────────────────────────────────────────────────── */}
+      <section className="px-5 pb-8 relative">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-60px" }}
+          variants={fadeUp}
+          className="relative max-w-[1200px] mx-auto aspect-[16/9] overflow-hidden rounded-3xl border border-white/10 shadow-[0_0_80px_-20px_rgba(77,107,255,0.35)]"
+        >
+          <Image
+            src={serviceBanner(service.slug)}
+            alt={`${service.name} by Rhinon Labs`}
+            fill
+            sizes="(min-width: 1200px) 1200px, 100vw"
+            className="object-cover"
+          />
+        </motion.div>
       </section>
 
       {/* ── Who it's for ─────────────────────────────────────────────────── */}
@@ -174,7 +198,7 @@ export default function ServiceDetail({ service, blogs }: { service: Service; bl
                   </div>
                   <div className="text-center px-2 pb-2">
                     <h3 className="text-white text-lg font-semibold mb-1.5 tracking-tight">{b.title}</h3>
-                    <p className="text-white/45 text-[15px] leading-relaxed">{b.description}</p>
+                    <p className="text-white/60 text-[15px] leading-relaxed">{b.description}</p>
                   </div>
                 </div></SpotlightCard>
                 </motion.div>
@@ -259,18 +283,18 @@ export default function ServiceDetail({ service, blogs }: { service: Service; bl
                     {blog.coverImage ? (
                       <img loading="lazy" decoding="async" src={blog.coverImage} alt={blog.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center"><BookOpen className="w-8 h-8 text-white/30" /></div>
+                      <div className="w-full h-full flex items-center justify-center"><BookOpen className="w-8 h-8 text-white/60" /></div>
                     )}
                     <div className="absolute inset-0 bg-linear-to-t from-background/90 via-transparent to-transparent opacity-80" />
                   </div>
                   <div className="p-6 flex flex-col flex-1">
                     {blog.category && (
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-white/45 mb-2">{blog.category}</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-white/60 mb-2">{blog.category}</span>
                     )}
                     <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-white/80 transition-colors leading-tight">{blog.title}</h3>
                     <p className="text-sm text-white/50 line-clamp-2 mb-4 leading-relaxed">{blog.excerpt}</p>
                     {blog.publishedAt && (
-                      <span className="mt-auto pt-4 border-t border-white/5 text-[10px] text-white/45">
+                      <span className="mt-auto pt-4 border-t border-white/5 text-[10px] text-white/60">
                         {format(new Date(blog.publishedAt), "MMM d, yyyy")}
                       </span>
                     )}

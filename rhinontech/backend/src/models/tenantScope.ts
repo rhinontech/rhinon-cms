@@ -73,6 +73,7 @@ import { SavedView } from "./SavedView";
 import { Unsubscribe } from "./Unsubscribe";
 import { DocsAccess } from "./DocsAccess";
 import { StartupIdea } from "./StartupIdea";
+import { BlogTopic } from "./BlogTopic";
 import { Deployment } from "./Deployment";
 import { PageView } from "./PageView";
 import { Visitor } from "./Visitor";
@@ -105,7 +106,7 @@ export const TENANT_MODELS: ModelStatic<any>[] = [
   Workflow, WorkflowEnrollment,
   Account, PipelineStage, Deal, Activity, SavedView,
   Unsubscribe, DocsAccess,
-  StartupIdea, Deployment,
+  StartupIdea, Deployment, BlogTopic,
   PageView, Visitor,
 ];
 

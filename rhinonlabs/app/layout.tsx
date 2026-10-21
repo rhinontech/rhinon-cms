@@ -49,6 +49,9 @@ const mulish = Mulish({
   variable: "--font-mulish",
   subsets: ["latin"],
   display: "swap",
+  // Only blog/case-study articles use Mulish (.blog-theme); preloading it on
+  // every page competed with the hero image for bandwidth on mobile.
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -117,6 +120,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
+      <head>
+        {/* The hero background (.site-bg in globals.css) is the largest element on
+            most pages; fetch the right size first instead of discovering it late. */}
+        <link rel="preload" as="image" type="image/avif" href="/images/background/background-960.avif" media="(max-width: 767px)" fetchPriority="high" />
+        <link rel="preload" as="image" type="image/avif" href="/images/background/background-1920.avif" media="(min-width: 768px)" fetchPriority="high" />
+      </head>
       <body
         className={`${inter.variable} ${instrumentSerif.variable} ${mulish.variable} relative font-sans antialiased text-foreground bg-background`}
       >

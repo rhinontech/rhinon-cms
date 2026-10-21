@@ -43,7 +43,7 @@ export function Integrations() {
                     whileInView="visible"
                     viewport={{ once: true, margin: "-100px" }}
                     variants={scrollVariant}
-                    className="text-4xl md:text-5xl font-medium tracking-tight text-transparent bg-clip-text bg-linear-to-b from-white/90 to-white/50 mb-6"
+                    className="text-4xl md:text-5xl font-medium tracking-tight text-transparent bg-clip-text bg-linear-to-b from-white to-white/80 mb-6"
                 >
                     Seamless <span className="font-serif italic text-transparent bg-clip-text ">Integrations</span>
                 </motion.h2>

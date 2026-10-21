@@ -25,7 +25,7 @@ const budgets = [
 ];
 
 const inputClass =
-  "w-full mt-1.5 border border-white/10 rounded-[10px] px-4 py-3.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-violet-400/50 focus:ring-2 focus:ring-violet-500/20 transition-all bg-white/[0.03]";
+  "w-full mt-1.5 border border-white/10 rounded-[10px] px-4 py-3.5 text-sm text-white placeholder:text-white/60 focus:outline-none focus:border-violet-400/50 focus:ring-2 focus:ring-violet-500/20 transition-all bg-white/[0.03]";
 const labelClass = "text-[14px] font-semibold opacity-60 tracking-wide";
 
 const emptyForm = {
@@ -108,7 +108,7 @@ export function IdeaForm() {
               Start Here
             </span>
           </div>
-          <h2 className="text-4xl md:text-5xl font-medium tracking-tight text-transparent bg-clip-text bg-linear-to-b from-white/90 to-white/50 py-1">
+          <h2 className="text-4xl md:text-5xl font-medium tracking-tight text-transparent bg-clip-text bg-linear-to-b from-white to-white/80 py-1">
             Have an Idea?{" "}
             <span className="font-serif italic bg-gradient-to-r from-cyan-300 via-blue-400 to-violet-400 bg-clip-text text-transparent">
               Let&apos;s Talk.

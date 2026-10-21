@@ -67,6 +67,7 @@ import { FieldDefinition } from "./FieldDefinition";
 import { TimeEntry } from "./TimeEntry";
 import { TaskActivity } from "./TaskActivity";
 import { StartupIdea } from "./StartupIdea";
+import { BlogTopic } from "./BlogTopic";
 import { Deployment } from "./Deployment";
 import { Organization } from "./Organization";
 import { DataTypes } from "sequelize";
@@ -492,6 +493,7 @@ export {
   TimeEntry,
   TaskActivity,
   StartupIdea,
+  BlogTopic,
   Deployment,
 };
 

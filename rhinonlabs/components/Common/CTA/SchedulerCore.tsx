@@ -292,7 +292,7 @@ export default function SchedulerCore({ onClose, headingLevel = "h3" }: Schedule
           </div>
         </div>
 
-        <div className="mt-8 text-[11px] text-white/30">
+        <div className="mt-8 text-[11px] text-white/60">
           © 2026 Rhinon Labs. All rights reserved.
         </div>
       </div>
@@ -318,6 +318,7 @@ export default function SchedulerCore({ onClose, headingLevel = "h3" }: Schedule
                     <div className="flex items-center gap-2">
                       <button
                         onClick={prevMonth}
+                        aria-label="Previous month"
                         className="p-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all text-white/70 hover:text-white disabled:opacity-30 disabled:pointer-events-none"
                         disabled={
                           year === new Date().getFullYear() &&
@@ -328,6 +329,7 @@ export default function SchedulerCore({ onClose, headingLevel = "h3" }: Schedule
                       </button>
                       <button
                         onClick={nextMonth}
+                        aria-label="Next month"
                         className="p-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all text-white/70 hover:text-white"
                       >
                         <ChevronRight size={18} />
@@ -336,7 +338,7 @@ export default function SchedulerCore({ onClose, headingLevel = "h3" }: Schedule
                   </div>
 
                   {/* Calendar Grid Header (Upper case, tracking spacing) */}
-                  <div className="grid grid-cols-7 gap-1.5 sm:gap-3 text-center text-[10px] font-bold text-white/40 uppercase tracking-widest mb-4">
+                  <div className="grid grid-cols-7 gap-1.5 sm:gap-3 text-center text-[10px] font-bold text-white/60 uppercase tracking-widest mb-4">
                     <span>Sun</span>
                     <span>Mon</span>
                     <span>Tue</span>
@@ -411,7 +413,7 @@ export default function SchedulerCore({ onClose, headingLevel = "h3" }: Schedule
                       return (
                         <div className="h-full flex flex-col items-center justify-center py-16 text-center">
                           <span className="w-5 h-5 border-2 border-white/20 border-t-white/60 rounded-full animate-spin mb-3" />
-                          <p className="text-xs text-white/30">Checking availability…</p>
+                          <p className="text-xs text-white/60">Checking availability…</p>
                         </div>
                       );
                     }
@@ -420,7 +422,7 @@ export default function SchedulerCore({ onClose, headingLevel = "h3" }: Schedule
                       return (
                         <div className="h-full flex flex-col items-center justify-center py-16 text-center">
                           <Clock className="w-8 h-8 text-white/10 mb-3" />
-                          <p className="text-xs text-white/40 max-w-[190px]">{slotsError}</p>
+                          <p className="text-xs text-white/60 max-w-[190px]">{slotsError}</p>
                         </div>
                       );
                     }
@@ -429,7 +431,7 @@ export default function SchedulerCore({ onClose, headingLevel = "h3" }: Schedule
                       return (
                         <div className="h-full flex flex-col items-center justify-center py-16 text-center">
                           <Clock className="w-8 h-8 text-white/10 mb-3" />
-                          <p className="text-xs text-white/30 max-w-[170px]">
+                          <p className="text-xs text-white/60 max-w-[170px]">
                             No slots on this date. Please pick another day.
                           </p>
                         </div>
@@ -440,7 +442,7 @@ export default function SchedulerCore({ onClose, headingLevel = "h3" }: Schedule
                       return (
                         <div className="h-full flex flex-col items-center justify-center py-16 text-center">
                           <Clock className="w-8 h-8 text-white/10 mb-3" />
-                          <p className="text-xs text-white/30 max-w-[180px]">
+                          <p className="text-xs text-white/60 max-w-[180px]">
                             Fully booked on this date. Please pick another day.
                           </p>
                         </div>
@@ -458,7 +460,7 @@ export default function SchedulerCore({ onClose, headingLevel = "h3" }: Schedule
                         className={`w-full py-3 px-4 rounded-xl border text-sm font-semibold text-center transition-all duration-200 ${
                           slot.available
                             ? "border-white/5 bg-white/5 hover:bg-white/10 hover:border-primary/50 text-white/80 hover:text-white active:scale-[0.98]"
-                            : "border-white/5 bg-transparent text-white/20 line-through cursor-not-allowed"
+                            : "border-white/5 bg-transparent text-white/55 line-through cursor-not-allowed"
                         }`}
                       >
                         {slotLabel(slot.startTime, timezone, is24h)}
@@ -467,7 +469,7 @@ export default function SchedulerCore({ onClose, headingLevel = "h3" }: Schedule
                   })() : (
                     <div className="h-full flex flex-col items-center justify-center py-16 text-center">
                       <Calendar className="w-8 h-8 text-white/10 mb-3" />
-                      <p className="text-xs text-white/30 max-w-[170px]">
+                      <p className="text-xs text-white/60 max-w-[170px]">
                         Select a date from the calendar to view available slots.
                       </p>
                     </div>
@@ -652,7 +654,7 @@ export default function SchedulerCore({ onClose, headingLevel = "h3" }: Schedule
 
                 {/* Terms and Bottom Buttons */}
                 <div className="pt-6 flex flex-col gap-5 border-t border-white/5 mt-6">
-                  <p className="text-[13px] text-white/40 leading-relaxed select-none">
+                  <p className="text-[13px] text-white/60 leading-relaxed select-none">
                     By proceeding, you agree to Rhinon Labs' <span className="font-semibold text-white">Terms</span> and <span className="font-semibold text-white">Privacy Policy</span>.
                   </p>
 

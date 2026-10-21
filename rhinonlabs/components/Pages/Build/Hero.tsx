@@ -79,7 +79,7 @@ export function BuildHero() {
 
           <motion.h1
             variants={fadeUp}
-            className="text-[42px] text-center sm:text-5xl md:text-[76px] font-sans font-normal leading-[1.08] tracking-[-0.02em] max-w-4xl mx-auto py-2 text-transparent bg-clip-text bg-linear-to-b from-white/90 to-white/50"
+            className="text-[42px] text-center sm:text-5xl md:text-[76px] font-sans font-normal leading-[1.08] tracking-[-0.02em] max-w-4xl mx-auto py-2 text-transparent bg-clip-text bg-linear-to-b from-white to-white/80"
           >
             Have an Idea for a Startup?{" "}
             <span className="font-serif italic bg-gradient-to-r from-cyan-300 via-blue-400 to-violet-400 bg-clip-text text-transparent">
