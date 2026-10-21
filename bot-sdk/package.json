@@ -15,7 +15,7 @@
     "build:types": "tsc --project tsconfig.declarations.json",
     "serve": "cross-env NODE_ENV=production webpack --config tools/webpack/webpack.config.prod.js && cross-env serve dist/",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx src/",
-    "release": "npm run build:webpack && cp dist/rhinonbot.js ../rhinontech/backend/public/widget/rhinonbot.js && echo 'Copied to rhinontech/backend/public/widget/rhinonbot.js \u2014 commit it and deploy the backend.'"
+    "release": "npm run build:webpack && cp dist/rhinonbot.js ../rhinontech/backend/public/widget/rhinonbot.js && gzip -9 -k -f ../rhinontech/backend/public/widget/rhinonbot.js && echo 'Copied rhinonbot.js (+ .gz) to rhinontech/backend/public/widget \u2014 commit both and deploy the backend.'"
   },
   "files": [
     "dist/"

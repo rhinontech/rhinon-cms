@@ -41,12 +41,20 @@ const router = Router();
  * would compete with the API for its 1 GB. Same path from src/ and dist/.
  */
 const WIDGET_FILE = nodePath.resolve(__dirname, "../../public/widget/rhinonbot.js");
-router.get("/rhinonbot.js", (_req, res) => {
+router.get("/rhinonbot.js", (req, res) => {
   if (!fs.existsSync(WIDGET_FILE)) return void res.status(404).type("text/plain").send("// widget not built");
   res.type("application/javascript; charset=utf-8");
   // Short cache: a release reaches customers' sites within ten minutes.
   res.set("Cache-Control", "public, max-age=600");
   res.set("Cross-Origin-Resource-Policy", "cross-origin");
+  res.set("Vary", "Accept-Encoding");
+  // The release also writes a gzipped copy (~830 KB → ~250 KB); nothing on the
+  // way compresses it for us, so serve that whenever the browser accepts it.
+  const gz = `${WIDGET_FILE}.gz`;
+  if (/\bgzip\b/.test(String(req.headers["accept-encoding"] || "")) && fs.existsSync(gz)) {
+    res.set("Content-Encoding", "gzip");
+    return void res.sendFile(gz, { headers: { "Content-Type": "application/javascript; charset=utf-8" } });
+  }
   res.sendFile(WIDGET_FILE);
 });
 
