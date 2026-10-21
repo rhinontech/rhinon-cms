@@ -14,11 +14,11 @@ export const metadata: Metadata = {
     "first-time founder MVP",
   ],
   alternates: {
-    canonical: "https://rhinonlabs.com/build",
+    canonical: "https://www.rhinonlabs.com/build",
   },
   openGraph: {
     type: "website",
-    url: "https://rhinonlabs.com/build",
+    url: "https://www.rhinonlabs.com/build",
     title: "Have a Startup Idea? Let's Build It. | Rhinon Labs",
     description:
       "You bring the business idea. We help you turn it into a working product — websites, apps, dashboards, AI features and the technology behind them.",

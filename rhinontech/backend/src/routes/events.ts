@@ -1,6 +1,7 @@
 import { Router, Response } from "express";
 import { Op, fn, col } from "sequelize";
 import multer from "multer";
+import { keepTenantContext } from "../services/tenantContext";
 import { AuthRequest, authenticate, authorize } from "../middleware/authenticate";
 import { Event, EventGuest, User, EventEnrollmentEmail, EventCertificateTemplate } from "../models";
 import { ENROLLMENT_EMAIL_TYPES, type EnrollmentEmailType } from "../models/EventEnrollmentEmail";
@@ -682,7 +683,7 @@ router.post("/guests/by-id", async (req: AuthRequest, res: Response) => {
 // Guest approval, referrals, notifications and feedback live in eventOperations.ts.
 
 // POST /events/upload (or banner upload)
-router.post("/upload", upload.single("file"), async (req: AuthRequest, res: Response) => {
+router.post("/upload", keepTenantContext(upload.single("file")), async (req: AuthRequest, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });

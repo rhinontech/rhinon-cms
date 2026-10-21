@@ -1,9 +1,22 @@
+import type { Metadata } from "next";
 import Homepage from "@/components/Pages/Homepage/Homepage";
 import { COURSES } from "@/components/Pages/Courses/courseData";
 import { buildEventDetail } from "@/components/Pages/Events/shared/model";
 import { CATEGORY_CONFIG } from "@/components/Pages/Events/shared/categoryConfig";
 import { getPublishedEvents } from "@/services/eventService";
 import { getBlogs } from "@/services/blogService";
+
+export const metadata: Metadata = {
+  title: "UpperCurve | Learn AI by Building It",
+  description:
+    "Join the 6-Weeks live Agentic AI Launchpad. Build & Ship 10+ AI Agents with Expert Mentors.",
+  openGraph: {
+    title: "UpperCurve | Learn AI by Building It",
+    description:
+      "Join the 6-Weeks live Agentic AI Launchpad. Build & Ship 10+ AI Agents with Expert Mentors.",
+    type: "website",
+  },
+};
 
 // Events change daily and the API is read without caching, as on /events.
 export const dynamic = "force-dynamic";

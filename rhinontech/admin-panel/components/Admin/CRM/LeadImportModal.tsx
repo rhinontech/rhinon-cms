@@ -89,9 +89,21 @@ function mapRow(raw: Record<string, string>): MappedLead {
     technologies: pick(n, "technologies"),
     annualRevenue: pick(n, "annual revenue"),
     apolloContactId: pick(n, "apollo contact id"),
-    source: "Apollo Import",
+    // The label is chosen once for the whole file (see defaultSourceLabel), not per row.
+    source: "",
     raw: rawClean,
   };
+}
+
+/** Apollo exports carry columns no hand-made CSV has; only those earn the "Apollo Import" label. */
+function looksLikeApolloExport(headers: string[]): boolean {
+  const h = new Set(headers.map((k) => k.trim().toLowerCase()));
+  return h.has("apollo contact id") || h.has("apollo account id");
+}
+
+function defaultSourceLabel(groupName: string | undefined, isApollo: boolean): string {
+  if (groupName) return `List · ${groupName}`;
+  return isApollo ? "Apollo Import" : "CSV Import";
 }
 
 export function LeadImportModal({
@@ -109,6 +121,7 @@ export function LeadImportModal({
   const [parseError, setParseError] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
+  const [sourceLabel, setSourceLabel] = useState(defaultSourceLabel(groupName, false));
 
   const validRows = rows.filter(r => r.name && r.email);
 
@@ -126,6 +139,7 @@ export function LeadImportModal({
           return;
         }
         setRows(res.data.map(mapRow));
+        setSourceLabel(defaultSourceLabel(groupName, looksLikeApolloExport(res.meta.fields || [])));
       },
       error: (err) => setParseError(err.message),
     });
@@ -136,7 +150,9 @@ export function LeadImportModal({
     try {
       const data = await apiFetch<ImportResult>("/leads/import", {
         method: "POST",
-        body: JSON.stringify({ leads: validRows, ...(contactGroupId ? { contactGroupId } : {}) }),
+        body: JSON.stringify({
+          leads: validRows.map((r) => ({ ...r, source: sourceLabel.trim() || defaultSourceLabel(groupName, false) })),
+          ...(contactGroupId ? { contactGroupId } : {}) }),
       });
       setResult(data);
     } catch (err: any) {
@@ -232,6 +248,20 @@ export function LeadImportModal({
                     </div>
                   )}
                 </div>
+              )}
+
+              {rows.length > 0 && (
+                <label className="block text-sm">
+                  <span className="text-muted-foreground">Source label</span>
+                  <input
+                    value={sourceLabel}
+                    onChange={(e) => setSourceLabel(e.target.value)}
+                    maxLength={120}
+                    placeholder="e.g. MBA campaign Aug"
+                    className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+                  />
+                  <span className="mt-1 block text-xs text-muted-foreground">Shown as the lead&apos;s Source in the CRM.</span>
+                </label>
               )}
 
               <div className="flex items-center justify-end gap-3 pt-1">

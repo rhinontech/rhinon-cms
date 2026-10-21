@@ -10,6 +10,8 @@ import { MdOutlinePlayCircle } from "react-icons/md";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { NativeSelect } from "@/components/ui/native-select";
+import { confirmDialog } from "@/components/ui/dialogs";
 interface Employee {
   id: string;
   fullName: string;
@@ -77,14 +79,20 @@ export function AdminPayrollRun() {
   const eligible = employees.filter((e) => e.basicSalary && Number(e.basicSalary) > 0 && !isExiting(e));
   const notConfigured = employees.filter((e) => (!e.basicSalary || Number(e.basicSalary) === 0) && !isExiting(e));
 
-  const run = async () => {
+  const [runExists, setRunExists] = useState(false);
+  // A different period needs its own check
+  useEffect(() => { setRunExists(false); setError(""); }, [month, year]);
+
+  const run = async (recalculate = false) => {
+    if (recalculate && !(await confirmDialog(`Recalculate ${MONTHS[month - 1]} ${year}?\n\nUnpaid payslips are rebuilt from current salaries. Paid payslips stay as they are; reimbursements carry over.`))) return;
     setRunning(true);
     setError("");
+    setRunExists(false);
     const token = Cookies.get("authToken");
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/payroll/admin/run`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ month, year }),
+      body: JSON.stringify({ month, year, recalculate }),
     });
     const data = await res.json();
     setRunning(false);
@@ -92,6 +100,7 @@ export function AdminPayrollRun() {
       setResult(data);
     } else {
       setError(data.message ?? "Failed to run payroll");
+      if (data.code === "RUN_EXISTS" && data.status !== "paid") setRunExists(true);
     }
   };
 
@@ -159,17 +168,17 @@ export function AdminPayrollRun() {
             <div className="flex flex-wrap sm:flex-nowrap gap-3 sm:gap-4">
               <div className="flex flex-col gap-1.5 flex-1 min-w-[140px]">
                 <label className="text-xs text-muted-foreground">Month</label>
-                <select
+                <NativeSelect
                   value={month}
                   onChange={(e) => setMonth(Number(e.target.value))}
                   className="px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card"
                 >
                   {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
-                </select>
+                </NativeSelect>
               </div>
               <div className="flex flex-col gap-1.5 flex-1 min-w-[140px]">
                 <label className="text-xs text-muted-foreground">Year</label>
-                <select
+                <NativeSelect
                   value={year}
                   onChange={(e) => setYear(Number(e.target.value))}
                   className="px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card"
@@ -177,7 +186,7 @@ export function AdminPayrollRun() {
                   {[now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1].map((y) => (
                     <option key={y} value={y}>{y}</option>
                   ))}
-                </select>
+                </NativeSelect>
               </div>
             </div>
           </div>
@@ -272,15 +281,26 @@ export function AdminPayrollRun() {
             </div>
           )}
 
-          {/* Run button */}
+          {/* Run button — or, when the period already has a draft run, recalculate it */}
+          {runExists ? (
+            <button
+              onClick={() => run(true)}
+              disabled={running || eligible.length === 0}
+              className="flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 bg-primary text-primary-foreground text-xs sm:text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
+            >
+              {running ? <TbLoader2 size={18} className="animate-spin" /> : <MdOutlinePlayCircle size={18} />}
+              <span>{running ? "Recalculating…" : `Recalculate ${MONTHS[month - 1]} ${year} with current salaries`}</span>
+            </button>
+          ) : (
           <button
-            onClick={run}
+            onClick={() => run()}
             disabled={running || eligible.length === 0}
             className="flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 bg-primary text-primary-foreground text-xs sm:text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
           >
             {running ? <TbLoader2 size={18} className="animate-spin" /> : <MdOutlinePlayCircle size={18} />}
             <span>{running ? "Running…" : `Run Payroll for ${MONTHS[month - 1]} ${year}`}</span>
           </button>
+          )}
         </div>
       </div>
     </div>

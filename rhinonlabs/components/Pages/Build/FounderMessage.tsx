@@ -19,7 +19,7 @@ export function FounderMessage() {
           variants={scrollVariant}
           className="p-10 md:p-16 rounded-[20px] border border-blue-400/20 bg-gradient-to-br from-blue-600/15 via-violet-600/10 to-cyan-500/[0.07] backdrop-blur-sm relative overflow-hidden text-center flex flex-col items-center gap-6"
         >
-          <h2 className="text-3xl md:text-[42px] font-medium tracking-tight leading-[1.2] text-transparent bg-clip-text bg-linear-to-b from-white/90 to-white/50 max-w-2xl py-1">
+          <h2 className="text-3xl md:text-[42px] font-medium tracking-tight leading-[1.2] text-transparent bg-clip-text bg-linear-to-b from-white to-white/80 max-w-2xl py-1">
             You Focus on the Business.{" "}
             <span className="font-serif italic bg-gradient-to-r from-cyan-300 via-blue-400 to-violet-400 bg-clip-text text-transparent">
               We&apos;ll Handle the Technology.

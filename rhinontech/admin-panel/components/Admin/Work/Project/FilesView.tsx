@@ -11,6 +11,8 @@ import {
 } from "react-icons/tb";
 import type { ProjectTask, TaskRow } from "./types";
 
+import { NativeSelect } from "@/components/ui/native-select";
+import { confirmDialog } from "@/components/ui/dialogs";
 interface ProjectFile {
   id: string;
   taskId: string;
@@ -92,7 +94,7 @@ export function FilesView({
   };
 
   const remove = async (f: ProjectFile) => {
-    if (!window.confirm(`Delete "${f.name}"? This cannot be undone.`)) return;
+    if (!(await confirmDialog(`Delete "${f.name}"? This cannot be undone.`))) return;
     try {
       await apiFetch(`/tasks/${f.taskId}/attachments/${f.id}`, { method: "DELETE" });
       await load();
@@ -107,14 +109,14 @@ export function FilesView({
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex shrink-0 flex-wrap items-center gap-2 border-b glass-header px-4 py-2">
-        <select
+        <NativeSelect
           value={uploadTo}
           onChange={(e) => setUploadTo(e.target.value)}
           className="rounded-lg border border-border bg-card px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">Attach to which task…</option>
           {tasks.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
-        </select>
+        </NativeSelect>
         <button
           onClick={() => inputRef.current?.click()}
           disabled={!uploadTo || uploading}

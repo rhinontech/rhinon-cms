@@ -21,7 +21,7 @@ export interface InviteOrganizer {
  * falling back to the sender, never to a Rhinon address, so a customer's
  * invite does not name us as the host.
  */
-async function organizerFor(sender: InviteSender): Promise<InviteOrganizer & { brand: Awaited<ReturnType<typeof getCompanyProfile>> }> {
+export async function organizerFor(sender: InviteSender): Promise<InviteOrganizer & { brand: Awaited<ReturnType<typeof getCompanyProfile>> }> {
   const brand = await getCompanyProfile();
   if (brand.isPlatform) return { name: PLATFORM_ORGANIZER_NAME, email: PLATFORM_ORGANIZER_EMAIL, brand };
   const token = await GoogleCalendarToken.findOne({ where: { isActive: true }, attributes: ["connectedEmail"] });

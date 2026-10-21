@@ -41,6 +41,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { promptDialog } from "@/components/ui/dialogs";
 
 const VARIABLES = [
   { label: "Name", token: "{{name}}" },
@@ -154,9 +155,9 @@ export function EmailBodyEditor({
 
   if (!editor) return null;
 
-  const setLink = () => {
+  const setLink = async () => {
     const previous = editor.getAttributes("link").href as string | undefined;
-    const url = window.prompt("Link URL", previous || "https://");
+    const url = (await promptDialog("Link URL", previous || "https://"));
     if (url === null) return;
     if (url === "" || url === "https://") {
       editor.chain().focus().extendMarkRange("link").unsetLink().run();

@@ -62,8 +62,10 @@ import {
   TbBrandYoutube,
 } from "react-icons/tb";
 import { cn } from "@/lib/utils";
-import { apiUpload } from "@/lib/api";
+import { apiFetch, apiUpload } from "@/lib/api";
 
+import { NativeSelect } from "@/components/ui/native-select";
+import { alertDialog, promptDialog } from "@/components/ui/dialogs";
 const CustomImage = Image.extend({
   addAttributes() {
     return {
@@ -160,7 +162,30 @@ function InsertImageButton({ editor }: { editor: Editor }) {
   const [open, setOpen] = useState(false);
   const [url, setUrl] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [generating, setGenerating] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // AI image: the prompt doubles as alt text, which the person can refine later.
+  const handleGenerate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const prompt = aiPrompt.trim();
+    if (!prompt) return;
+    setGenerating(true);
+    try {
+      const { url: imageUrl } = await apiFetch<{ url: string }>("/content/generate-image", {
+        method: "POST",
+        body: JSON.stringify({ prompt }),
+      });
+      editor.chain().focus().setImage({ src: imageUrl, alt: prompt.slice(0, 160) }).run();
+      setAiPrompt("");
+      setOpen(false);
+    } catch (err: any) {
+      alertDialog(err.message || "Image generation failed");
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -171,7 +196,7 @@ function InsertImageButton({ editor }: { editor: Editor }) {
       editor.chain().focus().setImage({ src: uploadedUrl }).run();
       setOpen(false);
     } catch (err: any) {
-      alert(err.message || "Upload failed");
+      alertDialog(err.message || "Upload failed");
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -235,6 +260,28 @@ function InsertImageButton({ editor }: { editor: Editor }) {
                 className="h-8 px-3 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 disabled:opacity-50 cursor-pointer"
               >
                 Insert
+              </button>
+            </form>
+
+            <div className="relative flex items-center py-1">
+              <span className="absolute inset-x-0 h-px bg-muted" />
+              <span className="relative mx-auto bg-card px-2 text-[10px] text-muted-foreground font-medium">OR</span>
+            </div>
+
+            <form onSubmit={handleGenerate} className="space-y-1.5">
+              <textarea
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder="Describe the image to generate, e.g. a 4-step MVP roadmap from idea to launch"
+                rows={2}
+                className="w-full px-2.5 py-1.5 rounded-md border border-border text-xs outline-none focus:ring-1 focus:ring-ring bg-card text-foreground resize-none"
+              />
+              <button
+                type="submit"
+                disabled={!aiPrompt.trim() || generating}
+                className="inline-flex w-full items-center justify-center gap-1.5 h-8 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 disabled:opacity-50 cursor-pointer"
+              >
+                {generating ? <><TbLoader size={14} className="animate-spin" /> Generating… (up to 30s)</> : "Generate with AI"}
               </button>
             </form>
           </div>
@@ -391,9 +438,9 @@ export function ParagraphBlock({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [html, editor]);
 
-  const setLink = useCallback((ed: Editor) => {
+  const setLink = useCallback(async (ed: Editor) => {
     const previous = ed.getAttributes("link").href as string | undefined;
-    const url = window.prompt("Link URL", previous || "https://");
+    const url = (await promptDialog("Link URL", previous || "https://"));
     if (url === null) return;
     if (url === "" || url === "https://") {
       ed.chain().focus().extendMarkRange("link").unsetLink().run();
@@ -425,7 +472,7 @@ export function ParagraphBlock({
     <div className="rounded-lg border border-border bg-card focus-within:ring-2 focus-within:ring-ring transition-shadow">
       <div className="flex flex-wrap items-center gap-0.5 border-b border-border px-2 py-1.5">
         {/* Font family */}
-        <select
+        <NativeSelect
           title="Font"
           value={fontValue}
           onChange={(e) => {
@@ -438,10 +485,10 @@ export function ParagraphBlock({
           {FONTS.map((f) => (
             <option key={f.label} value={f.value}>{f.label}</option>
           ))}
-        </select>
+        </NativeSelect>
 
         {/* Paragraph style */}
-        <select
+        <NativeSelect
           title="Paragraph style"
           value={styleValue}
           onChange={(e) => {
@@ -456,7 +503,7 @@ export function ParagraphBlock({
           <option value="h2">Heading 2</option>
           <option value="h3">Heading 3</option>
           <option value="h4">Heading 4</option>
-        </select>
+        </NativeSelect>
 
         <Divider />
 

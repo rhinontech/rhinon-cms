@@ -36,7 +36,7 @@ export function Differentiator() {
           {/* Column headers */}
           <div className="grid grid-cols-2 border-b border-white/5">
             <div className="px-5 py-5 sm:px-8">
-              <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-white/40">
+              <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-white/60">
                 Typical Freelancer
               </span>
             </div>
@@ -50,8 +50,8 @@ export function Differentiator() {
           {rows.map((row) => (
             <div key={row.rhinon} className="grid grid-cols-2 border-b border-white/5 last:border-b-0">
               <div className="px-5 py-5 sm:px-8 flex items-start gap-3">
-                <Minus className="w-4 h-4 mt-0.5 shrink-0 text-white/25" />
-                <span className="text-sm text-white/45">{row.freelancer}</span>
+                <Minus className="w-4 h-4 mt-0.5 shrink-0 text-white/55" />
+                <span className="text-sm text-white/60">{row.freelancer}</span>
               </div>
               <div className="px-5 py-5 sm:px-8 flex items-start gap-3 bg-gradient-to-r from-emerald-500/[0.07] to-cyan-500/[0.07] border-l border-emerald-400/20">
                 <Check className="w-4 h-4 mt-0.5 shrink-0 text-emerald-400" />

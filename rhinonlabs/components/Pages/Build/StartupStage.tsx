@@ -68,7 +68,7 @@ export function StartupStage() {
               <p className="text-sm opacity-60">{stage.body}</p>
 
               <div className="pt-2">
-                <p className="text-[11px] font-bold tracking-[0.2em] uppercase text-white/35 mb-3">
+                <p className="text-[11px] font-bold tracking-[0.2em] uppercase text-white/60 mb-3">
                   We can help with
                 </p>
                 <div className="flex flex-wrap gap-2">

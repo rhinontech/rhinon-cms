@@ -10,9 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 
 const navLinks = [
-    { title: "Services", href: "/#services" },
-    { title: "Process", href: "/#process" },
-    { title: "Automations", href: "/#our_products" },
+    { title: "Services", href: "/services" },
     { title: "Case Studies", href: "/case-studies" },
     { title: "Blogs", href: "/blogs" },
     { title: "Contact", href: "/contact-us" }
@@ -63,13 +61,13 @@ export function Navbar() {
         <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-white/5 transition-all duration-300 py-4">
             <div className="max-w-[1400px] px-16 max-sm:px-4 mx-auto flex items-center justify-between">
                 {/* Logo */}
-                <Link href="/" className="flex items-center gap-2 group">
+                <Link href="/" aria-label="Rhinon Labs home" className="flex items-center gap-2 group">
                     <Image
                         src="/Logo_Rhinon_Labs_Light.png"
                         alt="Rhinon Labs"
                         width={70}
                         height={70}
-                        className="w-38 object-contain transition-transform"
+                        className="w-38 object-contain opacity-75 transition-opacity group-hover:opacity-100"
                     />
                     {/* <span className="text-2xl font-serif italic tracking-wide">Rhinon Labs</span> */}
                 </Link>

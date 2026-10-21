@@ -9,6 +9,7 @@ import {
   TbMail, TbBuildingSkyscraper, TbCalendar, TbShield,
 } from "react-icons/tb";
 
+import { NativeSelect } from "@/components/ui/native-select";
 interface UserProfile {
   id: string;
   fullName: string;
@@ -218,13 +219,13 @@ export function ProfileInfo() {
                     return (
                       <div key={key} className="flex flex-col gap-1">
                         <label className="text-xs font-medium text-muted-foreground">{labels[key]}</label>
-                        <select
+                        <NativeSelect
                           value={(form[key] as string) ?? opts[key][0]}
                           onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
                           className="px-3 py-2 text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           {opts[key].map((v) => <option key={v}>{v}</option>)}
-                        </select>
+                        </NativeSelect>
                       </div>
                     );
                   })}

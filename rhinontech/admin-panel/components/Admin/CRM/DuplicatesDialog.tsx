@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { LifecycleBadge, TBtn, formatDate } from "./ui";
 import type { LifecycleStage, LeadStatus } from "./types";
+import { confirmDialog } from "@/components/ui/dialogs";
 
 interface DupLead {
   id: string;
@@ -68,11 +69,11 @@ export function DuplicatesDialog({ onClose }: { onClose: (merged: boolean) => vo
     if (!survivorId) return;
     const losers = group.leads.filter((l) => l.id !== survivorId);
     if (
-      !confirm(
+      !(await confirmDialog(
         `Merge ${losers.length} record${losers.length === 1 ? "" : "s"} into ${
           group.leads.find((l) => l.id === survivorId)?.email
         }?\n\nHistory moves across. The other record${losers.length === 1 ? " is" : "s are"} deleted. This cannot be undone.`
-      )
+      ))
     ) return;
 
     setBusyKey(key);

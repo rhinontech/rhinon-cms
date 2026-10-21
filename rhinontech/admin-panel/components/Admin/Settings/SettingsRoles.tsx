@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useSideNav } from "@/context/SideNavContext";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { apiFetch } from "@/lib/api";
+import { confirmDialog, alertDialog } from "@/components/ui/dialogs";
 
 interface Permission {
   id: string;
@@ -198,10 +199,10 @@ export function SettingsRoles() {
 
   const deleteRole = async (role: Role) => {
     if ((role.usersCount ?? 0) > 0) {
-      alert(`${role.usersCount} member(s) still have this role. Reassign them first.`);
+      alertDialog(`${role.usersCount} member(s) still have this role. Reassign them first.`);
       return;
     }
-    if (!confirm(`Delete role "${role.name}"?`)) return;
+    if (!(await confirmDialog(`Delete role "${role.name}"?`))) return;
     try {
       await apiFetch(`/roles/${role.id}`, { method: "DELETE" });
       const list = await fetchRoles();
@@ -211,7 +212,7 @@ export function SettingsRoles() {
         setMobileDetail(false);
       }
     } catch (err: any) {
-      alert(err.message || "Failed to delete role.");
+      alertDialog(err.message || "Failed to delete role.");
     }
   };
 

@@ -1,123 +1,76 @@
-'use client';
+import { COMPANY, SCHEMA_IDS, SITE_URL } from "@/lib/site";
+import { services } from "@/lib/services";
 
-import React from 'react';
-
+// Site-wide schema (every page): the Organization and WebSite entities, linked by
+// @id so page-level schema (Service, FAQPage, BlogPosting…) can point at the same
+// company instead of re-describing it. Page-specific schema lives with its page.
 export default function StructuredData() {
-  const organizationSchema = {
+  const graph = {
     "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": "Rhinon Labs",
-    "url": "https://rhinonlabs.com",
-    "logo": "https://rhinonlabs.com/favicon.ico",
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "Bhubaneswar",
-      "addressRegion": "OR",
-      "postalCode": "751001",
-      "addressCountry": "IN"
-    },
-    "sameAs": [
-      "https://linkedin.com/company/rhinon-labs",
-      "https://twitter.com/rhinonlabs",
-      "https://github.com/rhinon-labs"
-    ],
-    "contactPoint": {
-      "@type": "ContactPoint",
-      "telephone": "+91 9664430061",
-      "contactType": "Sales",
-      "areaServed": ["Worldwide", "IN"],
-      "availableLanguage": "English"
-    }
-  };
-
-  const serviceSchema = {
-    "@context": "https://schema.org",
-    "@type": "Service",
-    "serviceType": "MVP Development & AI Automation",
-    "provider": {
-      "@type": "Organization",
-      "name": "Rhinon Labs"
-    },
-    "description": "We help founders and SMBs design, build and launch websites, apps and AI products fast with affordable pricing.",
-    "areaServed": "Worldwide",
-    "hasOfferCatalog": {
-      "@type": "OfferCatalog",
-      "name": "Development Services",
-      "itemListElement": [
-        {
-          "@type": "Offer",
-          "itemOffered": {
-            "@type": "Service",
-            "name": "Custom Internal Dashboards"
-          }
-        },
-        {
-          "@type": "Offer",
-          "itemOffered": {
-            "@type": "Service",
-            "name": "Workflow Automation"
-          }
-        },
-        {
-          "@type": "Offer",
-          "itemOffered": {
-            "@type": "Service",
-            "name": "AI Agents & Smart Systems"
-          }
-        }
-      ]
-    }
-  };
-
-  const faqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
+    "@graph": [
       {
-        "@type": "Question",
-        "name": "Do we need to be technical to work with you?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Not at all. We handle the technical side end-to-end. We build it, we deploy it, we maintain it. You just run your business."
-        }
+        "@type": "Organization",
+        "@id": SCHEMA_IDS.organization,
+        name: COMPANY.name,
+        url: SITE_URL,
+        description: COMPANY.description,
+        slogan: COMPANY.tagline,
+        logo: {
+          "@type": "ImageObject",
+          url: COMPANY.logo,
+        },
+        image: `${SITE_URL}/og-image.jpg`,
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: COMPANY.address.locality,
+          addressRegion: COMPANY.address.region,
+          addressCountry: COMPANY.address.country,
+        },
+        areaServed: COMPANY.areaServed,
+        sameAs: [...COMPANY.sameAs],
+        contactPoint: {
+          "@type": "ContactPoint",
+          telephone: COMPANY.phoneE164,
+          contactType: "sales",
+          areaServed: COMPANY.areaServed,
+          availableLanguage: [...COMPANY.languages],
+          url: `${SITE_URL}/contact-us`,
+        },
+        // What the company does — helps search and AI systems classify the entity
+        knowsAbout: [
+          "MVP development",
+          "AI agents",
+          "Workflow automation",
+          "Internal tools and dashboards",
+          "Web application development",
+          "Mobile app development",
+          "Startup product development",
+        ],
+        makesOffer: services.map((s) => ({
+          "@type": "Offer",
+          itemOffered: {
+            "@type": "Service",
+            name: s.name,
+            url: `${SITE_URL}/services/${s.slug}`,
+          },
+        })),
       },
       {
-        "@type": "Question",
-        "name": "How long does it take to build a system?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "It depends on complexity, but most projects are scoped and delivered within 2-4 weeks. You’ll get a clear timeline before we begin."
-        }
-      }
-    ]
-  };
-
-  const websiteSchema = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "Rhinon Labs",
-    "url": "https://rhinonlabs.com",
-    "description": "Ship Your Product 3x Faster Without Hiring a Tech Team"
+        "@type": "WebSite",
+        "@id": SCHEMA_IDS.website,
+        name: COMPANY.name,
+        url: SITE_URL,
+        description: COMPANY.description,
+        inLanguage: "en",
+        publisher: { "@id": SCHEMA_IDS.organization },
+      },
+    ],
   };
 
   return (
-    <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-      />
-    </>
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(graph) }}
+    />
   );
 }

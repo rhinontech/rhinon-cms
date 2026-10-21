@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
+import { toast } from "sonner";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
@@ -34,6 +35,7 @@ interface InvestmentSummary {
   totalNetPaid: number;
   totalEmployerPfPaid: number;
   totalCompanyCostPaid: number;
+  totalReimbursementsPaid?: number;
   monthlyCommittedGross: number;
   paidPayslipCount: number;
   activeEmployeeCount: number;
@@ -101,11 +103,15 @@ export function AdminPayrollOverview() {
   const markPaid = async (id: string) => {
     setMarkingPaid(id);
     const token = Cookies.get("authToken");
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/payroll/admin/runs/${id}/pay`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/payroll/admin/runs/${id}/pay`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
     });
     setMarkingPaid(null);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      toast.error(data.message || "Could not mark payroll as paid");
+    }
     fetchRuns();
     fetchInvestment();
   };
@@ -151,7 +157,11 @@ export function AdminPayrollOverview() {
             <div className="p-3.5 sm:p-5">
               <p className="text-xs sm:text-sm text-muted-foreground">Total invested</p>
               <p className="mt-1 text-base sm:text-xl font-bold text-foreground truncate">{investment ? INR(investment.totalCompanyCostPaid) : "—"}</p>
-              <p className="mt-1 text-[11px] sm:text-xs text-muted-foreground">Gross salary + employer PF paid</p>
+              <p className="mt-1 text-[11px] sm:text-xs text-muted-foreground">
+                {investment && Number(investment.totalReimbursementsPaid ?? 0) > 0
+                  ? `Salary + employer PF + ${INR(Number(investment.totalReimbursementsPaid))} reimbursements`
+                  : "Gross salary + employer PF + reimbursements"}
+              </p>
             </div>
             <div className="p-3.5 sm:p-5">
               <p className="text-xs sm:text-sm text-muted-foreground">Salary credited</p>

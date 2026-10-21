@@ -557,3 +557,190 @@ This link expires in 48 hours. If you didn't create this workspace, ignore this 
 
   return { subject, html: emailWrapper(header, body, b), text };
 }
+
+// ─── Hiring: interview scheduled ─────────────────────────────────────────────
+
+const escHtml = (s: string) =>
+  s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+
+function detailRows(rows: [string, string][]) {
+  return `
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#fafaf9;border:1px solid #e7e5e4;border-radius:10px;margin-bottom:24px;">
+      ${rows.map(([k, v], i) => `
+      <tr>
+        <td style="padding:12px 16px;font-size:12px;color:#a8a29e;text-transform:uppercase;letter-spacing:0.4px;width:110px;${i ? "border-top:1px solid #e7e5e4;" : ""}">${k}</td>
+        <td style="padding:12px 16px;font-size:14px;font-weight:600;color:#1c1917;${i ? "border-top:1px solid #e7e5e4;" : ""}">${v}</td>
+      </tr>`).join("")}
+    </table>`;
+}
+
+function ctaButton(href: string, label: string) {
+  return `
+    <table cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      <tr>
+        <td style="background-color:#1c1917;border-radius:8px;">
+          <a href="${escHtml(href)}" style="display:inline-block;padding:13px 28px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:-0.1px;">
+            ${label}
+          </a>
+        </td>
+      </tr>
+    </table>`;
+}
+
+interface InterviewEmailOptions {
+  candidateName: string;
+  jobTitle: string;
+  roundName: string;
+  whenLabel: string;
+  durationMins: number;
+  meetingLink?: string | null;
+  // "rescheduled" adds the old time; "cancelled" drops the CTA and invite wording
+  variant?: "scheduled" | "rescheduled" | "cancelled";
+  previousWhenLabel?: string | null;
+}
+
+const VARIANT_WORD = { scheduled: "scheduled", rescheduled: "rescheduled", cancelled: "cancelled" } as const;
+
+export function interviewScheduledEmail({ candidateName, jobTitle, roundName, whenLabel, durationMins, meetingLink, variant = "scheduled", previousWhenLabel }: InterviewEmailOptions) {
+  const firstName = escHtml(candidateName.split(" ")[0]);
+  const word = VARIANT_WORD[variant];
+  const subject = `Interview ${word}: ${jobTitle} — ${roundName}`;
+  const cancelled = variant === "cancelled";
+
+  const header = `
+    <p style="margin:16px 0 0;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.4px;">
+      Your interview has<br/>been ${word}
+    </p>`.replace("has<br/>been scheduled", "is<br/>scheduled");
+
+  const body = `
+    <p style="margin:0 0 6px;font-size:15px;font-weight:600;color:#1c1917;">Hi ${firstName},</p>
+    <p style="margin:0 0 24px;font-size:14px;color:#78716c;line-height:1.7;">
+      ${cancelled
+        ? "Your interview below has been cancelled. We'll reach out if we'd like to set up another time."
+        : variant === "rescheduled"
+          ? "Your interview has moved to a new time. The updated details are below."
+          : "Thanks for your interest in joining Rhinon Tech. Here are the details of your next conversation with us."}
+    </p>
+    ${detailRows([
+      ["Role", escHtml(jobTitle)],
+      ["Round", escHtml(roundName)],
+      ...(variant === "rescheduled" && previousWhenLabel ? [["Was", `<span style="text-decoration:line-through;color:#a8a29e;font-weight:400;">${escHtml(previousWhenLabel)}</span>`] as [string, string]] : []),
+      [cancelled ? "Was" : "When", escHtml(whenLabel)],
+      ["Duration", `${durationMins} minutes`],
+    ])}
+    ${meetingLink && !cancelled ? ctaButton(meetingLink, "Join the meeting →") : ""}
+    <p style="margin:0 0 20px;font-size:13px;color:#78716c;line-height:1.7;">
+      ${cancelled
+        ? "Your calendar has been updated. If you have any questions, just reply to this email."
+        : "A calendar invite is attached. If the time doesn't work for you, just reply to this email and we'll find another slot."}
+    </p>
+    <p style="margin:0;font-size:13px;color:#1c1917;line-height:1.7;">
+      Looking forward to speaking with you,<br/><strong>Team Rhinon Tech</strong>
+    </p>`;
+
+  const text = `Hi ${candidateName.split(" ")[0]},
+
+Your ${roundName} interview for ${jobTitle} at Rhinon Tech is ${word}.
+${variant === "rescheduled" && previousWhenLabel ? `Was: ${previousWhenLabel}\n` : ""}
+When: ${whenLabel}
+Duration: ${durationMins} minutes
+${meetingLink ? `Join: ${meetingLink}\n` : ""}
+If the time doesn't work, reply to this email.
+
+Team Rhinon Tech`;
+
+  return { subject, html: emailWrapper(header, body), text };
+}
+
+export function interviewerAssignedEmail({ interviewerName, candidateName, jobTitle, roundName, whenLabel, durationMins, meetingLink, feedbackUrl, variant = "scheduled", previousWhenLabel }: InterviewEmailOptions & { interviewerName: string; feedbackUrl: string }) {
+  const firstName = escHtml(interviewerName.split(" ")[0]);
+  const cancelled = variant === "cancelled";
+  const subject = cancelled
+    ? `Cancelled: interview with ${candidateName} — ${roundName}`
+    : variant === "rescheduled"
+      ? `Rescheduled: interview with ${candidateName} — ${roundName}`
+      : `You're interviewing ${candidateName} — ${roundName}`;
+
+  const header = `
+    <p style="margin:16px 0 0;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.4px;">
+      ${cancelled ? "Interview<br/>cancelled" : variant === "rescheduled" ? "Interview<br/>rescheduled" : "New interview<br/>assigned to you"}
+    </p>`;
+
+  const body = `
+    <p style="margin:0 0 6px;font-size:15px;font-weight:600;color:#1c1917;">Hi ${firstName},</p>
+    <p style="margin:0 0 24px;font-size:14px;color:#78716c;line-height:1.7;">
+      ${cancelled
+        ? "The interview below is cancelled — no action needed."
+        : variant === "rescheduled"
+          ? "The interview below has moved. Updated details:"
+          : "You're the interviewer for the round below. The resume is available in Team → Hiring → My interviews."}
+    </p>
+    ${detailRows([
+      ["Candidate", escHtml(candidateName)],
+      ["Role", escHtml(jobTitle)],
+      ["Round", escHtml(roundName)],
+      ...(variant === "rescheduled" && previousWhenLabel ? [["Was", `<span style="text-decoration:line-through;color:#a8a29e;font-weight:400;">${escHtml(previousWhenLabel)}</span>`] as [string, string]] : []),
+      [cancelled ? "Was" : "When", escHtml(whenLabel)],
+      ["Duration", `${durationMins} minutes`],
+    ])}
+    ${meetingLink && !cancelled ? ctaButton(meetingLink, "Join the meeting →") : ""}
+    ${cancelled ? "" : `<p style="margin:0;font-size:13px;color:#78716c;line-height:1.7;">
+      After the interview, <a href="${escHtml(feedbackUrl)}" style="color:#1c1917;font-weight:600;">leave your feedback</a> — rating, recommendation and notes.
+    </p>`}`;
+
+  const text = `Hi ${interviewerName.split(" ")[0]},
+
+${cancelled ? `Cancelled: your interview with ${candidateName} for ${jobTitle} (${roundName}).` : variant === "rescheduled" ? `Rescheduled: your interview with ${candidateName} for ${jobTitle} (${roundName}).` : `You're interviewing ${candidateName} for ${jobTitle} (${roundName}).`}
+${variant === "rescheduled" && previousWhenLabel ? `Was: ${previousWhenLabel}\n` : ""}
+When: ${whenLabel}
+Duration: ${durationMins} minutes
+${meetingLink ? `Join: ${meetingLink}\n` : ""}
+Leave feedback afterwards: ${feedbackUrl}`;
+
+  return { subject, html: emailWrapper(header, body), text };
+}
+
+// ─── Salary revision / promotion letter ──────────────────────────────────────
+
+export function revisionLetterEmail({ fullName, kind, newTitle, effectiveDate, signingUrl }: {
+  fullName: string;
+  kind: "increment" | "promotion";
+  newTitle: string | null;
+  effectiveDate: string;
+  signingUrl: string;
+}) {
+  const firstName = escHtml(fullName.split(" ")[0]);
+  const effective = new Date(`${effectiveDate}T00:00:00`).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+  const isPromo = kind === "promotion";
+  const subject = isPromo ? `Congratulations on your promotion — Rhinon Tech` : `Your revised compensation — Rhinon Tech`;
+
+  const header = `
+    <p style="margin:16px 0 0;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.4px;">
+      ${isPromo ? "Congratulations on<br/>your promotion" : "Your compensation<br/>has been revised"}
+    </p>`;
+
+  const body = `
+    <p style="margin:0 0 6px;font-size:15px;font-weight:600;color:#1c1917;">Hi ${firstName},</p>
+    <p style="margin:0 0 24px;font-size:14px;color:#78716c;line-height:1.7;">
+      ${isPromo && newTitle
+        ? `We're delighted to share that you've been promoted to <strong style="color:#1c1917;">${escHtml(newTitle)}</strong>, effective ${escHtml(effective)}.`
+        : `In recognition of your work, your compensation has been revised effective ${escHtml(effective)}.`}
+      Your letter with the full details is ready — please review and sign it.
+    </p>
+    ${ctaButton(signingUrl, "Review &amp; sign letter →")}
+    <p style="margin:0 0 20px;font-size:13px;color:#78716c;line-height:1.7;">
+      Thank you for everything you bring to the team.
+    </p>
+    <p style="margin:0;font-size:12px;color:#a8a29e;line-height:1.7;">
+      If the button doesn't work, copy this link into your browser:<br/>
+      <a href="${escHtml(signingUrl)}" style="color:#78716c;word-break:break-all;">${escHtml(signingUrl)}</a>
+    </p>`;
+
+  const text = `Hi ${fullName.split(" ")[0]},
+
+${isPromo && newTitle ? `You've been promoted to ${newTitle}, effective ${effective}.` : `Your compensation has been revised effective ${effective}.`}
+
+Review and sign your letter: ${signingUrl}`;
+
+  return { subject, html: emailWrapper(header, body), text };
+}

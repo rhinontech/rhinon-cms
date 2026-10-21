@@ -1,10 +1,10 @@
 import { Metadata } from "next";
 import PrivacyTermsClient from "@/components/Pages/PrivacyTerms/PrivacyTermsClient";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://rhinonlabs.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinonlabs.com";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy & Terms of Service | Rhinon Labs",
+  title: "Privacy Policy & Terms of Service",
   description:
     "Review our Privacy Policy and Terms of Service. Learn how Rhinon Labs handles client data security, data sovereignty, AI ethics, and project intellectual property.",
   alternates: {

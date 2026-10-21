@@ -39,6 +39,9 @@ export interface Lead {
   lastActivityAt?: string | null;
   campaignId: string | null;
   campaign?: { name: string };
+  /** Contact lists (Outreach → Contacts) this lead belongs to. */
+  lists?: { id: string; name: string }[];
+  emailOpened?: boolean;
   source: string;
   notes: string | null;
   addedAt: string;

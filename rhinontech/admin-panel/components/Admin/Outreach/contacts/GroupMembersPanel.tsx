@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   TbUpload,
+  TbExternalLink,
   TbUserPlus,
   TbTrash,
   TbSearch,
@@ -20,8 +21,11 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { LeadImportModal } from "@/components/Admin/CRM/LeadImportModal";
+import Link from "next/link";
+import { useModuleBase } from "@/lib/sites";
 import { LeadPicker } from "../shared/LeadPicker";
 import type { ContactGroupSummary, ContactLead } from "./types";
+import { promptDialog } from "@/components/ui/dialogs";
 
 const LEAD_STATUSES = ["New", "Enriched", "Enrolled", "Emailed", "Interested", "Replied", "Bounced", "Unsubscribed"];
 
@@ -54,6 +58,8 @@ export function GroupMembersPanel({
   onGroupDeleted: () => void;
   onBack?: () => void;
 }) {
+  // Same brand, sibling module: /admin/outreach/x -> /admin/crm/x
+  const crmBase = useModuleBase().replace(/\/outreach(\/|$)/, "/crm$1");
   const confirm = useConfirm();
   const [members, setMembers] = useState<ContactLead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -184,8 +190,8 @@ export function GroupMembersPanel({
     }
   };
 
-  const saveCurrentAsView = () => {
-    const name = window.prompt("Name this view:");
+  const saveCurrentAsView = async () => {
+    const name = (await promptDialog("Name this view:"));
     if (!name || !name.trim()) return;
     const view: SavedView = { id: crypto.randomUUID(), name: name.trim(), search, status: statusFilter, source: sourceFilter };
     const next = [...savedViews, view];
@@ -244,6 +250,11 @@ export function GroupMembersPanel({
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <Button asChild size="sm" variant="outline" className="px-2.5 sm:px-3 text-xs">
+            <Link href={`${crmBase}?listId=${group.id}`} title="Open these contacts in the CRM">
+              <TbExternalLink size={14} /> <span className="hidden sm:inline">View in CRM</span>
+            </Link>
+          </Button>
           <Button size="sm" variant="outline" className="px-2.5 sm:px-3 text-xs" onClick={() => setShowImport(true)}>
             <TbUpload size={14} /> <span className="hidden sm:inline">Import CSV</span>
           </Button>

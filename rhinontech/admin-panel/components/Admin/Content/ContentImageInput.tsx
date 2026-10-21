@@ -1,23 +1,46 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { TbUpload, TbX, TbLoader } from "react-icons/tb";
-import { apiUpload } from "@/lib/api";
+import { TbUpload, TbX, TbLoader, TbSparkles } from "react-icons/tb";
+import { apiFetch, apiUpload } from "@/lib/api";
+import { promptDialog } from "@/components/ui/dialogs";
 
 export function ContentImageInput({
   label,
   value,
   onChange,
   placeholder = "or paste an image URL...",
+  aiPrompt,
 }: {
   label?: string;
   value: string;
   onChange: (url: string) => void;
   placeholder?: string;
+  /** When set, shows "Generate with AI" pre-filled with this prompt (editable before generating). */
+  aiPrompt?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const [generating, setGenerating] = useState(false);
+
+  const handleGenerate = async () => {
+    const prompt = await promptDialog("Describe the image to generate", aiPrompt || "");
+    if (!prompt?.trim()) return;
+    setGenerating(true);
+    setError("");
+    try {
+      const { url } = await apiFetch<{ url: string }>("/content/generate-image", {
+        method: "POST",
+        body: JSON.stringify({ prompt: prompt.trim() }),
+      });
+      onChange(url);
+    } catch (err: any) {
+      setError(err.message || "Image generation failed");
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -63,6 +86,18 @@ export function ContentImageInput({
           {uploading ? <TbLoader className="animate-spin" size={15} /> : <TbUpload size={15} />}
           {uploading ? "Uploading..." : "Upload"}
         </button>
+        {aiPrompt !== undefined && (
+          <button
+            type="button"
+            onClick={handleGenerate}
+            disabled={generating}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50 shrink-0"
+            title="Generate an image with AI"
+          >
+            {generating ? <TbLoader className="animate-spin" size={15} /> : <TbSparkles size={15} />}
+            {generating ? "Generating…" : "AI"}
+          </button>
+        )}
         <input
           type="text"
           value={value}

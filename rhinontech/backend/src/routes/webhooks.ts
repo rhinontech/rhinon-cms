@@ -2,7 +2,7 @@ import { Router, Request, Response } from "express";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { simpleParser } from "mailparser";
 import { Op } from "sequelize";
-import { InboxEmail, Lead, CampaignActivity, Activity } from "../models";
+import { InboxEmail, Lead, CampaignActivity, Activity, Site } from "../models";
 import { stopEnrollmentsForLead } from "../services/workflowEngine";
 import { uploadBuffer } from "../services/storage";
 import { env } from "../config/env";
@@ -123,13 +123,19 @@ router.post("/ses-inbound", async (req: Request, res: Response) => {
         // The recipient decides the workspace. SES hands us every tenant's mail
         // through one catch-all, so each address is resolved to an organization
         // and mail for an address we do not own is dropped, not filed.
+        // The envelope recipients are the addresses SES actually accepted for us, so a
+        // Cc/Bcc/list delivery counts; the headers are only the fallback.
+        const envelope: string[] = Array.isArray(receipt.recipients) ? receipt.recipients : [];
+        const wanted = new Set<string>(
+          (envelope.length ? envelope : [...toEmails, ...ccEmails]).map((r: string) => (r || "").toLowerCase()).filter(Boolean)
+        );
         const targets = new Map<string, InboundTarget>();
-        for (const recipient of new Set<string>(toEmails.concat(ccEmails).map((r: string) => (r || "").toLowerCase()))) {
+        for (const recipient of wanted) {
           const target = await resolveInboundRecipient(recipient);
           if (target) targets.set(recipient, target);
         }
         if (targets.size === 0) {
-          console.warn(`[Webhook] Dropped inbound mail for ${toEmails.join(", ")}: no matching workspace`);
+          console.warn(`[Webhook] Dropped inbound mail for ${[...wanted].join(", ")}: no matching workspace`);
           res.status(200).send("OK");
           return;
         }
@@ -189,6 +195,7 @@ router.post("/ses-inbound", async (req: Request, res: Response) => {
             // so the campaign gets its own inbox — this is what a reply belongs to.
             const repliedLead = await Lead.findOne({ where: { email: fromEmail.toLowerCase() } });
 
+            const orgDefaultSite = (await Site.findOne({ where: { isDefault: true }, attributes: ["id"] }))?.id ?? null;
             for (const target of orgTargets) {
               // SNS delivers at-least-once; a redelivery must not double-file.
               const already = await InboxEmail.findOne({
@@ -219,7 +226,7 @@ router.post("/ses-inbound", async (req: Request, res: Response) => {
                 // Who it was addressed to decides the brand: mail to
                 // hello@uppercurve.in is Uppercurve's whether or not we know the
                 // sender. The replying lead's brand is the fallback.
-                siteId: target.siteId ?? repliedLead?.siteId ?? null,
+                siteId: target.siteId ?? repliedLead?.siteId ?? orgDefaultSite,
                 sentAt: parsed.date || new Date(),
               });
             }

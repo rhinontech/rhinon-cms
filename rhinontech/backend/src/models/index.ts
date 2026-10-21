@@ -6,6 +6,9 @@ import { InboxMessage } from "./InboxMessage";
 import { InboxEmail } from "./InboxEmail";
 import { Payroll } from "./Payroll";
 import { Payslip } from "./Payslip";
+import { ReimbursementClaim } from "./ReimbursementClaim";
+import { JobOpening, Candidate, Interview } from "./Hiring";
+import { CompensationRevision } from "./CompensationRevision";
 import { Task } from "./Task";
 import { Attendance } from "./Attendance";
 import { Project } from "./Project";
@@ -66,6 +69,7 @@ import { FieldDefinition } from "./FieldDefinition";
 import { TimeEntry } from "./TimeEntry";
 import { TaskActivity } from "./TaskActivity";
 import { StartupIdea } from "./StartupIdea";
+import { BlogTopic } from "./BlogTopic";
 import { Deployment } from "./Deployment";
 import { Organization } from "./Organization";
 import { DataTypes } from "sequelize";
@@ -103,6 +107,22 @@ Payslip.belongsTo(Payroll, { foreignKey: "payrollId", as: "payroll" });
 Payslip.belongsTo(User, { foreignKey: "userId", as: "employee" });
 User.hasMany(Payslip, { foreignKey: "userId", as: "payslips" });
 Payroll.belongsTo(User, { foreignKey: "processedById", as: "processedBy" });
+ReimbursementClaim.belongsTo(User, { foreignKey: "userId", as: "employee" });
+ReimbursementClaim.belongsTo(User, { foreignKey: "reviewedById", as: "reviewer" });
+ReimbursementClaim.belongsTo(Payslip, { foreignKey: "payslipId", as: "payslip" });
+
+// Salary revisions / promotions
+CompensationRevision.belongsTo(User, { foreignKey: "userId", as: "employee" });
+CompensationRevision.belongsTo(User, { foreignKey: "createdById", as: "createdBy" });
+CompensationRevision.belongsTo(Document, { foreignKey: "documentId", as: "document" });
+
+// Hiring
+JobOpening.hasMany(Candidate, { foreignKey: "openingId", as: "candidates", onDelete: "CASCADE" });
+Candidate.belongsTo(JobOpening, { foreignKey: "openingId", as: "opening" });
+JobOpening.belongsTo(User, { foreignKey: "hiringManagerId", as: "hiringManager" });
+Candidate.hasMany(Interview, { foreignKey: "candidateId", as: "interviews", onDelete: "CASCADE" });
+Interview.belongsTo(Candidate, { foreignKey: "candidateId", as: "candidate" });
+Interview.belongsTo(User, { foreignKey: "interviewerId", as: "interviewer" });
 
 // Tasks — two separate associations to User
 Task.belongsTo(User, { foreignKey: "assigneeId", as: "assignee" });
@@ -415,7 +435,8 @@ export {
   Role, Permission, RolePermission,
   User,
   InboxConversation, InboxMessage, InboxEmail,
-  Payroll, Payslip,
+  Payroll, Payslip, ReimbursementClaim,
+  JobOpening, Candidate, Interview, CompensationRevision,
   Task,
   Attendance,
   Project,
@@ -476,6 +497,7 @@ export {
   TimeEntry,
   TaskActivity,
   StartupIdea,
+  BlogTopic,
   Deployment,
 };
 

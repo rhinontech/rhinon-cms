@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { useSideNav } from "@/context/SideNavContext";
+import { alertDialog } from "@/components/ui/dialogs";
 
 interface LeaveType {
   id: string;
@@ -102,7 +103,7 @@ export function LeavePoliciesPage() {
       if (isNew) { setIsPanelOpen(false); setIsNew(false); }
       setMobileDetail(false);
     } catch (err: any) {
-      alert(err?.message || "Failed to save leave type");
+      alertDialog(err?.message || "Failed to save leave type");
     } finally {
       setSaving(false);
     }

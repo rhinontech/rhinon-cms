@@ -14,6 +14,9 @@ import { InboxMessage } from "./InboxMessage";
 import { InboxEmail } from "./InboxEmail";
 import { Payroll } from "./Payroll";
 import { Payslip } from "./Payslip";
+import { ReimbursementClaim } from "./ReimbursementClaim";
+import { JobOpening, Candidate, Interview } from "./Hiring";
+import { CompensationRevision } from "./CompensationRevision";
 import { Task } from "./Task";
 import { Subtask } from "./Subtask";
 import { TaskComment } from "./TaskComment";
@@ -72,6 +75,7 @@ import { UsageCounter } from "./UsageCounter";
 import { AuditLog } from "./AuditLog";
 import { DocsAccess } from "./DocsAccess";
 import { StartupIdea } from "./StartupIdea";
+import { BlogTopic } from "./BlogTopic";
 import { Deployment } from "./Deployment";
 import { PageView } from "./PageView";
 import { Visitor } from "./Visitor";
@@ -87,7 +91,8 @@ import { Visitor } from "./Visitor";
 export const TENANT_MODELS: ModelStatic<any>[] = [
   User, Role,
   InboxConversation, InboxMessage, InboxEmail,
-  Payroll, Payslip,
+  Payroll, Payslip, ReimbursementClaim,
+  JobOpening, Candidate, Interview, CompensationRevision,
   Task, Subtask, TaskComment, TaskTag, TaskDependency, TaskAttachment, TaskActivity, TimeEntry,
   Attendance, AttendanceRequest, AttendancePolicy,
   Project, ProjectMember, ClientRequest, Team, TeamMember, WorkflowStatus, FieldDefinition,
@@ -103,7 +108,7 @@ export const TENANT_MODELS: ModelStatic<any>[] = [
   Workflow, WorkflowEnrollment,
   Account, PipelineStage, Deal, Activity, SavedView,
   Unsubscribe, UsageCounter, AuditLog, DocsAccess,
-  StartupIdea, Deployment,
+  StartupIdea, Deployment, BlogTopic,
   PageView, Visitor,
 ];
 

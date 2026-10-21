@@ -2,6 +2,7 @@ import { Router, Response } from "express";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import multer from "multer";
+import { keepTenantContext } from "../services/tenantContext";
 import { Op } from "sequelize";
 import { User, Role, Document, MailboxAddress } from "../models";
 import type { ExitReason } from "../models/User";
@@ -352,7 +353,7 @@ router.put("/:id", authorize("employees:write"), async (req: AuthRequest, res: R
 });
 
 // Avatar upload
-router.put("/:id/avatar", authorize("employees:write"), upload.single("avatar"), async (req: AuthRequest, res: Response) => {
+router.put("/:id/avatar", authorize("employees:write"), keepTenantContext(upload.single("avatar")), async (req: AuthRequest, res: Response) => {
   const employee = await User.findByPk(req.params.id);
   if (!employee) { res.status(404).json({ message: "Employee not found" }); return; }
   if (!req.file) { res.status(400).json({ message: "No file provided" }); return; }

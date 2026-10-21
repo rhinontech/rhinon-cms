@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
-import { TbCheck, TbLoader2, TbPlus, TbChevronDown } from "react-icons/tb";
+import { TbCheck, TbLoader2, TbPlus, TbChevronDown, TbTrash } from "react-icons/tb";
 import { cn } from "@/lib/utils";
 
+import { NativeSelect } from "@/components/ui/native-select";
 interface Employee {
   id: string;
   fullName: string;
@@ -62,6 +63,10 @@ export function AdminPayrollEntry() {
   const [pfEnabled, setPfEnabled]               = useState(true);
   const [ptAmount, setPtAmount]                 = useState("200");
   const [tdsAmount, setTdsAmount]               = useState("0");
+  const [reimbursements, setReimbursements]     = useState<{ label: string; amount: string }[]>([]);
+  const reimbursementTotal = reimbursements.reduce((s, r) => s + Number(r.amount || 0), 0);
+  const setReimbursement = (i: number, patch: Partial<{ label: string; amount: string }>) =>
+    setReimbursements((prev) => prev.map((r, j) => (j === i ? { ...r, ...patch } : r)));
 
   const [saving, setSaving]   = useState(false);
   const [error, setError]     = useState("");
@@ -105,12 +110,14 @@ export function AdminPayrollEntry() {
     setSelectedId(""); setBasicSalary(""); setHra(""); setTa("");
     setMedicalAllowance(""); setOtherAllowances("");
     setPfEnabled(true); setPtAmount("200"); setTdsAmount("0");
+    setReimbursements([]);
     setError(""); setSuccess(null);
   };
 
   const submit = async () => {
     if (!selectedId) { setError("Select an employee."); return; }
     if (!basicSalary || Number(basicSalary) <= 0) { setError("Basic salary is required."); return; }
+    if (reimbursements.some((r) => !r.label.trim() || !(Number(r.amount) > 0))) { setError("Each reimbursement needs a label and an amount."); return; }
     setSaving(true);
     setError("");
 
@@ -127,6 +134,7 @@ export function AdminPayrollEntry() {
         pfEnabled,
         ptAmount:  Number(ptAmount  || 0),
         tdsAmount: Number(tdsAmount || 0),
+        reimbursements: reimbursements.map((r) => ({ label: r.label.trim(), amount: Number(r.amount) })),
       }),
     });
 
@@ -139,7 +147,7 @@ export function AdminPayrollEntry() {
     }
 
     const { gross, net } = calcAmounts({ basicSalary, hra, ta, medicalAllowance, otherAllowances, pfEnabled, ptAmount, tdsAmount });
-    setSuccess({ employeeName: data.employeeName, month, year, net });
+    setSuccess({ employeeName: data.employeeName, month, year, net: net + reimbursementTotal });
   };
 
   const amounts = calcAmounts({ basicSalary, hra, ta, medicalAllowance, otherAllowances, pfEnabled, ptAmount, tdsAmount });
@@ -187,28 +195,26 @@ export function AdminPayrollEntry() {
                   <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                     Month
                     <div className="relative">
-                      <select
+                      <NativeSelect
                         value={month}
                         onChange={(e) => setMonth(Number(e.target.value))}
                         className="w-full appearance-none border border-border rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card"
                       >
                         {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
-                      </select>
-                      <TbChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                      </NativeSelect>
                     </div>
                   </label>
 
                   <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                     Year
                     <div className="relative">
-                      <select
+                      <NativeSelect
                         value={year}
                         onChange={(e) => setYear(Number(e.target.value))}
                         className="w-full appearance-none border border-border rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card"
                       >
                         {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
-                      </select>
-                      <TbChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                      </NativeSelect>
                     </div>
                   </label>
                 </div>
@@ -216,7 +222,7 @@ export function AdminPayrollEntry() {
                 <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                   Employee
                   <div className="relative">
-                    <select
+                    <NativeSelect
                       value={selectedId}
                       onChange={(e) => handleEmployeeChange(e.target.value)}
                       className="w-full appearance-none border border-border rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card"
@@ -225,8 +231,7 @@ export function AdminPayrollEntry() {
                       {employees.map((e) => (
                         <option key={e.id} value={e.id}>{e.fullName} — {e.department}</option>
                       ))}
-                    </select>
-                    <TbChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                    </NativeSelect>
                   </div>
                   {selectedEmployee && (
                     <p className="text-xs text-muted-foreground mt-0.5">
@@ -303,6 +308,42 @@ export function AdminPayrollEntry() {
                 </div>
               </div>
 
+              {/* Reimbursements */}
+              <div className="glass-card-solid rounded-xl p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Reimbursements</p>
+                  <button
+                    onClick={() => setReimbursements((prev) => [...prev, { label: "", amount: "" }])}
+                    className="flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-300 hover:underline"
+                  >
+                    <TbPlus size={14} /> Add
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">Bills paid back to the employee (e.g. internet). Added to net pay, not taxable salary.</p>
+                {reimbursements.map((r, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <input
+                      value={r.label}
+                      onChange={(e) => { setReimbursement(i, { label: e.target.value }); setError(""); }}
+                      placeholder="Internet – Aug 2026"
+                      className="flex-1 px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <div className="relative w-36">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">₹</span>
+                      <input
+                        type="number" min={0} value={r.amount}
+                        onChange={(e) => { setReimbursement(i, { amount: e.target.value }); setError(""); }}
+                        className="w-full pl-6 pr-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="0"
+                      />
+                    </div>
+                    <button onClick={() => setReimbursements((prev) => prev.filter((_, j) => j !== i))} className="p-1.5 text-muted-foreground hover:text-red-500">
+                      <TbTrash size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
               {/* Live summary */}
               <div className="glass-card-solid rounded-xl p-5">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">Summary</p>
@@ -323,9 +364,15 @@ export function AdminPayrollEntry() {
                     <span className="text-muted-foreground">TDS</span>
                     <span className={amounts.tds > 0 ? "text-red-500 dark:text-red-400" : "text-muted-foreground"}>−{INR(amounts.tds)}</span>
                   </div>
+                  {reimbursementTotal > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Reimbursements</span>
+                      <span className="text-blue-600 dark:text-blue-300">+{INR(reimbursementTotal)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between border-t pt-3 mt-1">
                     <span className="font-semibold text-foreground">Net Pay</span>
-                    <span className="text-lg font-bold text-green-700 dark:text-green-300">{INR(amounts.net)}</span>
+                    <span className="text-lg font-bold text-green-700 dark:text-green-300">{INR(amounts.net + reimbursementTotal)}</span>
                   </div>
                 </div>
               </div>

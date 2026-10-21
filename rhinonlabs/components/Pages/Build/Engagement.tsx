@@ -72,7 +72,7 @@ export function Engagement() {
                 >
                   {p.icon}
                 </div>
-                <span className="text-xs font-bold tracking-[0.2em] text-white/25">{p.step}</span>
+                <span className="text-xs font-bold tracking-[0.2em] text-white/55">{p.step}</span>
               </div>
               <h3 className="text-lg font-semibold">{p.title}</h3>
               <p className="text-sm opacity-60 leading-relaxed">{p.body}</p>

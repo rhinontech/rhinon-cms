@@ -5,6 +5,7 @@ import { PRIORITIES, STATUSES } from "./constants";
 import { DatePicker } from "@/components/ui/date-picker";
 import type { ApiTask, PersonOption, ProjectOption, TaskFormState } from "./types";
 
+import { NativeSelect } from "@/components/ui/native-select";
 function Field({
   label, value, onChange, required, type = "text", ...rest
 }: {
@@ -41,13 +42,13 @@ function SelectField({
   return (
     <label className={className ? `block ${className}` : "block"}>
       <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{label}</span>
-      <select
+      <NativeSelect
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
       >
         {children}
-      </select>
+      </NativeSelect>
     </label>
   );
 }

@@ -104,3 +104,18 @@ export function enterTenantContext(
 ): void {
   runForOrg(organizationId, next, { userId, label });
 }
+
+/**
+ * Wraps a callback-style middleware (multer) so `next` runs back inside the
+ * caller's tenant context. Busboy's stream callbacks fire outside the request's
+ * AsyncLocalStorage, so without this anything created after an upload is saved
+ * with organizationId = NULL and then hidden by tenant scoping.
+ */
+export function keepTenantContext<Req, Res>(
+  mw: (req: Req, res: Res, next: (err?: unknown) => void) => void
+): (req: Req, res: Res, next: (err?: unknown) => void) => void {
+  return (req, res, next) => {
+    const ctx = storage.getStore();
+    mw(req, res, (err?: unknown) => (ctx ? storage.run(ctx, () => next(err)) : next(err)));
+  };
+}

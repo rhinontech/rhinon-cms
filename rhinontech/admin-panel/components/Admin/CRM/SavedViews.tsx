@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { TbBookmark, TbChevronDown, TbTrash, TbCheck, TbPlus } from "react-icons/tb";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
+import { confirmDialog, alertDialog } from "@/components/ui/dialogs";
 
 export interface SavedView {
   id: string;
@@ -78,13 +79,13 @@ export function SavedViews({
   };
 
   const remove = async (view: SavedView) => {
-    if (!confirm(`Delete the "${view.name}" view?`)) return;
+    if (!(await confirmDialog(`Delete the "${view.name}" view?`))) return;
     try {
       await apiFetch(`/crm/views/${view.id}`, { method: "DELETE" });
       if (activeViewId === view.id) onApply(null);
       await load();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Delete failed");
+      alertDialog(err instanceof Error ? err.message : "Delete failed");
     }
   };
 

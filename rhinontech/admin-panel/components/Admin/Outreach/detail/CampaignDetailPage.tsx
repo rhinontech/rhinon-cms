@@ -18,6 +18,7 @@ import { SettingsTab } from "./SettingsTab";
 import { EnrollLeadsSheet } from "./EnrollLeadsSheet";
 import type { Campaign, CampaignLead, CampaignStats } from "../shared/types";
 import { useModuleBase } from "@/lib/sites";
+import Link from "next/link";
 
 type TabKey = "setup" | "leads" | "inbox" | "activity" | "settings";
 
@@ -182,6 +183,11 @@ export function CampaignDetailPage({ id }: { id: string }) {
         onGoToLeads={() => setActiveTab("leads")}
         onGoToSetup={() => setActiveTab("setup")}
       />
+      <div className="flex justify-end px-4 pt-1 text-[11px]">
+        <Link href={`${base.replace(/\/outreach(\/|$)/, "/crm$1")}?campaignId=${campaign.id}`} className="text-muted-foreground hover:text-blue-600 hover:underline">
+          View this campaign&apos;s leads in CRM →
+        </Link>
+      </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 sm:gap-4 overflow-auto p-3 sm:p-4">
         <FunnelStrip funnel={stats?.funnel ?? null} leads={leads} />

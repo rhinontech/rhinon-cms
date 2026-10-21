@@ -10,16 +10,16 @@ export default function Offerings({ course, upcomingCount }: { course: Course; u
       href: "/events",
       icon: CalendarDays,
       eyebrow: "Free · live",
-      title: "Live events",
-      body: "Workshops, micro-certificates and one-day builds — online and in Bengaluru. Every one of them free.",
-      meta: upcomingCount ? `${upcomingCount} upcoming` : "New dates soon",
+      title: "FREE Live Certification Workshop",
+      body: "Learn Agentic AI & Building AI Agent Live Hands-on with FREE Certifications.",
+      // meta: upcomingCount ? `${upcomingCount} upcoming` : "New dates soon",
     },
     {
       href: "/community",
       icon: Users,
       eyebrow: "Peers",
       title: "Community",
-      body: "Ambitious people learning in public — recordings, prompt libraries and build notes from every session.",
+      body: "Join 10,000+ Members of WhatsApp Community of Ambitious People.",
       meta: "Join free",
     },
     {
@@ -27,7 +27,7 @@ export default function Offerings({ course, upcomingCount }: { course: Course; u
       icon: Briefcase,
       eyebrow: "Careers",
       title: "Jobs",
-      body: "Roles for people who build with AI, curated for the skills you are learning here.",
+      body: "Find Your Next Opportunity and Take the Next Step in Your Career.",
       meta: "Browse roles",
     },
   ];
@@ -39,10 +39,10 @@ export default function Offerings({ course, upcomingCount }: { course: Course; u
           eyebrow="What we offer"
           title={
             <>
-              Where curiosity meets <GradientText>capability.</GradientText>
+              Where Curiosity meets <GradientText>Capability.</GradientText>
             </>
           }
-          description="One place to learn the skill, prove it with real work, and turn it into your next role."
+          description="Learn the Skill Live, prove it with real work & Walk into your next role with something to show."
         />
 
         <div className="mt-14 grid lg:grid-cols-12 gap-4 sm:gap-5">

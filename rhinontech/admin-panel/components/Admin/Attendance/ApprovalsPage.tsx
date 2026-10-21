@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { useSideNav } from "@/context/SideNavContext";
+import { alertDialog } from "@/components/ui/dialogs";
 
 interface Request {
   id: string;
@@ -67,7 +68,7 @@ export function ApprovalsPage() {
       setRequests(prev => prev.filter(r => r.id !== id));
       setSelectedRequest(null);
     } catch (err) {
-      alert("Action failed");
+      alertDialog("Action failed");
     } finally {
       setProcessing(null);
     }

@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { DatePicker } from "@/components/ui/date-picker";
 import type { FieldDefinition, PersonOption } from "./types";
 
+import { NativeSelect } from "@/components/ui/native-select";
 /** Commits on blur or Enter, reverts on Escape — the spreadsheet convention. */
 export function TextCell({
   value, onCommit, className, placeholder, type = "text",
@@ -123,14 +124,14 @@ export function SelectCell({
   placeholder?: string;
 }) {
   return (
-    <select
+    <NativeSelect
       value={value}
       onChange={(e) => onCommit(e.target.value)}
       className="w-full min-w-0 truncate rounded border border-transparent bg-transparent px-1 py-1 text-sm outline-none hover:border-border focus:border-blue-500 focus:bg-card"
     >
       <option value="">{placeholder}</option>
       {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-    </select>
+    </NativeSelect>
   );
 }
 

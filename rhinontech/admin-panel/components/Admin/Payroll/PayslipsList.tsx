@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { TbFileInvoice, TbDownload } from "react-icons/tb";
+import { usePathname, useRouter } from "next/navigation";
+import { TbFileInvoice, TbDownload, TbEye, TbCircleCheck, TbUserMinus } from "react-icons/tb";
+import { toast } from "sonner";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { usePermissions } from "@/context/PermissionsContext";
+import { confirmDialog } from "@/components/ui/dialogs";
 
 interface Payslip {
   id: string;
@@ -13,8 +15,9 @@ interface Payslip {
   grossPay: number;
   totalDeductions: number;
   status: string;
+  type?: "regular" | "fnf";
   payroll: { month: number; year: number; status: string };
-  employee?: { fullName: string; companyEmail: string; department: string };
+  employee?: { fullName: string; companyEmail: string; department: string; exitDate?: string | null };
 }
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -26,6 +29,55 @@ export function PayslipsList() {
   const roleSlug = pathname.split("/")[1];
   const { has } = usePermissions();
   const isAdminView = has("payroll:write");
+  const [payingId, setPayingId] = useState<string | null>(null);
+  const router = useRouter();
+
+  // Leaver whose last working day falls in/before this payslip's month → pay via F&F instead
+  const isLeaverSlip = (slip: Payslip) => {
+    if (!slip.employee?.exitDate || slip.status === "paid" || slip.type === "fnf") return false;
+    const { month, year } = slip.payroll;
+    const end = `${year}-${String(month).padStart(2, "0")}-${String(new Date(year, month, 0).getDate()).padStart(2, "0")}`;
+    return slip.employee.exitDate <= end;
+  };
+
+  const moveToSettlement = async (slip: Payslip) => {
+    if (!(await confirmDialog(`Remove ${slip.employee?.fullName}'s payslip from this payroll and run a final settlement instead?`))) return;
+    const token = document.cookie.split("; ").find((row) => row.startsWith("authToken="))?.split("=")[1];
+    setPayingId(slip.id);
+    try {
+      const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/payroll/admin/payslips/${slip.id}/move-to-settlement`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.message || "Failed to move payslip");
+      toast.success(data.message);
+      router.push(`/${roleSlug}/payroll/settlements`);
+    } catch (e) {
+      toast.error((e as Error).message);
+      setPayingId(null);
+    }
+  };
+
+  const markPaid = async (slip: Payslip) => {
+    if (!(await confirmDialog(`Mark ${slip.employee?.fullName ?? "this"} payslip as paid? The employee will be emailed.`))) return;
+    const token = document.cookie.split("; ").find((row) => row.startsWith("authToken="))?.split("=")[1];
+    setPayingId(slip.id);
+    try {
+      const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/payroll/admin/payslips/${slip.id}/pay`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.message || "Failed to mark paid");
+      setPayslips((prev) => prev.map((p) => (p.id === slip.id ? { ...p, status: "paid" } : p)));
+      toast.success("Payslip marked as paid");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setPayingId(null);
+    }
+  };
 
   useEffect(() => {
     const token = document.cookie
@@ -75,11 +127,31 @@ export function PayslipsList() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${slip.payroll.status === "paid" ? "bg-green-100 dark:bg-green-400/15 text-green-700 dark:text-green-300" : "bg-yellow-100 dark:bg-yellow-400/15 text-yellow-700 dark:text-yellow-300"}`}>
-                    {slip.payroll.status}
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${slip.status === "paid" ? "bg-green-100 dark:bg-green-400/15 text-green-700 dark:text-green-300" : "bg-yellow-100 dark:bg-yellow-400/15 text-yellow-700 dark:text-yellow-300"}`}>
+                    {slip.status}
                   </span>
+                  {isAdminView && isLeaverSlip(slip) ? (
+                    <button
+                      onClick={() => moveToSettlement(slip)}
+                      disabled={payingId === slip.id}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-400/30 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-400/10 transition-colors disabled:opacity-50"
+                    >
+                      <TbUserMinus size={14} /> {payingId === slip.id ? "Moving…" : "Run Settlement"}
+                    </button>
+                  ) : isAdminView && slip.status !== "paid" && (
+                    <button
+                      onClick={() => markPaid(slip)}
+                      disabled={payingId === slip.id}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-700 dark:text-green-300 border border-green-300 dark:border-green-400/30 rounded-lg hover:bg-green-50 dark:hover:bg-green-400/10 transition-colors disabled:opacity-50"
+                    >
+                      <TbCircleCheck size={14} /> {payingId === slip.id ? "Marking…" : "Mark Paid"}
+                    </button>
+                  )}
                   <Link href={`/${roleSlug}/payroll/payslips/${slip.id}`} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-foreground/85 border border-border rounded-lg hover:bg-muted/40 transition-colors">
-                    <TbDownload size={14} /> View
+                    <TbEye size={14} /> View
+                  </Link>
+                  <Link href={`/${roleSlug}/payroll/payslips/${slip.id}?download=1`} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-foreground/85 border border-border rounded-lg hover:bg-muted/40 transition-colors">
+                    <TbDownload size={14} /> Download
                   </Link>
                 </div>
               </div>

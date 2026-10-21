@@ -18,6 +18,8 @@ import {
   TbX,
 } from "react-icons/tb";
 
+import { NativeSelect } from "@/components/ui/native-select";
+import { confirmDialog } from "@/components/ui/dialogs";
 export interface TeamMember {
   id: string;
   userId: string;
@@ -166,7 +168,7 @@ export function TeamsPage() {
 
   const deleteTeam = async () => {
     if (!selected) return;
-    if (!window.confirm(`Delete the team "${selected.name}"? Its members lose access to any work scoped to it.`)) return;
+    if (!(await confirmDialog(`Delete the team "${selected.name}"? Its members lose access to any work scoped to it.`))) return;
     try {
       await apiFetch(`/teams/${selected.id}`, { method: "DELETE" });
       setSelected(null);
@@ -370,14 +372,14 @@ export function TeamsPage() {
                             <TbCrown size={13} className="ml-1.5 inline text-amber-500 dark:text-amber-400" title="Team owner" />
                           )}
                         </span>
-                        <select
+                        <NativeSelect
                           value={member.role}
                           onChange={(event) => setMemberRole(member.userId, event.target.value as "owner" | "member")}
                           className="rounded-md border border-border bg-card px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="member">Member</option>
                           <option value="owner">Owner</option>
-                        </select>
+                        </NativeSelect>
                         <button
                           onClick={() => removeMember(member.userId)}
                           className="rounded-md p-1 text-muted-foreground hover:bg-red-50 dark:hover:bg-red-400/10 hover:text-red-600 dark:hover:text-red-300"
@@ -392,7 +394,7 @@ export function TeamsPage() {
 
                 <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                   Add someone
-                  <select
+                  <NativeSelect
                     value={addingMember}
                     onChange={(event) => addMember(event.target.value)}
                     className="rounded-lg border border-border bg-card px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
@@ -401,7 +403,7 @@ export function TeamsPage() {
                     {addablePeople.map((person) => (
                       <option key={person.id} value={person.id}>{person.fullName}</option>
                     ))}
-                  </select>
+                  </NativeSelect>
                 </label>
               </div>
             ) : (

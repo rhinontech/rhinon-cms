@@ -13,6 +13,8 @@ import { RelatedTasks } from "./RelatedTasks";
 import { StageDot, TBtn, formatDate, formatMoney, relativeTime } from "./ui";
 import { useModuleBase } from "@/lib/sites";
 
+import { NativeSelect } from "@/components/ui/native-select";
+import { confirmDialog } from "@/components/ui/dialogs";
 const INPUT =
   "w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40";
 
@@ -135,7 +137,7 @@ export function DealDrawer({
   };
 
   const remove = async () => {
-    if (!confirm("Delete this deal? Its activity history goes with it.")) return;
+    if (!(await confirmDialog("Delete this deal? Its activity history goes with it."))) return;
     try {
       await apiFetch(`/deals/${dealId}`, { method: "DELETE" });
       onChanged();
@@ -281,17 +283,17 @@ export function DealDrawer({
                   <input type="number" min={0} value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} className={cn(INPUT, "tabular-nums")} />
                 </Field>
                 <Field label="Currency">
-                  <select value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className={INPUT}>
+                  <NativeSelect value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className={INPUT}>
                     {["INR", "USD", "EUR", "GBP"].map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
+                  </NativeSelect>
                 </Field>
               </div>
 
               <div className="grid grid-cols-2 gap-2.5">
                 <Field label="Stage">
-                  <select value={form.stageId} onChange={(e) => setForm({ ...form, stageId: e.target.value })} className={INPUT}>
+                  <NativeSelect value={form.stageId} onChange={(e) => setForm({ ...form, stageId: e.target.value })} className={INPUT}>
                     {stages.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  </select>
+                  </NativeSelect>
                 </Field>
                 <Field label="Expected close">
                   <input type="date" value={form.expectedCloseDate} onChange={(e) => setForm({ ...form, expectedCloseDate: e.target.value })} className={INPUT} />
@@ -299,10 +301,10 @@ export function DealDrawer({
               </div>
 
               <Field label="Owner">
-                <select value={form.ownerId} onChange={(e) => setForm({ ...form, ownerId: e.target.value })} className={INPUT}>
+                <NativeSelect value={form.ownerId} onChange={(e) => setForm({ ...form, ownerId: e.target.value })} className={INPUT}>
                   <option value="">Unassigned</option>
                   {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}
-                </select>
+                </NativeSelect>
               </Field>
 
               <Field label="Notes">

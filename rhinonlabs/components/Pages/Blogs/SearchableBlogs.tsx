@@ -54,14 +54,15 @@ export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) 
   const displayedAllBlogs = searchQuery ? filteredAll : initialBlogs.slice(2);
 
   return (
-    <main className="blog-theme min-h-screen bg-background relative selection:bg-primary/50 flex flex-col pt-32 pb-24 overflow-hidden">
+    <div className="blog-theme min-h-screen bg-background relative selection:bg-primary/50 flex flex-col pt-32 pb-24 overflow-hidden">
       {/* Background Image with Mask matching Home Page theme */}
       <div className="absolute inset-0 top-64 max-sm:top-52 -z-10 opacity-30 pointer-events-none">
         <div className="mask-[linear-gradient(to_bottom,transparent,white_30%,white_60%,transparent)] mask-mode:luminance relative w-full h-full">
-          <img
-            src="/images/background/background.jpg"
-            className="w-full h-full object-cover"
-            alt="Background Grid Texture"
+          <div
+            aria-hidden="true"
+            // Decorative only: a CSS background, not an <img>, so search engines
+            // never pick it as the page's thumbnail (they did, in Google results).
+            className="site-bg absolute inset-0 bg-cover bg-center"
           />
         </div>
       </div>
@@ -85,7 +86,7 @@ export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) 
           </motion.div>
           <motion.h1
             variants={fadeUpVariant}
-            className="text-[42px] sm:text-5xl md:text-7xl font-sans font-normal leading-[1.1] tracking-[-0.02em] text-transparent bg-clip-text bg-linear-to-b from-white/90 to-white/50 mb-6 py-2"
+            className="text-[42px] sm:text-5xl md:text-7xl font-sans font-normal leading-[1.1] tracking-[-0.02em] text-transparent bg-clip-text bg-linear-to-b from-white to-white/80 mb-6 py-2"
           >
             The <span className="font-serif italic text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">Founder's</span> Journal
           </motion.h1>
@@ -136,7 +137,7 @@ export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) 
                     )}
                   </div>
                   <div className="p-6 flex flex-col flex-grow">
-                    <div className="flex items-center gap-4 text-white/40 text-[10px] font-bold uppercase tracking-widest mb-3">
+                    <div className="flex items-center gap-4 text-white/60 text-[10px] font-bold uppercase tracking-widest mb-3">
                       <span>
                         {format(new Date(blog.publishedAt), "MMM d, yyyy")}
                       </span>
@@ -152,14 +153,14 @@ export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) 
 
                     <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <img
+                        <img loading="lazy" decoding="async"
                           src={blog.authorAvatar || "https://github.com/prabhatpk.png"}
                           alt={blog.authorName}
                           className="w-8 h-8 rounded-full border border-white/10 object-cover"
                         />
                         <div>
                           <p className="text-[10px] font-bold text-white uppercase tracking-wider">{blog.authorName}</p>
-                          <p className="text-[9px] text-white/40 uppercase tracking-wider">{blog.authorRole || "Author"}</p>
+                          <p className="text-[9px] text-white/60 uppercase tracking-wider">{blog.authorRole || "Author"}</p>
                         </div>
                       </div>
                       <div className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
@@ -182,13 +183,13 @@ export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) 
 
             {/* Search Input */}
             <div className="relative w-full max-w-sm">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
               <input
                 type="text"
                 placeholder="Search articles..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 border border-white/10 rounded-xl text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-colors bg-white/5"
+                className="w-full pl-10 pr-4 py-2.5 border border-white/10 rounded-xl text-sm text-white placeholder:text-white/60 focus:outline-none focus:border-white/20 transition-colors bg-white/5"
               />
             </div>
           </div>
@@ -212,7 +213,7 @@ export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) 
                   </div>
                   <div className="p-6 flex flex-col flex-1">
                     {blog.category && (
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-white/45 mb-2">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-white/60 mb-2">
                         {blog.category}
                       </span>
                     )}
@@ -223,14 +224,14 @@ export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) 
 
                     <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
-                        <img
+                        <img loading="lazy" decoding="async"
                           src={blog.authorAvatar || "https://github.com/prabhatpk.png"}
                           alt={blog.authorName}
                           className="w-6 h-6 rounded-full border border-white/10 object-cover"
                         />
                         <span className="text-[10px] font-bold text-white/70 uppercase tracking-wider">{blog.authorName}</span>
                       </div>
-                      <span className="text-[10px] text-white/45">{format(new Date(blog.publishedAt), "MMM d, yyyy")}</span>
+                      <span className="text-[10px] text-white/60">{format(new Date(blog.publishedAt), "MMM d, yyyy")}</span>
                     </div>
                   </div>
                 </Link>
@@ -238,7 +239,7 @@ export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) 
             </div>
           ) : (
             <div className="py-20 text-center border border-dashed border-white/10 rounded-2xl">
-              <p className="text-white/45">No articles found matching "{searchQuery}".</p>
+              <p className="text-white/60">No articles found matching "{searchQuery}".</p>
             </div>
           )}
         </div>
@@ -259,6 +260,6 @@ export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) 
         }}
       />
       <SchedulerModal isOpen={isSchedulerOpen} onClose={() => setIsSchedulerOpen(false)} />
-    </main>
+    </div>
   );
 }

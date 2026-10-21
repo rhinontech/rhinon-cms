@@ -10,6 +10,7 @@ import { LetterEnvelope } from "@/components/Admin/People/LetterEnvelope";
 import { RewriteToolbar } from "@/components/Admin/People/RewriteToolbar";
 import { NewTemplateDialog } from "@/components/Admin/People/NewTemplateDialog";
 import type { LetterBlock, LetterTemplate, LetterTemplateKey } from "@/types/letterBlocks";
+import { confirmDialog, alertDialog } from "@/components/ui/dialogs";
 
 type TemplateSummary = Pick<LetterTemplate, "key" | "category" | "title" | "version" | "updatedAt">;
 
@@ -39,13 +40,13 @@ export function SettingsLetterTemplates() {
   const ndaTemplates = summaries.filter((s) => s.category === "nda");
 
   const removeTemplate = async (key: string) => {
-    if (!confirm("Delete this template? This cannot be undone.")) return;
+    if (!(await confirmDialog("Delete this template? This cannot be undone."))) return;
     try {
       await apiFetch(`/letter-templates/${key}`, { method: "DELETE" });
       if (selectedKey === key) setSelectedKey(null);
       await load();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Could not delete this template.");
+      alertDialog(err instanceof Error ? err.message : "Could not delete this template.");
     }
   };
 

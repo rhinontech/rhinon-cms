@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, ShieldCheck, Sparkles } from "lucide-react";
 import type { CaseStudy } from "@/lib/api";
 import { MarkdownRenderer } from "@/components/Common/Markdown/MarkdownRenderer";
@@ -8,7 +9,8 @@ import { BlogSideRail } from "@/components/Common/Blog/BlogSideRail";
 import { extractToc } from "@/components/Common/Blog/blocks";
 import StickyCallButton from "@/components/Common/CTA/StickyCallButton";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://rhinonlabs.com";
+import { SCHEMA_IDS } from "@/lib/site";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinonlabs.com";
 
 export default function CaseStudyDetail({ caseStudy }: { caseStudy: CaseStudy }) {
   const category = caseStudy.category || caseStudy.industry || "Case Study";
@@ -21,13 +23,18 @@ export default function CaseStudyDetail({ caseStudy }: { caseStudy: CaseStudy })
 
   const caseStudySchema = {
     "@context": "https://schema.org",
-    "@type": "CreativeWork",
+    // Article (not generic CreativeWork) so the page is eligible for article rich results.
+    "@type": "Article",
+    headline: caseStudy.title,
     name: caseStudy.title,
     description: caseStudy.description,
     ...(cover ? { image: [cover] } : {}),
     ...(caseStudy.date ? { datePublished: caseStudy.date } : {}),
+    author: { "@type": "Organization", "@id": SCHEMA_IDS.organization, name: "Rhinon Labs", url: SITE_URL },
+    publisher: { "@id": SCHEMA_IDS.organization },
     creator: {
       "@type": "Organization",
+      "@id": SCHEMA_IDS.organization,
       name: "Rhinon Labs",
       url: SITE_URL,
     },
@@ -37,9 +44,20 @@ export default function CaseStudyDetail({ caseStudy }: { caseStudy: CaseStudy })
     },
   };
 
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+      { "@type": "ListItem", position: 2, name: "Case Studies", item: `${SITE_URL}/case-studies` },
+      { "@type": "ListItem", position: 3, name: caseStudy.title, item: pageUrl },
+    ],
+  };
+
   return (
     <div className="relative min-h-screen bg-background selection:bg-white/20 overflow-x-clip">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(caseStudySchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
 
       <div className="max-w-[1400px] mx-auto px-16 pt-28 pb-24 relative">
         {/* Breadcrumb */}
@@ -121,8 +139,15 @@ export default function CaseStudyDetail({ caseStudy }: { caseStudy: CaseStudy })
 
             {/* Cover image */}
             {cover && (
-              <div className="mb-14 aspect-video w-full overflow-hidden rounded-3xl border border-white/10">
-                <img src={cover} alt={caseStudy.title} className="h-full w-full object-cover" />
+              <div className="relative mb-14 aspect-video w-full overflow-hidden rounded-3xl border border-white/10">
+                <Image
+                  src={cover}
+                  alt={caseStudy.title}
+                  fill
+                  priority
+                  sizes="(min-width: 1280px) 760px, (min-width: 1024px) 60vw, 100vw"
+                  className="object-cover"
+                />
               </div>
             )}
 

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { apiFetch } from "@/lib/api";
 import type { LetterTemplate } from "@/types/letterBlocks";
 
+import { NativeSelect } from "@/components/ui/native-select";
 // Shared "create a new offer letter template" dialog — used from both the
 // Settings template editor and the create-member form's template picker
 // (POST /letter-templates always creates category "offer_letter"; NDA has no
@@ -52,7 +53,7 @@ export function NewTemplateDialog({
           className="mb-3 w-full rounded-md border border-border p-2 text-sm focus:outline-none focus:ring-2 focus:ring-border"
         />
         <label className="mb-1 block text-[11px] font-medium text-muted-foreground">Start from</label>
-        <select
+        <NativeSelect
           value={cloneFromKey}
           onChange={(e) => setCloneFromKey(e.target.value)}
           className="mb-4 w-full rounded-md border border-border p-2 text-sm focus:outline-none focus:ring-2 focus:ring-border"
@@ -63,7 +64,7 @@ export function NewTemplateDialog({
               Duplicate &quot;{s.title}&quot;
             </option>
           ))}
-        </select>
+        </NativeSelect>
         {error && <p className="mb-3 text-[11px] text-red-600 dark:text-red-300">{error}</p>}
         <div className="flex justify-end gap-2">
           <button type="button" onClick={onClose} className="rounded-md px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-muted">

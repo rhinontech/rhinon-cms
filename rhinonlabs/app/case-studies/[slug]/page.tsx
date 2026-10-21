@@ -5,7 +5,7 @@ import { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://rhinonlabs.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinonlabs.com";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const ogImage = cs.image || cs.images?.[0] || `${SITE_URL}/og-image.jpg`;
   return {
-    title: `${cs.title} | Rhinon Labs`,
+    title: cs.title,
     description: cs.description,
     alternates: { canonical: `${SITE_URL}/case-studies/${cs.slug}` },
     openGraph: {

@@ -56,12 +56,30 @@ export function GradientText({ children }: { children: ReactNode }) {
 }
 
 /** Solid blue call to action, matching the events pages. */
-export function PrimaryCta({ href, children, className = "" }: { href: string; children: ReactNode; className?: string }) {
+export function PrimaryCta({
+  href,
+  onClick,
+  children,
+  className = "",
+}: {
+  href?: string;
+  onClick?: () => void;
+  children: ReactNode;
+  className?: string;
+}) {
+  const commonClasses = `group inline-flex items-center justify-center gap-2 bg-[#0052FF] hover:bg-[#0043CC] text-white font-bold text-xs sm:text-[13px] tracking-wider uppercase px-7 py-4 rounded-[4px] shadow-[0_14px_30px_-12px_rgba(0,82,255,0.75)] transition-all active:scale-[0.98] cursor-pointer ${className}`;
+
+  if (onClick || !href) {
+    return (
+      <button type="button" onClick={onClick} className={commonClasses}>
+        {children}
+        <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+      </button>
+    );
+  }
+
   return (
-    <Link
-      href={href}
-      className={`group inline-flex items-center justify-center gap-2 bg-[#0052FF] hover:bg-[#0043CC] text-white font-bold text-xs sm:text-[13px] tracking-wider uppercase px-7 py-4 rounded-[4px] shadow-[0_14px_30px_-12px_rgba(0,82,255,0.75)] transition-all active:scale-[0.98] ${className}`}
-    >
+    <Link href={href} className={commonClasses}>
       {children}
       <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
     </Link>

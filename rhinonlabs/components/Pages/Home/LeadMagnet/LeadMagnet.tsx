@@ -73,7 +73,7 @@ export function LeadMagnet() {
                                     ))}
                                 </div>
                                 <div className="mt-4 pt-6 border-t border-white/5 flex items-center justify-between">
-                                    <div className="text-xs text-white/30 uppercase tracking-widest">Efficiency Gain</div>
+                                    <div className="text-xs text-white/60 uppercase tracking-widest">Efficiency Gain</div>
                                     <div className="text-xl font-bold font-serif italic text-primary">+82%</div>
                                 </div>
                             </div>

@@ -7,6 +7,7 @@ import { apiFetch } from "@/lib/api";
 import { PRIORITIES, STATUSES } from "./constants";
 import type { PersonOption, TaskPriority, TaskStatus } from "./types";
 
+import { NativeSelect } from "@/components/ui/native-select";
 /**
  * Bulk edit for the current list selection.
  *
@@ -60,7 +61,7 @@ export function TaskBulkBar({
     <div className="flex flex-wrap items-center gap-2 border-b bg-blue-50/70 dark:bg-blue-400/10 px-3 py-2 sm:px-4">
       <span className="text-xs font-semibold text-blue-900 dark:text-blue-200">{ids.length} selected</span>
 
-      <select
+      <NativeSelect
         value={status}
         onChange={(e) => { const v = e.target.value as TaskStatus; setStatus(v); if (v) run({ status: v }, "Moved"); }}
         className={selectClass}
@@ -68,9 +69,9 @@ export function TaskBulkBar({
       >
         <option value="">Set status…</option>
         {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-      </select>
+      </NativeSelect>
 
-      <select
+      <NativeSelect
         value={assignee}
         onChange={(e) => { const v = e.target.value; setAssignee(v); if (v) run({ assigneeId: v === "__none" ? null : v }, "Reassigned"); }}
         className={selectClass}
@@ -79,9 +80,9 @@ export function TaskBulkBar({
         <option value="">Assign to…</option>
         <option value="__none">Unassigned</option>
         {people.map((p) => <option key={p.id} value={p.id}>{p.fullName}</option>)}
-      </select>
+      </NativeSelect>
 
-      <select
+      <NativeSelect
         value={priority}
         onChange={(e) => { const v = e.target.value as TaskPriority; setPriority(v); if (v) run({ priority: v }, "Updated"); }}
         className={selectClass}
@@ -89,7 +90,7 @@ export function TaskBulkBar({
       >
         <option value="">Set priority…</option>
         {PRIORITIES.map((p) => <option key={p} value={p}>{p}</option>)}
-      </select>
+      </NativeSelect>
 
       <button onClick={remove} disabled={busy} className="rounded-md bg-red-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50">
         Delete

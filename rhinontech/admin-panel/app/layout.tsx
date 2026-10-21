@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
+import { DialogHost } from "@/components/ui/dialogs";
 import { ThemeProvider } from "@/components/Common/ThemeProvider/ThemeProvider";
 import "./globals.css";
 
@@ -40,6 +41,7 @@ export default function RootLayout({
         >
           {children}
           <Toaster position="bottom-right" richColors />
+          <DialogHost />
         </ThemeProvider>
       </body>
     </html>

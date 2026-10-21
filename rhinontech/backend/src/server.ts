@@ -21,6 +21,7 @@ import { refreshSendingDomains } from "./services/siteSender";
 import { dispatchDueEventEmails } from "./services/eventReminderJob";
 import { purgeDueWorkspaces } from "./services/workspaceLifecycle";
 import { beat } from "./services/heartbeat";
+import { applyDueRevisions } from "./services/compensationRevisions";
 
 async function autoClockOut() {
   const now = new Date();
@@ -200,6 +201,15 @@ function listen() {
         await runAsSystem("cron:purge-workspaces", purgeDueWorkspaces);
       } catch (err: any) {
         console.error("[Cron] Workspace purge failed:", err.message);
+      }
+    });
+
+    // Salary revisions / promotions whose effective date has arrived
+    cron.schedule("10 0 * * *", async () => {
+      try {
+        await runAsSystem("cron:revisions", applyDueRevisions);
+      } catch (err: any) {
+        console.error("[Cron] Revisions apply failed:", err.message);
       }
     }, { timezone: "Asia/Kolkata" });
 

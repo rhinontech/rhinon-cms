@@ -275,7 +275,15 @@ export function BlogEditorPage({ id, resource = "blogs" }: { id?: string; resour
 
         <div className="flex shrink-0 items-center gap-2">
           <button
-            onClick={() => setPreviewOpen(true)}
+            // Saved blogs open the full site-identical preview in a new tab (it
+            // shows the last saved version). Unsaved posts and events keep the
+            // quick in-page preview.
+            onClick={() =>
+              id && resource === "blogs"
+                ? window.open(`${pathname.replace(/\/$/, "")}/preview`, "_blank", "noopener")
+                : setPreviewOpen(true)
+            }
+            title={id && resource === "blogs" ? "Opens the saved version in a new tab — save first to see your latest edits" : undefined}
             className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted"
           >
             <TbEye size={14} /> Preview
@@ -456,7 +464,11 @@ export function BlogEditorPage({ id, resource = "blogs" }: { id?: string; resour
             </SettingsCard>
 
             <SettingsCard title="Thumbnail">
-              <ContentImageInput value={coverImage} onChange={setCoverImage} />
+              <ContentImageInput
+                value={coverImage}
+                onChange={setCoverImage}
+                aiPrompt={`Cover illustration for an article titled "${title || "untitled"}"`}
+              />
             </SettingsCard>
 
             <SettingsCard title="Author">

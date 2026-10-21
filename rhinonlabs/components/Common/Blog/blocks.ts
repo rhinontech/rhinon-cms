@@ -96,3 +96,24 @@ export function extractYouTubeId(url: string): string | null {
   );
   return m ? m[1] : null;
 }
+
+/** Hosts whose images next.config.ts allows through the image optimizer. */
+const OPTIMIZABLE_IMAGE = /^https:\/\/rhinontech-assets\.s3\.ap-south-1\.amazonaws\.com\/content\//;
+const ARTICLE_IMAGE_WIDTHS = [640, 828, 1200];
+
+/**
+ * Article images are raw <img> tags inside TipTap HTML, so they skip next/image:
+ * full-size S3 JPEGs (~400 KB each), fetched eagerly, competing with the cover
+ * for bandwidth. Route them through the optimizer (resized AVIF/WebP, cached)
+ * and lazy-load them. Images from other hosts are only made lazy.
+ */
+export function optimizeArticleImages(html: string): string {
+  return html.replace(/<img\b([^>]*?)\bsrc="([^"]+)"([^>]*)>/gi, (whole, pre: string, src: string, post: string) => {
+    const attrs = `${pre}${post}`.replace(/\s(loading|decoding|srcset|sizes)="[^"]*"/gi, "");
+    const lazy = ' loading="lazy" decoding="async"';
+    if (!OPTIMIZABLE_IMAGE.test(src)) return `<img${attrs} src="${src}"${lazy}>`;
+    const at = (w: number) => `/_next/image?url=${encodeURIComponent(src)}&w=${w}&q=75`;
+    const srcset = ARTICLE_IMAGE_WIDTHS.map((w) => `${at(w)} ${w}w`).join(", ");
+    return `<img${attrs} src="${at(828)}" srcset="${srcset}" sizes="(min-width: 1280px) 760px, (min-width: 1024px) 60vw, 100vw"${lazy}>`;
+  });
+}

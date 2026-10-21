@@ -92,7 +92,7 @@ export default function PrivacyTermsClient() {
                   <div key={item.heading} className="relative group">
                     <div className="absolute -left-[37px] top-1 w-2.5 h-2.5 rounded-full bg-white/20 group-hover:bg-cyan-500/50 transition-colors border border-background" />
                     <h3 className="text-xl font-medium mb-4 text-white/90">{item.heading}</h3>
-                    <p className="text-white/40 leading-relaxed font-light">
+                    <p className="text-white/60 leading-relaxed font-light">
                       {item.text}
                     </p>
                   </div>
@@ -109,7 +109,7 @@ export default function PrivacyTermsClient() {
           className="mt-32 p-10 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl text-center relative overflow-hidden group"
         >
           <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-          <Lock className="w-10 h-10 text-white/20 mx-auto mb-6" />
+          <Lock className="w-10 h-10 text-white/55 mx-auto mb-6" />
           <h3 className="text-2xl font-semibold mb-4">Have questions about our protocols?</h3>
           <p className="text-white/50 mb-8 max-w-md mx-auto">
             Our legal and security teams are available to discuss specific compliance requirements for your enterprise.
@@ -122,7 +122,7 @@ export default function PrivacyTermsClient() {
           </a>
         </motion.div>
         
-        <div className="mt-20 text-center text-sm text-white/30 uppercase tracking-[0.3em] font-medium">
+        <div className="mt-20 text-center text-sm text-white/60 uppercase tracking-[0.3em] font-medium">
           Last Updated: March 16, 2026 • © Rhinon Technical Group
         </div>
       </div>

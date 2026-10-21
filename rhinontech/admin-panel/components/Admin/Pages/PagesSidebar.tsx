@@ -28,6 +28,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { confirmDialog, alertDialog } from "@/components/ui/dialogs";
 
 export function PagesSidebar({ activeId, onChanged }: { activeId?: string; onChanged?: () => void }) {
   const { isExpanded, toggleSideNav } = useSideNav();
@@ -119,19 +120,19 @@ export function PagesSidebar({ activeId, onChanged }: { activeId?: string; onCha
       onChanged?.();
       router.push(`/${roleSlug}/pages/${page.id}`);
     } catch (err: any) {
-      alert(err.message || "Failed to create page");
+      alertDialog(err.message || "Failed to create page");
     }
   };
 
   const archivePage = async (id: string) => {
-    if (!confirm("Archive this page and its sub-pages?")) return;
+    if (!(await confirmDialog("Archive this page and its sub-pages?"))) return;
     try {
       await apiFetch(`/pages/${id}`, { method: "DELETE" });
       await fetchTree();
       onChanged?.();
       if (id === activeId) router.push(`/${roleSlug}/pages`);
     } catch (err: any) {
-      alert(err.message || "Failed to archive page");
+      alertDialog(err.message || "Failed to archive page");
     }
   };
 

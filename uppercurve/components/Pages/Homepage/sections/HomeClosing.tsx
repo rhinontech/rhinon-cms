@@ -1,13 +1,19 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import type { Course } from "@/components/Pages/Courses/courseData";
 import { CourseHeading, DarkGrid, GradientText, PrimaryCta } from "@/components/Pages/Courses/CourseLanding/ui";
+import CourseEnrollModal from "@/components/Pages/Courses/CourseEnrollModal";
 
 const STEPS = [
-  { title: "Start free", body: "Join a live event or the community. No account, no payment — just show up and build.", tag: "Events · community" },
-  { title: "Go deep", body: "Take a cohort when you are ready to commit: live sessions, weekly builds, real deadlines.", tag: "Courses" },
-  { title: "Prove it", body: "Every programme ends in something shipped and reviewed — plus a certificate anyone can verify.", tag: "Portfolio · certificate" },
-  { title: "Move up", body: "Take the work into interviews, promotions and roles that did not exist two years ago.", tag: "Jobs" },
+  {
+    title: "Starting Phase", body: "Join a FREE Certification Live Workshop or become part of the Community & Explore what interests you, learn from others and find your starting point.", tag: "WORKSHOPS · COMMUNITY"
+  },
+  { title: "Building Phase", body: "Move from watching to Building. Learn through structured courses, Hands-on Sessions & Projects that challenge you to think and build.", tag: "COURSES · PROJECTS" },
+  { title: "Show your Work", body: "Knowledge matters but Proof matters more. Build a portfolio, complete meaningful projects & Earn certifications that reflect your capabilities.", tag: "PORTFOLIO · CERTIFICATIONS" },
+  { title: "Go Further", body: "Put your skills to work & Explore jobs, internships, and opportunities that can turn what you've built into what's next.", tag: "JOBS · OPPORTUNITIES" },
 ];
 
 /** The route through UpperCurve, as a rising line of four steps. */
@@ -21,10 +27,10 @@ export function Path() {
           eyebrow="How it works"
           title={
             <>
-              Every step is a step <GradientText>up.</GradientText>
+              Every Step is a Step <GradientText>UP.</GradientText>
             </>
           }
-          description="Start with an evening. Stay for a cohort. Leave with work you can show."
+          description="A clear path from learning new skills to creating work that opens doors."
         />
         <ol className="mt-16 grid sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:items-end lg:[--rise:32px]">
           {STEPS.map((step, index) => (
@@ -50,23 +56,27 @@ export function HomeFaq({ course }: { course: Course }) {
     {
       question: "What is UpperCurve?",
       answer:
-        "A career growth platform where ambitious people learn practical skills, build real experience, connect with the right people, and move their careers forward.",
+        "UpperCurve is a learning platform for the AI era. We run live courses, free events and a community, and connect you to jobs, so you can learn a skill, prove it with real work and move up in your career.",
     },
     {
       question: "Are the events really free?",
-      answer: "Yes. Every public event — workshops, micro-certificates, intensives and build days — is free. You only register so we can send the joining details.",
+      answer:
+        "Yes, Every live event, workshop and competition on our events page is free. You can join without paying anything.",
     },
     {
       question: `Who is the ${course.title} ${course.titleAccent} for?`,
-      answer: course.faqs[0]?.answer ?? course.metaDescription,
+      answer:
+        "It's for professionals, students and educators who want to go beyond using AI and start building with it. If you want to ship real AI agents and have something to show for it, this is for you.",
     },
     {
       question: "Do I need a technical background?",
-      answer: "No. Our events and our course both start from the basics, with AI tools doing the heavy lifting. If you already code, the later sessions go deep enough to stay interesting.",
+      answer:
+        "No, We start with no-code automations and build up step by step, with live help and 1:1 mentorship along the way. If you're curious and ready to build, you can start.",
     },
     {
       question: "How do I stay in the loop?",
-      answer: "Join the UpperCurve community. New events, cohort dates and the material from every session are shared there first.",
+      answer:
+        "Join the Free WhatsApp Community. You'll hear about new events, cohort dates and job openings First.",
     },
   ];
   return (
@@ -97,6 +107,8 @@ export function HomeFaq({ course }: { course: Course }) {
 }
 
 export function HomeCta({ course }: { course: Course }) {
+  const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false);
+
   return (
     <section className="bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-20 sm:pb-28">
@@ -105,25 +117,31 @@ export function HomeCta({ course }: { course: Course }) {
           <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 -bottom-72 w-[900px] h-[600px] rounded-full bg-[radial-gradient(circle,rgba(0,82,255,0.5),transparent_62%)]" />
           <div className="relative">
             <h2 className="text-[40px] sm:text-6xl lg:text-[80px] font-extrabold tracking-[-0.045em] leading-[0.98]">
-              Ready to move
+              Ready to take
               <br />
-              <GradientText>up the curve?</GradientText>
+              <GradientText>the next step?</GradientText>
             </h2>
             <p className="mt-7 text-[16px] sm:text-lg text-white/65 max-w-lg mx-auto leading-relaxed">
-              Start with a free live event tonight, or commit to six weeks that change what you can build.
+              Learn through Hands-on Experiences, build real projects & evelop skills that move your career forward.
             </p>
             <div className="mt-10 flex flex-wrap justify-center gap-3">
-              <PrimaryCta href={`/courses/${course.slug}`}>Explore the course</PrimaryCta>
+              <PrimaryCta onClick={() => setIsEnrollModalOpen(true)}>Enroll Now</PrimaryCta>
               <Link
                 href="/events"
                 className="inline-flex items-center gap-2 border border-white/25 text-white hover:bg-white hover:text-[#0B1B3D] font-bold text-xs sm:text-[13px] tracking-wider uppercase px-7 py-4 rounded-[4px] transition-colors"
               >
-                Browse free events
+                Explore Free Events
               </Link>
             </div>
           </div>
         </div>
       </div>
+
+      <CourseEnrollModal
+        isOpen={isEnrollModalOpen}
+        onClose={() => setIsEnrollModalOpen(false)}
+        courseTitle={`${course.title} ${course.titleAccent || ""}`.trim()}
+      />
     </section>
   );
 }

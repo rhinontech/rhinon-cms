@@ -1,10 +1,12 @@
+import { FaqSchema } from "@/components/Common/SEO/PageSchemas";
 import ContactUs from "@/components/Pages/ContactUs/ContactUs";
 import { Metadata } from "next";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://rhinonlabs.com";
+import { SCHEMA_IDS } from "@/lib/site";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinonlabs.com";
 
 export const metadata: Metadata = {
-  title: "Contact Us | Rhinon Labs",
+  title: "Contact Us",
   description:
     "Request a discovery call to discuss your internal tools, AI automation, and MVP development challenges. 24-hour response time.",
   alternates: {
@@ -40,17 +42,8 @@ const contactPageSchema = {
   name: "Contact Rhinon Labs",
   description: "Get in touch with Rhinon Labs for MVP development, AI products, and internal tool builds.",
   url: `${SITE_URL}/contact-us`,
-  mainEntity: {
-    "@type": "Organization",
-    name: "Rhinon Labs",
-    url: SITE_URL,
-    contactPoint: {
-      "@type": "ContactPoint",
-      telephone: "+91 9664430061",
-      contactType: "Sales & Support",
-      availableLanguage: ["English"],
-    },
-  },
+  // The full Organization (address, phone, profiles) is in the site-wide graph
+  mainEntity: { "@id": SCHEMA_IDS.organization },
 };
 
 export default function page() {
@@ -60,6 +53,7 @@ export default function page() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(contactPageSchema) }}
       />
+      <FaqSchema />
       <ContactUs />
     </>
   );

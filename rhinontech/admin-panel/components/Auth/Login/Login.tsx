@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { TbBuilding, TbCheck, TbChevronRight, TbShieldLock } from "react-icons/tb";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { API_URL } from "@/lib/api";
@@ -215,9 +216,8 @@ export function Login({
                       Forgot password?
                     </Link>
                   </div>
-                  <Input
+                  <PasswordInput
                     id="password"
-                    type="password"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}

@@ -5,6 +5,7 @@ import { TbRefresh, TbBan } from "react-icons/tb";
 import { WorkflowEnrollment } from "@/types/automation";
 import { SequenceStats } from "./SequenceStats";
 
+import { NativeSelect } from "@/components/ui/native-select";
 interface WorkflowEnrollmentsTabProps {
   enrollments: WorkflowEnrollment[];
   onRefresh: () => void;
@@ -32,7 +33,7 @@ export function WorkflowEnrollmentsTab({
       {/* Top Filter and Actions Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <select
+          <NativeSelect
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             className="rounded-xl border border-border px-4 py-2 text-sm bg-card font-medium text-foreground/85 outline-none focus:border-indigo-500"
@@ -42,7 +43,7 @@ export function WorkflowEnrollmentsTab({
             <option value="Completed">Completed</option>
             <option value="Failed">Failed</option>
             <option value="Cancelled">Cancelled</option>
-          </select>
+          </NativeSelect>
         </div>
 
         <div className="flex items-center gap-3">

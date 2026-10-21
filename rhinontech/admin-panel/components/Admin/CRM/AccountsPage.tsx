@@ -19,6 +19,8 @@ import {
 } from "./ui";
 import { useModuleBase } from "@/lib/sites";
 
+import { NativeSelect } from "@/components/ui/native-select";
+import { confirmDialog } from "@/components/ui/dialogs";
 const COLS = "minmax(200px,2fr) minmax(140px,1.4fr) 90px 90px 110px 40px";
 const LIMIT = 50;
 
@@ -84,7 +86,7 @@ export function AccountsPage() {
   };
 
   const runBackfill = async () => {
-    if (!confirm("Group existing leads into accounts by email/website domain?\n\nThis is safe to re-run — leads already linked are skipped.")) return;
+    if (!(await confirmDialog("Group existing leads into accounts by email/website domain?\n\nThis is safe to re-run — leads already linked are skipped."))) return;
     setBackfilling(true);
     setNotice(null);
     try {
@@ -101,7 +103,7 @@ export function AccountsPage() {
   };
 
   const remove = async (id: string) => {
-    if (!confirm("Delete this account? Its contacts and deals are kept, just unlinked.")) return;
+    if (!(await confirmDialog("Delete this account? Its contacts and deals are kept, just unlinked."))) return;
     try {
       await apiFetch(`/accounts/${id}`, { method: "DELETE" });
       if (selected?.id === id) setSelected(null);
@@ -412,10 +414,10 @@ function EditAccountForm({
           <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className={INPUT} />
         </Field>
         <Field label="Owner">
-          <select value={form.ownerId} onChange={(e) => setForm({ ...form, ownerId: e.target.value })} className={INPUT}>
+          <NativeSelect value={form.ownerId} onChange={(e) => setForm({ ...form, ownerId: e.target.value })} className={INPUT}>
             <option value="">Unassigned</option>
             {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}
-          </select>
+          </NativeSelect>
         </Field>
       </div>
       <Field label="LinkedIn">

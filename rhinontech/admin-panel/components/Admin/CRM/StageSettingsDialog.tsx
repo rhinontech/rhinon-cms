@@ -7,6 +7,8 @@ import { apiFetch } from "@/lib/api";
 import type { PipelineStage, StageType } from "./types";
 import { StageDot, TBtn } from "./ui";
 
+import { NativeSelect } from "@/components/ui/native-select";
+import { confirmDialog } from "@/components/ui/dialogs";
 const INPUT =
   "w-full rounded border border-border bg-card px-2 py-1 text-[12px] outline-none focus:ring-2 focus:ring-blue-500/40";
 
@@ -99,7 +101,7 @@ export function StageSettingsDialog({ onClose }: { onClose: (changed: boolean) =
   };
 
   const remove = async (stage: PipelineStage) => {
-    if (!confirm(`Delete the "${stage.name}" stage?`)) return;
+    if (!(await confirmDialog(`Delete the "${stage.name}" stage?`))) return;
     setBusy(true);
     try {
       await apiFetch(`/deals/stages/${stage.id}`, { method: "DELETE" });
@@ -163,7 +165,7 @@ export function StageSettingsDialog({ onClose }: { onClose: (changed: boolean) =
                       />
                     </span>
 
-                    <select
+                    <NativeSelect
                       value={stage.type}
                       onChange={(e) => {
                         const type = e.target.value as StageType;
@@ -175,7 +177,7 @@ export function StageSettingsDialog({ onClose }: { onClose: (changed: boolean) =
                       <option value="Open">Open</option>
                       <option value="Won">Won</option>
                       <option value="Lost">Lost</option>
-                    </select>
+                    </NativeSelect>
 
                     <span className="flex items-center gap-1">
                       <input

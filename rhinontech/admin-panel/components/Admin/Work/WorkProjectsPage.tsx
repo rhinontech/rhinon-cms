@@ -11,6 +11,7 @@ import { apiFetch } from "@/lib/api";
 import { ProjectCollaborators } from "./ProjectCollaborators";
 import { TbLayoutSidebarFilled, TbLayoutSidebarRightFilled, TbPlus, TbSearch, TbExternalLink, TbLock, TbUsers, TbLayoutGrid } from "react-icons/tb";
 
+import { NativeSelect } from "@/components/ui/native-select";
 type ProjectStatus = "Active" | "Paused" | "Completed" | "Pipeline";
 type ProjectVisibility = "workspace" | "team" | "private";
 type PanelMode = "view" | "create" | "edit";
@@ -194,7 +195,7 @@ export function WorkProjectsPage() {
                 className="w-full rounded-lg border border-border py-2 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            <select
+            <NativeSelect
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value as ProjectStatus | "All")}
               className="w-[180px] rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
@@ -204,7 +205,7 @@ export function WorkProjectsPage() {
               <option>Paused</option>
               <option>Completed</option>
               <option>Pipeline</option>
-            </select>
+            </NativeSelect>
           </div>
 
           <div className="mt-8 overflow-hidden rounded-xl glass-card">
@@ -323,7 +324,7 @@ export function WorkProjectsPage() {
                 <FormInput label="Name" value={form.name} onChange={(value) => setForm((current) => ({ ...current, name: value }))} required />
                 <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                   Status
-                  <select
+                  <NativeSelect
                     value={form.status}
                     onChange={(event) => setForm((current) => ({ ...current, status: event.target.value as ProjectStatus }))}
                     className="rounded-lg border border-border bg-card px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
@@ -332,11 +333,11 @@ export function WorkProjectsPage() {
                     <option>Paused</option>
                     <option>Completed</option>
                     <option>Pipeline</option>
-                  </select>
+                  </NativeSelect>
                 </label>
                 <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                   Point of contact
-                  <select
+                  <NativeSelect
                     value={form.pointOfContact}
                     onChange={(event) => setForm((current) => ({ ...current, pointOfContact: event.target.value }))}
                     className="rounded-lg border border-border bg-card px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
@@ -347,11 +348,11 @@ export function WorkProjectsPage() {
                         {employee.fullName}
                       </option>
                     ))}
-                  </select>
+                  </NativeSelect>
                 </label>
                 <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                   Who can see this
-                  <select
+                  <NativeSelect
                     value={form.visibility}
                     onChange={(event) => setForm((current) => ({ ...current, visibility: event.target.value as ProjectVisibility }))}
                     className="rounded-lg border border-border bg-card px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
@@ -359,12 +360,12 @@ export function WorkProjectsPage() {
                     <option value="workspace">Everyone at the company</option>
                     <option value="team">A specific team</option>
                     <option value="private">Only me</option>
-                  </select>
+                  </NativeSelect>
                 </label>
                 {form.visibility === "team" && (
                   <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                     Team
-                    <select
+                    <NativeSelect
                       value={form.teamId}
                       onChange={(event) => setForm((current) => ({ ...current, teamId: event.target.value }))}
                       required
@@ -374,7 +375,7 @@ export function WorkProjectsPage() {
                       {teams.map((team) => (
                         <option key={team.id} value={team.id}>{team.name}</option>
                       ))}
-                    </select>
+                    </NativeSelect>
                     {!teams.length && (
                       <span className="text-xs font-normal text-muted-foreground">
                         You&apos;re not in a team yet — create one under Work → Teams first.

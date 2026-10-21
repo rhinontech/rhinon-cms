@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { TbExternalLink } from "react-icons/tb";
 import { type BlogBlock, type BlogFaq, extractYouTubeId } from "./types";
 
-const DEFAULT_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://rhinonlabs.com";
+const DEFAULT_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinonlabs.com";
 
 export function BlogPreview({
   open,

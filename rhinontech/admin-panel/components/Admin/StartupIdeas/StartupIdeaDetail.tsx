@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { STARTUP_IDEA_STATUSES, STATUS_STYLES, type StartupIdea, type StartupIdeaStatus } from "./types";
+import { confirmDialog } from "@/components/ui/dialogs";
 
 interface Props {
   id: string;
@@ -84,7 +85,7 @@ export function StartupIdeaDetail({ id, onClose, onChanged }: Props) {
   };
 
   const handleConvert = async () => {
-    if (!confirm("Add this founder to the CRM as a lead?")) return;
+    if (!(await confirmDialog("Add this founder to the CRM as a lead?"))) return;
     setConverting(true);
     try {
       const res = await apiFetch<{ leadId: string; deduped: boolean; idea: StartupIdea }>(
@@ -102,7 +103,7 @@ export function StartupIdeaDetail({ id, onClose, onChanged }: Props) {
   };
 
   const handleDelete = async () => {
-    if (!confirm("Delete this submission permanently?")) return;
+    if (!(await confirmDialog("Delete this submission permanently?"))) return;
     try {
       await apiFetch(`/startup-ideas/${id}`, { method: "DELETE" });
       toast.success("Submission deleted");

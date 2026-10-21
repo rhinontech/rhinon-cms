@@ -11,6 +11,8 @@ import { STATUS_CHIP } from "./constants";
 import type { FieldDefinition, FieldType, PersonOption, ProjectTask, TaskRow, WorkflowStatus } from "./types";
 import type { GroupKey } from "./WorkspaceToolbar";
 
+import { NativeSelect } from "@/components/ui/native-select";
+import { confirmDialog } from "@/components/ui/dialogs";
 const FIELD_TYPES: { value: FieldType; label: string }[] = [
   { value: "text", label: "Text" },
   { value: "number", label: "Number" },
@@ -122,8 +124,8 @@ export function TableView({
                 <span className="truncate">{f.name}</span>
                 {!readOnlyColumns && (
                   <button
-                    onClick={() => {
-                      if (window.confirm(`Remove the "${f.name}" column? Existing values are kept but hidden.`)) {
+                    onClick={async () => {
+                      if ((await confirmDialog(`Remove the "${f.name}" column? Existing values are kept but hidden.`))) {
                         onRemoveField(f.id);
                       }
                     }}
@@ -156,13 +158,13 @@ export function TableView({
                 placeholder="Column name (e.g. Budget)"
                 className="w-56 rounded-lg border border-border px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <select
+              <NativeSelect
                 value={fieldForm.type}
                 onChange={(e) => setFieldForm((f) => ({ ...f, type: e.target.value as FieldType }))}
                 className="rounded-lg border border-border bg-card px-2 py-1.5 text-sm outline-none"
               >
                 {FIELD_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </select>
+              </NativeSelect>
               {fieldForm.type === "dropdown" && (
                 <input
                   value={fieldForm.options}
@@ -224,7 +226,7 @@ export function TableView({
                       <TbSubtask size={13} />
                     </button>
                     <button
-                      onClick={() => window.confirm(`Delete "${task.title}"?`) && onDelete(task.id)}
+                      onClick={async () => (await confirmDialog(`Delete "${task.title}"?`)) && onDelete(task.id)}
                       title="Delete"
                       className="rounded p-1 text-muted-foreground hover:bg-red-50 dark:hover:bg-red-400/10 hover:text-red-600 dark:hover:text-red-300"
                     >
@@ -241,7 +243,7 @@ export function TableView({
                 />
 
                 <span className="px-0.5">
-                  <select
+                  <NativeSelect
                     value={task.statusId ?? ""}
                     onChange={(e) => onPatch(task.id, { statusId: e.target.value || null })}
                     className={cn(
@@ -251,7 +253,7 @@ export function TableView({
                   >
                     <option value="">—</option>
                     {statuses.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  </select>
+                  </NativeSelect>
                 </span>
 
                 <DatePicker

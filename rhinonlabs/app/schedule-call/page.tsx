@@ -1,10 +1,10 @@
 import { Metadata } from "next";
 import SchedulerCore from "@/components/Common/CTA/SchedulerCore";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://rhinonlabs.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinonlabs.com";
 
 export const metadata: Metadata = {
-  title: "Schedule a Call | Rhinon Labs",
+  title: "Schedule a Discovery Call",
   description:
     "Pick a time to see Rhinon Labs in action — a 30 minute discovery call over Google Meet to scope your MVP or AI build.",
   alternates: {
@@ -36,8 +36,8 @@ export const metadata: Metadata = {
 
 export default function ScheduleCallPage() {
   return (
-    <main className="min-h-screen w-full flex items-center justify-center p-4 bg-[#0B0F19]">
-      <SchedulerCore />
-    </main>
+    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-[#0B0F19]">
+      <SchedulerCore headingLevel="h1" />
+    </div>
   );
 }

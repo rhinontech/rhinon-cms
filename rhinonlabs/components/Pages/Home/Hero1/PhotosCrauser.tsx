@@ -7,7 +7,7 @@ const SLIDE_DURATION = 1500; // milliseconds
 const slides = [
   {
     id: 1,
-    image: "/assets/hero/1.png",
+    image: "/assets/hero/1.webp",
     title: "LIVE SESSIONS",
     subtitle: "Collaborate, connect, and learn together",
     tags: [
@@ -19,7 +19,7 @@ const slides = [
   },
   {
     id: 2,
-    image: "/assets/hero/2.png",
+    image: "/assets/hero/2.webp",
     title: "COMMUNITY MEETUPS",
     subtitle: "Build lasting professional connections",
     tags: [
@@ -31,7 +31,7 @@ const slides = [
   },
   {
     id: 3,
-    image: "/assets/hero/3.png",
+    image: "/assets/hero/3.webp",
     title: "LEARN BY BUILDING",
     subtitle: "Interactive learning experiences in real-time",
     tags: [
@@ -156,9 +156,14 @@ export default function CarouselSlideshow() {
 
 
                 <div className="relative h-full sm:h-56 md:h-full w-auto  overflow-hidden">
+                  {/* WebP ~60 KB each (were 0.7–4.7 MB PNGs); above the fold, so fetch first */}
                   <img
                     src={slide.image}
                     alt={slide.title}
+                    width={1800}
+                    height={1046}
+                    fetchPriority="high"
+                    decoding="async"
                     className="w-full h-full object-cover"
                   />
 

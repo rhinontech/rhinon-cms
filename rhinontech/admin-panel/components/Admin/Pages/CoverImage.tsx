@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { TbPhotoPlus, TbX, TbLoader } from "react-icons/tb";
 import { apiUpload } from "@/lib/api";
+import { alertDialog } from "@/components/ui/dialogs";
 
 /**
  * Notion-style page cover. Rendered OUTSIDE the content column so the image
@@ -29,7 +30,7 @@ export function CoverImage({
       const { url } = await apiUpload<{ url: string }>("/content/upload-image", file);
       onChange(url);
     } catch (err: any) {
-      alert(err.message || "Cover upload failed");
+      alertDialog(err.message || "Cover upload failed");
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";

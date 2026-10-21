@@ -6,7 +6,7 @@
 import { unsubscribePageUrl, signUnsubscribe } from "./unsubscribeToken";
 
 export const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:5003";
-export const FRONTEND_URL = process.env.SITE_URL || process.env.RHINONLABS_URL || process.env.FRONTEND_URL || "https://rhinonlabs.com";
+export const FRONTEND_URL = process.env.SITE_URL || process.env.RHINONLABS_URL || process.env.FRONTEND_URL || "https://www.rhinonlabs.com";
 
 export type EmailTemplateId = "default" | "template1" | "template2" | "template3" | "template4";
 

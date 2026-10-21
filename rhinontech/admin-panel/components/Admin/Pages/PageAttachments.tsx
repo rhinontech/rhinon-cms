@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { TbPaperclip, TbPlus, TbFile, TbTrash, TbLoader, TbX, TbDownload } from "react-icons/tb";
 import { apiFetch, apiUpload } from "@/lib/api";
 import type { PageAttachmentEntry } from "./types";
+import { confirmDialog, alertDialog } from "@/components/ui/dialogs";
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -50,7 +51,7 @@ export function PageAttachments({ pageId, canEdit }: { pageId: string; canEdit: 
       const attachment = await apiUpload<PageAttachmentEntry>(`/pages/${pageId}/attachments`, file, "file");
       setAttachments((prev) => [attachment, ...prev]);
     } catch (err: any) {
-      alert(err.message || "Upload failed");
+      alertDialog(err.message || "Upload failed");
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -58,13 +59,13 @@ export function PageAttachments({ pageId, canEdit }: { pageId: string; canEdit: 
   };
 
   const handleDelete = async (attachmentId: string) => {
-    if (!confirm("Remove this attachment?")) return;
+    if (!(await confirmDialog("Remove this attachment?"))) return;
     setDeletingId(attachmentId);
     try {
       await apiFetch(`/pages/${pageId}/attachments/${attachmentId}`, { method: "DELETE" });
       setAttachments((prev) => prev.filter((a) => a.id !== attachmentId));
     } catch (err: any) {
-      alert(err.message || "Delete failed");
+      alertDialog(err.message || "Delete failed");
     } finally {
       setDeletingId(null);
     }

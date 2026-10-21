@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { usePermissions } from "@/context/PermissionsContext";
+import { confirmDialog } from "@/components/ui/dialogs";
 
 type DeployStatus = "running" | "success" | "failed";
 
@@ -147,7 +148,7 @@ export function SettingsDeploy() {
       target.key === "prod"
         ? `Deploy PRODUCTION?\n\nThis pulls ${target.branch}, ${action}. The API will be briefly unavailable.`
         : `Deploy ${target.label}?\n\nThis pulls ${target.branch} and ${action}.`;
-    if (!confirm(warning)) return;
+    if (!(await confirmDialog(warning))) return;
 
     setStarting(target.key);
     try {

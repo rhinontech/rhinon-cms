@@ -26,13 +26,15 @@ import {
 } from "./ui";
 import { useModuleBase } from "@/lib/sites";
 
+import { NativeSelect } from "@/components/ui/native-select";
+import { confirmDialog } from "@/components/ui/dialogs";
 /**
  * Two column sets. With the detail panel open the table has roughly 550px to
  * work with, so all eight columns overflow and clip the right-hand edge. The
  * lower-priority ones (account, outreach state, last touch) drop out instead —
  * they're still on the record, just not worth a scrollbar.
  */
-const COLS_FULL = "26px minmax(180px,2.2fr) minmax(110px,1.1fr) 104px 132px 84px 78px 28px";
+const COLS_FULL = "26px minmax(180px,2.2fr) minmax(110px,1.1fr) minmax(120px,1.2fr) 104px 132px 84px 78px 28px";
 const COLS_COMPACT = "26px minmax(150px,2.4fr) 104px 34px 28px";
 const LIMIT = 50;
 
@@ -44,6 +46,8 @@ export function LeadsPage() {
   const crmBase = useModuleBase();
   // Scoped from an account row: /crm?accountId=… lists just that company.
   const accountFilter = searchParams.get("accountId");
+  // Outreach is a sibling module under the same brand: /admin/crm/x -> /admin/outreach/x.
+  const outreachBase = crmBase.replace(/\/crm(\/|$)/, "/outreach$1");
   const [leads, setLeads] = useState<Lead[]>([]);
   const [count, setCount] = useState(0);
   const [offset, setOffset] = useState(0);
@@ -56,6 +60,11 @@ export function LeadsPage() {
   const [sourceFilter, setSourceFilter] = useState("All");
   const [ownerFilter, setOwnerFilter] = useState("All");
   const [sources, setSources] = useState<string[]>([]);
+  // Deep-linkable from Outreach: /crm?listId=… or ?campaignId=…
+  const [listFilter, setListFilter] = useState(searchParams.get("listId") || "All");
+  const [campaignFilter, setCampaignFilter] = useState(searchParams.get("campaignId") || "All");
+  const [lists, setLists] = useState<{ id: string; name: string }[]>([]);
+  const [campaigns, setCampaigns] = useState<{ id: string; name: string }[]>([]);
   const [owners, setOwners] = useState<UserRef[]>([]);
   const [activeViewId, setActiveViewId] = useState<string | null>(null);
 
@@ -128,6 +137,8 @@ export function LeadsPage() {
       if (sourceFilter !== "All") q.set("source", sourceFilter);
       if (ownerFilter !== "All") q.set("ownerId", ownerFilter);
       if (accountFilter) q.set("accountId", accountFilter);
+      if (listFilter !== "All") q.set("listId", listFilter);
+      if (campaignFilter !== "All") q.set("campaignId", campaignFilter);
       const data = await apiFetch<{ rows: Lead[]; count: number }>(`/leads?${q}`);
       setLeads(data.rows);
       setCount(data.count);
@@ -137,13 +148,15 @@ export function LeadsPage() {
     } finally {
       setLoading(false);
     }
-  }, [debounced, lifecycleFilter, sourceFilter, ownerFilter, accountFilter, offset]);
+  }, [debounced, lifecycleFilter, sourceFilter, ownerFilter, accountFilter, listFilter, campaignFilter, offset]);
 
   useEffect(() => { load(); }, [load]);
 
   useEffect(() => {
     apiFetch<string[]>("/leads/sources").then(setSources).catch(() => {});
     apiFetch<UserRef[]>("/crm/users").then(setOwners).catch(() => {});
+    apiFetch<{ id: string; name: string }[]>("/contact-groups").then(setLists).catch(() => {});
+    apiFetch<{ id: string; name: string }[]>("/campaigns").then(setCampaigns).catch(() => {});
   }, []);
 
   // Deep link from an account or deal: ?leadId=… opens that record directly,
@@ -213,7 +226,7 @@ export function LeadsPage() {
   };
 
   const remove = async (id: string) => {
-    if (!confirm("Delete this lead?")) return;
+    if (!(await confirmDialog("Delete this lead?"))) return;
     try {
       await apiFetch(`/leads/${id}`, { method: "DELETE" });
       if (selected?.id === id) setSelected(null);
@@ -224,7 +237,7 @@ export function LeadsPage() {
   };
 
   const bulkDelete = async () => {
-    if (!confirm(`Delete ${selectedIds.size} lead(s)? This cannot be undone.`)) return;
+    if (!(await confirmDialog(`Delete ${selectedIds.size} lead(s)? This cannot be undone.`))) return;
     try {
       await apiFetch("/leads/bulk-delete", { method: "POST", body: JSON.stringify({ ids: [...selectedIds] }) });
       setSelectedIds(new Set());
@@ -268,6 +281,8 @@ export function LeadsPage() {
       if (sourceFilter !== "All") q.set("source", sourceFilter);
       if (ownerFilter !== "All") q.set("ownerId", ownerFilter);
       if (accountFilter) q.set("accountId", accountFilter);
+      if (listFilter !== "All") q.set("listId", listFilter);
+      if (campaignFilter !== "All") q.set("campaignId", campaignFilter);
       await apiDownload(`/leads/export.csv?${q}`, "leads.csv");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Export failed");
@@ -339,6 +354,14 @@ export function LeadsPage() {
               <option value="All">All sources</option>
               {sources.map((s) => <option key={s} value={s}>{s}</option>)}
             </Select>
+            <Select value={campaignFilter} onChange={(v) => { setCampaignFilter(v); setOffset(0); }}>
+              <option value="All">All campaigns</option>
+              {campaigns.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </Select>
+            <Select value={listFilter} onChange={(v) => { setListFilter(v); setOffset(0); }}>
+              <option value="All">All lists</option>
+              {lists.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+            </Select>
 
             {accountFilter && (
               <Link
@@ -396,6 +419,7 @@ export function LeadsPage() {
               </span>
               <span>Lead</span>
               {!compact && <span>Account</span>}
+              {!compact && <span>Campaign / list</span>}
               <span>Stage</span>
               {compact ? <span /> : <span>Owner</span>}
               {!compact && <span>Outreach</span>}
@@ -441,21 +465,42 @@ export function LeadsPage() {
                     </span>
                   )}
 
+                  {!compact && (
+                    <span className="flex min-w-0 flex-col leading-tight text-[11px]">
+                      {lead.campaign?.name ? (
+                        <Link
+                          href={`${outreachBase}/campaigns/${lead.campaignId}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="truncate text-foreground/80 hover:text-blue-600 dark:hover:text-blue-300 hover:underline"
+                          title={`Campaign: ${lead.campaign.name}`}
+                        >
+                          {lead.campaign.name}
+                        </Link>
+                      ) : null}
+                      {lead.lists && lead.lists.length > 0 ? (
+                        <span className="truncate text-muted-foreground" title={lead.lists.map((l) => l.name).join(", ")}>
+                          {lead.lists[0].name}{lead.lists.length > 1 ? ` +${lead.lists.length - 1}` : ""}
+                        </span>
+                      ) : null}
+                      {!lead.campaign?.name && !lead.lists?.length && <span className="text-muted-foreground/60">—</span>}
+                    </span>
+                  )}
+
                   {/* Inline stage edit — the single most-changed field. */}
                   <span onClick={(e) => e.stopPropagation()}>
-                    <select
+                    <NativeSelect
                       value={lead.lifecycleStage}
                       onChange={(e) => patchLead(lead.id, { lifecycleStage: e.target.value as LifecycleStage })}
                       className="w-full cursor-pointer appearance-none rounded bg-transparent text-[11px] outline-none"
                     >
                       {LIFECYCLE_STAGES.map((s) => <option key={s} value={s}>{s}</option>)}
-                    </select>
+                    </NativeSelect>
                   </span>
 
                   <span onClick={(e) => e.stopPropagation()} className="flex min-w-0 items-center gap-1.5">
                     <Avatar name={lead.owner?.fullName} size={18} />
                     {!compact && (
-                      <select
+                      <NativeSelect
                         value={lead.ownerId || ""}
                         onChange={(e) => patchLead(lead.id, { ownerId: e.target.value || null })}
                         // Unassigned reads as a quiet dash rather than the word
@@ -467,7 +512,7 @@ export function LeadsPage() {
                       >
                         <option value="">—</option>
                         {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}
-                      </select>
+                      </NativeSelect>
                     )}
                   </span>
 
@@ -542,24 +587,24 @@ export function LeadsPage() {
                     <div className="mt-2.5 grid grid-cols-2 gap-2">
                       <label className="flex flex-col gap-1">
                         <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Stage</span>
-                        <select
+                        <NativeSelect
                           value={selected.lifecycleStage}
                           onChange={(e) => patchLead(selected.id, { lifecycleStage: e.target.value as LifecycleStage })}
                           className="w-full cursor-pointer rounded border border-border bg-card px-2 py-1 text-[12px] outline-none focus:ring-2 focus:ring-blue-500/40"
                         >
                           {LIFECYCLE_STAGES.map((st) => <option key={st} value={st}>{st}</option>)}
-                        </select>
+                        </NativeSelect>
                       </label>
                       <label className="flex flex-col gap-1">
                         <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Owner</span>
-                        <select
+                        <NativeSelect
                           value={selected.ownerId || ""}
                           onChange={(e) => patchLead(selected.id, { ownerId: e.target.value || null })}
                           className="w-full cursor-pointer rounded border border-border bg-card px-2 py-1 text-[12px] outline-none focus:ring-2 focus:ring-blue-500/40"
                         >
                           <option value="">Unassigned</option>
                           {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}
-                        </select>
+                        </NativeSelect>
                       </label>
                     </div>
 
@@ -569,6 +614,36 @@ export function LeadsPage() {
                       <span>· added {relativeTime(selected.addedAt)}</span>
                     </div>
                   </div>
+
+                  {(selected.campaign?.name || (selected.lists && selected.lists.length > 0)) && (
+                    <div>
+                      <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Outreach</p>
+                      {selected.campaign?.name && (
+                        <div className="flex items-center justify-between gap-2 border-b border-border py-1.5">
+                          <Link href={`${outreachBase}/campaigns/${selected.campaignId}`} className="truncate text-[13px] text-blue-600 dark:text-blue-300 hover:underline">
+                            {selected.campaign.name}
+                          </Link>
+                          <span className="shrink-0 text-[11px] text-muted-foreground">
+                            Campaign · {selected.status}{selected.emailOpened ? " · opened" : ""}
+                          </span>
+                        </div>
+                      )}
+                      {(selected.lists || []).map((l) => (
+                        <div key={l.id} className="flex items-center justify-between gap-2 border-b border-border py-1.5 last:border-0">
+                          <button
+                            onClick={() => { setListFilter(l.id); setOffset(0); }}
+                            className="truncate text-left text-[13px] text-blue-600 dark:text-blue-300 hover:underline"
+                            title="Show everyone in this list"
+                          >
+                            {l.name}
+                          </button>
+                          <Link href={`${outreachBase}/contacts`} className="shrink-0 text-[11px] text-muted-foreground hover:underline">
+                            List · open in Outreach
+                          </Link>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   {selected.deals && selected.deals.length > 0 && (
                     <div>
@@ -700,13 +775,13 @@ export function LeadsPage() {
 
 function Select({ value, onChange, children }: { value: string; onChange: (v: string) => void; children: React.ReactNode }) {
   return (
-    <select
+    <NativeSelect
       value={value}
       onChange={(e) => onChange(e.target.value)}
       className="rounded-md border border-border bg-card/70 px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500/40"
     >
       {children}
-    </select>
+    </NativeSelect>
   );
 }
 

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { TbUpload, TbTrash } from "react-icons/tb";
 import { apiFetch, apiUpload } from "@/lib/api";
 import { usePermissions } from "@/context/PermissionsContext";
+import { confirmDialog, alertDialog } from "@/components/ui/dialogs";
 
 export function CompanySignature() {
   const { has } = usePermissions();
@@ -30,7 +31,7 @@ export function CompanySignature() {
 
   const upload = async (file: File) => {
     if (file.type !== "image/png") {
-      alert("Please upload a PNG (ideally with a transparent background).");
+      alertDialog("Please upload a PNG (ideally with a transparent background).");
       return;
     }
     setBusy(true);
@@ -38,14 +39,14 @@ export function CompanySignature() {
       await apiUpload("/branding/signature", file, "signature");
       await load();
     } catch (err: any) {
-      alert(err.message || "Could not upload the signature.");
+      alertDialog(err.message || "Could not upload the signature.");
     } finally {
       setBusy(false);
     }
   };
 
   const remove = async () => {
-    if (!confirm("Remove the company signature? Relieving and experience letters will go back to leaving blank space for a signature.")) return;
+    if (!(await confirmDialog("Remove the company signature? Relieving and experience letters will go back to leaving blank space for a signature."))) return;
     setBusy(true);
     try {
       await apiFetch("/branding/signature", { method: "DELETE" });

@@ -1,5 +1,5 @@
 import type { BlogBlock } from "@/lib/api";
-import { extractYouTubeId, stripScripts, withHeadingIds } from "./blocks";
+import { extractYouTubeId, optimizeArticleImages, stripScripts, withHeadingIds } from "./blocks";
 
 function Caption({ text }: { text?: string }) {
   if (!text) return null;
@@ -23,7 +23,7 @@ export function BlockRenderer({ blocks }: { blocks: BlogBlock[] }) {
               <div
                 key={block.id}
                 className="article-html"
-                dangerouslySetInnerHTML={{ __html: withHeadingIds(stripScripts(block.html), seenHeadings) }}
+                dangerouslySetInnerHTML={{ __html: optimizeArticleImages(withHeadingIds(stripScripts(block.html), seenHeadings)) }}
               />
             );
           case "image":

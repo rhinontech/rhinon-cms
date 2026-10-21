@@ -9,6 +9,7 @@ import { PRIORITIES, STATUSES } from "./constants";
 import type { GroupMode, ProjectOption, TaskScope, TeamOption, ViewMode } from "./types";
 import type { TaskFilters } from "./useTaskPrefs";
 
+import { NativeSelect } from "@/components/ui/native-select";
 const SCOPES: { key: TaskScope; label: string }[] = [
   { key: "all", label: "Everyone" },
   { key: "my", label: "My tasks" },
@@ -121,36 +122,36 @@ export function TasksToolbar({
         {/* Hidden on the board: narrowing to one status would empty two of the
             three columns. The value is kept for when you switch back to list. */}
         {view === "list" && (
-          <select value={filters.status} onChange={(e) => setFilter("status", e.target.value)} className={selectClass}>
+          <NativeSelect value={filters.status} onChange={(e) => setFilter("status", e.target.value)} className={selectClass}>
             <option value="all">All statuses</option>
             {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
+          </NativeSelect>
         )}
 
         {group === "person" && (
-          <select value={filters.project} onChange={(e) => setFilter("project", e.target.value)} className={selectClass}>
+          <NativeSelect value={filters.project} onChange={(e) => setFilter("project", e.target.value)} className={selectClass}>
             <option value="all">All projects</option>
             {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
+          </NativeSelect>
         )}
 
         {teams.length > 0 && (
-          <select value={filters.team} onChange={(e) => setFilter("team", e.target.value)} className={selectClass}>
+          <NativeSelect value={filters.team} onChange={(e) => setFilter("team", e.target.value)} className={selectClass}>
             <option value="all">All teams</option>
             {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-          </select>
+          </NativeSelect>
         )}
 
-        <select value={filters.priority} onChange={(e) => setFilter("priority", e.target.value)} className={selectClass}>
+        <NativeSelect value={filters.priority} onChange={(e) => setFilter("priority", e.target.value)} className={selectClass}>
           <option value="all">Any priority</option>
           {PRIORITIES.map((p) => <option key={p} value={p}>{p}</option>)}
-        </select>
+        </NativeSelect>
 
         {allTags.length > 0 && (
-          <select value={filters.tag} onChange={(e) => setFilter("tag", e.target.value)} className={selectClass}>
+          <NativeSelect value={filters.tag} onChange={(e) => setFilter("tag", e.target.value)} className={selectClass}>
             <option value="">All tags</option>
             {allTags.map((t) => <option key={t} value={t}>{t}</option>)}
-          </select>
+          </NativeSelect>
         )}
 
         <label className="flex cursor-pointer items-center gap-1.5 text-xs text-foreground/70">

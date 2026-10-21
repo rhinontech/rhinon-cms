@@ -1,17 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useRef, useState } from "react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { cn } from "@/lib/utils";
+import { confirmDialog } from "@/components/ui/dialogs";
 
 interface ConfirmOptions {
   title: string;
@@ -24,57 +13,28 @@ interface ConfirmOptions {
 
 type Confirm = (options: ConfirmOptions) => Promise<boolean>;
 
-const ConfirmContext = createContext<Confirm | null>(null);
-
 /**
- * Promise-based confirmation dialog replacing native confirm().
+ * Promise-based confirmation dialog — kept for existing call sites; it now
+ * delegates to the app-wide confirmDialog (components/ui/dialogs.tsx), so every
+ * confirmation in the admin panel shares one dialog.
  *
  *   const confirm = useConfirm();
  *   if (await confirm({ title: "Delete campaign?", destructive: true })) { … }
  */
+const confirm: Confirm = ({ title, description, confirmLabel, cancelLabel, destructive }) =>
+  confirmDialog({
+    title,
+    description,
+    confirmText: confirmLabel ?? "Confirm",
+    cancelText: cancelLabel,
+    destructive: destructive ?? false,
+  });
+
+/** No longer needed (the host lives in app/layout.tsx); kept so existing wrappers still render. */
 export function ConfirmDialogProvider({ children }: { children: React.ReactNode }) {
-  const [options, setOptions] = useState<ConfirmOptions | null>(null);
-  const resolverRef = useRef<(value: boolean) => void>(null);
-
-  const confirm = useCallback<Confirm>((opts) => {
-    setOptions(opts);
-    return new Promise<boolean>((resolve) => {
-      resolverRef.current = resolve;
-    });
-  }, []);
-
-  const settle = (value: boolean) => {
-    resolverRef.current?.(value);
-    resolverRef.current = null;
-    setOptions(null);
-  };
-
-  return (
-    <ConfirmContext.Provider value={confirm}>
-      {children}
-      <AlertDialog open={!!options} onOpenChange={(open) => { if (!open) settle(false); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{options?.title}</AlertDialogTitle>
-            {options?.description && <AlertDialogDescription>{options.description}</AlertDialogDescription>}
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => settle(false)}>{options?.cancelLabel || "Cancel"}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => settle(true)}
-              className={cn(options?.destructive && "bg-red-600 text-white hover:bg-red-700")}
-            >
-              {options?.confirmLabel || "Confirm"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </ConfirmContext.Provider>
-  );
+  return <>{children}</>;
 }
 
 export function useConfirm(): Confirm {
-  const confirm = useContext(ConfirmContext);
-  if (!confirm) throw new Error("useConfirm must be used within a ConfirmDialogProvider");
   return confirm;
 }

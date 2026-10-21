@@ -53,12 +53,41 @@ async function detachLeadReferences(ids: string[], transaction: any) {
   await WorkflowEnrollment.update({ leadId: null }, { where, transaction });
 }
 
-// GET /leads - list leads. Supports status/campaignId/source/search filters.
+/**
+ * Attaches the contact lists each lead belongs to, as `lists: [{ id, name }]`.
+ * Loaded separately rather than as a belongsToMany include: an include would
+ * break limit/offset paging and, combined with a listId filter, would hide a
+ * lead's other lists.
+ */
+async function withLists(leads: Lead[]): Promise<any[]> {
+  const ids = leads.map((l) => l.id);
+  if (!ids.length) return [];
+  const members = await ContactGroupMember.findAll({
+    where: { leadId: { [Op.in]: ids } },
+    attributes: ["leadId", "contactGroupId"],
+    include: [{ model: ContactGroup, as: "group", attributes: ["id", "name"] }],
+  });
+  const byLead = new Map<string, { id: string; name: string }[]>();
+  for (const m of members as any[]) {
+    if (!m.group) continue;
+    const list = byLead.get(m.leadId) ?? [];
+    list.push({ id: m.group.id, name: m.group.name });
+    byLead.set(m.leadId, list);
+  }
+  return leads.map((l) => ({ ...l.toJSON(), lists: byLead.get(l.id) ?? [] }));
+}
+
+// GET /leads - list leads. Supports status/campaignId/listId/source/search filters.
 // Pagination (limit/offset) is opt-in: pass `limit` to get `{ rows, count }`;
 // omit it to get the legacy plain-array shape used by existing Outreach callers.
 router.get("/", readAccess, async (req: AuthRequest, res: Response) => {
-  const { status, campaignId, source, search, limit, offset, idsOnly, ownerId, lifecycleStage, accountId } = req.query;
+  const { status, campaignId, listId, source, search, limit, offset, idsOnly, ownerId, lifecycleStage, accountId } = req.query;
   const where: any = {};
+
+  if (listId) {
+    const members = await ContactGroupMember.findAll({ where: { contactGroupId: listId as string }, attributes: ["leadId"] });
+    where.id = { [Op.in]: members.map((m) => m.leadId).filter(Boolean) };
+  }
 
   if (status) where.status = status;
   if (campaignId) where.campaignId = campaignId;
@@ -88,7 +117,7 @@ router.get("/", readAccess, async (req: AuthRequest, res: Response) => {
       limit: Math.min(parseInt(limit as string, 10) || 50, 200),
       offset: parseInt((offset as string) || "0", 10) || 0,
     });
-    res.json({ rows, count });
+    res.json({ rows: await withLists(rows), count });
     return;
   }
 
@@ -98,7 +127,7 @@ router.get("/", readAccess, async (req: AuthRequest, res: Response) => {
     order: [["addedAt", "DESC"]],
   });
 
-  res.json(leads);
+  res.json(await withLists(leads));
 });
 
 // GET /leads/sources - distinct lead source values, for the CRM filter dropdown
@@ -208,7 +237,8 @@ router.post("/import", writeAccess, async (req: AuthRequest, res: Response) => {
         annualRevenue: str(raw.annualRevenue),
         apolloContactId: str(raw.apolloContactId),
         raw: raw.raw && typeof raw.raw === "object" ? raw.raw : null,
-        source: str(raw.source) ?? "CSV Import",
+        // A list import is labelled by its list, so the CRM can tell campaigns apart.
+        source: str(raw.source) ?? (targetGroup ? `List · ${targetGroup.name}` : "CSV Import"),
         status: "New",
       });
     });
@@ -615,7 +645,7 @@ router.get("/:id", readAccess, async (req: AuthRequest, res: Response) => {
     return;
   }
 
-  res.json(lead);
+  res.json((await withLists([lead]))[0]);
 });
 
 // PUT /leads/:id - update lead

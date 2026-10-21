@@ -19,6 +19,7 @@ import { apiFetch } from "@/lib/api";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { useSideNav } from "@/context/SideNavContext";
 import { usePermissions } from "@/context/PermissionsContext";
+import { alertDialog } from "@/components/ui/dialogs";
 
 interface Policy {
   id: string;
@@ -67,7 +68,7 @@ export function GovernancePage() {
       setIsEditing(false);
       fetchPolicies();
     } catch (err) {
-      alert("Failed to save policy");
+      alertDialog("Failed to save policy");
     }
   };
 

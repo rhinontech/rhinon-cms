@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { useSideNav } from "@/context/SideNavContext";
+import { alertDialog } from "@/components/ui/dialogs";
 
 interface LeaveRequest {
   id: string;
@@ -74,7 +75,7 @@ export function LeaveApprovalsPage() {
       setMobileDetail(false);
       setManagerNote("");
     } catch (err: any) {
-      alert(err?.message || "Action failed");
+      alertDialog(err?.message || "Action failed");
     } finally {
       setProcessing(null);
     }

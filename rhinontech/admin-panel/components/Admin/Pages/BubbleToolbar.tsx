@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { Editor } from "@tiptap/react";
 import { TbBold, TbItalic, TbUnderline, TbStrikethrough, TbHighlight, TbLink, TbLinkOff, TbCode } from "react-icons/tb";
 import { cn } from "@/lib/utils";
+import { promptDialog } from "@/components/ui/dialogs";
 
 /**
  * A lightweight floating selection toolbar. TipTap v3's React bindings don't
@@ -40,9 +41,9 @@ export function BubbleToolbar({ editor }: { editor: Editor }) {
 
   if (!rect) return null;
 
-  const setLink = () => {
+  const setLink = async () => {
     const previous = editor.getAttributes("link").href as string | undefined;
-    const url = window.prompt("Link URL", previous || "https://");
+    const url = (await promptDialog("Link URL", previous || "https://"));
     if (url === null) return;
     if (url === "" || url === "https://") {
       editor.chain().focus().extendMarkRange("link").unsetLink().run();

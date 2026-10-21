@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import Cookies from "js-cookie";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
-import { TbPencil, TbCheck, TbX, TbSearch, TbLoader2, TbLayoutSidebarFilled, TbLayoutSidebarRightFilled } from "react-icons/tb";
+import { TbTrendingUp, TbPencil, TbCheck, TbX, TbSearch, TbLoader2, TbLayoutSidebarFilled, TbLayoutSidebarRightFilled } from "react-icons/tb";
 import { cn } from "@/lib/utils";
+import { RevisionForm, RevisionHistory } from "./CompensationRevision";
 import { useSideNav } from "@/context/SideNavContext";
 
 interface Employee {
@@ -57,7 +58,7 @@ interface SalaryForm {
   tdsAmount: string;
 }
 
-type PanelMode = "view" | "edit";
+type PanelMode = "view" | "edit" | "revise";
 
 const INR = (v: number) => `₹${Number(v).toLocaleString("en-IN")}`;
 
@@ -90,6 +91,7 @@ export function AdminPayrollEmployees() {
   const [search, setSearch] = useState("");
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [mode, setMode] = useState<PanelMode>("view");
+  const [revisionKey, setRevisionKey] = useState(0);
   const [isPreviewExpanded, setIsPreviewExpanded] = useState(true);
   // Phone-only: salary details open as a full-screen overlay from the list.
   const [mobileDetail, setMobileDetail] = useState(false);
@@ -324,9 +326,18 @@ export function AdminPayrollEmployees() {
           <div className="flex flex-col w-full flex-1 h-full overflow-hidden relative">
             <div className="sticky top-0 w-full flex items-center justify-between min-h-16 px-4 sm:px-5 py-2 sm:py-0 border-b bg-card z-10 shrink-0">
               <p className="flex self-stretch items-center text-sm sm:text-md font-medium tracking-tight border-b-2 border-blue-600 text-foreground -mb-px">
-                Salary Details
+                {mode === "revise" ? "Revise / Promote" : "Salary Details"}
               </p>
               <div className="flex items-center gap-1.5 sm:gap-2">
+                {mode === "view" && selectedEmployee && selectedHasSalary && (
+                  <button
+                    onClick={() => setMode("revise")}
+                    className="inline-flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium text-foreground/85 hover:bg-muted transition-colors"
+                  >
+                    <TbTrendingUp size={14} />
+                    <span>Revise / Promote</span>
+                  </button>
+                )}
                 {mode === "view" && selectedEmployee && (
                   <button
                     onClick={startEdit}
@@ -449,11 +460,25 @@ export function AdminPayrollEmployees() {
                         <strong className="text-green-700 dark:text-green-300">{selectedHasSalary ? INR(selectedNet) : "-"}</strong>
                       </div>
                     </div>
+
+                    <RevisionHistory userId={selectedEmployee.id} refreshKey={revisionKey} />
                   </div>
                 ) : (
                   <div className="flex items-center justify-center h-full text-muted-foreground text-sm">Select an employee.</div>
                 )}
               </div>
+            ) : mode === "revise" && selectedEmployee ? (
+              <RevisionForm
+                key={selectedEmployee.id}
+                employee={selectedEmployee}
+                onCancel={() => setMode("view")}
+                onDone={async () => {
+                  const nextEmployees = await fetchEmployees();
+                  setSelectedEmployee(nextEmployees?.find((e) => e.id === selectedEmployee.id) ?? selectedEmployee);
+                  setRevisionKey((k) => k + 1);
+                  setMode("view");
+                }}
+              />
             ) : (
               <div className="flex-1 overflow-auto p-5 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

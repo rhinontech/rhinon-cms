@@ -49,10 +49,13 @@ const mulish = Mulish({
   variable: "--font-mulish",
   subsets: ["latin"],
   display: "swap",
+  // Only blog/case-study articles use Mulish (.blog-theme); preloading it on
+  // every page competed with the hero image for bandwidth on mobile.
+  preload: false,
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://rhinonlabs.com"),
+  metadataBase: new URL("https://www.rhinonlabs.com"),
   title: {
     default: "Rhinon Labs | Ship Your Product 3x Faster Without Hiring a Tech Team",
     template: "%s | Rhinon Labs",
@@ -76,7 +79,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://rhinonlabs.com",
+    url: "https://www.rhinonlabs.com",
     title: "Rhinon Labs | Ship Your Product 3x Faster",
     description:
       "We help founders and SMBs design, build and launch websites, apps and AI products fast. AI-powered development with affordable pricing.",
@@ -108,15 +111,6 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  alternates: {
-    canonical: "https://rhinonlabs.com",
-  },
-  other: {
-    "geo.region": "IN-OR",
-    "geo.placename": "Bhubaneswar",
-    "geo.position": "20.2961;85.8245",
-    "ICBM": "20.2961, 85.8245",
-  },
 };
 
 export default function RootLayout({
@@ -126,6 +120,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
+      <head>
+        {/* The hero background (.site-bg in globals.css) is the largest element on
+            most pages; fetch the right size first instead of discovering it late. */}
+        <link rel="preload" as="image" type="image/avif" href="/images/background/background-960.avif" media="(max-width: 767px)" fetchPriority="high" />
+        <link rel="preload" as="image" type="image/avif" href="/images/background/background-1920.avif" media="(min-width: 768px)" fetchPriority="high" />
+      </head>
       <body
         className={`${inter.variable} ${instrumentSerif.variable} ${mulish.variable} relative font-sans antialiased text-foreground bg-background`}
       >
@@ -134,7 +134,8 @@ export default function RootLayout({
           <PageviewTracker />
         </Suspense>
         <Navbar />
-        {children}
+        {/* The single <main> landmark for every page (pages use plain containers) */}
+        <main id="main">{children}</main>
         <Footer />
 
         {/* <div

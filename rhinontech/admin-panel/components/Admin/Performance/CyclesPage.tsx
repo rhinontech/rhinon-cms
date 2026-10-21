@@ -7,6 +7,7 @@ import { useSideNav } from "@/context/SideNavContext";
 import { apiFetch } from "@/lib/api";
 import { TbPlus, TbX, TbRefresh, TbLoader2 } from "react-icons/tb";
 
+import { NativeSelect } from "@/components/ui/native-select";
 interface ReviewCycle {
   id: string;
   name: string;
@@ -233,7 +234,7 @@ export function CyclesPage() {
 
               <div className="space-y-1">
                 <label className="text-xs text-muted-foreground">Type</label>
-                <select
+                <NativeSelect
                   className="w-full rounded-lg border border-border px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={form.type}
                   onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as ReviewCycle["type"] }))}
@@ -241,7 +242,7 @@ export function CyclesPage() {
                   <option value="quarterly">Quarterly</option>
                   <option value="annual">Annual</option>
                   <option value="probation">Probation</option>
-                </select>
+                </NativeSelect>
               </div>
 
               <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
