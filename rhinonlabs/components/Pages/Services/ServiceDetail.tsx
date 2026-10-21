@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { format } from "date-fns";
 import { motion, Variants } from "framer-motion";
-import { ArrowRight, BookOpen, CheckCircle2 } from "lucide-react";
+import { ArrowRight, BookOpen, CheckCircle2, Rocket, ShieldCheck, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Spotlight } from "@/components/ui/spotlight";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
@@ -16,6 +16,13 @@ import { CaseStudies } from "@/components/Pages/Home/CaseStudy/CaseStudies";
 import type { Service } from "@/lib/services";
 import { services } from "@/lib/services";
 import type { Blog } from "@/lib/api";
+
+/** Colour + icon per outcome card, by position (every service has three). */
+const OUTCOME_TONES = [
+  { Icon: Rocket, tile: "from-[#5b7bff] to-[#8b5cf6]", glow: "from-[#5b7bff] to-[#8b5cf6]" },
+  { Icon: ShieldCheck, tile: "from-[#14b8a6] to-[#2dd4bf]", glow: "from-[#14b8a6] to-[#2dd4bf]" },
+  { Icon: TrendingUp, tile: "from-[#f59e0b] to-[#f97316]", glow: "from-[#f59e0b] to-[#f97316]" },
+];
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 30 },
@@ -187,33 +194,39 @@ export default function ServiceDetail({ service, blogs }: { service: Service; bl
       <section className="py-24 relative overflow-hidden">
         <div className="max-w-[1200px] mx-auto px-6 relative z-10">
           <SectionHeader badge="Our Process" lead="How we" accent="work" sub="A clear scope and timeline before we start — then visible progress every week." />
-          <div className="relative grid grid-cols-1 md:grid-cols-4 gap-6">
-            {/* connector line behind the step nodes */}
-            <div className="hidden md:block absolute top-[52px] left-[12%] right-[12%] h-px bg-linear-to-r from-transparent via-[#e4fe00]/40 to-transparent" />
-            {service.process.map((p, i) => (
-              <motion.div key={p.step} {...inView}>
-              <SpotlightCard className="h-full" color="rgba(228, 254, 0, 0.08)"><div className="p-7 flex flex-col">
-                <div className="mb-6 flex items-center justify-between">
-                  <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-[#1c2bff] px-2 text-xs font-semibold text-white">
-                    0{i + 1}
+          {/* One connected timeline: a glowing track links the steps so they read
+              as a single journey. Horizontal from md up, vertical on phones. */}
+          <motion.div
+            {...inView}
+            className="relative rounded-3xl border border-white/10 bg-white/[0.02] px-6 py-10 md:px-10 md:py-14 shadow-[inset_0_2px_1px_rgba(207,231,255,0.15)] overflow-hidden"
+          >
+            <div className="pointer-events-none absolute -top-32 left-1/2 h-64 w-[70%] -translate-x-1/2 rounded-full bg-[#4d6bff]/15 blur-3xl" />
+            <ol className="relative grid grid-cols-1 gap-10 md:grid-cols-4 md:gap-8">
+              {/* track */}
+              <div className="hidden md:block absolute left-[12.5%] right-[12.5%] top-6 h-[2px] rounded-full bg-linear-to-r from-[#5b7bff] via-[#a26bff] to-[#2dd4bf] opacity-70" />
+              <div className="md:hidden absolute left-6 top-2 bottom-2 w-[2px] rounded-full bg-linear-to-b from-[#5b7bff] via-[#a26bff] to-[#2dd4bf] opacity-70" />
+              {service.process.map((p, i) => (
+                <li key={p.step} className="relative flex gap-5 md:flex-col md:items-center md:text-center md:gap-0">
+                  <span className="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#0b0f1c] ring-2 ring-white/10 shadow-[0_0_30px_-4px_rgba(91,123,255,0.7)]">
+                    <span className="bg-linear-to-br from-[#c7d4ff] to-[#5b7bff] bg-clip-text text-transparent text-base font-bold tabular-nums">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
                   </span>
-                  <span className="h-10 w-10 rounded-lg border border-white/10 bg-[#10131c] flex items-center justify-center shadow-[inset_0_1px_1px_rgba(207,231,255,0.2)]">
-                    <span className="h-3 w-3 rounded-full bg-[#e4fe00] shadow-[0_0_12px_rgba(228,254,0,0.6)]" />
-                  </span>
-                </div>
-                <h3 className="text-[20px] font-semibold text-white mb-2 tracking-tight">{p.step}</h3>
-                <p className="text-[15px] leading-relaxed text-white/55">{p.description}</p>
-              </div></SpotlightCard>
-              </motion.div>
-            ))}
-          </div>
-          <motion.div {...inView} className="mt-12 flex justify-center">
-            <button
-              onClick={() => setIsSchedulerOpen(true)}
-              className="px-6 py-3 rounded-xl bg-[#1c2bff] text-white text-sm font-medium hover:bg-[#1c2bff]/90 transition-colors"
-            >
-              Book a free discovery call
-            </button>
+                  <div className="md:mt-7">
+                    <h3 className="text-[20px] font-semibold text-white mb-2 tracking-tight">{p.step}</h3>
+                    <p className="text-[15px] leading-relaxed text-white/60 md:max-w-[240px] md:mx-auto">{p.description}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+            <div className="relative mt-12 flex justify-center">
+              <button
+                onClick={() => setIsSchedulerOpen(true)}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#1c2bff] text-white text-sm font-medium hover:bg-[#1c2bff]/90 transition-colors shadow-[0_8px_30px_-8px_rgba(28,43,255,0.8)]"
+              >
+                Book a free discovery call <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
           </motion.div>
         </div>
         <SectionGlow />
@@ -223,13 +236,23 @@ export default function ServiceDetail({ service, blogs }: { service: Service; bl
       <section className="py-24 relative overflow-hidden">
         <div className="max-w-full mx-auto px-6 relative z-10">
           <SectionHeader badge="Measurable Impact" lead="What you" accent="walk away with" />
-          <div className="flex flex-wrap justify-center gap-4 max-w-5xl mx-auto">
-            {service.outcomes.map((o) => (
-              <div key={o} className="flex hover:scale-105 transition-all duration-300 ease-in-out items-center gap-2 px-5 py-2.5 rounded-full bg-white shadow-[0_4px_20px_rgba(255,255,255,0.15)] hover:shadow-[0_4px_20px_rgba(255,255,255,0.7)]">
-                <CheckCircle2 className="w-4 h-4 text-[#111]" />
-                <span className="text-[15px] max-sm:text-[13px] font-medium text-[#333] tracking-tight">{o}</span>
-              </div>
-            ))}
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-3 max-w-[1100px] mx-auto">
+            {service.outcomes.map((o, i) => {
+              const tone = OUTCOME_TONES[i % OUTCOME_TONES.length];
+              return (
+                <motion.div
+                  key={o}
+                  {...inView}
+                  className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] p-7 shadow-[inset_0_2px_1px_rgba(207,231,255,0.15)] transition-transform duration-300 hover:-translate-y-1"
+                >
+                  <div className={`pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full blur-3xl opacity-25 bg-linear-to-br ${tone.glow}`} />
+                  <span className={`relative flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br ${tone.tile} shadow-lg`}>
+                    <tone.Icon className="h-6 w-6 text-white" />
+                  </span>
+                  <p className="relative mt-6 text-[18px] leading-snug font-medium text-white tracking-tight">{o}</p>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
         <SectionGlow />
