@@ -55,6 +55,7 @@ export interface Chatbot {
 export interface ChatbotState {
   chatbot: Chatbot | null;
   snippet: string | null;
+  widgetUrl: string;
   plan: { used: number; blockedReason: string | null };
 }
 

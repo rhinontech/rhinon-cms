@@ -12,15 +12,9 @@ import { apiFetch } from "@/lib/api";
 import { timeAgo } from "@/lib/dates";
 import { useCurrentSite, useModuleBase } from "@/lib/sites";
 import { CopyButton, LoadingRows, Notice, Pill, SettingsCard, SettingsFrame, Spinner } from "@/components/Admin/Settings/parts";
+import { InstallGuide } from "./InstallGuide";
 import { errorText, useChatbot, useChatEvents, type Chatbot } from "./chatbotApi";
 
-const INSTALL_HINTS = [
-  { name: "Any website", where: "Paste it just before </body> on every page, or in a site-wide footer." },
-  { name: "Next.js", where: "In app/layout.tsx, use next/script with strategy=\"afterInteractive\", the same src and data-app-id." },
-  { name: "WordPress", where: "Appearance → Theme File Editor → footer.php, before </body> — or any \"insert footer code\" plugin." },
-  { name: "Webflow / Framer", where: "Site settings → Custom code → Footer code." },
-  { name: "Shopify", where: "Online Store → Themes → Edit code → theme.liquid, before </body>." },
-];
 
 export function ChatbotOverview() {
   const base = useModuleBase();
@@ -157,16 +151,13 @@ export function ChatbotOverview() {
                 <Pill tone="amber"><TbClockHour4 size={12} /> Not seen yet — this updates by itself once a page with the snippet loads</Pill>
               )}
             </div>
-            <details className="mt-4">
-              <summary className="cursor-pointer text-xs font-medium text-muted-foreground hover:text-foreground">Where does it go on my platform?</summary>
-              <ul className="mt-3 space-y-2 text-xs text-muted-foreground">
-                {INSTALL_HINTS.map((h) => (
-                  <li key={h.name}>
-                    <span className="font-medium text-foreground">{h.name}</span> — {h.where}
-                  </li>
-                ))}
-              </ul>
-            </details>
+          </SettingsCard>
+
+          <SettingsCard
+            title="Step-by-step for your platform"
+            description="Pick what your site is built with for the exact file and code."
+          >
+            <InstallGuide src={state?.widgetUrl ?? ""} appId={bot.publicId} />
           </SettingsCard>
 
           <SettingsCard

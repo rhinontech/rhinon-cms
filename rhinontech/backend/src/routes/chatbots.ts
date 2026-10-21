@@ -87,6 +87,7 @@ router.get("/", canRead, async (req: AuthRequest, res) => {
   res.json({
     chatbot: bot,
     snippet: bot ? installSnippet(bot.publicId) : null,
+    widgetUrl: `${apiBase()}/widget/rhinonbot.js`,
     training: bot ? { running: isTraining(bot.id) } : null,
     plan: await usage(req.user!.organizationId),
   });
