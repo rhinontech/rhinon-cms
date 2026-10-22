@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  ChevronLeft,
-  EllipsisVertical,
-  Maximize2,
-  Minimize2,
-  ThumbsDown,
-  ThumbsUp,
-} from 'lucide-react';
+import { ChevronLeft, Maximize2, Minimize2, ThumbsDown, ThumbsUp } from 'lucide-react';
 import './HelpArticlePage.scss';
 import { resolveS3Key, getInitialSrc } from '@/utils/s3KeyResolver';
 import { resolveImagesInHTML } from '@/utils/htmlImageResolver';
@@ -92,97 +85,65 @@ const HelpArticlePage: React.FC<HelpArticlePageProps> = ({
     setWindowWidth('400px');
   };
 
+  const updated = (() => {
+    const t = Date.parse(selectedHelpArticle.updated_at);
+    if (Number.isNaN(t)) return '';
+    const days = Math.floor((Date.now() - t) / 86_400_000);
+    if (days < 1) return 'Updated today';
+    if (days === 1) return 'Updated yesterday';
+    if (days < 30) return `Updated ${days} days ago`;
+    return `Updated ${new Date(t).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}`;
+  })();
+
   return (
-    <div className='news-screen-container'>
-      {/* header */}
-      <div className='news-header'>
-        <div
-          onClick={handleOnBack}
-          style={{
-            cursor: 'pointer',
-            height: 36,
-            width: 36,
-            border: '1px solid var(--border-color)',
-            borderRadius: 8,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
+    <div className='rh-help rh-article'>
+      <div className='rh-help-bar'>
+        <button type='button' className='rh-icon-btn' onClick={handleOnBack} aria-label='Back'>
           <ChevronLeft size={18} />
-        </div>
-
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
-          <img
-            src={resolvedSecondaryLogo || chatbot_config?.secondaryLogo}
-            alt='Rhinon Logo'
-            style={{
-              maxHeight: '36px',
-              maxWidth: '120px',
-              objectFit: 'contain',
-            }}
-          />
-        </div>
-
-        {maxScreen ? (
-          <button
-            onClick={handleMinScreen}
-            className='header-btn-extend'
-            style={{ border: 'none', background: 'transparent', color: 'var(--text-primary)' }}
-          >
-            <Minimize2 size={18} />
-          </button>
-        ) : (
-          <button
-            onClick={handleMaxScreen}
-            className='header-btn-extend'
-            style={{ border: 'none', background: 'transparent', color: 'var(--text-primary)' }}
-          >
-            <Maximize2 size={18} />
-          </button>
-        )}
-        {/* <button className='header-btn'>
-          <EllipsisVertical size={18} />
-        </button> */}
+        </button>
+        <img className='rh-help-logo' src={resolvedSecondaryLogo || chatbot_config?.secondaryLogo} alt='' />
+        <button
+          type='button'
+          className='rh-icon-btn rh-help-bar-end'
+          onClick={maxScreen ? handleMinScreen : handleMaxScreen}
+          aria-label={maxScreen ? 'Make smaller' : 'Make bigger'}
+        >
+          {maxScreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+        </button>
       </div>
 
-      <div className='item-container'>
-        <div className='item-title'>
-          <h3>{selectedHelpArticle.title}</h3>
-          <p style={{ fontSize: 'small', color: 'var(--text-secondary)' }}>
-            Updated{' '}
-            {new Date(selectedHelpArticle.updated_at).toLocaleString()}
-          </p>
-        </div>
+      <div className='rh-help-scroll'>
+        <article className='rh-article-body'>
+          <h1 className='rh-article-title'>{selectedHelpArticle.title}</h1>
+          {updated && <p className='rh-help-meta'>{updated}</p>}
 
-        {/* render content as HTML */}
-        {loadingContent ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
-            <Loader />
-          </div>
-        ) : (
-          <>
-            <div
-              className='item-content'
-              dangerouslySetInnerHTML={{ __html: processedContent }}
-            />
-            <div className='article-feedback'>
-              {vote ? (
-                <span>Thanks for letting us know.</span>
-              ) : (
-                <>
-                  <span>Was this helpful?</span>
-                  <button type='button' onClick={() => handleVote('up')} aria-label='Yes, helpful'>
-                    <ThumbsUp size={15} /> Yes
-                  </button>
-                  <button type='button' onClick={() => handleVote('down')} aria-label='Not helpful'>
-                    <ThumbsDown size={15} /> No
-                  </button>
-                </>
-              )}
+          {loadingContent ? (
+            <div className='rh-help-loading'>
+              <Loader />
             </div>
-          </>
-        )}
+          ) : (
+            <>
+              <div className='rh-article-content' dangerouslySetInnerHTML={{ __html: processedContent }} />
+              <div className='rh-article-feedback'>
+                {vote ? (
+                  <p>{vote === 'up' ? 'Glad it helped 🎉' : 'Thanks — we’ll improve this article.'}</p>
+                ) : (
+                  <>
+                    <p>Was this article helpful?</p>
+                    <div>
+                      <button type='button' onClick={() => handleVote('up')} aria-label='Yes, helpful'>
+                        <ThumbsUp size={15} /> Yes
+                      </button>
+                      <button type='button' onClick={() => handleVote('down')} aria-label='Not helpful'>
+                        <ThumbsDown size={15} /> No
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </>
+          )}
+        </article>
       </div>
     </div>
   );

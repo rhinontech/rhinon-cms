@@ -30,6 +30,7 @@ export interface ChatbotConfig {
   persona?: string;
   primaryLogo?: string;
   secondaryLogo?: string;
+  launcherIcon?: string;
   isBgFade?: boolean;
   isBackgroundImage?: boolean;
   backgroundImage?: string;

@@ -118,9 +118,19 @@ router.get("/chatbot/chatbot", withResolvedBot, asyncRoute(async (req, res) => {
   });
 }));
 
+/** Pages on the developer's own machine don't count as the bot being installed. */
+function fromLocalPage(req: Request): boolean {
+  const page = String(req.get("origin") || req.get("referer") || "");
+  try {
+    return /^(localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0)$/.test(new URL(page).hostname);
+  } catch {
+    return false;
+  }
+}
+
 router.post("/chatbot/set-installed", withResolvedBot, asyncRoute(async (req, res) => {
   const { bot, organizationId } = req.bot!;
-  if (!bot.installedAt) {
+  if (!bot.installedAt && !fromLocalPage(req)) {
     await bot.update({ installedAt: new Date() });
     emitToOrg(organizationId, "chatbot:installed", { chatbotId: bot.id });
   }

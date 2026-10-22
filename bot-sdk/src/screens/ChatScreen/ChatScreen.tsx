@@ -18,6 +18,7 @@ import {
   PostChatForm,
 } from './ChatComponents';
 import { scrollWithin } from '@/utils/scrollWithin';
+import { AVATARS } from '@/constants/urls';
 
 // ====== Main ChatScreen Component ======
 const ChatScreen: React.FC<ChatScreenProps> = (props) => {
@@ -720,6 +721,14 @@ const ChatScreen: React.FC<ChatScreenProps> = (props) => {
 
       {/* Messages */}
       <div className='messages-container'>
+        {/* Who you're talking to, at the top of every conversation. */}
+        <div className='rh-chat-intro'>
+          <img src={AVATARS.BOT} alt='' />
+          <p className='rh-chat-intro-name'>{chatbot_config?.chatbotName || supportName}</p>
+          <p className='rh-chat-intro-sub'>
+            {isSpeakingWithRealPerson ? 'You’re chatting with our team' : 'Ask us anything — a person can join anytime'}
+          </p>
+        </div>
         {chatMessages.map((msg, index) => (
           <MessageItem
             key={index}

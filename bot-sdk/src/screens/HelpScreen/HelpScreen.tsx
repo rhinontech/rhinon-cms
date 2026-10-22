@@ -1,16 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Search,
-  EllipsisVertical,
-  ChevronLeft,
-  ChevronRight,
-} from 'lucide-react';
+import { BookOpen, ChevronLeft, ChevronRight, FileText, Search, X } from 'lucide-react';
 import './HelpScreen.scss';
 import { Loader } from '@/components/common';
 import { resolveS3Key, getInitialSrc } from '@/utils/s3KeyResolver';
 
 // New imports from restructured modules
-import type { Article, Folder, ChatbotConfig, HelpScreenProps } from '@/types';
+import type { Article, Folder, HelpScreenProps } from '@/types';
 import { fetchFoldersWithArticles } from '@/services/help';
 
 const HelpScreen: React.FC<HelpScreenProps> = ({
@@ -53,191 +48,136 @@ const HelpScreen: React.FC<HelpScreenProps> = ({
     resolveLogo();
   }, [chatbot_config?.secondaryLogo]);
 
-  // useEffect(() => {
-  //   console.log(folders)
-  // }, [folders])
+  const query = searchQuery.trim().toLowerCase();
+  // Searching looks across every collection, so a visitor needn't guess which one.
+  const results = query
+    ? folders.flatMap((folder) =>
+        (folder.articles || [])
+          .filter((article) => article.title.toLowerCase().includes(query))
+          .map((article) => ({ article, folder })),
+      )
+    : [];
+  const visibleFolders = folders.filter((folder) => (folder.articles || []).length > 0);
+  const articleCount = visibleFolders.reduce((n, f) => n + f.articles.length, 0);
+  const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
-  // Filter folders and articles by search
-  const filteredFolders = folders
-    .map((folder) => ({
-      ...folder,
-      articles: (folder.articles || []).filter((article) =>
-        article.title.toLowerCase().includes(searchQuery.toLowerCase()),
-      ),
-    }))
-    .filter(
-      (folder) =>
-        folder.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        folder.articles.length > 0,
-    )
-    .filter((folder) => folder.articles.length > 0);
+  const ArticleRow = ({ article, folderName }: { article: Article; folderName?: string }) => (
+    <button type='button' className='rh-help-article' onClick={() => setSelectedHelpArticle(article)}>
+      <span className='rh-help-article-icon'>
+        <FileText size={15} />
+      </span>
+      <span className='rh-help-article-text'>
+        <span className='rh-help-article-title'>{article.title}</span>
+        {folderName && <span className='rh-help-article-sub'>{folderName}</span>}
+      </span>
+      <ChevronRight size={16} className='rh-help-chevron' />
+    </button>
+  );
 
-
-  if (loading) {
-    return (
-      <div
-        style={{
-          height: '100%',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-      >
-        <Loader />
-      </div>
-    );
-  }
   return (
-    <div className='chat-list-screen'>
-      {/* Header */}
-      <div className='news-header'>
-        {selectedHelp && (
-          <div
-            onClick={() => setSelectedHelp(null)}
-            style={{
-              cursor: 'pointer',
-              height: 36,
-              width: 36,
-              border: '1px solid var(--border-color)',
-              borderRadius: 8,
-              display: 'flex',
-              position: 'relative',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 10,
-            }}
-          >
+    <div className='rh-help'>
+      {/* Top bar */}
+      <div className='rh-help-bar'>
+        {selectedHelp ? (
+          <button type='button' className='rh-icon-btn' onClick={() => setSelectedHelp(null)} aria-label='Back to all collections'>
             <ChevronLeft size={18} />
-          </div>
-        )}
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
-          <img
-            src={resolvedSecondaryLogo || chatbot_config?.secondaryLogo}
-            alt='Rhinon Logo'
-            style={{
-              maxHeight: '36px',
-              maxWidth: '120px',
-              objectFit: 'contain',
-            }}
-          />
-        </div>
-        {/* <button className='header-btn'>
-          <EllipsisVertical size={18} />
-        </button> */}
+          </button>
+        ) : null}
+        <img className='rh-help-logo' src={resolvedSecondaryLogo || chatbot_config?.secondaryLogo} alt='' />
       </div>
 
-      {/* Search + Collection Count */}
-      <div className='help-header'>
-        <div className='search-box'>
-          <input
-            type='text'
-            style={{ color: 'black' }}
-            placeholder='Search for the help...'
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <Search size={16} />
-        </div>
-        {!selectedHelp && (
-          <p
-            style={{
-              margin: 0,
-              padding: 0,
-              color: '#8A8A8A',
-              marginTop: '14px',
-              marginLeft: '10px',
-            }}
-          >
-            {filteredFolders.length > 0 && <>{filteredFolders.length} {filteredFolders.length === 1 ? 'collection' : 'collections'}</>}
-          </p>
-        )}
-      </div>
-
-      {/* Folder List */}
-      {!selectedHelp && !loading && (
-        <div className='help-categories'>
-          {filteredFolders.map((folder) => (
-            <div
-              key={folder.folderId}
-              onClick={() => setSelectedHelp(folder)}
-              className='help-item'
-            >
-              <h3>{folder.name}</h3>
-              {folder.description && <p>{folder.description}</p>}
-              <p className='help-count'>
-                {folder.articles.length} {folder.articles.length === 1 ? 'article' : 'articles'}
+      <div className='rh-help-scroll'>
+        {/* Hero: title + search, or the open collection */}
+        <div className='rh-help-hero'>
+          {selectedHelp ? (
+            <>
+              <span className='rh-help-hero-icon'>
+                <BookOpen size={18} />
+              </span>
+              <h2>{selectedHelp.name}</h2>
+              {selectedHelp.description && <p>{selectedHelp.description}</p>}
+              <span className='rh-help-meta'>{plural(selectedHelp.articles.length, 'article')}</span>
+            </>
+          ) : (
+            <>
+              <h2>How can we help?</h2>
+              <p>
+                {articleCount
+                  ? `${plural(articleCount, 'answer')} from the ${chatbot_config?.chatbotName || 'support'} team`
+                  : 'Answers to common questions'}
               </p>
-              <div
-                style={{
-                  position: 'absolute',
-                  right: '10px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                }}
-              >
-                <ChevronRight size={18} />
-              </div>
+              <label className='rh-help-search'>
+                <Search size={16} />
+                <input
+                  type='text'
+                  placeholder='Search articles'
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {searchQuery && (
+                  <button type='button' onClick={() => setSearchQuery('')} aria-label='Clear search'>
+                    <X size={14} />
+                  </button>
+                )}
+              </label>
+            </>
+          )}
+        </div>
+
+        <div className='rh-help-body'>
+          {loading ? (
+            <div className='rh-help-loading'>
+              <Loader />
             </div>
-          ))}
-          {filteredFolders.length === 0 && (
+          ) : selectedHelp ? (
+            <div className='rh-help-group'>
+              {selectedHelp.articles.map((article) => (
+                <ArticleRow key={article.articleId} article={article} />
+              ))}
+            </div>
+          ) : query ? (
+            results.length ? (
+              <>
+                <p className='rh-help-label'>{plural(results.length, 'result')}</p>
+                <div className='rh-help-group'>
+                  {results.map(({ article, folder }) => (
+                    <ArticleRow key={article.articleId} article={article} folderName={folder.name} />
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className='rh-empty'>
+                <p className='rh-empty-title'>No articles match “{searchQuery.trim()}”</p>
+                <p className='rh-empty-sub'>Try other words, or ask in the chat.</p>
+              </div>
+            )
+          ) : visibleFolders.length ? (
+            <>
+              <p className='rh-help-label'>Collections</p>
+              <div className='rh-help-folders'>
+                {visibleFolders.map((folder) => (
+                  <button type='button' key={folder.folderId} className='rh-help-folder' onClick={() => setSelectedHelp(folder)}>
+                    <span className='rh-help-folder-icon'>
+                      <BookOpen size={16} />
+                    </span>
+                    <span className='rh-help-folder-text'>
+                      <span className='rh-help-folder-name'>{folder.name}</span>
+                      {folder.description && <span className='rh-help-folder-desc'>{folder.description}</span>}
+                      <span className='rh-help-meta'>{plural(folder.articles.length, 'article')}</span>
+                    </span>
+                    <ChevronRight size={16} className='rh-help-chevron' />
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
             <div className='rh-empty'>
               <p className='rh-empty-title'>No help articles yet</p>
               <p className='rh-empty-sub'>Ask in the chat instead — we&apos;re happy to help.</p>
             </div>
           )}
         </div>
-      )}
-
-      {/* Articles inside Folder */}
-      {selectedHelp && (
-        <div className='help-categories'>
-          {/* Folder header */}
-          <div
-            className='help-item'
-            style={{
-              background: 'var(--bg-secondary)',
-              boxShadow: 'none',
-              cursor: 'default',
-            }}
-          >
-            <h3 style={{ fontWeight: 'bold' }}>{selectedHelp.name}</h3>
-            {selectedHelp.description && <p>{selectedHelp.description}</p>}
-            <p className='help-count'>
-              {selectedHelp.articles.length} {selectedHelp.articles.length === 1 ? 'article' : 'articles'}
-            </p>
-          </div>
-
-          {/* Articles */}
-          {selectedHelp.articles.length === 0 && (
-            <p style={{ padding: '10px', color: '#999' }}>
-              No articles in this folder.
-            </p>
-          )}
-
-          {selectedHelp.articles
-            .filter((article) =>
-              article.title.toLowerCase().includes(searchQuery.toLowerCase()),
-            )
-            .map((article) => (
-              <div
-                key={article.articleId}
-                onClick={() => setSelectedHelpArticle(article)}
-                className='help-item'
-                style={{
-                  background: 'var(--bg-secondary)',
-                  boxShadow: 'none',
-                  paddingTop: '20px',
-                  paddingBottom: '20px',
-                  display: 'flex',
-                  flexDirection: 'row',
-                }}
-              >
-                <h3 style={{ flex: 1 }}>{article.title}</h3>
-                <ChevronRight size={18} />
-              </div>
-            ))}
-        </div>
-      )}
+      </div>
     </div>
   );
 };

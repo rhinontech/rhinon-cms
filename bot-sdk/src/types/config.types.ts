@@ -16,6 +16,8 @@ export interface ChatbotConfig {
   popupMessage?: string;
   greetings?: string[];
   primaryLogo?: string;
+  /** The launcher button's own icon (Appearance → Launcher icon), inset on the primary colour. */
+  launcherIcon?: string;
   secondaryLogo?: string;
   preChatForm?: FormField[];
   postChatForm?: PostChatFormConfig;

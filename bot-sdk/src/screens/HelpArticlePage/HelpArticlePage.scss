@@ -59,35 +59,3 @@
     border-radius: 6px;
     /* optional for consistency */
 }
-.article-feedback {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 8px 10px 24px;
-    padding-top: 14px;
-    border-top: 1px solid var(--border-color, rgba(15, 23, 42, 0.08));
-    font-size: 13px;
-    color: var(--text-secondary);
-
-    span {
-        margin-right: auto;
-    }
-
-    button {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        padding: 6px 12px;
-        border-radius: 999px;
-        border: 1px solid var(--border-color, rgba(15, 23, 42, 0.12));
-        background: transparent;
-        color: var(--text-primary);
-        font: inherit;
-        font-size: 12.5px;
-        cursor: pointer;
-
-        &:hover {
-            background: rgba(127, 127, 127, 0.08);
-        }
-    }
-}

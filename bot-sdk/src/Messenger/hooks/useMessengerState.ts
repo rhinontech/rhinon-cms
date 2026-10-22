@@ -205,6 +205,7 @@ export function useMessengerState(
                 cfg.primaryLogo || LOGOS.primaryLight,
               secondaryLogo:
                 cfg.secondaryLogo || LOGOS.primaryDark,
+              launcherIcon: cfg.launcherIcon || '',
               preChatForm: formResponse.pre_chat_form,
               postChatForm: formResponse.post_chat_form,
               ticketForm: formResponse.ticket_form,

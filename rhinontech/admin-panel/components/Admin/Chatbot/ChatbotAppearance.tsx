@@ -143,7 +143,7 @@ export function ChatbotAppearance() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <ImageField
                     label="Primary logo"
-                    hint="Home header and the launcher button. Square works best."
+                    hint="Home header. Also the launcher, unless you set a launcher icon."
                     value={isBuiltIn(draft.primaryLogo) ? undefined : draft.primaryLogo}
                     defaultSrc={DEFAULT_IMAGES.primaryLogo}
                     aspect={1}
@@ -158,6 +158,15 @@ export function ChatbotAppearance() {
                     defaultSrc={DEFAULT_IMAGES.secondaryLogo}
                     onChange={(url) => set("secondaryLogo", url ?? "")}
                     testId="secondary-logo"
+                  />
+                  <ImageField
+                    label="Launcher icon"
+                    hint="Shown inside the launcher button, on your primary colour. A white logo on a transparent background works best."
+                    value={draft.launcherIcon || undefined}
+                    defaultSrc={`${API_URL}/widget/assets/bot.png`}
+                    aspect={1}
+                    onChange={(url) => set("launcherIcon", url ?? "")}
+                    testId="launcher-icon"
                   />
                 </div>
               </Panel>

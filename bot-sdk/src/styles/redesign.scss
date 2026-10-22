@@ -86,15 +86,23 @@ $ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .chat-button {
-  width: 56px !important;
-  height: 56px !important;
-  border-radius: 50% !important;
-  box-shadow: 0 10px 24px -6px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
-  transition: transform 0.2s $ease, box-shadow 0.2s $ease;
+  // The original Saleszium launcher: 50px, this shape, the logo inset on the
+  // primary colour, no shadow.
+  width: 50px !important;
+  height: 50px !important;
+  border-radius: 10% 35% 25% 35% !important;
+  box-shadow: none !important;
+  transition: transform 0.2s $ease;
 
   &:hover {
-    transform: scale(1.06) !important;
-    box-shadow: 0 14px 30px -8px rgba(15, 23, 42, 0.45);
+    transform: scale(1.1) !important;
+  }
+
+  .chat-button-icon {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    display: block;
   }
 }
 
@@ -370,20 +378,27 @@ $ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 /* ── Chat ──────────────────────────────────────────────────────────── */
 
 .chat-header {
-  height: 64px !important;
+  height: 60px !important;
   align-items: center;
-  padding: 0 14px !important;
-  background: var(--bg-primary);
+  padding: 0 12px 0 14px !important;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--primary-color) 9%, var(--bg-primary)), var(--bg-primary)) !important;
   border-bottom: 1px solid var(--border-color) !important;
 
+  .contact-info {
+    gap: 10px !important;
+  }
+
+  // The back button (inline-styled in ChatHeader).
   .contact-info > div:first-child[style] {
     border: 0 !important;
     border-radius: 10px !important;
-    width: 32px !important;
-    height: 32px !important;
+    width: 30px !important;
+    height: 30px !important;
+    color: var(--text-secondary);
 
     &:hover {
       background: var(--bg-tertiary);
+      color: var(--text-primary);
     }
   }
 
@@ -391,17 +406,19 @@ $ease: cubic-bezier(0.2, 0.8, 0.2, 1);
     position: relative;
 
     img {
-      width: 38px !important;
-      height: 38px !important;
+      width: 34px !important;
+      height: 34px !important;
+      border-radius: 50% !important;
+      box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 3px var(--border-color);
     }
 
     &::after {
       content: '';
       position: absolute;
-      right: 0;
-      bottom: 0;
-      width: 10px;
-      height: 10px;
+      right: -1px;
+      bottom: -1px;
+      width: 9px;
+      height: 9px;
       border-radius: 50%;
       background: #22c55e;
       border: 2px solid var(--bg-primary);
@@ -409,43 +426,95 @@ $ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
   .name {
-    font-size: 15px !important;
+    font-size: 14.5px !important;
     font-weight: 600 !important;
     letter-spacing: -0.01em;
+    line-height: 1.25 !important;
   }
 
   .status {
-    font-size: 12px !important;
+    font-size: 11.5px !important;
     color: var(--text-secondary) !important;
+    line-height: 1.3 !important;
   }
 
-  .header-btn {
+  .header-btn,
+  .header-btn-extend {
+    width: 30px !important;
+    height: 30px !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
     color: var(--text-secondary) !important;
     border-radius: 10px !important;
+
+    &:hover {
+      background: var(--bg-tertiary) !important;
+      color: var(--text-primary) !important;
+    }
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
   }
 }
 
 .messages-container {
-  padding: 18px 16px !important;
-  gap: 10px !important;
+  padding: 8px 14px 14px !important;
+  gap: 8px !important;
   background: var(--bg-primary);
+  scrollbar-width: thin;
+}
+
+.rh-chat-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 18px 12px 14px;
+  margin-bottom: 4px;
+
+  img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    margin-bottom: 8px;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary-color) 14%, transparent);
+  }
+
+  .rh-chat-intro-name {
+    margin: 0 !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+  }
+
+  .rh-chat-intro-sub {
+    margin: 2px 0 0 !important;
+    font-size: 12px !important;
+    color: var(--text-secondary) !important;
+  }
 }
 
 .message {
-  max-width: 82% !important;
+  max-width: 84% !important;
   align-items: flex-end;
+  gap: 8px !important;
 
   .message-avatar img {
-    width: 28px !important;
-    height: 28px !important;
+    width: 26px !important;
+    height: 26px !important;
+    border-radius: 50% !important;
   }
 
   .message-bubble {
-    padding: 10px 14px !important;
+    padding: 9px 13px !important;
     font-size: 14px !important;
     line-height: 1.5 !important;
     border-radius: 18px !important;
-    box-shadow: none;
+    box-shadow: none !important;
+    word-break: break-word;
   }
 
   // Bot bubbles use the bot's secondary colour (Appearance → Secondary colour),
@@ -453,13 +522,34 @@ $ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   &.bot .message-bubble {
     background: var(--secondary-color, var(--rh-bot-bubble)) !important;
     color: #111827 !important;
+    border: 1px solid color-mix(in srgb, #0f172a 8%, transparent);
     border-bottom-left-radius: 6px !important;
+
+    a {
+      color: var(--primary-color) !important;
+    }
   }
 
   &.user .message-bubble {
-    background: var(--primary-color) !important;
+    background: linear-gradient(135deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 78%, #000)) !important;
     color: #fff !important;
     border-bottom-right-radius: 6px !important;
+
+    a {
+      color: #fff !important;
+    }
+  }
+}
+
+.typing-dots {
+  height: 18px !important;
+  padding: 0 2px;
+
+  span {
+    width: 6px !important;
+    height: 6px !important;
+    background-color: #64748b !important;
+    opacity: 0.7;
   }
 }
 
@@ -468,36 +558,82 @@ $ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   color: var(--text-tertiary) !important;
 }
 
+// The composer: one rounded field with the actions inside it.
 .chat-input {
-  padding: 10px 12px 12px !important;
-  background: var(--bg-primary);
-  border-top: 1px solid var(--border-color);
+  margin: 0 12px 12px !important;
+  padding: 5px 5px 5px 16px !important;
+  min-height: 46px;
+  box-sizing: border-box;
+  gap: 2px !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 23px !important;
+  background: var(--bg-secondary) !important;
+  box-shadow: var(--shadow-sm) !important;
+  transition: border-color 0.15s, box-shadow 0.15s;
 
-  .input-group {
-    border-radius: 16px !important;
-    border: 1px solid var(--border-color) !important;
-    background: var(--bg-secondary) !important;
-    box-shadow: none !important;
-    transition: border-color 0.15s, box-shadow 0.15s;
+  &:focus-within {
+    border-color: color-mix(in srgb, var(--primary-color) 50%, var(--border-color)) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 13%, transparent) !important;
+  }
 
-    &:focus-within {
-      border-color: color-mix(in srgb, var(--primary-color) 55%, var(--border-color)) !important;
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 14%, transparent) !important;
+  input[type='text'] {
+    min-width: 0;
+    height: 34px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    font-size: 14px !important;
+    color: var(--text-primary) !important;
+
+    &::placeholder {
+      color: var(--text-tertiary);
     }
   }
 
-  .send-btn {
-    border-radius: 12px !important;
-    background: var(--primary-color) !important;
-  }
-
   .input-btn {
+    width: 32px !important;
+    height: 32px !important;
+    flex-shrink: 0;
+    justify-content: center;
+    border-radius: 50% !important;
     color: var(--text-tertiary) !important;
-    border-radius: 10px !important;
+    transition: background 0.15s, color 0.15s;
+
+    svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+    }
 
     &:hover {
       color: var(--text-primary) !important;
       background: var(--bg-tertiary) !important;
+    }
+  }
+
+  .send-btn {
+    width: 36px !important;
+    height: 36px !important;
+    flex-shrink: 0;
+    margin-left: 2px;
+    border-radius: 50% !important;
+    background: var(--primary-color) !important;
+    box-shadow: 0 4px 12px -4px color-mix(in srgb, var(--primary-color) 70%, transparent);
+    transition: transform 0.15s $ease, opacity 0.15s;
+
+    svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    &:hover:not(.disabled) {
+      transform: scale(1.05);
+    }
+
+    &.disabled {
+      opacity: 0.4;
+      box-shadow: none;
     }
   }
 }
@@ -1209,4 +1345,450 @@ $ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   border-radius: 10px !important;
   font-size: 13.5px !important;
   font-weight: 600 !important;
+}
+
+/* ── Help center (Help tab, a collection, an article) ─────────────── */
+
+.rh-help {
+  // A soft brand-colour glow from the top-right corner, behind the bar and header.
+  background:
+    radial-gradient(120% 70% at 100% 0%, color-mix(in srgb, var(--primary-color) 16%, transparent), transparent 70%),
+    var(--bg-primary) !important;
+  background-repeat: no-repeat !important;
+  display: flex;
+  flex-direction: column;
+  height: 97%;
+  margin: 10px 10px 0;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+}
+
+.rh-help-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 52px;
+  flex-shrink: 0;
+  padding: 0 10px 0 12px;
+  border-bottom: 1px solid var(--border-color);
+
+  .rh-help-bar-end {
+    margin-left: auto;
+  }
+}
+
+.rh-help-logo {
+  max-height: 26px;
+  max-width: 120px;
+  object-fit: contain;
+}
+
+.rh-help-scroll {
+  flex: 1;
+  border-top: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.rh-help-hero {
+  padding: 20px 16px 18px;
+
+  h2 {
+    margin: 0 !important;
+    font-size: 19px !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.02em;
+    color: var(--text-primary) !important;
+  }
+
+  p {
+    margin: 4px 0 0 !important;
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+    color: var(--text-secondary) !important;
+  }
+}
+
+.rh-help-hero-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin-bottom: 10px;
+  border-radius: 11px;
+  color: var(--primary-color);
+  background: color-mix(in srgb, var(--primary-color) 14%, var(--bg-primary));
+}
+
+.rh-help-meta {
+  display: block;
+  margin-top: 6px;
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+}
+
+.rh-help-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  margin-top: 14px;
+  padding: 0 12px;
+  box-sizing: border-box;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-primary);
+  box-shadow: var(--shadow-sm);
+  color: var(--text-tertiary);
+  cursor: text;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus-within {
+    border-color: color-mix(in srgb, var(--primary-color) 50%, var(--border-color));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 13%, transparent);
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    font-size: 14px;
+    color: var(--text-primary) !important;
+
+    &::placeholder {
+      color: var(--text-tertiary);
+    }
+  }
+
+  button {
+    display: flex;
+    padding: 4px;
+    border: 0;
+    border-radius: 6px;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+}
+
+.rh-help-body {
+  padding: 4px 12px 16px;
+}
+
+.rh-help-loading {
+  display: flex;
+  justify-content: center;
+  padding: 32px 0;
+}
+
+.rh-help-label {
+  margin: 8px 4px 8px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-tertiary) !important;
+}
+
+.rh-help-folders {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rh-help-folder,
+.rh-help-article {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  border: 0;
+  text-align: left;
+  font: inherit;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.rh-help-folder {
+  padding: 12px 12px 12px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--rh-card);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s, transform 0.18s $ease, box-shadow 0.18s $ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+    border-color: color-mix(in srgb, var(--primary-color) 35%, var(--border-color));
+  }
+}
+
+.rh-help-folder-icon,
+.rh-help-article-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 10px;
+  color: var(--primary-color);
+  background: color-mix(in srgb, var(--primary-color) 12%, var(--bg-primary));
+}
+
+.rh-help-folder-icon {
+  width: 36px;
+  height: 36px;
+  align-self: flex-start;
+}
+
+.rh-help-article-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+}
+
+.rh-help-folder-text,
+.rh-help-article-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.rh-help-folder-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.rh-help-folder-desc {
+  margin-top: 2px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.rh-help-folder .rh-help-meta {
+  margin-top: 4px;
+}
+
+.rh-help-chevron {
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+}
+
+// Articles: one grouped card with divided rows.
+.rh-help-group {
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--rh-card);
+  box-shadow: var(--shadow-sm);
+}
+
+.rh-help-article {
+  padding: 12px;
+  background: transparent;
+  transition: background 0.15s;
+
+  & + & {
+    border-top: 1px solid var(--border-color);
+  }
+
+  &:hover {
+    background: var(--bg-secondary);
+
+    .rh-help-chevron {
+      color: var(--text-primary);
+    }
+  }
+}
+
+.rh-help-article-title {
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.rh-help-article-sub {
+  margin-top: 1px;
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+}
+
+// One article.
+.rh-article-body {
+  padding: 22px 20px 24px;
+}
+
+.rh-article-title {
+  margin: 0 !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+  letter-spacing: -0.02em;
+  color: var(--text-primary) !important;
+}
+
+.rh-article .rh-help-meta {
+  margin-top: 6px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.rh-article-content {
+  padding-top: 6px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+
+  p {
+    margin: 12px 0 !important;
+    font-size: 14px !important;
+    line-height: 1.7 !important;
+    color: var(--text-primary) !important;
+  }
+
+  h2 {
+    margin: 22px 0 6px !important;
+    font-size: 16px !important;
+    font-weight: 650 !important;
+    letter-spacing: -0.01em;
+  }
+
+  h3,
+  h4 {
+    margin: 18px 0 4px !important;
+    font-size: 14.5px !important;
+    font-weight: 600 !important;
+  }
+
+  ul,
+  ol {
+    margin: 10px 0 !important;
+    padding-left: 22px !important;
+  }
+
+  li {
+    margin: 4px 0;
+    padding-left: 2px;
+  }
+
+  li::marker {
+    color: var(--primary-color);
+    font-weight: 600;
+  }
+
+  a {
+    color: var(--primary-color) !important;
+    font-weight: 500;
+    text-underline-offset: 2px;
+  }
+
+  blockquote {
+    margin: 14px 0;
+    padding: 10px 14px;
+    border-left: 3px solid var(--primary-color);
+    border-radius: 0 10px 10px 0;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+  }
+
+  img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 14px 0;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+  }
+
+  code {
+    padding: 1px 5px;
+    border-radius: 5px;
+    background: var(--bg-tertiary);
+    font-size: 12.5px;
+  }
+
+  hr {
+    margin: 20px 0;
+    border: 0;
+    border-top: 1px solid var(--border-color);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  th,
+  td {
+    padding: 6px 8px;
+    border: 1px solid var(--border-color);
+    text-align: left;
+  }
+}
+
+.rh-article-feedback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 26px;
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  text-align: center;
+
+  p {
+    margin: 0 !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: var(--text-primary) !important;
+  }
+
+  div {
+    display: flex;
+    gap: 8px;
+  }
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+
+    &:hover {
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+    }
+  }
+}
+
+// On dark, the brand colour alone is too dim for the small icons.
+.chatbot-container[data-theme='dark'] {
+  .rh-help-folder-icon,
+  .rh-help-article-icon,
+  .rh-help-hero-icon {
+    color: color-mix(in srgb, var(--primary-color) 55%, #fff);
+    background: color-mix(in srgb, var(--primary-color) 22%, var(--bg-primary));
+  }
 }

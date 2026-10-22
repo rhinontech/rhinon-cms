@@ -1,9 +1,10 @@
 // ChatButton - Floating chat button component
 import React, { memo, useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { MessageCircle, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { LOGOS } from '@/constants/urls';
 import type { ChatbotConfig } from '@/types';
+import { AVATARS } from '@/constants/urls';
 import { resolveS3Key, getInitialSrc } from '@/utils/s3KeyResolver';
 
 interface ChatButtonProps {
@@ -40,6 +41,13 @@ export const ChatButton: React.FC<ChatButtonProps> = memo(({
     resolveLogo();
   }, [chatbot_config.primaryLogo]);
 
+  // Appearance → Launcher icon, in place of the logo.
+  const [launcherIcon, setLauncherIcon] = useState<string>(() => getInitialSrc(chatbot_config.launcherIcon));
+  useEffect(() => {
+    if (!chatbot_config.launcherIcon) return setLauncherIcon('');
+    resolveS3Key(chatbot_config.launcherIcon, null).then(setLauncherIcon);
+  }, [chatbot_config.launcherIcon]);
+
   const defaultLogos: string[] = [LOGOS.primaryLight, LOGOS.primaryDark, LOGOS.rhinonWhite];
   const hasCustomLogo = !!chatbot_config.primaryLogo && !defaultLogos.includes(chatbot_config.primaryLogo);
 
@@ -53,7 +61,7 @@ export const ChatButton: React.FC<ChatButtonProps> = memo(({
   return (
     <motion.button
       style={{ ['--primary-color' as string]: chatbot_config.primaryColor }}
-      className={`chat-button ${!isAdmin && isOpen ? '' : ''}`}
+      className='chat-button'
       onClick={isAdmin ? undefined : isOpen ? onClose : onToggle}
       disabled={isAdmin}
       whileHover={{ scale: 1.1 }}
@@ -81,6 +89,8 @@ export const ChatButton: React.FC<ChatButtonProps> = memo(({
 
       {!isAdmin && isOpen ? (
         <X size={24} color='#fff' aria-hidden="true" />
+      ) : launcherIcon ? (
+        <img className='chat-button-icon' src={launcherIcon} alt={`${chatbot_config.chatbotName || 'Chat'} icon`} />
       ) : hasCustomLogo ? (
         <img
           src={resolvedLogo || chatbot_config.primaryLogo}
@@ -88,8 +98,8 @@ export const ChatButton: React.FC<ChatButtonProps> = memo(({
           style={{ width: '32px', height: '32px', objectFit: 'contain' }}
         />
       ) : (
-        // No logo of their own: our wordmark does not fit a 32px circle.
-        <MessageCircle size={26} color='#fff' aria-hidden="true" />
+        // Nothing uploaded: the default launcher icon Appearance shows.
+        <img className='chat-button-icon' src={AVATARS.BOT} alt='' aria-hidden="true" />
       )}
     </motion.button>
   );
