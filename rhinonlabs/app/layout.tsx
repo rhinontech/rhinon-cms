@@ -125,6 +125,7 @@ export default function RootLayout({
             most pages; fetch the right size first instead of discovering it late. */}
         <link rel="preload" as="image" type="image/avif" href="/images/background/background-960.avif" media="(max-width: 767px)" fetchPriority="high" />
         <link rel="preload" as="image" type="image/avif" href="/images/background/background-1920.avif" media="(min-width: 768px)" fetchPriority="high" />
+        {/* Rhinon Analytics Tracking */}
         <script
           async
           defer
