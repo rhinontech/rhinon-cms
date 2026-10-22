@@ -11,7 +11,7 @@
   "dependencies": {
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-slot": "^1.2.4",
-    "@rhinon/chat": "^1.0.0",
+    "@rhinon/chat": "^1.0.3",
     "@tsparticles/react": "^3.0.0",
     "@tsparticles/slim": "^3.9.1",
     "class-variance-authority": "^0.7.1",
