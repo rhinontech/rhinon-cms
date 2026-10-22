@@ -1,13 +1,11 @@
 // Campaign analytics tracking utilities
 
-import { getServerApiUrl } from '@/services/api';
-
-const ANALYTICS_ENDPOINT = getServerApiUrl();
+import { getServerApiUrl, getCurrentAppId } from '@/services/api';
 
 type AnalyticsEvent = 'campaign_impression' | 'campaign_click' | 'campaign_close';
 
 interface AnalyticsData {
-    campaignId: number;
+    campaignId: number | string;
     appId: string;
     timestamp: number;
     buttonId?: string;
@@ -16,36 +14,28 @@ interface AnalyticsData {
 }
 
 /**
- * Send analytics event to backend
+ * Counts a campaign view, click or close (the stats on the admin's Campaigns
+ * list). Fire-and-forget: keepalive lets a click that navigates away still land.
  */
 const sendAnalytics = async (event: AnalyticsEvent, data: AnalyticsData): Promise<void> => {
     try {
-        // For now, just log to console
-        // In production, this would send to your analytics endpoint
-        console.log(`[Campaign Analytics] ${event}:`, data);
-
-        // Uncomment when backend endpoint is ready
-        /*
-        await fetch(`${ANALYTICS_ENDPOINT}/analytics/campaign`, {
+        // Read at call time: an npm install sets api_url after this module loads.
+        await fetch(`${getServerApiUrl()}/analytics/campaign`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                event,
-                ...data
-            })
+            headers: { 'Content-Type': 'application/json' },
+            // The card component doesn't always know the app id; the page's bot is the fallback.
+            body: JSON.stringify({ event, ...data, chatbot_id: data.appId || getCurrentAppId() }),
+            keepalive: true,
         });
-        */
-    } catch (error) {
-        console.error('Error sending campaign analytics:', error);
+    } catch {
+        // Stats are best-effort; never disturb the visitor.
     }
 };
 
 /**
  * Track when a campaign is shown to a visitor
  */
-export const trackCampaignImpression = (campaignId: number, appId: string): void => {
+export const trackCampaignImpression = (campaignId: number | string, appId: string): void => {
     sendAnalytics('campaign_impression', {
         campaignId,
         appId,
@@ -57,7 +47,7 @@ export const trackCampaignImpression = (campaignId: number, appId: string): void
  * Track when a campaign button is clicked
  */
 export const trackCampaignClick = (
-    campaignId: number,
+    campaignId: number | string,
     buttonId: string,
     appId: string,
     url?: string,
@@ -76,7 +66,7 @@ export const trackCampaignClick = (
 /**
  * Track when a campaign is closed by the visitor
  */
-export const trackCampaignClose = (campaignId: number, appId: string): void => {
+export const trackCampaignClose = (campaignId: number | string, appId: string): void => {
     sendAnalytics('campaign_close', {
         campaignId,
         appId,

@@ -8,6 +8,8 @@ import { Chatbot } from "../models/Chatbot";
 import { ChatbotSource } from "../models/ChatbotSource";
 import { ChatConversation } from "../models/ChatConversation";
 import { ChatMessage } from "../models/ChatMessage";
+import { ChatbotCampaign } from "../models/ChatbotCampaign";
+import { cleanContent, cleanTargeting } from "../services/chatbot/campaigns";
 import { User } from "../models/User";
 import { chatbotSlotBlockedReason } from "../services/usage";
 import { currentSiteFilter, runAcrossSites } from "../services/siteContext";
@@ -142,6 +144,83 @@ router.delete("/", canWrite, async (req: AuthRequest, res) => {
   if (convIds.length) await ChatMessage.destroy({ where: { conversationId: { [Op.in]: convIds } } });
   await ChatConversation.destroy({ where: { chatbotId: bot.id } });
   await bot.destroy();
+  res.json({ success: true });
+});
+
+// ── Campaigns (targeted pop-ups) ───────────────────────────────────────
+
+function campaignFields(body: Record<string, any>) {
+  const out: Record<string, unknown> = {};
+  if ("name" in body) out.name = str(body.name, 200) || "Untitled campaign";
+  if (body.type === "recurring" || body.type === "one-time") out.type = body.type;
+  if ("content" in body) out.content = cleanContent(body.content);
+  if ("targeting" in body) out.targeting = cleanTargeting(body.targeting);
+  for (const key of ["startsAt", "endsAt"] as const) {
+    if (key in body) {
+      const d = body[key] ? new Date(body[key]) : null;
+      out[key] = d && !Number.isNaN(d.getTime()) ? d : null;
+    }
+  }
+  return out;
+}
+
+router.get("/campaigns", canRead, async (_req, res) => {
+  const bot = await currentBot(res);
+  if (!bot) return;
+  res.json({ campaigns: await ChatbotCampaign.findAll({ where: { chatbotId: bot.id }, order: [["updatedAt", "DESC"]] }) });
+});
+
+router.get("/campaigns/:id", canRead, async (req, res) => {
+  const bot = await currentBot(res);
+  if (!bot) return;
+  const campaign = await ChatbotCampaign.findOne({ where: { id: req.params.id as string, chatbotId: bot.id } });
+  if (!campaign) return void res.status(404).json({ message: "Campaign not found" });
+  res.json({ campaign });
+});
+
+router.post("/campaigns", canWrite, async (req, res) => {
+  const bot = await currentBot(res);
+  if (!bot) return;
+  const fields = campaignFields({ content: {}, targeting: {}, ...(req.body ?? {}) });
+  const campaign = await ChatbotCampaign.create({ chatbotId: bot.id, name: "Untitled campaign", status: "draft", ...fields } as any);
+  res.status(201).json({ campaign });
+});
+
+router.patch("/campaigns/:id", canWrite, async (req, res) => {
+  const bot = await currentBot(res);
+  if (!bot) return;
+  const campaign = await ChatbotCampaign.findOne({ where: { id: req.params.id as string, chatbotId: bot.id } });
+  if (!campaign) return void res.status(404).json({ message: "Campaign not found" });
+  const fields = campaignFields(req.body ?? {});
+  if (["draft", "active", "paused"].includes(req.body?.status)) fields.status = req.body.status;
+  const next = { ...campaign.toJSON(), ...fields } as any;
+  if (next.status === "active" && !(next.content as any)?.heading) return void res.status(400).json({ message: "Add a heading before publishing." });
+  if (next.startsAt && next.endsAt && new Date(next.endsAt) <= new Date(next.startsAt)) return void res.status(400).json({ message: "The end date must be after the start date." });
+  await campaign.update(fields);
+  res.json({ campaign });
+});
+
+router.post("/campaigns/:id/duplicate", canWrite, async (req, res) => {
+  const bot = await currentBot(res);
+  if (!bot) return;
+  const source = await ChatbotCampaign.findOne({ where: { id: req.params.id as string, chatbotId: bot.id } });
+  if (!source) return void res.status(404).json({ message: "Campaign not found" });
+  const campaign = await ChatbotCampaign.create({
+    chatbotId: bot.id,
+    name: `${source.name} (copy)`.slice(0, 200),
+    type: source.type,
+    status: "draft",
+    content: source.content,
+    targeting: source.targeting,
+  });
+  res.status(201).json({ campaign });
+});
+
+router.delete("/campaigns/:id", canWrite, async (req, res) => {
+  const bot = await currentBot(res);
+  if (!bot) return;
+  const deleted = await ChatbotCampaign.destroy({ where: { id: req.params.id as string, chatbotId: bot.id } });
+  if (!deleted) return void res.status(404).json({ message: "Campaign not found" });
   res.json({ success: true });
 });
 

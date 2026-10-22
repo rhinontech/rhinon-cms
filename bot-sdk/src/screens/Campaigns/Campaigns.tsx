@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import './Campaigns.scss';
 import {
-  trackCampaignImpression,
   trackCampaignClick,
   trackCampaignClose,
 } from '@/services/campaign';
@@ -13,13 +12,7 @@ export const Campaigns: React.FC<CampaignsProps & { appId?: string }> = ({
   activeCampaign,
   appId = '',
 }) => {
-  // Track impression on mount
-  useEffect(() => {
-    const trackImpression = async () => {
-      trackCampaignImpression(activeCampaign.id, appId);
-    };
-    trackImpression();
-  }, [activeCampaign.id, appId]);
+  // The view is counted once, where the campaign is chosen (useCampaignLogic).
 
   const handleButtonClick = async (btn: ButtonElement) => {
     // Track click
@@ -34,14 +27,21 @@ export const Campaigns: React.FC<CampaignsProps & { appId?: string }> = ({
     // Perform action based on actionType
     const actionType = btn.actionType || 'open-url';
 
-    if (actionType === 'open-url') {
+    if (actionType === 'open-chat') {
+      // Opens the chat window (Campaign → chat hand-off).
+      setIsOpen(true);
+    } else if (actionType === 'open-url') {
       const url = btn.url?.trim();
 
       if (!url) return;
 
       // If external link → open in new tab
       if (url.startsWith('http://') || url.startsWith('https://')) {
-        window.open(url, '_blank');
+        window.open(url, '_blank', 'noopener');
+      }
+      // mailto: / tel: — hand to the browser as-is
+      else if (/^(mailto|tel):/i.test(url)) {
+        window.location.href = url;
       }
       // If internal route → navigate inside site
       else {

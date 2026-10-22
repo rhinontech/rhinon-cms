@@ -1,6 +1,6 @@
 // Campaign frequency capping utilities
 
-const STORAGE_KEY = 'saleszium_campaign_views';
+const STORAGE_KEY = 'rhinon_campaign_views';
 const DEFAULT_MAX_VIEWS = 3;
 const DEFAULT_COOLDOWN_HOURS = 24;
 
@@ -46,7 +46,7 @@ const saveCampaignViews = (views: CampaignViews): void => {
  * @param cooldownHours - Cooldown period for recurring campaigns (default: 24) - NOT USED ANYMORE
  */
 export const canShowCampaign = (
-    campaignId: number,
+    campaignId: number | string,
     campaignType: 'recurring' | 'one-time' = 'recurring',
     maxViews: number = DEFAULT_MAX_VIEWS,
     cooldownHours: number = DEFAULT_COOLDOWN_HOURS
@@ -74,7 +74,7 @@ export const canShowCampaign = (
  * Record a campaign view
  * Only records for one-time campaigns - recurring campaigns are not tracked
  */
-export const recordCampaignView = (campaignId: number, campaignType: 'recurring' | 'one-time' = 'recurring'): void => {
+export const recordCampaignView = (campaignId: number | string, campaignType: 'recurring' | 'one-time' = 'recurring'): void => {
     // Don't record views for recurring campaigns
     if (campaignType === 'recurring') {
         return;

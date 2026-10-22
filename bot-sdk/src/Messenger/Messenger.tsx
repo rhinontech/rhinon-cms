@@ -53,6 +53,8 @@ interface MessengerProps {
 const Messenger: React.FC<MessengerProps> = ({ config }) => {
   // Use centralized state management hook
   const state = useMessengerState(config);
+  // The visitor closed the pop-up message — not shown again this page view.
+  const [popupDismissed, setPopupDismissed] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const [socket, setSocket] = useState<any>(null);
 
@@ -894,8 +896,8 @@ const Messenger: React.FC<MessengerProps> = ({ config }) => {
         ['--secondary-color' as string]: chatbot_config?.secondaryColor || '#f3f6ff',
       }}
     >
-      {/* Campaign Popup */}
-      {!isOpen && showPopup && chatbot_config?.popupMessage && activeCampaign && (
+      {/* Campaign — a matching campaign wins over the plain pop-up message */}
+      {!isOpen && !config?.admin && showPopup && activeCampaign && (
         <Suspense fallback={null}>
           <Campaigns
             setIsOpen={(val) => {
@@ -908,6 +910,24 @@ const Messenger: React.FC<MessengerProps> = ({ config }) => {
             activeCampaign={activeCampaign}
           />
         </Suspense>
+      )}
+
+      {/* Pop-up message (Appearance → Pop-up message) beside the launcher */}
+      {!isOpen && !config?.admin && showPopup && !activeCampaign && !popupDismissed && chatbot_config?.popupMessage && (
+        <div className='chatbot-popup rh-popup' role='button' tabIndex={0} onClick={() => setIsOpen(true)}>
+          <button
+            type='button'
+            className='rh-popup-close'
+            aria-label='Dismiss'
+            onClick={(e) => {
+              e.stopPropagation();
+              setPopupDismissed(true);
+            }}
+          >
+            ×
+          </button>
+          {chatbot_config.popupMessage}
+        </div>
       )}
 
       {/* Chat Window */}

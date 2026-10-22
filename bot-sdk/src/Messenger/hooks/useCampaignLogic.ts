@@ -4,6 +4,9 @@ import type { Campaign } from '@/types';
 import { getCampaignsChatbot, trackCampaignImpression } from '@/services/campaign';
 import { evaluateTargeting } from '@/utils/campaignTargeting';
 import { canShowCampaign, recordCampaignView } from '@/utils/campaignFrequency';
+import { initExitIntent, cleanupExitIntent, hasExitIntentTriggered } from '@/utils/exitIntent';
+
+const isMobileDevice = () => typeof window !== 'undefined' && (window.matchMedia?.('(pointer: coarse)').matches || window.innerWidth < 768);
 import {
   isReturningVisitor,
   getCurrentUrl,
@@ -37,6 +40,8 @@ export function useCampaignLogic({
         timeOnPage: getPageLoadTime(),
         currentUrl: getCurrentUrl(),
         referrerUrl: getReferrerUrl(),
+        exitIntent: hasExitIntentTriggered(),
+        isMobile: isMobileDevice(),
       };
 
       for (const campaign of activeCampaigns) {
@@ -64,6 +69,8 @@ export function useCampaignLogic({
   useEffect(() => {
     // Initialize visitor tracking
     initVisitorTracking();
+    // Re-check the moment exit intent fires, not on the next 5-second tick.
+    initExitIntent(() => checkCampaigns(), { enableMouseLeave: true, enableScrollDepth: isMobileDevice(), scrollThreshold: 70 });
 
     const fetchCampaigns = async () => {
       try {
@@ -94,7 +101,10 @@ export function useCampaignLogic({
       }
     }, 5000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      cleanupExitIntent();
+    };
   }, [appId]);
 
   return { checkCampaigns };

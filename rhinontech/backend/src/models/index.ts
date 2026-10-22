@@ -75,6 +75,7 @@ import { Chatbot } from "./Chatbot";
 import { ChatbotSource } from "./ChatbotSource";
 import { ChatConversation } from "./ChatConversation";
 import { ChatMessage } from "./ChatMessage";
+import { ChatbotCampaign } from "./ChatbotCampaign";
 import { Organization } from "./Organization";
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/database";
@@ -507,6 +508,7 @@ export {
   ChatbotSource,
   ChatConversation,
   ChatMessage,
+  ChatbotCampaign,
 };
 
 export async function syncDatabase(force = false) {

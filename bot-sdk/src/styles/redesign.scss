@@ -1122,3 +1122,83 @@ $ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 .home-container.rh-sheet-open > :not(.overlay) {
   visibility: hidden;
 }
+
+/* Pop-up message bubble beside the launcher */
+.rh-popup {
+  cursor: pointer;
+  padding-right: 30px !important;
+
+  .rh-popup-close {
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    width: 22px;
+    height: 22px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-tertiary);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+  }
+}
+
+/* ── Campaign card (targeted pop-up above the launcher) ──────────────
+   The admin's campaign editor mirrors these sizes in CampaignCardPreview.tsx. */
+
+.campaign-card {
+  width: 300px !important;
+  bottom: 84px !important;
+}
+
+.campaign-card-inner {
+  border-radius: 18px !important;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.35) !important;
+}
+
+.campaign-image {
+  height: 160px !important;
+}
+
+.campaign-close-btn {
+  top: 10px !important;
+  right: 10px !important;
+  width: 26px !important;
+  height: 26px !important;
+  background: rgba(15, 23, 42, 0.55) !important;
+}
+
+.campaign-content {
+  padding: 16px !important;
+  gap: 10px !important;
+}
+
+.campaign-text {
+  h3 {
+    font-size: 15.5px !important;
+    letter-spacing: -0.01em;
+    padding-right: 24px;
+  }
+
+  p {
+    font-size: 13.5px !important;
+  }
+}
+
+.campaign-buttons {
+  padding-top: 4px !important;
+}
+
+.campaign-btn {
+  padding: 10px 16px !important;
+  border-radius: 10px !important;
+  font-size: 13.5px !important;
+  font-weight: 600 !important;
+}

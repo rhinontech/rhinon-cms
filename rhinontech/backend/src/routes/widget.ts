@@ -6,6 +6,7 @@ import { Op } from "sequelize";
 import { Lead } from "../models/Lead";
 import { ChatConversation } from "../models/ChatConversation";
 import { ChatMessage } from "../models/ChatMessage";
+import { ChatbotCampaign } from "../models/ChatbotCampaign";
 import { User } from "../models/User";
 import { rateLimit } from "../middleware/rateLimit";
 import { findOrMergeLead } from "../services/leadCapture";
@@ -358,7 +359,46 @@ router.get("/aws/presigned-url", withResolvedBot, asyncRoute(async (req, res) =>
 // Answered empty so the widget renders those tabs as "nothing yet" instead of
 // erroring. Tickets and help center are phase 2, campaigns phase 3.
 router.get("/folders/chatbot-structure", (_req, res) => void res.json([]));
-router.get("/campaigns/chatbot/all", (_req, res) => void res.json([]));
+// Active campaigns inside their schedule, in the widget's shape.
+router.get("/campaigns/chatbot/all", withResolvedBot, asyncRoute(async (req, res) => {
+  const now = new Date();
+  const campaigns = await ChatbotCampaign.findAll({
+    where: {
+      chatbotId: req.bot!.bot.id,
+      status: "active",
+      [Op.and]: [
+        { [Op.or]: [{ startsAt: null }, { startsAt: { [Op.lte]: now } }] },
+        { [Op.or]: [{ endsAt: null }, { endsAt: { [Op.gt]: now } }] },
+      ],
+    },
+    order: [["updatedAt", "DESC"]],
+  });
+  res.json(
+    campaigns.map((c) => ({
+      id: c.id,
+      type: c.type,
+      status: c.status,
+      content: c.content,
+      targeting: c.targeting,
+      created_at: c.createdAt,
+      updated_at: c.updatedAt,
+    }))
+  );
+}));
+
+/**
+ * Campaign stats from the widget. Each event is one increment on this bot's own
+ * campaign; anything else is ignored with a 204 so probes learn nothing.
+ */
+const CAMPAIGN_COUNTERS = { campaign_impression: "impressions", campaign_click: "clicks", campaign_close: "closes" } as const;
+router.post("/analytics/campaign", rateLimit({ name: "widget-campaign-stats", windowMs: 60_000, max: 60 }), withResolvedBot, asyncRoute(async (req, res) => {
+  const column = CAMPAIGN_COUNTERS[req.body?.event as keyof typeof CAMPAIGN_COUNTERS];
+  const id = str(req.body?.campaignId, 40);
+  if (column && /^[0-9a-f-]{36}$/i.test(id)) {
+    await ChatbotCampaign.increment(column, { by: 1, where: { id, chatbotId: req.bot!.bot.id } });
+  }
+  res.status(204).end();
+}));
 
 /**
  * Interim tickets (until phase 2 brings real ones): a ticket from the widget

@@ -1,40 +1,6 @@
 // Campaign targeting evaluation utilities
 
-interface CampaignCondition {
-    field: string;
-    operator: string;
-    value: string;
-}
-
-interface CampaignRules {
-    matchType: 'match-all' | 'match-any';
-    conditions: CampaignCondition[];
-}
-
-interface CampaignTrigger {
-    type: 'time-on-page';
-    value: number;
-    unit: 'seconds' | 'minutes';
-}
-
-interface CampaignTargeting {
-    visitorType: 'all' | 'first-time' | 'returning';
-    trigger: CampaignTrigger;
-    rules: CampaignRules;
-}
-
-interface Campaign {
-    id: number;
-    status: string;
-    targeting: CampaignTargeting;
-}
-
-interface VisitorData {
-    isReturning: boolean;
-    timeOnPage: number; // in seconds
-    currentUrl: string;
-    referrerUrl: string;
-}
+import type { Campaign, CampaignCondition, CampaignRules, CampaignTrigger, VisitorData } from '@/types/campaign.types';
 
 /**
  * Check if visitor type matches campaign targeting
@@ -49,7 +15,8 @@ const checkVisitorType = (targetType: string, isReturning: boolean): boolean => 
 /**
  * Check if time on page meets trigger requirement
  */
-const checkTimeOnPage = (trigger: CampaignTrigger, timeOnPage: number): boolean => {
+const checkTimeOnPage = (trigger: CampaignTrigger, timeOnPage: number, exitIntent?: boolean): boolean => {
+    if (trigger?.type === 'exit-intent') return !!exitIntent;
     const requiredTime = trigger.unit === 'minutes'
         ? trigger.value * 60
         : trigger.value;
@@ -63,11 +30,15 @@ const checkTimeOnPage = (trigger: CampaignTrigger, timeOnPage: number): boolean 
 const checkUrlCondition = (
     condition: CampaignCondition,
     currentUrl: string,
-    referrerUrl: string
+    referrerUrl: string,
+    isMobile?: boolean
 ): boolean => {
     let urlToCheck = '';
 
     // Determine which URL to check
+    if (condition.field === 'device-type') {
+        return (condition.value === 'mobile') === !!isMobile;
+    }
     if (condition.field === 'current-page-url') {
         urlToCheck = currentUrl.toLowerCase();
     } else if (condition.field === 'referrer-url') {
@@ -102,14 +73,15 @@ const checkUrlCondition = (
 const checkUrlConditions = (
     rules: CampaignRules,
     currentUrl: string,
-    referrerUrl: string
+    referrerUrl: string,
+    isMobile?: boolean
 ): boolean => {
     if (!rules.conditions || rules.conditions.length === 0) {
         return true; // No conditions means always match
     }
 
     const results = rules.conditions.map(condition =>
-        checkUrlCondition(condition, currentUrl, referrerUrl)
+        checkUrlCondition(condition, currentUrl, referrerUrl, isMobile)
     );
 
     if (rules.matchType === 'match-all') {
@@ -139,12 +111,12 @@ export const evaluateTargeting = (
     }
 
     // Check time on page
-    if (!checkTimeOnPage(targeting.trigger, visitorData.timeOnPage)) {
+    if (!checkTimeOnPage(targeting.trigger, visitorData.timeOnPage, visitorData.exitIntent)) {
         return false;
     }
 
     // Check URL conditions
-    if (!checkUrlConditions(targeting.rules, visitorData.currentUrl, visitorData.referrerUrl)) {
+    if (!checkUrlConditions(targeting.rules, visitorData.currentUrl, visitorData.referrerUrl, visitorData.isMobile)) {
         return false;
     }
 

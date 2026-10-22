@@ -36,7 +36,8 @@ export interface CampaignRules {
 }
 
 export interface CampaignTrigger {
-  type: 'time-on-page';
+  /** exit-intent: the mouse heads for the tab bar (desktop) or the visitor scrolls 70% down (mobile). */
+  type: 'time-on-page' | 'exit-intent';
   value: number;
   unit: 'seconds' | 'minutes';
 }
@@ -48,7 +49,7 @@ export interface CampaignTargeting {
 }
 
 export interface Campaign {
-  id: number;
+  id: number | string;
   organization_id: number;
   type: 'recurring' | 'one-time';
   status: string;
@@ -63,6 +64,9 @@ export interface VisitorData {
   timeOnPage: number;
   currentUrl: string;
   referrerUrl: string;
+  /** Exit intent has fired on this page. */
+  exitIntent?: boolean;
+  isMobile?: boolean;
 }
 
 export interface CampaignView {
