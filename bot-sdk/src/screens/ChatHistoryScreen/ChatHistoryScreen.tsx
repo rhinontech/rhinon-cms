@@ -7,6 +7,7 @@ import type { ChatbotConfig, ConversationItem, ChatHistoryScreenProps } from '@/
 import { getConversationByUserId } from '@/services/chat';
 import { resolveS3Key } from '@/utils/s3KeyResolver';
 import { AVATARS } from '@/constants/urls';
+import { ChevronRight, MessageCircle, Send } from 'lucide-react';
 
 const ChatHistoryScreen: React.FC<ChatHistoryScreenProps> = ({
   isFreePlan,
@@ -32,11 +33,13 @@ const ChatHistoryScreen: React.FC<ChatHistoryScreenProps> = ({
       );
 
       if (isFreePlan || isAdmin) {
+        // Admin preview: sample conversations so the layout can be judged.
+        const ago = (h: number) => new Date(Date.now() - h * 3600_000).toISOString();
         setConversationIds([
-          { conversation_id: "NEW_CHAT", last_chat_time: "2026-02-12T02:17:10.083127+00:00", title: "Informal Greeting" },
-          { conversation_id: "NEW_CHAT", last_chat_time: "2026-02-08T02:17:10.083127+00:00", title: "Ticket Search" },
-          { conversation_id: "NEW_CHAT", last_chat_time: "2026-02-10T02:17:10.083127+00:00", title: "Product Inquiry" }
-        ]);
+          { conversation_id: "NEW_CHAT", last_chat_time: ago(0.3), title: "Pricing for an MVP", lastMessage: "A typical MVP starts at INR 4,00,000 and takes 6–8 weeks.", type: "bot" },
+          { conversation_id: "NEW_CHAT", last_chat_time: ago(5), title: "Support", name: "Priya from the team", lastMessage: "I've shared the proposal on email — let me know!", type: "support", unreadCount: 1 },
+          { conversation_id: "NEW_CHAT", last_chat_time: ago(50), title: "Integration question", lastMessage: "Yes, we can connect it to your existing CRM.", type: "bot" },
+        ] as ConversationItem[]);
         return;
       }
       const resolvedConversations = await Promise.all(sortedConversations.map(async (chat: ConversationItem) => {
@@ -115,150 +118,73 @@ const ChatHistoryScreen: React.FC<ChatHistoryScreenProps> = ({
   }
 
   return (
-    <div className='chat-list-screen'>
-      {/* Header */}
-      <div className='chat-list-header'>
-        <div className='header-title'>
-          <h2>Chat history</h2>
-        </div>
-
-        {/* Search Bar (optional) */}
-        {/* <div className='search-container'>
-          <Search size={16} className='search-icon' />
-          <input
-            type='text'
-            placeholder='Search conversations'
-            className='search-input'
-          />
-        </div> */}
+    <div className='chat-list-screen rh-history' style={{ ['--primary-color' as any]: chatbot_config.primaryColor }}>
+      <div className='rh-history-header'>
+        <h2>Messages</h2>
+        <p>Your conversations with {chatbot_config.chatbotName || 'us'}</p>
       </div>
 
-      {/* Chat List */}
-      <div className='chat-list'>
+      <div className='rh-history-list'>
         {conversationIds.length === 0 ? (
-          <div className='no-chats'>
-            <div></div>
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                textAlign: 'center',
-              }}
-            >
-              <div style={{ marginBottom: '20px' }}>
-                <p style={{ margin: 0, fontWeight: 700, fontSize: '30px' }}>
-                  “Looking empty”
-                </p>
-                <p style={{ margin: 0, fontSize: '15px' }}>
-                  Tap into the start conversation
-                </p>
-              </div>
-              <button
-                className='start-conversation-btn'
-                style={{
-                  ['--primary-color' as any]: `${chatbot_config.primaryColor}`,
-                }}
-                onClick={handleStartConversation}
-              >
-                Start Conversation
-              </button>
-            </div>
-            <div
-              style={{
-                display: 'flex',
-                gap: 10,
-                alignItems: 'end',
-                justifyContent: 'end',
-                margin: 15,
-              }}
-            >
-              {/* <div className='hover-card'>Connect with agent</div>
-              <div className='hover-card'>Raise a ticket</div> */}
-            </div>
+          <div className='rh-history-empty'>
+            <span className='rh-history-empty-icon'><MessageCircle size={26} /></span>
+            <p className='rh-empty-title'>No conversations yet</p>
+            <p className='rh-empty-sub'>Ask us anything — the answer usually takes seconds.</p>
           </div>
         ) : (
-          <div className='content-chat-section'>
-            <h3 style={{ margin: '20px', marginBottom: '10px' }}>
-              History/Ticket Searches
-            </h3>
-            {conversationIds.map((chat) => (
-              <div
-                key={chat.conversation_id}
-                style={{
-                  marginBottom: 20,
-                  display: 'flex',
-                  flexDirection: 'column',
-                }}
-              >
-                <div
-                  className='chat-card'
-                  onClick={() => onChatSelect(chat.conversation_id)}
-                >
-                  <div className='chat-avatar'>
-                    {chat.avatar ? (
-                      <img
-                        src={chat.avatar}
-                        alt='agent profile'
-                        style={{ borderRadius: '8px', objectFit: 'cover' }}
-                      />
-                    ) : chat.title === 'Support Chat' || chat.type === 'support' ? (
-                      <img
-                        src={AVATARS.SUPPORT}
-                        alt='support profile'
-                      />
-                    ) : (
-                      <img
-                        src={AVATARS.BOT}
-                        alt="bot"
-                      />
-                    )}
-                    {chat.isOnline && <div className='online-indicator'></div>}
-                  </div>
-
-                  <div className='chat-info'>
-                    <div className='chat-header-info'>
-                      <div className='chat-name'>{chat.name || chat.title}</div>
-                      <div className='chat-time'>
-                        {/* {new Date(chat.last_chat_time).toLocaleString()} */}
-                        {new Date(chat.last_chat_time).toLocaleString()}
-                      </div>
-                    </div>
-                    {chat.lastMessage && (
-                      <div className='chat-preview'>
-                        <div className='last-message'>
-                          {chat.lastMessage?.includes('<a href') || chat.lastMessage?.includes('platform-uploads')
-                            ? '📷 Photo'
-                            : chat.lastMessage}
-                        </div>
-                        {chat.unreadCount && (
-                          <div className='unread-badge'>{chat.unreadCount}</div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          conversationIds.map((chat, i) => {
+            const isSupport = chat.type === 'support' || chat.title === 'Support Chat';
+            const avatar = chat.avatar || (isSupport ? AVATARS.SUPPORT : AVATARS.BOT);
+            const preview =
+              chat.lastMessage?.includes('<a href') || chat.lastMessage?.includes('platform-uploads')
+                ? '📎 Attachment'
+                : chat.lastMessage;
+            return (
+              <button type='button' key={`${chat.conversation_id}-${i}`} className='rh-history-row' onClick={() => onChatSelect(chat.conversation_id)}>
+                <span className='rh-history-avatar'>
+                  <img src={avatar} alt='' />
+                  {chat.isOnline && <span className='rh-history-online' />}
+                </span>
+                <span className='rh-history-text'>
+                  <span className='rh-history-top'>
+                    <span className='rh-history-name'>{chat.name || chat.title}</span>
+                    <span className='rh-history-time'>{timeAgo(chat.last_chat_time)}</span>
+                  </span>
+                  <span className='rh-history-bottom'>
+                    <span className={`rh-history-preview ${chat.unreadCount ? 'unread' : ''}`}>
+                      {preview || (isSupport ? 'Chat with the team' : 'Chat with the assistant')}
+                    </span>
+                    {!!chat.unreadCount && <span className='rh-history-badge'>{chat.unreadCount}</span>}
+                  </span>
+                </span>
+                <ChevronRight size={16} className='rh-history-chevron' />
+              </button>
+            );
+          })
         )}
       </div>
-      {conversationIds.length !== 0 && (
-        <div className='start-conversation-btn-hover'>
-          <button
-            className='start-conversation-btn'
-            onClick={handleStartConversation}
-            style={{
-              ['--primary-color' as any]: `${chatbot_config.primaryColor}`,
-              marginTop: '10px',
-            }}
-          >
-            Start New Conversation
-          </button>
-        </div>
-      )}
+
+      <div className='rh-history-footer'>
+        <button type='button' className='rh-history-cta' onClick={handleStartConversation}>
+          <Send size={16} /> {conversationIds.length ? 'Send us a message' : 'Start a conversation'}
+        </button>
+      </div>
     </div>
   );
 };
+
+/** "now", "5 min", "3 h", "Mon", "12 Feb" — compact, like messaging apps. */
+function timeAgo(iso: string): string {
+  const then = new Date(iso);
+  const diff = Date.now() - then.getTime();
+  if (Number.isNaN(diff)) return '';
+  const min = Math.round(diff / 60000);
+  if (min < 1) return 'now';
+  if (min < 60) return `${min} min`;
+  const h = Math.round(min / 60);
+  if (h < 24) return `${h} h`;
+  if (h < 24 * 7) return then.toLocaleDateString(undefined, { weekday: 'short' });
+  return then.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+}
 
 export default ChatHistoryScreen;

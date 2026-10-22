@@ -58,12 +58,26 @@ if (!customElements.get('chat-bot')) {
   customElements.define('chat-bot', ChatBotElement);
 }
 
+/**
+ * The widget's font. @font-face inside a shadow root is ignored by Chrome, so
+ * it is added to the host page once. Harmless if the page already has Inter.
+ */
+function loadFont() {
+  if (typeof document === 'undefined' || document.getElementById('rhinon-chat-font')) return;
+  const link = document.createElement('link');
+  link.id = 'rhinon-chat-font';
+  link.rel = 'stylesheet';
+  link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap';
+  document.head.appendChild(link);
+}
+
 // Track if manual initialization has been called
 let manuallyInitialized = false;
 
 // Updated initialization function with container support
 function initRhinonChat(config: RhinonChatConfig): ChatBotElement {
   manuallyInitialized = true;
+  loadFont();
   if (config.api_url) setApiBase(config.api_url);
   setCurrentAppId(config.app_id);
   setTestingMode(!!(config as any).admin && !!(config as any).adminTestingMode);

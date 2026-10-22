@@ -5,14 +5,19 @@ import { ChevronLeft } from 'lucide-react';
 // New imports from restructured modules
 import type { TicketField, ChatbotConfig, TicketScreenProps } from '@/types';
 import { submitTicket } from '@/services/ticket';
+import { DEFAULT_TICKET_FORM } from '@/constants/defaults';
 
 const RaiseTicket: React.FC<TicketScreenProps> = ({
   appId,
   setIsTicketRaised,
   chatbot_config,
-  ticketForm,
+  ticketForm: configuredForm,
   setOpenTicket,
+  previewOnly = false,
 }) => {
+  // An empty ticket form (bots created before forms had defaults) would leave
+  // nothing to fill in and no email to reply to — use the standard fields.
+  const ticketForm = configuredForm?.length ? configuredForm : DEFAULT_TICKET_FORM;
   const [formValues, setFormValues] = useState<{ [key: string]: string }>({});
   const fieldRefs: any = useRef({});
   const handleChange = (id: string, value: string) => {
@@ -91,6 +96,12 @@ const RaiseTicket: React.FC<TicketScreenProps> = ({
     });
 
     console.log('Ticket submitted:', payload);
+
+    if (previewOnly) {
+      setIsTicketRaised(true);
+      setOpenTicket(false);
+      return;
+    }
 
     try {
       await submitTicket(payload);

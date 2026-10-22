@@ -148,7 +148,7 @@ const HelpScreen: React.FC<HelpScreenProps> = ({
               marginLeft: '10px',
             }}
           >
-            {filteredFolders.length} Collections
+            {filteredFolders.length > 0 && <>{filteredFolders.length} {filteredFolders.length === 1 ? 'collection' : 'collections'}</>}
           </p>
         )}
       </div>
@@ -198,9 +198,10 @@ const HelpScreen: React.FC<HelpScreenProps> = ({
             </div>
           ))}
           {filteredFolders.length === 0 && (
-            <p style={{ padding: '10px', color: '#999' }}>
-              No folders or articles found.
-            </p>
+            <div className='rh-empty'>
+              <p className='rh-empty-title'>No help articles yet</p>
+              <p className='rh-empty-sub'>Ask in the chat instead — we&apos;re happy to help.</p>
+            </div>
           )}
         </div>
       )}

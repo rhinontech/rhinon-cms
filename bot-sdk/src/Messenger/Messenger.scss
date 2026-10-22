@@ -429,3 +429,5 @@
     height: 55px; // Slightly smaller in landscape
   }
 }
+// Visual redesign — must come last so it wins over the screen styles above.
+@import '../styles/redesign';

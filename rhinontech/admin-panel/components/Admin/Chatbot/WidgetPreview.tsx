@@ -22,7 +22,9 @@ function loadWidget(): Promise<RhinonBotFn> {
   if (existing) return Promise.resolve(existing);
   loading ??= new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = `${API_URL}/widget/rhinon-chat.js`;
+    // Customers' sites cache the widget for 10 minutes; the preview must always
+    // show the latest release, so it asks for a fresh copy once per page load.
+    script.src = `${API_URL}/widget/rhinon-chat.js?v=${Date.now()}`;
     script.async = true;
     script.onload = () => {
       const fn = (window as unknown as { RhinonChat?: RhinonBotFn }).RhinonChat;
@@ -96,7 +98,7 @@ export function WidgetPreview({
   );
 
   return (
-    <div className="relative mx-auto h-[760px] w-full max-w-[440px] overflow-hidden rounded-2xl border border-border bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(127,127,127,0.04)_10px,rgba(127,127,127,0.04)_20px)]">
+    <div className="relative mx-auto h-[min(760px,calc(100vh_-_215px))] w-full max-w-[440px] overflow-hidden rounded-2xl border border-border bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(127,127,127,0.04)_10px,rgba(127,127,127,0.04)_20px)]">
       <div ref={frame} className="absolute inset-0" style={{ transform: "translateZ(0)" }} data-testid="widget-preview" />
       {failed && (
         <p className="absolute inset-0 flex items-center justify-center p-6 text-center text-sm text-muted-foreground">

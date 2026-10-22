@@ -98,6 +98,8 @@ export interface TicketScreenProps {
   setOpenTicket: React.Dispatch<React.SetStateAction<boolean>>;
   chatbot_config: ChatbotConfig;
   ticketForm: TicketField[];
+  /** Admin preview: show the form, but don't create a real ticket. */
+  previewOnly?: boolean;
 }
 
 export interface CampaignsProps {

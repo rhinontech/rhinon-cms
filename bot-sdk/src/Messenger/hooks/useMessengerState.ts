@@ -312,7 +312,8 @@ export function useMessengerState(
           config.app_id,
           sortedConversations[0].conversation_id,
         );
-        if (resultSocket.is_closed) {
+        // Null when the latest chat never reached a person — nothing to check.
+        if (resultSocket?.is_closed) {
           setSelectedChatId('NEW_CHAT');
         }
       }

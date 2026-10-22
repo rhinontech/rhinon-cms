@@ -390,6 +390,21 @@ router.post("/tickets/create-from-ticket", rateLimit({ name: "widget-ticket", wi
   res.status(201).json({ ticket_id: conv.publicKey, status: "open" });
 }));
 
+// A visitor rates a ticket from "Your tickets". ticket_id is the short id shown
+// there (the conversation key's first 8 characters), scoped to this bot's tickets.
+router.post("/tickets/ticket-rating", withResolvedBot, asyncRoute(async (req, res) => {
+  const id = str(req.body?.ticket_id, 16).toLowerCase();
+  const rating = Number(req.body?.rating);
+  if (!/^[a-z0-9]{8}$/.test(id) || !(rating >= 1 && rating <= 5)) return void res.status(400).json({ message: "ticket_id and a 1–5 rating are required" });
+  const conv = await ChatConversation.findOne({
+    where: { chatbotId: req.bot!.bot.id, publicKey: { [Op.like]: `${id}%` }, visitorId: { [Op.like]: "ticket:%" } },
+  });
+  if (!conv) return void res.status(404).json({ message: "Ticket not found" });
+  await conv.update({ review: { ...(conv.review ?? {}), rating: String(Math.round(rating)), submittedAt: new Date().toISOString() } });
+  emitToOrg(req.bot!.organizationId, "chat:conversation", serializeConversation(conv));
+  res.json({ success: true });
+}));
+
 router.post("/tickets/get-tickets", withResolvedBot, asyncRoute(async (req, res) => {
   const email = realEmail(req.body?.user_email);
   if (!email) return void res.json([]);
@@ -398,7 +413,19 @@ router.post("/tickets/get-tickets", withResolvedBot, asyncRoute(async (req, res)
     order: [["createdAt", "DESC"]],
     limit: 20,
   });
-  res.json(convs.map((c) => ({ ticket_id: c.publicKey, status: c.status === "closed" ? "closed" : "open", subject: c.title, created_at: c.createdAt, rating: null, assigned_user_id: null })));
+  res.json(
+    convs.map((c) => ({
+      ticket_id: c.publicKey.slice(0, 8).toUpperCase(),
+      status: c.status === "closed" ? "Resolved" : "Open",
+      subject: c.title,
+      created_at: c.createdAt,
+      // The widget sorts and labels by these.
+      updated_at: c.lastMessageAt,
+      rating: (c.review as any)?.rating ? Number((c.review as any).rating) : null,
+      // Non-null once someone on the team has picked it up ("Assigned to technical team").
+      assigned_user_id: c.assignedUserId ? 1 : null,
+    }))
+  );
 }));
 
 // SEO tracking is out of scope; swallow the beacons quietly.

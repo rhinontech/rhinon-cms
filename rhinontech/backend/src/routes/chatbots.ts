@@ -11,7 +11,7 @@ import { ChatMessage } from "../models/ChatMessage";
 import { User } from "../models/User";
 import { chatbotSlotBlockedReason } from "../services/usage";
 import { currentSiteFilter, runAcrossSites } from "../services/siteContext";
-import { deleteObject, getPresignedReadUrl, uploadBuffer } from "../services/storage";
+import { deleteObject, getPresignedReadUrl, publicUrl, uploadBuffer } from "../services/storage";
 import { analyzeUrl, TRAINABLE_EXTENSIONS } from "../services/chatbot/extract";
 import { isTraining, startTraining } from "../services/chatbot/training";
 import { deleteChatbotChunks, deleteSourceChunks } from "../services/chatbot/vectorStore";
@@ -143,6 +143,23 @@ router.delete("/", canWrite, async (req: AuthRequest, res) => {
   await ChatConversation.destroy({ where: { chatbotId: bot.id } });
   await bot.destroy();
   res.json({ success: true });
+});
+
+// ── Appearance images (logos, background) ──────────────────────────────
+
+const imageUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
+const IMAGE_TYPES = /^image\/(png|jpe?g|gif|webp|svg\+xml)$/;
+
+/**
+ * Stored under the public content/ prefix: the widget shows these to every
+ * visitor on the customer's site, so they need a plain, permanent URL.
+ */
+router.post("/upload-image", canWrite, imageUpload.single("image"), async (req, res) => {
+  const file = (req as any).file as Express.Multer.File | undefined;
+  if (!file) return void res.status(400).json({ message: "No image uploaded" });
+  if (!IMAGE_TYPES.test(file.mimetype)) return void res.status(415).json({ message: "Use a PNG, JPG, GIF, WebP or SVG image." });
+  const key = await uploadBuffer(file.buffer, file.originalname, "content", file.mimetype);
+  res.status(201).json({ url: publicUrl(key) });
 });
 
 // ── Training ────────────────────────────────────────────────────────────
