@@ -1,10 +1,6 @@
-// tools/webpack/webpack.config.prod.js
 const path = require('path');
 const webpack = require('webpack');
-
-// No dotenv here on purpose: a release must not pick up a developer's .env
-// URLs. The widget finds its backend from its own script address (see
-// src/services/api/client.ts). Set REACT_APP_* only to override that.
+require('dotenv').config();
 
 module.exports = {
   mode: 'production',
