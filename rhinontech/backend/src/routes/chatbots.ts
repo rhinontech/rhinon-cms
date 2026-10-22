@@ -10,6 +10,12 @@ import { ChatConversation } from "../models/ChatConversation";
 import { ChatMessage } from "../models/ChatMessage";
 import { ChatbotCampaign } from "../models/ChatbotCampaign";
 import { cleanContent, cleanTargeting } from "../services/chatbot/campaigns";
+import { ChatbotTicket } from "../models/ChatbotTicket";
+import { ChatbotTicketMessage } from "../models/ChatbotTicketMessage";
+import { HelpFolder } from "../models/HelpFolder";
+import { HelpArticle } from "../models/HelpArticle";
+import { Site } from "../models/Site";
+import { cleanArticleHtml, emailTicketReply, nextPosition } from "../services/chatbot/support";
 import { User } from "../models/User";
 import { chatbotSlotBlockedReason } from "../services/usage";
 import { currentSiteFilter, runAcrossSites } from "../services/siteContext";
@@ -221,6 +227,229 @@ router.delete("/campaigns/:id", canWrite, async (req, res) => {
   if (!bot) return;
   const deleted = await ChatbotCampaign.destroy({ where: { id: req.params.id as string, chatbotId: bot.id } });
   if (!deleted) return void res.status(404).json({ message: "Campaign not found" });
+  res.json({ success: true });
+});
+
+// ── Tickets ────────────────────────────────────────────────────────────
+
+const TICKET_STATUSES = ["open", "pending", "resolved", "closed"] as const;
+const TICKET_PRIORITIES = ["low", "medium", "high", "urgent"] as const;
+
+async function ticketOfBot(res: Response, id: string) {
+  const bot = await currentBot(res);
+  if (!bot) return null;
+  const ticket = /^[0-9a-f-]{36}$/i.test(id) ? await ChatbotTicket.findOne({ where: { id, chatbotId: bot.id } }) : null;
+  if (!ticket) res.status(404).json({ message: "Ticket not found" });
+  return ticket ? { bot, ticket } : null;
+}
+
+async function userNames(ids: (string | null | undefined)[]) {
+  const unique = [...new Set(ids.filter(Boolean))] as string[];
+  if (!unique.length) return new Map<string, string>();
+  const users = await User.findAll({ where: { id: unique }, attributes: ["id", "fullName"] });
+  return new Map(users.map((u) => [u.id, u.fullName]));
+}
+
+router.get("/tickets", canRead, async (req, res) => {
+  const bot = await currentBot(res);
+  if (!bot) return;
+  const where: WhereOptions = { chatbotId: bot.id };
+  const status = str(req.query.status, 20);
+  if ((TICKET_STATUSES as readonly string[]).includes(status)) Object.assign(where, { status });
+  const q = str(req.query.q, 120);
+  if (q) Object.assign(where, { [Op.or]: [{ subject: { [Op.iLike]: `%${q}%` } }, { customerEmail: { [Op.iLike]: `%${q}%` } }, { code: q.toUpperCase().replace(/^#/, "") }] });
+  const [tickets, grouped] = await Promise.all([
+    ChatbotTicket.findAll({ where, order: [["lastActivityAt", "DESC"]], limit: 200 }),
+    ChatbotTicket.findAll({ where: { chatbotId: bot.id }, attributes: ["status", [ChatbotTicket.sequelize!.fn("COUNT", "*"), "n"]], group: ["status"], raw: true }),
+  ]);
+  const names = await userNames(tickets.map((t) => t.assignedUserId));
+  const counts = Object.fromEntries(TICKET_STATUSES.map((s) => [s, 0])) as Record<string, number>;
+  for (const g of grouped as any[]) counts[g.status] = Number(g.n);
+  res.json({
+    counts,
+    tickets: tickets.map((t) => ({ ...t.toJSON(), assigneeName: t.assignedUserId ? names.get(t.assignedUserId) ?? null : null })),
+  });
+});
+
+router.get("/tickets/:id", canRead, async (req, res) => {
+  const found = await ticketOfBot(res, req.params.id as string);
+  if (!found) return;
+  const { ticket } = found;
+  if (ticket.isNew) await ticket.update({ isNew: false }, { silent: true });
+  const messages = await ChatbotTicketMessage.findAll({ where: { ticketId: ticket.id }, order: [["createdAt", "ASC"]] });
+  const names = await userNames([ticket.assignedUserId, ...messages.map((m) => m.authorUserId)]);
+  res.json({
+    ticket: { ...ticket.toJSON(), assigneeName: ticket.assignedUserId ? names.get(ticket.assignedUserId) ?? null : null },
+    messages: messages.map((m) => ({ ...m.toJSON(), authorName: m.authorUserId ? names.get(m.authorUserId) ?? null : null })),
+  });
+});
+
+router.patch("/tickets/:id", canWrite, async (req: AuthRequest, res) => {
+  const found = await ticketOfBot(res, req.params.id as string);
+  if (!found) return;
+  const b = req.body ?? {};
+  const fields: Record<string, unknown> = {};
+  if ((TICKET_STATUSES as readonly string[]).includes(b.status)) fields.status = b.status;
+  if ((TICKET_PRIORITIES as readonly string[]).includes(b.priority)) fields.priority = b.priority;
+  if (Array.isArray(b.tags)) fields.tags = [...new Set(b.tags.map((t: unknown) => str(t, 40)).filter(Boolean))].slice(0, 10);
+  if ("assignedUserId" in b) {
+    const id = b.assignedUserId ? str(b.assignedUserId, 40) : null;
+    // Only someone in this workspace (the tenant hooks scope the lookup).
+    if (id && !(await User.count({ where: { id } }))) return void res.status(400).json({ message: "That person isn't in this workspace." });
+    fields.assignedUserId = id;
+  }
+  await found.ticket.update(fields);
+  res.json({ ticket: found.ticket });
+});
+
+/** A reply (emailed to the visitor) or an internal note. */
+router.post("/tickets/:id/messages", canWrite, async (req: AuthRequest, res) => {
+  const found = await ticketOfBot(res, req.params.id as string);
+  if (!found) return;
+  const { bot, ticket } = found;
+  const text = str(req.body?.text, 10_000);
+  if (!text) return void res.status(400).json({ message: "Write a message first." });
+  const note = req.body?.note === true;
+  let emailed: boolean | null = null;
+  if (!note) {
+    const site = bot.siteId ? await Site.findByPk(bot.siteId, { attributes: ["name"] }) : null;
+    emailed = await emailTicketReply(ticket, text, site?.name || String((bot.config as any)?.chatbotName || "Support"));
+  }
+  const message = await ChatbotTicketMessage.create({ ticketId: ticket.id, role: note ? "note" : "agent", authorUserId: req.user!.userId, text, emailed });
+  await ticket.update({
+    lastActivityAt: new Date(),
+    ...(note ? {} : { status: ticket.status === "open" ? "pending" : ticket.status }),
+    assignedUserId: ticket.assignedUserId ?? req.user!.userId,
+  });
+  const me = await User.findByPk(req.user!.userId, { attributes: ["fullName"] });
+  res.status(201).json({ message: { ...message.toJSON(), authorName: me?.fullName ?? null }, ticket });
+});
+
+router.delete("/tickets/:id", canWrite, async (req, res) => {
+  const found = await ticketOfBot(res, req.params.id as string);
+  if (!found) return;
+  await ChatbotTicketMessage.destroy({ where: { ticketId: found.ticket.id } });
+  await found.ticket.destroy();
+  res.json({ success: true });
+});
+
+// ── Help center ────────────────────────────────────────────────────────
+
+const UUID = /^[0-9a-f-]{36}$/i;
+
+router.get("/help", canRead, async (_req, res) => {
+  const bot = await currentBot(res);
+  if (!bot) return;
+  const [folders, articles] = await Promise.all([
+    HelpFolder.findAll({ where: { chatbotId: bot.id }, order: [["position", "ASC"], ["createdAt", "ASC"]] }),
+    HelpArticle.findAll({ where: { chatbotId: bot.id }, attributes: { exclude: ["content"] }, order: [["position", "ASC"], ["createdAt", "ASC"]] }),
+  ]);
+  res.json({ folders, articles });
+});
+
+router.post("/help/folders", canWrite, async (req, res) => {
+  const bot = await currentBot(res);
+  if (!bot) return;
+  const name = str(req.body?.name, 120);
+  if (!name) return void res.status(400).json({ message: "Give the collection a name." });
+  const folder = await HelpFolder.create({
+    chatbotId: bot.id,
+    name,
+    description: str(req.body?.description, 400),
+    position: await nextPosition(HelpFolder, { chatbotId: bot.id }),
+  });
+  res.status(201).json({ folder });
+});
+
+router.patch("/help/folders/:id", canWrite, async (req, res) => {
+  const bot = await currentBot(res);
+  if (!bot) return;
+  const id = req.params.id as string;
+  const folder = UUID.test(id) ? await HelpFolder.findOne({ where: { id, chatbotId: bot.id } }) : null;
+  if (!folder) return void res.status(404).json({ message: "Collection not found" });
+  const fields: Record<string, unknown> = {};
+  if (typeof req.body?.name === "string") {
+    if (!str(req.body.name, 120)) return void res.status(400).json({ message: "Give the collection a name." });
+    fields.name = str(req.body.name, 120);
+  }
+  if (typeof req.body?.description === "string") fields.description = str(req.body.description, 400);
+  if (Number.isInteger(req.body?.position)) fields.position = req.body.position;
+  await folder.update(fields);
+  res.json({ folder });
+});
+
+/** Deleting a collection deletes its articles too — the admin confirms first. */
+router.delete("/help/folders/:id", canWrite, async (req, res) => {
+  const bot = await currentBot(res);
+  if (!bot) return;
+  const id = req.params.id as string;
+  if (!UUID.test(id)) return void res.status(404).json({ message: "Collection not found" });
+  await HelpArticle.destroy({ where: { folderId: id, chatbotId: bot.id } });
+  const deleted = await HelpFolder.destroy({ where: { id, chatbotId: bot.id } });
+  if (!deleted) return void res.status(404).json({ message: "Collection not found" });
+  res.json({ success: true });
+});
+
+async function articleFields(body: Record<string, any>, chatbotId: string) {
+  const fields: Record<string, unknown> = {};
+  if (typeof body.title === "string") fields.title = str(body.title, 200);
+  if ("content" in body) fields.content = cleanArticleHtml(body.content);
+  if (body.status === "draft" || body.status === "published") fields.status = body.status;
+  if (Number.isInteger(body.position)) fields.position = body.position;
+  if (typeof body.folderId === "string") {
+    if (!UUID.test(body.folderId) || !(await HelpFolder.count({ where: { id: body.folderId, chatbotId } }))) return null;
+    fields.folderId = body.folderId;
+  }
+  return fields;
+}
+
+router.post("/help/articles", canWrite, async (req, res) => {
+  const bot = await currentBot(res);
+  if (!bot) return;
+  const fields = await articleFields(req.body ?? {}, bot.id);
+  if (!fields?.folderId) return void res.status(400).json({ message: "Pick a collection for the article." });
+  const article = await HelpArticle.create({
+    chatbotId: bot.id,
+    title: "Untitled article",
+    position: await nextPosition(HelpArticle, { chatbotId: bot.id, folderId: fields.folderId }),
+    ...fields,
+  } as any);
+  if (!article.title) await article.update({ title: "Untitled article" });
+  res.status(201).json({ article });
+});
+
+router.get("/help/articles/:id", canRead, async (req, res) => {
+  const bot = await currentBot(res);
+  if (!bot) return;
+  const id = req.params.id as string;
+  const article = UUID.test(id) ? await HelpArticle.findOne({ where: { id, chatbotId: bot.id } }) : null;
+  if (!article) return void res.status(404).json({ message: "Article not found" });
+  res.json({ article });
+});
+
+router.patch("/help/articles/:id", canWrite, async (req, res) => {
+  const bot = await currentBot(res);
+  if (!bot) return;
+  const id = req.params.id as string;
+  const article = UUID.test(id) ? await HelpArticle.findOne({ where: { id, chatbotId: bot.id } }) : null;
+  if (!article) return void res.status(404).json({ message: "Article not found" });
+  const fields = await articleFields(req.body ?? {}, bot.id);
+  if (!fields) return void res.status(400).json({ message: "That collection doesn't exist." });
+  if ("title" in fields && !fields.title) return void res.status(400).json({ message: "Give the article a title." });
+  const next = { ...article.toJSON(), ...fields };
+  if (next.status === "published" && !next.content.replace(/<[^>]*>/g, "").trim()) {
+    return void res.status(400).json({ message: "Write something before publishing." });
+  }
+  await article.update(fields);
+  res.json({ article });
+});
+
+router.delete("/help/articles/:id", canWrite, async (req, res) => {
+  const bot = await currentBot(res);
+  if (!bot) return;
+  const id = req.params.id as string;
+  const deleted = UUID.test(id) ? await HelpArticle.destroy({ where: { id, chatbotId: bot.id } }) : 0;
+  if (!deleted) return void res.status(404).json({ message: "Article not found" });
   res.json({ success: true });
 });
 

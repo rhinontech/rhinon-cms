@@ -1,1 +1,1 @@
-export { fetchFoldersWithArticles, getArticle } from './helpService';
+export { fetchFoldersWithArticles, getArticle, sendArticleFeedback } from './helpService';

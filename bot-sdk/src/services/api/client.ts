@@ -90,6 +90,7 @@ let testingMode = false;
 export const setTestingMode = (on: boolean) => {
   testingMode = on;
 };
+export const isTestingMode = (): boolean => testingMode;
 export const asVisitorId = (id: string): string => (testingMode && !id.startsWith('admin-test-') ? `admin-test-${id}` : id);
 
 const attachAppId = (config: any) => {

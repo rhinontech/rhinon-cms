@@ -163,27 +163,9 @@ const HelpScreen: React.FC<HelpScreenProps> = ({
               className='help-item'
             >
               <h3>{folder.name}</h3>
-              <p>{folder.description || 'No description available'}</p>
-              <p
-                style={{
-                  fontSize: 'small',
-                  display: 'flex',
-                  gap: '5px',
-                  alignItems: 'center',
-                  paddingRight: 0
-                }}
-              >
-                Created at{' '}
-                {folder.createdAt
-                  ? new Date(folder.createdAt).toLocaleString()
-                  : 'N/A'}
-                <span
-                  style={{ fontSize: '18px', lineHeight: 0 }}
-                  className='dot'
-                >
-                  •
-                </span>
-                {folder.articles.length} Articles
+              {folder.description && <p>{folder.description}</p>}
+              <p className='help-count'>
+                {folder.articles.length} {folder.articles.length === 1 ? 'article' : 'articles'}
               </p>
               <div
                 style={{
@@ -219,25 +201,9 @@ const HelpScreen: React.FC<HelpScreenProps> = ({
             }}
           >
             <h3 style={{ fontWeight: 'bold' }}>{selectedHelp.name}</h3>
-            <p>{selectedHelp.description || 'No description'}</p>
-            <p
-              style={{
-                fontSize: 'small',
-                display: 'flex',
-                gap: '5px',
-                alignItems: 'center',
-                color: '#8A8A8A',
-                paddingRight: 0
-              }}
-            >
-              Created at{' '}
-              {selectedHelp.createdAt
-                ? new Date(selectedHelp.createdAt).toLocaleString()
-                : 'N/A'}
-              <span style={{ fontSize: '18px', lineHeight: 0 }} className='dot'>
-                •
-              </span>
-              {selectedHelp.articles.length} Articles
+            {selectedHelp.description && <p>{selectedHelp.description}</p>}
+            <p className='help-count'>
+              {selectedHelp.articles.length} {selectedHelp.articles.length === 1 ? 'article' : 'articles'}
             </p>
           </div>
 

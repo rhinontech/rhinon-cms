@@ -10,6 +10,10 @@ import { ChatbotCampaign } from "../models/ChatbotCampaign";
 import { User } from "../models/User";
 import { rateLimit } from "../middleware/rateLimit";
 import { findOrMergeLead } from "../services/leadCapture";
+import { ChatbotTicket } from "../models/ChatbotTicket";
+import { ChatbotTicketMessage } from "../models/ChatbotTicketMessage";
+import { HelpArticle } from "../models/HelpArticle";
+import { newTicketCode, widgetArticle, widgetHelpStructure, widgetTicket } from "../services/chatbot/support";
 import { getPresignedReadUrl, uploadBuffer } from "../services/storage";
 import { planState } from "../services/usage";
 import { Organization } from "../models/Organization";
@@ -355,10 +359,6 @@ router.get("/aws/presigned-url", withResolvedBot, asyncRoute(async (req, res) =>
   res.json({ downloadUrl: await getPresignedReadUrl(key, 900) });
 }));
 
-// ── Later phases ──────────────────────────────────────────────────────────
-// Answered empty so the widget renders those tabs as "nothing yet" instead of
-// erroring. Tickets and help center are phase 2, campaigns phase 3.
-router.get("/folders/chatbot-structure", (_req, res) => void res.json([]));
 // Active campaigns inside their schedule, in the widget's shape.
 router.get("/campaigns/chatbot/all", withResolvedBot, asyncRoute(async (req, res) => {
   const now = new Date();
@@ -401,71 +401,87 @@ router.post("/analytics/campaign", rateLimit({ name: "widget-campaign-stats", wi
 }));
 
 /**
- * Interim tickets (until phase 2 brings real ones): a ticket from the widget
- * becomes a human conversation flagged `meta.ticket`, so it lands in Live
- * chats with the visitor's email, and the visitor becomes a CRM lead. Nothing
- * a visitor sends is dropped while the proper module is built.
+ * Tickets from "Raise a ticket". The visitor becomes a CRM lead and the team
+ * sees the ticket in the chatbot's Tickets inbox; replies go out by email.
  */
 router.post("/tickets/create-from-ticket", rateLimit({ name: "widget-ticket", windowMs: 60 * 60_000, max: 10 }), withResolvedBot, asyncRoute(async (req, res) => {
   const email = realEmail(req.body?.customer_email);
   const subject = str(req.body?.subject, 200);
   if (!email || !subject) return void res.status(400).json({ message: "A valid email and a subject are required" });
   const custom = (req.body?.custom_data ?? {}) as Record<string, unknown>;
-  const details = Object.entries(custom).map(([k, v]) => `${k.replace(/[_-]+/g, " ")}: ${str(v, 2000)}`).filter((l) => !l.endsWith(": ")).join("\n");
+  const customData: Record<string, string> = {};
+  for (const [k, v] of Object.entries(custom).slice(0, 20)) {
+    const value = str(v, 2000);
+    if (value) customData[str(k, 60)] = value;
+  }
+  const details = Object.entries(customData).map(([k, v]) => `${k.replace(/[_-]+/g, " ")}: ${v}`).join("\n");
   const lines = Array.isArray(req.body?.conversations)
     ? (req.body.conversations as Array<Record<string, unknown>>).slice(-30).map((m) => `${m.role === "user" ? "Visitor" : "Bot"}: ${str(m.text, 1000)}`).join("\n")
     : "";
 
-  const conv = await findOrCreateConversation(req.bot!, `ticket:${email}`.slice(0, 128), null, { email, meta: { ticket: true, subject } });
-  if (!conv) return void res.status(400).json({ message: "Could not open the ticket" });
-  await conv.update({ mode: "human", title: subject, visitorEmail: email });
-  const { appendMessage } = await import("../services/chatbot/chatStore");
-  await appendMessage(req.bot!, conv, {
-    role: "user",
-    phase: "human",
-    text: [`Ticket: ${subject}`, details, lines && `Chat before the ticket:\n${lines}`].filter(Boolean).join("\n\n"),
-  });
   const lead = await findOrMergeLead({ name: email.split("@")[0], email, source: "Website chatbot", summary: `Raised a ticket: ${subject}` });
-  await conv.update({ leadId: lead.id });
-  res.status(201).json({ ticket_id: conv.publicKey, status: "open" });
+  const ticket = await ChatbotTicket.create({
+    chatbotId: req.bot!.bot.id,
+    code: await newTicketCode(),
+    subject,
+    customerEmail: email,
+    customerName: str(customData.name ?? customData.full_name, 120) || null,
+    customData,
+    leadId: lead.id,
+  });
+  await ChatbotTicketMessage.create({
+    ticketId: ticket.id,
+    role: "customer",
+    text: [details || subject, lines && `Chat before the ticket:\n${lines}`].filter(Boolean).join("\n\n"),
+  });
+  emitToOrg(req.bot!.organizationId, "ticket:new", { id: ticket.id, chatbotId: ticket.chatbotId, subject, code: ticket.code });
+  res.status(201).json({ ticket_id: ticket.code, status: "open" });
 }));
 
-// A visitor rates a ticket from "Your tickets". ticket_id is the short id shown
-// there (the conversation key's first 8 characters), scoped to this bot's tickets.
+// A visitor rates a ticket from "Your tickets", by the short code shown there.
 router.post("/tickets/ticket-rating", withResolvedBot, asyncRoute(async (req, res) => {
-  const id = str(req.body?.ticket_id, 16).toLowerCase();
+  const code = str(req.body?.ticket_id, 16).toUpperCase();
   const rating = Number(req.body?.rating);
-  if (!/^[a-z0-9]{8}$/.test(id) || !(rating >= 1 && rating <= 5)) return void res.status(400).json({ message: "ticket_id and a 1–5 rating are required" });
-  const conv = await ChatConversation.findOne({
-    where: { chatbotId: req.bot!.bot.id, publicKey: { [Op.like]: `${id}%` }, visitorId: { [Op.like]: "ticket:%" } },
-  });
-  if (!conv) return void res.status(404).json({ message: "Ticket not found" });
-  await conv.update({ review: { ...(conv.review ?? {}), rating: String(Math.round(rating)), submittedAt: new Date().toISOString() } });
-  emitToOrg(req.bot!.organizationId, "chat:conversation", serializeConversation(conv));
+  if (!/^[A-Z0-9]{8}$/.test(code) || !(rating >= 1 && rating <= 5)) return void res.status(400).json({ message: "ticket_id and a 1–5 rating are required" });
+  const ticket = await ChatbotTicket.findOne({ where: { chatbotId: req.bot!.bot.id, code } });
+  if (!ticket) return void res.status(404).json({ message: "Ticket not found" });
+  await ticket.update({ rating: Math.round(rating) });
   res.json({ success: true });
 }));
 
 router.post("/tickets/get-tickets", withResolvedBot, asyncRoute(async (req, res) => {
   const email = realEmail(req.body?.user_email);
   if (!email) return void res.json([]);
-  const convs = await ChatConversation.findAll({
-    where: { chatbotId: req.bot!.bot.id, visitorId: `ticket:${email}` },
+  const tickets = await ChatbotTicket.findAll({
+    where: { chatbotId: req.bot!.bot.id, customerEmail: email },
     order: [["createdAt", "DESC"]],
     limit: 20,
   });
-  res.json(
-    convs.map((c) => ({
-      ticket_id: c.publicKey.slice(0, 8).toUpperCase(),
-      status: c.status === "closed" ? "Resolved" : "Open",
-      subject: c.title,
-      created_at: c.createdAt,
-      // The widget sorts and labels by these.
-      updated_at: c.lastMessageAt,
-      rating: (c.review as any)?.rating ? Number((c.review as any).rating) : null,
-      // Non-null once someone on the team has picked it up ("Assigned to technical team").
-      assigned_user_id: c.assignedUserId ? 1 : null,
-    }))
-  );
+  res.json(tickets.map(widgetTicket));
+}));
+
+// ── Help center ──────────────────────────────────────────────────────────
+router.get("/folders/chatbot-structure", withResolvedBot, asyncRoute(async (req, res) => {
+  res.json({ folders: await widgetHelpStructure(req.bot!.bot.id) });
+}));
+
+// Opening an article counts a view (not from the admin's preview). Only this bot's published articles.
+router.get("/articles/:id", withResolvedBot, asyncRoute(async (req, res) => {
+  const id = str(req.params.id, 40);
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return void res.status(404).json({ message: "Article not found" });
+  const article = await HelpArticle.findOne({ where: { id, chatbotId: req.bot!.bot.id, status: "published" } });
+  if (!article) return void res.status(404).json({ message: "Article not found" });
+  if (req.query.preview !== "1") await article.increment("views", { by: 1 });
+  res.json(widgetArticle(article));
+}));
+
+router.post("/articles/:id/feedback", rateLimit({ name: "widget-article-feedback", windowMs: 60_000, max: 20 }), withResolvedBot, asyncRoute(async (req, res) => {
+  const id = str(req.params.id, 40);
+  const column = req.body?.helpful === true ? "likes" : req.body?.helpful === false ? "dislikes" : null;
+  if (column && /^[0-9a-f-]{36}$/i.test(id)) {
+    await HelpArticle.increment(column, { by: 1, where: { id, chatbotId: req.bot!.bot.id, status: "published" } });
+  }
+  res.status(204).end();
 }));
 
 // SEO tracking is out of scope; swallow the beacons quietly.

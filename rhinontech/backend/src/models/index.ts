@@ -76,6 +76,10 @@ import { ChatbotSource } from "./ChatbotSource";
 import { ChatConversation } from "./ChatConversation";
 import { ChatMessage } from "./ChatMessage";
 import { ChatbotCampaign } from "./ChatbotCampaign";
+import { ChatbotTicket } from "./ChatbotTicket";
+import { ChatbotTicketMessage } from "./ChatbotTicketMessage";
+import { HelpFolder } from "./HelpFolder";
+import { HelpArticle } from "./HelpArticle";
 import { Organization } from "./Organization";
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/database";
@@ -509,6 +513,10 @@ export {
   ChatConversation,
   ChatMessage,
   ChatbotCampaign,
+  ChatbotTicket,
+  ChatbotTicketMessage,
+  HelpFolder,
+  HelpArticle,
 };
 
 export async function syncDatabase(force = false) {

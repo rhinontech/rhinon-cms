@@ -4,11 +4,14 @@ import {
   EllipsisVertical,
   Maximize2,
   Minimize2,
+  ThumbsDown,
+  ThumbsUp,
 } from 'lucide-react';
 import './HelpArticlePage.scss';
 import { resolveS3Key, getInitialSrc } from '@/utils/s3KeyResolver';
 import { resolveImagesInHTML } from '@/utils/htmlImageResolver';
 import { Loader } from '@/components/common';
+import { getArticle, sendArticleFeedback } from '@/services/help';
 
 // New imports from restructured modules
 import type { Article, ChatbotConfig, HelpArticlePageProps } from '@/types';
@@ -35,18 +38,44 @@ const HelpArticlePage: React.FC<HelpArticlePageProps> = ({
     resolveLogo();
   }, [chatbot_config?.secondaryLogo]);
 
-  // Resolve images in article content
+  // The Help list carries titles only: fetch the body (this also counts the view).
   useEffect(() => {
+    let cancelled = false;
     const processContent = async () => {
-      if (selectedHelpArticle?.content) {
-        setLoadingContent(true);
-        const resolved = await resolveImagesInHTML(selectedHelpArticle.content);
-        setProcessedContent(resolved);
-        setLoadingContent(false);
+      setLoadingContent(true);
+      let html = selectedHelpArticle?.content || '';
+      if (!html && selectedHelpArticle?.articleId) {
+        html = await getArticle(selectedHelpArticle.articleId).then((a) => a.content || '').catch(() => '');
       }
+      const resolved = html ? await resolveImagesInHTML(html) : '';
+      if (cancelled) return;
+      setProcessedContent(resolved);
+      setLoadingContent(false);
     };
     processContent();
-  }, [selectedHelpArticle?.content]);
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedHelpArticle?.articleId, selectedHelpArticle?.content]);
+
+  const voteKey = `rh-article-vote-${selectedHelpArticle?.articleId}`;
+  const [vote, setVote] = useState<'up' | 'down' | null>(() => {
+    try {
+      return (localStorage.getItem(voteKey) as 'up' | 'down' | null) || null;
+    } catch {
+      return null;
+    }
+  });
+  const handleVote = (v: 'up' | 'down') => {
+    if (vote || !selectedHelpArticle?.articleId) return;
+    setVote(v);
+    try {
+      localStorage.setItem(voteKey, v);
+    } catch {
+      // Private mode: the vote still counts, it just isn't remembered.
+    }
+    void sendArticleFeedback(selectedHelpArticle.articleId, v === 'up');
+  };
 
   const handleOnBack = () => {
     setSelectedHelpArticle(null);
@@ -132,10 +161,27 @@ const HelpArticlePage: React.FC<HelpArticlePageProps> = ({
             <Loader />
           </div>
         ) : (
-          <div
-            className='item-content'
-            dangerouslySetInnerHTML={{ __html: processedContent }}
-          />
+          <>
+            <div
+              className='item-content'
+              dangerouslySetInnerHTML={{ __html: processedContent }}
+            />
+            <div className='article-feedback'>
+              {vote ? (
+                <span>Thanks for letting us know.</span>
+              ) : (
+                <>
+                  <span>Was this helpful?</span>
+                  <button type='button' onClick={() => handleVote('up')} aria-label='Yes, helpful'>
+                    <ThumbsUp size={15} /> Yes
+                  </button>
+                  <button type='button' onClick={() => handleVote('down')} aria-label='Not helpful'>
+                    <ThumbsDown size={15} /> No
+                  </button>
+                </>
+              )}
+            </div>
+          </>
         )}
       </div>
     </div>
