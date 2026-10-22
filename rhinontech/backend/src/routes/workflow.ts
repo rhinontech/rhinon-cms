@@ -3,6 +3,7 @@ import { authenticate, authorizeAny, requireInternal, AuthRequest } from "../mid
 import { FieldDefinition, Task, WorkflowStatus } from "../models";
 import { canAccessProject } from "../services/workAccess";
 import { workflowFor } from "../services/taskStatus";
+import { statusFor } from "../utils/httpErrors";
 
 const router = Router();
 router.use(authenticate, authorizeAny("work:read", "crm:read"));
@@ -79,8 +80,8 @@ router.put("/statuses/:id", requireInternal, async (req: AuthRequest, res: Respo
       ...(isDefault !== undefined && { isDefault: Boolean(isDefault) }),
     });
     res.json(status);
-  } catch {
-    res.status(500).json({ message: "Failed to update status" });
+  } catch (err) {
+    res.status(statusFor(err)).json({ message: "Failed to update status" });
   }
 });
 

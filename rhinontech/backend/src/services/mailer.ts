@@ -3,6 +3,7 @@ import MailComposer from "nodemailer/lib/mail-composer";
 import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
 import { oneClickUnsubscribeUrl } from "./unsubscribeToken";
 import { brandSender, ensureSendingDomains, knownSendingDomains } from "./siteSender";
+import { getCompanyProfile } from "./companyProfile";
 
 type SendEmailPayload = {
   to: string | string[];
@@ -151,7 +152,12 @@ export async function sendEmail({
   // the active brand. Outside a brand-split module there is no site
   // context, so HR and account mail keeps the platform domain.
   const fromAddress = from || (await brandSender(sesFromEmail)) || sesFromEmail;
-  const displayName = customFromName || fromName;
+  // A workspace's mail is signed with its own name, never the platform's.
+  let displayName = customFromName;
+  if (!displayName) {
+    const profile = await getCompanyProfile();
+    displayName = profile.organizationId && !profile.isPlatform ? profile.name : fromName;
+  }
   // A dedicated mailbox is the whole point of rotation, so it overrides the
   // usual SES/SMTP selection rather than being folded into it.
   if (smtpAuth?.user && smtpAuth?.pass) {

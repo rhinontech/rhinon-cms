@@ -2,10 +2,12 @@ import { Router, Response } from "express";
 import { authenticate, hasPermission, AuthRequest } from "../middleware/authenticate";
 import { Document } from "../models/Document";
 import { User } from "../models/User";
+import { statusFor } from "../utils/httpErrors";
 import {
   getPresignedUploadUrl,
   getPresignedReadUrl,
   deleteObject,
+  isOwnKey,
 } from "../services/storage";
 
 const router = Router();
@@ -117,6 +119,10 @@ router.post("/presign", async (req: AuthRequest, res: Response) => {
 router.post("/", async (req: AuthRequest, res: Response) => {
   try {
     const { title, category, fileKey, fileName, fileSize, mimeType } = req.body;
+    if (fileKey && !(await isOwnKey(fileKey))) {
+      res.status(400).json({ message: "Invalid file key" });
+      return;
+    }
     const userId = req.user!.userId;
     const employeeId = req.body.employeeId === "self" ? userId : req.body.employeeId;
 
@@ -140,7 +146,7 @@ router.post("/", async (req: AuthRequest, res: Response) => {
     res.status(201).json(doc);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Failed to create document" });
+    res.status(statusFor(err)).json({ message: "Failed to create document" });
   }
 });
 
@@ -172,7 +178,7 @@ router.post("/request", async (req: AuthRequest, res: Response) => {
     res.status(201).json(doc);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Failed to create document request" });
+    res.status(statusFor(err)).json({ message: "Failed to create document request" });
   }
 });
 
@@ -198,6 +204,10 @@ router.put("/:id/upload", async (req: AuthRequest, res: Response) => {
     }
 
     const { fileKey, fileName, fileSize, mimeType } = req.body;
+    if (!(await isOwnKey(fileKey))) {
+      res.status(400).json({ message: "Invalid file key" });
+      return;
+    }
 
     await doc.update({ fileKey, fileName, fileSize, mimeType, isRequest: false });
     res.json(doc);

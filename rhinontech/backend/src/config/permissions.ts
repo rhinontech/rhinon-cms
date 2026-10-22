@@ -41,6 +41,8 @@ export const PERMISSION_CATALOG = [
   { name: "startupIdeas:write", resource: "startupIdeas", action: "write" },
   { name: "meetings:read",      resource: "meetings",     action: "read"  },
   { name: "meetings:write",     resource: "meetings",     action: "write" },
+  { name: "chatbot:read",       resource: "chatbot",      action: "read"  },
+  { name: "chatbot:write",      resource: "chatbot",      action: "write" },
   // Deploy: read = see the build history, trigger = restart a backend.
   { name: "deploy:read",        resource: "deploy",       action: "read"  },
   { name: "deploy:trigger",     resource: "deploy",       action: "trigger" },
@@ -61,7 +63,6 @@ export const PERMISSION_CATALOG = [
  * - startupIdeas: submissions from Rhinon's /build campaign.
  * - docsAccess:   gating for Rhinon's own published docs.
  * - deploy:       restarts our backend processes.
- * - analytics:    rhinonlabs.com traffic.
  */
 export const PLATFORM_ONLY_PERMISSIONS = new Set([
   "provisioning:read", "provisioning:write",
@@ -69,7 +70,6 @@ export const PLATFORM_ONLY_PERMISSIONS = new Set([
   "startupIdeas:read", "startupIdeas:write",
   "docsAccess:read", "docsAccess:write",
   "deploy:read", "deploy:trigger",
-  "analytics:read",
 ]);
 
 /** The catalog minus the platform modules — what a tenant superadmin holds. */

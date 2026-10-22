@@ -757,7 +757,7 @@ router.post("/:id/enrich", writeAccess, async (req: AuthRequest, res: Response) 
 
     res.json(enrichment);
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(error?.status === 402 ? 402 : 500).json({ message: error.message });
   }
 });
 

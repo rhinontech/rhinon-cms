@@ -2,6 +2,7 @@
 
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { CompanySignature } from "@/components/Admin/Settings/CompanySignature";
+import { CompanyProfile } from "@/components/Admin/Settings/CompanyProfile";
 
 export function SettingsGeneral() {
   return (
@@ -10,13 +11,16 @@ export function SettingsGeneral() {
         <SubNavToggle />
         <div>
           <h1 className="text-base font-semibold tracking-tight">General</h1>
-          <p className="text-xs text-muted-foreground">Company branding used across letters and documents</p>
+          <p className="text-xs text-muted-foreground">Your company profile and the branding used across letters and documents</p>
         </div>
       </div>
       <div className="flex-1 overflow-auto p-6">
         {/* Grid, not a single column: settings cards sit side by side on wide screens
             instead of leaving half the panel empty. */}
         <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+          <div className="lg:col-span-2 2xl:col-span-3">
+            <CompanyProfile />
+          </div>
           <CompanySignature />
         </div>
       </div>

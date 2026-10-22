@@ -1,4 +1,5 @@
 import { AsyncLocalStorage } from "node:async_hooks";
+import { isDevOrTest } from "../config/env";
 
 /**
  * Per-request tenant context.
@@ -29,9 +30,19 @@ export interface TenantContext {
 
 const storage = new AsyncLocalStorage<TenantContext>();
 
-/** Throw instead of warning when a tenant model is queried with no context. */
+/**
+ * Throw instead of warning when a tenant model is queried with no context.
+ *
+ * On by default everywhere except local development/test: an unscoped query
+ * that merely logs a warning is a cross-tenant read that nobody noticed, and a
+ * 500 is the better failure. TENANT_STRICT=false is the escape hatch if a route
+ * is ever found to need it while a proper fix is written.
+ */
 export function isStrict(): boolean {
-  return process.env.TENANT_STRICT === "true";
+  const flag = process.env.TENANT_STRICT;
+  if (flag === "true") return true;
+  if (flag === "false") return false;
+  return !isDevOrTest;
 }
 
 export function getTenantContext(): TenantContext | undefined {

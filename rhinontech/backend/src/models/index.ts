@@ -52,6 +52,8 @@ import { WorkflowEnrollment } from "./WorkflowEnrollment";
 import { Visitor } from "./Visitor";
 import { GoogleCalendarToken } from "./GoogleCalendarToken";
 import { Unsubscribe } from "./Unsubscribe";
+import { UsageCounter } from "./UsageCounter";
+import { AuditLog } from "./AuditLog";
 import { Account } from "./Account";
 import { PipelineStage } from "./PipelineStage";
 import { Deal } from "./Deal";
@@ -69,6 +71,16 @@ import { TaskActivity } from "./TaskActivity";
 import { StartupIdea } from "./StartupIdea";
 import { BlogTopic } from "./BlogTopic";
 import { Deployment } from "./Deployment";
+import { Chatbot } from "./Chatbot";
+import { ChatbotSource } from "./ChatbotSource";
+import { ChatConversation } from "./ChatConversation";
+import { ChatMessage } from "./ChatMessage";
+import { ChatbotCampaign } from "./ChatbotCampaign";
+import { ChatbotTicket } from "./ChatbotTicket";
+import { ChatbotTicketMessage } from "./ChatbotTicketMessage";
+import { HelpFolder } from "./HelpFolder";
+import { HelpArticle } from "./HelpArticle";
+import { ConnectedAccount } from "./ConnectedAccount";
 import { Organization } from "./Organization";
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/database";
@@ -478,6 +490,8 @@ export {
   Visitor,
   GoogleCalendarToken,
   Unsubscribe,
+  UsageCounter,
+  AuditLog,
   Account,
   PipelineStage,
   Deal,
@@ -495,6 +509,16 @@ export {
   StartupIdea,
   BlogTopic,
   Deployment,
+  Chatbot,
+  ChatbotSource,
+  ChatConversation,
+  ChatMessage,
+  ChatbotCampaign,
+  ChatbotTicket,
+  ChatbotTicketMessage,
+  HelpFolder,
+  HelpArticle,
+  ConnectedAccount,
 };
 
 export async function syncDatabase(force = false) {

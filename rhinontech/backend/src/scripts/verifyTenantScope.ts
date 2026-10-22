@@ -114,7 +114,7 @@ async function main() {
     threw = err.message;
   }
   check("strict mode throws with no context", threw.includes("[Tenancy]"), threw.slice(0, 90));
-  process.env.TENANT_STRICT = "";
+  process.env.TENANT_STRICT = "false";
 
   // 9. Writes get stamped with the active org.
   const draft = Blog.build({ title: "t", excerpt: "e", content: "c", slug: "s" } as any);

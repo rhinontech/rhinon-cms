@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { TbLock, TbCheck, TbLoader2, TbAlertCircle, TbEye, TbEyeOff } from "react-icons/tb";
+import { TwoFactorCard } from "@/components/Admin/Profile/TwoFactorCard";
 
 interface UserProfile {
   id: string;
@@ -141,6 +142,8 @@ export function ProfileSecurity() {
               </button>
             </div>
           </div>
+
+          <TwoFactorCard />
 
           {/* Account information (read-only) */}
           <div className="bg-card rounded-xl border border-border overflow-hidden">

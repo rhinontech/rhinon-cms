@@ -11,6 +11,34 @@ interface RoleWithPermissions {
   Permissions: { name: string }[];
 }
 
+/** What /auth/me says about the workspace the user is signed into. */
+export interface AccountStatus {
+  organization: {
+    id: string;
+    name: string;
+    slug: string;
+    emailDomain: string;
+    status: "active" | "trial" | "suspended";
+    plan: "free" | "starter" | "enterprise";
+    isPlatform: boolean;
+  } | null;
+  /** The owner has not yet clicked the link we emailed at signup. */
+  emailVerificationPending: boolean;
+  trialEndsAt: string | null;
+  trialExpired: boolean;
+  termsVersion: string | null;
+  termsAccepted: boolean;
+}
+
+const EMPTY_ACCOUNT: AccountStatus = {
+  organization: null,
+  emailVerificationPending: false,
+  trialEndsAt: null,
+  trialExpired: false,
+  termsVersion: null,
+  termsAccepted: true, // unknown is not "unaccepted": never nag before the answer arrives
+};
+
 type PermissionsContextType = {
   /** The signed-in user's own permissions (ignoring any preview). */
   permissions: string[];
@@ -24,6 +52,12 @@ type PermissionsContextType = {
   department: string | null;
   /** True while previewing another role's URL as superadmin. */
   isPreviewing: boolean;
+  /** The workspace owner (its superadmin), acting as themselves rather than previewing a role. */
+  isOwner: boolean;
+  /** The platform workspace's owner — the only person who can manage other workspaces. */
+  isPlatformOwner: boolean;
+  /** Workspace, trial, verification and terms state, from the same /auth/me call. */
+  account: AccountStatus;
   /** The role currently in effect for gating decisions — the previewed role's
    *  slug while superadmin is browsing another role's URL, else roleSlug. */
   effectiveRoleSlug: string;
@@ -44,6 +78,26 @@ function readCookieHint() {
   }
 }
 
+// Each module layout mounts its own shell, so this provider remounts on every
+// sidebar click. Remembering the last /auth/me answer lets the remount start
+// from it instead of an empty state — otherwise anything keyed on identity
+// (the platform-only "Workspaces" item) blinks out until the refetch lands.
+// It is null on a full page load, so the first render still matches SSR.
+type MeSnapshot = {
+  permissions: string[];
+  roleSlug: string;
+  userId: string | null;
+  fullName: string;
+  department: string | null;
+  account: AccountStatus;
+};
+let lastMe: MeSnapshot | null = null;
+
+/** Forget the remembered identity — call on sign-out so the next account starts clean. */
+export function clearPermissionsCache() {
+  lastMe = null;
+}
+
 export function PermissionsProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
@@ -53,20 +107,21 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
   // hydration mismatch). Instead the cookie hint is applied a tick later from
   // an effect below (client-only, runs after hydration), and /auth/me then
   // replaces it with the live DB state.
-  const [permissions, setPermissions] = useState<string[]>([]);
-  const [roleSlug, setRoleSlug] = useState("");
-  const [userId, setUserId] = useState<string | null>(null);
-  const [fullName, setFullName] = useState("");
-  const [department, setDepartment] = useState<string | null>(null);
-  const [ready, setReady] = useState(false);
+  const [permissions, setPermissions] = useState<string[]>(() => lastMe?.permissions ?? []);
+  const [roleSlug, setRoleSlug] = useState(() => lastMe?.roleSlug ?? "");
+  const [userId, setUserId] = useState<string | null>(() => lastMe?.userId ?? null);
+  const [fullName, setFullName] = useState(() => lastMe?.fullName ?? "");
+  const [department, setDepartment] = useState<string | null>(() => lastMe?.department ?? null);
+  const [ready, setReady] = useState(() => lastMe !== null);
   const [tick, setTick] = useState(0);
   const [previewRolePermissions, setPreviewRolePermissions] = useState<string[] | null>(null);
+  const [account, setAccount] = useState<AccountStatus>(() => lastMe?.account ?? EMPTY_ACCOUNT);
 
   const urlRoleSlug = pathname.split("/")[1] || "";
   const isPreviewing = roleSlug === "superadmin" && urlRoleSlug !== "superadmin" && urlRoleSlug !== "";
 
   useEffect(() => {
-    setPermissions(readCookieHint());
+    if (!lastMe) setPermissions(readCookieHint());
   }, []);
 
   useEffect(() => {
@@ -79,14 +134,37 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
       id?: string;
       fullName?: string;
       department?: string | null;
+      organization?: AccountStatus["organization"];
+      emailVerificationPending?: boolean;
+      trialEndsAt?: string | null;
+      trialExpired?: boolean;
+      termsVersion?: string | null;
+      termsAccepted?: boolean;
     }>("/auth/me")
       .then((data) => {
         if (cancelled) return;
-        setPermissions(data.permissions || []);
-        setRoleSlug(data.roleSlug || "");
-        setUserId(data.id ?? null);
-        setFullName(data.fullName || "");
-        setDepartment(data.department ?? null);
+        const me: MeSnapshot = {
+          permissions: data.permissions || [],
+          roleSlug: data.roleSlug || "",
+          userId: data.id ?? null,
+          fullName: data.fullName || "",
+          department: data.department ?? null,
+          account: {
+            organization: data.organization ?? null,
+            emailVerificationPending: !!data.emailVerificationPending,
+            trialEndsAt: data.trialEndsAt ?? null,
+            trialExpired: !!data.trialExpired,
+            termsVersion: data.termsVersion ?? null,
+            termsAccepted: data.termsAccepted ?? true,
+          },
+        };
+        lastMe = me;
+        setPermissions(me.permissions);
+        setRoleSlug(me.roleSlug);
+        setUserId(me.userId);
+        setFullName(me.fullName);
+        setDepartment(me.department);
+        setAccount(me.account);
         setReady(true);
         // Keep the cookie warm as the fast-path hint for the next page load.
         Cookies.set("permissions", JSON.stringify(data.permissions || []), { expires: 7 });
@@ -131,10 +209,12 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
   };
 
   const effectiveRoleSlug = isPreviewing ? urlRoleSlug : roleSlug;
+  const isOwner = roleSlug === "superadmin" && !isPreviewing;
+  const isPlatformOwner = isOwner && !!account.organization?.isPlatform;
 
   return (
     <PermissionsContext.Provider
-      value={{ permissions, roleSlug, userId, fullName, department, isPreviewing, effectiveRoleSlug, ready, has, refresh: () => setTick((t) => t + 1) }}
+      value={{ permissions, roleSlug, userId, fullName, department, isPreviewing, isOwner, isPlatformOwner, account, effectiveRoleSlug, ready, has, refresh: () => setTick((t) => t + 1) }}
     >
       {children}
     </PermissionsContext.Provider>

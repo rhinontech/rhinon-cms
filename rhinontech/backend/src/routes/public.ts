@@ -13,6 +13,9 @@ import { env } from "../config/env";
 import { classifyChannel, parseHost, isBotUserAgent } from "../services/analytics";
 import { enrollRealtimeLead } from "../services/workflowEngine";
 import { extractClientIp, lookupIpLocation, lookupIpLocationCached } from "../services/geolocation";
+import { runForOrg } from "../services/tenantContext";
+import { legal } from "../config/legal";
+import { parseBeaconBody, recordPageview, enrichGeoInBackground } from "../services/pageviewIngest";
 
 const router = Router();
 
@@ -320,111 +323,15 @@ router.post("/platform-leads", async (req: Request, res: Response) => {
 // always returns fast and never lets a tracking failure surface to the visitor.
 router.post("/track", express.text({ type: ["text/plain"] }), async (req: Request, res: Response) => {
   try {
-    // express.json handled application/json; express.text handled text/plain (a JSON string).
-    let b: any = req.body;
-    if (typeof b === "string") {
-      try { b = JSON.parse(b); } catch { b = {}; }
-    }
-    b = b || {};
-
-    const str = (v: any, max = 512): string | null => {
-      const s = (v ?? "").toString().trim();
-      return s === "" ? null : s.slice(0, max);
-    };
-
-    // Path is required; strip any querystring/hash so grouping by page is clean.
-    let path = str(b.path, 512);
-    if (path) path = path.split("?")[0].split("#")[0];
-    if (!path || !path.startsWith("/")) {
-      res.status(204).end(); // ignore junk silently
-      return;
-    }
-
-    const visitorId = str(b.visitorId, 64);
-    const sessionId = str(b.sessionId, 64);
-    if (!visitorId || !sessionId) {
-      res.status(204).end();
-      return;
-    }
-
-    const referrer = str(b.referrer, 1024);
-    const referrerHost = parseHost(referrer);
-    const userAgent = str(req.headers["user-agent"], 1024);
-    // Treat both the configured site host and the host that sent this beacon as "us",
-    // so internal navigation reads as Direct (not Referral) on localhost and in prod.
-    const originHost = parseHost((req.headers.origin as string) || null);
-    const selfHosts = [parseHost(env.siteUrl), originHost];
-
-    const utmSource = str(b.utmSource, 256);
-    const utmMedium = str(b.utmMedium, 256);
-    const utmCampaign = str(b.utmCampaign, 256);
-    const utmTerm = str(b.utmTerm, 256);
-    const utmContent = str(b.utmContent, 256);
-
-    const channel = classifyChannel({ referrerHost, utmMedium, selfHosts });
-    const isBot = isBotUserAgent(userAgent);
-
-    // Resolve the visiting organisation from the request IP, then let the IP go.
-    // Bots are skipped — they'd burn lookup quota for no signal.
-    let companyName: string | null = null;
-    let companyDomain: string | null = null;
-    if (!isBot && isIpCompanyLookupEnabled()) {
-      const ip = clientIpFrom(req.headers as any, req.socket?.remoteAddress);
-      const hit = await lookupCompanyByIp(ip);
-      if (hit) {
-        companyName = hit.name;
-        companyDomain = hit.domain;
-      }
-    }
-
     // Which brand's traffic this is. The beacon may name a site (`domain`), and
     // the Uppercurve front-end does; rhinonlabs.com sends nothing and falls
     // through to the workspace's default site, which is Rhinon Labs.
+    const b = parseBeaconBody(req.body);
     const site = await resolvePublicSite(b.site ?? b.domain ?? req.query.domain);
 
-    const view = await PageView.create({
-      siteId: site?.id ?? null,
-      visitorId,
-      sessionId,
-      path,
-      companyName,
-      companyDomain,
-      title: str(b.title, 512),
-      referrer,
-      referrerHost,
-      channel,
-      utmSource,
-      utmMedium,
-      utmCampaign,
-      utmTerm,
-      utmContent,
-      userAgent,
-      isBot,
-    });
-
-    res.status(204).end();
-
-    // Geo is resolved AFTER responding: the beacon must never wait on a third-party
-    // lookup. Bots are skipped — they only burn the rate limit. The lookup is cached
-    // per IP, so a visitor reading several pages costs one call.
-    if (!isBot) {
-      void (async () => {
-        try {
-          const ip = extractClientIp(req);
-          const geo = await lookupIpLocationCached(ip);
-          if (!geo || (geo.latitude == null && geo.country == null)) return;
-          await view.update({
-            country: geo.country ?? null,
-            region: geo.region ?? null,
-            city: geo.city ?? null,
-            latitude: geo.latitude ?? null,
-            longitude: geo.longitude ?? null,
-          });
-        } catch (err) {
-          console.error("Pageview geo enrichment failed:", err);
-        }
-      })();
-    }
+    const view = await recordPageview(req, b, { siteId: site?.id ?? null, companyLookup: true });
+    res.status(204).end(); // junk is ignored silently, and so are failures below
+    if (view) enrichGeoInBackground(req, view);
   } catch (err) {
     console.error("Failed to record pageview:", err);
     res.status(204).end(); // never surface tracking errors to the visitor
@@ -983,23 +890,34 @@ router.post("/startup-ideas", async (req: Request, res: Response) => {
  * because otherwise anyone could POST arbitrary addresses and suppress a whole
  * list; the separate /unsubscribe form below stays as the human-facing path.
  */
+/** Records an opt-out inside the organization that sent the mail. */
+async function recordUnsubscribe(email: string, organizationId: string | null, reason: string) {
+  const run = async () => {
+    const [entry, created] = await Unsubscribe.findOrCreate({
+      where: { email },
+      defaults: { email, reason } as never,
+    });
+    if (!created && !entry.reason) await entry.update({ reason });
+  };
+  // With an org the row lands in that workspace's list; without one (links sent
+  // before workspaces existed) it lands in whatever the public context resolved,
+  // which is the platform workspace.
+  if (organizationId) await runForOrg(organizationId, run, { label: "unsubscribe" });
+  else await run();
+}
+
 router.post("/unsubscribe/one-click", async (req: Request, res: Response) => {
   const email = String(req.query.email ?? "").trim().toLowerCase();
   const token = String(req.query.t ?? "");
+  const organizationId = req.query.o ? String(req.query.o) : null;
 
-  if (!verifyUnsubscribe(email, token)) {
+  if (!verifyUnsubscribe(email, token, organizationId)) {
     res.status(403).json({ message: "Invalid unsubscribe link" });
     return;
   }
 
   try {
-    const [entry, created] = await Unsubscribe.findOrCreate({
-      where: { email },
-      defaults: { email, reason: "One-click unsubscribe (RFC 8058)" } as never,
-    });
-    if (!created && !entry.reason) {
-      await entry.update({ reason: "One-click unsubscribe (RFC 8058)" });
-    }
+    await recordUnsubscribe(email, organizationId, "One-click unsubscribe (RFC 8058)");
   } catch (err: any) {
     console.error("[Unsubscribe] one-click failed:", err.message);
   }
@@ -1009,12 +927,82 @@ router.post("/unsubscribe/one-click", async (req: Request, res: Response) => {
   res.status(200).json({ message: "Unsubscribed" });
 });
 
+const escapeHtml = (v: string) =>
+  v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+function unsubscribePage(body: string): string {
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Email preferences</title><style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#18181b}main{background:#fff;max-width:420px;margin:16px;padding:32px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.1)}h1{font-size:20px;margin:0 0 12px}p{line-height:1.6;color:#52525b;margin:0 0 20px}button{background:#18181b;color:#fff;border:0;border-radius:8px;padding:10px 18px;font-size:15px;cursor:pointer}</style></head><body><main>${body}</main></body></html>`;
+}
+
+/**
+ * Human unsubscribe page. GET only shows a confirm button and changes nothing:
+ * mail security scanners and link-preview bots fetch every URL in a message, and
+ * an unsubscribe that fired on GET would silently opt recipients out.
+ */
+router.get("/unsubscribe/page", async (req: Request, res: Response) => {
+  const email = String(req.query.email ?? "").trim().toLowerCase();
+  const token = String(req.query.t ?? "");
+  const organizationId = req.query.o ? String(req.query.o) : null;
+
+  if (!verifyUnsubscribe(email, token, organizationId)) {
+    res.status(403).type("html").send(unsubscribePage("<h1>Link not valid</h1><p>This unsubscribe link is invalid or has been altered.</p>"));
+    return;
+  }
+
+  res.type("html").send(
+    unsubscribePage(
+      `<h1>Unsubscribe</h1><p>Stop sending emails to <strong>${escapeHtml(email)}</strong>?</p>` +
+        `<form method="post" action=""><input type="hidden" name="email" value="${escapeHtml(email)}"><input type="hidden" name="t" value="${escapeHtml(token)}">${organizationId ? `<input type="hidden" name="o" value="${escapeHtml(organizationId)}">` : ""}<button type="submit">Confirm unsubscribe</button></form>`
+    )
+  );
+});
+
+router.post("/unsubscribe/page", express.urlencoded({ extended: false }), async (req: Request, res: Response) => {
+  const email = String(req.body?.email ?? "").trim().toLowerCase();
+  const token = String(req.body?.t ?? "");
+  const organizationId = req.body?.o ? String(req.body.o) : null;
+
+  if (!verifyUnsubscribe(email, token, organizationId)) {
+    res.status(403).type("html").send(unsubscribePage("<h1>Link not valid</h1><p>This unsubscribe link is invalid or has been altered.</p>"));
+    return;
+  }
+
+  try {
+    await recordUnsubscribe(email, organizationId, "Unsubscribed via email footer link");
+    res.type("html").send(unsubscribePage(`<h1>You're unsubscribed</h1><p><strong>${escapeHtml(email)}</strong> will no longer receive these emails.</p>`));
+  } catch (err: any) {
+    console.error("[Unsubscribe] page failed:", err.message);
+    res.status(500).type("html").send(unsubscribePage("<h1>Something went wrong</h1><p>Please try again in a moment.</p>"));
+  }
+});
+
+/** Where the legal documents live and which version is current, for the signup form. */
+router.get("/legal", (_req: Request, res: Response) => {
+  res.json({
+    termsVersion: legal.termsVersion,
+    termsUrl: legal.termsUrl || null,
+    privacyUrl: legal.privacyUrl || null,
+    dpaUrl: legal.dpaUrl || null,
+    acceptanceRequired: legal.requireAcceptance,
+  });
+});
+
 router.post("/unsubscribe", async (req: Request, res: Response) => {
   try {
     const b = req.body || {};
     const emailRaw = (b.email ?? "").toString().trim();
     const email = emailRaw.toLowerCase();
     const reason = (b.reason ?? "").toString().trim();
+    const token = (b.t ?? "").toString();
+
+    // Links now carry a signature over the address. Forms that send one must
+    // get it right; forms that do not (the marketing-site page until it is
+    // updated to forward ?t=) still work, since the worst an unsigned request
+    // can do is add an address to the platform's own suppression list.
+    if (token && !verifyUnsubscribe(email, token)) {
+      res.status(403).json({ message: "Invalid unsubscribe link" });
+      return;
+    }
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       res.status(400).json({ message: "A valid email address is required" });
@@ -1026,9 +1014,11 @@ router.post("/unsubscribe", async (req: Request, res: Response) => {
       return;
     }
 
-    const unsubscribeEntry = await Unsubscribe.create({
-      email,
-      reason,
+    // One row per address: repeat submissions (or a bot replaying the form) must
+    // not grow the table.
+    const [unsubscribeEntry] = await Unsubscribe.findOrCreate({
+      where: { email },
+      defaults: { email, reason } as never,
     });
 
     // Optionally update lead status if lead exists with this email

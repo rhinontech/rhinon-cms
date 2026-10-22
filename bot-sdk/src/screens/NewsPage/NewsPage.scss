@@ -1,0 +1,40 @@
+.item-img-container {
+    height: 300px;
+    width: 100%;
+}
+
+.item-img {
+    border-radius: 25px;
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+}
+
+.item-container {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    height: 100%;
+    gap: 10px;
+    overflow: auto;
+    padding: 15px;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+
+    #{'&::-webkit-scrollbar'} {
+        display: none;
+    }
+
+}
+
+.item-title {
+    // background-color: #F8F8F8;
+    padding: 20px;
+    border-radius: 8px 8px 8px 8px;
+}
+
+.item-content {
+    // background-color: #F8F8F8;
+    padding: 10px;
+    border-radius: 8px 8px 8px 8px;
+}

@@ -17,7 +17,7 @@ router.get("/auth", (_req: Request, res: Response) => {
   const redirectUri = process.env.LINKEDIN_REDIRECT_URI;
 
   if (!clientId || !redirectUri) {
-    res.status(500).json({ error: "LinkedIn credentials not configured" });
+    res.status(503).json({ error: "LinkedIn credentials not configured" });
     return;
   }
 
@@ -113,7 +113,8 @@ router.get("/organizations", authenticate, async (_req: AuthRequest, res: Respon
     const orgs = await getLinkedInOrganizations();
     res.json(orgs);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    // Not having connected an account is a state the UI handles, not a server fault.
+    res.status(/not connected/i.test(error.message) ? 409 : 500).json({ error: error.message });
   }
 });
 

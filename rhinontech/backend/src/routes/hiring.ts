@@ -9,7 +9,7 @@ import { uploadBuffer, getPresignedReadUrl } from "../services/storage";
 import { sendEmail } from "../services/mailer";
 import { env } from "../config/env";
 import { interviewScheduledEmail, interviewerAssignedEmail } from "../services/emailTemplates";
-import { buildMeetingIcs } from "../services/meetingInvite";
+import { buildMeetingIcs, organizerFor } from "../services/meetingInvite";
 import { createEvent, updateEvent, deleteEvent, CalendarNotConnectedError } from "../services/googleCalendar";
 
 // Hiring pipeline: openings → candidates → interview rounds → offer → hired.
@@ -342,6 +342,7 @@ async function notifyParty(
 
   let content: string | null = null;
   try {
+    const inviteSender = { email: interviewerEmail || to, name: interviewer.fullName };
     content = buildMeetingIcs({
       id: interview.id,
       iCalUID: interview.calendarICalUID || `interview-${interview.id}@rhinontech.in`,
@@ -356,7 +357,7 @@ async function notifyParty(
       htmlLink: null,
       organizer: null,
       attendees: [{ email: to, responseStatus: null }],
-    } as any, variant === "cancelled" ? "cancel" : "request", { email: interviewerEmail || to, name: interviewer.fullName });
+    } as any, variant === "cancelled" ? "cancel" : "request", inviteSender, await organizerFor(inviteSender));
   } catch (err) {
     console.error("[Hiring] Couldn't build calendar invite:", (err as Error).message);
   }

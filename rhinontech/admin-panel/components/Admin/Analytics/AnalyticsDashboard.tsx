@@ -11,7 +11,6 @@ import {
   Label,
   Pie,
   PieChart,
-  ResponsiveContainer,
   XAxis,
   YAxis,
 } from "recharts";
@@ -57,6 +56,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { useModuleBase } from "@/lib/sites";
+import { usePermissions } from "@/context/PermissionsContext";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinonlabs.com";
 
@@ -132,6 +132,12 @@ const pagesConfig: ChartConfig = {
 };
 
 export function AnalyticsDashboard() {
+  const router = useRouter();
+  const base = useModuleBase();
+  const { account } = usePermissions();
+  // rhinonlabs' own traffic view keeps its extras (email-identified visitors, the
+  // public site link); a customer workspace sees its own site and the install flow.
+  const isPlatform = !!account.organization?.isPlatform;
   const [days, setDays] = useState(30);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -212,7 +218,9 @@ export function AnalyticsDashboard() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground">Website Analytics</h1>
-            <p className="text-sm text-muted-foreground">Organic & tagged traffic to rhinonlabs.com</p>
+            <p className="text-sm text-muted-foreground">
+              {isPlatform ? "Organic & tagged traffic to rhinonlabs.com" : "Visitors, sources and pages for your website"}
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <Tabs value={String(days)} onValueChange={(v) => setDays(Number(v))}>
@@ -227,16 +235,35 @@ export function AnalyticsDashboard() {
             <Button variant="outline" size="icon" onClick={load} title="Refresh">
               <TbRefresh size={16} className={loading ? "animate-spin" : ""} />
             </Button>
-            <Button variant="outline" size="sm" asChild>
-              <a href={SITE_URL} target="_blank" rel="noreferrer" className="gap-1.5">
-                Visit site <TbExternalLink size={14} />
-              </a>
+            <Button variant="outline" size="sm" data-testid="open-setup" onClick={() => router.push(`${base}/setup`)}>
+              Install tracking
             </Button>
+            {isPlatform && (
+              <Button variant="outline" size="sm" asChild>
+                <a href={SITE_URL} target="_blank" rel="noreferrer" className="gap-1.5">
+                  Visit site <TbExternalLink size={14} />
+                </a>
+              </Button>
+            )}
           </div>
         </div>
 
         {error && (
           <div className="rounded-lg border border-red-200 dark:border-red-400/25 bg-red-50 dark:bg-red-400/10 px-4 py-3 text-sm text-red-700 dark:text-red-300">{error}</div>
+        )}
+
+        {/* Nothing yet: the first thing a new workspace needs is the snippet. */}
+        {!loading && !error && overview && overview.current.pageviews === 0 && overview.previous.pageviews === 0 && (
+          <div
+            data-testid="analytics-empty"
+            className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-border bg-card px-5 py-4"
+          >
+            <div>
+              <p className="text-sm font-semibold text-foreground">No visits recorded yet</p>
+              <p className="text-xs text-muted-foreground">Add the tracking snippet to your website and your numbers start here within seconds.</p>
+            </div>
+            <Button size="sm" onClick={() => router.push(`${base}/setup`)}>Set up tracking</Button>
+          </div>
         )}
 
         {/* Stat cards */}
@@ -369,7 +396,7 @@ export function AnalyticsDashboard() {
         </Card>
 
         {/* Identified Email Visitors Table */}
-        <VisitorsTable visitors={visitors} loading={loading && visitors.length === 0} />
+        {isPlatform && <VisitorsTable visitors={visitors} loading={loading && visitors.length === 0} />}
       </div>
     </div>
   );
@@ -654,8 +681,9 @@ function MiniTrend({ data, dataKey, color }: { data: TimeseriesPoint[]; dataKey:
   const gradientId = `mini-${dataKey}`;
   return (
     <div className="h-8 w-20 shrink-0">
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}>
+      {/* Fixed box, so a fixed-size chart: ResponsiveContainer measures -1×-1 on its
+          first render and recharts warns about it. */}
+      <AreaChart width={80} height={32} data={data} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}>
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={color} stopOpacity={0.35} />
@@ -670,8 +698,7 @@ function MiniTrend({ data, dataKey, color }: { data: TimeseriesPoint[]; dataKey:
             fill={`url(#${gradientId})`}
             isAnimationActive={false}
           />
-        </AreaChart>
-      </ResponsiveContainer>
+      </AreaChart>
     </div>
   );
 }

@@ -19,7 +19,11 @@ import { provisionAllOrganizations } from "./services/orgProvisioning";
 import { runAsSystem } from "./services/tenantContext";
 import { refreshSendingDomains } from "./services/siteSender";
 import { dispatchDueEventEmails } from "./services/eventReminderJob";
+import { purgeDueWorkspaces } from "./services/workspaceLifecycle";
+import { beat } from "./services/heartbeat";
 import { applyDueRevisions } from "./services/compensationRevisions";
+import { attachChatSocket } from "./services/chatbot/realtime";
+import { ensureVectorSchema } from "./services/chatbot/vectorStore";
 
 async function autoClockOut() {
   const now = new Date();
@@ -89,6 +93,14 @@ async function bootstrap() {
 
   await syncDatabase();
   console.log("Models synced");
+
+  // pgvector for the website chatbot. Failing here must not take the API down:
+  // everything except bot training and answers keeps working without it.
+  try {
+    await ensureVectorSchema();
+  } catch (err: any) {
+    console.error("[Chatbot] Vector store unavailable:", err.message);
+  }
 
   const orphans = await auditOrphanRows();
   if (orphans.length) {
@@ -161,8 +173,11 @@ async function bootstrap() {
 }
 
 function listen() {
-  app.listen(env.port, () => {
+  const server = app.listen(env.port, () => {
     console.log(`Server running on http://localhost:${env.port}`);
+    // Live chat for the website widget rides on the same port, so nginx only
+    // needs to allow the WebSocket upgrade on the API host.
+    attachChatSocket(server);
 
     // Stale-intel refresh: nightly at 3:30 AM IST, well clear of the outreach
     // scheduler. No-ops unless LEAD_REENRICH_ENABLED=true.
@@ -192,6 +207,16 @@ function listen() {
       }
     }, { timezone: "Asia/Kolkata" });
 
+    // Workspaces whose owner asked for deletion and whose grace period has ended
+    // are purged here. 2:30 AM IST is the quietest hour.
+    cron.schedule("30 2 * * *", async () => {
+      try {
+        await runAsSystem("cron:purge-workspaces", purgeDueWorkspaces);
+      } catch (err: any) {
+        console.error("[Cron] Workspace purge failed:", err.message);
+      }
+    });
+
     // Salary revisions / promotions whose effective date has arrived
     cron.schedule("10 0 * * *", async () => {
       try {
@@ -216,6 +241,7 @@ function listen() {
     // match right now. Each matching campaign is triggered independently so one
     // campaign's schedule can never cause another Active campaign to be sent.
     cron.schedule("* * * * *", async () => {
+      beat("scheduler");
       const now = new Date();
       const hh = now.getHours().toString().padStart(2, "0");
       const mm = now.getMinutes().toString().padStart(2, "0");

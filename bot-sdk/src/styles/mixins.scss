@@ -1,0 +1,139 @@
+// SCSS Mixins for Rhinon SDK
+// ===========================
+
+@import './variables.scss';
+
+// Flexbox mixins
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+// Text truncation
+@mixin text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@mixin line-clamp($lines) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// Button reset
+@mixin button-reset {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  
+  &:focus {
+    outline: none;
+  }
+}
+
+// Scrollbar styling
+@mixin custom-scrollbar($width: 6px, $track-color: transparent, $thumb-color: #ccc) {
+  &::-webkit-scrollbar {
+    width: $width;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: $track-color;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: $thumb-color;
+    border-radius: $width / 2;
+    
+    &:hover {
+      background: darken($thumb-color, 10%);
+    }
+  }
+}
+
+// Transition mixin
+@mixin transition($properties...) {
+  transition-property: $properties;
+  transition-duration: $transition-normal;
+  transition-timing-function: ease;
+}
+
+// Media query mixins
+@mixin mobile {
+  @media (max-width: $breakpoint-sm) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (max-width: $breakpoint-md) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: $breakpoint-lg) {
+    @content;
+  }
+}
+
+// Focus visible
+@mixin focus-visible {
+  &:focus-visible {
+    outline: 2px solid $primary-color;
+    outline-offset: 2px;
+  }
+}
+
+// Card style
+@mixin card($padding: $spacing-md) {
+  background: $background-color;
+  border-radius: $border-radius-lg;
+  padding: $padding;
+  box-shadow: $shadow-md;
+}
+
+// Input style
+@mixin input-base {
+  width: 100%;
+  padding: $spacing-sm $spacing-md;
+  border: 1px solid $border-color;
+  border-radius: $border-radius-md;
+  font-size: $font-size-md;
+  
+  &:focus {
+    outline: none;
+    border-color: $primary-color;
+  }
+  
+  &::placeholder {
+    color: $text-color-light;
+  }
+}
+
+// Avatar
+@mixin avatar($size: 40px) {
+  width: $size;
+  height: $size;
+  border-radius: $border-radius-full;
+  object-fit: cover;
+}

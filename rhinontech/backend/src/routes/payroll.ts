@@ -7,6 +7,7 @@ import { authenticate, authorize, AuthRequest } from "../middleware/authenticate
 import { sendEmail } from "../services/mailer";
 import { payslipPaidEmail } from "../services/emailTemplates";
 import { env } from "../config/env";
+import { transactionalBrand } from "../services/companyProfile";
 import { applyDueRevisions } from "../services/compensationRevisions";
 
 const router = Router();
@@ -623,7 +624,7 @@ router.post("/admin/settlements/:userId", authorize("payroll:write"), async (req
     const emailTo = user.personalEmail || user.companyEmail;
     if (emailTo) {
       const roleSlug = (user as any).role?.slug || "employee";
-      const mail = payslipPaidEmail({
+      const mail = payslipPaidEmail({ brand: await transactionalBrand(),
         fullName: user.fullName,
         companyEmail: user.companyEmail,
         netPay,
@@ -684,7 +685,7 @@ router.post("/admin/runs/:id/pay", authorize("payroll:write"), async (req: AuthR
     if (!emailTo) continue;
     const roleSlug = emp.role?.slug || "employee";
     const payslipUrl = `${env.frontendUrl}/${roleSlug}/payroll/payslips/${slip.id}`;
-    const mail = payslipPaidEmail({
+    const mail = payslipPaidEmail({ brand: await transactionalBrand(),
       fullName: emp.fullName,
       companyEmail: emp.companyEmail,
       netPay: Number(slip.netPay),

@@ -154,15 +154,17 @@ async function renameCollidingColumns(): Promise<string[]> {
 const UPPERCURVE_SITE_URL = process.env.UPPERCURVE_SITE_URL || "https://uppercurve.in";
 
 async function migrateContentSites(): Promise<{ sitesCreated: number; contentMapped: number }> {
-  await Site.sync();
-
-  // Site.sync() creates the table but never adds a column to an existing one —
-  // only syncDatabase()'s alter does, and that runs AFTER this. So any column
-  // this migration itself reads has to be added here by hand, or the very next
-  // Site query dies on a column that does not exist yet.
+  // Site.sync() creates the table (and its indexes) but never adds a column to an
+  // existing one — only syncDatabase()'s alter does, and that runs AFTER this. So
+  // every column this migration reads, or that an index in the model needs, has to
+  // be added here by hand BEFORE the sync: on an existing table, Site.sync() goes
+  // straight to CREATE INDEX and dies on a column that does not exist yet.
   if (await tableExists("sites")) {
     await sequelize.query(`ALTER TABLE "sites" ADD COLUMN IF NOT EXISTS "sendingDomain" VARCHAR(255)`);
+    await sequelize.query(`ALTER TABLE "sites" ADD COLUMN IF NOT EXISTS "analyticsKey" VARCHAR(255)`);
+    await sequelize.query(`ALTER TABLE "sites" ADD COLUMN IF NOT EXISTS "trackedDomains" VARCHAR(255)[] NOT NULL DEFAULT ARRAY[]::VARCHAR(255)[]`);
   }
+  await Site.sync();
 
   // The content tables need the column before anything can be mapped onto it.
   for (const table of ["blogs", "case_studies", "events"]) {

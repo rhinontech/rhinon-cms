@@ -147,7 +147,8 @@ router.post("/ai-rewrite", authorize("employees:write"), async (req: AuthRequest
   let rewritten: string;
   try {
     rewritten = await rewriteLetterSentence(blockFullText, selectedText, instruction.trim());
-  } catch (err) {
+  } catch (err: any) {
+    if (err?.status === 402) { res.status(402).json({ message: err.message, code: "PLAN_LIMIT" }); return; }
     console.error("AI rewrite failed:", err);
     res.status(502).json({ message: "The AI rewrite failed. Please try again." });
     return;

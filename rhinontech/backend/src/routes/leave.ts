@@ -2,6 +2,7 @@ import { Router, Response } from "express";
 import { Op } from "sequelize";
 import { LeaveType, LeaveBalance, LeaveRequest, User } from "../models";
 import { authenticate, hasPermission, AuthRequest } from "../middleware/authenticate";
+import { statusFor } from "../utils/httpErrors";
 
 const router = Router();
 router.use(authenticate);
@@ -42,8 +43,8 @@ router.post("/types", async (req: AuthRequest, res: Response) => {
     const { name, daysPerYear, color, isPaid, description } = req.body;
     const type = await LeaveType.create({ name, daysPerYear, color, isPaid, description });
     res.json(type);
-  } catch {
-    res.status(500).json({ message: "Failed to create leave type" });
+  } catch (err) {
+    res.status(statusFor(err)).json({ message: "Failed to create leave type" });
   }
 });
 

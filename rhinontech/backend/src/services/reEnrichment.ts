@@ -2,6 +2,7 @@ import { Op } from "sequelize";
 import { Lead, CampaignActivity } from "../models";
 import { enrichLeadWithAI } from "./gemini";
 import { fetchWebsiteText } from "./research";
+import { runForOrg } from "./tenantContext";
 
 /**
  * Refreshes stale AI enrichment in the background.
@@ -44,30 +45,37 @@ export async function runReEnrichmentCycle(): Promise<{ scanned: number; refresh
 
   for (const lead of candidates) {
     try {
-      const websiteText = await fetchWebsiteText(lead.website);
-      const enrichment = await enrichLeadWithAI(lead.name, lead.company, {
-        title: lead.title,
-        industry: lead.industry,
-        keywords: lead.keywords,
-        technologies: lead.technologies,
-        website: lead.website,
-        websiteText,
-      });
+      // Runs inside the lead's own organization so the model writes as that
+      // company and the rows it touches are scoped to it.
+      const organizationId = (lead as any).organizationId as string | null;
+      const refresh = async () => {
+        const websiteText = await fetchWebsiteText(lead.website);
+        const enrichment = await enrichLeadWithAI(lead.name, lead.company, {
+          title: lead.title,
+          industry: lead.industry,
+          keywords: lead.keywords,
+          technologies: lead.technologies,
+          website: lead.website,
+          websiteText,
+        });
 
-      if (enrichment.error) {
-        failed++;
-        continue;
-      }
+        if (enrichment.error) {
+          failed++;
+          return;
+        }
 
-      await lead.update({ enrichment });
-      await CampaignActivity.create({
-        leadId: lead.id,
-        campaignId: lead.campaignId,
-        type: "Enrichment",
-        content: "Scheduled re-enrichment refreshed this lead's intel.",
-        generatedContent: JSON.stringify(enrichment),
-      });
-      refreshed++;
+        await lead.update({ enrichment });
+        await CampaignActivity.create({
+          leadId: lead.id,
+          campaignId: lead.campaignId,
+          type: "Enrichment",
+          content: "Scheduled re-enrichment refreshed this lead's intel.",
+          generatedContent: JSON.stringify(enrichment),
+        });
+        refreshed++;
+      };
+      if (organizationId) await runForOrg(organizationId, refresh, { label: "cron:re-enrichment" });
+      else await refresh();
     } catch (err: any) {
       console.error(`[Re-enrichment] Failed for lead ${lead.id}:`, err.message);
       failed++;

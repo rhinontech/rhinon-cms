@@ -7,7 +7,7 @@ import { MdDashboard } from "react-icons/md";
 import { FaUserGroup } from "react-icons/fa6";
 import { RiSettings3Fill } from "react-icons/ri";
 import { HiInbox } from "react-icons/hi2";
-import { TbBriefcase, TbCash, TbSpeakerphone, TbNews, TbBook, TbTargetArrow, TbChartArcs, TbHierarchy, TbCalendarEvent, TbBulb } from "react-icons/tb";
+import { TbBriefcase, TbCash, TbSpeakerphone, TbNews, TbBook, TbTargetArrow, TbChartArcs, TbHierarchy, TbCalendarEvent, TbBulb, TbBuildingCommunity, TbMessageChatbot } from "react-icons/tb";
 import { BsPinAngleFill, BsPinAngle } from "react-icons/bs";
 import { cn } from "@/lib/utils";
 import { useDashboard } from "../../../Common/DashboardProvider/DashboardProvider";
@@ -24,7 +24,7 @@ function moduleKeyOf(href: string): string {
 export function Sidebar() {
   const pathname = usePathname();
   const { sidebarExpanded, setSidebarExpanded, isHovering, setIsHovering, mobileNavOpen, setMobileNavOpen } = useDashboard();
-  const { has } = usePermissions();
+  const { has, isPlatformOwner } = usePermissions();
   // Which brand the whole admin is viewed as. Every module is available under
   // every brand; this only decides which brand's data the split ones show.
   const { slug: brandSlug } = useActiveBrand();
@@ -62,6 +62,7 @@ export function Sidebar() {
     { title: "Pages",      icon: <TbBook size={20} className="h-5 w-5 flex-shrink-0" />,          href: `/${roleSlug}/pages`,      permissions: ["pages:read"] },
     { title: "CRM",        icon: <TbTargetArrow size={20} className="h-5 w-5 flex-shrink-0" />,   href: `/${roleSlug}/crm`,        permissions: ["crm:read"] },
     { title: "Outreach",   icon: <TbSpeakerphone size={20} className="h-5 w-5 flex-shrink-0" />,  href: `/${roleSlug}/outreach`,   permissions: ["outreach:read"] },
+    { title: "Chatbot",    icon: <TbMessageChatbot size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/chatbot`,    permissions: ["chatbot:read"] },
     { title: "Automation", icon: <TbHierarchy size={20} className="h-5 w-5 flex-shrink-0" />,    href: `/${roleSlug}/automation`, permissions: ["outreach:read", "crm:read", "dashboard:read"] },
     { title: "Work",       icon: <TbBriefcase size={20} className="h-5 w-5 flex-shrink-0" />,     href: `/${roleSlug}/work`,       permissions: ["work:read"] },
     { title: "Team",       icon: <FaUserGroup size={20} className="h-5 w-5 flex-shrink-0" />,     href: `/${roleSlug}/employees`,  permissions: ["people:read", "attendance:read", "leave:read", "performance:read", "documents:read"] },
@@ -70,9 +71,12 @@ export function Sidebar() {
     { title: "Startup Ideas", icon: <TbBulb size={20} className="h-5 w-5 flex-shrink-0" />,       href: `/${roleSlug}/startup-ideas`, permissions: ["startupIdeas:read"], badge: unreadIdeas },
     { title: "Meetings",   icon: <TbCalendarEvent size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/meetings`,   permissions: ["meetings:read"] },
     { title: "Analytics",  icon: <TbChartArcs size={20} className="h-5 w-5 flex-shrink-0" />,     href: `/${roleSlug}/analytics`,  permissions: ["analytics:read"] },
+    // The platform team's own module: every customer workspace. Not a permission —
+    // a tenant's owner is a superadmin too — so it keys on being the platform's owner.
+    { title: "Workspaces", icon: <TbBuildingCommunity size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/platform`, permissions: [] as string[], platformOnly: true },
     { title: "Settings",   icon: <RiSettings3Fill size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/settings`,   permissions: ["settings:read", "docsAccess:read", "provisioning:read"] },
   ]
-    .filter((item) => has(...item.permissions))
+    .filter((item) => ("platformOnly" in item && item.platformOnly ? isPlatformOwner : has(...item.permissions)))
     // Link straight into the active brand for the modules that are split by
     // one, so switching brand and clicking Inbox does not bounce through the
     // brand picker every time.

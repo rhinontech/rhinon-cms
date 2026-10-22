@@ -39,7 +39,7 @@ const run = async () => {
     title: "Scaling Swiggy Ops", excerpt: "How we did it", content: "Body text", status: "Published" } });
   check("tenant cannot write a blog", blog.status === 403, `${blog.status} ${blog.data?.message ?? ""}`);
 
-  const platformOnly = ["/startup-ideas", "/analytics/overview", "/docs-access", "/deploy/history"];
+  const platformOnly = ["/startup-ideas", "/docs-access", "/deploy/history"];
   for (const path of platformOnly) {
     const res = await call(path, { token: tokenA });
     check(`tenant is refused ${path}`, res.status === 403, String(res.status));

@@ -16,6 +16,45 @@ export interface OrganizationSettings {
   address?: string | null;
   supportEmail?: string | null;
   primaryColor?: string | null;
+  /**
+   * What the workspace sells and to whom — the brief the AI sales agent writes
+   * from. Without it the agent has nothing true to say about a tenant and is
+   * told so, rather than borrowing the platform's own pitch.
+   */
+  companyKnowledge?: string | null;
+  /**
+   * Set at signup, cleared when the owner clicks the link we email them. While
+   * true the workspace cannot send outreach or automation mail: every tenant is
+   * DKIM-signed by the platform domain, so an unverified throwaway signup
+   * blasting mail would spend everyone's sender reputation.
+   */
+  pendingEmailVerification?: boolean;
+  /**
+   * ISO timestamp the trial ends. While status is "trial" and this has passed,
+   * the workspace is read-only and metered features refuse. Absent = no deadline
+   * (workspaces that predate plans are grandfathered).
+   */
+  trialEndsAt?: string;
+  /** Set when the owner asks for the workspace to be deleted; purged once it passes. */
+  deletionRequestedAt?: string;
+  deletionScheduledFor?: string;
+  deletionRequestedBy?: string;
+  /** Legal acceptance, recorded at signup or when the owner accepts a newer version. */
+  termsVersion?: string;
+  termsAcceptedAt?: string;
+  termsAcceptedBy?: string;
+  /** Set when the owner asks for a different plan; cleared once platform staff change it. */
+  upgradeRequest?: { plan: string; note: string | null; at: string; by: string };
+  /** The workspace's own sending domains and their verification progress (services/customDomain.ts). */
+  emailDomains?: {
+    domain: string;
+    status: "pending" | "verified" | "failed";
+    dkimTokens: string[];
+    /** The brand (Site) this domain sends for. */
+    siteId: string | null;
+    requestedAt: string;
+    verifiedAt?: string;
+  }[];
 }
 
 interface OrganizationAttributes {

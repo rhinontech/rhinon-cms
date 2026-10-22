@@ -2,6 +2,7 @@ import { Router, Response } from "express";
 import { Op } from "sequelize";
 import { Attendance, AttendancePolicy, AttendanceRequest, Role, User } from "../models";
 import { authenticate, hasPermission, AuthRequest } from "../middleware/authenticate";
+import { statusFor } from "../utils/httpErrors";
 
 const router = Router();
 router.use(authenticate);
@@ -496,7 +497,7 @@ router.post("/requests", async (req: AuthRequest, res: Response) => {
     });
     res.json(request);
   } catch (err) {
-    res.status(500).json({ message: "Failed to create request" });
+    res.status(statusFor(err)).json({ message: "Failed to create request" });
   }
 });
 
@@ -549,7 +550,7 @@ router.post("/policies", async (req: AuthRequest, res: Response) => {
     });
     res.json(policy);
   } catch (err) {
-    res.status(500).json({ message: "Failed to create policy" });
+    res.status(statusFor(err)).json({ message: "Failed to create policy" });
   }
 });
 

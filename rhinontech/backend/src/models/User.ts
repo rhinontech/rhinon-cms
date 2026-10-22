@@ -77,6 +77,10 @@ interface UserAttributes {
   // Password reset
   resetToken?: string | null;
   resetTokenExpiry?: Date | null;
+  totpSecret?: string | null;
+  totpEnabled?: boolean;
+  totpRecoveryCodes?: string[] | null;
+  totpLastStep?: number | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -129,6 +133,10 @@ interface UserCreationAttributes
     | "onboarded"
     | "resetToken"
     | "resetTokenExpiry"
+    | "totpSecret"
+    | "totpEnabled"
+    | "totpRecoveryCodes"
+    | "totpLastStep"
   > {}
 
 export class User
@@ -186,8 +194,28 @@ export class User
   declare onboarded: boolean;
   declare resetToken: string | null;
   declare resetTokenExpiry: Date | null;
+  /** Encrypted TOTP secret (services/totp.ts). Pending until totpEnabled is true. */
+  declare totpSecret: string | null;
+  declare totpEnabled: boolean;
+  /** SHA-256 hashes of the unused one-time recovery codes. */
+  declare totpRecoveryCodes: string[] | null;
+  /** Last accepted 30-second step, so one code cannot be replayed. */
+  declare totpLastStep: number | null;
   declare createdAt: Date;
   declare updatedAt: Date;
+
+  /**
+   * Many routes return a User straight to the client. The second-factor secret
+   * and recovery-code hashes must never be among the fields they send, however
+   * a route was written, so they are removed here at the source.
+   */
+  toJSON() {
+    const values = super.toJSON() as unknown as Record<string, unknown>;
+    delete values.totpSecret;
+    delete values.totpRecoveryCodes;
+    delete values.totpLastStep;
+    return values as any;
+  }
 }
 
 User.init(
@@ -248,6 +276,10 @@ User.init(
     onboarded:             { type: DataTypes.BOOLEAN, allowNull: true, defaultValue: false },
     resetToken:            { type: DataTypes.STRING,  allowNull: true, defaultValue: null },
     resetTokenExpiry:      { type: DataTypes.DATE,    allowNull: true, defaultValue: null },
+    totpSecret:            { type: DataTypes.TEXT,    allowNull: true, defaultValue: null },
+    totpEnabled:           { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+    totpRecoveryCodes:     { type: DataTypes.JSONB,   allowNull: true, defaultValue: null },
+    totpLastStep:          { type: DataTypes.INTEGER, allowNull: true, defaultValue: null },
   },
   {
     sequelize,

@@ -1,17 +1,21 @@
 import { Router, Response } from "express";
 import { Op, fn, col, literal } from "sequelize";
-import { PageView, Visitor } from "../models";
-import { authenticate, authorize, requirePlatformOrg, AuthRequest } from "../middleware/authenticate";
+import { PageView, Site, Visitor } from "../models";
+import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 import { resolveSiteContext } from "../middleware/siteContext";
+import { currentSiteId } from "../services/siteContext";
+import {
+  MAX_TRACKED_DOMAINS, ensureAnalyticsKey, forgetTracker, installSnippet, lastRejectedHost,
+  newAnalyticsKey, normalizeDomain, trackerScriptUrl,
+} from "../services/analyticsSetup";
+import { auditRequest } from "../services/audit";
 
 const router = Router();
 router.use(authenticate);
 // Brand-split module: the [domain] the admin is showing scopes every read below.
 router.use(resolveSiteContext);
-// rhinonlabs.com traffic is the platform's own marketing data.
-// authorize() waves every superadmin through, and each tenant owner IS a
-// superadmin — so the permission check alone would not keep customers out.
-router.use(requirePlatformOrg);
+// Every workspace reads its own sites' traffic: the tenant hooks scope PageView
+// to the caller's organization, and the site context to the brand being viewed.
 router.use(authorize("analytics:read"));
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -46,6 +50,101 @@ async function countMetrics(from: Date, to: Date) {
   ]);
   return { pageviews, visitors, sessions };
 }
+
+// ── Tracking setup ───────────────────────────────────────────────────────────
+// What a customer needs to put analytics on their own site: the snippet, the
+// domains it may report from, and whether anything has arrived yet.
+
+async function setupSite(): Promise<Site | null> {
+  const id = currentSiteId();
+  return id ? Site.findByPk(id) : null;
+}
+
+async function setupPayload(site: Site) {
+  const key = await ensureAnalyticsKey(site);
+  // findOne/count, not max(): aggregates skip the tenant hooks, findOne and count do not.
+  const where = { siteId: site.id };
+  const since = new Date(Date.now() - DAY_MS);
+  const [latest, events24h] = await Promise.all([
+    PageView.findOne({ where, order: [["createdAt", "DESC"]], attributes: ["createdAt"] }),
+    PageView.count({ where: { ...where, createdAt: { [Op.gte]: since } } }),
+  ]);
+  const lastEventAt = latest?.createdAt ?? null;
+  return {
+    site: { id: site.id, name: site.name, slug: site.slug, siteUrl: site.siteUrl },
+    key,
+    domains: site.trackedDomains ?? [],
+    suggestedDomain: normalizeDomain(site.siteUrl),
+    maxDomains: MAX_TRACKED_DOMAINS,
+    scriptUrl: trackerScriptUrl(),
+    snippet: (site.trackedDomains ?? []).length ? installSnippet(key) : null,
+    lastEventAt,
+    events24h,
+    rejected: lastRejectedHost(site.id),
+  };
+}
+
+// GET /analytics/setup
+router.get("/setup", async (_req: AuthRequest, res: Response) => {
+  try {
+    const site = await setupSite();
+    if (!site) return void res.status(404).json({ message: "No site to set up." });
+    res.json(await setupPayload(site));
+  } catch (err) {
+    console.error("analytics/setup failed:", err);
+    res.status(500).json({ message: "Failed to load tracking setup" });
+  }
+});
+
+// PUT /analytics/setup/domains — { domains: ["acme.com", "https://www.shop.acme.com/x"] }
+router.put("/setup/domains", authorize("settings:write"), async (req: AuthRequest, res: Response) => {
+  try {
+    const site = await setupSite();
+    if (!site) return void res.status(404).json({ message: "No site to set up." });
+
+    const input = req.body?.domains;
+    if (!Array.isArray(input)) return void res.status(400).json({ message: "domains must be a list." });
+
+    const domains: string[] = [];
+    for (const raw of input) {
+      const host = normalizeDomain(raw);
+      if (!host) return void res.status(400).json({ message: `"${String(raw).slice(0, 80)}" is not a valid domain.` });
+      if (!domains.includes(host)) domains.push(host);
+    }
+    if (domains.length > MAX_TRACKED_DOMAINS) {
+      return void res.status(400).json({ message: `At most ${MAX_TRACKED_DOMAINS} domains per site.` });
+    }
+
+    const before = site.trackedDomains ?? [];
+    await site.update({ trackedDomains: domains });
+    forgetTracker(site.analyticsKey);
+    await auditRequest(req, "analytics.domains.update", {
+      entityType: "site", entityId: site.id, metadata: { site: site.slug, from: before, to: domains },
+    });
+    res.json(await setupPayload(site));
+  } catch (err) {
+    console.error("analytics/setup/domains failed:", err);
+    res.status(500).json({ message: "Failed to save domains" });
+  }
+});
+
+// POST /analytics/setup/rotate-key — the old snippet stops collecting at once.
+router.post("/setup/rotate-key", authorize("settings:write"), async (req: AuthRequest, res: Response) => {
+  try {
+    const site = await setupSite();
+    if (!site) return void res.status(404).json({ message: "No site to set up." });
+    const old = site.analyticsKey;
+    await site.update({ analyticsKey: newAnalyticsKey() });
+    forgetTracker(old);
+    await auditRequest(req, "analytics.key.rotate", {
+      entityType: "site", entityId: site.id, metadata: { site: site.slug },
+    });
+    res.json(await setupPayload(site));
+  } catch (err) {
+    console.error("analytics/setup/rotate-key failed:", err);
+    res.status(500).json({ message: "Failed to rotate key" });
+  }
+});
 
 // GET /analytics/overview — totals for the range + previous-period totals for deltas.
 router.get("/overview", async (req: AuthRequest, res: Response) => {
