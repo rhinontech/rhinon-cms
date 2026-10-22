@@ -8,6 +8,7 @@ import FloatingContactButton from "@/components/Common/FloatingContactButton/Flo
 import { Navbar } from "@/components/Common/Header/Navbar";
 import StructuredData from "@/components/Common/SEO/StructuredData";
 import { PageviewTracker } from "@/components/Common/Analytics/PageviewTracker";
+import RhinonChatLoader from "@/components/RhinonChat";
 
 // const geistSans = Geist({
 //   variable: "--font-geist-sans",
@@ -144,6 +145,7 @@ export default function RootLayout({
         {/* The single <main> landmark for every page (pages use plain containers) */}
         <main id="main">{children}</main>
         <Footer />
+        <RhinonChatLoader />
 
         {/* <div
           className="fixed bottom-0 left-0 right-0 mx-auto w-full max-w-[1200px] h-[70px] z-10 pointer-events-none backdrop-blur-[7px] mask-[linear-gradient(to_bottom,transparent_0%,black_60%)]"
