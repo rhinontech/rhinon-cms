@@ -1,6 +1,6 @@
 {
   "name": "@rhinon/chat",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Rhinon website chat: an AI assistant trained on your site, with live hand-off to your team.",
   "license": "MIT",
   "publishConfig": {

@@ -25,9 +25,9 @@ import { deleteObject, getPresignedReadUrl, publicUrl, uploadBuffer } from "../s
 import { analyzeUrl, TRAINABLE_EXTENSIONS } from "../services/chatbot/extract";
 import { isTraining, startTraining } from "../services/chatbot/training";
 import { deleteChatbotChunks, deleteSourceChunks } from "../services/chatbot/vectorStore";
-import { liveVisitors, onlineVisitors, emitToConversation, emitToOrg } from "../services/chatbot/realtime";
+import { liveVisitors, onlineVisitors, emitToConversation, emitToOrg, emitToVisitor } from "../services/chatbot/realtime";
 import { apiBase } from "../services/analyticsSetup";
-import { appendMessage, serializeConversation, serializeMessage, type ResolvedBot } from "../services/chatbot/chatStore";
+import { appendMessage, findOrCreateConversation, serializeConversation, serializeMessage, type ResolvedBot } from "../services/chatbot/chatStore";
 
 /**
  * Admin side of the website chatbot. Brand-split like Inbox and CRM: the
@@ -643,6 +643,54 @@ router.get("/visitors", canRead, async (_req, res) => {
         conversation: c ? { id: c.id, mode: c.mode, status: c.status, lastMessageAt: c.lastMessageAt, unreadCount: c.unreadCount } : null,
       };
     }),
+  });
+});
+
+/** Proactively start a live chat with a visitor, sending an initial greeting and opening their widget. */
+router.post("/visitors/:visitorId/start-chat", canWrite, async (req: AuthRequest, res) => {
+  const bot = await currentBot(res);
+  if (!bot) return;
+  const visitorId = str(req.params.visitorId, 128);
+  if (!visitorId) return void res.status(400).json({ message: "Invalid visitor ID" });
+
+  const me = await User.findByPk(req.user!.userId, { attributes: ["id", "fullName", "avatarKey"] });
+  const adminName = me?.fullName || req.user!.fullName || "Support";
+  const customMessage = str(req.body?.message, 1000);
+  const text = customMessage || `Hey there, I am ${adminName}, how can I assist you today?`;
+
+  const resolved = resolvedFor(req, bot);
+
+  let conv = await ChatConversation.findOne({
+    where: { chatbotId: bot.id, visitorId, status: "open" },
+    order: [["lastMessageAt", "DESC"]],
+  });
+
+  if (!conv) {
+    conv = await findOrCreateConversation(resolved, visitorId, null);
+  }
+  if (!conv) return void res.status(500).json({ message: "Could not create conversation." });
+
+  await conv.update({
+    mode: "human",
+    status: "open",
+    closedAt: null,
+    assignedUserId: req.user!.userId,
+    unreadCount: 0,
+  });
+
+  const image = me?.avatarKey ? await getPresignedReadUrl(me.avatarKey, 3600).catch(() => null) : null;
+  const message = await appendMessage(resolved, conv, {
+    role: "support",
+    phase: "human",
+    text,
+    agent: { id: req.user!.userId, name: adminName, image },
+  });
+
+  emitToVisitor(bot.id, visitorId, "open_chat", { conversationId: conv.publicKey });
+
+  res.status(201).json({
+    conversation: serializeConversation(conv),
+    message: serializeMessage(message),
   });
 });
 

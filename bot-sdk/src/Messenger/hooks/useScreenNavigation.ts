@@ -69,10 +69,9 @@ export function useScreenNavigation({ state }: UseScreenNavigationProps) {
   useEffect(() => {
     const handleOpenChat = (event: CustomEvent<{ conversationId?: string }>) => {
       const conversationId = event.detail?.conversationId;
-      if (!conversationId) return;
-
       // Always ensure chat UI is open
       setIsOpen(true);
+      if (!conversationId) return;
 
       // Close or reset the existing conversation if any
       setSelectedChatId(null);

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { TbClock, TbExternalLink, TbMapPin, TbMessage, TbMessageCircle, TbUsers, TbWorld } from "react-icons/tb";
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,7 @@ const source = (ref: string | null) => {
 
 export function ChatbotVisitors() {
   const base = useModuleBase();
+  const router = useRouter();
   const { has } = usePermissions();
   const canAct = has("chatbot:write");
   const [visitors, setVisitors] = useState<Visitor[] | null>(null);
@@ -57,6 +59,7 @@ export function ChatbotVisitors() {
   const [missing, setMissing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("online");
+  const [startingChat, setStartingChat] = useState<string | null>(null);
   const [, tick] = useState(0);
 
   const load = useCallback(async () => {
@@ -132,10 +135,21 @@ export function ChatbotVisitors() {
     [shown]
   );
 
-  const startChat = (v: Visitor) => {
-    if (!chatbotId) return;
-    openChatForVisitor(chatbotId, v.visitorId);
-    toast.success(`Opened the chat on ${label(v)}'s screen`, { description: "Their reply will appear in Live chats." });
+  const startChat = async (v: Visitor) => {
+    if (!chatbotId || startingChat) return;
+    setStartingChat(v.visitorId);
+    try {
+      const res = await apiFetch<{ conversation: { id: string; publicKey: string } }>(
+        `/chatbots/visitors/${encodeURIComponent(v.visitorId)}/start-chat`,
+        { method: "POST" }
+      );
+      toast.success(`Chat opened on ${label(v)}'s screen`, { description: "Opening Live chats..." });
+      router.push(`${base}/chats?c=${res.conversation.id}`);
+    } catch (err) {
+      toast.error(errorText(err, "Could not start chat"));
+    } finally {
+      setStartingChat(null);
+    }
   };
 
   if (missing) {
@@ -239,8 +253,13 @@ export function ChatbotVisitors() {
                   ) : (
                     canAct &&
                     v.online && (
-                      <Button size="sm" onClick={() => startChat(v)} data-testid={`start-chat-${v.visitorId}`}>
-                        <TbMessageCircle size={14} /> Start chat
+                      <Button
+                        size="sm"
+                        onClick={() => void startChat(v)}
+                        disabled={startingChat === v.visitorId}
+                        data-testid={`start-chat-${v.visitorId}`}
+                      >
+                        <TbMessageCircle size={14} /> {startingChat === v.visitorId ? "Starting…" : "Start chat"}
                       </Button>
                     )
                   )}
