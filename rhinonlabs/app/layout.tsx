@@ -125,6 +125,12 @@ export default function RootLayout({
             most pages; fetch the right size first instead of discovering it late. */}
         <link rel="preload" as="image" type="image/avif" href="/images/background/background-960.avif" media="(max-width: 767px)" fetchPriority="high" />
         <link rel="preload" as="image" type="image/avif" href="/images/background/background-1920.avif" media="(min-width: 768px)" fetchPriority="high" />
+        <script
+          async
+          defer
+          src="https://api.rhinontech.in/t.js"
+          data-key="rt_50d801ebcd1cae883a7c45e8"
+        />
       </head>
       <body
         className={`${inter.variable} ${instrumentSerif.variable} ${mulish.variable} relative font-sans antialiased text-foreground bg-background`}
