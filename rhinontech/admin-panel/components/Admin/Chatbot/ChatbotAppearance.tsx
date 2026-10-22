@@ -146,7 +146,6 @@ export function ChatbotAppearance() {
                     hint="Home header. Also the launcher, unless you set a launcher icon."
                     value={isBuiltIn(draft.primaryLogo) ? undefined : draft.primaryLogo}
                     defaultSrc={DEFAULT_IMAGES.primaryLogo}
-                    aspect={1}
                     dark
                     onChange={(url) => set("primaryLogo", url ?? "")}
                     testId="primary-logo"
