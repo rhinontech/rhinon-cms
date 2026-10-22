@@ -4,6 +4,8 @@ import { ChatbotTicket } from "../../models/ChatbotTicket";
 import { HelpArticle } from "../../models/HelpArticle";
 import { HelpFolder } from "../../models/HelpFolder";
 import { sendEmail } from "../mailer";
+import { sendFromAccount } from "../connectedAccounts";
+import type { ConnectedAccount } from "../../models/ConnectedAccount";
 
 /**
  * Tickets and the help center: the pieces both the admin routes and the
@@ -38,24 +40,21 @@ export function widgetTicket(t: ChatbotTicket) {
 const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
 /**
- * An agent's reply, emailed to the visitor. Sent as the brand (the mailer
- * rewrites the sender onto the active site's domain). Never throws — the
- * reply is saved either way and the caller records whether it went out.
+ * An agent's reply, emailed to the visitor — from the brand address, or from
+ * the agent's own connected Gmail/Outlook when `account` is given. Never
+ * throws: the reply is saved either way and the caller records whether it
+ * went out.
  */
-export async function emailTicketReply(t: ChatbotTicket, text: string, brandName: string): Promise<boolean> {
+export async function emailTicketReply(t: ChatbotTicket, text: string, brandName: string, account?: ConnectedAccount | null): Promise<boolean> {
+  const subject = `Re: ${t.subject} [#${t.code}]`;
+  const html = `<div style="font-family:Inter,Arial,sans-serif;font-size:15px;line-height:1.6;color:#111827">${escapeHtml(text).replace(/\n/g, "<br>")}
+<p style="margin-top:28px;color:#6b7280;font-size:13px">— ${escapeHtml(brandName)} support · Ticket #${t.code}</p></div>`;
   try {
-    const body = escapeHtml(text).replace(/\n/g, "<br>");
-    await sendEmail({
-      to: t.customerEmail,
-      fromName: brandName,
-      subject: `Re: ${t.subject} [#${t.code}]`,
-      text: `${text}\n\n—\n${brandName} support · Ticket #${t.code}`,
-      html: `<div style="font-family:Inter,Arial,sans-serif;font-size:15px;line-height:1.6;color:#111827">${body}
-<p style="margin-top:28px;color:#6b7280;font-size:13px">— ${escapeHtml(brandName)} support · Ticket #${t.code}</p></div>`,
-    });
+    if (account) await sendFromAccount(account, { to: t.customerEmail, subject, html, fromName: account.name || brandName });
+    else await sendEmail({ to: t.customerEmail, fromName: brandName, subject, html, text: `${text}\n\n—\n${brandName} support · Ticket #${t.code}` });
     return true;
   } catch (err: any) {
-    console.error("[Tickets] reply email failed:", err?.message || err);
+    console.error(`[Tickets] reply email failed${account ? ` (${account.provider})` : ""}:`, err?.message || err);
     return false;
   }
 }

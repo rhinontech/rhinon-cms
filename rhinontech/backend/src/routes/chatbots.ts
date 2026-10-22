@@ -16,6 +16,8 @@ import { HelpFolder } from "../models/HelpFolder";
 import { HelpArticle } from "../models/HelpArticle";
 import { Site } from "../models/Site";
 import { cleanArticleHtml, emailTicketReply, nextPosition } from "../services/chatbot/support";
+import { ConnectedAccount } from "../models/ConnectedAccount";
+import { parseProvider } from "../services/connectedAccounts";
 import { User } from "../models/User";
 import { chatbotSlotBlockedReason } from "../services/usage";
 import { currentSiteFilter, runAcrossSites } from "../services/siteContext";
@@ -311,11 +313,17 @@ router.post("/tickets/:id/messages", canWrite, async (req: AuthRequest, res) => 
   if (!text) return void res.status(400).json({ message: "Write a message first." });
   const note = req.body?.note === true;
   let emailed: boolean | null = null;
+  let sentVia: string | null = null;
   if (!note) {
     const site = bot.siteId ? await Site.findByPk(bot.siteId, { attributes: ["name"] }) : null;
-    emailed = await emailTicketReply(ticket, text, site?.name || String((bot.config as any)?.chatbotName || "Support"));
+    // "via": send from the agent's own connected mailbox instead of the brand address.
+    const via = parseProvider(req.body?.via);
+    const account = via ? await ConnectedAccount.findOne({ where: { userId: req.user!.userId, provider: via } }) : null;
+    if (via && !account) return void res.status(400).json({ message: "Connect that account in Settings → Accounts first." });
+    emailed = await emailTicketReply(ticket, text, site?.name || String((bot.config as any)?.chatbotName || "Support"), account);
+    sentVia = account ? account.email : null;
   }
-  const message = await ChatbotTicketMessage.create({ ticketId: ticket.id, role: note ? "note" : "agent", authorUserId: req.user!.userId, text, emailed });
+  const message = await ChatbotTicketMessage.create({ ticketId: ticket.id, role: note ? "note" : "agent", authorUserId: req.user!.userId, text, emailed, sentVia });
   await ticket.update({
     lastActivityAt: new Date(),
     ...(note ? {} : { status: ticket.status === "open" ? "pending" : ticket.status }),

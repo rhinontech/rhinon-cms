@@ -48,7 +48,13 @@ interface TicketMessage {
   authorName: string | null;
   text: string;
   emailed: boolean | null;
+  sentVia: string | null;
   createdAt: string;
+}
+
+interface MailAccount {
+  provider: "GOOGLE" | "MICROSOFT";
+  email: string;
 }
 
 interface Person {
@@ -93,6 +99,9 @@ export function ChatbotTickets() {
   const [people, setPeople] = useState<Person[]>([]);
   const [draft, setDraft] = useState("");
   const [asNote, setAsNote] = useState(false);
+  const [mailAccounts, setMailAccounts] = useState<MailAccount[]>([]);
+  // "" = the brand address; otherwise a connected account's provider.
+  const [via, setVia] = useState<"" | MailAccount["provider"]>("");
   const [sending, setSending] = useState(false);
   const [tagDraft, setTagDraft] = useState("");
   const threadEnd = useRef<HTMLDivElement>(null);
@@ -120,6 +129,7 @@ export function ChatbotTickets() {
 
   useEffect(() => {
     apiFetch<Person[]>("/people").then(setPeople).catch(() => undefined);
+    apiFetch<{ accounts: MailAccount[] }>("/integrations/accounts").then((r) => setMailAccounts(r.accounts)).catch(() => undefined);
   }, []);
 
   useChatEvents({ "ticket:new": () => void load() });
@@ -168,7 +178,7 @@ export function ChatbotTickets() {
     try {
       const res = await apiFetch<{ message: TicketMessage; ticket: Ticket }>(`/chatbots/tickets/${detail.ticket.id}/messages`, {
         method: "POST",
-        body: JSON.stringify({ text: draft, note: asNote }),
+        body: JSON.stringify({ text: draft, note: asNote, ...(via && !asNote ? { via } : {}) }),
       });
       const next = { ...detail.ticket, ...res.ticket, assigneeName: detail.ticket.assigneeName ?? people.find((p) => p.id === res.ticket.assignedUserId)?.fullName ?? null };
       if (next.status !== detail.ticket.status) setCounts((c) => ({ ...c, [detail.ticket.status]: Math.max(0, c[detail.ticket.status] - 1), [next.status]: c[next.status] + 1 }));
@@ -176,7 +186,7 @@ export function ChatbotTickets() {
       setTickets((prev) => prev?.map((t) => (t.id === next.id ? next : t)) ?? prev);
       setDraft("");
       if (!asNote) {
-        if (res.message.emailed) toast.success(`Emailed to ${detail.ticket.customerEmail}`);
+        if (res.message.emailed) toast.success(`Emailed to ${detail.ticket.customerEmail}${res.message.sentVia ? ` from ${res.message.sentVia}` : ""}`);
         else toast.error("Saved, but the email didn't go out. Try again later.");
       }
     } catch (err) {
@@ -351,9 +361,26 @@ export function ChatbotTickets() {
                           {o.icon} {o.label}
                         </button>
                       ))}
-                      <span className="ml-auto truncate pr-1 text-[11px] text-muted-foreground">
-                        {asNote ? "Only your team sees this" : `Emailed to ${selected.ticket.customerEmail}`}
-                      </span>
+                      {!asNote && mailAccounts.length > 0 ? (
+                        <label className="ml-auto flex min-w-0 items-center gap-1.5 pr-1 text-[11px] text-muted-foreground">
+                          Send from
+                          <select
+                            value={via}
+                            onChange={(e) => setVia(e.target.value as typeof via)}
+                            className="max-w-[14rem] truncate rounded-md border border-border bg-background px-1.5 py-0.5 text-[11px] text-foreground"
+                            data-testid="send-from"
+                          >
+                            <option value="">Brand address</option>
+                            {mailAccounts.map((a) => (
+                              <option key={a.provider} value={a.provider}>{a.email}</option>
+                            ))}
+                          </select>
+                        </label>
+                      ) : (
+                        <span className="ml-auto truncate pr-1 text-[11px] text-muted-foreground">
+                          {asNote ? "Only your team sees this" : `Emailed to ${selected.ticket.customerEmail}`}
+                        </span>
+                      )}
                     </div>
                     <Textarea
                       value={draft}
@@ -523,7 +550,7 @@ function ThreadItem({ m, customer, seed, me }: { m: TicketMessage; customer: str
         <p className="mb-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <span className="font-medium text-foreground">{name}</span>· {timeAgo(m.createdAt)}
           {!fromCustomer && m.emailed === false && <Chip tone="red">Email not sent</Chip>}
-          {!fromCustomer && m.emailed && <span className="inline-flex items-center gap-1"><TbMail size={11} /> Emailed</span>}
+          {!fromCustomer && m.emailed && <span className="inline-flex items-center gap-1"><TbMail size={11} /> {m.sentVia ? `Emailed from ${m.sentVia}` : "Emailed"}</span>}
         </p>
         <div className={cn("rounded-xl px-3.5 py-2.5 text-[13px] leading-relaxed", fromCustomer ? "bg-muted/70" : "border border-border bg-background")}>
           <p className="whitespace-pre-wrap break-words">{m.text}</p>

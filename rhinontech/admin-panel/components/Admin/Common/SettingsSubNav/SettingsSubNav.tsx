@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { TbSettings, TbShieldLock, TbBooks, TbBook, TbFileText, TbCalendarEvent, TbRocket, TbCreditCard, TbAt, TbCode, TbHistory, TbDatabaseExport } from "react-icons/tb";
+import { TbSettings, TbShieldLock, TbBooks, TbBook, TbFileText, TbCalendarEvent, TbRocket, TbCreditCard, TbAt, TbCode, TbHistory, TbDatabaseExport, TbPlugConnected } from "react-icons/tb";
 import { MdOutlineCloud } from "react-icons/md";
 import { CollapsibleSubNav, type SubNavItem } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { usePermissions } from "@/context/PermissionsContext";
@@ -15,6 +15,7 @@ export function SettingsSubNav() {
 
   const items: SubNavItem[] = [
     { label: "General", href: base, icon: <TbSettings size={18} />, exact: true },
+    { label: "Accounts", href: `${base}/accounts`, icon: <TbPlugConnected size={18} /> },
     // Workspace-level: plan, sending domain, API access, the activity trail, your data.
     ...(has("settings:read")
       ? [

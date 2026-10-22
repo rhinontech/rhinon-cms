@@ -33,6 +33,7 @@ import { ChatbotTicket } from "./ChatbotTicket";
 import { ChatbotTicketMessage } from "./ChatbotTicketMessage";
 import { HelpFolder } from "./HelpFolder";
 import { HelpArticle } from "./HelpArticle";
+import { ConnectedAccount } from "./ConnectedAccount";
 import { TimeEntry } from "./TimeEntry";
 import { Attendance } from "./Attendance";
 import { AttendanceRequest } from "./AttendanceRequest";
@@ -120,7 +121,7 @@ export const TENANT_MODELS: ModelStatic<any>[] = [
   StartupIdea, Deployment, BlogTopic,
   PageView, Visitor,
   Chatbot, ChatbotSource, ChatConversation, ChatMessage, ChatbotCampaign,
-  ChatbotTicket, ChatbotTicketMessage, HelpFolder, HelpArticle,
+  ChatbotTicket, ChatbotTicketMessage, HelpFolder, HelpArticle, ConnectedAccount,
 ];
 
 const TENANT_MODEL_NAMES = new Set(TENANT_MODELS.map((m) => m.name));

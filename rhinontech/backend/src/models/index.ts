@@ -80,6 +80,7 @@ import { ChatbotTicket } from "./ChatbotTicket";
 import { ChatbotTicketMessage } from "./ChatbotTicketMessage";
 import { HelpFolder } from "./HelpFolder";
 import { HelpArticle } from "./HelpArticle";
+import { ConnectedAccount } from "./ConnectedAccount";
 import { Organization } from "./Organization";
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/database";
@@ -517,6 +518,7 @@ export {
   ChatbotTicketMessage,
   HelpFolder,
   HelpArticle,
+  ConnectedAccount,
 };
 
 export async function syncDatabase(force = false) {
