@@ -155,7 +155,7 @@ export function useChatbot() {
 let socket: Socket | null = null;
 let users = 0;
 
-function acquire(): Socket | null {
+export function acquireChatSocket(): Socket | null {
   const token = Cookies.get("authToken");
   if (!token) return null;
   if (!socket) {
@@ -165,7 +165,7 @@ function acquire(): Socket | null {
   return socket;
 }
 
-function release() {
+export function releaseChatSocket() {
   users -= 1;
   if (users <= 0 && socket) {
     socket.disconnect();
@@ -185,7 +185,7 @@ export function useChatEvents(handlers: Record<string, (data: any) => void>) {
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    const s = acquire();
+    const s = acquireChatSocket();
     if (!s) return;
     const onAny = (event: string, data: unknown) => ref.current[event]?.(data);
     const onConnect = () => setConnected(true);
@@ -198,7 +198,7 @@ export function useChatEvents(handlers: Record<string, (data: any) => void>) {
       s.offAny(onAny);
       s.off("connect", onConnect);
       s.off("disconnect", onDisconnect);
-      release();
+      releaseChatSocket();
     };
   }, []);
 

@@ -96,10 +96,13 @@ function clientIp(socket: Socket): string | null {
   return (first || socket.handshake.address || "").replace(/^::ffff:/, "") || null;
 }
 
+import { attachCallSignaling, registerManualUser } from "./callSignaling";
+
 interface AgentIdentity {
   userId: string;
   organizationId: string;
   fullName: string;
+  email: string;
 }
 
 async function authenticateAgent(token: string): Promise<AgentIdentity | null> {
@@ -113,7 +116,7 @@ async function authenticateAgent(token: string): Promise<AgentIdentity | null> {
 
   const account = await runAsSystem("chatbot:socket-auth", () =>
     User.unscoped().findByPk(payload.userId, {
-      attributes: ["id", "status", "fullName", "organizationId"],
+      attributes: ["id", "status", "fullName", "companyEmail", "personalEmail", "organizationId"],
       include: [
         { model: Role, as: "role", include: [{ model: Permission }] },
         { model: Organization, as: "tenant" },
@@ -126,7 +129,8 @@ async function authenticateAgent(token: string): Promise<AgentIdentity | null> {
   const role = (account as any).role as Role & { Permissions: Permission[] };
   const perms = (role?.Permissions || []).map((p: any) => `${p.resource}:${p.action}`);
   if (role?.slug !== "superadmin" && !perms.includes("chatbot:read")) return null;
-  return { userId: account.id, organizationId: org.id, fullName: account.fullName };
+  const email = account.companyEmail || account.personalEmail || "";
+  return { userId: account.id, organizationId: org.id, fullName: account.fullName, email };
 }
 
 /** A small per-socket budget so one tab cannot flood a chat or the database. */
@@ -150,6 +154,9 @@ export function attachChatSocket(server: HttpServer) {
   });
 
   io.on("connection", (socket) => {
+    // Attach call signaling handlers to every incoming socket
+    attachCallSignaling(io!, socket);
+
     const token = typeof socket.handshake.auth?.token === "string" ? socket.handshake.auth.token : null;
     if (token) {
       void handleAgent(socket, token);
@@ -171,6 +178,12 @@ async function handleAgent(socket: Socket, token: string) {
   socket.data.agent = agent;
   socket.join(orgRoom(agent.organizationId));
 
+  // Auto-register agent identity for WebRTC voice calls
+  registerManualUser(socket.id, agent.userId, agent.fullName, agent.organizationId);
+  if (agent.email) {
+    registerManualUser(socket.id, agent.email, agent.fullName, agent.organizationId);
+  }
+
   // Proactive "open chat" on a visitor's widget — only for this workspace's bots.
   socket.on("open_chat", async ({ chatbotId, visitorId, conversationId }: Record<string, string>) => {
     if (!chatbotId || !visitorId) return;
@@ -184,6 +197,10 @@ async function handleAgent(socket: Socket, token: string) {
 async function handleVisitor(socket: Socket) {
   const q = socket.handshake.query as Record<string, string | undefined>;
   const visitorId = String(q.visitor_id || q.user_id || "").slice(0, 128);
+
+  if (visitorId) {
+    registerManualUser(socket.id, visitorId, "Visitor");
+  }
 
   // The widget emits its first message the moment it connects, while the bot
   // lookup below is still in flight. Listeners are registered synchronously
@@ -204,6 +221,8 @@ async function handleVisitor(socket: Socket) {
 
   const ctx = await ready;
   if (!ctx) {
+    // If socket has visitorId, keep it alive for call signaling even if bot resolution wasn't needed
+    if (visitorId) return;
     socket.disconnect(true);
     return;
   }

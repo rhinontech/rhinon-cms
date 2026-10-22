@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { TbClock, TbExternalLink, TbMapPin, TbMessage, TbMessageCircle, TbUsers, TbWorld } from "react-icons/tb";
+import { Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePermissions } from "@/context/PermissionsContext";
 import { apiFetch } from "@/lib/api";
@@ -14,6 +15,7 @@ import { LoadingRows, Notice } from "@/components/Admin/Settings/parts";
 import { VisitorsMap, type MappableVisitor } from "@/components/Admin/Analytics/VisitorsMap";
 import { Avatar, Chip, EmptyState, PageShell, Panel, Segmented, Stat, StatusDot, pageLabel, since } from "./ui";
 import { errorText, openChatForVisitor, useChatEvents } from "./chatbotApi";
+import { useCall } from "./CallContext";
 
 interface Visitor {
   visitorId: string;
@@ -54,6 +56,7 @@ export function ChatbotVisitors() {
   const router = useRouter();
   const { has } = usePermissions();
   const canAct = has("chatbot:write");
+  const { startCall, isInCall, isCalling } = useCall();
   const [visitors, setVisitors] = useState<Visitor[] | null>(null);
   const [chatbotId, setChatbotId] = useState<string | null>(null);
   const [missing, setMissing] = useState(false);
@@ -245,7 +248,19 @@ export function ChatbotVisitors() {
                     </a>
                   )}
                 </div>
-                <div className="flex shrink-0 flex-col items-end gap-1.5">
+                <div className="flex shrink-0 items-center gap-1.5">
+                  {v.online && canAct && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-emerald-600 border-emerald-300 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 gap-1.5"
+                      onClick={() => void startCall(v.visitorId, label(v))}
+                      disabled={isInCall || isCalling}
+                      title={`Call ${label(v)}`}
+                    >
+                      <Phone size={14} /> Call
+                    </Button>
+                  )}
                   {v.conversation ? (
                     <Button size="sm" variant="outline" asChild>
                       <Link href={`${base}/chats?c=${v.conversation.id}`}><TbMessage size={14} /> Open chat</Link>

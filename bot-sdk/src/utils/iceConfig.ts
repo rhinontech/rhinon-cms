@@ -31,9 +31,17 @@ export const hasTurnConfigured = Boolean(
   TURN_URLS.length && TURN_USERNAME && TURN_CREDENTIAL,
 );
 
+const DEFAULT_TURN_URLS = [
+  'turn:3.109.172.202:3478?transport=udp',
+  'turn:3.109.172.202:3478?transport=tcp',
+];
+const DEFAULT_TURN_USERNAME = 'saleszium';
+const DEFAULT_TURN_CREDENTIAL = 'rtWebRtc@123';
+
 export function getIceServers(): RTCIceServer[] {
+  const stunUrls = STUN_URLS.length ? STUN_URLS : [FALLBACK_STUN, 'stun:3.109.172.202:3478'];
   const servers: RTCIceServer[] = [
-    { urls: STUN_URLS.length ? STUN_URLS : [FALLBACK_STUN] },
+    { urls: stunUrls },
   ];
 
   if (hasTurnConfigured) {
@@ -43,11 +51,11 @@ export function getIceServers(): RTCIceServer[] {
       credential: TURN_CREDENTIAL,
     });
   } else {
-    console.warn(
-      '[call] No TURN server configured. Calls will connect over STUN only and ' +
-        'will have no audio whenever a peer sits behind a symmetric NAT. Set ' +
-        'REACT_APP_TURN_URLS / REACT_APP_TURN_USERNAME / REACT_APP_TURN_CREDENTIAL.',
-    );
+    servers.push({
+      urls: DEFAULT_TURN_URLS,
+      username: DEFAULT_TURN_USERNAME,
+      credential: DEFAULT_TURN_CREDENTIAL,
+    });
   }
 
   return servers;

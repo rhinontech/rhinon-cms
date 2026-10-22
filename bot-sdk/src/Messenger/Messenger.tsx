@@ -4,7 +4,7 @@ import './Messenger.scss';
 import { io } from 'socket.io-client';
 import { getSocketUrl } from '@/services/api';
 
-const VOICE_CALLS_ENABLED = false;
+const VOICE_CALLS_ENABLED = true;
 import type { Message, ChatScreenProps } from '@/types';
 import { getIceServers } from '@/utils/iceConfig';
 
@@ -355,11 +355,17 @@ const Messenger: React.FC<MessengerProps> = ({ config }) => {
   // Voice calls (WebRTC) are not offered, so this socket is never opened.
   useEffect(() => {
     if (!VOICE_CALLS_ENABLED) return;
-    const newSocket = io(getSocketUrl());
+    const newSocket = io(getSocketUrl(), {
+      query: {
+        chatbot_id: config?.app_id,
+        user_id: userId,
+        visitor_id: userId,
+      },
+    });
     setSocket(newSocket);
 
     newSocket.on('connect', () => {
-      console.log(' Connected:', newSocket.id);
+      console.log(' WebRTC Connected:', newSocket.id);
 
       // Auto-register with userId as callId
       if (userId) {
@@ -380,6 +386,7 @@ const Messenger: React.FC<MessengerProps> = ({ config }) => {
     newSocket.on('call_request_manual', ({ from, fromName, fromCallId }) => {
       console.log(`Incoming call from ${fromName} (${fromCallId})`);
       setIncomingCall({ from, fromName, fromCallId });
+      setIsOpen(true);
     });
 
     // ICE + offer handlers

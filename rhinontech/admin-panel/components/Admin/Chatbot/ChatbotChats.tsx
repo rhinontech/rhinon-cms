@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { LoadingRows, Notice, Spinner } from "@/components/Admin/Settings/parts";
 import { Avatar, Chip, EmptyState, PageShell, Segmented, StatusDot, pageLabel } from "./ui";
 import { errorText, openChatForVisitor, useChatEvents, type ChatConversation, type ChatMessage } from "./chatbotApi";
+import { useCall } from "./CallContext";
 
 type Filter = "open" | "human" | "closed" | "all";
 
@@ -52,6 +53,7 @@ export function ChatbotChats() {
   const crmBase = base.replace("/chatbot/", "/crm/");
   const { has, userId } = usePermissions();
   const canReply = has("chatbot:write");
+  const { startCall, isInCall, isCalling } = useCall();
 
   const [conversations, setConversations] = useState<ChatConversation[] | null>(null);
   const [missing, setMissing] = useState(false);
@@ -329,6 +331,18 @@ export function ChatbotChats() {
                 </div>
                 {canReply && (
                   <div className="flex items-center gap-1">
+                    {isOnline(selected.visitorId) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-emerald-600 border-emerald-300 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 gap-1.5"
+                        title={`Call ${visitorLabel(selected)}`}
+                        onClick={() => void startCall(selected.visitorId, visitorLabel(selected))}
+                        disabled={isInCall || isCalling}
+                      >
+                        <TbPhone size={15} /> Call
+                      </Button>
+                    )}
                     <Button variant="ghost" size="icon" title={selected.isPinned ? "Unpin" : "Pin"} onClick={() => patch({ isPinned: !selected.isPinned })}>
                       {selected.isPinned ? <TbPinnedOff size={16} /> : <TbPin size={16} />}
                     </Button>
@@ -496,10 +510,22 @@ export function ChatbotChats() {
               </Section>
             )}
 
-            {canReply && chatbotId && isOnline(selected.visitorId) && (
-              <Button variant="outline" onClick={() => openChatForVisitor(chatbotId, selected.visitorId, selected.publicKey)}>
-                <TbMessageCircle size={15} /> Open the chat on their screen
-              </Button>
+            {canReply && isOnline(selected.visitorId) && (
+              <div className="flex flex-col gap-2">
+                <Button
+                  variant="outline"
+                  className="text-emerald-600 border-emerald-300 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 gap-1.5"
+                  onClick={() => void startCall(selected.visitorId, visitorLabel(selected))}
+                  disabled={isInCall || isCalling}
+                >
+                  <TbPhone size={15} /> Voice call visitor
+                </Button>
+                {chatbotId && (
+                  <Button variant="outline" onClick={() => openChatForVisitor(chatbotId, selected.visitorId, selected.publicKey)}>
+                    <TbMessageCircle size={15} /> Open the chat on their screen
+                  </Button>
+                )}
+              </div>
             )}
 
             {selected.review && (
