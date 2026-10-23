@@ -55,8 +55,12 @@ export const connectToSocket = (appId: string): Socket => {
     window.dispatchEvent(new CustomEvent('open_chat_from_server', { detail: { conversationId } }));
   });
 
+  // Calls ring every socket a visitor has; this one hands them to the widget.
   socket.on('call_request_manual', (data) => {
     window.dispatchEvent(new CustomEvent('call_request_from_server', { detail: data }));
+  });
+  socket.on('call_ended_manual', (data) => {
+    window.dispatchEvent(new CustomEvent('call_ended_from_server', { detail: data }));
   });
 
   return socket;

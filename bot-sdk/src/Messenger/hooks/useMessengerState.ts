@@ -195,9 +195,10 @@ export function useMessengerState(
               secondaryColor: cfg.secondaryColor || '#f3f6ff',
               chatbotName: cfg.chatbotName || 'Rhinon',
               navigationOptions: cfg.navigationOptions,
-              popupMessage:
-                cfg.popupMessage ||
-                'Hey, I am Rhinon AI Assistant, How can I help you?',
+              // An empty message means "no pop-up" (Appearance says so); only a
+              // bot that never set one gets the default.
+              popupMessage: cfg.popupMessage ?? 'Hey, I am Rhinon AI Assistant, How can I help you?',
+              popupDelay: cfg.popupDelay,
               greetings: cfg.greetings?.length
                 ? cfg.greetings
                 : ['Hi there👋', 'How can we help?'],

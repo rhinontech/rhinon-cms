@@ -31,6 +31,7 @@ export interface ChatbotConfig {
   primaryLogo?: string;
   secondaryLogo?: string;
   launcherIcon?: string;
+  popupDelay?: number;
   isBgFade?: boolean;
   isBackgroundImage?: boolean;
   backgroundImage?: string;

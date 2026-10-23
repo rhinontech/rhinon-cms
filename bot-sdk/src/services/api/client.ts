@@ -2,7 +2,7 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
 /**
- * Where the backend is, in order:
+ * Where the backend is, in order (`npm run dev` puts REACT_APP_*_URL from .env first):
  *   1. `api_url` passed to RhinonChat({ … }) — see setApiBase, applied at init;
  *   2. the script's own address, when loaded as the hosted
  *      /widget/rhinon-chat.js (or the old /widget/rhinonbot.js) — so the same
@@ -25,9 +25,13 @@ const scriptBase = (() => {
 })();
 
 const normalizeBase = (base: string) => base.replace(/\/+$/, '');
-let API_BASE_URL = normalizeBase(process.env.REACT_APP_NEW_SERVER_API_URL || scriptBase || PRODUCTION_API);
-let AI_API_URL = normalizeBase(process.env.REACT_APP_API_URL_AI || API_BASE_URL);
-let SOCKET_URL = process.env.REACT_APP_SOCKET_URL || new URL(API_BASE_URL).origin;
+// REACT_APP_*_URL from .env are for `npm run dev` only. A release build must
+// not carry whatever backend the person building it pointed their .env at
+// (a localhost URL once shipped that way), so production ignores them.
+const devEnv = (value: string | undefined) => (process.env.NODE_ENV === 'development' ? value || '' : '');
+let API_BASE_URL = normalizeBase(devEnv(process.env.REACT_APP_NEW_SERVER_API_URL) || scriptBase || PRODUCTION_API);
+let AI_API_URL = normalizeBase(devEnv(process.env.REACT_APP_API_URL_AI) || API_BASE_URL);
+let SOCKET_URL = devEnv(process.env.REACT_APP_SOCKET_URL) || new URL(API_BASE_URL).origin;
 
 // Create axios instance for main server API
 export const serverApi: AxiosInstance = axios.create({

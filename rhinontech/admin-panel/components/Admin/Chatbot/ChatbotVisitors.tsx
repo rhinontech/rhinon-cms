@@ -253,7 +253,7 @@ export function ChatbotVisitors() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="text-emerald-600 border-emerald-300 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 gap-1.5"
+                      className="gap-1.5 border-emerald-500/40 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/40"
                       onClick={() => void startCall(v.visitorId, label(v))}
                       disabled={isInCall || isCalling}
                       title={`Call ${label(v)}`}

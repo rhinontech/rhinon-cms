@@ -96,7 +96,7 @@ function clientIp(socket: Socket): string | null {
   return (first || socket.handshake.address || "").replace(/^::ffff:/, "") || null;
 }
 
-import { attachCallSignaling, registerManualUser } from "./callSignaling";
+import { attachCallSignaling, registerAgentSocket, registerVisitorSocket } from "./callSignaling";
 
 interface AgentIdentity {
   userId: string;
@@ -178,11 +178,8 @@ async function handleAgent(socket: Socket, token: string) {
   socket.data.agent = agent;
   socket.join(orgRoom(agent.organizationId));
 
-  // Auto-register agent identity for WebRTC voice calls
-  registerManualUser(socket.id, agent.userId, agent.fullName, agent.organizationId);
-  if (agent.email) {
-    registerManualUser(socket.id, agent.email, agent.fullName, agent.organizationId);
-  }
+  // Voice calls: this socket may ring visitors of its own workspace.
+  registerAgentSocket(socket.id, { userId: agent.userId, name: agent.fullName || "Support", organizationId: agent.organizationId });
 
   // Proactive "open chat" on a visitor's widget — only for this workspace's bots.
   socket.on("open_chat", async ({ chatbotId, visitorId, conversationId }: Record<string, string>) => {
@@ -197,10 +194,6 @@ async function handleAgent(socket: Socket, token: string) {
 async function handleVisitor(socket: Socket) {
   const q = socket.handshake.query as Record<string, string | undefined>;
   const visitorId = String(q.visitor_id || q.user_id || "").slice(0, 128);
-
-  if (visitorId) {
-    registerManualUser(socket.id, visitorId, "Visitor");
-  }
 
   // The widget emits its first message the moment it connects, while the bot
   // lookup below is still in flight. Listeners are registered synchronously
@@ -221,13 +214,14 @@ async function handleVisitor(socket: Socket) {
 
   const ctx = await ready;
   if (!ctx) {
-    // If socket has visitorId, keep it alive for call signaling even if bot resolution wasn't needed
-    if (visitorId) return;
     socket.disconnect(true);
     return;
   }
   const { store, resolved } = ctx;
   const botId = resolved.bot.id;
+
+  // Voice calls: agents of this bot's workspace may ring this visitor.
+  if (socket.connected) registerVisitorSocket(socket.id, { visitorId, organizationId: resolved.organizationId });
 
   // Presence socket (the widget's tracker connection). Skipped if the tab
   // already went away during the lookup, or it would stay "online" forever.

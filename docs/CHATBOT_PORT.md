@@ -11,7 +11,7 @@ Bring Saleszium's AI chatbot (website widget, training, AI answers, live human c
 | Answer model | Gemini 2.5 Flash, the same as Saleszium's `/gcs/standard/chat` and our existing `services/gemini.ts`. |
 | Embeddings | Gemini embeddings (768 dimensions) into pgvector, so we use one AI provider instead of Saleszium's OpenAI + Gemini mix. Nothing is migrated, so there's nothing to re-embed. |
 | Widget | `saleszium_app/bot-sdk` moves to `rhinon-cms/bot-sdk` mostly as-is. Our backend serves its endpoint paths under `/widget/*`, so most of its code is untouched. |
-| Out of scope | Voice (Gemini Live, WebRTC calls) and SEO tracking (`/seo/*`). Both are switched off in the widget. |
+| Out of scope | Gemini Live voice and SEO tracking (`/seo/*`). Agent→visitor **WebRTC calls** were added later (2026-10-23): signaling in `services/chatbot/callSignaling.ts`, TURN via coturn on the API host. |
 | Usage | Bot replies get their own daily allowance per plan. They do not draw from `aiPerDay`, which allows only 20 a day on free. |
 
 ## What Saleszium had, and where it lands
@@ -25,9 +25,9 @@ Bring Saleszium's AI chatbot (website widget, training, AI answers, live human c
 | `live_visitors` | in-memory presence plus `chat_conversations.lastSeenAt`; no table churn on a t2.micro |
 | `forms` (pre-chat, post-chat, ticket) | `chatbots.forms` JSON |
 | `customers` + `rhinontech_crm` pipeline push | **our** `Lead` (CRM), created on pre-chat submit or hand-off |
-| `tickets` | phase 2, likely reusing `InboxConversation` (already has status and priority) |
-| `folders` + `articles` (help center) | phase 2 |
-| `chatbot_campaigns` | phase 3 |
+| `tickets` | `chatbot_tickets` + `chatbot_ticket_messages` (customer / agent / internal note); 8-character public `code`; agent replies are emailed from the brand address or the agent's own connected mailbox |
+| `folders` + `articles` (help center) | `help_folders` + `help_articles` (draft/published, sanitised HTML, views/likes/dislikes) |
+| `chatbot_campaigns` | `chatbot_campaigns` (content + targeting in the widget's own shapes, cleaned by `services/chatbot/campaigns.ts`) |
 | Settings → Accounts (Google, Microsoft/Outlook, LinkedIn) + WhatsApp | phase 4: "Saleszium-style" integrations hub |
 
 ## Security fixes (do not port these as-is)
@@ -57,7 +57,8 @@ Bring Saleszium's AI chatbot (website widget, training, AI answers, live human c
 | `/folders/chatbot-structure`, `/articles/*` | help center | 2 |
 | `/campaigns/chatbot/all` | pop-up campaigns | 3 |
 | `/standard/set_user_assistant` | old re-train trigger: becomes a no-op | 1 |
-| `/seo/*`, `/gcs/realtime/*` | **removed** | — |
+| `users_accounts` (Google/Microsoft tokens, exchanged in the browser) | `connected_accounts`: per person, OAuth done server-side, tokens encrypted (`services/connectedAccounts.ts`) |
+| `/seo/*`, `/gcs/realtime/*` | **removed** |
 
 ## Admin (new "Chatbot" module, per brand, like Inbox/CRM)
 
@@ -66,23 +67,27 @@ Bring Saleszium's AI chatbot (website widget, training, AI answers, live human c
 3. **Live chats**: conversation list, transcript, take over from the bot, close, visitor info sidebar
 4. **Appearance**: colors, logos, greeting, background, with a live preview using the widget itself
 5. **Forms**: pre-chat, post-chat and ticket
-6. Later: Tickets, Help center, Campaigns, Integrations
+6. **Tickets**: inbox, reply by email or internal note, status, priority, assignee, tags
+7. **Help center**: collections and articles with a rich-text editor
+8. **Campaigns**: template picker, editor with live card preview, targeting, schedule, stats
+9. **Settings → Accounts** (workspace settings, per person): Google and Microsoft mailboxes, LinkedIn
 
 ## Status
 
-- **Phase 1 — done (2026-10-22), on `beta`.** Backend (`routes/widget.ts`, `routes/chatbots.ts`, `services/chatbot/*`), admin module (`components/Admin/Chatbot`), widget at `/bot-sdk`. Verified locally: 31-check API/socket e2e, real widget on a foreign origin, every admin screen.
-- Interim: widget tickets land in Live chats as `meta.ticket` conversations until phase 2.
-- Releasing the widget: `cd bot-sdk && npm run release`, commit `rhinontech/backend/public/widget/rhinonbot.js`, deploy the backend. One build serves prod, beta and local: it finds its backend from its own script URL.
+All phases shipped and are on `main` and prod (`7b747fb`, 2026-10-23).
 
-## Phases
+1. **Core** (2026-10-22): pgvector, models, plan limits, `/widget` core endpoints, authenticated Socket.IO, training pipeline, RAG chat with lead capture and hand-off, admin screens, widget moved and rebranded as `@rhinon/chat`.
+2. **Live visitors + redesign**: IP geolocation and map, the new widget look (`bot-sdk/src/styles/redesign.scss`), full Saleszium appearance parity (secondary colour, default images, crop, preview page switching, launcher icon in the original launcher shape).
+3. **Campaigns** (phase 4 in the original plan).
+4. **Tickets + help center** (phase 5). Run `src/scripts/migrateInterimTickets.ts` (dry run, then `--apply`) wherever widget tickets were raised before it; prod had none on 2026-10-23.
+5. **Accounts** (phase 6): Google and Microsoft. WhatsApp is deferred. Each OAuth app must list `${PUBLIC_API_URL}/integrations/accounts/<provider>/callback`. Credentials: `MAIL_GOOGLE_CLIENT_ID/SECRET` and `MICROSOFT_CLIENT_ID/SECRET` (for now the Saleszium apps).
+6. **WebRTC calls** (2026-10-23, outside the original plan).
 
-1. **Core**: pgvector, models, plan limits, `/widget` core endpoints, authenticated Socket.IO, training pipeline (rate-limited fetch and parse), RAG chat with lead capture and hand-off tools, the admin screens above, widget moved and rebranded (Saleszium URLs and assets), built and served from the backend.
-2. Tickets + help center
-3. Chatbot campaigns
-4. Integrations (Google, Microsoft, LinkedIn accounts; WhatsApp)
+- Releasing the widget: `cd bot-sdk && npm run release`, commit `rhinontech/backend/public/widget/rhinon-chat.js` and `.gz`, deploy the backend. One build serves every environment: it finds its backend from its own script URL; npm users pass `api_url`.
+- Demo data: `src/scripts/seedChatbotDemo.ts <publicId>` (chats) and `src/scripts/seedSupportDemo.ts <publicId>` (tickets + help). Both are rerunnable and touch only rows they tagged.
 
 ## Open items
 
-- Widget branding: the widget code hard-codes `saleszium.com` assets (for example the notification sound) and the `Saleszium(...)` global. Rename to Rhinon and self-host the assets.
+- TURN credentials are static and shipped in the public widget (`iceConfig.ts`). Replace them with short-lived credentials minted by the backend (coturn `use-auth-secret`), then rotate the password.
+- Ticket emails go out, but replies to them don't come back into the ticket (no inbound routing yet).
 - Where the built widget is served from (backend static route vs S3/CloudFront). Backend static is enough while traffic is low.
-- Deploy: nginx must allow WebSocket upgrade on the API host for Socket.IO.

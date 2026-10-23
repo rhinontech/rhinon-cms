@@ -1,173 +1,208 @@
 import type { Server, Socket } from "socket.io";
 
 /**
- * WebRTC voice call signaling between agents and visitors.
+ * WebRTC voice calls from an agent (admin panel) to a visitor (chat widget).
  *
- * Implements the Saleszium signaling contract:
- *   - register_manual: bind socket to a callId (visitorId or agent email/id)
- *   - call_user_manual: initiate call to targetCallId
- *   - call_request_manual: dispatched to target with caller info
- *   - call_accepted_manual / call_rejected_manual: callee acceptance response
- *   - offer_manual / answer_manual: SDP offer/answer exchange
- *   - ice_candidate_manual: ICE candidate routing
- *   - end_call_manual / call_ended_manual: tear down active call
+ * Event names follow the Saleszium contract the widget and admin already speak:
+ *   agent   → call_user_manual { targetCallId }        ring a visitor
+ *   visitor ← call_request_manual { from, fromName }    the ring (to every socket of that visitor)
+ *   visitor → call_accepted_manual / call_rejected_manual { to }
+ *   both    ↔ offer_manual / answer_manual / ice_candidate_manual { to }
+ *   either  → end_call_manual                           hang up, or cancel while ringing
+ *   both    ← call_ended_manual { reason }              the call is over for this socket
+ *   agent   ← call_error { message }
+ *
+ * Identity comes from the server, never the client: agents are the signed-in
+ * user of an authenticated socket, visitors are the visitorId their widget
+ * connected with, tied to that bot's workspace. An agent can only ring visitors
+ * of their own workspace, and offers/answers/ICE are relayed only between the
+ * two sockets of one call — never to an arbitrary socket id.
+ *
+ * Every call lives in `calls` from the first ring until it ends, so a cancel,
+ * a timeout or a dropped socket always reaches the other side (before, an
+ * agent hanging up while it rang left the visitor's widget ringing forever).
  */
 
-interface ManualUser {
-  callId: string;
-  username: string;
-  organizationId?: string;
+/** How long a visitor's widget rings before the call counts as missed. */
+const RING_TIMEOUT_MS = 30_000;
+
+type EndReason = "cancelled" | "missed" | "declined" | "ended" | "answered_elsewhere" | "disconnected" | "failed";
+
+interface AgentIdentity {
+  userId: string;
+  name: string;
+  organizationId: string;
 }
 
-const manualUsers = new Map<string, ManualUser>();
-const callIdToSockets = new Map<string, Set<string>>();
-const activeCalls = new Map<string, string>(); // socket.id -> peerSocket.id
-
-export function registerManualUser(
-  socketId: string,
-  callId: string,
-  username: string,
-  organizationId?: string
-) {
-  if (!callId || !username) return;
-
-  manualUsers.set(socketId, { callId, username, organizationId });
-  let set = callIdToSockets.get(callId);
-  if (!set) {
-    set = new Set<string>();
-    callIdToSockets.set(callId, set);
-  }
-  set.add(socketId);
+interface VisitorIdentity {
+  visitorId: string;
+  organizationId: string;
 }
 
-export function unregisterManualUser(socketId: string) {
-  const user = manualUsers.get(socketId);
-  if (user) {
-    const set = callIdToSockets.get(user.callId);
-    if (set) {
-      set.delete(socketId);
-      if (set.size === 0) {
-        callIdToSockets.delete(user.callId);
-      }
-    }
-    manualUsers.delete(socketId);
+interface Call {
+  id: string;
+  organizationId: string;
+  agentSocketId: string;
+  agentName: string;
+  visitorId: string;
+  /** Every socket the visitor had open when the call started; all of them ring. */
+  ringingSocketIds: Set<string>;
+  /** The visitor socket that picked up, once answered. */
+  visitorSocketId: string | null;
+  state: "ringing" | "active";
+  timeout: NodeJS.Timeout | null;
+}
+
+const agents = new Map<string, AgentIdentity>(); // socket id → agent
+const visitors = new Map<string, VisitorIdentity>(); // socket id → visitor
+const calls = new Map<string, Call>(); // call id → call
+const callBySocket = new Map<string, string>(); // socket id → call id
+
+let ioRef: Server | null = null;
+let nextId = 0;
+
+/** Called once the agent's socket has authenticated (realtime.ts → handleAgent). */
+export function registerAgentSocket(socketId: string, agent: AgentIdentity) {
+  agents.set(socketId, agent);
+}
+
+/** Called once the visitor's bot is resolved, so we know the workspace (realtime.ts → handleVisitor). */
+export function registerVisitorSocket(socketId: string, visitor: VisitorIdentity) {
+  visitors.set(socketId, visitor);
+}
+
+function visitorSocketsFor(organizationId: string, visitorId: string): string[] {
+  const out: string[] = [];
+  for (const [socketId, v] of visitors) {
+    if (v.visitorId === visitorId && v.organizationId === organizationId) out.push(socketId);
   }
+  return out;
+}
+
+const emit = (socketId: string, event: string, data: unknown) => ioRef?.to(socketId).emit(event, data);
+
+/** Tears the call down and tells everyone still involved why. */
+function finish(call: Call, reason: EndReason, by: string | null) {
+  if (!calls.has(call.id)) return;
+  calls.delete(call.id);
+  if (call.timeout) clearTimeout(call.timeout);
+
+  const involved = new Set<string>([call.agentSocketId, ...call.ringingSocketIds]);
+  if (call.visitorSocketId) involved.add(call.visitorSocketId);
+  for (const socketId of involved) {
+    callBySocket.delete(socketId);
+    if (socketId !== by) emit(socketId, "call_ended_manual", { reason, callId: call.id });
+  }
+  console.log(`[Call] ${call.id} ${reason}`);
+}
+
+/** The call this socket is in, if the `to` it names is really its peer. */
+function peerOf(socketId: string, to: unknown): string | null {
+  const call = calls.get(callBySocket.get(socketId) ?? "");
+  if (!call || call.state !== "active" || typeof to !== "string") return null;
+  const peer = socketId === call.agentSocketId ? call.visitorSocketId : call.agentSocketId;
+  return peer && peer === to ? peer : null;
 }
 
 export function attachCallSignaling(io: Server, socket: Socket) {
-  socket.on("register_manual", (data: { callId?: string; username?: string }) => {
-    const callId = typeof data?.callId === "string" ? data.callId.trim() : "";
-    const username = typeof data?.username === "string" ? data.username.trim() : "User";
-    if (!callId) return;
+  ioRef = io;
 
-    registerManualUser(socket.id, callId, username);
-    socket.emit("registered_manual", { callId });
-    console.log(`[Call] Registered manual user: ${username} (${callId}) on socket ${socket.id}`);
+  // Kept for older widgets/admins. Identity is assigned by the server, so the
+  // callId a client claims is ignored.
+  socket.on("register_manual", () => {
+    const callId = agents.get(socket.id)?.userId ?? visitors.get(socket.id)?.visitorId;
+    if (callId) socket.emit("registered_manual", { callId });
   });
 
-  socket.on("call_user_manual", (data: { targetCallId?: string }) => {
-    const targetCallId = typeof data?.targetCallId === "string" ? data.targetCallId.trim() : "";
-    const caller = manualUsers.get(socket.id);
+  socket.on("call_user_manual", (data: { targetCallId?: unknown }) => {
+    const agent = agents.get(socket.id);
+    if (!agent) return void socket.emit("call_error", { message: "Only signed-in agents can start calls." });
+    if (callBySocket.has(socket.id)) return void socket.emit("call_error", { message: "You're already on a call." });
 
-    if (!caller) {
-      console.warn(`[Call] Caller on socket ${socket.id} not registered`);
-      socket.emit("call_error", { message: "Caller not registered. Please refresh." });
-      socket.emit("error", "Caller not registered.");
-      return;
+    const visitorId = typeof data?.targetCallId === "string" ? data.targetCallId.trim().slice(0, 128) : "";
+    const targets = visitorId ? visitorSocketsFor(agent.organizationId, visitorId) : [];
+    if (!targets.length) return void socket.emit("call_error", { message: "This visitor has left the site." });
+    if (targets.some((id) => callBySocket.has(id))) return void socket.emit("call_error", { message: "This visitor is already on a call." });
+
+    const call: Call = {
+      id: `call_${Date.now().toString(36)}_${(nextId++).toString(36)}`,
+      organizationId: agent.organizationId,
+      agentSocketId: socket.id,
+      agentName: agent.name,
+      visitorId,
+      ringingSocketIds: new Set(targets),
+      visitorSocketId: null,
+      state: "ringing",
+      timeout: null,
+    };
+    calls.set(call.id, call);
+    callBySocket.set(socket.id, call.id);
+    for (const id of targets) {
+      callBySocket.set(id, call.id);
+      // Only the agent's name: their email or user id is nothing a visitor needs.
+      emit(id, "call_request_manual", { from: socket.id, fromName: agent.name, fromCallId: call.id, callId: call.id });
     }
-
-    if (!targetCallId) {
-      socket.emit("call_error", { message: "Invalid target user." });
-      return;
-    }
-
-    const targetSockets = callIdToSockets.get(targetCallId);
-    if (!targetSockets || targetSockets.size === 0) {
-      console.log(`[Call] User ${targetCallId} not found or offline`);
-      socket.emit("call_error", { message: "User not found or offline." });
-      socket.emit("error", "User not found or offline.");
-      return;
-    }
-
-    // Forward incoming call request to all active sockets for this user/visitor
-    for (const targetSocketId of targetSockets) {
-      io.to(targetSocketId).emit("call_request_manual", {
-        from: socket.id,
-        fromName: caller.username,
-        fromCallId: caller.callId,
-      });
-    }
-
-    console.log(`[Call] Call initiated: ${caller.username} (${caller.callId}) → ${targetCallId} (${targetSockets.size} socket(s))`);
+    call.timeout = setTimeout(() => finish(call, "missed", null), RING_TIMEOUT_MS);
+    socket.emit("call_ringing_manual", { callId: call.id });
+    console.log(`[Call] ${call.id} ${agent.name} → visitor ${visitorId} (${targets.length} socket(s))`);
   });
 
-  socket.on("call_accepted_manual", (data: { to?: string }) => {
-    const targetSocketId = data?.to;
-    if (!targetSocketId) return;
-
-    // Track active peer connection pair
-    activeCalls.set(socket.id, targetSocketId);
-    activeCalls.set(targetSocketId, socket.id);
-
-    console.log(`[Call] Call accepted by ${socket.id}, forwarding to ${targetSocketId}`);
-    io.to(targetSocketId).emit("call_accepted_manual", { from: socket.id });
+  socket.on("call_accepted_manual", () => {
+    const call = calls.get(callBySocket.get(socket.id) ?? "");
+    if (!call || call.state !== "ringing" || !call.ringingSocketIds.has(socket.id)) return;
+    if (call.timeout) clearTimeout(call.timeout);
+    call.timeout = null;
+    call.state = "active";
+    call.visitorSocketId = socket.id;
+    // Stop the ring on the visitor's other tabs and connections.
+    for (const id of call.ringingSocketIds) {
+      if (id === socket.id) continue;
+      callBySocket.delete(id);
+      emit(id, "call_ended_manual", { reason: "answered_elsewhere", callId: call.id });
+    }
+    call.ringingSocketIds = new Set([socket.id]);
+    emit(call.agentSocketId, "call_accepted_manual", { from: socket.id, callId: call.id });
   });
 
-  socket.on("call_rejected_manual", (data: { to?: string }) => {
-    const targetSocketId = data?.to;
-    if (targetSocketId) {
-      activeCalls.delete(socket.id);
-      activeCalls.delete(targetSocketId);
-      console.log(`[Call] Call rejected by ${socket.id}, notifying ${targetSocketId}`);
-      io.to(targetSocketId).emit("call_rejected_manual", { from: socket.id });
-    }
+  socket.on("call_rejected_manual", () => {
+    const call = calls.get(callBySocket.get(socket.id) ?? "");
+    if (!call || call.state !== "ringing" || !call.ringingSocketIds.has(socket.id)) return;
+    emit(call.agentSocketId, "call_rejected_manual", { from: socket.id, callId: call.id });
+    finish(call, "declined", call.agentSocketId);
   });
 
-  socket.on("offer_manual", (data: { offer?: unknown; to?: string }) => {
-    if (data?.to && data?.offer) {
-      io.to(data.to).emit("offer_manual", { offer: data.offer, from: socket.id });
-    }
-  });
+  for (const [event, field] of [
+    ["offer_manual", "offer"],
+    ["answer_manual", "answer"],
+    ["ice_candidate_manual", "candidate"],
+  ] as const) {
+    socket.on(event, (data: Record<string, unknown>) => {
+      const peer = peerOf(socket.id, data?.to);
+      if (peer && data?.[field]) emit(peer, event, { [field]: data[field], from: socket.id });
+    });
+  }
 
-  socket.on("answer_manual", (data: { answer?: unknown; to?: string }) => {
-    if (data?.to && data?.answer) {
-      io.to(data.to).emit("answer_manual", { answer: data.answer, from: socket.id });
-    }
-  });
-
-  socket.on("ice_candidate_manual", (data: { candidate?: unknown; to?: string }) => {
-    if (data?.to && data?.candidate) {
-      io.to(data.to).emit("ice_candidate_manual", { candidate: data.candidate, from: socket.id });
-    }
-  });
-
-  socket.on("end_call_manual", (data?: { to?: string }) => {
-    const caller = manualUsers.get(socket.id);
-    const peerSocketId = data?.to || activeCalls.get(socket.id);
-
-    if (peerSocketId) {
-      io.to(peerSocketId).emit("call_ended_manual", {
-        from: socket.id,
-        fromCallId: caller?.callId ?? "",
-      });
-      activeCalls.delete(peerSocketId);
-    }
-    activeCalls.delete(socket.id);
-    console.log(`[Call] Call ended by ${caller?.callId ?? socket.id}`);
+  socket.on("end_call_manual", (data?: { reason?: unknown }) => {
+    const call = calls.get(callBySocket.get(socket.id) ?? "");
+    if (!call) return;
+    const failed = data?.reason === "failed";
+    // An agent hanging up while it still rings is a cancel.
+    finish(call, failed ? "failed" : call.state === "ringing" ? "cancelled" : "ended", socket.id);
   });
 
   socket.on("disconnect", () => {
-    // If socket was in active call, notify remote peer
-    const peerSocketId = activeCalls.get(socket.id);
-    if (peerSocketId) {
-      const caller = manualUsers.get(socket.id);
-      io.to(peerSocketId).emit("call_ended_manual", {
-        from: socket.id,
-        fromCallId: caller?.callId ?? "",
-      });
-      activeCalls.delete(peerSocketId);
+    const call = calls.get(callBySocket.get(socket.id) ?? "");
+    if (call) {
+      if (socket.id === call.agentSocketId || socket.id === call.visitorSocketId) {
+        finish(call, "disconnected", socket.id);
+      } else {
+        // One of several ringing visitor sockets went away; the rest keep ringing.
+        call.ringingSocketIds.delete(socket.id);
+        callBySocket.delete(socket.id);
+        if (call.state === "ringing" && call.ringingSocketIds.size === 0) finish(call, "disconnected", socket.id);
+      }
     }
-    activeCalls.delete(socket.id);
-    unregisterManualUser(socket.id);
+    agents.delete(socket.id);
+    visitors.delete(socket.id);
   });
 }

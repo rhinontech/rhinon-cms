@@ -335,7 +335,7 @@ export function ChatbotChats() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="text-emerald-600 border-emerald-300 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 gap-1.5"
+                        className="gap-1.5 border-emerald-500/40 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/40"
                         title={`Call ${visitorLabel(selected)}`}
                         onClick={() => void startCall(selected.visitorId, visitorLabel(selected))}
                         disabled={isInCall || isCalling}
@@ -514,7 +514,7 @@ export function ChatbotChats() {
               <div className="flex flex-col gap-2">
                 <Button
                   variant="outline"
-                  className="text-emerald-600 border-emerald-300 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 gap-1.5"
+                  className="gap-1.5 border-emerald-500/40 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/40"
                   onClick={() => void startCall(selected.visitorId, visitorLabel(selected))}
                   disabled={isInCall || isCalling}
                 >

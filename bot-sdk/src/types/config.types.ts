@@ -18,6 +18,8 @@ export interface ChatbotConfig {
   primaryLogo?: string;
   /** The launcher button's own icon (Appearance → Launcher icon), inset on the primary colour. */
   launcherIcon?: string;
+  /** Seconds before the pop-up message appears beside the launcher (default 3). */
+  popupDelay?: number;
   secondaryLogo?: string;
   preChatForm?: FormField[];
   postChatForm?: PostChatFormConfig;

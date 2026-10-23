@@ -234,9 +234,24 @@ export function ChatbotAppearance() {
                         onChange={(e) => set("greetings", [greetings[0] ?? "", e.target.value])} />
                     </Field>
                   </div>
-                  <Field label="Pop-up message" hint="Shown beside the button before the chat is opened. Leave empty for none.">
-                    <Input value={draft.popupMessage ?? ""} maxLength={120} placeholder="Questions? Ask me anything." onChange={(e) => set("popupMessage", e.target.value)} />
-                  </Field>
+                  <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
+                    <Field label="Pop-up message" hint="Shown beside the launcher until the visitor opens the chat or closes it. Leave empty for none.">
+                      <Input value={draft.popupMessage ?? ""} maxLength={120} placeholder="Questions? Ask me anything." onChange={(e) => set("popupMessage", e.target.value)} data-testid="popup-message" />
+                    </Field>
+                    <Field label="Show after">
+                      <select
+                        className="h-9 rounded-md border border-input bg-background px-3 text-sm disabled:opacity-50"
+                        value={String(draft.popupDelay ?? 3)}
+                        disabled={!draft.popupMessage}
+                        onChange={(e) => set("popupDelay", Number(e.target.value))}
+                        data-testid="popup-delay"
+                      >
+                        {[0, 3, 5, 10, 20, 30, 60].map((s) => (
+                          <option key={s} value={s}>{s === 0 ? "Immediately" : `${s} seconds`}</option>
+                        ))}
+                      </select>
+                    </Field>
+                  </div>
                 </div>
               </Panel>
 
