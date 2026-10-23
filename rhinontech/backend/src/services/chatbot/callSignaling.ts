@@ -20,7 +20,7 @@ interface ManualUser {
 }
 
 const manualUsers = new Map<string, ManualUser>();
-const callIdToSocket = new Map<string, string>();
+const callIdToSockets = new Map<string, Set<string>>();
 const activeCalls = new Map<string, string>(); // socket.id -> peerSocket.id
 
 export function registerManualUser(
@@ -31,21 +31,24 @@ export function registerManualUser(
 ) {
   if (!callId || !username) return;
 
-  // Clean up any stale socket that previously held this callId
-  const existingSocketId = callIdToSocket.get(callId);
-  if (existingSocketId && existingSocketId !== socketId) {
-    manualUsers.delete(existingSocketId);
-  }
-
   manualUsers.set(socketId, { callId, username, organizationId });
-  callIdToSocket.set(callId, socketId);
+  let set = callIdToSockets.get(callId);
+  if (!set) {
+    set = new Set<string>();
+    callIdToSockets.set(callId, set);
+  }
+  set.add(socketId);
 }
 
 export function unregisterManualUser(socketId: string) {
   const user = manualUsers.get(socketId);
   if (user) {
-    if (callIdToSocket.get(user.callId) === socketId) {
-      callIdToSocket.delete(user.callId);
+    const set = callIdToSockets.get(user.callId);
+    if (set) {
+      set.delete(socketId);
+      if (set.size === 0) {
+        callIdToSockets.delete(user.callId);
+      }
     }
     manualUsers.delete(socketId);
   }
@@ -78,22 +81,24 @@ export function attachCallSignaling(io: Server, socket: Socket) {
       return;
     }
 
-    const targetSocketId = callIdToSocket.get(targetCallId);
-    if (!targetSocketId) {
+    const targetSockets = callIdToSockets.get(targetCallId);
+    if (!targetSockets || targetSockets.size === 0) {
       console.log(`[Call] User ${targetCallId} not found or offline`);
       socket.emit("call_error", { message: "User not found or offline." });
       socket.emit("error", "User not found or offline.");
       return;
     }
 
-    // Forward incoming call request to target
-    io.to(targetSocketId).emit("call_request_manual", {
-      from: socket.id,
-      fromName: caller.username,
-      fromCallId: caller.callId,
-    });
+    // Forward incoming call request to all active sockets for this user/visitor
+    for (const targetSocketId of targetSockets) {
+      io.to(targetSocketId).emit("call_request_manual", {
+        from: socket.id,
+        fromName: caller.username,
+        fromCallId: caller.callId,
+      });
+    }
 
-    console.log(`[Call] Call initiated: ${caller.username} (${caller.callId}) → ${targetCallId} (${targetSocketId})`);
+    console.log(`[Call] Call initiated: ${caller.username} (${caller.callId}) → ${targetCallId} (${targetSockets.size} socket(s))`);
   });
 
   socket.on("call_accepted_manual", (data: { to?: string }) => {

@@ -383,11 +383,21 @@ const Messenger: React.FC<MessengerProps> = ({ config }) => {
     });
 
     // Incoming call
-    newSocket.on('call_request_manual', ({ from, fromName, fromCallId }) => {
-      console.log(`Incoming call from ${fromName} (${fromCallId})`);
+    const handleIncomingCallData = ({ from, fromName, fromCallId }: { from: string; fromName: string; fromCallId: string }) => {
+      console.log(`[Call] Incoming call from ${fromName} (${fromCallId})`);
       setIncomingCall({ from, fromName, fromCallId });
       setIsOpen(true);
-    });
+    };
+
+    newSocket.on('call_request_manual', handleIncomingCallData);
+
+    const onWindowCallRequest = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.from) {
+        handleIncomingCallData(detail);
+      }
+    };
+    window.addEventListener('call_request_from_server', onWindowCallRequest);
 
     // ICE + offer handlers
     newSocket.on('offer_manual', async ({ offer, from }) => {
@@ -437,6 +447,7 @@ const Messenger: React.FC<MessengerProps> = ({ config }) => {
     });
 
     return () => {
+      window.removeEventListener('call_request_from_server', onWindowCallRequest);
       newSocket.disconnect();
     };
   }, [userId]);
@@ -620,6 +631,54 @@ const Messenger: React.FC<MessengerProps> = ({ config }) => {
     }
     return () => clearInterval(interval);
   }, [isInCall, callStartTime]);
+
+  // Audio ringtone when receiving incoming call
+  useEffect(() => {
+    if (!incomingCall) return;
+    let audioCtx: AudioContext | null = null;
+    let interval: NodeJS.Timeout | null = null;
+
+    try {
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (AudioCtx) {
+        audioCtx = new AudioCtx();
+      }
+    } catch {
+      return;
+    }
+
+    const playTone = () => {
+      if (!audioCtx || audioCtx.state === 'closed') return;
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {});
+      }
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(480, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 1.2);
+      } catch {
+        // Audio error ignored
+      }
+    };
+
+    playTone();
+    interval = setInterval(playTone, 3000);
+
+    return () => {
+      if (interval) clearInterval(interval);
+      if (audioCtx && audioCtx.state !== 'closed') {
+        audioCtx.close().catch(() => {});
+      }
+    };
+  }, [incomingCall]);
 
   // Lock body scroll when chat is open on mobile
   useEffect(() => {
@@ -939,7 +998,7 @@ const Messenger: React.FC<MessengerProps> = ({ config }) => {
 
       {/* Chat Window */}
       <AnimatePresence>
-        {(isOpen || config?.admin) && (
+        {(isOpen || Boolean(incomingCall) || config?.admin) && (
           config?.admin ? (
             // Admin mode: no animation
             <div
