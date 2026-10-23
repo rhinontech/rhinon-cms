@@ -1,6 +1,6 @@
 {
   "name": "@rhinon/chat",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "Rhinon website chat: an AI assistant trained on your site, with live hand-off to your team.",
   "license": "MIT",
   "publishConfig": {
@@ -15,7 +15,7 @@
     "build:types": "tsc --project tsconfig.declarations.json",
     "serve": "cross-env NODE_ENV=production webpack --config tools/webpack/webpack.config.prod.js && cross-env serve dist/",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx src/",
-    "release": "npm run build && cp dist/rhinon-chat.js ../rhinontech/backend/public/widget/rhinon-chat.js && gzip -9 -k -f ../rhinontech/backend/public/widget/rhinon-chat.js && echo 'Copied rhinon-chat.js (+ .gz) to rhinontech/backend/public/widget \u2014 commit and deploy the backend. To publish to npm: npm publish'",
+    "release": "npm run build && cp dist/rhinon-chat.js ../rhinontech/backend/public/widget/rhinon-chat.js && gzip -9 -k -f ../rhinontech/backend/public/widget/rhinon-chat.js && echo 'Copied rhinon-chat.js (+ .gz) to rhinontech/backend/public/widget — commit and deploy the backend. To publish to npm: npm publish'",
     "prepublishOnly": "npm run build"
   },
   "files": [

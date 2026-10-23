@@ -43,6 +43,7 @@ const SCRIPTS_DIR = path.join(__dirname, "..", "..", "scripts");
 const SCRIPT_FOR: Record<DeployKind, string> = {
   pm2: path.join(SCRIPTS_DIR, "deploy.sh"),
   docker: path.join(SCRIPTS_DIR, "deploy-docker.sh"),
+  npm: path.join(SCRIPTS_DIR, "deploy-widget.sh"),
 };
 /** A run that has produced no exit file by now is assumed dead (script SIGKILLed, box rebooted). */
 const STALE_AFTER_MS = 20 * 60 * 1000;
@@ -56,10 +57,37 @@ function publicTarget(t: DeployTarget) {
     app: t.app,
     branch: t.branch,
     // What actually gets restarted — a pm2 process or a compose service.
-    unit: t.kind === "docker" ? `${t.compose!.service} (compose)` : t.proc!,
+    unit: t.kind === "docker" ? `${t.compose!.service} (compose)` : t.kind === "npm" ? t.npm!.package : t.proc!,
     port: t.port,
     description: t.description,
   };
+}
+
+/**
+ * For npm targets: the version in the checkout and the one live on npm, so the
+ * panel can say whether pressing Deploy will publish. The registry is asked at
+ * most once a minute.
+ */
+let npmCache: { at: number; name: string; latest: string | null } | null = null;
+async function packageVersions(t: DeployTarget) {
+  if (t.kind !== "npm") return null;
+  let local: string | null = null;
+  try {
+    local = JSON.parse(await fsp.readFile(path.join(t.repo, t.npm!.dir, "package.json"), "utf8")).version ?? null;
+  } catch {
+    // Checkout missing (a laptop) — the panel shows what it can.
+  }
+  if (!npmCache || npmCache.name !== t.npm!.package || Date.now() - npmCache.at > 60_000) {
+    let latest: string | null = null;
+    try {
+      const res = await fetch(`https://registry.npmjs.org/${t.npm!.package}/latest`, { signal: AbortSignal.timeout(4000) });
+      if (res.ok) latest = ((await res.json()) as { version?: string }).version ?? null;
+    } catch {
+      latest = npmCache?.latest ?? null;
+    }
+    npmCache = { at: Date.now(), name: t.npm!.package, latest };
+  }
+  return { local, published: npmCache.latest };
 }
 
 async function readIfExists(p: string): Promise<string | null> {
@@ -125,6 +153,7 @@ router.get("/targets", authorize("deploy:read"), async (_req: AuthRequest, res: 
         });
         return {
           ...publicTarget(t),
+          versions: await packageVersions(t),
           latest: latest ? summarize(await finalize(latest)) : null,
         };
       })
@@ -194,16 +223,19 @@ router.post("/:target", authorize("deploy:trigger"), async (req: AuthRequest, re
       return;
     }
 
-    // One deploy per target at a time — two concurrent `git pull`s in one checkout
-    // leave it in a state neither run expected.
-    const inFlight = await Deployment.findOne({
-      where: { target: target.key, status: "running" },
+    // One run per checkout at a time — two concurrent `git pull`s in one checkout
+    // leave it in a state neither run expected. The widget shares prod's checkout.
+    const sameCheckout = Object.values(DEPLOY_TARGETS).filter((t) => t.repo === target.repo).map((t) => t.key);
+    const running = await Deployment.findAll({
+      where: { target: sameCheckout, status: "running" },
       order: [["createdAt", "DESC"]],
     });
-    if (inFlight && (await finalize(inFlight)).status === "running") {
+    for (const run of running) {
+      if ((await finalize(run)).status !== "running") continue;
+      const label = getDeployTarget(run.target)?.label ?? run.target;
       res.status(409).json({
-        message: `A ${target.label} deploy is already running.`,
-        deploymentId: inFlight.id,
+        message: run.target === target.key ? `A ${target.label} deploy is already running.` : `Wait for the ${label} deploy to finish first.`,
+        deploymentId: run.id,
       });
       return;
     }
@@ -238,6 +270,7 @@ router.post("/:target", authorize("deploy:trigger"), async (req: AuthRequest, re
         PROC: target.proc || "",
         COMPOSE_DIR: target.compose?.dir || "",
         SERVICE: target.compose?.service || "",
+        PKG_DIR: target.npm?.dir || "",
         LOG: deployLogPath(dep.id),
         EXIT_FILE: deployExitPath(dep.id),
         META_FILE: metaPath(dep.id),

@@ -8,7 +8,7 @@ import os from "os";
  * process name are never accepted from the client. If a caller could supply a path or
  * a command, this endpoint would be a remote shell for anyone holding a stolen token.
  */
-export type DeployKind = "pm2" | "docker";
+export type DeployKind = "pm2" | "docker" | "npm";
 
 export interface DeployTarget {
   key: string;
@@ -22,6 +22,8 @@ export interface DeployTarget {
   proc?: string;
   /** Directory holding docker-compose.yml, and the service to restart. `kind: "docker"` only. */
   compose?: { dir: string; service: string };
+  /** Package to build and publish, relative to the repo. `kind: "npm"` only. */
+  npm?: { dir: string; package: string };
   /** Local port and path used for the post-restart health check. */
   port: number;
   healthPath: string;
@@ -54,6 +56,20 @@ export const DEPLOY_TARGETS: Record<string, DeployTarget> = {
     port: 5003,
     healthPath: "/health",
     description: "Staging backend on port 5003 — safe to deploy any time.",
+  },
+  // Builds bot-sdk and publishes it to npm when its version is new. Shares the
+  // prod checkout (the pull is the same one a prod deploy does) and restarts nothing.
+  widget: {
+    key: "widget",
+    label: "Chat widget",
+    kind: "npm",
+    app: "Rhinon Tech",
+    repo: process.env.DEPLOY_PROD_REPO || "/home/ubuntu/rhinon-cms",
+    branch: "main",
+    npm: { dir: "bot-sdk", package: "@rhinon/chat" },
+    port: 0,
+    healthPath: "",
+    description: "Builds bot-sdk and publishes @rhinon/chat to npm when its version is new.",
   },
   furrcircle: {
     key: "furrcircle",

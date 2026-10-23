@@ -36,8 +36,9 @@ interface DeploymentSummary {
 interface DeployTarget {
   key: string;
   label: string;
-  /** "pm2" apps rebuild before restarting; "docker" ones restart the compose service. */
-  kind: "pm2" | "docker";
+  /** "pm2" apps rebuild before restarting; "docker" ones restart the compose service;
+   *  "npm" builds a package and publishes it when its version is new. */
+  kind: "pm2" | "docker" | "npm";
   /** Grouping heading — Rhinon Tech and FurrCircle are separate systems on one box. */
   app: string;
   branch: string;
@@ -45,6 +46,8 @@ interface DeployTarget {
   unit: string;
   port: number;
   description: string;
+  /** npm targets: the version in the checkout and the one on npm. */
+  versions?: { local: string | null; published: string | null } | null;
   latest: DeploymentSummary | null;
 }
 
@@ -144,8 +147,13 @@ export function SettingsDeploy() {
       target.kind === "docker"
         ? `restarts the ${target.unit} container (deps + migrations re-run on boot)`
         : `rebuilds and restarts ${target.unit}`;
+    const willPublish = target.versions?.local && target.versions.local !== target.versions.published;
     const warning =
-      target.key === "prod"
+      target.kind === "npm"
+        ? willPublish
+          ? `Publish ${target.unit}@${target.versions!.local} to npm?\n\nThis pulls ${target.branch}, builds the widget and publishes it. A published version can't be replaced.`
+          : `Build ${target.unit}?\n\nThis pulls ${target.branch} and builds the widget. Version ${target.versions?.local ?? "?"} is already on npm, so nothing will be published — bump the version in bot-sdk/package.json to release.`
+        : target.key === "prod"
         ? `Deploy PRODUCTION?\n\nThis pulls ${target.branch}, ${action}. The API will be briefly unavailable.`
         : `Deploy ${target.label}?\n\nThis pulls ${target.branch} and ${action}.`;
     if (!(await confirmDialog(warning))) return;
@@ -174,7 +182,7 @@ export function SettingsDeploy() {
         <div className="flex-1">
           <h1 className="text-base font-semibold tracking-tight">Deploy</h1>
           <p className="text-xs text-muted-foreground">
-            Pull, build and restart the backend on EC2
+            Pull, build and restart the backend on EC2, or release the chat widget to npm
           </p>
         </div>
         <button
@@ -222,8 +230,21 @@ export function SettingsDeploy() {
                     <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
                       <dt>Branch</dt>
                       <dd className="font-mono text-foreground">{t.branch}</dd>
-                      <dt>{t.kind === "docker" ? "Service" : "Process"}</dt>
+                      <dt>{t.kind === "docker" ? "Service" : t.kind === "npm" ? "Package" : "Process"}</dt>
                       <dd className="font-mono text-foreground">{t.unit}</dd>
+                      {t.kind === "npm" && (
+                        <>
+                          <dt>Version</dt>
+                          <dd className="text-foreground">
+                            <span className="font-mono">{t.versions?.local ?? "?"}</span>
+                            {t.versions?.local && t.versions.local === t.versions.published ? (
+                              <span className="text-muted-foreground"> · live on npm</span>
+                            ) : (
+                              <span className="text-amber-600 dark:text-amber-400"> · npm has {t.versions?.published ?? "nothing yet"}</span>
+                            )}
+                          </dd>
+                        </>
+                      )}
                       <dt>Last deploy</dt>
                       <dd className="text-foreground">
                         {t.latest ? `${when(t.latest.startedAt)} · ${t.latest.triggeredByName}` : "never"}
@@ -251,7 +272,15 @@ export function SettingsDeploy() {
                         )}
                       >
                         {busy ? <TbLoader2 size={14} className="animate-spin" /> : <TbRocket size={14} />}
-                        {busy ? "Deploying…" : `Deploy ${t.label}`}
+                        {t.kind === "npm"
+                          ? busy
+                            ? "Releasing…"
+                            : t.versions?.local && t.versions.local !== t.versions.published
+                              ? `Publish ${t.versions.local}`
+                              : "Build widget"
+                          : busy
+                            ? "Deploying…"
+                            : `Deploy ${t.label}`}
                       </button>
                       {t.latest && (
                         <button

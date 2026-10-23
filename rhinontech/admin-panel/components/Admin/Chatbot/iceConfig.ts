@@ -20,14 +20,14 @@ export const hasTurnConfigured = Boolean(
 );
 
 const DEFAULT_TURN_URLS = [
-  "turn:35.154.151.48:3478?transport=udp",
-  "turn:35.154.151.48:3478?transport=tcp",
+  "turn:turn.rhinontech.in:3478?transport=udp",
+  "turn:turn.rhinontech.in:3478?transport=tcp",
 ];
 const DEFAULT_TURN_USERNAME = "rhinon";
 const DEFAULT_TURN_CREDENTIAL = "rhinonCall@2026";
 
 export function getIceServers(): RTCIceServer[] {
-  const stunUrls = STUN_URLS.length ? STUN_URLS : [FALLBACK_STUN, "stun:35.154.151.48:3478"];
+  const stunUrls = STUN_URLS.length ? STUN_URLS : [FALLBACK_STUN, "stun:turn.rhinontech.in:3478"];
   const servers: RTCIceServer[] = [{ urls: stunUrls }];
 
   if (hasTurnConfigured) {
