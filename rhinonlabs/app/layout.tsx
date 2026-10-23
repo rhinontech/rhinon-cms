@@ -80,7 +80,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://www.rhinonlabs.com",
+    url: "https://www.rhinonlabs.com/",
     title: "Rhinon Labs | Ship Your Product 3x Faster",
     description:
       "We help founders and SMBs design, build and launch websites, apps and AI products fast. AI-powered development with affordable pricing.",
