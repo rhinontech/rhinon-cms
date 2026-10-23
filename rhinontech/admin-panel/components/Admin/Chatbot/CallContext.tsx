@@ -3,7 +3,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import type { Socket } from "socket.io-client";
 import { toast } from "sonner";
-import { getIceServers } from "./iceConfig";
+import { fetchIceServers } from "./iceConfig";
 import { acquireChatSocket, releaseChatSocket } from "./chatbotApi";
 
 /**
@@ -128,7 +128,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       const stream = localStreamRef.current;
       if (!socket || !stream) return;
       remoteSocketIdRef.current = remoteSocketId;
-      const peer = new RTCPeerConnection({ iceServers: getIceServers() });
+      const peer = new RTCPeerConnection({ iceServers: await fetchIceServers() });
       peerRef.current = peer;
       stream.getTracks().forEach((track) => peer.addTrack(track, stream));
       peer.ontrack = (e) => {

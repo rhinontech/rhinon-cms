@@ -19,6 +19,7 @@ import { cleanArticleHtml, emailTicketReply, nextPosition } from "../services/ch
 import { ConnectedAccount } from "../models/ConnectedAccount";
 import { parseProvider } from "../services/connectedAccounts";
 import { accountFor } from "../services/emailIdentity";
+import { iceServersFor } from "../services/turnCredentials";
 import { brandSender } from "../services/siteSender";
 import { User } from "../models/User";
 import { chatbotSlotBlockedReason } from "../services/usage";
@@ -232,6 +233,14 @@ router.delete("/campaigns/:id", canWrite, async (req, res) => {
   const deleted = await ChatbotCampaign.destroy({ where: { id: req.params.id as string, chatbotId: bot.id } });
   if (!deleted) return void res.status(404).json({ message: "Campaign not found" });
   res.json({ success: true });
+});
+
+// ── Voice calls ────────────────────────────────────────────────────────
+
+// Short-lived TURN credentials for the agent's side of a call (services/turnCredentials.ts).
+router.get("/ice-servers", canRead, (req: AuthRequest, res) => {
+  res.set("Cache-Control", "no-store");
+  res.json({ iceServers: iceServersFor(`agent-${req.user!.userId.slice(0, 8)}`) });
 });
 
 // ── Tickets ────────────────────────────────────────────────────────────

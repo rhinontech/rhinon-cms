@@ -1,48 +1,19 @@
 /**
- * ICE (STUN/TURN) configuration for WebRTC voice calls in Admin Panel.
+ * ICE (STUN/TURN) servers for the agent's side of a voice call.
+ *
+ * TURN credentials are never built into the admin bundle: the backend mints
+ * short-lived ones for signed-in agents (services/turnCredentials.ts). If that
+ * fails the call still tries with public STUN.
  */
+import { apiFetch } from "@/lib/api";
 
-const FALLBACK_STUN = "stun:stun.l.google.com:19302";
+const STUN_ONLY: RTCIceServer[] = [{ urls: ["stun:stun.l.google.com:19302"] }];
 
-const splitUrls = (value?: string): string[] =>
-  (value ?? "")
-    .split(",")
-    .map((url) => url.trim())
-    .filter(Boolean);
-
-const STUN_URLS = splitUrls(process.env.NEXT_PUBLIC_STUN_URLS);
-const TURN_URLS = splitUrls(process.env.NEXT_PUBLIC_TURN_URLS);
-const TURN_USERNAME = process.env.NEXT_PUBLIC_TURN_USERNAME;
-const TURN_CREDENTIAL = process.env.NEXT_PUBLIC_TURN_CREDENTIAL;
-
-export const hasTurnConfigured = Boolean(
-  TURN_URLS.length && TURN_USERNAME && TURN_CREDENTIAL
-);
-
-const DEFAULT_TURN_URLS = [
-  "turn:turn.rhinontech.in:3478?transport=udp",
-  "turn:turn.rhinontech.in:3478?transport=tcp",
-];
-const DEFAULT_TURN_USERNAME = "rhinon";
-const DEFAULT_TURN_CREDENTIAL = "rhinonCall@2026";
-
-export function getIceServers(): RTCIceServer[] {
-  const stunUrls = STUN_URLS.length ? STUN_URLS : [FALLBACK_STUN, "stun:turn.rhinontech.in:3478"];
-  const servers: RTCIceServer[] = [{ urls: stunUrls }];
-
-  if (hasTurnConfigured) {
-    servers.push({
-      urls: TURN_URLS,
-      username: TURN_USERNAME,
-      credential: TURN_CREDENTIAL,
-    });
-  } else {
-    servers.push({
-      urls: DEFAULT_TURN_URLS,
-      username: DEFAULT_TURN_USERNAME,
-      credential: DEFAULT_TURN_CREDENTIAL,
-    });
+export async function fetchIceServers(): Promise<RTCIceServer[]> {
+  try {
+    const { iceServers } = await apiFetch<{ iceServers: RTCIceServer[] }>("/chatbots/ice-servers");
+    return iceServers?.length ? iceServers : STUN_ONLY;
+  } catch {
+    return STUN_ONLY;
   }
-
-  return servers;
 }

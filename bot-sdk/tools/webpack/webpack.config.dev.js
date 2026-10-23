@@ -41,18 +41,7 @@ module.exports = {
       'process.env.REACT_APP_API_URL_AI': JSON.stringify(
         process.env.REACT_APP_API_URL_AI || 'http://localhost:5055/widget',
       ),
-      'process.env.REACT_APP_STUN_URLS': JSON.stringify(
-        process.env.REACT_APP_STUN_URLS || '',
-      ),
-      'process.env.REACT_APP_TURN_URLS': JSON.stringify(
-        process.env.REACT_APP_TURN_URLS || '',
-      ),
-      'process.env.REACT_APP_TURN_USERNAME': JSON.stringify(
-        process.env.REACT_APP_TURN_USERNAME || '',
-      ),
-      'process.env.REACT_APP_TURN_CREDENTIAL': JSON.stringify(
-        process.env.REACT_APP_TURN_CREDENTIAL || '',
-      ),
+      // TURN credentials are minted per call by the backend (services/turnCredentials.ts) — never built in.
       // Add any other env vars you need here
     }),
   ],

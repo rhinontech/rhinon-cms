@@ -79,6 +79,15 @@ function visitorSocketsFor(organizationId: string, visitorId: string): string[] 
   return out;
 }
 
+/**
+ * Whether this visitor has a call ringing or in progress with an agent of this
+ * workspace — the only time the widget is handed TURN credentials.
+ */
+export function visitorHasCall(organizationId: string, visitorId: string): boolean {
+  for (const call of calls.values()) if (call.organizationId === organizationId && call.visitorId === visitorId) return true;
+  return false;
+}
+
 const emit = (socketId: string, event: string, data: unknown) => ioRef?.to(socketId).emit(event, data);
 
 /** Tears the call down and tells everyone still involved why. */

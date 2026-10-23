@@ -7,7 +7,7 @@ import { getSocketUrl } from '@/services/api';
 
 const VOICE_CALLS_ENABLED = true;
 import type { Message, ChatScreenProps } from '@/types';
-import { getIceServers } from '@/utils/iceConfig';
+import { fetchIceServers } from '@/utils/iceConfig';
 
 // Lazy load screens for better initial bundle size
 const ChatScreen = lazy(() => import('@/screens/ChatScreen/ChatScreen'));
@@ -524,7 +524,8 @@ const Messenger: React.FC<MessengerProps> = ({ config }) => {
     }
 
     // Step 2: Only after permission granted — proceed with connection
-    const peer = new RTCPeerConnection({ iceServers: getIceServers() });
+    // Fetched while the call still rings — the backend only issues TURN credentials then.
+    const peer = new RTCPeerConnection({ iceServers: await fetchIceServers(userId) });
     peerRef.current = peer;
 
     localStreamRef.current = stream;

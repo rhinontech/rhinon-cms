@@ -13,6 +13,8 @@ import { findOrMergeLead } from "../services/leadCapture";
 import { ChatbotTicket } from "../models/ChatbotTicket";
 import { ChatbotTicketMessage } from "../models/ChatbotTicketMessage";
 import { HelpArticle } from "../models/HelpArticle";
+import { iceServersFor } from "../services/turnCredentials";
+import { visitorHasCall } from "../services/chatbot/callSignaling";
 import { newTicketCode, widgetArticle, widgetHelpStructure, widgetTicket } from "../services/chatbot/support";
 import { getPresignedReadUrl, uploadBuffer } from "../services/storage";
 import { planState } from "../services/usage";
@@ -492,6 +494,16 @@ router.post("/articles/:id/feedback", rateLimit({ name: "widget-article-feedback
     await HelpArticle.increment(column, { by: 1, where: { id, chatbotId: req.bot!.bot.id, status: "published" } });
   }
   res.status(204).end();
+}));
+
+// TURN credentials for a visitor answering a call. Only handed out while that
+// visitor really has a call ringing or live with this bot's workspace, so a bot
+// id alone can't be used to relay traffic through our TURN server.
+router.get("/call/ice-servers", rateLimit({ name: "widget-ice", windowMs: 60_000, max: 20 }), withResolvedBot, asyncRoute(async (req, res) => {
+  const visitorId = str(req.query.visitor_id, 128);
+  res.set("Cache-Control", "no-store");
+  if (!visitorId || !visitorHasCall(req.bot!.organizationId, visitorId)) return void res.status(403).json({ message: "No call in progress" });
+  res.json({ iceServers: iceServersFor(`visitor-${visitorId.slice(-8)}`) });
 }));
 
 // SEO tracking is out of scope; swallow the beacons quietly.
