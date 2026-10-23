@@ -34,6 +34,9 @@ export function MeetingsPage() {
   const [loading, setLoading] = useState(true);
   const [notConnected, setNotConnected] = useState(false);
   const [connectedEmail, setConnectedEmail] = useState<string | null>(null);
+  // Whose calendar this is (Settings → Accounts → Meetings) and why it can't load, if it can't.
+  const [source, setSource] = useState<"workspace" | "GOOGLE" | "MICROSOFT">("workspace");
+  const [notConnectedReason, setNotConnectedReason] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<MeetingEvent | null>(null);
 
@@ -51,8 +54,9 @@ export function MeetingsPage() {
       setEvents(data);
       setNotConnected(false);
     } catch (err: any) {
-      if (err.message?.includes("not connected")) {
+      if (/no calendar|not connected|reconnect/i.test(err.message || "")) {
         setNotConnected(true);
+        setNotConnectedReason(err.message);
         setEvents([]);
       } else {
         toast.error(err.message || "Couldn't load meetings");
@@ -67,9 +71,10 @@ export function MeetingsPage() {
   }, [fetchEvents]);
 
   useEffect(() => {
-    apiFetch<{ connected: boolean; connectedEmail: string | null }>("/meetings/status")
+    apiFetch<{ connected: boolean; connectedEmail: string | null; source?: "workspace" | "GOOGLE" | "MICROSOFT" }>("/meetings/status")
       .then((s) => {
         setConnectedEmail(s.connectedEmail);
+        setSource(s.source ?? "workspace");
         if (!s.connected) setNotConnected(true);
       })
       .catch(() => {});
@@ -127,7 +132,11 @@ export function MeetingsPage() {
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Meetings</h1>
             <p className="text-sm text-muted-foreground">
-              {connectedEmail ? `Shared calendar · ${connectedEmail}` : "Shared company calendar"}
+              {source === "workspace"
+                ? connectedEmail
+                  ? `Workspace calendar · ${connectedEmail}`
+                  : "Workspace calendar"
+                : `Your ${source === "GOOGLE" ? "Google" : "Outlook"} calendar · ${connectedEmail ?? ""}`}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -145,9 +154,10 @@ export function MeetingsPage() {
         {notConnected ? (
           <div className="rounded-xl border border-amber-200 dark:border-amber-400/25 bg-amber-50 dark:bg-amber-400/10 px-4 py-6 text-center">
             <TbCalendarEvent size={28} className="mx-auto mb-2 text-amber-500 dark:text-amber-400" />
-            <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">The shared calendar isn&apos;t connected yet</p>
+            <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">No calendar to show yet</p>
             <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
-              An admin needs to connect support@rhinon.tech under Settings → Google Calendar.
+              {notConnectedReason ||
+                "Connect your Google or Microsoft account in Settings → Accounts and choose it for Meetings, or ask an admin to connect the workspace calendar."}
             </p>
           </div>
         ) : (

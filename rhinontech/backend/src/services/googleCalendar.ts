@@ -25,7 +25,7 @@ export function buildOAuthClient() {
   return new auth.OAuth2(creds.clientId, creds.clientSecret, creds.redirectUri);
 }
 
-interface CalendarClient {
+export interface CalendarClient {
   calendar: calendar_v3.Calendar;
   calendarId: string;
 }
@@ -86,15 +86,33 @@ export async function getConnectionStatus(): Promise<CalendarConnectionStatus> {
 
 export class CalendarNotConnectedError extends Error {
   constructor() {
-    super("Google Calendar is not connected. Connect it from Settings → Google Calendar.");
+    super("No calendar is connected. Connect your Google or Microsoft account in Settings → Accounts.");
     this.name = "CalendarNotConnectedError";
   }
 }
 
-async function requireClient(): Promise<CalendarClient> {
-  const client = await getCalendarClient();
-  if (!client) throw new CalendarNotConnectedError();
-  return client;
+async function requireClient(client?: CalendarClient): Promise<CalendarClient> {
+  if (client) return client;
+  const shared = await getCalendarClient();
+  if (!shared) throw new CalendarNotConnectedError();
+  return shared;
+}
+
+/**
+ * A person's own Google Calendar, from the Gmail account they connected in
+ * Settings → Accounts (services/connectedAccounts.ts). Uses that OAuth app's
+ * credentials, not the workspace calendar's.
+ */
+export function clientForGoogleAccount(refreshToken: string): CalendarClient {
+  const oauth2Client = new auth.OAuth2(process.env.MAIL_GOOGLE_CLIENT_ID, process.env.MAIL_GOOGLE_CLIENT_SECRET);
+  oauth2Client.setCredentials({ refresh_token: refreshToken });
+  return { calendar: googleCalendar({ version: "v3", auth: oauth2Client }), calendarId: "primary" };
+}
+
+/** "none" when we email our own .ics (workspace calendar); "all" when Google sends the invites. */
+export interface WriteOptions {
+  client?: CalendarClient;
+  sendUpdates?: "none" | "all";
 }
 
 export interface MeetingEvent {
@@ -144,8 +162,8 @@ function toMeetingEvent(event: calendar_v3.Schema$Event): MeetingEvent {
   };
 }
 
-export async function listEvents(timeMin: Date, timeMax: Date): Promise<MeetingEvent[]> {
-  const { calendar, calendarId } = await requireClient();
+export async function listEvents(timeMin: Date, timeMax: Date, client?: CalendarClient): Promise<MeetingEvent[]> {
+  const { calendar, calendarId } = await requireClient(client);
   const { data } = await calendar.events.list({
     calendarId,
     timeMin: timeMin.toISOString(),
@@ -199,12 +217,13 @@ export interface EventInput {
   addMeet?: boolean;
 }
 
-export async function createEvent(input: EventInput): Promise<MeetingEvent> {
-  const { calendar, calendarId } = await requireClient();
+export async function createEvent(input: EventInput, opts: WriteOptions = {}): Promise<MeetingEvent> {
+  const { calendar, calendarId } = await requireClient(opts.client);
   const { data } = await calendar.events.insert({
     calendarId,
     conferenceDataVersion: input.addMeet ? 1 : 0,
-    sendUpdates: "none", // we email the .ics ourselves (see meetingInvite.ts) — Google must not double-send
+    // Workspace calendar: we email the .ics ourselves (meetingInvite.ts), so Google must not double-send.
+    sendUpdates: opts.sendUpdates ?? "none",
     requestBody: {
       summary: input.summary,
       description: input.description || undefined,
@@ -229,12 +248,12 @@ export async function createEvent(input: EventInput): Promise<MeetingEvent> {
 
 // Used for both edits and reschedules — a reschedule is just a time-only patch. PATCH (not
 // update) so unspecified fields keep their existing values instead of being wiped.
-export async function updateEvent(eventId: string, input: Partial<EventInput>): Promise<MeetingEvent> {
-  const { calendar, calendarId } = await requireClient();
+export async function updateEvent(eventId: string, input: Partial<EventInput>, opts: WriteOptions = {}): Promise<MeetingEvent> {
+  const { calendar, calendarId } = await requireClient(opts.client);
   const { data } = await calendar.events.patch({
     calendarId,
     eventId,
-    sendUpdates: "none",
+    sendUpdates: opts.sendUpdates ?? "none",
     requestBody: {
       ...(input.summary !== undefined ? { summary: input.summary } : {}),
       ...(input.description !== undefined ? { description: input.description || undefined } : {}),
@@ -247,13 +266,13 @@ export async function updateEvent(eventId: string, input: Partial<EventInput>): 
   return toMeetingEvent(data);
 }
 
-export async function getEvent(eventId: string): Promise<MeetingEvent> {
-  const { calendar, calendarId } = await requireClient();
+export async function getEvent(eventId: string, client?: CalendarClient): Promise<MeetingEvent> {
+  const { calendar, calendarId } = await requireClient(client);
   const { data } = await calendar.events.get({ calendarId, eventId });
   return toMeetingEvent(data);
 }
 
-export async function deleteEvent(eventId: string): Promise<void> {
-  const { calendar, calendarId } = await requireClient();
-  await calendar.events.delete({ calendarId, eventId, sendUpdates: "none" });
+export async function deleteEvent(eventId: string, opts: WriteOptions = {}): Promise<void> {
+  const { calendar, calendarId } = await requireClient(opts.client);
+  await calendar.events.delete({ calendarId, eventId, sendUpdates: opts.sendUpdates ?? "none" });
 }

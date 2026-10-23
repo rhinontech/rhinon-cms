@@ -93,10 +93,11 @@ export function GoogleCalendarSettings() {
   return (
     <div className="max-w-5xl space-y-6 p-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Google Calendar</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Workspace calendar</h1>
         <p className="text-sm text-muted-foreground">
-          Connect the shared <span className="font-medium">support@rhinon.tech</span> calendar once. Everyone with calendar
-          access then sees the same events in the Meetings tab.
+          One shared Google calendar for the workspace. It powers the public booking page and interview scheduling, and it&apos;s
+          the Meetings calendar for anyone who hasn&apos;t picked their own. To use your personal calendar instead, connect
+          Google or Microsoft in Settings → Accounts.
         </p>
       </div>
 
@@ -110,7 +111,7 @@ export function GoogleCalendarSettings() {
       <Card>
         <CardHeader>
           <CardTitle>Connection</CardTitle>
-          <CardDescription>Sign in as support@rhinon.tech when Google asks — that account owns the calendar.</CardDescription>
+          <CardDescription>Sign in with the Google account that owns the shared calendar when Google asks.</CardDescription>
         </CardHeader>
         <CardContent>
           <div

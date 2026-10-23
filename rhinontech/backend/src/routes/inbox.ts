@@ -4,7 +4,7 @@ import { InboxEmail, User, Campaign } from "../models";
 import { InboxEmailFolder } from "../models/InboxEmail";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 import { resolveSiteContext } from "../middleware/siteContext";
-import { sendEmail } from "../services/mailer";
+import { sendAs, accountFor } from "../services/emailIdentity";
 import { getPresignedUploadUrl, getPresignedReadUrl, getObjectBuffer, isOwnKey } from "../services/storage";
 import { brandSender } from "../services/siteSender";
 import { defaultSenderName } from "../services/companyProfile";
@@ -266,6 +266,16 @@ router.get("/:id", authorize("inbox:read"), async (req: AuthRequest, res: Respon
   res.json({ ...email.toJSON(), isRead: true, attachments: await presignAll(email.attachments), thread: serialized });
 });
 
+/**
+ * The connected Gmail/Outlook the user chose for the Inbox — but only when they
+ * write from their own address. Shared addresses (hello@, support@) always go out
+ * as themselves. `null` means "send as the platform address".
+ */
+async function personalAccount(req: AuthRequest, senderAddress: string) {
+  if (senderAddress.toLowerCase() !== (req.user?.companyEmail ?? "").toLowerCase()) return null;
+  return accountFor(req.user!.userId, "inbox");
+}
+
 router.post("/", authorize("inbox:write"), async (req: AuthRequest, res: Response) => {
   const { toEmails, ccEmails = [], subject, body, folder = "sent" } = req.body;
   const attachments = await cleanAttachments(req.body.attachments);
@@ -296,17 +306,16 @@ router.post("/", authorize("inbox:write"), async (req: AuthRequest, res: Respons
 
   if (!isDraft) {
     try {
-      await sendEmail({
+      await sendAs(req.user!.userId, "inbox", {
         to: toEmails,
         cc: ccEmails,
-        from: fromEmail,
+        platformFrom: fromEmail,
         fromName: sender.name || req.user?.fullName,
-        via: "ses",
         subject,
         html: body,
         text: body,
         attachments: attachments.length ? await mailerAttachments(attachments) : undefined,
-      });
+      }, await personalAccount(req, sender.address));
     } catch (err) {
       res.status(502).json({ message: err instanceof Error ? err.message : "Failed to deliver email" });
       return;
@@ -384,16 +393,15 @@ router.post("/:id/reply", authorize("inbox:write"), async (req: AuthRequest, res
   });
 
   try {
-    await sendEmail({
+    await sendAs(req.user!.userId, "inbox", {
       to: reply.toEmails,
-      from: reply.fromEmail,
+      platformFrom: reply.fromEmail,
       fromName: reply.fromName,
-      via: "ses",
       subject: reply.subject,
       html: reply.body || `${attachments.length} attachment(s)`,
       text: reply.body || `${attachments.length} attachment(s)`,
       attachments: attachments.length ? await mailerAttachments(attachments) : undefined,
-    });
+    }, await personalAccount(req, sender.address));
   } catch (err) {
     await reply.destroy().catch(() => {});
     res.status(502).json({ message: err instanceof Error ? err.message : "Failed to deliver reply" });

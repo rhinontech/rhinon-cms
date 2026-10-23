@@ -21,11 +21,14 @@ interface ConnectedAccountAttributes {
   refreshToken: string;
   expiresAt: Date;
   scope?: string | null;
+  /** Today's sends through this mailbox (UTC day in `sentOn`), shown against the provider's daily cap. */
+  sentOn?: string | null;
+  sentCount?: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-interface ConnectedAccountCreationAttributes extends Optional<ConnectedAccountAttributes, "id" | "name" | "scope"> {}
+interface ConnectedAccountCreationAttributes extends Optional<ConnectedAccountAttributes, "id" | "name" | "scope" | "sentOn" | "sentCount"> {}
 
 export class ConnectedAccount
   extends Model<ConnectedAccountAttributes, ConnectedAccountCreationAttributes>
@@ -40,6 +43,8 @@ export class ConnectedAccount
   declare refreshToken: string;
   declare expiresAt: Date;
   declare scope: string | null;
+  declare sentOn: string | null;
+  declare sentCount: number;
   declare readonly createdAt: Date;
   declare readonly updatedAt: Date;
 }
@@ -55,6 +60,8 @@ ConnectedAccount.init(
     refreshToken: { type: DataTypes.TEXT, allowNull: false },
     expiresAt: { type: DataTypes.DATE, allowNull: false },
     scope: { type: DataTypes.TEXT, allowNull: true },
+    sentOn: { type: DataTypes.DATEONLY, allowNull: true },
+    sentCount: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
   },
   { sequelize, tableName: "connected_accounts", timestamps: true, indexes: [{ unique: true, fields: ["userId", "provider"] }] }
 );

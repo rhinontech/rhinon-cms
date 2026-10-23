@@ -120,10 +120,10 @@ InboxEmail.init(
       type: DataTypes.TEXT,
       allowNull: false,
     },
+    // Every insert names the mailbox it belongs to; there is no default owner.
     ownerEmail: {
       type: DataTypes.STRING,
       allowNull: false,
-      defaultValue: "admin@rhinontech.in",
     },
     isRead: {
       type: DataTypes.BOOLEAN,

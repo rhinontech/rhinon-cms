@@ -5,25 +5,19 @@ import { CALENDAR_TIMEZONE, type MeetingEvent } from "./googleCalendar";
 import { getCompanyProfile } from "./companyProfile";
 import { GoogleCalendarToken } from "../models";
 
-// The calendar these events live on. It's always the ORGANIZER, regardless of which
-// teammate created the meeting — they're recorded as SENT-BY instead.
-const PLATFORM_ORGANIZER_NAME = "Rhinon Labs";
-const PLATFORM_ORGANIZER_EMAIL = process.env.GOOGLE_CALENDAR_ORGANIZER_EMAIL || "support@rhinon.tech";
-
 export interface InviteOrganizer {
   name: string;
   email: string;
 }
 
 /**
- * Who appears as the organizer of the invite. The platform's own shared calendar
- * for Rhinon; for a workspace, its own name and the Google account it connected —
- * falling back to the sender, never to a Rhinon address, so a customer's
- * invite does not name us as the host.
+ * Who appears as the organizer of the invite: the workspace's name and the
+ * account its shared calendar is connected as (the calendar the event lives on),
+ * falling back to the teammate who sent it — never a fixed address. The sender
+ * is recorded as SENT-BY.
  */
 export async function organizerFor(sender: InviteSender): Promise<InviteOrganizer & { brand: Awaited<ReturnType<typeof getCompanyProfile>> }> {
   const brand = await getCompanyProfile();
-  if (brand.isPlatform) return { name: PLATFORM_ORGANIZER_NAME, email: PLATFORM_ORGANIZER_EMAIL, brand };
   const token = await GoogleCalendarToken.findOne({ where: { isActive: true }, attributes: ["connectedEmail"] });
   return { name: brand.name, email: token?.connectedEmail || sender.email, brand };
 }
@@ -65,7 +59,7 @@ export function buildMeetingIcs(event: MeetingEvent, kind: InviteKind, sender: I
   const { error, value } = createEvent({
     // Google's own iCalUID keeps REQUEST and CANCEL pointing at the same event, so an
     // update lands in place instead of creating a duplicate.
-    uid: event.iCalUID || `${event.id}@rhinon.tech`,
+    uid: event.iCalUID || `${event.id}@${sender.email.split("@")[1] || "invite"}`,
     method: kind === "cancel" ? "CANCEL" : "REQUEST",
     sequence,
     title: event.summary,

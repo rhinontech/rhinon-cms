@@ -18,6 +18,8 @@ import { Site } from "../models/Site";
 import { cleanArticleHtml, emailTicketReply, nextPosition } from "../services/chatbot/support";
 import { ConnectedAccount } from "../models/ConnectedAccount";
 import { parseProvider } from "../services/connectedAccounts";
+import { accountFor } from "../services/emailIdentity";
+import { brandSender } from "../services/siteSender";
 import { User } from "../models/User";
 import { chatbotSlotBlockedReason } from "../services/usage";
 import { currentSiteFilter, runAcrossSites } from "../services/siteContext";
@@ -316,12 +318,23 @@ router.post("/tickets/:id/messages", canWrite, async (req: AuthRequest, res) => 
   let sentVia: string | null = null;
   if (!note) {
     const site = bot.siteId ? await Site.findByPk(bot.siteId, { attributes: ["name"] }) : null;
-    // "via": send from the agent's own connected mailbox instead of the brand address.
-    const via = parseProvider(req.body?.via);
-    const account = via ? await ConnectedAccount.findOne({ where: { userId: req.user!.userId, provider: via } }) : null;
-    if (via && !account) return void res.status(400).json({ message: "Connect that account in Settings → Accounts first." });
-    emailed = await emailTicketReply(ticket, text, site?.name || String((bot.config as any)?.chatbotName || "Support"), account);
-    sentVia = account ? account.email : null;
+    // "via" is a one-off pick ("platform", "GOOGLE", "MICROSOFT"); without it the
+    // agent's Settings → Accounts choice for Tickets applies.
+    const via = req.body?.via === "platform" ? "platform" : parseProvider(req.body?.via);
+    const account =
+      via === "platform" ? null
+      : via ? await ConnectedAccount.findOne({ where: { userId: req.user!.userId, provider: via } })
+      : await accountFor(req.user!.userId, "tickets");
+    if (via && via !== "platform" && !account) return void res.status(400).json({ message: "Connect that account in Settings → Accounts first." });
+    if (!req.user!.companyEmail) return void res.status(400).json({ message: "Your user has no platform email address." });
+    const platformFrom = (await brandSender(req.user!.companyEmail, bot.siteId)) || req.user!.companyEmail;
+    const sentFrom = await emailTicketReply(ticket, text, site?.name || String((bot.config as any)?.chatbotName || "Support"), {
+      userId: req.user!.userId,
+      platformFrom,
+      account,
+    });
+    emailed = sentFrom !== null;
+    sentVia = sentFrom;
   }
   const message = await ChatbotTicketMessage.create({ ticketId: ticket.id, role: note ? "note" : "agent", authorUserId: req.user!.userId, text, emailed, sentVia });
   await ticket.update({

@@ -1,6 +1,11 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../config/database";
 
+/** Where a user's mail goes out from, per module: their platform address or a connected mailbox. */
+export type EmailIdentityChoice = "platform" | "GOOGLE" | "MICROSOFT";
+export type EmailModule = "inbox" | "campaigns" | "tickets" | "meetings";
+export type EmailPreferences = Partial<Record<EmailModule, EmailIdentityChoice>>;
+
 /**
  * "guest" is an external collaborator — a client or contractor reachable only
  * through an explicit ProjectMember grant. Guests are Users so that task
@@ -81,6 +86,7 @@ interface UserAttributes {
   totpEnabled?: boolean;
   totpRecoveryCodes?: string[] | null;
   totpLastStep?: number | null;
+  emailPreferences?: EmailPreferences | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -137,6 +143,7 @@ interface UserCreationAttributes
     | "totpEnabled"
     | "totpRecoveryCodes"
     | "totpLastStep"
+    | "emailPreferences"
   > {}
 
 export class User
@@ -201,6 +208,8 @@ export class User
   declare totpRecoveryCodes: string[] | null;
   /** Last accepted 30-second step, so one code cannot be replayed. */
   declare totpLastStep: number | null;
+  /** Which address each module sends from (services/emailIdentity.ts). Missing = the platform address. */
+  declare emailPreferences: EmailPreferences | null;
   declare createdAt: Date;
   declare updatedAt: Date;
 
@@ -280,6 +289,7 @@ User.init(
     totpEnabled:           { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
     totpRecoveryCodes:     { type: DataTypes.JSONB,   allowNull: true, defaultValue: null },
     totpLastStep:          { type: DataTypes.INTEGER, allowNull: true, defaultValue: null },
+    emailPreferences:      { type: DataTypes.JSONB,   allowNull: true, defaultValue: null },
   },
   {
     sequelize,

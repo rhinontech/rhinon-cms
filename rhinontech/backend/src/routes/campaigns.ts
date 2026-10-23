@@ -7,7 +7,7 @@ import { env } from "../config/env";
 import { generateAIEmailDraft, generateLinkedInPost, generateTemplateWithAI } from "../services/gemini";
 import { isLinkedInPostType } from "../config/linkedInPlaybook";
 import { postToLinkedIn } from "../services/linkedin";
-import { sendEmail } from "../services/mailer";
+import { sendAs } from "../services/emailIdentity";
 import { stripHtml, toEmailHtml, BACKEND_URL } from "../services/emailTemplate";
 import { Op } from "sequelize";
 import { normalizeEmail, isValidEmail } from "../utils/email";
@@ -230,6 +230,15 @@ function isPermanentSendError(err: any): boolean {
  * enum value: it already means undeliverable, is already excluded from resends,
  * and avoids a Postgres enum migration. The activity row carries the real reason.
  */
+/** The person a campaign sends as: the owner of its sender address, else its creator. */
+async function campaignSenderId(campaign: Campaign): Promise<string> {
+  if (campaign.senderEmail) {
+    const owner = await User.findOne({ where: { companyEmail: campaign.senderEmail }, attributes: ["id"] });
+    if (owner) return owner.id;
+  }
+  return campaign.createdById;
+}
+
 export async function dispatchLeadEmail(
   campaign: Campaign,
   lead: Lead,
@@ -298,7 +307,18 @@ export async function dispatchLeadEmail(
   try {
     // Bulk mail: carries RFC 8058 one-click unsubscribe headers, which Gmail
     // and Yahoo require of bulk senders.
-    await sendEmail({ to: email!, from: fromEmail, fromName: senderName, via: "ses", subject, html: htmlBody, text: plainText, unsubscribeFor: email! });
+    // Sent as the campaign's sender: their platform address over SES, or the
+    // Gmail/Outlook they chose for Campaigns (replies still come back to the
+    // platform address, so they land in this campaign's inbox).
+    await sendAs(await campaignSenderId(campaign), "campaigns", {
+      to: email!,
+      platformFrom: fromEmail,
+      fromName: senderName,
+      subject,
+      html: htmlBody,
+      text: plainText,
+      unsubscribeFor: email!,
+    });
   } catch (err: any) {
     return fail(err.message || "send failed", isPermanentSendError(err));
   }

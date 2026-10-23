@@ -1,4 +1,5 @@
 import { Router, Request, Response, NextFunction } from "express";
+import { fallbackFromAddress, getCompanyProfile } from "../services/companyProfile";
 import { CalendarNotConnectedError, createEvent, getBusyIntervals } from "../services/googleCalendar";
 import { sendMeetingInvite } from "../services/meetingInvite";
 import { findOrMergeLead, str } from "../services/leadCapture";
@@ -36,9 +37,10 @@ const BUSINESS_TIMEZONE = "Asia/Kolkata";
 const SOURCE = "Scheduler";
 
 // Public bookings aren't made by a signed-in teammate, so the invite goes out from the
-// company SES address. The .ics organizer is still Rhinon Labs (support@rhinon.tech).
-function publicSender() {
-  return { email: process.env.AWS_SES_FROM_EMAIL || "hello@rhinontech.in", name: "Rhinon Labs" };
+// workspace's own sending address, signed with its name.
+async function publicSender() {
+  const profile = await getCompanyProfile();
+  return { email: process.env.AWS_SES_FROM_EMAIL || (await fallbackFromAddress()), name: profile.name };
 }
 
 // GET /public/schedule-call/availability?date=YYYY-MM-DD
@@ -194,7 +196,7 @@ router.post("/schedule-call", async (req: Request, res: Response) => {
       });
 
       try {
-        inviteSent = await sendMeetingInvite(event, "request", publicSender());
+        inviteSent = await sendMeetingInvite(event, "request", (await publicSender()));
       } catch (err: any) {
         console.error("Failed to email schedule-call invite:", err.message);
       }

@@ -101,7 +101,9 @@ export function ChatbotTickets() {
   const [asNote, setAsNote] = useState(false);
   const [mailAccounts, setMailAccounts] = useState<MailAccount[]>([]);
   // "" = the brand address; otherwise a connected account's provider.
-  const [via, setVia] = useState<"" | MailAccount["provider"]>("");
+  // Starts on the Tickets choice from Settings → Accounts; can be changed per reply.
+  const [via, setVia] = useState<"platform" | MailAccount["provider"]>("platform");
+  const [platformEmail, setPlatformEmail] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [tagDraft, setTagDraft] = useState("");
   const threadEnd = useRef<HTMLDivElement>(null);
@@ -129,7 +131,14 @@ export function ChatbotTickets() {
 
   useEffect(() => {
     apiFetch<Person[]>("/people").then(setPeople).catch(() => undefined);
-    apiFetch<{ accounts: MailAccount[] }>("/integrations/accounts").then((r) => setMailAccounts(r.accounts)).catch(() => undefined);
+    apiFetch<{ accounts: MailAccount[]; platformEmail: string | null; preferences: { tickets?: "platform" | MailAccount["provider"] } }>("/integrations/accounts")
+      .then((r) => {
+        setMailAccounts(r.accounts);
+        setPlatformEmail(r.platformEmail);
+        const saved = r.preferences.tickets;
+        if (saved && (saved === "platform" || r.accounts.some((a) => a.provider === saved))) setVia(saved);
+      })
+      .catch(() => undefined);
   }, []);
 
   useChatEvents({ "ticket:new": () => void load() });
@@ -178,7 +187,7 @@ export function ChatbotTickets() {
     try {
       const res = await apiFetch<{ message: TicketMessage; ticket: Ticket }>(`/chatbots/tickets/${detail.ticket.id}/messages`, {
         method: "POST",
-        body: JSON.stringify({ text: draft, note: asNote, ...(via && !asNote ? { via } : {}) }),
+        body: JSON.stringify({ text: draft, note: asNote, ...(!asNote ? { via } : {}) }),
       });
       const next = { ...detail.ticket, ...res.ticket, assigneeName: detail.ticket.assigneeName ?? people.find((p) => p.id === res.ticket.assignedUserId)?.fullName ?? null };
       if (next.status !== detail.ticket.status) setCounts((c) => ({ ...c, [detail.ticket.status]: Math.max(0, c[detail.ticket.status] - 1), [next.status]: c[next.status] + 1 }));
@@ -370,7 +379,7 @@ export function ChatbotTickets() {
                             className="max-w-[14rem] truncate rounded-md border border-border bg-background px-1.5 py-0.5 text-[11px] text-foreground"
                             data-testid="send-from"
                           >
-                            <option value="">Brand address</option>
+                            <option value="platform">{platformEmail ?? "Your platform address"}</option>
                             {mailAccounts.map((a) => (
                               <option key={a.provider} value={a.provider}>{a.email}</option>
                             ))}

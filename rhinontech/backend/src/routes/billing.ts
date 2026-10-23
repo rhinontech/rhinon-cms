@@ -3,12 +3,26 @@ import { authenticate, authorize, AuthRequest } from "../middleware/authenticate
 import { usageSummary } from "../services/usage";
 import { PLAN_LIMITS } from "../config/plans";
 import { Organization } from "../models/Organization";
+import { runAsSystem } from "../services/tenantContext";
 import { User } from "../models/User";
 import { rateLimit } from "../middleware/rateLimit";
 import { sendEmail } from "../services/mailer";
 import { auditRequest } from "../services/audit";
 
 const router = Router();
+async function platformContact(): Promise<string | null> {
+  return runAsSystem("billing:platform-contact", async () => {
+    const platform = await Organization.unscoped().findOne({ where: { isPlatform: true }, attributes: ["id"] });
+    if (!platform) return null;
+    const founder = await User.unscoped().findOne({
+      where: { organizationId: platform.id } as any, // added by the tenant hooks, not on UserAttributes
+      order: [["createdAt", "ASC"]],
+      attributes: ["companyEmail"],
+    });
+    return founder?.companyEmail ?? null;
+  });
+}
+
 router.use(authenticate);
 
 /**
@@ -55,7 +69,10 @@ router.post("/upgrade-request", upgradeLimiter, async (req: AuthRequest, res: Re
 
   const owner = await User.unscoped().findByPk(req.user!.userId, { attributes: ["fullName", "personalEmail"] });
   const summary = await usageSummary(org.id);
-  const to = process.env.UPGRADE_REQUEST_EMAIL || "support@rhinon.tech";
+  // Upgrade requests go to the platform team: UPGRADE_REQUEST_EMAIL, else the
+  // platform workspace's founder (its first user) — never a fixed address.
+  const to = process.env.UPGRADE_REQUEST_EMAIL || (await platformContact());
+  if (!to) { res.status(500).json({ message: "No one is set up to receive upgrade requests." }); return; }
   const esc = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
   const lines = [

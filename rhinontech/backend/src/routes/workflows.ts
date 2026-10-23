@@ -54,8 +54,9 @@ const DEFAULT_WORKFLOW = {
         status: "READY",
         nodeType: "send_email",
         config: {
-          fromEmail: "noreply@theproductspace.in",
-          fromName: "The Product Space",
+          // Empty: sends as the person running the workflow.
+          fromEmail: "",
+          fromName: "",
           subject: "Free Resources: 500+ Claude Prompts Included",
         },
       },

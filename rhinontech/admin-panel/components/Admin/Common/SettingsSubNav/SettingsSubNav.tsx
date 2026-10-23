@@ -30,7 +30,7 @@ export function SettingsSubNav() {
       ? [
           { label: "Roles & Permissions", href: `${base}/roles`, icon: <TbShieldLock size={18} /> },
           { label: "Access Governance", href: `${base}/governance`, icon: <TbBooks size={18} /> },
-          { label: "Google Calendar", href: `${base}/google-calendar`, icon: <TbCalendarEvent size={18} /> },
+          { label: "Workspace calendar", href: `${base}/google-calendar`, icon: <TbCalendarEvent size={18} /> },
         ]
       : []),
     ...(has("deploy:read")

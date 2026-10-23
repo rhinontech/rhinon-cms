@@ -94,6 +94,5 @@ export async function transactionalBrand(organizationId: string | null = current
  */
 export async function fallbackFromAddress(organizationId: string | null = currentOrganizationId()): Promise<string> {
   const profile = await getCompanyProfile(organizationId);
-  if (profile.isPlatform || !profile.emailDomain) return "admin@rhinontech.in";
-  return `admin@${profile.emailDomain}`;
+  return `admin@${profile.emailDomain || process.env.PLATFORM_EMAIL_DOMAIN || "rhinontech.in"}`;
 }

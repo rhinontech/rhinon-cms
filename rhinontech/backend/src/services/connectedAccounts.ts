@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env";
 import { ConnectedAccount, type AccountProvider } from "../models/ConnectedAccount";
@@ -33,7 +34,8 @@ function config(provider: AccountProvider): ProviderConfig {
       clientSecret: process.env.MAIL_GOOGLE_CLIENT_SECRET,
       authUrl: "https://accounts.google.com/o/oauth2/v2/auth",
       tokenUrl: "https://oauth2.googleapis.com/token",
-      scope: "openid email profile https://www.googleapis.com/auth/gmail.send",
+      // Send mail and manage calendar events — never read mail.
+      scope: "openid email profile https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/calendar.events",
       // offline + consent: the only way to be sure of a refresh token.
       extraAuthParams: { access_type: "offline", prompt: "consent", include_granted_scopes: "true" },
     };
@@ -43,7 +45,7 @@ function config(provider: AccountProvider): ProviderConfig {
     clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
     authUrl: `https://login.microsoftonline.com/${MS_TENANT()}/oauth2/v2.0/authorize`,
     tokenUrl: `https://login.microsoftonline.com/${MS_TENANT()}/oauth2/v2.0/token`,
-    scope: "openid email profile offline_access User.Read Mail.Send",
+    scope: "openid email profile offline_access User.Read Mail.Send Calendars.ReadWrite",
     extraAuthParams: { prompt: "select_account" },
   };
 }
@@ -140,8 +142,34 @@ export async function connectAccount(provider: AccountProvider, userId: string, 
   return who;
 }
 
+/** True when the account was connected with calendar access (older connections weren't). */
+export function hasCalendarAccess(account: ConnectedAccount): boolean {
+  const scope = (account.scope ?? "").toLowerCase();
+  return account.provider === "GOOGLE" ? scope.includes("calendar.events") : scope.includes("calendars.readwrite");
+}
+
+/**
+ * Roughly how many recipients a day the provider lets this mailbox send to.
+ * Consumer accounts get far less than Workspace / Microsoft 365 ones.
+ */
+export function dailySendLimit(account: ConnectedAccount): number {
+  const domain = account.email.split("@")[1] ?? "";
+  if (account.provider === "GOOGLE") return /^(gmail|googlemail)\.com$/.test(domain) ? 500 : 2000;
+  return /^(outlook|hotmail|live|msn)\.[a-z.]+$/.test(domain) ? 300 : 10000;
+}
+
+const today = () => new Date().toISOString().slice(0, 10);
+
+/** Sends counted today (the counter resets on the first send of a new UTC day). */
+export const sentToday = (account: ConnectedAccount) => (account.sentOn === today() ? account.sentCount : 0);
+
+async function countSend(account: ConnectedAccount, recipients: number) {
+  const day = today();
+  await account.update({ sentOn: day, sentCount: (account.sentOn === day ? account.sentCount : 0) + recipients });
+}
+
 /** A valid access token, refreshed when it's about to expire. */
-async function accessToken(account: ConnectedAccount): Promise<string> {
+export async function accessToken(account: ConnectedAccount): Promise<string> {
   if (account.expiresAt.getTime() > Date.now()) return decryptSecret(account.accessToken);
   const tokens = await tokenRequest(account.provider, { grant_type: "refresh_token", refresh_token: decryptSecret(account.refreshToken) });
   await account.update({
@@ -155,40 +183,124 @@ async function accessToken(account: ConnectedAccount): Promise<string> {
 
 const headerSafe = (s: string) => s.replace(/[\r\n]+/g, " ");
 const b64url = (s: string | Buffer) => Buffer.from(s).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const encodeWord = (s: string) => `=?UTF-8?B?${Buffer.from(headerSafe(s)).toString("base64")}?=`;
+const wrap76 = (b64: string) => b64.replace(/.{1,76}/g, "$&\r\n").trimEnd();
+const asList = (v?: string | string[]) => (Array.isArray(v) ? v : v ? [v] : []).map(headerSafe).filter(Boolean);
 
-/** Sends one email from the person's own mailbox. Throws when it doesn't go out. */
-export async function sendFromAccount(account: ConnectedAccount, mail: { to: string; subject: string; html: string; fromName?: string }) {
+export interface AccountMail {
+  to: string | string[];
+  cc?: string | string[];
+  subject: string;
+  html: string;
+  text?: string;
+  fromName?: string;
+  /** Where replies go — the user's platform address, so they land in the platform inbox. */
+  replyTo?: string;
+  attachments?: { filename: string; content: Buffer; contentType?: string }[];
+  /** Extra headers (Gmail only; Microsoft Graph accepts just X- headers). */
+  headers?: Record<string, string>;
+}
+
+/** Sends one email from the person's own mailbox and counts it. Throws when it doesn't go out. */
+export async function sendFromAccount(account: ConnectedAccount, mail: AccountMail) {
   const token = await accessToken(account);
+  const to = asList(mail.to);
+  const cc = asList(mail.cc);
+  if (!to.length) throw new Error("No recipient");
+
   if (account.provider === "GOOGLE") {
-    const from = mail.fromName ? `"${headerSafe(mail.fromName).replace(/"/g, "")}" <${account.email}>` : account.email;
-    const mime = [
+    const from = mail.fromName ? `${encodeWord(mail.fromName)} <${account.email}>` : account.email;
+    const head = [
       `From: ${from}`,
-      `To: ${headerSafe(mail.to)}`,
-      `Subject: =?UTF-8?B?${Buffer.from(headerSafe(mail.subject)).toString("base64")}?=`,
+      `To: ${to.join(", ")}`,
+      ...(cc.length ? [`Cc: ${cc.join(", ")}`] : []),
+      ...(mail.replyTo ? [`Reply-To: ${headerSafe(mail.replyTo)}`] : []),
+      `Subject: ${encodeWord(mail.subject)}`,
+      ...Object.entries(mail.headers ?? {}).map(([k, v]) => `${headerSafe(k)}: ${headerSafe(v)}`),
       "MIME-Version: 1.0",
+    ];
+    const alt = `alt_${crypto.randomUUID()}`;
+    const altPart = [
+      `Content-Type: multipart/alternative; boundary="${alt}"`,
+      "",
+      `--${alt}`,
+      'Content-Type: text/plain; charset="UTF-8"',
+      "Content-Transfer-Encoding: base64",
+      "",
+      wrap76(Buffer.from(mail.text ?? mail.html.replace(/<[^>]+>/g, "")).toString("base64")),
+      `--${alt}`,
       'Content-Type: text/html; charset="UTF-8"',
       "Content-Transfer-Encoding: base64",
       "",
-      Buffer.from(mail.html).toString("base64"),
-    ].join("\r\n");
+      wrap76(Buffer.from(mail.html).toString("base64")),
+      `--${alt}--`,
+    ];
+    let body: string[];
+    if (mail.attachments?.length) {
+      const mixed = `mix_${crypto.randomUUID()}`;
+      body = [`Content-Type: multipart/mixed; boundary="${mixed}"`, "", `--${mixed}`, ...altPart];
+      for (const a of mail.attachments) {
+        const name = headerSafe(a.filename).replace(/"/g, "");
+        body.push(
+          `--${mixed}`,
+          `Content-Type: ${a.contentType || "application/octet-stream"}; name="${name}"`,
+          `Content-Disposition: attachment; filename="${name}"`,
+          "Content-Transfer-Encoding: base64",
+          "",
+          wrap76(a.content.toString("base64"))
+        );
+      }
+      body.push(`--${mixed}--`);
+    } else {
+      body = altPart;
+    }
     const res = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ raw: b64url(mime) }),
+      body: JSON.stringify({ raw: b64url([...head, ...body].join("\r\n")) }),
     });
     if (!res.ok) throw new Error(`Gmail refused the message (${res.status})`);
-    return;
+  } else {
+    const xHeaders = Object.entries(mail.headers ?? {})
+      .filter(([k]) => /^x-/i.test(k))
+      .map(([name, value]) => ({ name, value: headerSafe(value) }));
+    const res = await fetch("https://graph.microsoft.com/v1.0/me/sendMail", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: {
+          subject: mail.subject,
+          body: { contentType: "HTML", content: mail.html },
+          toRecipients: to.map((address) => ({ emailAddress: { address } })),
+          ccRecipients: cc.map((address) => ({ emailAddress: { address } })),
+          ...(mail.replyTo ? { replyTo: [{ emailAddress: { address: mail.replyTo } }] } : {}),
+          ...(xHeaders.length ? { internetMessageHeaders: xHeaders } : {}),
+          ...(mail.attachments?.length
+            ? {
+                attachments: mail.attachments.map((a) => ({
+                  "@odata.type": "#microsoft.graph.fileAttachment",
+                  name: a.filename,
+                  contentType: a.contentType || "application/octet-stream",
+                  contentBytes: a.content.toString("base64"),
+                })),
+              }
+            : {}),
+        },
+        saveToSentItems: true,
+      }),
+    });
+    if (!res.ok) throw new Error(`Outlook refused the message (${res.status})`);
   }
-  const res = await fetch("https://graph.microsoft.com/v1.0/me/sendMail", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      message: { subject: mail.subject, body: { contentType: "HTML", content: mail.html }, toRecipients: [{ emailAddress: { address: mail.to } }] },
-      saveToSentItems: true,
-    }),
-  });
-  if (!res.ok) throw new Error(`Outlook refused the message (${res.status})`);
+  await countSend(account, to.length + cc.length);
 }
 
 /** Safe to send to the browser: no tokens. */
-export const publicAccount = (a: ConnectedAccount) => ({ provider: a.provider, email: a.email, name: a.name, connectedAt: a.createdAt });
+export const publicAccount = (a: ConnectedAccount) => ({
+  provider: a.provider,
+  email: a.email,
+  name: a.name,
+  connectedAt: a.createdAt,
+  calendarAccess: hasCalendarAccess(a),
+  sentToday: sentToday(a),
+  dailyLimit: dailySendLimit(a),
+});

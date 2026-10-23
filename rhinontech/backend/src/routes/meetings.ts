@@ -1,24 +1,19 @@
 import { Router, Response } from "express";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
-import {
-  CalendarNotConnectedError,
-  createEvent,
-  deleteEvent,
-  getConnectionStatus,
-  getEvent,
-  listEvents,
-  updateEvent,
-  type MeetingEvent,
-} from "../services/googleCalendar";
+import { CalendarNotConnectedError, getConnectionStatus, type EventInput, type MeetingEvent } from "../services/googleCalendar";
+import { CalendarReconnectError, calendarFor, type MeetingCalendar } from "../services/meetingCalendar";
 import { sendMeetingInvite, type InviteKind } from "../services/meetingInvite";
 import { logMeetingOnLeads } from "../services/crmActivity";
 
 const router = Router();
 
-// Google is told not to email anyone (sendUpdates: "none") so the invite comes from the
-// teammate who made the change, over SES, with our own .ics. A failed send must not undo a
-// calendar change that already succeeded — report it instead and let the UI warn.
-async function notifyAttendees(event: MeetingEvent, kind: InviteKind, req: AuthRequest): Promise<boolean> {
+// Each person works in the calendar they chose in Settings → Accounts → Meetings
+// (services/meetingCalendar.ts). Their own Google/Outlook emails attendees itself.
+// On the workspace calendar Google is told not to (sendUpdates: "none"), so the invite
+// comes from the teammate who made the change, over SES, with our own .ics. A failed
+// send must not undo a calendar change that already succeeded — report it instead.
+async function notifyAttendees(cal: MeetingCalendar, event: MeetingEvent, kind: InviteKind, req: AuthRequest): Promise<boolean> {
+  if (cal.providerSendsInvites) return event.attendees.length > 0;
   const email = req.user?.companyEmail;
   if (!email) {
     console.warn(`No companyEmail for user ${req.user?.userId} — skipping ${kind} invite for event ${event.id}`);
@@ -32,11 +27,15 @@ async function notifyAttendees(event: MeetingEvent, kind: InviteKind, req: AuthR
   }
 }
 
-// The shared support@rhinon.tech calendar isn't connected yet — surface that as a clean 409
-// the UI can turn into "ask an admin to connect it", not a 500.
+// No calendar to work with yet (or one that needs reconnecting) — a clean 409 the UI
+// turns into a "connect your account" prompt, not a 500.
 function handleError(error: any, res: Response, fallback: string) {
   if (error instanceof CalendarNotConnectedError) {
     res.status(409).json({ code: "CALENDAR_NOT_CONNECTED", message: error.message });
+    return;
+  }
+  if (error instanceof CalendarReconnectError) {
+    res.status(409).json({ code: "CALENDAR_RECONNECT", provider: error.provider, message: error.message });
     return;
   }
   console.error(`${fallback}:`, error.response?.data?.error?.message || error.message);
@@ -55,16 +54,17 @@ function str(v: unknown, max = 2000): string | null {
 }
 
 // GET /meetings/status — lets the Meetings tab show a "not connected yet" state.
-router.get("/status", authenticate, authorize("meetings:read"), async (_req: AuthRequest, res: Response) => {
+router.get("/status", authenticate, authorize("meetings:read"), async (req: AuthRequest, res: Response) => {
   try {
-    const status = await getConnectionStatus();
-    res.json({ connected: status.connected, connectedEmail: status.connectedEmail });
+    const cal = await calendarFor(req.user!.userId);
+    const connected = cal.source !== "workspace" || (await getConnectionStatus()).connected;
+    res.json({ connected, connectedEmail: cal.email, source: cal.source });
   } catch (error: any) {
     handleError(error, res, "Failed to read calendar status");
   }
 });
 
-// GET /meetings?from=ISO&to=ISO — events on the shared calendar for a window.
+// GET /meetings?from=ISO&to=ISO — events on this person's calendar for a window.
 router.get("/", authenticate, authorize("meetings:read"), async (req: AuthRequest, res: Response) => {
   try {
     const from = parseDate(req.query.from);
@@ -77,7 +77,7 @@ router.get("/", authenticate, authorize("meetings:read"), async (req: AuthReques
       res.status(400).json({ message: "`to` must be after `from`" });
       return;
     }
-    res.json(await listEvents(from, to));
+    res.json(await (await calendarFor(req.user!.userId)).list(from, to));
   } catch (error: any) {
     handleError(error, res, "Failed to fetch meetings");
   }
@@ -109,7 +109,8 @@ router.post("/", authenticate, authorize("meetings:write"), async (req: AuthRequ
           .filter((a): a is string => Boolean(a && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a)))
       : [];
 
-    const event = await createEvent({
+    const cal = await calendarFor(req.user!.userId);
+    const event = await cal.create({
       summary,
       description: str(req.body?.description, 5000),
       location: str(req.body?.location, 500),
@@ -119,7 +120,7 @@ router.post("/", authenticate, authorize("meetings:write"), async (req: AuthRequ
       addMeet: Boolean(req.body?.addMeet),
     });
 
-    const invited = await notifyAttendees(event, "request", req);
+    const invited = await notifyAttendees(cal, event, "request", req);
 
     // Surface the booking on any attendee who is a lead. Fire-and-forget —
     // the meeting is already created and must not fail on CRM bookkeeping.
@@ -129,7 +130,7 @@ router.post("/", authenticate, authorize("meetings:write"), async (req: AuthRequ
       startTime,
       endTime,
       description: str(req.body?.description, 5000),
-      meetingLink: (event as any).hangoutLink || null,
+      meetingLink: event.meetLink,
       eventId: (event as any).id || null,
       userId: req.user!.userId,
     });
@@ -155,7 +156,7 @@ router.patch("/:id", authenticate, authorize("meetings:write"), async (req: Auth
       return;
     }
 
-    const patch: Parameters<typeof updateEvent>[1] = {};
+    const patch: Partial<EventInput> = {};
     if (req.body?.summary !== undefined) {
       const summary = str(req.body.summary, 300);
       if (!summary) {
@@ -179,10 +180,11 @@ router.patch("/:id", authenticate, authorize("meetings:write"), async (req: Auth
       return;
     }
 
-    const event = await updateEvent(req.params.id, patch);
+    const cal = await calendarFor(req.user!.userId);
+    const event = await cal.update(req.params.id, patch);
     // Same UID with a bumped SEQUENCE, so clients update the existing entry in place
     // rather than showing a second copy of the meeting.
-    const invited = await notifyAttendees(event, "request", req);
+    const invited = await notifyAttendees(cal, event, "request", req);
     res.json({ ...event, inviteSent: invited });
   } catch (error: any) {
     if (error.code === 404 || error.response?.status === 404) {
@@ -198,9 +200,10 @@ router.delete("/:id", authenticate, authorize("meetings:write"), async (req: Aut
   try {
     // Read it first — once it's deleted we can't recover the attendee list or the iCalUID
     // that the CANCEL notice has to reference.
+    const cal = await calendarFor(req.user!.userId);
     let existing: MeetingEvent | null = null;
     try {
-      existing = await getEvent(req.params.id);
+      existing = await cal.get(req.params.id);
     } catch (err: any) {
       if (!(err instanceof CalendarNotConnectedError)) {
         console.warn(`Couldn't read event ${req.params.id} before delete:`, err.message);
@@ -209,9 +212,9 @@ router.delete("/:id", authenticate, authorize("meetings:write"), async (req: Aut
       }
     }
 
-    await deleteEvent(req.params.id);
+    await cal.remove(req.params.id);
 
-    const invited = existing ? await notifyAttendees(existing, "cancel", req) : false;
+    const invited = existing ? await notifyAttendees(cal, existing, "cancel", req) : false;
     res.json({ ok: true, inviteSent: invited });
     return;
   } catch (error: any) {

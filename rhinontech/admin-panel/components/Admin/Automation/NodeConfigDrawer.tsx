@@ -14,15 +14,18 @@ interface NodeConfigDrawerProps {
   onDelete: (nodeId: string) => void;
 }
 
-// The shared/support inbox — always available as a "From" choice alongside
-// whichever user is currently logged in.
-const SHARED_SENDER = "info@rhinontech.in";
+/** An address this person may send from: their own, or a shared one assigned to them. */
+interface SenderOption {
+  address: string;
+  name: string | null;
+  shared: boolean;
+}
 
 export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfigDrawerProps) {
-  const [currentUserEmail, setCurrentUserEmail] = useState<string>("");
+  const [senders, setSenders] = useState<SenderOption[]>([]);
   const [config, setConfig] = useState<NodeConfig>({
     fromEmail: "",
-    fromName: "Rhinon Tech",
+    fromName: "", // empty: the workspace's own name
     subject: "",
     emailBody: "",
     delayHours: 6,
@@ -32,39 +35,35 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
   const [label, setLabel] = useState("");
   const [isSaved, setIsSaved] = useState(false);
 
+  // Same list the Inbox composer offers: the user's own address first, then any
+  // shared addresses (hello@, support@) assigned to them in Team → Email addresses.
   useEffect(() => {
-    apiFetch<{ companyEmail?: string; email?: string }>("/auth/me")
-      .then((user) => {
-        const mail = user.companyEmail || user.email || "";
-        if (mail) setCurrentUserEmail(mail);
-      })
-      .catch(() => { });
+    apiFetch<SenderOption[]>("/inbox/addresses").then(setSenders).catch(() => setSenders([]));
   }, []);
+  const ownAddress = senders.find((s) => !s.shared)?.address ?? senders[0]?.address ?? "";
 
   useEffect(() => {
     if (node) {
       const initialConfig = node.data.config || {
-        fromEmail: currentUserEmail || SHARED_SENDER,
-        fromName: "Rhinon Tech",
+        fromEmail: ownAddress,
+        fromName: "", // empty: the workspace's own name
         subject: "",
         emailBody: "",
         delayHours: 6,
         delayDays: 1,
         conditionType: "email_opened",
       };
-      // "From email" only ever offers two choices — the shared inbox or the
-      // logged-in user's own address — so clamp anything else (an unset
-      // placeholder, or a value left behind by a different user) back to a
-      // valid default instead of silently sending from a stale address.
-      const validSenders = [SHARED_SENDER, currentUserEmail].filter(Boolean);
-      if (currentUserEmail && !validSenders.includes(initialConfig.fromEmail || "")) {
-        initialConfig.fromEmail = SHARED_SENDER;
+      // Only addresses this user may send from are offered, so clamp anything else
+      // (an unset placeholder, or a value left behind by a different user) back to
+      // their own address instead of silently sending from a stale one.
+      if (senders.length && !senders.some((s) => s.address === initialConfig.fromEmail)) {
+        initialConfig.fromEmail = ownAddress;
       }
       setConfig(initialConfig);
       setLabel(node.data.label || "");
       setIsSaved(false);
     }
-  }, [node, currentUserEmail]);
+  }, [node, senders, ownAddress]);
 
   if (!node) return null;
 
@@ -128,16 +127,17 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
             <div>
               <label className="block text-xs font-semibold text-foreground/85 mb-1">From email</label>
               <NativeSelect
-                value={config.fromEmail || SHARED_SENDER}
+                value={config.fromEmail || ownAddress}
                 onChange={(e) => setConfig({ ...config, fromEmail: e.target.value })}
                 className="w-full rounded-lg border border-border px-3 py-2 text-sm bg-card font-medium text-foreground focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
               >
-                <option value={SHARED_SENDER}>{SHARED_SENDER} (shared)</option>
-                {currentUserEmail && currentUserEmail !== SHARED_SENDER && (
-                  <option value={currentUserEmail}>{currentUserEmail} (you)</option>
-                )}
+                {senders.map((s) => (
+                  <option key={s.address} value={s.address}>
+                    {s.address} {s.shared ? "(shared)" : "(you)"}
+                  </option>
+                ))}
               </NativeSelect>
-              <p className="text-[11px] text-muted-foreground mt-1">Send as the shared inbox, or your own address.</p>
+              <p className="text-[11px] text-muted-foreground mt-1">Your own address, or a shared one assigned to you in Team → Email addresses.</p>
             </div>
 
             <div>
