@@ -116,12 +116,33 @@ $ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   width: 240px !important;
 }
 
+// "Powered by" and the logo share one centre line: the logo is a block sized
+// by height (an inline image sits on the text baseline and rides high).
 .footer {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  // Centred in the strip between the menu and the window's bottom edge.
+  height: 32px;
+  box-sizing: border-box;
   background: var(--bg-primary) !important;
   margin: 0 !important;
-  padding: 0 0 8px;
+  padding: 0 !important;
   color: var(--text-tertiary) !important;
   opacity: 0.85;
+
+  p {
+    margin: 0 !important;
+    font-size: 11px !important;
+    line-height: 1 !important;
+  }
+
+  img {
+    display: block;
+    height: 12px;
+    width: auto !important;
+  }
 }
 
 /* ── Home ──────────────────────────────────────────────────────────── */
