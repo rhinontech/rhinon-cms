@@ -497,7 +497,9 @@ export function CampaignInboxTab({
                       {new Date(e.sentAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
                     </span>
                   </div>
-                  <div className={e.folder === "sent" ? "[&_p]:text-white [&_a]:text-blue-100" : ""}>
+                  {/* The body renders in its own frame: plain mail takes this bubble's
+                      text colour, and links read the --email-link variable. */}
+                  <div className={e.folder === "sent" ? "[--email-link:#dbeafe]" : ""}>
                     <EmailBodyView body={e.body} />
                   </div>
                 </div>

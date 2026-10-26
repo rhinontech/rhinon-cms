@@ -96,7 +96,10 @@ export function parseEmailBody(html: string): ParsedEmailBody {
 
         const cleanedHtml = body.innerHTML.trim();
         if (cleanedHtml && cleanedHtml !== raw) {
-          return { cleaned: cleanedHtml, raw, hasQuoted: true };
+          // body.innerHTML leaves out <head>, and with it the sender's stylesheet
+          // (Outlook's MsoNormal margins live there). Carry the styles over.
+          const headStyles = Array.from(doc.head.querySelectorAll("style")).map((s) => s.outerHTML).join("");
+          return { cleaned: headStyles + cleanedHtml, raw, hasQuoted: true };
         }
       }
     } catch {

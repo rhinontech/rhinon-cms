@@ -260,13 +260,13 @@ export function SettingsRoles() {
                 setNewRoleName(e.target.value);
                 setNewRoleSlug(e.target.value.toLowerCase().replace(/\s+/g, "-"));
               }}
-              className="w-full text-xs border border-border rounded-md px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card"
+              className="w-full text-xs border border-border rounded-md px-2.5 py-1.5 focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60 bg-card"
             />
             <input
               placeholder="slug (e.g. hr-manager)"
               value={newRoleSlug}
               onChange={(e) => setNewRoleSlug(e.target.value)}
-              className="w-full text-xs border border-border rounded-md px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card"
+              className="w-full text-xs border border-border rounded-md px-2.5 py-1.5 focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60 bg-card"
             />
             <div className="flex gap-2">
               <button

@@ -26,7 +26,7 @@ function PasswordField({ label, value, onChange, show, onToggle, hint }: {
           type={show ? "text" : "password"}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full px-3 py-2 pr-10 text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 pr-10 text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
         />
         <button
           type="button"

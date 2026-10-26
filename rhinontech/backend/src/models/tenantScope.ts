@@ -85,6 +85,7 @@ import { UsageCounter } from "./UsageCounter";
 import { AuditLog } from "./AuditLog";
 import { DocsAccess } from "./DocsAccess";
 import { StartupIdea } from "./StartupIdea";
+import { LeadFinderTarget } from "./LeadFinderTarget";
 import { BlogTopic } from "./BlogTopic";
 import { Deployment } from "./Deployment";
 import { PageView } from "./PageView";
@@ -118,7 +119,7 @@ export const TENANT_MODELS: ModelStatic<any>[] = [
   Workflow, WorkflowEnrollment,
   Account, PipelineStage, Deal, Activity, SavedView,
   Unsubscribe, UsageCounter, AuditLog, DocsAccess,
-  StartupIdea, Deployment, BlogTopic,
+  StartupIdea, Deployment, BlogTopic, LeadFinderTarget,
   PageView, Visitor,
   Chatbot, ChatbotSource, ChatConversation, ChatMessage, ChatbotCampaign,
   ChatbotTicket, ChatbotTicketMessage, HelpFolder, HelpArticle, ConnectedAccount,

@@ -113,7 +113,7 @@ export function WorkspaceToolbar({
           value={filters.search}
           onChange={(e) => setFilters({ ...filters, search: e.target.value })}
           placeholder="Search tasks…"
-          className="w-52 rounded-lg border border-border py-1.5 pl-8 pr-2 text-xs outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-52 rounded-lg border border-border py-1.5 pl-8 pr-2 text-xs outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
         />
       </div>
 

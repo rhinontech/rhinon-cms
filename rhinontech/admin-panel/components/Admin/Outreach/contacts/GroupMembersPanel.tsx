@@ -235,7 +235,7 @@ export function GroupMembersPanel({
                 onChange={(e) => setNameDraft(e.target.value)}
                 onBlur={handleRename}
                 onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
-                className="w-full max-w-[200px] rounded-lg border border-border px-2 py-1 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full max-w-[200px] rounded-lg border border-border px-2 py-1 text-sm font-semibold outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
               />
             ) : (
               <h1
@@ -288,7 +288,7 @@ export function GroupMembersPanel({
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Search contacts..."
-              className="w-full rounded-lg border border-border py-1.5 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-card"
+              className="w-full rounded-lg border border-border py-1.5 pl-9 pr-3 text-sm outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60 bg-card"
             />
           </div>
           <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">

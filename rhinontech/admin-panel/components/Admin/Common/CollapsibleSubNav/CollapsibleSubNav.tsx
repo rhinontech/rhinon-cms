@@ -56,18 +56,18 @@ export function CollapsibleSubNav({ title, items }: CollapsibleSubNavProps) {
     <aside
       className={`flex-col glass-sidenav transition-all duration-200 ease-in-out overflow-hidden
         ${showNav
-          ? "fixed inset-y-0 left-0 z-50 flex w-64 max-lg:bg-card! shadow-xl lg:static lg:z-auto lg:h-full lg:w-[15%] lg:min-w-[180px] lg:rounded-l-xl lg:glass-sidenav lg:shadow-none lg:border-r lg:border-border"
+          ? "fixed inset-y-0 left-0 z-50 flex w-64 max-lg:bg-card! shadow-xl lg:static lg:z-auto lg:h-full lg:w-[15%] lg:min-w-[212px] lg:rounded-l-xl lg:glass-sidenav lg:shadow-none lg:border-r lg:border-border"
           : "hidden lg:flex lg:h-full lg:w-0"}`}
     >
       {showNav && (
         <div className="flex flex-col w-full flex-1">
-          <div className="flex items-center justify-between w-full h-16 px-5 py-4 text-xl font-semibold tracking-tight border-b border-border">
-            {title}
+          <div className="flex h-16 w-full shrink-0 items-center justify-between border-b border-border px-5">
+            <span className="truncate text-[15px] font-semibold tracking-tight">{title}</span>
             <button onClick={toggleSideNav} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted lg:hidden" aria-label="Close menu">
               <TbX size={18} />
             </button>
           </div>
-          <div className="flex flex-col px-3 py-3 space-y-0.5">
+          <div className="flex flex-col space-y-0.5 px-2.5 py-3">
             {items.map((item, index) => (
               <SidebarItem
                 key={index}

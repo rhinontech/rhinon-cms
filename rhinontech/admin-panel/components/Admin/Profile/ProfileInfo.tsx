@@ -54,7 +54,7 @@ function InputField({ label, name, value, onChange, type = "text", disabled = fa
       <input
         type={type} name={name} value={value}
         onChange={(e) => onChange(e.target.value)} disabled={disabled}
-        className="px-3 py-2 text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-muted/40 disabled:text-muted-foreground disabled:cursor-not-allowed"
+        className="px-3 py-2 text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60 disabled:bg-muted/40 disabled:text-muted-foreground disabled:cursor-not-allowed"
       />
       {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
     </div>
@@ -222,7 +222,7 @@ export function ProfileInfo() {
                         <NativeSelect
                           value={(form[key] as string) ?? opts[key][0]}
                           onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
-                          className="px-3 py-2 text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="px-3 py-2 text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                         >
                           {opts[key].map((v) => <option key={v}>{v}</option>)}
                         </NativeSelect>

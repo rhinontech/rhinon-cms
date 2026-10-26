@@ -111,5 +111,5 @@ export async function openResume(candidateId: string) {
   return r.ok;
 }
 
-export const inputCls = "w-full px-3 py-2 text-sm bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500";
+export const inputCls = "w-full px-3 py-2 text-sm bg-card border border-border rounded-lg focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60";
 export const labelCls = "flex flex-col gap-1 text-sm font-medium text-foreground/85";

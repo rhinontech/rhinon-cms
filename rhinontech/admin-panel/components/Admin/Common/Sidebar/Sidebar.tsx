@@ -3,13 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { MdDashboard } from "react-icons/md";
-import { FaUserGroup } from "react-icons/fa6";
-import { RiSettings3Fill } from "react-icons/ri";
-import { HiInbox } from "react-icons/hi2";
-import { TbBriefcase, TbCash, TbSpeakerphone, TbNews, TbBook, TbTargetArrow, TbChartArcs, TbHierarchy, TbCalendarEvent, TbBulb, TbBuildingCommunity, TbMessageChatbot } from "react-icons/tb";
-import { BsPinAngleFill, BsPinAngle } from "react-icons/bs";
+import type { IconType } from "react-icons";
+import { TbPin, TbPinFilled } from "react-icons/tb";
 import { cn } from "@/lib/utils";
+import { MODULES } from "@/components/Admin/Common/navConfig";
 import { useDashboard } from "../../../Common/DashboardProvider/DashboardProvider";
 import { usePermissions } from "@/context/PermissionsContext";
 import { apiFetch } from "@/lib/api";
@@ -56,25 +53,33 @@ export function Sidebar() {
     };
   }, [canReadIdeas, pathname]);
 
+  const item = (key: string, permissions: string[], extra: { badge?: number; platformOnly?: boolean } = {}) => ({
+    title: MODULES[key].label,
+    icon: MODULES[key].icon,
+    href: `/${roleSlug}/${key}`,
+    permissions,
+    ...extra,
+  });
+
   const navItems = [
-    { title: "Dashboard",  icon: <MdDashboard size={20} className="h-5 w-5 flex-shrink-0" />,    href: `/${roleSlug}/dashboard`,  permissions: ["dashboard:read"] },
-    { title: "Inbox",      icon: <HiInbox size={20} className="h-5 w-5 flex-shrink-0" />,         href: `/${roleSlug}/inbox`,      permissions: ["inbox:read"] },
-    { title: "Pages",      icon: <TbBook size={20} className="h-5 w-5 flex-shrink-0" />,          href: `/${roleSlug}/pages`,      permissions: ["pages:read"] },
-    { title: "CRM",        icon: <TbTargetArrow size={20} className="h-5 w-5 flex-shrink-0" />,   href: `/${roleSlug}/crm`,        permissions: ["crm:read"] },
-    { title: "Outreach",   icon: <TbSpeakerphone size={20} className="h-5 w-5 flex-shrink-0" />,  href: `/${roleSlug}/outreach`,   permissions: ["outreach:read"] },
-    { title: "Chatbot",    icon: <TbMessageChatbot size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/chatbot`,    permissions: ["chatbot:read"] },
-    { title: "Automation", icon: <TbHierarchy size={20} className="h-5 w-5 flex-shrink-0" />,    href: `/${roleSlug}/automation`, permissions: ["outreach:read", "crm:read", "dashboard:read"] },
-    { title: "Work",       icon: <TbBriefcase size={20} className="h-5 w-5 flex-shrink-0" />,     href: `/${roleSlug}/work`,       permissions: ["work:read"] },
-    { title: "Team",       icon: <FaUserGroup size={20} className="h-5 w-5 flex-shrink-0" />,     href: `/${roleSlug}/employees`,  permissions: ["people:read", "attendance:read", "leave:read", "performance:read", "documents:read"] },
-    { title: "Payroll",    icon: <TbCash size={20} className="h-5 w-5 flex-shrink-0" />,          href: `/${roleSlug}/payroll`,    permissions: ["payslips:read"] },
-    { title: "Content",    icon: <TbNews size={20} className="h-5 w-5 flex-shrink-0" />,          href: `/${roleSlug}/content`,    permissions: ["content:read"] },
-    { title: "Startup Ideas", icon: <TbBulb size={20} className="h-5 w-5 flex-shrink-0" />,       href: `/${roleSlug}/startup-ideas`, permissions: ["startupIdeas:read"], badge: unreadIdeas },
-    { title: "Meetings",   icon: <TbCalendarEvent size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/meetings`,   permissions: ["meetings:read"] },
-    { title: "Analytics",  icon: <TbChartArcs size={20} className="h-5 w-5 flex-shrink-0" />,     href: `/${roleSlug}/analytics`,  permissions: ["analytics:read"] },
+    item("dashboard", ["dashboard:read"]),
+    item("inbox", ["inbox:read"]),
+    item("pages", ["pages:read"]),
+    item("crm", ["crm:read"]),
+    item("outreach", ["outreach:read"]),
+    item("chatbot", ["chatbot:read"]),
+    item("automation", ["outreach:read", "crm:read", "dashboard:read"]),
+    item("work", ["work:read"]),
+    item("employees", ["people:read", "attendance:read", "leave:read", "performance:read", "documents:read"]),
+    item("payroll", ["payslips:read"]),
+    item("content", ["content:read"]),
+    item("startup-ideas", ["startupIdeas:read"], { badge: unreadIdeas }),
+    item("meetings", ["meetings:read"]),
+    item("analytics", ["analytics:read"]),
     // The platform team's own module: every customer workspace. Not a permission —
     // a tenant's owner is a superadmin too — so it keys on being the platform's owner.
-    { title: "Workspaces", icon: <TbBuildingCommunity size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/platform`, permissions: [] as string[], platformOnly: true },
-    { title: "Settings",   icon: <RiSettings3Fill size={20} className="h-5 w-5 flex-shrink-0" />, href: `/${roleSlug}/settings`,   permissions: ["settings:read", "docsAccess:read", "provisioning:read"] },
+    item("platform", [], { platformOnly: true }),
+    item("settings", ["settings:read", "docsAccess:read", "provisioning:read"]),
   ]
     .filter((item) => ("platformOnly" in item && item.platformOnly ? isPlatformOwner : has(...item.permissions)))
     // Link straight into the active brand for the modules that are split by
@@ -86,7 +91,7 @@ export function Sidebar() {
       return scoped && brandSlug ? { ...item, href: `${item.href}/${brandSlug}` } : item;
     }) as Array<{
     title: string;
-    icon: React.ReactNode;
+    icon: IconType;
     href: string;
     permissions: string[];
     badge?: number;
@@ -111,17 +116,21 @@ export function Sidebar() {
     >
       {/* Brand switcher — takes the logo's place, because which brand you are in
           decides what every brand-split module below is showing. */}
-      <div className="flex h-14 items-center justify-center border-border w-full">
+      <div className="flex h-14 w-full shrink-0 items-center justify-center">
         {expanded ? (
-          <div className="flex items-center gap-1 w-full px-2">
+          <div className="flex w-full items-center gap-1 px-2">
             <div className="min-w-0 flex-1">
               <BrandSwitcher expanded />
             </div>
             <button
               onClick={() => setSidebarExpanded(!sidebarExpanded)}
-              className="p-1 rounded bg-card/50 hover:bg-card/70 transition-all shrink-0"
+              title={sidebarExpanded ? "Unpin sidebar" : "Pin sidebar open"}
+              className={cn(
+                "hidden shrink-0 rounded-md p-1.5 transition-colors lg:block",
+                sidebarExpanded ? "text-foreground/80 hover:bg-foreground/[0.06]" : "text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground"
+              )}
             >
-              {sidebarExpanded ? <BsPinAngleFill size={14} /> : <BsPinAngle size={14} />}
+              {sidebarExpanded ? <TbPinFilled size={14} /> : <TbPin size={14} />}
             </button>
           </div>
         ) : (
@@ -130,34 +139,40 @@ export function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex flex-1 flex-col py-4">
-        <div className="space-y-1 px-2">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "group flex items-center justify-center gap-x-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                pathname.startsWith(item.href)
-                  ? "bg-card/70 text-foreground"
-                  : "text-foreground/85 hover:bg-card/40 hover:text-foreground"
-              )}
-            >
-              <span className="relative flex-shrink-0">
-                {item.icon}
-                {/* Collapsed rail has no room for a count — a dot still signals "something new". */}
-                {!expanded && !!item.badge && (
-                  <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-primary ring-2 ring-background" />
+      <nav className="flex min-h-0 flex-1 flex-col overflow-y-auto py-3">
+        <div className="space-y-0.5 px-2">
+          {navItems.map((item) => {
+            const active = pathname.startsWith(item.href);
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                title={expanded ? undefined : item.title}
+                className={cn(
+                  "group relative flex h-9 items-center gap-3 rounded-lg px-2.5 text-[13px] font-medium transition-[background-color,color,box-shadow] duration-150",
+                  expanded ? "justify-start" : "justify-center",
+                  active
+                    ? "bg-card text-foreground shadow-xs ring-1 ring-foreground/[0.06] dark:bg-white/[0.08] dark:shadow-none dark:ring-white/[0.06]"
+                    : "text-foreground/65 hover:bg-card/60 hover:text-foreground dark:hover:bg-white/[0.05]"
                 )}
-              </span>
-              {expanded && <span className="flex-1 truncate">{item.title}</span>}
-              {expanded && !!item.badge && (
-                <span className="ml-auto rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold leading-none text-primary-foreground">
-                  {item.badge > 99 ? "99+" : item.badge}
+              >
+                <span className="relative shrink-0">
+                  <Icon size={19} strokeWidth={1.8} className={cn("transition-colors", active ? "text-brand" : "text-current")} />
+                  {/* Collapsed rail has no room for a count — a dot still signals "something new". */}
+                  {!expanded && !!item.badge && (
+                    <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-brand ring-2 ring-background" />
+                  )}
                 </span>
-              )}
-            </Link>
-          ))}
+                {expanded && <span className="flex-1 truncate">{item.title}</span>}
+                {expanded && !!item.badge && (
+                  <span className="ml-auto rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold leading-none tabular-nums text-brand-foreground">
+                    {item.badge > 99 ? "99+" : item.badge}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
         </div>
       </nav>
     </aside>

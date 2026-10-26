@@ -283,7 +283,7 @@ export function ReviewsPage() {
                     </div>
                   ) : (
                     <textarea
-                      className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                      className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60 resize-none"
                       rows={4}
                       value={selected.type === "self" ? form.selfFeedback : form.managerFeedback}
                       onChange={(e) =>
@@ -303,7 +303,7 @@ export function ReviewsPage() {
                     </div>
                   ) : (
                     <textarea
-                      className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                      className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60 resize-none"
                       rows={3}
                       value={form.strengths}
                       onChange={(e) => setForm((f) => ({ ...f, strengths: e.target.value }))}
@@ -321,7 +321,7 @@ export function ReviewsPage() {
                     </div>
                   ) : (
                     <textarea
-                      className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                      className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60 resize-none"
                       rows={3}
                       value={form.improvements}
                       onChange={(e) => setForm((f) => ({ ...f, improvements: e.target.value }))}

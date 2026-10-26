@@ -149,7 +149,7 @@ export function DealsBoard() {
           <NativeSelect
             value={ownerFilter}
             onChange={(e) => setOwnerFilter(e.target.value)}
-            className="rounded-md border border-border bg-card/70 px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="rounded-md border border-border bg-card/70 px-2 py-1.5 text-xs outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
           >
             <option value="All">All owners</option>
             {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}
@@ -553,7 +553,7 @@ function NewDealDialog({
 }
 
 const INPUT =
-  "w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40";
+  "w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (

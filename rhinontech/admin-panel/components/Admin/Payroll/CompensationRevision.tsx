@@ -57,7 +57,7 @@ const todayLocal = () => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
 
-const inputCls = "w-full px-3 py-2 text-sm bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500";
+const inputCls = "w-full px-3 py-2 text-sm bg-card border border-border rounded-lg focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60";
 const labelCls = "flex flex-col gap-1 text-sm font-medium text-foreground/85";
 
 export function RevisionForm({ employee, onDone, onCancel }: { employee: RevisableEmployee; onDone: () => void; onCancel: () => void }) {

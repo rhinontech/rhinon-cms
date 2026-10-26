@@ -80,7 +80,8 @@ function assertPublicHost(hostname: string) {
   }
 }
 
-async function fetchText(raw: string): Promise<{ body: string; contentType: string; finalUrl: string }> {
+/** Raw page fetch with the SSRF guards (public hosts only, checked on every redirect). */
+export async function fetchText(raw: string): Promise<{ body: string; contentType: string; finalUrl: string }> {
   const url = assertHttpUrl(raw);
   const res = await axios.get<string>(url.toString(), {
     httpAgent,

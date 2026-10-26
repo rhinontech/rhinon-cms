@@ -266,7 +266,7 @@ export function GoalsPage() {
               <div className="space-y-1">
                 <label className="text-xs text-muted-foreground">Title *</label>
                 <input
-                  className="w-full rounded-lg border border-border px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                   value={form.title}
                   onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                   placeholder="Goal title"
@@ -276,7 +276,7 @@ export function GoalsPage() {
               <div className="space-y-1">
                 <label className="text-xs text-muted-foreground">Description</label>
                 <textarea
-                  className="w-full rounded-lg border border-border px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60 resize-none"
                   rows={3}
                   value={form.description}
                   onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
@@ -289,7 +289,7 @@ export function GoalsPage() {
                   <div className="space-y-1">
                     <label className="text-xs text-muted-foreground">Status</label>
                     <NativeSelect
-                      className="w-full rounded-lg border border-border px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-lg border border-border px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                       value={form.status}
                       onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as ReviewGoal["status"] }))}
                     >
@@ -319,7 +319,7 @@ export function GoalsPage() {
                 <label className="text-xs text-muted-foreground">Target Date</label>
                 <input
                   type="date"
-                  className="w-full rounded-lg border border-border px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                   value={form.targetDate}
                   onChange={(e) => setForm((f) => ({ ...f, targetDate: e.target.value }))}
                 />
@@ -329,7 +329,7 @@ export function GoalsPage() {
                 <div className="space-y-1">
                   <label className="text-xs text-muted-foreground">Review Cycle</label>
                   <NativeSelect
-                    className="w-full rounded-lg border border-border px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-lg border border-border px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                     value={form.cycleId}
                     onChange={(e) => setForm((f) => ({ ...f, cycleId: e.target.value }))}
                   >

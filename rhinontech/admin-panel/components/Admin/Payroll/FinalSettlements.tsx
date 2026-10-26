@@ -299,7 +299,7 @@ export function FinalSettlements() {
                             step="0.01"
                             value={form[f.key]}
                             onChange={(e) => setAmount(f.key, e.target.value)}
-                            className="w-32 rounded-lg border border-border px-2.5 py-1.5 text-right text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-32 rounded-lg border border-border px-2.5 py-1.5 text-right text-sm focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                           />
                         </label>
                       ))}
@@ -311,7 +311,7 @@ export function FinalSettlements() {
                           value={encashDays}
                           onChange={(e) => applyEncashDays(e.target.value)}
                           placeholder="0"
-                          className="w-14 rounded-lg border border-border px-2 py-1 text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-14 rounded-lg border border-border px-2 py-1 text-right focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                         />
                         <span>days × {INR(preview.perDayBasic)}/day (basic ÷ 30)</span>
                       </div>
@@ -328,7 +328,7 @@ export function FinalSettlements() {
                             step="0.01"
                             value={form[f.key]}
                             onChange={(e) => setAmount(f.key, e.target.value)}
-                            className="w-32 rounded-lg border border-border px-2.5 py-1.5 text-right text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-32 rounded-lg border border-border px-2.5 py-1.5 text-right text-sm focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                           />
                         </label>
                       ))}

@@ -301,7 +301,7 @@ export function WorkChangesPage() {
               <NativeSelect
                 value={projectFilter}
                 onChange={(event) => setProjectFilter(event.target.value)}
-                className="w-[220px] rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-[220px] rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
               >
                 <option value="all">All projects</option>
                 {projects.map((project) => (
@@ -326,7 +326,7 @@ export function WorkChangesPage() {
             <NativeSelect
               value={typeFilter}
               onChange={(event) => setTypeFilter(event.target.value as RequestType | "All")}
-              className="w-[180px] rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-[180px] rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
             >
               <option>All</option>
               <option>Bug</option>
@@ -335,7 +335,7 @@ export function WorkChangesPage() {
             <NativeSelect
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value as RequestStatus | "All")}
-              className="w-[180px] rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-[180px] rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
             >
               <option>All</option>
               <option>Open</option>
@@ -525,7 +525,7 @@ export function WorkChangesPage() {
                   <textarea
                     value={form.description}
                     onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
-                    className="min-h-32 rounded-lg border border-border px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
+                    className="min-h-32 rounded-lg border border-border px-3 py-2 font-normal outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                   />
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -534,7 +534,7 @@ export function WorkChangesPage() {
                     <NativeSelect
                       value={form.projectId}
                       onChange={(event) => setForm((current) => ({ ...current, projectId: event.target.value }))}
-                      className="rounded-lg border border-border bg-card px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
+                      className="rounded-lg border border-border bg-card px-3 py-2 font-normal outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                     >
                       <option value="">Not linked</option>
                       {projects.map((project) => (
@@ -549,7 +549,7 @@ export function WorkChangesPage() {
                     <NativeSelect
                       value={form.reportedBy}
                       onChange={(event) => setForm((current) => ({ ...current, reportedBy: event.target.value }))}
-                      className="rounded-lg border border-border bg-card px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
+                      className="rounded-lg border border-border bg-card px-3 py-2 font-normal outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                     >
                       <option value="">Select employee</option>
                       {employees.map((employee) => (
@@ -597,7 +597,7 @@ function FormInput({ label, value, onChange, required }: { label: string; value:
         value={value}
         onChange={(event) => onChange(event.target.value)}
         required={required}
-        className="rounded-lg border border-border px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
+        className="rounded-lg border border-border px-3 py-2 font-normal outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
       />
     </label>
   );
@@ -610,7 +610,7 @@ function SelectField({ label, value, onChange, options }: { label: string; value
       <NativeSelect
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="rounded-lg border border-border bg-card px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
+        className="rounded-lg border border-border bg-card px-3 py-2 font-normal outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
       >
         {options.map((option) => (
           <option key={option} value={option}>
@@ -642,7 +642,7 @@ function InlineBadgeSelect({
         onChange(event.target.value);
       }}
       className={cn(
-        "h-7 w-[108px] cursor-pointer appearance-none rounded-full border px-3 text-xs font-semibold outline-none transition-colors focus:ring-2 focus:ring-blue-500",
+        "h-7 w-[108px] cursor-pointer appearance-none rounded-full border px-3 text-xs font-semibold outline-none transition-colors focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60",
         className
       )}
       aria-label={`Change ${value}`}

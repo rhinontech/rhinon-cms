@@ -171,7 +171,7 @@ export function AdminPayrollRun() {
                 <NativeSelect
                   value={month}
                   onChange={(e) => setMonth(Number(e.target.value))}
-                  className="px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card"
+                  className="px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-border rounded-lg focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60 bg-card"
                 >
                   {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
                 </NativeSelect>
@@ -181,7 +181,7 @@ export function AdminPayrollRun() {
                 <NativeSelect
                   value={year}
                   onChange={(e) => setYear(Number(e.target.value))}
-                  className="px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card"
+                  className="px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-border rounded-lg focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60 bg-card"
                 >
                   {[now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1].map((y) => (
                     <option key={y} value={y}>{y}</option>

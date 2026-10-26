@@ -90,7 +90,7 @@ export function Avatar({ name, size = 20 }: { name: string | null | undefined; s
  * Lifecycle is the human funnel, so it gets real colour. Two terminal states
  * read differently on purpose: Customer wins, Unqualified recedes.
  */
-const LIFECYCLE_TINT: Record<LifecycleStage, string> = {
+export const LIFECYCLE_TINT: Record<LifecycleStage, string> = {
   New: "bg-muted text-foreground/70 ring-border",
   Contacted: "bg-blue-50 dark:bg-blue-400/10 text-blue-700 dark:text-blue-300 ring-blue-200",
   Engaged: "bg-violet-50 dark:bg-violet-400/10 text-violet-700 dark:text-violet-300 ring-violet-200",
@@ -118,12 +118,20 @@ export function LifecycleBadge({ stage, className }: { stage: LifecycleStage; cl
  * as quiet grey text so it never competes with lifecycle for attention.
  */
 export function OutreachStatus({ status }: { status: LeadStatus }) {
-  const muted = status === "Bounced" || status === "Unsubscribed";
+  const dot =
+    status === "Bounced" || status === "Unsubscribed" ? "bg-rose-500"
+      : status === "Replied" ? "bg-emerald-500"
+        : status === "New" ? "bg-muted-foreground/40"
+          : "bg-sky-500";
   return (
     <span
       title={`Outreach engine state: ${status}`}
-      className={cn("text-[11px] tabular-nums", muted ? "text-rose-400" : "text-muted-foreground")}
+      className={cn(
+        "inline-flex items-center gap-1.5 text-[12px] tabular-nums",
+        status === "Bounced" || status === "Unsubscribed" ? "text-rose-600 dark:text-rose-400" : "text-foreground/70"
+      )}
     >
+      <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", dot)} />
       {status}
     </span>
   );
@@ -143,10 +151,12 @@ export function StageDot({ color, type }: { color?: string | null; type?: StageT
    Dense table primitives
    ────────────────────────────────────────────────────────────── */
 
-export function TableShell({ children, className }: { children: React.ReactNode; className?: string }) {
+export function TableShell({ children, className, minWidth }: { children: React.ReactNode; className?: string; minWidth?: number }) {
   return (
     <div className={cn("overflow-x-auto rounded-lg glass-card", className)}>
-      <div className="min-w-full">{children}</div>
+      {/* A floor width: on narrow windows the table scrolls sideways instead of
+          crushing every column into ellipses. */}
+      <div className="min-w-full" style={minWidth ? { minWidth } : undefined}>{children}</div>
     </div>
   );
 }
@@ -155,7 +165,7 @@ export function HeaderRow({ cols, children }: { cols: string; children: React.Re
   return (
     <div
       style={{ gridTemplateColumns: cols }}
-      className="sticky top-0 z-10 grid items-center gap-3 border-b border-border/70 glass-thead px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
+      className="sticky top-0 z-10 grid items-center gap-3 border-b border-border/70 glass-thead px-4 py-2.5 text-[11px] font-medium text-muted-foreground"
     >
       {children}
     </div>
@@ -180,9 +190,9 @@ export function DataRow({
       className={cn(
         // 36px: dense enough to scan a few hundred rows, tall enough that the
         // two-line lead cell isn't touching its own row borders.
-        "grid min-h-9 items-center gap-3 border-b border-border px-3 text-[13px] transition-colors",
+        "group grid min-h-12 items-center gap-3 border-b border-border/70 px-4 py-1.5 text-[13px] transition-colors last:border-b-0",
         onClick && "cursor-pointer",
-        selected ? "bg-blue-50/70 dark:bg-blue-400/10" : "hover:bg-muted/40"
+        selected ? "bg-[var(--surface-selected)]" : "hover:bg-foreground/[0.025]"
       )}
     >
       {children}

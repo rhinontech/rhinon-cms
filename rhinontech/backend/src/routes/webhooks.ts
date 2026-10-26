@@ -9,6 +9,7 @@ import { env } from "../config/env";
 import { resolveInboundRecipient, InboundTarget } from "../services/inboundRouting";
 import { verifySnsMessage, isSnsUrl } from "../services/snsVerify";
 import { runForOrg } from "../services/tenantContext";
+import { emailPreview } from "../services/emailPreview";
 
 const router = Router();
 
@@ -118,7 +119,8 @@ router.post("/ses-inbound", async (req: Request, res: Response) => {
 
         const subject = parsed.subject || "(No Subject)";
         const htmlBody = parsed.html || parsed.textAsHtml || parsed.text || "";
-        const snippet = parsed.text ? parsed.text.substring(0, 160) : "";
+        // From the HTML when there is one: machine-made text parts can open with raw CSS.
+        const snippet = emailPreview(htmlBody, parsed.text);
 
         // The recipient decides the workspace. SES hands us every tenant's mail
         // through one catch-all, so each address is resolved to an organization

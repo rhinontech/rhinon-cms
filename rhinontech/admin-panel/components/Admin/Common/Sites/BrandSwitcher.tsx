@@ -67,9 +67,11 @@ function Glyph({ name, slug, size = "md" }: { name: string; slug: string; size?:
     return (
       <span className={cn("flex shrink-0 items-center justify-center rounded-lg bg-muted/50 p-1", box)}>
         {/* Both marks render and CSS picks one — swapping via useTheme() would
-            flash the wrong logo before hydration resolves. */}
-        <Image src={logo.light} alt="" aria-hidden className="h-full w-full object-contain dark:hidden" />
-        <Image src={logo.dark} alt="" aria-hidden className="hidden h-full w-full object-contain dark:block" />
+            flash the wrong logo before hydration resolves. Eager, because a lazy
+            image that starts out display:none was never fetched once the theme
+            revealed it: the dark mark stayed an empty tile. */}
+        <Image src={logo.light} alt="" aria-hidden loading="eager" className="h-full w-full object-contain dark:hidden" />
+        <Image src={logo.dark} alt="" aria-hidden loading="eager" className="hidden h-full w-full object-contain dark:block" />
       </span>
     );
   }

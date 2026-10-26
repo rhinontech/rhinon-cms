@@ -162,16 +162,33 @@ function avatar(name: string, idx: number, size = "h-9 w-9") {
 
 // ─── sub-components ───────────────────────────────────────────────────────────
 
-function StatCard({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: React.ReactNode; sub?: string }) {
+const STAT_TONES = {
+  sky: "bg-sky-50 text-sky-600 ring-sky-100 dark:bg-sky-400/10 dark:text-sky-300 dark:ring-sky-400/15",
+  emerald: "bg-emerald-50 text-emerald-600 ring-emerald-100 dark:bg-emerald-400/10 dark:text-emerald-300 dark:ring-emerald-400/15",
+  violet: "bg-violet-50 text-violet-600 ring-violet-100 dark:bg-violet-400/10 dark:text-violet-300 dark:ring-violet-400/15",
+  amber: "bg-amber-50 text-amber-600 ring-amber-100 dark:bg-amber-400/10 dark:text-amber-300 dark:ring-amber-400/15",
+  rose: "bg-rose-50 text-rose-600 ring-rose-100 dark:bg-rose-400/10 dark:text-rose-300 dark:ring-rose-400/15",
+} as const;
+
+// Sized to how many cards a role sees, so a fourth or fifth card never sits
+// alone on a row of its own.
+const STAT_COLUMNS: Record<number, string> = {
+  2: "lg:grid-cols-2",
+  3: "lg:grid-cols-3",
+  4: "lg:grid-cols-4",
+  5: "lg:grid-cols-3 xl:grid-cols-5",
+};
+
+function StatCard({ icon, label, value, sub, tone = "sky" }: { icon: React.ReactNode; label: string; value: React.ReactNode; sub?: string; tone?: keyof typeof STAT_TONES }) {
   return (
-    <div className="flex items-center gap-3.5 sm:gap-4 rounded-xl glass-card p-4 sm:p-5 min-w-0">
-      <div className="flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground/70">
+    <div className="flex items-start gap-3.5 sm:gap-4 rounded-xl glass-card p-4 sm:p-5 min-w-0">
+      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 ring-inset ${STAT_TONES[tone]}`}>
         {icon}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-xs text-muted-foreground truncate" title={label}>{label}</p>
-        <p className="mt-0.5 text-lg sm:text-xl font-bold text-foreground leading-none">{value}</p>
-        {sub && <p className="mt-1 text-xs text-muted-foreground truncate" title={sub}>{sub}</p>}
+        <p className="text-xs font-medium text-muted-foreground truncate" title={label}>{label}</p>
+        <p className="mt-1.5 text-xl sm:text-2xl font-semibold tracking-tight tabular-nums text-foreground leading-none">{value}</p>
+        {sub && <p className="mt-1.5 text-xs text-muted-foreground truncate" title={sub}>{sub}</p>}
       </div>
     </div>
   );
@@ -251,6 +268,7 @@ export default function DashboardPage() {
   const clocked = !!att?.clockIn;
   const clockedOut = !!att?.clockOut;
   const onBreak = !!att?.breaks?.length && !att.breaks[att.breaks.length - 1].end;
+  const statCount = (isSuperadmin ? 3 : 4) + (stats?.crm ? 1 : 0);
 
   return (
     <AdminDashboardShell>
@@ -261,7 +279,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-3">
             {greetingIcon()}
             <div>
-              <h1 className="text-xl font-bold text-foreground">
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground">
                 {stats ? greeting(stats.currentUser.fullName) : "Loading…"}
               </h1>
               <p className="text-sm text-muted-foreground">{todayLabel}</p>
@@ -269,12 +287,13 @@ export default function DashboardPage() {
           </div>
 
           {/* ── Stats strip ── */}
-          <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 ${isSuperadmin ? "lg:grid-cols-3" : "lg:grid-cols-4"}`}>
+          <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 ${STAT_COLUMNS[statCount] ?? "lg:grid-cols-4"}`}>
             <StatCard
               icon={<TbUsers size={20} />}
               label="Total employees"
               value={stats?.totalEmployees ?? "—"}
               sub={stats ? `${stats.newThisMonth} joined this month` : undefined}
+              tone="sky"
             />
             {isSuperadmin && (
               <StatCard
@@ -282,6 +301,7 @@ export default function DashboardPage() {
                 label="Total invested"
                 value={investment ? formatINR(investment.totalCompanyCostPaid) : "—"}
                 sub={investment ? `${investment.activeSalaryEmployeeCount} salaried employees` : "Payroll paid"}
+                tone="emerald"
               />
             )}
             {!isSuperadmin && (
@@ -290,6 +310,7 @@ export default function DashboardPage() {
                 label="Days present"
                 value={stats ? `${stats.daysPresent} days` : "—"}
                 sub={stats ? `${formatDuration(stats.totalMinutesThisMonth)} this month` : undefined}
+                tone="emerald"
               />
             )}
             {!isSuperadmin && (
@@ -298,6 +319,7 @@ export default function DashboardPage() {
                 label="My pending tasks"
                 value={stats?.pendingTasks ?? "—"}
                 sub={stats?.pendingTasks ? "Need attention" : "All caught up!"}
+                tone="amber"
               />
             )}
             <StatCard
@@ -305,6 +327,7 @@ export default function DashboardPage() {
               label="New hires this month"
               value={stats?.newThisMonth ?? "—"}
               sub="Joined recently"
+              tone="violet"
             />
             {/* Only rendered for people who can see the CRM — the API returns
                 null otherwise, so no permission check is needed here. */}
@@ -314,6 +337,7 @@ export default function DashboardPage() {
                 label="Open pipeline"
                 value={formatPipelineValue(stats.crm.openValue)}
                 sub={`${stats.crm.openCount} deals · ${formatPipelineValue(stats.crm.weightedValue)} weighted`}
+                tone="rose"
               />
             )}
           </div>

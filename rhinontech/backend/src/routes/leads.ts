@@ -1,7 +1,13 @@
 import { Router, Response } from "express";
 import { Lead, Campaign, CampaignActivity, ContactGroup, ContactGroupMember, Account, Deal, PipelineStage, Activity, User, Task, InboxEmail, WorkflowEnrollment } from "../models";
 import { findOrCreateAccountForLead } from "./accounts";
-import { authenticate, authorizeAny, AuthRequest } from "../middleware/authenticate";
+import { authenticate, authorizeAny, requirePlatformOrg, AuthRequest } from "../middleware/authenticate";
+import { rateLimit } from "../middleware/rateLimit";
+import { findLeads } from "../services/leadFinder";
+import { verifyFirstWorking } from "../services/emailVerifier";
+import { runQueueForOrg } from "../services/leadFinderQueue";
+import { LeadFinderTarget } from "../models";
+import { currentOrganizationId } from "../services/tenantContext";
 import { resolveSiteContext } from "../middleware/siteContext";
 import { enrichLeadWithAI } from "../services/gemini";
 import { fetchWebsiteText } from "../services/research";
@@ -169,6 +175,131 @@ router.post("/", writeAccess, async (req: AuthRequest, res: Response) => {
 });
 
 // POST /leads/import - bulk import leads (rows already mapped client-side from CSV)
+// POST /leads/finder — company name or website → people and likely emails
+// (services/leadFinder.ts). Finds only; the admin imports what they want via
+// /leads/import. Platform-only, like the rest of lead sourcing.
+router.post(
+  "/finder",
+  writeAccess,
+  requirePlatformOrg,
+  rateLimit({ name: "lead-finder", windowMs: 60 * 60_000, max: 60 }),
+  async (req: AuthRequest, res: Response) => {
+    const company = typeof req.body?.company === "string" ? req.body.company.trim().slice(0, 120) : "";
+    const website = typeof req.body?.website === "string" ? req.body.website.trim().slice(0, 300) : "";
+    if (!company && !website) {
+      res.status(400).json({ message: "Give a company name or its website." });
+      return;
+    }
+    try {
+      res.json(await findLeads({ company, website }));
+    } catch (err: any) {
+      res.status(422).json({ message: err?.message || "Couldn't search that company." });
+    }
+  }
+);
+
+// POST /leads/finder/verify — { emails: [main, ...alternatives] } → the first one
+// whose mailbox exists, checked without sending anything (services/emailVerifier.ts).
+router.post(
+  "/finder/verify",
+  writeAccess,
+  requirePlatformOrg,
+  rateLimit({ name: "lead-finder-verify", windowMs: 60 * 60_000, max: 200 }),
+  async (req: AuthRequest, res: Response) => {
+    const emails = Array.isArray(req.body?.emails)
+      ? (req.body.emails as unknown[]).filter((e): e is string => typeof e === "string" && isValidEmail(e.trim())).slice(0, 5)
+      : [];
+    if (!emails.length) {
+      res.status(400).json({ message: "Give at least one email to check." });
+      return;
+    }
+    res.json(await verifyFirstWorking(emails));
+  }
+);
+
+// ── Lead Finder queue: companies the daily cron works through ────────────
+
+const finderAccess = [writeAccess, requirePlatformOrg] as const;
+
+const domainOf = (input: string): string | null => {
+  try {
+    const host = new URL(/^https?:\/\//i.test(input) ? input : `https://${input}`).hostname.toLowerCase().replace(/^www\./, "");
+    return /^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(host) ? host : null;
+  } catch {
+    return null;
+  }
+};
+
+// GET /leads/finder/targets — the queue, newest first
+router.get("/finder/targets", ...finderAccess, async (_req: AuthRequest, res: Response) => {
+  const targets = await LeadFinderTarget.findAll({ order: [["createdAt", "DESC"]], limit: 500 });
+  res.json({ targets });
+});
+
+// POST /leads/finder/targets — { items: [{ company?, website? }] }, up to 500 at once.
+// Companies whose domain is already queued or done are skipped.
+router.post("/finder/targets", ...finderAccess, async (req: AuthRequest, res: Response) => {
+  const raw: unknown[] = Array.isArray(req.body?.items) ? req.body.items.slice(0, 500) : [];
+  const items = raw
+    .map((i: any) => {
+      const company = typeof i?.company === "string" ? i.company.trim().slice(0, 120) : "";
+      const website = typeof i?.website === "string" ? i.website.trim().slice(0, 300) : "";
+      const domain = website ? domainOf(website) : null;
+      return { company: company || null, website: domain ? `https://${domain}` : null, domain };
+    })
+    .filter((i) => i.company || i.domain);
+  if (!items.length) {
+    res.status(400).json({ message: "Add at least one company name or website." });
+    return;
+  }
+  const domains = items.map((i) => i.domain).filter((d): d is string => Boolean(d));
+  const existing = domains.length
+    ? await LeadFinderTarget.findAll({ where: { domain: { [Op.in]: domains } }, attributes: ["domain"] })
+    : [];
+  const seen = new Set(existing.map((e) => e.domain));
+  const fresh = items.filter((i) => {
+    if (!i.domain) return true;
+    if (seen.has(i.domain)) return false;
+    seen.add(i.domain);
+    return true;
+  });
+  await LeadFinderTarget.bulkCreate(fresh.map((i) => ({ ...i, createdById: req.user!.userId })));
+  res.status(201).json({ added: fresh.length, skipped: items.length - fresh.length });
+});
+
+// POST /leads/finder/targets/:id/retry — back into the queue
+router.post("/finder/targets/:id/retry", ...finderAccess, async (req: AuthRequest, res: Response) => {
+  const t = await LeadFinderTarget.findByPk(req.params.id);
+  if (!t) {
+    res.status(404).json({ message: "Not found" });
+    return;
+  }
+  await t.update({ status: "queued", error: null });
+  res.json(t);
+});
+
+// DELETE /leads/finder/targets/:id — removes it from the queue (leads already added stay)
+router.delete("/finder/targets/:id", ...finderAccess, async (req: AuthRequest, res: Response) => {
+  await LeadFinderTarget.destroy({ where: { id: req.params.id } });
+  res.json({ ok: true });
+});
+
+// POST /leads/finder/run — process the queue now instead of waiting for the morning run
+router.post(
+  "/finder/run",
+  ...finderAccess,
+  rateLimit({ name: "lead-finder-run", windowMs: 60 * 60_000, max: 6 }),
+  async (_req: AuthRequest, res: Response) => {
+    const orgId = currentOrganizationId();
+    if (!orgId) {
+      res.status(400).json({ message: "No workspace" });
+      return;
+    }
+    runQueueForOrg(orgId).catch((err) => console.error("[Lead Finder] Run failed:", err?.message));
+    res.status(202).json({ started: true });
+  }
+);
+
 router.post("/import", writeAccess, async (req: AuthRequest, res: Response) => {
   try {
     const incoming: any[] = Array.isArray(req.body?.leads) ? req.body.leads : [];

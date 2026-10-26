@@ -145,7 +145,7 @@ export function Timeline({
             : logType === "Email" ? "Summary of the email…"
             : "Add a note…"
           }
-          className="h-16 w-full resize-none rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40"
+          className="h-16 w-full resize-none rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
         />
         <div className="mt-1.5 flex items-center justify-between gap-2">
           {logType === "Call" ? (
@@ -155,7 +155,7 @@ export function Timeline({
               value={duration}
               onChange={(e) => setDuration(e.target.value)}
               placeholder="Duration (min)"
-              className="w-32 rounded border border-border bg-card px-2 py-1 text-[11px] tabular-nums outline-none focus:ring-2 focus:ring-blue-500/40"
+              className="w-32 rounded border border-border bg-card px-2 py-1 text-[11px] tabular-nums outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
             />
           ) : <span className="text-[10px] text-muted-foreground">⌘↵ to save</span>}
           <TBtn variant="solid" onClick={submit} disabled={saving || !body.trim()}>

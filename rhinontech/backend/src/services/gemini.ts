@@ -18,7 +18,7 @@ const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 const GEMINI_REST = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 
 // Generate text grounded in live Google Search. Falls back to the plain model on failure.
-async function generateGroundedContent(prompt: string): Promise<string> {
+export async function generateGroundedContent(prompt: string, opts: { fallback?: boolean } = {}): Promise<string> {
   try {
     const res = await axios.post(
       `${GEMINI_REST}?key=${env.geminiApiKey}`,
@@ -31,6 +31,8 @@ async function generateGroundedContent(prompt: string): Promise<string> {
   } catch {
     /* fall through to non-grounded */
   }
+  // Callers that need facts (the Lead Finder) opt out: an ungrounded answer is a guess.
+  if (opts.fallback === false) throw new Error("Grounded search returned nothing");
   const r = await model.generateContent(prompt);
   return (await r.response).text();
 }

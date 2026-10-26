@@ -287,7 +287,7 @@ export function TaskDetailDrawer({
             <NativeSelect
               value={task.assigneeId ?? ""}
               onChange={(e) => patchAndRefresh(task.id, { assigneeId: e.target.value || null })}
-              className="mt-1 w-full rounded-lg border border-border px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1 w-full rounded-lg border border-border px-2 py-1.5 text-sm outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
             >
               <option value="">Unassigned</option>
               {people.map((p) => <option key={p.id} value={p.id}>{p.fullName}</option>)}
@@ -384,7 +384,7 @@ export function TaskDetailDrawer({
               value={childTitle}
               onChange={(e) => setChildTitle(e.target.value)}
               placeholder="+ Add a subitem"
-              className="w-full rounded-lg border border-border px-2.5 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg border border-border px-2.5 py-1.5 text-sm outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
             />
           </form>
         </div>

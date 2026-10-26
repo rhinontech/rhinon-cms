@@ -1,4 +1,5 @@
 import app from "./app";
+import { runLeadFinderQueue } from "./services/leadFinderQueue";
 import { env } from "./config/env";
 import { sequelize } from "./config/database";
 import { syncDatabase } from "./models";
@@ -194,6 +195,16 @@ function listen() {
       }, { timezone: "Asia/Kolkata" });
       console.log("[Re-enrichment] Nightly refresh scheduled for 3:30 AM IST.");
     }
+
+    // Lead Finder queue: 7:00 AM IST, so the day's new leads are in the CRM
+    // before anyone sits down to build campaigns.
+    cron.schedule("0 7 * * *", async () => {
+      try {
+        await runLeadFinderQueue();
+      } catch (err: any) {
+        console.error("[Cron] Lead Finder run failed:", err.message);
+      }
+    }, { timezone: "Asia/Kolkata" });
 
     // Auto clock-out: runs every day at 4:00 AM IST, closing out anyone still
     // clocked in (covers late/overnight shifts) without disturbing which day's

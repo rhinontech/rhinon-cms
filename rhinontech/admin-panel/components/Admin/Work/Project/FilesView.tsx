@@ -112,7 +112,7 @@ export function FilesView({
         <NativeSelect
           value={uploadTo}
           onChange={(e) => setUploadTo(e.target.value)}
-          className="rounded-lg border border-border bg-card px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500"
+          className="rounded-lg border border-border bg-card px-2 py-1.5 text-xs outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
         >
           <option value="">Attach to which task…</option>
           {tasks.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}

@@ -158,7 +158,7 @@ function Column({
               onChange={(e) => setTitle(e.target.value)}
               onBlur={() => { if (!title.trim()) setAdding(false); }}
               placeholder="Task name…"
-              className="w-full rounded-lg border border-border px-2.5 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg border border-border px-2.5 py-2 text-sm outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
             />
           </form>
         )}

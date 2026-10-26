@@ -139,7 +139,7 @@ function UploadForEmployeeModal({ employees, onClose, onSuccess }: UploadForEmpl
           <div className="flex flex-col gap-1.5">
             <label className="text-xs text-muted-foreground">Employee</label>
             <NativeSelect
-              className="border rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-full"
+              className="border rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60 max-w-full"
               value={employeeId}
               onChange={e => setEmployeeId(e.target.value)}
               required
@@ -153,7 +153,7 @@ function UploadForEmployeeModal({ employees, onClose, onSuccess }: UploadForEmpl
           <div className="flex flex-col gap-1.5">
             <label className="text-xs text-muted-foreground">Title</label>
             <input
-              className="border rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
               value={title}
               onChange={e => setTitle(e.target.value)}
               placeholder="Document title"
@@ -163,7 +163,7 @@ function UploadForEmployeeModal({ employees, onClose, onSuccess }: UploadForEmpl
           <div className="flex flex-col gap-1.5">
             <label className="text-xs text-muted-foreground">Category</label>
             <NativeSelect
-              className="border rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-full"
+              className="border rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60 max-w-full"
               value={category}
               onChange={e => setCategory(e.target.value as Category)}
             >
@@ -432,7 +432,7 @@ export function AllDocumentsPage() {
           {/* Filters */}
           <div className="flex flex-wrap gap-2 sm:gap-3 w-full">
             <NativeSelect
-              className="border rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-card focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto max-w-full"
+              className="border rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-card focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60 w-full sm:w-auto max-w-full"
               value={employeeFilter}
               onChange={e => setEmployeeFilter(e.target.value)}
             >
@@ -442,7 +442,7 @@ export function AllDocumentsPage() {
               ))}
             </NativeSelect>
             <NativeSelect
-              className="border rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-card focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto max-w-full"
+              className="border rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-card focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60 w-full sm:w-auto max-w-full"
               value={categoryFilter}
               onChange={e => setCategoryFilter(e.target.value as "all" | Category)}
             >
@@ -454,7 +454,7 @@ export function AllDocumentsPage() {
             <div className="flex-1 min-w-[180px] max-w-full relative">
               <TbSearch size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
-                className="w-full border rounded-lg pl-9 pr-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-card focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border rounded-lg pl-9 pr-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-card focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                 placeholder="Search by title..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}

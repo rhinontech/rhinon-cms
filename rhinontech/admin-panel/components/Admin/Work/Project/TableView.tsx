@@ -156,7 +156,7 @@ export function TableView({
                 value={fieldForm.name}
                 onChange={(e) => setFieldForm((f) => ({ ...f, name: e.target.value }))}
                 placeholder="Column name (e.g. Budget)"
-                className="w-56 rounded-lg border border-border px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-56 rounded-lg border border-border px-2 py-1.5 text-sm outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
               />
               <NativeSelect
                 value={fieldForm.type}
@@ -170,7 +170,7 @@ export function TableView({
                   value={fieldForm.options}
                   onChange={(e) => setFieldForm((f) => ({ ...f, options: e.target.value }))}
                   placeholder="Low, Medium, High"
-                  className="w-56 rounded-lg border border-border px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-56 rounded-lg border border-border px-2 py-1.5 text-sm outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                 />
               )}
               <button type="submit" className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground">
@@ -309,7 +309,7 @@ export function TableView({
                       onChange={(e) => setSubtaskTitle(e.target.value)}
                       onBlur={() => !subtaskTitle && setSubtaskFor(null)}
                       placeholder="Subitem name…"
-                      className="w-full rounded border border-border px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded border border-border px-2 py-1 text-sm outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                     />
                   </form>
                 </div>

@@ -120,7 +120,7 @@ export function WorkSchedulePicker({ value, onChange }: Props) {
             setStartTime(e.target.value);
             update(selectedDays, e.target.value, endTime);
           }}
-          className="px-3 py-1.5 text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-1.5 text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
         />
         <span className="text-xs text-muted-foreground">to</span>
         <input
@@ -130,7 +130,7 @@ export function WorkSchedulePicker({ value, onChange }: Props) {
             setEndTime(e.target.value);
             update(selectedDays, startTime, e.target.value);
           }}
-          className="px-3 py-1.5 text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-1.5 text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
         />
       </div>
     </div>

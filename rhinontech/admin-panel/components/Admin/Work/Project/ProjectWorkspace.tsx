@@ -20,6 +20,7 @@ import { TableView } from "./TableView";
 import { useProjectWorkspace } from "./useProjectWorkspace";
 import type { ProjectTask } from "./types";
 import { promptDialog } from "@/components/ui/dialogs";
+import { rememberProject } from "./lastProject";
 
 type Tab = "table" | "board" | "gantt" | "files" | "analytics" | "calendar";
 
@@ -62,6 +63,8 @@ export function ProjectWorkspace({
    * here and only costs width. Collapse on entry and put it back on the way
    * out, so the module's other pages keep their navigation.
    */
+  useEffect(() => { if (mode === "internal") rememberProject(projectId); }, [projectId, mode]);
+
   useEffect(() => {
     setSideNav(false);
     return () => setSideNav(true);

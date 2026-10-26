@@ -285,7 +285,7 @@ function OffboardDialog({
               type="date"
               value={exitDate}
               onChange={(e) => setExitDate(e.target.value)}
-              className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
               required
             />
           </label>
@@ -294,7 +294,7 @@ function OffboardDialog({
             <NativeSelect
               value={exitReason}
               onChange={(e) => setExitReason(e.target.value)}
-              className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
             >
               {EXIT_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
             </NativeSelect>
@@ -306,7 +306,7 @@ function OffboardDialog({
               onChange={(e) => setExitNotes(e.target.value)}
               rows={3}
               placeholder="Handover details, exit interview notes..."
-              className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
             />
           </label>
         </div>
@@ -444,7 +444,7 @@ function FormInput({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
         required={required}
       />
     </label>
@@ -483,7 +483,7 @@ function FormSelect({
       <NativeSelect
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-lg border border-border px-3 py-2 font-normal bg-card focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="rounded-lg border border-border px-3 py-2 font-normal bg-card focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
         required={required}
       >
         {options.map((opt) => (
@@ -1082,7 +1082,7 @@ export function PeopleDirectory() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search..."
-                className="w-full pl-8 sm:pl-9 pr-3 py-1.5 sm:py-2 text-xs border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:w-56 md:w-64 bg-card"
+                className="w-full pl-8 sm:pl-9 pr-3 py-1.5 sm:py-2 text-xs border border-border rounded-lg focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60 sm:w-56 md:w-64 bg-card"
               />
             </div>
             {canManage && (
@@ -1493,22 +1493,22 @@ export function PeopleDirectory() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                       Full name
-                      <input value={form.fullName} onChange={(e) => updateForm("fullName", e.target.value)} className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                      <input value={form.fullName} onChange={(e) => updateForm("fullName", e.target.value)} className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60" required />
                     </label>
                     <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                       Personal email
-                      <input type="email" value={form.personalEmail} onChange={(e) => updateForm("personalEmail", e.target.value)} className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                      <input type="email" value={form.personalEmail} onChange={(e) => updateForm("personalEmail", e.target.value)} className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60" required />
                     </label>
                     <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                       Role
-                      <NativeSelect value={form.roleId} onChange={(e) => updateForm("roleId", e.target.value)} className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                      <NativeSelect value={form.roleId} onChange={(e) => updateForm("roleId", e.target.value)} className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60" required>
                         <option value="">Select role</option>
                         {roles.map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}
                       </NativeSelect>
                     </label>
                     <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                       Department
-                      <input value={form.department} onChange={(e) => updateForm("department", e.target.value)} className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                      <input value={form.department} onChange={(e) => updateForm("department", e.target.value)} className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60" required />
                     </label>
                     <FormInput label="Legal name" value={form.legalName} onChange={(value) => updateForm("legalName", value)} />
                     <FormInput label="PAN" value={form.pan} onChange={(value) => updateForm("pan", value)} />

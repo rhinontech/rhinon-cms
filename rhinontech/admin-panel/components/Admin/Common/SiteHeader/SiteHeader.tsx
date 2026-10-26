@@ -6,7 +6,7 @@ import Cookies from "js-cookie";
 import { clearPermissionsCache } from "@/context/PermissionsContext";
 import { useEffect, useState } from "react";
 import { LogOut } from "lucide-react";
-import { TbUser, TbChevronDown, TbBell, TbEye, TbMenu2 } from "react-icons/tb";
+import { TbUser, TbChevronDown, TbChevronRight, TbBell, TbEye, TbMenu2 } from "react-icons/tb";
 import { useDashboard } from "@/components/Common/DashboardProvider/DashboardProvider";
 import {
   Popover,
@@ -14,7 +14,57 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import { apiFetch } from "@/lib/api";
+import { siteSlugFromPath, useSites } from "@/lib/sites";
 import { ThemeToggle } from "@/components/Common/ThemeProvider/ThemeToggle";
+import { MODULES } from "@/components/Admin/Common/navConfig";
+
+/** Ids, slugs with digits and tokens are not page names, so they never become a crumb. */
+const looksLikeId = (segment: string) => /\d/.test(segment) && segment.length > 6;
+const humanize = (segment: string) => {
+  const words = decodeURIComponent(segment).replace(/[-_]+/g, " ").trim();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+};
+
+/**
+ * Where you are: the module, the brand for brand-split modules, then the page.
+ * Built from the URL alone, so it is right on the first paint of every screen.
+ */
+function Breadcrumbs({ pathname }: { pathname: string }) {
+  const { sites } = useSites();
+  const [, role, moduleKey, ...rest] = pathname.split("/");
+  const mod = MODULES[moduleKey];
+  if (!mod) return <div className="min-w-0 flex-1" />;
+
+  const brandSlug = siteSlugFromPath(pathname);
+  const brand = brandSlug ? sites.find((s) => s.slug === brandSlug) : null;
+  const pageSegments = brandSlug ? rest.slice(1) : rest;
+  const page = pageSegments[0] && !looksLikeId(pageSegments[0]) ? humanize(pageSegments[0]) : null;
+  const moduleHref = `/${role}/${moduleKey}${brandSlug ? `/${brandSlug}` : ""}`;
+  const Icon = mod.icon;
+
+  return (
+    <nav aria-label="Breadcrumb" className="flex min-w-0 flex-1 items-center gap-1.5 text-[13px]">
+      <Link href={moduleHref} className="flex min-w-0 items-center gap-2 rounded-md px-1.5 py-1 font-semibold text-foreground transition-colors hover:bg-foreground/[0.05]">
+        <Icon size={16} strokeWidth={1.9} className="shrink-0 text-muted-foreground" />
+        <span className="truncate">{mod.label}</span>
+      </Link>
+      {brandSlug && (
+        <>
+          <TbChevronRight size={13} className="shrink-0 text-muted-foreground/60" />
+          <span className="hidden min-w-0 truncate rounded-full bg-foreground/[0.05] px-2 py-0.5 text-xs font-medium text-foreground/75 ring-1 ring-inset ring-foreground/[0.06] sm:inline">
+            {brand?.name ?? humanize(brandSlug)}
+          </span>
+        </>
+      )}
+      {page && (
+        <>
+          <TbChevronRight size={13} className="hidden shrink-0 text-muted-foreground/60 sm:block" />
+          <span className="hidden min-w-0 truncate font-medium text-muted-foreground sm:inline">{page}</span>
+        </>
+      )}
+    </nav>
+  );
+}
 
 function decodeJWT(token: string): { fullName?: string; companyEmail?: string; roleSlug?: string } {
   try {
@@ -78,21 +128,22 @@ export function SiteHeader() {
   };
 
   return (
-    <div className="flex items-center justify-end rounded-lg glass-card px-3 sm:px-4 h-[50px] shrink-0 gap-2 sm:gap-3">
+    <div className="flex h-11 shrink-0 items-center gap-1.5 px-1 sm:gap-2">
       {/* Hamburger — opens the sidebar drawer on mobile */}
       <button
         onClick={() => setMobileNavOpen(true)}
-        className="mr-auto rounded-lg p-2 text-foreground/70 hover:bg-muted lg:hidden"
+        className="rounded-lg p-2 text-foreground/70 hover:bg-foreground/[0.06] lg:hidden"
         aria-label="Open navigation"
       >
         <TbMenu2 size={20} />
       </button>
+      <Breadcrumbs pathname={pathname} />
       {canPreviewRoles && (
         <Popover>
           <PopoverTrigger asChild>
-            <button className="inline-flex items-center gap-2 rounded-lg border border-border px-2.5 sm:px-3 py-1.5 text-sm font-medium text-foreground/85 hover:bg-muted/40">
-              <TbEye size={16} className="text-muted-foreground" />
-              <span className="hidden sm:inline">Viewing as {currentRoleView}</span>
+            <button className="inline-flex h-8 items-center gap-1.5 rounded-full border border-foreground/[0.08] bg-card/60 px-2.5 text-xs font-medium text-foreground/80 shadow-xs backdrop-blur transition-colors hover:bg-card sm:px-3">
+              <TbEye size={15} className="text-muted-foreground" />
+              <span className="hidden sm:inline">{`Viewing as ${currentRoleView}`}</span>
               <TbChevronDown size={13} className="text-muted-foreground" />
             </button>
           </PopoverTrigger>
@@ -122,21 +173,21 @@ export function SiteHeader() {
       <ThemeToggle />
 
       {/* Notifications */}
-      <button className="relative p-1.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground/85 transition-colors">
+      <button className="relative rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground" aria-label="Notifications">
         <TbBell size={18} />
       </button>
 
-      <div className="h-5 w-px bg-muted" />
+      <div className="mx-0.5 h-5 w-px bg-foreground/10" />
 
       {/* User menu */}
       <Popover>
         <PopoverTrigger asChild>
-          <button className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-muted transition-colors group">
-            <div className={`w-7 h-7 rounded-full bg-gradient-to-br ${avatarGradient(name)} flex items-center justify-center text-white text-[11px] font-bold shrink-0`}>
+          <button className="group flex items-center gap-2 rounded-full py-1 pl-1 pr-2 transition-colors hover:bg-foreground/[0.06]">
+            <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${avatarGradient(name)} text-[11px] font-bold text-white shadow-xs ring-2 ring-background/70`}>
               {initial}
             </div>
-            <span className="text-sm font-medium text-foreground/85 max-w-[160px] truncate">{firstName}</span>
-            <TbChevronDown size={13} className="text-muted-foreground group-hover:text-foreground/70 transition-colors" />
+            <span className="hidden max-w-[160px] truncate text-[13px] font-medium text-foreground/85 sm:inline">{firstName}</span>
+            <TbChevronDown size={13} className="text-muted-foreground transition-colors group-hover:text-foreground/70" />
           </button>
         </PopoverTrigger>
 

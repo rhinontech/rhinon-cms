@@ -69,6 +69,7 @@ import { FieldDefinition } from "./FieldDefinition";
 import { TimeEntry } from "./TimeEntry";
 import { TaskActivity } from "./TaskActivity";
 import { StartupIdea } from "./StartupIdea";
+import { LeadFinderTarget } from "./LeadFinderTarget";
 import { BlogTopic } from "./BlogTopic";
 import { Deployment } from "./Deployment";
 import { Chatbot } from "./Chatbot";
@@ -507,6 +508,7 @@ export {
   TimeEntry,
   TaskActivity,
   StartupIdea,
+  LeadFinderTarget,
   BlogTopic,
   Deployment,
   Chatbot,

@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
@@ -19,6 +18,16 @@ interface SidebarItemProps {
   href?: string;
   externalLink?: boolean;
 }
+
+// The same active treatment as the main sidebar: a raised card with the
+// icon picked out in the brand colour.
+const itemClass = (active: boolean) =>
+  cn(
+    "flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-[13px] transition-[background-color,color,box-shadow] duration-150 [&_svg]:size-[17px] [&_svg]:shrink-0",
+    active
+      ? "bg-card font-medium text-foreground shadow-xs ring-1 ring-foreground/[0.06] dark:bg-white/[0.08] dark:shadow-none dark:ring-white/[0.06] [&>span>svg]:text-brand"
+      : "text-foreground/70 hover:bg-card/60 hover:text-foreground dark:hover:bg-white/[0.05]"
+  );
 
 export const SidebarItem = ({
   icon,
@@ -43,69 +52,48 @@ export const SidebarItem = ({
     return (
       <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
         <CollapsibleTrigger asChild>
-          <Button
-            variant="ghost"
-            className={cn(
-              "w-full flex justify-between items-center py-2 h-auto font-normal text-sm cursor-pointer transition-all",
-              isOpen ? "" : "hover:bg-muted/40"
-            )}
-          >
-            <div className="flex items-center">
+          <button type="button" className={cn(itemClass(false), "cursor-pointer justify-between")}>
+            <span className="flex min-w-0 items-center gap-2.5">
               {icon}
-              <span className="ml-2">{label}</span>
-            </div>
+              <span className="truncate">{label}</span>
+            </span>
             {isOpen ? (
-              <ChevronDown className="h-4 w-4" />
+              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
             ) : (
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
             )}
-          </Button>
+          </button>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <div className="pl-5 py-1">{children}</div>
+          <div className="ml-[19px] mt-0.5 space-y-0.5 border-l border-foreground/[0.08] py-0.5 pl-2">{children}</div>
         </CollapsibleContent>
       </Collapsible>
     );
   }
 
+  const content = (
+    <>
+      <span className="flex shrink-0 items-center">{icon}</span>
+      <span className="min-w-0 flex-1 truncate">{label}</span>
+    </>
+  );
+
+  if (!href) {
+    return <div className={itemClass(isActive)}>{content}</div>;
+  }
+
+  if (externalLink) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className={itemClass(isActive)}>
+        {content}
+        <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+      </a>
+    );
+  }
+
   return (
-    <Button
-      variant="ghost"
-      className={cn(
-        "w-full flex justify-between items-center font-normal text-sm transition-all",
-        isActive ? "bg-muted" : "hover:bg-muted/70"
-      )}
-      size="sm"
-      asChild={!!href}
-    >
-      {href ? (
-        externalLink ? (
-          <a
-            href={href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex w-full items-center justify-between"
-          >
-            <div className="flex items-center">
-              {icon}
-              <span className="ml-2">{label}</span>
-            </div>
-            <ExternalLink className=" w-4" />
-          </a>
-        ) : (
-          <Link href={href} className="flex w-full items-center justify-between">
-            <div className="flex items-center">
-              {icon}
-              <span className="ml-2">{label}</span>
-            </div>
-          </Link>
-        )
-      ) : (
-        <div className="flex w-full items-center">
-          {icon}
-          <span className="ml-2">{label}</span>
-        </div>
-      )}
-    </Button>
+    <Link href={href} className={itemClass(isActive)}>
+      {content}
+    </Link>
   );
 };
