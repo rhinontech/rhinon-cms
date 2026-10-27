@@ -119,3 +119,46 @@ export function trackEmailVisitor(email: string, path: string) {
     fallbackBeacon(url, body);
   }
 }
+
+
+const VISIT_REF_KEY = "rl_ref"; // localStorage — the visit code from a personalised email link
+
+/**
+ * A visit from someone who arrived through a personalised campaign link (?r=…).
+ *
+ * The code is kept in this browser, so their later pages and return visits are
+ * recognised too, and it is taken out of the address bar straight away: it
+ * should not end up in bookmarks, shared links or the Referer of the next site.
+ * The code names a lead only to our backend; it carries no email address.
+ */
+export function trackKnownVisitor(path: string) {
+  if (typeof window === "undefined" || path.startsWith("/unsubscribe")) return;
+
+  let ref: string | null = null;
+  try {
+    const url = new URL(window.location.href);
+    const fromLink = url.searchParams.get("r");
+    if (fromLink && /^[A-Za-z0-9_-]{32}$/.test(fromLink)) {
+      window.localStorage.setItem(VISIT_REF_KEY, fromLink);
+    }
+    // Strip the code and any legacy ?email= from what the visitor sees.
+    if (url.searchParams.has("r") || url.searchParams.has("email")) {
+      url.searchParams.delete("r");
+      url.searchParams.delete("email");
+      window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+    }
+    ref = window.localStorage.getItem(VISIT_REF_KEY);
+  } catch {
+    /* storage blocked: an anonymous visit is all we can record */
+  }
+  if (!ref) return;
+
+  const url = `${API_BASE}/public/visitors`;
+  const body = JSON.stringify({ ref, path, referrer: document.referrer || undefined });
+  try {
+    fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true, mode: "cors" })
+      .catch(() => fallbackBeacon(url, body));
+  } catch {
+    fallbackBeacon(url, body);
+  }
+}

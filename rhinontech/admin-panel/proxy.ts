@@ -47,7 +47,12 @@ export function proxy(request: NextRequest) {
   }
 
   if (!authToken) {
-    return NextResponse.redirect(new URL("/auth/login", request.url));
+    const login = new URL("/auth/login", request.url);
+    // A campaign link's visit code (?r=…) survives the bounce to sign-in, so the
+    // click is still recorded against the lead who made it.
+    const ref = request.nextUrl.searchParams.get("r");
+    if (ref) login.searchParams.set("r", ref);
+    return NextResponse.redirect(login);
   }
 
   const payload = decodeJWTPayload(authToken);

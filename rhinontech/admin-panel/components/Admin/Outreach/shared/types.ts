@@ -91,6 +91,8 @@ export interface CampaignFunnel {
   opened: number;
   replied: number;
   bounced: number;
+  /** Leads who visited our website through their personalised link. */
+  visited?: number;
 }
 
 export interface CampaignStats {

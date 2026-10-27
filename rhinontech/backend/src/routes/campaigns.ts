@@ -1,5 +1,5 @@
 import { Router, Response } from "express";
-import { Campaign, CampaignTemplate, Lead, CampaignActivity, User, InboxEmail, Unsubscribe } from "../models";
+import { Campaign, CampaignTemplate, Lead, CampaignActivity, User, InboxEmail, Unsubscribe, Visitor } from "../models";
 import { stripTenantKeys } from "../models/tenantScope";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 import { resolveSiteContext } from "../middleware/siteContext";
@@ -16,6 +16,7 @@ import { brandSender } from "../services/siteSender";
 import { outboundBlockedReason } from "../services/emailVerification";
 import { currentOrganizationId, runAsSystem, runForOrg } from "../services/tenantContext";
 import { reserveUsage } from "../services/usage";
+import { ownWebsiteHosts, personalizeLinks, signVisitRef } from "../services/visitRef";
 
 const router = Router();
 
@@ -323,7 +324,10 @@ export async function dispatchLeadEmail(
     ? fillPlaceholders(campaign.subject, lead, senderName)
     : `Optimizing ${lead.company}'s potential`;
   const profile = await getCompanyProfile();
-  const htmlBody = toEmailHtml(lead.aiDraft, undefined, openTrackingPixelUrl(lead.id, campaign.id), email!, undefined, {
+  // Links to our own sites carry this lead's visit code, so a click shows up
+  // as their website visit. The Sent-folder copy below keeps the plain draft.
+  const trackedBody = personalizeLinks(lead.aiDraft, signVisitRef(lead.id), await ownWebsiteHosts());
+  const htmlBody = toEmailHtml(trackedBody, undefined, openTrackingPixelUrl(lead.id, campaign.id), email!, undefined, {
     name: profile.name,
     isPlatform: profile.isPlatform,
     organizationId: profile.organizationId,
@@ -929,6 +933,62 @@ router.post("/:id/resume", authorize("outreach:write"), async (req: AuthRequest,
   res.json(campaign);
 });
 
+/**
+ * POST /campaigns/:id/test — one copy of the campaign email to a test inbox
+ * (the caller's own address unless they name another), so the subject, body,
+ * variables and layout can be checked before it goes to the whole list.
+ *
+ * Same sender, mailbox and template as a real send; variables are filled from
+ * the first enrolled lead. Nothing about the campaign or its leads changes: no
+ * draft, no status, no activity, no tracking pixel, no Sent-folder copy.
+ */
+router.post("/:id/test", authorize("outreach:write"), async (req: AuthRequest, res: Response) => {
+  const campaign = await Campaign.findByPk(req.params.id);
+  if (!campaign) { res.status(404).json({ message: "Campaign not found" }); return; }
+  if (!isEmailChannel(campaign.channel)) { res.status(400).json({ message: "Test sends are for email campaigns." }); return; }
+  if (!campaign.subject?.trim() || !campaign.body?.trim()) {
+    res.status(400).json({ message: "Add a subject and email body first." });
+    return;
+  }
+
+  const to = normalizeEmail(typeof req.body?.to === "string" && req.body.to.trim() ? req.body.to : req.user!.companyEmail || "");
+  if (!to || !isValidEmail(to)) { res.status(400).json({ message: "Enter a valid email address to send the test to." }); return; }
+
+  const blocked = await outboundBlockedReason();
+  if (blocked) { res.status(403).json({ message: blocked, code: "EMAIL_NOT_VERIFIED" }); return; }
+
+  const senderName = campaign.senderName || req.user!.fullName || (await defaultSenderName());
+  const fromEmail =
+    (await brandSender(campaign.senderEmail || req.user!.companyEmail || (await fallbackFromAddress()), campaign.siteId)) ||
+    (await fallbackFromAddress());
+  const sample =
+    (await Lead.findOne({ where: { campaignId: campaign.id }, order: [["createdAt", "ASC"]] })) ??
+    { name: (req.user!.fullName || "there").split(" ")[0], email: to, company: "Your Company", title: null };
+
+  const body = fillPlaceholders(campaign.body, sample, senderName);
+  const subject = `[Test] ${fillPlaceholders(campaign.subject, sample, senderName)}`;
+  const profile = await getCompanyProfile();
+  try {
+    await sendAs(await campaignSenderId(campaign), "campaigns", {
+      to,
+      platformFrom: fromEmail,
+      fromName: senderName,
+      subject,
+      html: toEmailHtml(body, undefined, undefined, to, undefined, {
+        name: profile.name,
+        isPlatform: profile.isPlatform,
+        organizationId: profile.organizationId,
+        address: profile.address,
+      }),
+      text: stripHtml(body),
+    });
+  } catch (err: any) {
+    res.status(502).json({ message: err.message || "The test email could not be sent." });
+    return;
+  }
+  res.json({ sentTo: to, from: fromEmail, sampleLead: (sample as any).name });
+});
+
 // GET /campaigns/:id/stats — per-campaign funnel + daily activity series
 router.get("/:id/stats", authorize("outreach:read"), async (req: AuthRequest, res: Response) => {
   const campaign = await Campaign.findByPk(req.params.id);
@@ -936,9 +996,10 @@ router.get("/:id/stats", authorize("outreach:read"), async (req: AuthRequest, re
 
   const leads = await Lead.findAll({
     where: { campaignId: campaign.id },
-    attributes: ["status", "aiDraft", "draftApproved", "emailOpened"],
+    attributes: ["id", "status", "aiDraft", "draftApproved", "emailOpened"],
     raw: true,
   });
+  const leadIds = leads.map((l: any) => l.id);
 
   const funnel = {
     enrolled: leads.length,
@@ -948,6 +1009,8 @@ router.get("/:id/stats", authorize("outreach:read"), async (req: AuthRequest, re
     opened: leads.filter((l: any) => l.emailOpened).length,
     replied: leads.filter((l: any) => l.status === "Replied").length,
     bounced: leads.filter((l: any) => l.status === "Bounced").length,
+    // Leads who came to our website through their personalised link.
+    visited: await Visitor.count({ distinct: true, col: "leadId", where: { leadId: { [Op.in]: leadIds } } }),
   };
 
   const since = new Date();

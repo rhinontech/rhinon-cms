@@ -19,6 +19,7 @@ import { DuplicatesDialog } from "./DuplicatesDialog";
 import { Timeline } from "./Timeline";
 import { SavedViews, type SavedView } from "./SavedViews";
 import { RelatedTasks } from "./RelatedTasks";
+import { LeadVisits } from "./LeadVisits";
 import { LIFECYCLE_STAGES, type Lead, type LifecycleStage, type UserRef } from "./types";
 import {
   Avatar, DataRow, EmptyState, HeaderRow, LIFECYCLE_TINT, OutreachStatus,
@@ -718,6 +719,8 @@ export function LeadsPage() {
                   {selected.raw && Object.keys(selected.raw).length > 0 && <RawData raw={selected.raw} />}
 
                   <RelatedTasks leadId={selected.id} owners={owners} />
+
+                  <LeadVisits leadId={selected.id} />
 
                   <div>
                     <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Activity</p>

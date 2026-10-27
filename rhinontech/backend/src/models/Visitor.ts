@@ -6,6 +6,8 @@ export interface VisitorAttributes {
   /** The brand this row belongs to. Injected for every site model by
    *  models/siteScope.ts; declared here so route code can read it. */
   siteId?: string | null;
+  /** The lead this visit is from, when they arrived through a personalised email link. */
+  leadId?: string | null;
   email: string;
   ip: string;
   city?: string | null;
@@ -25,7 +27,7 @@ export interface VisitorAttributes {
 export interface VisitorCreationAttributes
   extends Optional<
     VisitorAttributes,
-    "siteId" | "id"
+    "siteId" | "id" | "leadId"
     | "city"
     | "region"
     | "country"
@@ -44,6 +46,7 @@ export class Visitor
 {
   declare id: string;
   declare siteId: string | null;
+  declare leadId: string | null;
   declare email: string;
   declare ip: string;
   declare city: string | null;
@@ -68,6 +71,7 @@ Visitor.init(
       primaryKey: true,
     },
     siteId: { type: DataTypes.UUID, allowNull: true },
+    leadId: { type: DataTypes.UUID, allowNull: true },
     email: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -124,6 +128,7 @@ Visitor.init(
     timestamps: true,
     indexes: [
       { fields: ["email"] },
+      { fields: ["leadId"] },
       { fields: ["ip"] },
       { fields: ["visitedAt"] },
       { fields: ["createdAt"] },

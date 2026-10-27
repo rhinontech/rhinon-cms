@@ -13,7 +13,8 @@ import { env } from "../config/env";
 import { classifyChannel, parseHost, isBotUserAgent } from "../services/analytics";
 import { enrollRealtimeLead } from "../services/workflowEngine";
 import { extractClientIp, lookupIpLocation, lookupIpLocationCached } from "../services/geolocation";
-import { runForOrg } from "../services/tenantContext";
+import { runAsSystem, runForOrg } from "../services/tenantContext";
+import { verifyVisitRef } from "../services/visitRef";
 import { legal } from "../config/legal";
 import { parseBeaconBody, recordPageview, enrichGeoInBackground } from "../services/pageviewIngest";
 
@@ -351,9 +352,16 @@ router.post("/visitors", express.text({ type: ["text/plain"] }), async (req: Req
     }
     b = b || {};
 
-    const rawEmail = typeof b.email === "string" ? b.email.trim().toLowerCase() : "";
+    // Preferred: the signed visit code from a campaign link (?r=…), which names
+    // the lead without the address ever appearing in a URL. The plain ?email=
+    // form still works for links already sent, but it proves nothing.
+    const leadId = verifyVisitRef(b.ref);
+    const lead = leadId
+      ? await runAsSystem("visit-ref", () => Lead.findByPk(leadId, { attributes: ["id", "email", "organizationId", "siteId"] }))
+      : null;
+    const rawEmail = lead ? lead.email.trim().toLowerCase() : typeof b.email === "string" ? b.email.trim().toLowerCase() : "";
     if (!rawEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawEmail)) {
-      res.status(400).json({ message: "Valid email is required" });
+      res.status(400).json({ message: "A visit code or a valid email is required" });
       return;
     }
 
@@ -364,10 +372,7 @@ router.post("/visitors", express.text({ type: ["text/plain"] }), async (req: Req
     const referrer = typeof b.referrer === "string" ? b.referrer.slice(0, 1024) : null;
     const userAgent = (req.headers["user-agent"] as string) || null;
 
-    const site = await resolvePublicSite(b.site ?? b.domain ?? req.query.domain);
-
-    const visitor = await Visitor.create({
-      siteId: site?.id ?? null,
+    const row = {
       email: rawEmail,
       ip,
       city: geo.city,
@@ -380,14 +385,26 @@ router.post("/visitors", express.text({ type: ["text/plain"] }), async (req: Req
       referrer,
       userAgent: userAgent ? userAgent.slice(0, 1024) : null,
       visitedAt: new Date(),
-    });
+    };
 
-    res.status(201).json({ success: true, visitor });
+    if (lead && (lead as any).organizationId) {
+      // Recorded in the lead's own workspace and brand, whichever site they landed on.
+      await runForOrg((lead as any).organizationId, () => Visitor.create({ ...row, leadId: lead.id, siteId: (lead as any).siteId ?? null }), {
+        label: "visit-ref",
+      });
+    } else {
+      const site = await resolvePublicSite(b.site ?? b.domain ?? req.query.domain);
+      await Visitor.create({ ...row, siteId: site?.id ?? null });
+    }
+
+    // Nothing about the stored row goes back to an anonymous caller.
+    res.status(201).json({ success: true });
   } catch (err) {
     console.error("Failed to record visitor:", err);
-    res.status(204).end();
+    res.status(500).json({ message: "Failed to record visitor" });
   }
 });
+
 
 // GET /public/blogs?domain=rhinonlabs|uppercurve — published blogs for the marketing site,
 // newest first. `domain` defaults to rhinonlabs so the existing Rhinon Labs site (which doesn't
