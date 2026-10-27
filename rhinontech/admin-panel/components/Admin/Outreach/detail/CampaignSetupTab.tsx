@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { EmailBodyEditor } from "../shared/EmailBodyEditor";
 import type { Campaign } from "../shared/types";
 
@@ -24,14 +23,14 @@ function SetupSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
-      <div className="mb-3.5 sm:mb-4 flex items-center gap-2.5">
+    <div className="rounded-xl glass-card p-4 sm:p-5">
+      <div className="mb-3 flex items-center gap-2">
         {complete ? (
-          <TbCircleCheck className="shrink-0 text-emerald-500 dark:text-emerald-400" size={22} />
+          <TbCircleCheck className="shrink-0 text-emerald-500 dark:text-emerald-400" size={18} />
         ) : (
-          <TbCircleX className="shrink-0 text-red-400" size={22} />
+          <TbCircleX className="shrink-0 text-rose-400" size={18} />
         )}
-        <h3 className="text-base font-bold text-foreground">{title}</h3>
+        <h3 className="text-sm font-semibold tracking-tight text-foreground">{title}</h3>
       </div>
       {children}
     </div>
@@ -98,16 +97,18 @@ export function CampaignSetupTab({
   return (
     <div className="mx-auto space-y-3 sm:space-y-4">
       <SetupSection title="Sender" complete={!!senderEmail.trim() && !!senderName.trim()}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-          <div className="space-y-1.5">
-            <Label>Sender Name</Label>
-            <Input value={senderName || "—"} disabled className="bg-muted/40 font-medium text-foreground" />
+        {/* Set by the campaign's mailbox, not editable here: read-only text,
+            not a pair of greyed-out inputs that look broken. */}
+        <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <dt className="text-xs text-muted-foreground">Name</dt>
+            <dd className="mt-0.5 text-sm font-medium text-foreground">{senderName || "—"}</dd>
           </div>
-          <div className="space-y-1.5">
-            <Label>Sender Email</Label>
-            <Input value={senderEmail || "—"} disabled className="bg-muted/40 font-medium text-foreground" />
+          <div>
+            <dt className="text-xs text-muted-foreground">Email</dt>
+            <dd className="mt-0.5 break-all text-sm font-medium text-foreground">{senderEmail || "—"}</dd>
           </div>
-        </div>
+        </dl>
       </SetupSection>
 
       <SetupSection title="Recipients" complete={leadsTotal > 0}>

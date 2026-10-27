@@ -9,7 +9,7 @@ import { isLinkedInPostType } from "../config/linkedInPlaybook";
 import { postToLinkedIn } from "../services/linkedin";
 import { sendAs } from "../services/emailIdentity";
 import { stripHtml, toEmailHtml, BACKEND_URL } from "../services/emailTemplate";
-import { Op } from "sequelize";
+import { Op, fn, col, literal } from "sequelize";
 import { normalizeEmail, isValidEmail } from "../utils/email";
 import { defaultSenderName, fallbackFromAddress, getCompanyProfile } from "../services/companyProfile";
 import { brandSender } from "../services/siteSender";
@@ -55,7 +55,34 @@ router.get("/", authorize("outreach:read"), async (req: AuthRequest, res: Respon
     include: [{ model: CampaignTemplate, as: "template", attributes: ["name"] }],
     order: [["createdAt", "DESC"]],
   });
-  res.json(campaigns);
+
+  // Sent / opened / replied per campaign, so the list compares campaigns at a
+  // glance. Same rules as GET /:id/stats, in one grouped query rather than one
+  // per campaign; a findAll, so the tenant and site hooks still scope it.
+  const ids = campaigns.map((c) => c.id);
+  const rows = ids.length
+    ? ((await Lead.findAll({
+        where: { campaignId: { [Op.in]: ids } },
+        attributes: [
+          "campaignId",
+          [fn("COUNT", col("id")), "enrolled"],
+          [literal(`COUNT(*) FILTER (WHERE "status" IN ('Emailed','Replied','Bounced'))`), "sent"],
+          [literal(`COUNT(*) FILTER (WHERE "emailOpened" = true)`), "opened"],
+          [literal(`COUNT(*) FILTER (WHERE "status" = 'Replied')`), "replied"],
+          [literal(`COUNT(*) FILTER (WHERE "status" = 'Bounced')`), "bounced"],
+        ],
+        group: ["campaignId"],
+        raw: true,
+      })) as unknown as Array<Record<string, string | number>>)
+    : [];
+  const byCampaign = new Map(rows.map((r) => [String(r.campaignId), r]));
+  res.json(
+    campaigns.map((c) => {
+      const r = byCampaign.get(c.id);
+      const n = (key: string) => Number(r?.[key] ?? 0);
+      return { ...c.toJSON(), metrics: { enrolled: n("enrolled"), sent: n("sent"), opened: n("opened"), replied: n("replied"), bounced: n("bounced") } };
+    })
+  );
 });
 
 // Channels the engine can actually deliver on. DM/Connection remain in the DB

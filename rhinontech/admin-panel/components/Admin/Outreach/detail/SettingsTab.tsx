@@ -55,7 +55,7 @@ export function SettingsTab({
   };
 
   return (
-    <div className="max-w-xl space-y-6">
+    <div className="mx-auto max-w-2xl space-y-6">
       <div className="space-y-4 rounded-xl border border-border bg-card p-5">
         <div className="flex items-center justify-between rounded-lg border border-border bg-muted/40 px-4 py-3">
           <div>

@@ -12,6 +12,8 @@ export type CampaignChannel =
 
 export interface Campaign {
   id: string;
+  /** Lead counts per stage, sent by the campaigns list (not on single-campaign reads). */
+  metrics?: { enrolled: number; sent: number; opened: number; replied: number; bounced: number };
   name: string;
   channel: CampaignChannel;
   stage: CampaignStage;

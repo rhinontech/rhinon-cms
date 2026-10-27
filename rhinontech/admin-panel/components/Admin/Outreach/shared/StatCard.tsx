@@ -17,7 +17,7 @@ export function StatCard({
   className?: string;
 }) {
   return (
-    <div className={cn("rounded-xl glass-panel p-5", className)}>
+    <div className={cn("rounded-xl glass-card px-4 py-3.5", className)}>
       {loading ? (
         <div className="space-y-3">
           <Skeleton className="h-4 w-24" />
@@ -26,10 +26,10 @@ export function StatCard({
       ) : (
         <>
           <div className="flex items-center justify-between gap-2">
-            <span className="text-sm font-medium text-muted-foreground">{label}</span>
+            <span className="text-xs font-medium text-muted-foreground">{label}</span>
             {icon && <span className="text-muted-foreground">{icon}</span>}
           </div>
-          <div className="mt-2 text-3xl font-bold tracking-tight text-foreground tabular-nums">{value}</div>
+          <div className="mt-1.5 text-2xl font-semibold tracking-tight text-foreground tabular-nums">{value}</div>
           {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
         </>
       )}

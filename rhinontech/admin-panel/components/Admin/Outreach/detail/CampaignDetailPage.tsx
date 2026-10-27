@@ -183,35 +183,44 @@ export function CampaignDetailPage({ id }: { id: string }) {
         onGoToLeads={() => setActiveTab("leads")}
         onGoToSetup={() => setActiveTab("setup")}
       />
-      <div className="flex justify-end px-4 pt-1 text-[11px]">
-        <Link href={`${base.replace(/\/outreach(\/|$)/, "/crm$1")}?campaignId=${campaign.id}`} className="text-muted-foreground hover:text-blue-600 hover:underline">
-          View this campaign&apos;s leads in CRM →
+      {/* Tabs run across the top, so every tab gets the page's full width. */}
+      <div className="flex shrink-0 items-end justify-between gap-3 border-b px-3 sm:px-4">
+        <nav className="-mb-px flex min-w-0 gap-1 overflow-x-auto">
+          {NAV_ITEMS.map((item) => (
+            <button
+              key={item.key}
+              onClick={() => setActiveTab(item.key)}
+              className={cn(
+                "flex shrink-0 items-center gap-2 whitespace-nowrap border-b-2 px-3 py-2.5 text-[13px] font-medium transition-colors [&_svg]:size-4",
+                activeTab === item.key
+                  ? "border-brand text-foreground [&_svg]:text-brand"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {item.icon}
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </nav>
+        <Link
+          href={`${base.replace(/\/outreach(\/|$)/, "/crm$1")}?campaignId=${campaign.id}`}
+          className="mb-2 hidden shrink-0 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-foreground/[0.05] hover:text-foreground sm:block"
+        >
+          {"Leads in CRM →"}
         </Link>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-3 sm:gap-4 overflow-auto p-3 sm:p-4">
-        <FunnelStrip funnel={stats?.funnel ?? null} leads={leads} />
+      {/* The Inbox is a two-pane mail view with its own scrolling panes, so it
+          fills the space under the tabs; the other tabs scroll as a page. */}
+      <div className={cn("flex min-h-0 flex-1 flex-col gap-4 p-3 sm:p-5", activeTab === "inbox" ? "overflow-hidden" : "overflow-auto")}>
+        {(activeTab === "setup" || activeTab === "leads") && (
+          <div className="mx-auto w-full max-w-[1200px]">
+            <FunnelStrip funnel={stats?.funnel ?? null} leads={leads} />
+          </div>
+        )}
 
-        <div className="flex min-h-0 flex-1 flex-col md:flex-row gap-3 sm:gap-4">
-          <nav className="flex shrink-0 flex-row overflow-x-auto gap-1 border-b border-border pb-2.5 pt-0.5 md:pb-0 md:pt-0 md:w-44 md:flex-col md:border-b-0 md:space-y-0.5">
-            {NAV_ITEMS.map((item) => (
-              <button
-                key={item.key}
-                onClick={() => setActiveTab(item.key)}
-                className={cn(
-                  "flex shrink-0 items-center justify-center md:justify-start gap-2 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors whitespace-nowrap",
-                  activeTab === item.key
-                    ? "bg-blue-50 dark:bg-blue-400/10 text-blue-900 dark:text-blue-200 font-semibold"
-                    : "text-foreground/70 hover:bg-muted"
-                )}
-              >
-                {item.icon}
-                <span>{item.label}</span>
-              </button>
-            ))}
-          </nav>
-
-          <div className="min-w-0 flex-1">
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className={cn("mx-auto w-full min-w-0", activeTab === "inbox" ? "flex min-h-0 flex-1 flex-col" : "max-w-[1200px]")}>
             {activeTab === "setup" && (
               <CampaignSetupTab
                 campaign={campaign}

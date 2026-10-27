@@ -78,7 +78,7 @@ export function CampaignHeader({
         </button>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="truncate text-base sm:text-lg font-bold tracking-tight text-foreground">{campaign.name}</h1>
+            <h1 className="truncate text-base sm:text-lg font-semibold tracking-tight text-foreground">{campaign.name}</h1>
             <StatusBadge stage={campaign.stage} />
           </div>
           {action && (

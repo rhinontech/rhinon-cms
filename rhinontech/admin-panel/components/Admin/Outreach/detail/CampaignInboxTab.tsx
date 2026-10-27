@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { TbInbox, TbLoader, TbSend, TbArrowLeft, TbEye, TbMessageCheck, TbMail, TbUsersPlus } from "react-icons/tb";
+import { TbInbox, TbLoader, TbSend2, TbArrowLeft, TbEye, TbMessageCheck, TbMail, TbUsersPlus, TbSearch } from "react-icons/tb";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from "../shared/EmptyState";
 import { EmailBodyView } from "../shared/EmailBodyView";
 import type { CampaignLead } from "../shared/types";
+import { Avatar, listTime, stampTime, fullTime } from "../../Inbox/inboxShared";
 import { SaveSegmentToGroupDialog, type GroupSegment } from "./SaveSegmentToGroupDialog";
 
 interface ThreadEmail {
@@ -88,6 +88,7 @@ export function CampaignInboxTab({
   const [sending, setSending] = useState(false);
   const [filter, setFilter] = useState<FilterTab>("all");
   const [groupDialogOpen, setGroupDialogOpen] = useState(false);
+  const [query, setQuery] = useState("");
 
   const fetchInbox = () => {
     apiFetch<ThreadEmail[]>(`/campaigns/${campaignId}/inbox`)
@@ -181,11 +182,16 @@ export function CampaignInboxTab({
 
   // Filtered conversations
   const filteredConversations = useMemo(() => {
-    if (filter === "unopened") return buckets.unopened;
-    if (filter === "opened") return buckets.opened;
-    if (filter === "reply") return buckets.replied;
-    return conversations;
-  }, [conversations, buckets, filter]);
+    const list =
+      filter === "unopened" ? buckets.unopened
+        : filter === "opened" ? buckets.opened
+          : filter === "reply" ? buckets.replied
+            : conversations;
+    const q = query.trim().toLowerCase();
+    return q
+      ? list.filter((c) => `${c.lead.name} ${c.lead.company} ${c.lead.email}`.toLowerCase().includes(q))
+      : list;
+  }, [conversations, buckets, filter, query]);
 
   const segments = useMemo<GroupSegment[]>(
     () => [
@@ -294,140 +300,86 @@ export function CampaignInboxTab({
   }
 
   return (
-    <div className="flex h-full min-h-[480px] overflow-hidden rounded-xl border border-border/80 bg-card">
-      {/* Conversation List Sidebar */}
-      <div
-        className={cn(
-          "flex flex-col border-r border-border w-full md:w-72 lg:w-80 shrink-0 overflow-hidden",
-          mobileThreadOpen ? "hidden md:flex" : "flex"
-        )}
-      >
-        {/* Filter Navigation Tabs */}
-        <div className="border-b border-border p-2.5 bg-muted/40 shrink-0 space-y-2">
-          {/* Four tabs in a 2x2 grid — a single row can't hold "Unopened" plus a
-              count inside the 288px sidebar without truncating. */}
-          <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted/70 p-1">
-            {TAB_DEFS.map((tab) => {
-              const active = filter === tab.key;
-              return (
-                <button
-                  key={tab.key}
-                  onClick={() => setFilter(tab.key)}
-                  className={cn(
-                    "flex items-center justify-center gap-1.5 rounded-md py-1.5 px-2 text-xs font-medium transition-all",
-                    active ? `bg-card shadow-sm font-semibold ${tab.activeText}` : "text-foreground/70 hover:text-foreground"
-                  )}
-                >
-                  {tab.icon ? (
-                    <span className={active ? tab.activeIcon : "text-muted-foreground"}>{tab.icon}</span>
-                  ) : null}
-                  <span>{tab.label}</span>
-                  <span
-                    className={cn(
-                      "rounded-full px-1.5 py-0.2 text-[10px] font-bold leading-tight",
-                      active ? tab.activeBadge : "text-muted-foreground"
-                    )}
-                  >
-                    {counts[tab.key]}
-                  </span>
-                </button>
-              );
-            })}
+    <div className="flex h-full min-h-[480px] overflow-hidden rounded-xl glass-card">
+      {/* Conversation list */}
+      <div className={cn("flex w-full shrink-0 flex-col overflow-hidden border-r md:w-80 lg:w-[340px]", mobileThreadOpen ? "hidden md:flex" : "flex")}>
+        <div className="shrink-0 space-y-2.5 border-b p-3">
+          <div className="segmented" role="tablist" aria-label="Filter conversations">
+            {TAB_DEFS.map((tab) => (
+              <button
+                key={tab.key}
+                role="tab"
+                aria-selected={filter === tab.key}
+                onClick={() => setFilter(tab.key)}
+                className={cn(
+                  "flex flex-auto items-center justify-center gap-1 rounded-md px-1.5 py-1.5 text-xs font-medium transition-colors",
+                  filter === tab.key ? "segment-active" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {tab.label}
+                <span className="tabular-nums text-[10.5px] text-muted-foreground">{counts[tab.key]}</span>
+              </button>
+            ))}
           </div>
-
-          <Button
-            size="sm"
-            variant="outline"
-            className="w-full"
-            onClick={() => setGroupDialogOpen(true)}
-            disabled={conversations.length === 0}
-          >
-            <TbUsersPlus size={14} /> Save to contact group
-          </Button>
+          <div className="flex gap-2">
+            <div className="relative min-w-0 flex-1">
+              <TbSearch size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search people"
+                className="h-8 w-full rounded-lg border border-input bg-background/70 pl-8 pr-2 text-[13px] outline-none focus:border-ring/60 focus:ring-[3px] focus:ring-ring/15"
+              />
+            </div>
+            <Button size="sm" variant="outline" onClick={() => setGroupDialogOpen(true)} title="Save these people to a contact group">
+              <TbUsersPlus /> Save
+            </Button>
+          </div>
         </div>
 
-        {/* Conversation Items */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="min-h-0 flex-1 overflow-y-auto p-1.5">
           {filteredConversations.length === 0 ? (
-            <div className="p-6 text-center text-xs text-muted-foreground flex flex-col items-center gap-2 mt-4">
-              <TbInbox size={28} className="text-muted-foreground/70" />
-              <p className="font-medium text-muted-foreground">
-                {filter === "unopened"
-                  ? "Everyone has opened their email"
-                  : filter === "opened"
-                  ? "No opened emails found"
-                  : filter === "reply"
-                  ? "No replied leads found"
-                  : "No conversations found"}
-              </p>
-              <p className="text-[11px] text-muted-foreground">
-                {filter === "unopened"
-                  ? "Recipients who haven't opened yet will show here."
-                  : filter === "opened"
-                  ? "Recipients who open but don't reply will show here."
-                  : filter === "reply"
-                  ? "When leads reply to this campaign, they'll show here."
-                  : ""}
+            <div className="flex flex-col items-center gap-2 p-8 text-center">
+              <TbInbox size={24} className="text-muted-foreground/70" />
+              <p className="text-sm font-medium text-foreground">
+                {query.trim() ? "No matches"
+                  : filter === "unopened" ? "Everyone has opened it"
+                    : filter === "opened" ? "No opens without a reply"
+                      : filter === "reply" ? "No replies yet" : "No conversations"}
               </p>
             </div>
           ) : (
             filteredConversations.map((c) => {
               const lastEmail = c.emails[c.emails.length - 1];
               const isSelected = selectedLeadId === c.leadId;
-
               return (
                 <button
                   key={c.leadId}
-                  onClick={() => {
-                    setSelectedLeadId(c.leadId);
-                    setMobileThreadOpen(true);
-                  }}
+                  onClick={() => { setSelectedLeadId(c.leadId); setMobileThreadOpen(true); }}
                   className={cn(
-                    "flex w-full flex-col gap-1 border-b border-border px-4 py-3 text-left transition-colors relative",
-                    isSelected
-                      ? "bg-blue-50/80 dark:bg-blue-400/10 hover:bg-blue-50 dark:hover:bg-blue-400/10"
-                      : "hover:bg-muted/40"
+                    "relative flex w-full gap-3 rounded-lg px-3 py-2.5 text-left transition-colors",
+                    isSelected ? "bg-[var(--surface-selected)] shadow-[inset_0_0_0_1px_color-mix(in_oklch,var(--brand)_18%,transparent)]" : "hover:bg-foreground/[0.04]"
                   )}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="truncate text-sm font-semibold text-foreground">
-                      {c.lead.name}
+                  {c.unread > 0 && <span className="absolute left-[3px] top-[26px] h-1.5 w-1.5 rounded-full bg-brand" />}
+                  <Avatar name={c.lead.name} seed={c.lead.email} />
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-baseline gap-2">
+                      <span className={cn("min-w-0 flex-1 truncate text-[13px]", c.unread ? "font-semibold text-foreground" : "font-medium text-foreground/85")}>{c.lead.name}</span>
+                      <time className="shrink-0 text-[11px] tabular-nums text-muted-foreground">{lastEmail ? listTime(lastEmail.sentAt) : ""}</time>
                     </span>
-                    <span className="shrink-0 text-[10px] text-muted-foreground">
-                      {lastEmail ? new Date(lastEmail.sentAt).toLocaleDateString([], { month: "short", day: "numeric" }) : ""}
+                    <span className="flex items-center gap-2">
+                      <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{c.lead.company || c.lead.email}</span>
+                      {c.hasReply ? (
+                        <span className="inline-flex shrink-0 items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400"><TbMessageCheck size={12} />Replied</span>
+                      ) : c.hasOpened ? (
+                        <span className="inline-flex shrink-0 items-center gap-1 text-[11px] font-medium text-sky-600 dark:text-sky-400"><TbEye size={12} />Opened</span>
+                      ) : (
+                        <span className="inline-flex shrink-0 items-center gap-1 text-[11px] text-muted-foreground/80"><TbMail size={12} />Sent</span>
+                      )}
                     </span>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="truncate text-xs text-muted-foreground font-normal">
-                      {c.lead.company}
-                    </span>
-
-                    {/* Badges */}
-                    <div className="flex items-center gap-1 shrink-0">
-                      {c.hasReply && (
-                        <span className="inline-flex items-center gap-0.5 rounded-md bg-emerald-50 dark:bg-emerald-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-400/25">
-                          <TbMessageCheck size={11} />
-                          <span>Replied</span>
-                        </span>
-                      )}
-                      {!c.hasReply && c.hasOpened && (
-                        <span className="inline-flex items-center gap-0.5 rounded-md bg-blue-50 dark:bg-blue-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-400/25">
-                          <TbEye size={11} />
-                          <span>Opened</span>
-                        </span>
-                      )}
-                      {c.unread > 0 && (
-                        <span className="flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
-                          {c.unread}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <p className="line-clamp-1 text-xs text-muted-foreground font-normal mt-0.5">
-                    {lastEmail ? lastEmail.snippet : ""}
-                  </p>
+                    <span className="mt-0.5 block truncate text-xs text-muted-foreground/90">{lastEmail?.snippet}</span>
+                  </span>
                 </button>
               );
             })
@@ -435,102 +387,74 @@ export function CampaignInboxTab({
         </div>
       </div>
 
-      {/* Conversation Thread Detail */}
-      <div
-        className={cn(
-          "flex min-w-0 flex-1 flex-col bg-muted/40",
-          !mobileThreadOpen ? "hidden md:flex" : "flex"
-        )}
-      >
+      {/* Conversation */}
+      <div className={cn("flex min-w-0 flex-1 flex-col", !mobileThreadOpen ? "hidden md:flex" : "flex")}>
         {selected ? (
           <>
-            {/* Thread Header */}
-            <div className="flex items-center justify-between gap-2 border-b border-border bg-card px-4 py-3 shrink-0">
-              <div className="flex items-center gap-3 min-w-0">
-                <button
-                  onClick={() => setMobileThreadOpen(false)}
-                  className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted md:hidden shrink-0"
-                  aria-label="Back to conversations"
-                >
-                  <TbArrowLeft size={18} />
-                </button>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="truncate text-sm font-bold text-foreground">{selected.lead.name}</p>
-                    {selected.hasReply ? (
-                      <span className="inline-flex items-center gap-1 rounded bg-emerald-50 dark:bg-emerald-400/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-400/25">
-                        <TbMessageCheck size={11} /> Replied
-                      </span>
-                    ) : selected.hasOpened ? (
-                      <span className="inline-flex items-center gap-1 rounded bg-blue-50 dark:bg-blue-400/10 px-1.5 py-0.5 text-[10px] font-medium text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-400/25">
-                        <TbEye size={11} /> Opened
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {selected.lead.company} · {selected.lead.email}
-                  </p>
-                </div>
+            <div className="flex h-16 shrink-0 items-center gap-3 border-b px-4">
+              <button onClick={() => setMobileThreadOpen(false)} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted md:hidden" aria-label="Back to conversations">
+                <TbArrowLeft size={18} />
+              </button>
+              <Avatar name={selected.lead.name} seed={selected.lead.email} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[15px] font-semibold tracking-tight text-foreground">{selected.lead.name}</p>
+                <p className="truncate text-xs text-muted-foreground">{[selected.lead.company, selected.lead.email].filter(Boolean).join(" · ")}</p>
+              </div>
+              {selected.hasReply ? (
+                <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-400/10 dark:text-emerald-300 dark:ring-emerald-400/20">Replied</span>
+              ) : selected.hasOpened ? (
+                <span className="shrink-0 rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-medium text-sky-700 ring-1 ring-inset ring-sky-200 dark:bg-sky-400/10 dark:text-sky-300 dark:ring-sky-400/20">Opened</span>
+              ) : null}
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4 sm:px-5">
+              <div className="mx-auto flex max-w-[820px] flex-col gap-2.5">
+                {selected.emails.map((e) => {
+                  const mine = e.folder === "sent";
+                  return (
+                    <article key={e.id} className={cn("rounded-xl border bg-card shadow-xs", mine && "border-brand/15 bg-[color-mix(in_oklch,var(--card)_96%,var(--brand))]")}>
+                      <header className="flex items-start gap-3 px-4 pt-3.5 sm:px-5">
+                        <Avatar name={mine ? "You" : e.fromName} seed={e.fromEmail} size="sm" />
+                        <div className="min-w-0 flex-1">
+                          <span className="text-[13px] font-semibold text-foreground">{mine ? "You" : e.fromName}</span>
+                          <span className="ml-1.5 text-xs text-muted-foreground">{mine ? "sent" : "replied"}</span>
+                        </div>
+                        <time className="shrink-0 text-xs text-muted-foreground" title={fullTime(e.sentAt)}>{stampTime(e.sentAt)}</time>
+                      </header>
+                      <div className="px-4 pb-4 pt-2.5 sm:px-5">
+                        <EmailBodyView body={e.body} />
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             </div>
 
-            {/* Email Messages List */}
-            <div className="flex-1 space-y-3 overflow-y-auto p-4 sm:p-5">
-              {selected.emails.map((e) => (
-                <div
-                  key={e.id}
-                  className={cn(
-                    "max-w-[92%] sm:max-w-[85%] rounded-xl px-4 py-3 text-sm break-words shadow-sm",
-                    e.folder === "sent"
-                      ? "ml-auto bg-blue-600 text-white"
-                      : "bg-card border border-border/80 text-foreground"
-                  )}
-                >
-                  <div
-                    className={cn(
-                      "mb-1.5 flex items-center justify-between gap-3 text-[11px] font-semibold",
-                      e.folder === "sent" ? "text-blue-100" : "text-muted-foreground"
-                    )}
-                  >
-                    <span>{e.folder === "sent" ? "You" : e.fromName}</span>
-                    <span className="shrink-0 text-[10px]">
-                      {new Date(e.sentAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
-                    </span>
-                  </div>
-                  {/* The body renders in its own frame: plain mail takes this bubble's
-                      text colour, and links read the --email-link variable. */}
-                  <div className={e.folder === "sent" ? "[--email-link:#dbeafe]" : ""}>
-                    <EmailBodyView body={e.body} />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Reply Composer */}
-            <div className="border-t border-border bg-card p-3 sm:p-4 shrink-0">
+            <div className="shrink-0 border-t bg-foreground/[0.015] p-3">
               {lastInbound ? (
-                <div className="flex items-end gap-2">
-                  <Textarea
+                <div className="mx-auto max-w-[820px] rounded-xl border bg-background shadow-xs focus-within:border-ring/60 focus-within:ring-[3px] focus-within:ring-ring/12">
+                  <textarea
                     value={replyBody}
                     onChange={(e) => setReplyBody(e.target.value)}
-                    placeholder={`Reply to ${selected.lead.name}...`}
-                    className="h-20 resize-none text-sm"
+                    onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleReply(); } }}
+                    placeholder={`Reply to ${selected.lead.name}…`}
+                    rows={2}
+                    className="field-sizing-content block max-h-48 min-h-[64px] w-full resize-none bg-transparent px-3 py-2.5 text-[13.5px] leading-6 outline-none placeholder:text-muted-foreground/80"
                   />
-                  <Button onClick={handleReply} disabled={sending || !replyBody.trim()} size="sm" className="h-10 px-3">
-                    {sending ? <TbLoader className="animate-spin" size={14} /> : <TbSend size={14} />}
-                  </Button>
+                  <div className="flex items-center justify-between px-3 pb-2">
+                    <span className="truncate text-[11px] text-muted-foreground">{`To ${lastInbound.fromEmail} · ⌘/Ctrl+Enter to send`}</span>
+                    <Button onClick={handleReply} disabled={sending || !replyBody.trim()} size="sm">
+                      {sending ? <TbLoader className="animate-spin" /> : <TbSend2 />} Send
+                    </Button>
+                  </div>
                 </div>
               ) : (
-                <p className="text-center text-xs text-muted-foreground py-1">
-                  Waiting for a reply before you can respond here.
-                </p>
+                <p className="py-1 text-center text-xs text-muted-foreground">You can reply here once they write back.</p>
               )}
             </div>
           </>
         ) : (
-          <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground p-6 text-center">
-            Pick a conversation from the list
-          </div>
+          <div className="flex flex-1 items-center justify-center p-6 text-center text-sm text-muted-foreground">Pick a conversation from the list</div>
         )}
       </div>
 
