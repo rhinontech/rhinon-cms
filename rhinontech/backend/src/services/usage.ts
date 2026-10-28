@@ -41,7 +41,10 @@ export interface OrgPlanState {
 }
 
 export function planState(org: Organization): OrgPlanState {
-  const raw = org.settings?.trialEndsAt;
+  // The free plan is free for good: it carries no deadline, so it never expires
+  // and shows no countdown, including for workspaces that signed up with one.
+  // A deadline still applies to any other plan the platform sets a trial on.
+  const raw = org.plan === "free" ? null : org.settings?.trialEndsAt;
   const trialEndsAt = raw ? new Date(raw) : null;
   const trialExpired = !org.isPlatform && org.status === "trial" && !!trialEndsAt && trialEndsAt.getTime() < Date.now();
   // Platform is unlimited whatever its plan column says.
@@ -56,6 +59,7 @@ export async function chatbotSlotBlockedReason(existing: number, organizationId:
   if (!organizationId) return null;
   const state = await loadState(organizationId);
   if (!state || state.limits.chatbots === null) return null;
+  if (state.limits.chatbots === 0) return "The website chatbot is a paid feature. Upgrade your plan to add one to your site.";
   return existing >= state.limits.chatbots
     ? `The ${state.limits.label} plan includes a chatbot on ${state.limits.chatbots} brand${state.limits.chatbots === 1 ? "" : "s"}. Upgrade to add more.`
     : null;

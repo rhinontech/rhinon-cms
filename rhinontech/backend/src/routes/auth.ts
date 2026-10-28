@@ -20,7 +20,7 @@ import { provisionOrgEmailDomain } from "../services/sesProvisioning";
 import { transactionalBrand } from "../services/companyProfile";
 import { sendVerificationEmail, readVerifyToken } from "../services/emailVerification";
 import { emailFlowLimiter } from "../middleware/rateLimit";
-import { trialEndDate, planState } from "../services/usage";
+import { planState } from "../services/usage";
 import { recordAudit, auditRequest, clientIp } from "../services/audit";
 import { legal } from "../config/legal";
 import { generateSecret, encryptSecret, decryptSecret, verifyCode, otpauthUrl, generateRecoveryCodes, consumeRecoveryCode, mfaLocked, mfaMiss, mfaClear } from "../services/totp";
@@ -122,7 +122,6 @@ router.post("/signup", async (req: Request, res: Response) => {
           settings: {
             displayName: String(organizationName).trim(),
             pendingEmailVerification: true,
-            trialEndsAt: trialEndDate().toISOString(),
             ...(acceptedTerms ? { termsVersion: legal.termsVersion, termsAcceptedAt: new Date().toISOString() } : {}),
           },
         },
@@ -571,7 +570,7 @@ router.get("/me", authenticate, async (req: AuthRequest, res: Response) => {
     emailVerificationPending: !!settings?.pendingEmailVerification,
     termsVersion: legal.termsVersion,
     termsAccepted: settings?.termsVersion === legal.termsVersion,
-    trialEndsAt: settings?.trialEndsAt ?? null,
+    trialEndsAt: organization ? planState(organization).trialEndsAt : null,
     trialExpired: organization ? planState(organization).trialExpired : false,
   });
 });
