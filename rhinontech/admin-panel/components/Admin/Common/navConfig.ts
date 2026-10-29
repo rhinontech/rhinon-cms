@@ -1,7 +1,7 @@
 import type { IconType } from "react-icons";
 import {
   TbBook, TbBriefcase, TbBuildingCommunity, TbBulb, TbCalendarEvent, TbCash, TbChartArcs, TbFileText,
-  TbHierarchy, TbInbox, TbLayoutDashboard, TbMessageChatbot, TbNews, TbSettings, TbSpeakerphone,
+  TbHierarchy, TbInbox, TbMessages, TbLayoutDashboard, TbMessageChatbot, TbNews, TbSettings, TbSpeakerphone,
   TbTargetArrow, TbUserCircle, TbUsers,
 } from "react-icons/tb";
 
@@ -15,6 +15,7 @@ import {
 export const MODULES: Record<string, { label: string; icon: IconType }> = {
   dashboard: { label: "Dashboard", icon: TbLayoutDashboard },
   inbox: { label: "Inbox", icon: TbInbox },
+  chat: { label: "Chat", icon: TbMessages },
   pages: { label: "Pages", icon: TbBook },
   crm: { label: "CRM", icon: TbTargetArrow },
   outreach: { label: "Outreach", icon: TbSpeakerphone },

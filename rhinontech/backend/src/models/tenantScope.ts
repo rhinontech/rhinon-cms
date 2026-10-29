@@ -20,6 +20,7 @@ import { CompensationRevision } from "./CompensationRevision";
 import { Task } from "./Task";
 import { Subtask } from "./Subtask";
 import { TaskComment } from "./TaskComment";
+import { TeamChatConversation, TeamChatMember, TeamChatMessage, TeamChatReaction, TeamCallLink } from "./TeamChat";
 import { TaskTag } from "./TaskTag";
 import { TaskDependency } from "./TaskDependency";
 import { TaskAttachment } from "./TaskAttachment";
@@ -123,6 +124,7 @@ export const TENANT_MODELS: ModelStatic<any>[] = [
   PageView, Visitor,
   Chatbot, ChatbotSource, ChatConversation, ChatMessage, ChatbotCampaign,
   ChatbotTicket, ChatbotTicketMessage, HelpFolder, HelpArticle, ConnectedAccount,
+  TeamChatConversation, TeamChatMember, TeamChatMessage, TeamChatReaction, TeamCallLink,
 ];
 
 const TENANT_MODEL_NAMES = new Set(TENANT_MODELS.map((m) => m.name));

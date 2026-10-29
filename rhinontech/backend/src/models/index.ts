@@ -32,6 +32,7 @@ import { LetterTemplate } from "./LetterTemplate";
 import { LinkedInToken } from "./LinkedInToken";
 import { Subtask } from "./Subtask";
 import { TaskComment } from "./TaskComment";
+import { TeamChatConversation, TeamChatMember, TeamChatMessage, TeamChatReaction, TeamCallLink } from "./TeamChat";
 import { TaskTag } from "./TaskTag";
 import { Site } from "./Site";
 import { Blog } from "./Blog";
@@ -154,6 +155,16 @@ TaskComment.belongsTo(Task, { foreignKey: "taskId", as: "task" });
 Task.hasMany(TaskComment, { foreignKey: "taskId", as: "comments", onDelete: "CASCADE" });
 TaskComment.belongsTo(User, { foreignKey: "userId", as: "author" });
 User.hasMany(TaskComment, { foreignKey: "userId", as: "taskComments" });
+
+// Team chat (internal, Teams-style)
+TeamChatConversation.hasMany(TeamChatMember, { foreignKey: "conversationId", as: "members", onDelete: "CASCADE" });
+TeamChatMember.belongsTo(TeamChatConversation, { foreignKey: "conversationId", as: "conversation" });
+TeamChatMember.belongsTo(User, { foreignKey: "userId", as: "user" });
+TeamChatConversation.hasMany(TeamChatMessage, { foreignKey: "conversationId", as: "messages", onDelete: "CASCADE" });
+TeamChatMessage.belongsTo(TeamChatConversation, { foreignKey: "conversationId", as: "conversation" });
+TeamChatMessage.hasMany(TeamChatReaction, { foreignKey: "messageId", as: "reactions", onDelete: "CASCADE" });
+TeamChatReaction.belongsTo(TeamChatMessage, { foreignKey: "messageId", as: "message" });
+TeamChatConversation.hasMany(TeamCallLink, { foreignKey: "conversationId", as: "callLinks", onDelete: "CASCADE" });
 
 // --- Wrike-parity task graph -------------------------------------------------
 
@@ -471,6 +482,7 @@ export {
   LinkedInToken,
   Subtask,
   TaskComment,
+  TeamChatConversation, TeamChatMember, TeamChatMessage, TeamChatReaction, TeamCallLink,
   TaskTag,
   Site,
   Blog,

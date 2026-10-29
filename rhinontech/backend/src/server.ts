@@ -23,7 +23,8 @@ import { dispatchDueEventEmails } from "./services/eventReminderJob";
 import { purgeDueWorkspaces } from "./services/workspaceLifecycle";
 import { beat } from "./services/heartbeat";
 import { applyDueRevisions } from "./services/compensationRevisions";
-import { attachChatSocket } from "./services/chatbot/realtime";
+import { attachChatSocket, socketServer } from "./services/chatbot/realtime";
+import { attachTeamChatSocket } from "./services/teamChat/realtime";
 import { ensureVectorSchema } from "./services/chatbot/vectorStore";
 
 async function autoClockOut() {
@@ -179,6 +180,8 @@ function listen() {
     // Live chat for the website widget rides on the same port, so nginx only
     // needs to allow the WebSocket upgrade on the API host.
     attachChatSocket(server);
+    // Internal team chat: its own namespace on the same Socket.IO server.
+    attachTeamChatSocket(socketServer()!);
 
     // Stale-intel refresh: nightly at 3:30 AM IST, well clear of the outreach
     // scheduler. No-ops unless LEAD_REENRICH_ENABLED=true.

@@ -4,6 +4,7 @@ import { Sidebar } from "@/components/Admin/Common/Sidebar/Sidebar";
 import { ConfirmDialogProvider } from "@/components/Admin/Common/ConfirmDialog";
 import { PermissionsProvider } from "@/context/PermissionsContext";
 import { AccountBanners } from "@/components/Admin/Common/AccountBanners/AccountBanners";
+import { TeamChatProvider } from "@/components/Admin/Chat/TeamChatProvider";
 
 export function AdminDashboardShell({
   children,
@@ -15,6 +16,7 @@ export function AdminDashboardShell({
   return (
     <PermissionsProvider>
       <ConfirmDialogProvider>
+        <TeamChatProvider />
         <div className="flex h-screen w-full overflow-hidden app-backdrop">
           <Sidebar />
           <main className="flex min-h-0 min-w-0 flex-col m-2 gap-2 w-full">

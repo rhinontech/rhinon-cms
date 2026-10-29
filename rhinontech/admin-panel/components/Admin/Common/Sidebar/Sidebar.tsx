@@ -12,6 +12,7 @@ import { usePermissions } from "@/context/PermissionsContext";
 import { apiFetch } from "@/lib/api";
 import { SITE_SCOPED_MODULES, useActiveBrand, type SiteScopedModule } from "@/lib/sites";
 import { BrandSwitcher } from "@/components/Admin/Common/Sites/BrandSwitcher";
+import { selectUnreadTotal, useTeamChat } from "@/components/Admin/Chat/store";
 
 /** The module a sidebar href points at: /admin/outreach -> "outreach". */
 function moduleKeyOf(href: string): string {
@@ -38,6 +39,7 @@ export function Sidebar() {
   // interval and refreshed on navigation, so opening a submission clears it promptly.
   const canReadIdeas = has("startupIdeas:read");
   const [unreadIdeas, setUnreadIdeas] = useState(0);
+  const unreadChat = useTeamChat(selectUnreadTotal);
   useEffect(() => {
     if (!canReadIdeas) return;
     let active = true;
@@ -64,6 +66,7 @@ export function Sidebar() {
   const navItems = [
     item("dashboard", ["dashboard:read"]),
     item("inbox", ["inbox:read"]),
+    item("chat", ["chat:read"], { badge: unreadChat }),
     item("pages", ["pages:read"]),
     item("crm", ["crm:read"]),
     item("outreach", ["outreach:read"]),

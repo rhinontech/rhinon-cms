@@ -55,6 +55,8 @@ import pagesRoutes from "./routes/pages";
 import googleCalendarSettingsRoutes from "./routes/googleCalendarSettings";
 import connectedAccountsRoutes from "./routes/connectedAccounts";
 import meetingsRoutes from "./routes/meetings";
+import teamChatRoutes from "./routes/teamChat";
+import meetRoutes from "./routes/meet";
 import scheduleCallRoutes from "./routes/scheduleCall";
 import startupIdeasRoutes from "./routes/startupIdeas";
 import deployRoutes from "./routes/deploy";
@@ -158,6 +160,7 @@ app.use("/linkedin", linkedinRoutes);
 app.use("/google-calendar", googleCalendarSettingsRoutes);
 app.use("/integrations/accounts", connectedAccountsRoutes);
 app.use("/meetings", meetingsRoutes);
+app.use("/team-chat", teamChatRoutes);
 app.use("/ai", aiRoutes);
 app.use("/content", contentRoutes);
 app.use("/events", eventsRoutes);
@@ -212,6 +215,8 @@ app.use("/webhooks", systemContext("webhooks"), express.text({ type: ["applicati
  * matches a real route there, while "/public/swiggy/blogs" matches nothing and
  * falls through to the :orgSlug mount below.
  */
+// Meeting links for guests: before the generic /public mounts, which would read "meet" as an org slug.
+app.use("/public/meet", rateLimit({ name: "meet", windowMs: 15 * 60_000, max: 60 }), meetRoutes);
 app.use("/public", publicTenantContext(), publicRoutes);
 app.use("/public", publicTenantContext(), scheduleCallRoutes);
 app.use("/public/:orgSlug", publicTenantContext(), publicRoutes);

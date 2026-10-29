@@ -24,6 +24,11 @@ import { runAsSystem } from "../tenantContext";
 
 let io: Server | null = null;
 
+/** The shared Socket.IO server, for other features that mount their own namespace on it. */
+export function socketServer(): Server | null {
+  return io;
+}
+
 const orgRoom = (organizationId: string) => `org:${organizationId}`;
 const convRoom = (conversationId: string) => `conv:${conversationId}`;
 const visitorRoom = (chatbotId: string, visitorId: string) => `visitor:${chatbotId}:${visitorId}`;
