@@ -141,9 +141,9 @@ export function WorkCommitsPage() {
             </p>
           </div>
         ) : (
-          <div className="mx-auto grid max-w-5xl gap-4">
+          <div className="mx-auto grid max-w-5xl grid-cols-[minmax(0,1fr)] gap-4">
             {groups.map((g) => (
-              <section key={g.name} className="rounded-xl border bg-card/60">
+              <section key={g.name} className="min-w-0 rounded-xl border bg-card/60">
                 <header className="flex items-center gap-2 border-b px-4 py-2.5">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-foreground/70">
                     {g.name.slice(0, 2).toUpperCase()}

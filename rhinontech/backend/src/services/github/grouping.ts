@@ -136,9 +136,11 @@ export async function groupCommitsWithAI(link: ProjectRepo, range: GroupingRange
     const committedAt: any = {};
     if (range.from) committedAt[Op.gte] = range.from;
     if (range.to) committedAt[Op.lt] = range.to;
+    const inRange = range.from || range.to ? { committedAt } : {};
+    await releaseOrphans(link, inRange);
     for (let round = 0; round < 20; round++) {
       const fetched = await RepoCommit.findAll({
-        where: { projectRepoId: link.id, groupedAt: null, ...(range.from || range.to ? { committedAt } : {}) },
+        where: { projectRepoId: link.id, groupedAt: null, ...inRange },
         order: [["committedAt", "ASC"]],
         limit: BATCH,
       });
@@ -153,6 +155,32 @@ export async function groupCommitsWithAI(link: ProjectRepo, range: GroupingRange
     return total;
   } finally {
     running.delete(link.id);
+  }
+}
+
+/**
+ * A deleted card must not keep its commits: they would count as "already
+ * grouped" forever. Drop task ids that no longer exist, and put commits left
+ * with none back in the queue so this run groups them again.
+ */
+async function releaseOrphans(link: ProjectRepo, inRange: Record<string, unknown>) {
+  const grouped = await RepoCommit.findAll({
+    where: { projectRepoId: link.id, groupedAt: { [Op.ne]: null }, ...inRange },
+    attributes: ["id", "taskIds", "groupedAt", "message"],
+  });
+  const referenced = [...new Set(grouped.flatMap((c) => c.taskIds))];
+  if (!referenced.length && !grouped.length) return;
+  const alive = new Set(
+    referenced.length
+      ? (await Task.findAll({ where: { id: { [Op.in]: referenced } }, attributes: ["id"] })).map((t) => t.id)
+      : []
+  );
+  for (const c of grouped) {
+    // Merge commits are marked grouped with no task on purpose; leave them be.
+    if (!c.taskIds.length) continue;
+    const kept = c.taskIds.filter((id) => alive.has(id));
+    if (kept.length === c.taskIds.length) continue;
+    await c.update({ taskIds: kept, groupedAt: kept.length ? c.groupedAt : null });
   }
 }
 

@@ -72,7 +72,7 @@ function Section({ icon, title, action, children }: {
   icon: React.ReactNode; title: string; action?: React.ReactNode; children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-xl border bg-card/60">
+    <section className="min-w-0 rounded-xl border bg-card/60">
       <header className="flex items-center gap-2 border-b px-4 py-2.5">
         <span className="text-muted-foreground">{icon}</span>
         <h2 className="text-sm font-semibold text-foreground">{title}</h2>
@@ -520,7 +520,7 @@ export function GitHubView({ projectId, onCardsChanged }: {
 
   return (
     <div className="h-full overflow-auto">
-      <div className="mx-auto grid max-w-5xl gap-4 p-4">
+      <div className="mx-auto grid max-w-5xl grid-cols-[minmax(0,1fr)] gap-4 p-4">
         {!status?.configured && (
           <div className="rounded-lg border border-amber-300/60 bg-amber-50 dark:bg-amber-400/10 px-4 py-3 text-xs text-amber-800 dark:text-amber-200">
             The GitHub App isn't configured on this server (GITHUB_APP_ID / GITHUB_APP_PRIVATE_KEY / GITHUB_WEBHOOK_SECRET).
@@ -561,7 +561,7 @@ export function GitHubView({ projectId, onCardsChanged }: {
           <p className="mt-3 text-[11px] text-muted-foreground">
             Reference a task in a commit message with its ref, e.g. <span className="font-mono">feat: login page T-1a2b3c4d</span>.
             Writing <span className="font-mono">fixes T-1a2b3c4d</span> on the default branch also completes it. Copy a task's ref from its detail drawer.
-            Commits without a ref are grouped by AI into feature cards, nightly or with "Group with AI".
+            Commits without a ref are grouped by AI into feature cards: daily at 2 AM, or with Run under "Create cards from commits".
           </p>
         </Section>
 
