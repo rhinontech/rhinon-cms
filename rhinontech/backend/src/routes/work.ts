@@ -9,6 +9,8 @@ import { sendEmail } from "../services/mailer";
 import { collaboratorInviteEmail } from "../services/emailTemplates";
 import { ensureCollaboratorRole } from "../services/collaboratorRole";
 import { env } from "../config/env";
+import { deleteProject } from "../services/projectDeletion";
+import { auditRequest } from "../services/audit";
 import { transactionalBrand } from "../services/companyProfile";
 import {
   canAccessProject,
@@ -193,6 +195,36 @@ router.put("/projects/:id", requireInternal, async (req: AuthRequest, res: Respo
     res.json(full);
   } catch (err) {
     res.status(500).json({ message: "Failed to update project" });
+  }
+});
+
+/**
+ * DELETE /work/projects/:id — permanent, with everything inside it (see
+ * services/projectDeletion.ts). Owner or superadmin only, and the caller must
+ * echo the project's name back: one stray request should never be enough.
+ */
+router.delete("/projects/:id", requireInternal, authorizeAny("work:write"), async (req: AuthRequest, res: Response) => {
+  try {
+    const project = await Project.findByPk(req.params.id);
+    if (!project || !(await canAccessProject(project.id, req))) {
+      res.status(404).json({ message: "Project not found" });
+      return;
+    }
+    const isOwner = (project.ownerId ?? project.createdById) === req.user!.userId;
+    if (!isOwner && req.user?.roleSlug !== "superadmin") {
+      res.status(403).json({ message: "Only the project owner or a super admin can delete a project." });
+      return;
+    }
+    if (typeof req.body?.confirmName !== "string" || req.body.confirmName.trim() !== project.name.trim()) {
+      res.status(400).json({ message: "Type the project name exactly to confirm." });
+      return;
+    }
+    const summary = await deleteProject(project.id);
+    auditRequest(req, "project.deleted", { entityType: "project", entityId: project.id, metadata: { name: project.name, ...summary } });
+    res.json({ message: "Project deleted", ...summary });
+  } catch (err: any) {
+    console.error("[Work] Project delete failed:", err.message);
+    res.status(500).json({ message: "Failed to delete project" });
   }
 });
 

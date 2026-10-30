@@ -9,7 +9,9 @@ import { useSideNav } from "@/context/SideNavContext";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { ProjectCollaborators } from "./ProjectCollaborators";
-import { TbLayoutSidebarFilled, TbLayoutSidebarRightFilled, TbPlus, TbSearch, TbExternalLink, TbLock, TbUsers, TbLayoutGrid, TbInfoCircle, TbArrowRight } from "react-icons/tb";
+import { portalPath } from "./Project/portalUrl";
+import { TbLayoutSidebarFilled, TbLayoutSidebarRightFilled, TbPlus, TbSearch, TbExternalLink, TbLock, TbUsers, TbLayoutGrid, TbInfoCircle, TbArrowRight, TbTrash } from "react-icons/tb";
+import { promptDialog } from "@/components/ui/dialogs";
 
 import { NativeSelect } from "@/components/ui/native-select";
 type ProjectStatus = "Active" | "Paused" | "Completed" | "Pipeline";
@@ -72,6 +74,7 @@ export function WorkProjectsPage() {
   const [mode, setMode] = useState<PanelMode>("view");
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchProjects = async () => {
     try {
@@ -158,6 +161,40 @@ export function WorkProjectsPage() {
       toast.error(err.message || "Failed to save project");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedProject) return;
+    const typed = await promptDialog({
+      title: `Delete "${selectedProject.name}"?`,
+      description:
+        "This permanently deletes the project with all its tasks, files, comments, time logs, change requests, " +
+        "linked GitHub repositories (and their deploy keys) and stored secrets. It cannot be undone. " +
+        "Type the project name to confirm.",
+      placeholder: selectedProject.name,
+      confirmText: "Delete project",
+      destructive: true,
+    });
+    if (typed == null) return;
+    if (typed.trim() !== selectedProject.name.trim()) {
+      toast.error("The name didn't match — nothing was deleted.");
+      return;
+    }
+    setDeleting(true);
+    try {
+      const out = await apiFetch<{ tasks: number }>(`/work/projects/${selectedProject.id}`, {
+        method: "DELETE",
+        body: JSON.stringify({ confirmName: typed }),
+      });
+      toast.success(`Deleted "${selectedProject.name}" and ${out.tasks} task${out.tasks === 1 ? "" : "s"}`);
+      setSelectedProject(null);
+      setMode("view");
+      await fetchProjects();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete project");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -317,7 +354,7 @@ export function WorkProjectsPage() {
                     <ProjectCollaborators projectId={selectedProject.id} />
                     {selectedProject.visibility === "workspace" ? (
                       <a
-                        href={`/p/${selectedProject.id}`}
+                        href={portalPath(selectedProject.name, selectedProject.id)}
                         target="_blank"
                         rel="noreferrer"
                         className="flex w-full items-center justify-center gap-2 rounded-lg border border-blue-200 dark:border-blue-400/25 bg-blue-50 dark:bg-blue-400/10 px-4 py-2 text-sm font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-400/15"
@@ -420,6 +457,16 @@ export function WorkProjectsPage() {
                   />
                 </label>
                 <div className="flex items-center justify-end gap-3 border-t pt-4">
+                  {mode === "edit" && (
+                    <button
+                      type="button"
+                      onClick={handleDelete}
+                      disabled={deleting}
+                      className="mr-auto flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-400/10 disabled:opacity-60"
+                    >
+                      <TbTrash size={15} /> {deleting ? "Deleting..." : "Delete project"}
+                    </button>
+                  )}
                   <button type="button" onClick={() => setMode("view")} className="rounded-lg px-4 py-2 text-sm font-medium text-foreground/85 hover:bg-muted">
                     Cancel
                   </button>

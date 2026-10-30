@@ -424,3 +424,93 @@ Return ONLY a JSON object, no surrounding text or code fences:
     inputNeeded: Array.from(new Set(inputNeeded)),
   };
 }
+
+/* ------------------------------------------------------------------ *
+ * Work ↔ GitHub: grouping small commits into feature-level cards.
+ * ------------------------------------------------------------------ */
+
+export interface CommitForGrouping {
+  sha: string;
+  message: string;
+  author: string;
+  at: string;
+  files: string[];
+}
+
+export interface RecentWorkCard {
+  id: string;
+  title: string;
+  summary: string;
+}
+
+export interface CommitGroup {
+  title: string;
+  summary: string;
+  /** Set when the commits continue a card from RECENT CARDS rather than starting a new one. */
+  existingTaskId: string | null;
+  shas: string[];
+}
+
+/**
+ * Asks Gemini to cluster commits into units of shipped work. Returns raw
+ * groups; the caller validates every sha and id against what it sent.
+ */
+export async function groupCommitsIntoWork(
+  repo: string,
+  commits: CommitForGrouping[],
+  recentCards: RecentWorkCard[]
+): Promise<CommitGroup[]> {
+  await requireUsage("ai");
+  const commitText = commits
+    .map((c) =>
+      [
+        `- sha: ${c.sha}`,
+        `  author: ${c.author}`,
+        `  at: ${c.at}`,
+        `  message: ${JSON.stringify(c.message.slice(0, 600))}`,
+        c.files.length ? `  files: ${c.files.slice(0, 25).join(", ")}${c.files.length > 25 ? ` (+${c.files.length - 25} more)` : ""}` : "",
+      ].filter(Boolean).join("\n")
+    )
+    .join("\n");
+  const cardText = recentCards.length
+    ? recentCards.map((c) => `- id: ${c.id}\n  title: ${JSON.stringify(c.title)}\n  summary: ${JSON.stringify(c.summary.slice(0, 300))}`).join("\n")
+    : "(none)";
+
+  const prompt = `
+You are turning a team's git commits into a work log for a project-management board.
+Developers commit in small steps, so one feature or fix is usually spread over several
+commits. Group the commits below into units of SHIPPED WORK — one group per feature,
+fix, or piece of work a manager would recognise.
+
+Repository: ${repo}
+
+COMMITS (oldest first):
+${commitText}
+
+RECENT CARDS already on the board for this repo (from earlier days):
+${cardText}
+
+RULES:
+- Every commit sha must appear in exactly one group. Do not drop any, however small.
+- Group by intent, using messages, file paths, and timing. Commits touching the same
+  area for the same purpose belong together even if hours apart.
+- Do not merge unrelated work just to make fewer groups. Tiny unrelated chores
+  (typos, version bumps, lockfiles) may share one "Maintenance" group.
+- If commits clearly continue the work of a RECENT CARD, set existingTaskId to that
+  card's id instead of starting a new group with a near-duplicate title.
+- title: short, specific, written as the outcome (e.g. "Team chat with group calls",
+  "Fix login redirect loop"). No commit prefixes like "feat:". Max 80 characters.
+- summary: 1-3 plain sentences on what changed and why it matters. No markdown.
+
+Return ONLY JSON:
+{"groups":[{"title":"...","summary":"...","existingTaskId":null,"shas":["<full sha>", "..."]}]}
+`;
+
+  const result = await model.generateContent({
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    generationConfig: { responseMimeType: "application/json", temperature: 0.2 },
+  });
+  const text = (await result.response).text();
+  const parsed = JSON.parse(text.match(/\{[\s\S]*\}/)?.[0] ?? "{}");
+  return Array.isArray(parsed.groups) ? parsed.groups : [];
+}

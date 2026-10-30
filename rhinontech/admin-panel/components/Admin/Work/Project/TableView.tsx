@@ -5,7 +5,8 @@ import { cn } from "@/lib/utils";
 import {
   TbAlertTriangle, TbChevronDown, TbChevronRight, TbFile, TbPaperclip, TbPlus, TbSubtask, TbTrash, TbX,
 } from "react-icons/tb";
-import { CustomFieldCell, SelectCell, TitleCell } from "./CellEditors";
+import { CustomFieldCell, SelectCell, TitleCell, formatFieldValue } from "./CellEditors";
+import { format } from "date-fns";
 import { DatePicker } from "@/components/ui/date-picker";
 import { STATUS_CHIP } from "./constants";
 import type { FieldDefinition, FieldType, PersonOption, ProjectTask, TaskRow, WorkflowStatus } from "./types";
@@ -30,7 +31,7 @@ function isOverdue(task: ProjectTask) {
 }
 
 export function TableView({
-  rows, statuses, fields, people, collapsed, rosterAvailable, group, readOnlyColumns = false,
+  rows, statuses, fields, people, collapsed, rosterAvailable, group, readOnlyColumns = false, readOnly = false,
   onToggleCollapsed, onPatch, onCreate, onDelete, onAddField, onRemoveField, onOpenTask,
 }: {
   rows: TaskRow[];
@@ -42,6 +43,8 @@ export function TableView({
   group: GroupKey;
   /** Hides column add/remove — /workflow/fields writes are requireInternal. */
   readOnlyColumns?: boolean;
+  /** The public portal: every cell renders as plain text, nothing is editable. */
+  readOnly?: boolean;
   onToggleCollapsed: (id: string) => void;
   onPatch: (id: string, patch: Record<string, unknown>) => void;
   onCreate: (title: string, parentTaskId?: string | null) => void;
@@ -55,6 +58,7 @@ export function TableView({
   const [fieldForm, setFieldForm] = useState({ name: "", type: "text" as FieldType, options: "" });
   const [subtaskFor, setSubtaskFor] = useState<string | null>(null);
   const [subtaskTitle, setSubtaskTitle] = useState("");
+  const fixedColumns = readOnlyColumns || readOnly;
 
   // Fixed columns, then one per custom field, then Files and the add-column button.
   const gridTemplate = `2.4rem minmax(220px,2fr) 150px 150px 120px ${fields.map(() => "120px").join(" ")} 90px 2.5rem`;
@@ -122,7 +126,7 @@ export function TableView({
             {fields.map((f) => (
               <span key={f.id} className="group flex items-center gap-1 px-1.5">
                 <span className="truncate">{f.name}</span>
-                {!readOnlyColumns && (
+                {!fixedColumns && (
                   <button
                     onClick={async () => {
                       if ((await confirmDialog(`Remove the "${f.name}" column? Existing values are kept but hidden.`))) {
@@ -138,7 +142,7 @@ export function TableView({
               </span>
             ))}
             <span className="px-1.5">Files</span>
-            {readOnlyColumns ? <span /> : (
+            {fixedColumns ? <span /> : (
               <button
                 onClick={() => setAddingField((a) => !a)}
                 title="Add a column"
@@ -211,13 +215,19 @@ export function TableView({
                     <span className="w-[18px] shrink-0" />
                   )}
                   <TbFile size={13} className="shrink-0 text-muted-foreground" />
-                  <TitleCell
-                    title={task.title}
-                    onOpen={() => onOpenTask(task)}
-                    onRename={(v) => onPatch(task.id, { title: v })}
-                    className="font-medium text-foreground"
-                  />
-                  <span className="flex shrink-0 items-center gap-0.5 opacity-0 transition group-hover:opacity-100">
+                  {readOnly ? (
+                    <button onClick={() => onOpenTask(task)} className="min-w-0 truncate px-1.5 py-1 text-left text-sm font-medium text-foreground hover:underline">
+                      {task.title}
+                    </button>
+                  ) : (
+                    <TitleCell
+                      title={task.title}
+                      onOpen={() => onOpenTask(task)}
+                      onRename={(v) => onPatch(task.id, { title: v })}
+                      className="font-medium text-foreground"
+                    />
+                  )}
+                  {!readOnly && <span className="flex shrink-0 items-center gap-0.5 opacity-0 transition group-hover:opacity-100">
                     <button
                       onClick={() => { setSubtaskFor(task.id); setSubtaskTitle(""); }}
                       title="Add subitem"
@@ -232,17 +242,28 @@ export function TableView({
                     >
                       <TbTrash size={13} />
                     </button>
-                  </span>
+                  </span>}
                 </span>
 
-                <SelectCell
+                {readOnly ? (
+                  <span className="truncate px-2 text-sm text-foreground/80">{task.assignee?.fullName ?? <span className="text-muted-foreground">Unassigned</span>}</span>
+                ) : <SelectCell
                   value={task.assigneeId ?? ""}
                   options={people.map((p) => ({ value: p.id, label: p.fullName }))}
                   onCommit={(v) => onPatch(task.id, { assigneeId: v || null })}
                   placeholder="Unassigned"
-                />
+                />}
 
-                <span className="px-0.5">
+                {readOnly ? (
+                  <span className="px-0.5">
+                    <span className={cn(
+                      "block truncate rounded-full px-2 py-1 text-[11px] font-medium",
+                      STATUS_CHIP[task.workflowStatus?.color ?? "stone"] ?? STATUS_CHIP.stone
+                    )}>
+                      {task.workflowStatus?.name ?? "—"}
+                    </span>
+                  </span>
+                ) : <span className="px-0.5">
                   <NativeSelect
                     value={task.statusId ?? ""}
                     onChange={(e) => onPatch(task.id, { statusId: e.target.value || null })}
@@ -254,24 +275,30 @@ export function TableView({
                     <option value="">—</option>
                     {statuses.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                   </NativeSelect>
-                </span>
+                </span>}
 
-                <DatePicker
+                {readOnly ? (
+                  <span className={cn("px-2 text-sm", isOverdue(task) ? "text-red-600 dark:text-red-300" : "text-foreground/80")}>
+                    {task.dueDate ? format(new Date(task.dueDate), "d MMM yyyy") : <span className="text-muted-foreground">—</span>}
+                  </span>
+                ) : <DatePicker
                   variant="cell"
                   ariaLabel={`Due date for ${task.title}`}
                   value={task.dueDate}
                   onChange={(v) => onPatch(task.id, { dueDate: v })}
                   className={isOverdue(task) ? "text-red-600 dark:text-red-300" : undefined}
-                />
+                />}
 
                 {fields.map((f) => (
                   <span key={f.id} className="px-0.5">
-                    <CustomFieldCell
+                    {readOnly ? (
+                      <span className="block truncate px-1.5 text-sm text-foreground/80">{formatFieldValue(f, task.customFields?.[f.id]) || "—"}</span>
+                    ) : <CustomFieldCell
                       field={f}
                       value={task.customFields?.[f.id]}
                       people={people}
                       onCommit={(v) => onPatch(task.id, { customFields: { [f.id]: v } })}
-                    />
+                    />}
                   </span>
                 ))}
 
@@ -289,7 +316,7 @@ export function TableView({
                 <span />
               </div>
 
-              {subtaskFor === task.id && (
+              {!readOnly && subtaskFor === task.id && (
                 <div className="grid border-b bg-blue-50/40 dark:bg-blue-400/10 px-2 py-1.5" style={{ gridTemplateColumns: gridTemplate }}>
                   <span />
                   <form
@@ -320,7 +347,7 @@ export function TableView({
           ))}
 
           {/* add row */}
-          <form
+          {!readOnly && <form
             onSubmit={(e) => { e.preventDefault(); onCreate(newTitle); setNewTitle(""); }}
             className="grid items-center px-2 py-1.5"
             style={{ gridTemplateColumns: gridTemplate }}
@@ -332,11 +359,11 @@ export function TableView({
               placeholder="Item"
               className="w-full rounded border border-transparent px-1.5 py-1 text-sm outline-none placeholder:text-muted-foreground hover:border-border focus:border-blue-500"
             />
-          </form>
+          </form>}
 
           {!rows.length && (
             <p className="px-4 py-10 text-center text-sm text-muted-foreground">
-              No tasks in this project yet — add the first one above.
+              {readOnly ? "No tasks in this project yet." : "No tasks in this project yet — add the first one above."}
             </p>
           )}
         </div>

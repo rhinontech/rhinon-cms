@@ -27,6 +27,8 @@ import workRoutes from "./routes/work";
 import teamsRoutes from "./routes/teams";
 import workflowRoutes from "./routes/workflow";
 import webhooksRoutes from "./routes/webhooks";
+import githubRoutes from "./routes/github";
+import { githubWebhook } from "./routes/githubWebhook";
 import publicRoutes from "./routes/public";
 import leadsRoutes from "./routes/leads";
 import leadVisitsRoutes from "./routes/leadVisits";
@@ -101,6 +103,8 @@ const restrictedCors = cors({
 app.use((req, res, next) =>
   req.path.startsWith("/public") || req.path.startsWith("/widget") || req.path === "/collect" || req.path === "/t.js" ? openCors(req, res, next) : restrictedCors(req, res, next)
 );
+// GitHub signs the raw bytes, so this must see the body before express.json does.
+app.post("/webhooks/github", express.raw({ type: "*/*", limit: "5mb" }), githubWebhook);
 app.use(express.json({ limit: "20mb" }));
 
 // One line per request, after the body parser so payloads are readable and before
@@ -120,6 +124,8 @@ app.post("/auth/reset-password", tokenLimiter);
 app.use("/auth/onboard", tokenLimiter);
 app.use("/document-signing", tokenLimiter);
 app.use("/public/unsubscribe", tokenLimiter);
+// The client portal: unauthenticated, and a full task list per call.
+app.get(["/public/projects/:projectId/workspace", "/public/:orgSlug/projects/:projectId/workspace"], rateLimit({ name: "portal", windowMs: 15 * 60_000, max: 300 }));
 app.post("/public/web-leads", rateLimit({ name: "web-leads", windowMs: 60 * 60_000, max: 30 }));
 
 import workflowsRoutes from "./routes/workflows";
@@ -179,6 +185,7 @@ app.use("/widget", widgetRoutes);
 app.use("/chatbots", chatbotsRoutes);
 app.use("/startup-ideas", startupIdeasRoutes);
 app.use("/deploy", deployRoutes);
+app.use("/github", githubRoutes);
 app.use("/docs-access", docsAccessRoutes);
 app.use("/pages", pagesRoutes);
 app.use("/branding", brandingRoutes);
@@ -265,6 +272,11 @@ app.get("/health/deep", rateLimit({ name: "health-deep", windowMs: 60_000, max: 
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   if (err?.name === "PlanLimitError") {
     if (!res.headersSent) res.status(402).json({ message: err.message, code: "PLAN_LIMIT", limit: err.limit });
+    return;
+  }
+  // Model validators carry messages written for users ("Not a valid GitHub username").
+  if (err?.name === "SequelizeValidationError") {
+    if (!res.headersSent) res.status(400).json({ message: err.errors?.map((e: any) => e.message).join("; ") || "Invalid input." });
     return;
   }
   const badInput = err?.parent?.code === "22P02" || err?.original?.code === "22P02";

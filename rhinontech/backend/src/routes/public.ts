@@ -1,7 +1,8 @@
 import express, { Router, Response, Request } from "express";
 import { Op } from "sequelize";
-import { ClientRequest, Project, User, Lead, Blog, CaseStudy, Event, EventGuest, PageView, DocsAccess, WorkflowEnrollment, CampaignActivity, Visitor, Unsubscribe, StartupIdea } from "../models";
+import { ClientRequest, FieldDefinition, Task, TaskDependency, TaskTag, WorkflowStatus, Project, User, Lead, Blog, CaseStudy, Event, EventGuest, PageView, DocsAccess, WorkflowEnrollment, CampaignActivity, Visitor, Unsubscribe, StartupIdea } from "../models";
 import { registerEventHandler } from "./events";
+import { workflowFor } from "../services/taskStatus";
 import { verifyGuestToken } from "../services/eventEmail";
 import { certificateDownloadUrl } from "../services/eventCertificate";
 import { verifyUnsubscribe } from "../services/unsubscribeToken";
@@ -132,6 +133,52 @@ router.get("/projects/:projectId/requests", async (req: Request, res: Response) 
     });
   } catch (err) {
     console.error("Failed to fetch public project requests:", err);
+    res.status(500).json({ message: "Failed to fetch project data" });
+  }
+});
+
+/**
+ * GET /public/projects/:projectId/workspace — the client portal's read-only
+ * workspace: every task in the project (Table/Board/Gantt/Calendar), its
+ * workflow columns and custom fields.
+ *
+ * Same rule as the requests list above: only "workspace"-visibility projects
+ * are ever served. Deliberately left out: files, comments, activity, creator
+ * and assignee emails — the portal shows the work, not the team's internals.
+ */
+router.get("/projects/:projectId/workspace", async (req: Request, res: Response) => {
+  try {
+    const { projectId } = req.params;
+    const project = await Project.findByPk(projectId, { attributes: ["id", "name", "status", "visibility"] });
+    if (!project || project.visibility !== "workspace") {
+      res.status(404).json({ message: "Project not found" });
+      return;
+    }
+
+    const [tasks, statuses, fields] = await Promise.all([
+      Task.findAll({
+        where: { projectId: project.id },
+        attributes: [
+          "id", "title", "description", "descriptionHtml", "status", "statusId", "priority",
+          "startDate", "dueDate", "completedAt", "projectId", "parentTaskId", "position",
+          "assigneeId", "customFields", "createdAt",
+        ],
+        include: [
+          { model: User.unscoped(), as: "assignee", attributes: ["id", "fullName"] },
+          { model: WorkflowStatus, as: "workflowStatus", attributes: ["id", "name", "color", "group", "order"] },
+          { model: TaskTag, as: "tags", attributes: ["id", "label", "color"] },
+          { model: TaskDependency, as: "dependsOn", attributes: ["id", "predecessorId", "type", "lagDays"], separate: true },
+        ],
+        order: [["position", "ASC"], ["createdAt", "ASC"]],
+      }),
+      workflowFor(project.id),
+      FieldDefinition.findAll({ where: { projectId: [null, project.id] } as any, order: [["order", "ASC"]] }),
+    ]);
+
+    const { visibility, ...publicProject } = project.toJSON() as any;
+    res.json({ project: publicProject, tasks, statuses, fields });
+  } catch (err) {
+    console.error("Failed to fetch public project workspace:", err);
     res.status(500).json({ message: "Failed to fetch project data" });
   }
 });

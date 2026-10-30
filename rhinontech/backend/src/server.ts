@@ -2,7 +2,7 @@ import app from "./app";
 import { runLeadFinderQueue } from "./services/leadFinderQueue";
 import { env } from "./config/env";
 import { sequelize } from "./config/database";
-import { syncDatabase } from "./models";
+import { syncDatabase, ProjectRepo } from "./models";
 import { Campaign } from "./models/Campaign";
 import { Attendance } from "./models/Attendance";
 import { finalizeDueOffboardings } from "./services/offboarding";
@@ -18,6 +18,8 @@ import { ensureCollaboratorRole } from "./services/collaboratorRole";
 import { runTenancyMigration, auditOrphanRows } from "./services/tenancyMigration";
 import { provisionAllOrganizations } from "./services/orgProvisioning";
 import { runAsSystem } from "./services/tenantContext";
+import { startGroupingJob } from "./services/github/grouping";
+import { githubConfigured } from "./services/github/app";
 import { refreshSendingDomains } from "./services/siteSender";
 import { dispatchDueEventEmails } from "./services/eventReminderJob";
 import { purgeDueWorkspaces } from "./services/workspaceLifecycle";
@@ -230,6 +232,30 @@ function listen() {
         console.error("[Cron] Workspace purge failed:", err.message);
       }
     });
+
+    // Work ↔ GitHub pipeline: at 2 AM IST, the previous 24h (2 AM → 2 AM) of
+    // commits is synced and grouped into feature cards. 2 AM rather than
+    // midnight so late-night work lands with the day it belongs to.
+    if (githubConfigured()) {
+      cron.schedule("0 2 * * *", async () => {
+        const to = new Date();
+        to.setSeconds(0, 0);
+        const from = new Date(+to - 86400_000);
+        const links = await runAsSystem("cron:github-grouping", () =>
+          ProjectRepo.findAll({ where: { autoCreateTasks: true } })
+        );
+        for (const link of links) {
+          try {
+            const job = await startGroupingJob(link, { from, to }, "nightly").done;
+            if (job.result?.commits) {
+              console.log(`[GitHub] ${link.repoFullName}: grouped ${job.result.commits} commits → ${job.result.created} new, ${job.result.extended} extended`);
+            }
+          } catch (err: any) {
+            console.error(`[GitHub] Nightly grouping ${link.repoFullName}:`, err.message);
+          }
+        }
+      }, { timezone: "Asia/Kolkata" });
+    }
 
     // Salary revisions / promotions whose effective date has arrived
     cron.schedule("10 0 * * *", async () => {

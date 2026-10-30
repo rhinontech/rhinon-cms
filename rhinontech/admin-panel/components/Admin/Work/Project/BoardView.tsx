@@ -106,8 +106,9 @@ function DraggableCard(props: { task: ProjectTask; childCount: number; onOpen: (
 }
 
 function Column({
-  status, tasks, childCountOf, onOpen, onCreate,
+  status, tasks, childCountOf, onOpen, onCreate, readOnly,
 }: {
+  readOnly: boolean;
   status: WorkflowStatus;
   tasks: ProjectTask[];
   childCountOf: (id: string) => number;
@@ -124,16 +125,20 @@ function Column({
         <span className={cn("h-2 w-2 shrink-0 rounded-full", STATUS_DOT[status.color] ?? STATUS_DOT.stone)} />
         <span className="truncate text-sm font-semibold">{status.name}</span>
         <span className="text-xs opacity-70">{tasks.length}</span>
-        <button
-          onClick={() => setAdding(true)}
-          className="ml-auto rounded p-0.5 opacity-70 hover:bg-foreground/10 hover:opacity-100"
-          title="Add a task here"
-        >
-          <TbPlus size={14} />
-        </button>
-        <button className="rounded p-0.5 opacity-40" title="Column options (coming soon)" disabled>
-          <TbDots size={14} />
-        </button>
+        {!readOnly && (
+          <>
+            <button
+              onClick={() => setAdding(true)}
+              className="ml-auto rounded p-0.5 opacity-70 hover:bg-foreground/10 hover:opacity-100"
+              title="Add a task here"
+            >
+              <TbPlus size={14} />
+            </button>
+            <button className="rounded p-0.5 opacity-40" title="Column options (coming soon)" disabled>
+              <TbDots size={14} />
+            </button>
+          </>
+        )}
       </div>
 
       <div
@@ -163,11 +168,13 @@ function Column({
           </form>
         )}
 
-        {tasks.map((t) => (
+        {tasks.map((t) => readOnly ? (
+          <BoardCard key={t.id} task={t} childCount={childCountOf(t.id)} onOpen={onOpen} />
+        ) : (
           <DraggableCard key={t.id} task={t} childCount={childCountOf(t.id)} onOpen={onOpen} />
         ))}
 
-        {!tasks.length && !adding && (
+        {!tasks.length && !adding && !readOnly && (
           <button
             onClick={() => setAdding(true)}
             className="flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-border py-3 text-xs text-muted-foreground hover:border-border hover:text-foreground/70"
@@ -181,8 +188,10 @@ function Column({
 }
 
 export function BoardView({
-  rows, statuses, people, onPatch, onCreateInStatus, onOpenTask,
+  rows, statuses, people, onPatch, onCreateInStatus, onOpenTask, readOnly = false,
 }: {
+  /** The public portal: no drag, no create. */
+  readOnly?: boolean;
   rows: TaskRow[];
   statuses: WorkflowStatus[];
   people: PersonOption[];
@@ -235,7 +244,7 @@ export function BoardView({
     setActive(null);
     const task = (e.active.data.current as { task?: ProjectTask } | undefined)?.task;
     const statusId = (e.over?.data.current as { statusId?: string } | undefined)?.statusId;
-    if (!task || !statusId || task.statusId === statusId) return;
+    if (readOnly || !task || !statusId || task.statusId === statusId) return;
     onPatch(task.id, { statusId });
   };
 
@@ -259,6 +268,7 @@ export function BoardView({
               childCountOf={(id) => childCounts.get(id) ?? 0}
               onOpen={onOpenTask}
               onCreate={onCreateInStatus}
+              readOnly={readOnly}
             />
           ))}
         </div>

@@ -54,6 +54,7 @@ interface Employee {
   workSchedule?: string;
   remotePosition?: boolean;
   workLocation?: string;
+  githubLogin?: string | null;
   paymentFrequency?: string;
   legalName?: string;
   roleTitle?: string;
@@ -94,6 +95,7 @@ type EmployeeForm = {
   workSchedule: string;
   remotePosition: boolean;
   workLocation: string;
+  githubLogin: string;
   paymentFrequency: string;
   legalName: string;
   roleTitle: string;
@@ -131,6 +133,7 @@ const emptyForm: EmployeeForm = {
   workSchedule: "11 AM – 8 PM (Mon–Sat)",
   remotePosition: false,
   workLocation: "",
+  githubLogin: "",
   paymentFrequency: "Monthly",
   legalName: "",
   roleTitle: "",
@@ -185,6 +188,7 @@ function employeeToForm(employee: Employee): EmployeeForm {
     workSchedule: employee.workSchedule ?? "11 AM – 8 PM (Mon–Sat)",
     remotePosition: employee.remotePosition ?? false,
     workLocation: employee.workLocation ?? "",
+    githubLogin: employee.githubLogin ?? "",
     paymentFrequency: employee.paymentFrequency ?? "Monthly",
     legalName: employee.legalName ?? employee.fullName,
     roleTitle: employee.roleTitle ?? employee.role?.name ?? "",
@@ -1294,6 +1298,7 @@ export function PeopleDirectory() {
                       <Detail label="Role title" value={selectedEmployee.roleTitle || selectedEmployee.role?.name || "-"} />
                       <Detail label="Department" value={selectedEmployee.department} />
                       <Detail label="Work location" value={selectedEmployee.workLocation || "-"} />
+                      <Detail label="GitHub" value={selectedEmployee.githubLogin || "-"} />
                       <Detail label="Employment type" value={selectedEmployee.employmentType || "-"} />
                       <Detail label="Work schedule" value={selectedEmployee.workSchedule || "-"} />
                       <Detail label="Remote" value={selectedEmployee.remotePosition ? "Yes" : "No"} />
@@ -1516,6 +1521,7 @@ export function PeopleDirectory() {
                     <FormInput label="Joining date" type="date" value={form.joiningDate} onChange={(value) => updateForm("joiningDate", value)} required />
                     <FormInput label="Date of birth" type="date" value={form.dateOfBirth} onChange={(value) => updateForm("dateOfBirth", value)} />
                     <FormInput label="Work location" value={form.workLocation} onChange={(value) => updateForm("workLocation", value)} />
+                    <FormInput label="GitHub username" value={form.githubLogin} onChange={(value) => updateForm("githubLogin", value)} />
                     <FormSelect label="Employment type" value={form.employmentType} onChange={(value) => updateForm("employmentType", value)} options={EMPLOYMENT_TYPES} />
                     <FormSelect label="Compensation type" value={form.compensationType} onChange={(value) => updateForm("compensationType", value)} options={COMPENSATION_TYPES} />
                     <div className="col-span-2 flex flex-col gap-1.5">

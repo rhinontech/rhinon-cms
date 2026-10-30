@@ -33,6 +33,7 @@ import { LinkedInToken } from "./LinkedInToken";
 import { Subtask } from "./Subtask";
 import { TaskComment } from "./TaskComment";
 import { TeamChatConversation, TeamChatMember, TeamChatMessage, TeamChatReaction, TeamCallLink } from "./TeamChat";
+import { ProjectRepo, RepoCommit, ProjectSecret } from "./GitHub";
 import { TaskTag } from "./TaskTag";
 import { Site } from "./Site";
 import { Blog } from "./Blog";
@@ -84,7 +85,7 @@ import { HelpFolder } from "./HelpFolder";
 import { HelpArticle } from "./HelpArticle";
 import { ConnectedAccount } from "./ConnectedAccount";
 import { Organization } from "./Organization";
-import { DataTypes } from "sequelize";
+import { DataTypes, Op } from "sequelize";
 import { sequelize } from "../config/database";
 import { TENANT_MODELS, installTenantScope, assertTenantColumns } from "./tenantScope";
 import { SITE_MODELS, installSiteScope, assertSiteColumns } from "./siteScope";
@@ -165,6 +166,26 @@ TeamChatMessage.belongsTo(TeamChatConversation, { foreignKey: "conversationId", 
 TeamChatMessage.hasMany(TeamChatReaction, { foreignKey: "messageId", as: "reactions", onDelete: "CASCADE" });
 TeamChatReaction.belongsTo(TeamChatMessage, { foreignKey: "messageId", as: "message" });
 TeamChatConversation.hasMany(TeamCallLink, { foreignKey: "conversationId", as: "callLinks", onDelete: "CASCADE" });
+
+// GitHub integration (Work)
+Project.hasMany(ProjectRepo, { foreignKey: "projectId", as: "repos", onDelete: "CASCADE" });
+ProjectRepo.belongsTo(Project, { foreignKey: "projectId", as: "project" });
+ProjectRepo.hasMany(RepoCommit, { foreignKey: "projectRepoId", as: "commits", onDelete: "CASCADE" });
+RepoCommit.belongsTo(ProjectRepo, { foreignKey: "projectRepoId", as: "repo" });
+RepoCommit.belongsTo(Project, { foreignKey: "projectId", as: "project" });
+RepoCommit.belongsTo(User, { foreignKey: "userId", as: "author" });
+Project.hasMany(ProjectSecret, { foreignKey: "projectId", as: "secrets", onDelete: "CASCADE" });
+ProjectSecret.belongsTo(Project, { foreignKey: "projectId", as: "project" });
+ProjectSecret.belongsTo(User, { foreignKey: "createdById", as: "creator" });
+// Setting a GitHub username claims that person's earlier, unattributed commits —
+// matching otherwise only happens as commits arrive.
+User.afterSave(async (user, options) => {
+  if (!user.changed("githubLogin") || !user.githubLogin) return;
+  await RepoCommit.update(
+    { userId: user.id },
+    { where: { authorLogin: { [Op.iLike]: user.githubLogin }, userId: null }, transaction: options.transaction }
+  );
+});
 
 // --- Wrike-parity task graph -------------------------------------------------
 
@@ -483,6 +504,7 @@ export {
   Subtask,
   TaskComment,
   TeamChatConversation, TeamChatMember, TeamChatMessage, TeamChatReaction, TeamCallLink,
+  ProjectRepo, RepoCommit, ProjectSecret,
   TaskTag,
   Site,
   Blog,

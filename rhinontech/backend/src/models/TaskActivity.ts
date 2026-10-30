@@ -16,7 +16,8 @@ export type TaskActivityType =
   | "dependency_removed"
   | "subitem_added"
   | "time_logged"
-  | "shared_with_guests";
+  | "shared_with_guests"
+  | "commit_linked";
 
 interface TaskActivityAttributes {
   id: string;
@@ -64,7 +65,7 @@ TaskActivity.init(
       type: DataTypes.ENUM(
         "created", "title_changed", "status_changed", "assignee_changed", "dates_changed",
         "priority_changed", "description_changed", "field_changed", "file_added", "file_removed",
-        "dependency_added", "dependency_removed", "subitem_added", "time_logged", "shared_with_guests"
+        "dependency_added", "dependency_removed", "subitem_added", "time_logged", "shared_with_guests", "commit_linked"
       ),
       allowNull: false,
     },

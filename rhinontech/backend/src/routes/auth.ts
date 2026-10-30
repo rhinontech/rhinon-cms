@@ -581,6 +581,7 @@ router.put("/me", authenticate, async (req: AuthRequest, res: Response) => {
     "fullName", "personalEmail",
     "pan", "employmentType", "compensationType",
     "workSchedule", "remotePosition", "workLocation", "paymentFrequency",
+    "githubLogin",
   ];
   const update: Record<string, unknown> = {};
   for (const key of allowed) {

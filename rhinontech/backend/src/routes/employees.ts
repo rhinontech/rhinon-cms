@@ -68,6 +68,7 @@ const employeeEditableFields = [
   "workSchedule",
   "remotePosition",
   "workLocation",
+  "githubLogin",
   "paymentFrequency",
   "legalName",
   "roleTitle",

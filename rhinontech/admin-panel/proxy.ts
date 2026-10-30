@@ -18,7 +18,7 @@ export function proxy(request: NextRequest) {
   const isAuthRoute = pathname.startsWith("/auth/");
   const isOnboardRoute = pathname.startsWith("/onboard");
   const isSignDocumentsRoute = pathname.startsWith("/sign-documents");
-  const isPublicPortal = pathname.startsWith("/p/");
+  const isPublicPortal = pathname.startsWith("/p/") || pathname.startsWith("/public/");
   // Meeting links: guests join a call without an account.
   const isMeetLink = pathname.startsWith("/meet/");
 

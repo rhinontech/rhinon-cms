@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, API_URL } from "@/lib/api";
 import type {
   FieldDefinition, PersonOption, ProjectSummary, ProjectTask, TaskRow, WorkflowStatus,
 } from "./types";
@@ -15,7 +15,8 @@ import { EMPTY_FILTERS, type GroupKey, type SortKey, type WorkspaceFilters } fro
  * Kept in one hook so switching tabs never refetches, and so an edit made in the
  * Table is immediately reflected in Board, Calendar and Gantt.
  */
-export function useProjectWorkspace(projectId: string) {
+export function useProjectWorkspace(projectId: string, source: "internal" | "public" = "internal") {
+  const isPublic = source === "public";
   const [project, setProject] = useState<ProjectSummary | null>(null);
   const [tasks, setTasks] = useState<ProjectTask[]>([]);
   const [statuses, setStatuses] = useState<WorkflowStatus[]>([]);
@@ -29,14 +30,35 @@ export function useProjectWorkspace(projectId: string) {
   const [sort, setSort] = useState<SortKey>("position");
   const [group, setGroup] = useState<GroupKey>("none");
 
+  /**
+   * The client portal: one unauthenticated read of the whole workspace. Plain
+   * fetch, not apiFetch — a stray admin cookie in the visitor's browser must
+   * not be sent along, and nothing here needs it.
+   */
+  const loadPublic = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_URL}/public/projects/${projectId}/workspace`);
+      if (!res.ok) throw new Error(String(res.status));
+      const d = await res.json();
+      setProject(d.project);
+      setTasks(d.tasks);
+      setStatuses(d.statuses);
+      setFields(d.fields);
+    } catch {
+      setProject(null);
+      setTasks([]);
+    }
+  }, [projectId]);
+
   const loadTasks = useCallback(async () => {
+    if (isPublic) return loadPublic();
     try {
       // scope=all: inside a project the whole team's work is the point, not just mine.
       setTasks(await apiFetch<ProjectTask[]>(`/tasks?scope=all&projectId=${projectId}`));
     } catch {
       setTasks([]);
     }
-  }, [projectId]);
+  }, [projectId, isPublic, loadPublic]);
 
   const loadMeta = useCallback(async () => {
     const [s, f] = await Promise.all([
@@ -49,6 +71,10 @@ export function useProjectWorkspace(projectId: string) {
 
   useEffect(() => {
     setLoading(true);
+    if (isPublic) {
+      loadPublic().finally(() => setLoading(false));
+      return;
+    }
     Promise.all([
       apiFetch<ProjectSummary[]>("/work/projects")
         .then((all) => setProject(all.find((p) => p.id === projectId) ?? null))
@@ -65,7 +91,7 @@ export function useProjectWorkspace(projectId: string) {
         // whoever already appears on the project's tasks.
         .catch(() => { setRoster([]); setRosterAvailable(false); }),
     ]).finally(() => setLoading(false));
-  }, [projectId, loadTasks, loadMeta]);
+  }, [projectId, isPublic, loadPublic, loadTasks, loadMeta]);
 
   /**
    * The assignee picker's options.

@@ -261,11 +261,24 @@ export function TaskDetailDrawer({
           className="w-full rounded border border-transparent px-1 py-0.5 text-lg font-semibold text-foreground outline-none hover:border-border focus:border-blue-500"
         />
 
-        {projectName && (
-          <span className="inline-flex items-center gap-1 rounded bg-orange-50 dark:bg-orange-400/10 px-2 py-0.5 text-xs font-medium text-orange-800 dark:text-orange-200">
-            <TbFolder size={12} /> {projectName}
-          </span>
-        )}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {projectName && (
+            <span className="inline-flex items-center gap-1 rounded bg-orange-50 dark:bg-orange-400/10 px-2 py-0.5 text-xs font-medium text-orange-800 dark:text-orange-200">
+              <TbFolder size={12} /> {projectName}
+            </span>
+          )}
+          {/* What a commit message names to link itself here (see GitHubView). */}
+          <button
+            onClick={async () => {
+              await navigator.clipboard.writeText(`T-${task.id.slice(0, 8)}`);
+              toast.success("Task ref copied");
+            }}
+            className="rounded bg-muted px-2 py-0.5 font-mono text-xs text-foreground/70 hover:bg-muted/70"
+            title="Copy ref — put it in a commit message to link the commit to this task"
+          >
+            T-{task.id.slice(0, 8)}
+          </button>
+        </div>
 
         <div className="grid grid-cols-2 gap-2">
           <label className="block">

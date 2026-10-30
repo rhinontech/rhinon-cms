@@ -4,12 +4,14 @@ import { AdminDashboardShell } from "@/components/Admin/Common/AdminDashboardShe
 import { CollapsibleSubNav } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { SideNavProvider } from "@/context/SideNavContext";
 import { usePathname } from "next/navigation";
-import { TbCheckbox, TbFolders, TbLayoutDashboard, TbLayoutKanban, TbUsersGroup, TbList } from "react-icons/tb";
+import { TbCheckbox, TbFolders, TbGitCommit, TbLayoutDashboard, TbLayoutKanban, TbUsersGroup, TbList } from "react-icons/tb";
+import { useOrganization } from "@/lib/useOrganization";
 
 function WorkLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const roleSlug = pathname.split("/")[1];
   const base = `/${roleSlug}/work`;
+  const { organization } = useOrganization();
 
   const items = [
     { label: "Overview", href: base, icon: <TbLayoutDashboard size={18} />, exact: true },
@@ -19,6 +21,8 @@ function WorkLayoutContent({ children }: { children: React.ReactNode }) {
     { label: "Tasks", href: `${base}/tasks`, icon: <TbCheckbox size={18} /> },
     { label: "Changes & Bugs", href: `${base}/changes`, icon: <TbLayoutKanban size={18} /> },
     { label: "Teams", href: `${base}/teams`, icon: <TbUsersGroup size={18} /> },
+    // GitHub tracking is platform-only for now; the API enforces it too.
+    ...(organization?.isPlatform ? [{ label: "Commits", href: `${base}/commits`, icon: <TbGitCommit size={18} /> }] : []),
   ];
 
   return (

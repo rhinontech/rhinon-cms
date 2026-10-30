@@ -9,6 +9,7 @@ import { apiFetch } from "@/lib/api";
 import { TbLayoutSidebarFilled, TbLayoutSidebarRightFilled, TbPlus, TbCheck, TbExternalLink, TbCheckbox, TbAlertTriangle } from "react-icons/tb";
 
 import { NativeSelect } from "@/components/ui/native-select";
+import { portalPath } from "./Project/portalUrl";
 type RequestType = "Bug" | "Change request";
 type RequestStatus = "Open" | "In review" | "In progress" | "Done";
 type RequestPriority = "Low" | "Medium" | "High";
@@ -312,7 +313,7 @@ export function WorkChangesPage() {
               </NativeSelect>
               {projectFilter !== "all" && (
                 <a
-                  href={`/p/${projectFilter}`}
+                  href={portalPath(projects.find((p) => p.id === projectFilter)?.name ?? "project", projectFilter)}
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground/70 hover:bg-muted/40 hover:text-foreground"

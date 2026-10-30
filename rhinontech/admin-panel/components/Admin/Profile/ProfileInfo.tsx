@@ -24,6 +24,7 @@ interface UserProfile {
   workSchedule?: string;
   remotePosition?: boolean;
   workLocation?: string;
+  githubLogin?: string | null;
   paymentFrequency?: string;
   role?: { name: string; slug: string };
 }
@@ -94,6 +95,7 @@ export function ProfileInfo() {
           compensationType: form.compensationType, workSchedule: form.workSchedule,
           remotePosition: form.remotePosition, workLocation: form.workLocation,
           paymentFrequency: form.paymentFrequency,
+          githubLogin: form.githubLogin ?? "",
         }),
       });
       setProfile(updated); setForm(updated); setEditing(false);
@@ -193,6 +195,7 @@ export function ProfileInfo() {
                   <Field label="Compensation Type" value={profile.compensationType ?? "Salaried"} />
                   <Field label="Work Schedule"     value={profile.workSchedule ?? "11 AM – 8 PM (Mon–Sat)"} />
                   <Field label="Work Location"     value={profile.workLocation} />
+                  <Field label="GitHub Username"   value={profile.githubLogin ?? undefined} />
                   <Field label="Remote Position"   value={profile.remotePosition ? "Yes" : "No"} />
                   <Field label="Payment Frequency" value={profile.paymentFrequency ?? "Monthly"} />
                 </div>
@@ -204,6 +207,7 @@ export function ProfileInfo() {
                   <InputField label="Department" name="department" value={profile.department} onChange={() => {}} disabled hint="Set by admin" />
                   <InputField label="PAN" name="pan" value={form.pan ?? ""} onChange={(v) => setForm((f) => ({ ...f, pan: v.toUpperCase() }))} hint="10-character PAN number" />
                   <InputField label="Work Location" name="workLocation" value={form.workLocation ?? ""} onChange={(v) => setForm((f) => ({ ...f, workLocation: v }))} />
+                  <InputField label="GitHub Username" name="githubLogin" value={form.githubLogin ?? ""} onChange={(v) => setForm((f) => ({ ...f, githubLogin: v }))} hint="Links your commits to you in Work" />
 
                   {(["employmentType", "compensationType", "paymentFrequency"] as const).map((key) => {
                     const opts: Record<string, string[]> = {
