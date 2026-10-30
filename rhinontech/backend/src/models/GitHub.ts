@@ -18,6 +18,8 @@ interface ProjectRepoAttributes {
   /** The GitHub App installation that can see this repo; needed to mint API tokens. */
   installationId: number;
   defaultBranch: string;
+  /** Tag color for this repo's cards (a STATUS_CHIP palette key), so repos don't blur together. */
+  color: string;
   /**
    * Opt-in: each night, commits that reference no task are grouped by AI into
    * feature-level Done cards (services/github/grouping.ts).
@@ -37,7 +39,7 @@ interface ProjectRepoAttributes {
 interface ProjectRepoCreationAttributes
   extends Optional<
     ProjectRepoAttributes,
-    | "id" | "autoCreateTasks" | "deployKeyId" | "deployKeyPublic" | "deployKeyPrivateEnc"
+    | "id" | "color" | "autoCreateTasks" | "deployKeyId" | "deployKeyPublic" | "deployKeyPrivateEnc"
     | "deployKeyReadOnly" | "lastPushAt" | "createdById"
   > {}
 
@@ -51,6 +53,7 @@ export class ProjectRepo
   declare repoId: number;
   declare installationId: number;
   declare defaultBranch: string;
+  declare color: string;
   declare autoCreateTasks: boolean;
   declare deployKeyId: number | null;
   declare deployKeyPublic: string | null;
@@ -70,6 +73,7 @@ ProjectRepo.init(
     repoId: { type: DataTypes.BIGINT, allowNull: false },
     installationId: { type: DataTypes.BIGINT, allowNull: false },
     defaultBranch: { type: DataTypes.STRING(200), allowNull: false, defaultValue: "main" },
+    color: { type: DataTypes.STRING(20), allowNull: false, defaultValue: "blue" },
     autoCreateTasks: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
     deployKeyId: { type: DataTypes.BIGINT, allowNull: true },
     deployKeyPublic: { type: DataTypes.TEXT, allowNull: true },

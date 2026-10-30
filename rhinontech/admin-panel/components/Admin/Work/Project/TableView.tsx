@@ -227,6 +227,9 @@ export function TableView({
                       className="font-medium text-foreground"
                     />
                   )}
+                  {task.tags?.map((t) => (
+                    <span key={t.id} className={cn("shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium", STATUS_CHIP[t.color] ?? STATUS_CHIP.stone)}>{t.label}</span>
+                  ))}
                   {!readOnly && <span className="flex shrink-0 items-center gap-0.5 opacity-0 transition group-hover:opacity-100">
                     <button
                       onClick={() => { setSubtaskFor(task.id); setSubtaskTitle(""); }}

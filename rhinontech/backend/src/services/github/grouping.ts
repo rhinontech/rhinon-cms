@@ -1,5 +1,5 @@
 import { Op } from "sequelize";
-import { Project, ProjectRepo, RepoCommit, Task, TaskActivity, User } from "../../models";
+import { Project, ProjectRepo, RepoCommit, Task, TaskActivity, TaskTag, User } from "../../models";
 import { groupCommitsIntoWork, type CommitGroup } from "../gemini";
 import { logActivity } from "../taskActivity";
 import { asInstallation } from "./app";
@@ -277,6 +277,7 @@ async function groupBatch(link: ProjectRepo, fetched: RepoCommit[]): Promise<Gro
       await logActivity(task.id, null, "created", `Created by AI from ${commits.length} commit${commits.length === 1 ? "" : "s"}`, {
         source: SOURCE, shas: commits.map((c) => c.sha),
       });
+      await TaskTag.create({ taskId: task.id, label: repoLabel(link), color: link.color });
       cards.set(task.id, task);
       result.created++;
     }
@@ -355,4 +356,24 @@ export function startGroupingJob(
   }, { label: `github:grouping:${trigger}` });
 
   return { job, done };
+}
+
+/** The tag that marks a card's repo: "owner/name" → "name". */
+export const repoLabel = (link: ProjectRepo) => link.repoFullName.split("/").pop()!.slice(0, 50);
+
+/**
+ * Applies a repo's color to every card its commits belong to, adding the tag
+ * where it's missing (cards made before colors existed, or by hand).
+ */
+export async function syncRepoTags(link: ProjectRepo) {
+  const commits = await RepoCommit.findAll({ where: { projectRepoId: link.id }, attributes: ["taskIds"] });
+  const ids = [...new Set(commits.flatMap((c) => c.taskIds))];
+  if (!ids.length) return;
+  const live = (await Task.findAll({ where: { id: { [Op.in]: ids } }, attributes: ["id"] })).map((t) => t.id);
+  const label = repoLabel(link);
+  const tagged = new Set(
+    (await TaskTag.findAll({ where: { taskId: { [Op.in]: live }, label }, attributes: ["taskId"] })).map((t) => t.taskId)
+  );
+  await TaskTag.update({ color: link.color }, { where: { taskId: { [Op.in]: live }, label } });
+  for (const id of live) if (!tagged.has(id)) await TaskTag.create({ taskId: id, label, color: link.color });
 }

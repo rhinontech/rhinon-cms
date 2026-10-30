@@ -12,7 +12,7 @@ import {
   GitHubError, asInstallation, githubConfigured, installUrl, listAvailableRepos,
 } from "../services/github/app";
 import { backfillCommits } from "../services/github/commits";
-import { groupingJob, startGroupingJob } from "../services/github/grouping";
+import { groupingJob, startGroupingJob, syncRepoTags } from "../services/github/grouping";
 import { generateSshKeyPair, removeDeployKey } from "../services/github/keys";
 
 /**
@@ -27,6 +27,8 @@ const router = Router();
 router.use(authenticate, requirePlatformOrg, requireInternal, authorize("work:read"));
 
 const canWrite = authorize("work:write");
+/** Keys of the admin panel's STATUS_CHIP palette. */
+const REPO_COLORS = ["blue", "indigo", "cyan", "amber", "green", "stone", "red", "purple"];
 
 const fail = (res: Response, err: any, what: string) => {
   console.error(`[GitHub] ${what}:`, err.message);
@@ -61,6 +63,7 @@ const publicLink = (l: ProjectRepo) => ({
   projectId: l.projectId,
   repoFullName: l.repoFullName,
   defaultBranch: l.defaultBranch,
+  color: l.color,
   autoCreateTasks: l.autoCreateTasks,
   deployKeyPublic: l.deployKeyPublic,
   deployKeyReadOnly: l.deployKeyReadOnly,
@@ -168,12 +171,14 @@ router.post("/projects/:projectId/repos", canWrite, projectGuard, async (req: Au
 
 router.patch("/repos/:linkId", canWrite, linkGuard, async (req: AuthRequest, res: Response) => {
   const link: ProjectRepo = (req as any).link;
-  const patch: Partial<{ autoCreateTasks: boolean; defaultBranch: string }> = {};
+  const patch: Partial<{ autoCreateTasks: boolean; defaultBranch: string; color: string }> = {};
+  if (typeof req.body?.color === "string" && REPO_COLORS.includes(req.body.color)) patch.color = req.body.color;
   if (typeof req.body?.autoCreateTasks === "boolean") patch.autoCreateTasks = req.body.autoCreateTasks;
   if (typeof req.body?.defaultBranch === "string" && req.body.defaultBranch.trim()) {
     patch.defaultBranch = req.body.defaultBranch.trim().slice(0, 200);
   }
   await link.update(patch);
+  if (patch.color) await syncRepoTags(link);
   res.json(publicLink(link));
 });
 

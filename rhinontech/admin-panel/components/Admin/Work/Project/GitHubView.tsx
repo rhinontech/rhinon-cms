@@ -11,12 +11,14 @@ import {
 } from "react-icons/tb";
 import { Switch } from "@/components/ui/switch";
 import { NativeSelect } from "@/components/ui/native-select";
+import { STATUS_CHIP, STATUS_DOT } from "./constants";
 import { alertDialog, confirmDialog } from "@/components/ui/dialogs";
 
 export interface RepoLink {
   id: string;
   repoFullName: string;
   defaultBranch: string;
+  color: string;
   autoCreateTasks: boolean;
   deployKeyPublic: string | null;
   deployKeyReadOnly: boolean;
@@ -51,6 +53,9 @@ interface Secret {
   createdAt: string;
   creator?: { fullName: string } | null;
 }
+
+/** Must match REPO_COLORS in the API (routes/github.ts). */
+const REPO_COLORS = ["blue", "indigo", "cyan", "amber", "green", "stone", "red", "purple"];
 
 const KIND_LABEL: Record<Secret["kind"], string> = {
   ssh_key: "SSH key", env: "Env vars", token: "Token", note: "Note",
@@ -184,6 +189,23 @@ function RepoCard({ link, onChanged }: { link: RepoLink; onChanged: () => void }
             <TbTrash size={14} />
           </button>
         </div>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-foreground/80">
+        Card color
+        {REPO_COLORS.map((c) => (
+          <button
+            key={c}
+            onClick={() => c !== link.color && patch({ color: c })}
+            disabled={busy === "patch"}
+            title={c}
+            className={cn("h-5 w-5 rounded-full ring-offset-2 ring-offset-card", STATUS_DOT[c], link.color === c && "ring-2 ring-foreground/60")}
+          />
+        ))}
+        <span className={cn("rounded px-1.5 py-0.5 text-[10px] font-medium", STATUS_CHIP[link.color] ?? STATUS_CHIP.stone)}>
+          {link.repoFullName.split("/").pop()}
+        </span>
+        <span className="text-muted-foreground">— tag on this repo's cards</span>
       </div>
 
       <label className="mt-3 flex items-center gap-2 text-xs text-foreground/80">

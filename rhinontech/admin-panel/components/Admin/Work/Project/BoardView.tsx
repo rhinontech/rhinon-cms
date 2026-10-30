@@ -61,6 +61,13 @@ function BoardCard({
       )}
       <button data-task-opener onClick={() => onOpen?.(task)} className="block w-full px-3 py-2.5 text-left">
         <p className="text-sm font-medium leading-snug text-foreground">{task.title}</p>
+        {!!task.tags?.length && (
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            {task.tags.map((t) => (
+              <span key={t.id} className={cn("rounded px-1.5 py-0.5 text-[10px] font-medium", STATUS_CHIP[t.color] ?? STATUS_CHIP.stone)}>{t.label}</span>
+            ))}
+          </div>
+        )}
         <div className="mt-2 flex items-center justify-between gap-2">
           {task.assignee ? (
             <span
