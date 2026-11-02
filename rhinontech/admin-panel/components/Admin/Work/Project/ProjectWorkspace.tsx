@@ -31,8 +31,8 @@ type Tab = "table" | "board" | "gantt" | "files" | "analytics" | "calendar" | "g
 
 /** Each tab carries its own accent so the view you are in is obvious at a glance. */
 const TABS: { key: Tab; label: string; icon: React.ReactNode; accent: string; tint: string }[] = [
-  { key: "table",     label: "Table",       icon: <TbTable size={15} />,        accent: "border-blue-500 text-blue-700 dark:text-blue-300",       tint: "text-blue-500 dark:text-blue-400" },
   { key: "board",     label: "Board",       icon: <TbLayoutKanban size={15} />, accent: "border-violet-500 text-violet-700 dark:text-violet-300",   tint: "text-violet-500 dark:text-violet-400" },
+  { key: "table",     label: "Table",       icon: <TbTable size={15} />,        accent: "border-blue-500 text-blue-700 dark:text-blue-300",       tint: "text-blue-500 dark:text-blue-400" },
   { key: "gantt",     label: "Gantt chart", icon: <TbTimeline size={15} />,     accent: "border-emerald-500 text-emerald-700 dark:text-emerald-300", tint: "text-emerald-500 dark:text-emerald-400" },
   { key: "files",     label: "Files",       icon: <TbPaperclip size={15} />,    accent: "border-amber-500 text-amber-700 dark:text-amber-300",     tint: "text-amber-500 dark:text-amber-400" },
   { key: "analytics", label: "Analytics",   icon: <TbChartPie size={15} />,     accent: "border-rose-500 text-rose-700 dark:text-rose-300",       tint: "text-rose-500 dark:text-rose-400" },
@@ -45,9 +45,9 @@ const TABS: { key: Tab; label: string; icon: React.ReactNode; accent: string; ti
 
 /** What each mode may see. The portal gets the views of the work, not its files or tooling. */
 const TABS_FOR: Record<"internal" | "collaborator" | "public", Tab[]> = {
-  internal: ["table", "board", "gantt", "files", "analytics", "calendar", "github"],
-  collaborator: ["table", "board", "gantt", "files", "analytics", "calendar"],
-  public: ["table", "board", "gantt", "analytics", "calendar", "requests"],
+  internal: ["board", "table", "gantt", "files", "analytics", "calendar", "github"],
+  collaborator: ["board", "table", "gantt", "files", "analytics", "calendar"],
+  public: ["board", "table", "gantt", "analytics", "calendar", "requests"],
 };
 
 /**
@@ -78,7 +78,7 @@ export function ProjectWorkspace({
   const isCollab = mode === "collaborator";
   const isPublic = mode === "public";
   const { setSideNav } = useSideNav();
-  const [tab, setTab] = useState<Tab>("table");
+  const [tab, setTab] = useState<Tab>("board");
   const { organization } = useOrganization();
   const showGitHub = mode === "internal" && Boolean(organization?.isPlatform);
   const tabs = TABS.filter((t) => TABS_FOR[mode].includes(t.key) && (t.key !== "github" || showGitHub));
@@ -264,6 +264,7 @@ export function ProjectWorkspace({
             onCreateInStatus={ws.createInStatus}
             onOpenTask={setOpenTask}
             readOnly={isPublic}
+            columns={mode === "internal" ? { add: ws.addColumn, update: ws.updateColumn, remove: ws.removeColumn } : undefined}
           />
         )}
 

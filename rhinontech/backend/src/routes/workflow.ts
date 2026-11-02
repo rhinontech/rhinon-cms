@@ -1,5 +1,6 @@
 import { Router, Response } from "express";
 import { authenticate, authorizeAny, requireInternal, AuthRequest } from "../middleware/authenticate";
+import { sequelize } from "../config/database";
 import { FieldDefinition, Task, WorkflowStatus } from "../models";
 import { canAccessProject } from "../services/workAccess";
 import { workflowFor } from "../services/taskStatus";
@@ -61,6 +62,37 @@ router.post("/statuses", requireInternal, async (req: AuthRequest, res: Response
   }
 });
 
+/**
+ * POST /workflow/statuses/fork { projectId } — gives a project its own columns,
+ * copied from the shared defaults, and moves its tasks onto them, so editing a
+ * column can't change every other project. Returns old id → new id; a project
+ * that already has its own columns gets an empty map.
+ */
+router.post("/statuses/fork", requireInternal, async (req: AuthRequest, res: Response) => {
+  try {
+    const projectId = req.body?.projectId;
+    if (typeof projectId !== "string" || !projectId) { res.status(400).json({ message: "projectId is required" }); return; }
+    if (!(await guardProject(projectId, req, res))) return;
+    if (await WorkflowStatus.count({ where: { projectId } })) { res.json({ map: {} }); return; }
+
+    const shared = await WorkflowStatus.findAll({ where: { projectId: null }, order: [["order", "ASC"]] });
+    const map: Record<string, string> = {};
+    await sequelize.transaction(async (transaction) => {
+      for (const s of shared) {
+        const copy = await WorkflowStatus.create(
+          { projectId, name: s.name, color: s.color, group: s.group, order: s.order, isDefault: s.isDefault },
+          { transaction }
+        );
+        map[s.id] = copy.id;
+        await Task.update({ statusId: copy.id }, { where: { projectId, statusId: s.id }, transaction });
+      }
+    });
+    res.json({ map });
+  } catch (err) {
+    res.status(statusFor(err)).json({ message: "Failed to copy columns" });
+  }
+});
+
 router.put("/statuses/:id", requireInternal, async (req: AuthRequest, res: Response) => {
   try {
     const status = await WorkflowStatus.findByPk(req.params.id);
@@ -97,6 +129,14 @@ router.delete("/statuses/:id", requireInternal, async (req: AuthRequest, res: Re
     if (inUse > 0) {
       res.status(409).json({ message: `${inUse} task(s) are in "${status.name}". Move them first.` });
       return;
+    }
+    // AI cards and "fixes T-…" commits close tasks into a Completed column.
+    if (status.group === "Completed") {
+      const others = await WorkflowStatus.count({ where: { projectId: status.projectId, group: "Completed" } });
+      if (others <= 1) {
+        res.status(409).json({ message: "A project needs at least one Completed column." });
+        return;
+      }
     }
     await status.destroy();
     res.json({ message: "Status deleted" });
