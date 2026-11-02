@@ -14,6 +14,7 @@ import { RewriteToolbar } from "@/components/Admin/People/RewriteToolbar";
 import { NewTemplateDialog } from "@/components/Admin/People/NewTemplateDialog";
 import type { LetterBlock } from "@/types/letterBlocks";
 import { useOrganization } from "@/lib/useOrganization";
+import { GitHubAccessPanel } from "./GitHubAccessPanel";
 
 import { NativeSelect } from "@/components/ui/native-select";
 import { confirmDialog, alertDialog } from "@/components/ui/dialogs";
@@ -503,7 +504,7 @@ function FormSelect({
 export function PeopleDirectory() {
   // Company addresses live on the workspace's own subdomain, so the suffix in
   // the Add-Employee form has to come from the org, not a hardcoded constant.
-  const { emailDomain } = useOrganization();
+  const { emailDomain, organization } = useOrganization();
   const { isExpanded: isSubNavExpanded } = useSideNav();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [attachDocs, setAttachDocs] = useState(true);
@@ -1304,6 +1305,10 @@ export function PeopleDirectory() {
                       <Detail label="Remote" value={selectedEmployee.remotePosition ? "Yes" : "No"} />
                       <Detail label="Joining date" value={formatDate(selectedEmployee.joiningDate)} />
                     </div>
+
+                    {canManage && organization?.isPlatform && (
+                      <GitHubAccessPanel userId={selectedEmployee.id} githubLogin={selectedEmployee.githubLogin} />
+                    )}
 
                     {/* Admin-only sections */}
                     {canManage && (

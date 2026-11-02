@@ -233,3 +233,63 @@ ProjectSecret.init(
   },
   { sequelize, tableName: "project_secrets", timestamps: true, indexes: [{ fields: ["projectId"] }] }
 );
+
+export type RepoAccessStatus = "invited" | "active" | "failed";
+export type RepoPermission = "pull" | "push" | "admin";
+
+interface RepoAccessAttributes {
+  id: string;
+  userId: string;
+  repoId: number;
+  repoFullName: string;
+  installationId: number;
+  /** The login access was granted to; revocation must target this even if the profile changes. */
+  githubLogin: string;
+  permission: RepoPermission;
+  status: RepoAccessStatus;
+  invitationId: number | null;
+  error: string | null;
+  grantedById: string | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+interface RepoAccessCreationAttributes
+  extends Optional<RepoAccessAttributes, "id" | "status" | "invitationId" | "error" | "grantedById"> {}
+
+/** An employee's access to one repository, granted from People. Removed rows are deleted. */
+export class RepoAccess
+  extends Model<RepoAccessAttributes, RepoAccessCreationAttributes>
+  implements RepoAccessAttributes
+{
+  declare id: string;
+  declare userId: string;
+  declare repoId: number;
+  declare repoFullName: string;
+  declare installationId: number;
+  declare githubLogin: string;
+  declare permission: RepoPermission;
+  declare status: RepoAccessStatus;
+  declare invitationId: number | null;
+  declare error: string | null;
+  declare grantedById: string | null;
+  declare readonly createdAt: Date;
+  declare readonly updatedAt: Date;
+}
+
+RepoAccess.init(
+  {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    userId: { type: DataTypes.UUID, allowNull: false },
+    repoId: { type: DataTypes.BIGINT, allowNull: false },
+    repoFullName: { type: DataTypes.STRING(200), allowNull: false },
+    installationId: { type: DataTypes.BIGINT, allowNull: false },
+    githubLogin: { type: DataTypes.STRING(100), allowNull: false },
+    permission: { type: DataTypes.STRING(10), allowNull: false },
+    status: { type: DataTypes.STRING(10), allowNull: false, defaultValue: "invited" },
+    invitationId: { type: DataTypes.BIGINT, allowNull: true },
+    error: { type: DataTypes.STRING(300), allowNull: true },
+    grantedById: { type: DataTypes.UUID, allowNull: true },
+  },
+  { sequelize, tableName: "repo_access", timestamps: true, indexes: [{ unique: true, fields: ["userId", "repoId"] }] }
+);

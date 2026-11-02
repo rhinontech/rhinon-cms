@@ -1,5 +1,6 @@
 import { Op } from "sequelize";
 import { User, LeaveRequest, Attendance, Task, DocsAccess } from "../models";
+import { revokeAllRepoAccess } from "./github/access";
 
 // Business dates (joining/exit days) are IST regardless of server timezone.
 export function todayIST(): string {
@@ -11,6 +12,7 @@ export interface OffboardCleanupResult {
   attendanceClosed: number;
   tasksUnassigned: number;
   docsAccessRevoked: number;
+  repoAccessRevoked: number;
 }
 
 /**
@@ -20,6 +22,7 @@ export interface OffboardCleanupResult {
  * - open attendance entries clocked out
  * - open tasks unassigned (back to the pool)
  * - docs access revoked for their company + personal emails
+ * - GitHub repo access removed
  *
  * Live JWT sessions die via the status check in the authenticate middleware.
  */
@@ -60,7 +63,9 @@ export async function finalizeOffboarding(user: User): Promise<OffboardCleanupRe
     ? await DocsAccess.destroy({ where: { email: { [Op.in]: emails } } })
     : 0;
 
-  return { leaveRequestsRejected, attendanceClosed, tasksUnassigned, docsAccessRevoked };
+  const repoAccessRevoked = await revokeAllRepoAccess(user.id);
+
+  return { leaveRequestsRejected, attendanceClosed, tasksUnassigned, docsAccessRevoked, repoAccessRevoked };
 }
 
 /**

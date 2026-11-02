@@ -3,7 +3,8 @@ import { Op } from "sequelize";
 import {
   authenticate, authorize, requireInternal, requirePlatformOrg, AuthRequest,
 } from "../middleware/authenticate";
-import { Project, ProjectRepo, ProjectSecret, RepoCommit, User } from "../models";
+import { Project, ProjectRepo, ProjectSecret, RepoAccess, RepoCommit, User } from "../models";
+import { grantRepoAccess, listRepoAccess, revokeRepoAccess } from "../services/github/access";
 import type { ProjectSecretKind } from "../models/GitHub";
 import { canAccessProject, getHiddenProjectIds } from "../services/workAccess";
 import { encryptSecret, decryptSecret } from "../services/totp";
@@ -373,6 +374,72 @@ router.delete("/projects/:projectId/secrets/:secretId", canWrite, projectGuard, 
   }
   await secret.destroy();
   auditRequest(req, "project.secret_deleted", { entityType: "project", entityId: secret.projectId, metadata: { name: secret.name } });
+  res.json({ ok: true });
+});
+
+// ---------- Employee repo access (People) ----------
+
+// Its own router: HR manages access without needing work:read, which guards
+// the commit feed and project secrets above. Mounted at /github/access.
+export const githubAccessRouter = Router();
+githubAccessRouter.use(authenticate, requirePlatformOrg, requireInternal, authorize("employees:write"));
+const REPO_PERMISSIONS = ["pull", "push", "admin"] as const;
+
+/** The picker's options. */
+githubAccessRouter.get("/repos", async (_req, res) => {
+  try {
+    res.json(await listAvailableRepos());
+  } catch (err: any) {
+    fail(res, err, "list repositories");
+  }
+});
+
+githubAccessRouter.get("/:userId", async (req: AuthRequest, res: Response) => {
+  try {
+    res.json(await listRepoAccess(req.params.userId as string));
+  } catch (err: any) {
+    fail(res, err, "load repo access");
+  }
+});
+
+/** Body: { repoIds: number[], permission }. Per-repo failures are stored on the row, not thrown. */
+githubAccessRouter.post("/:userId", async (req: AuthRequest, res: Response) => {
+  const repoIds = Array.isArray(req.body?.repoIds) ? req.body.repoIds.map(Number).filter(Number.isFinite) : [];
+  const permission = req.body?.permission;
+  if (!repoIds.length || !REPO_PERMISSIONS.includes(permission)) {
+    res.status(400).json({ message: "Choose at least one repository and a permission." });
+    return;
+  }
+  const user = await User.findByPk(req.params.userId as string);
+  if (!user) {
+    res.status(404).json({ message: "Employee not found" });
+    return;
+  }
+  if (!user.githubLogin) {
+    res.status(400).json({ message: "Add this person's GitHub username first." });
+    return;
+  }
+  try {
+    await grantRepoAccess(user, repoIds, permission, req.user!.userId);
+    auditRequest(req, "github.access_granted", { entityType: "user", entityId: user.id, metadata: { repoIds, permission, login: user.githubLogin } });
+    res.json(await RepoAccess.findAll({ where: { userId: user.id }, order: [["repoFullName", "ASC"]] }));
+  } catch (err: any) {
+    fail(res, err, "grant repo access");
+  }
+});
+
+githubAccessRouter.delete("/:userId/:accessId", async (req: AuthRequest, res: Response) => {
+  const row = await RepoAccess.findOne({ where: { id: req.params.accessId, userId: req.params.userId } });
+  if (!row) {
+    res.status(404).json({ message: "Access not found" });
+    return;
+  }
+  const ok = await revokeRepoAccess(row);
+  auditRequest(req, "github.access_revoked", { entityType: "user", entityId: row.userId, metadata: { repo: row.repoFullName, login: row.githubLogin, ok } });
+  if (!ok) {
+    res.status(502).json({ message: row.error ?? "GitHub refused the removal." });
+    return;
+  }
   res.json({ ok: true });
 });
 
