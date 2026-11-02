@@ -10,6 +10,7 @@ import { collaboratorInviteEmail } from "../services/emailTemplates";
 import { ensureCollaboratorRole } from "../services/collaboratorRole";
 import { env } from "../config/env";
 import { deleteProject } from "../services/projectDeletion";
+import { notifyRequestCreated, notifyRequestStatus } from "../services/workNotifications";
 import { projectDaySummary } from "../services/daySummary";
 import { auditRequest } from "../services/audit";
 import { transactionalBrand } from "../services/companyProfile";
@@ -294,6 +295,7 @@ router.post("/requests", async (req: AuthRequest, res: Response) => {
       createdById: req.user!.userId,
     });
 
+    notifyRequestCreated(request, req.user!);
     const full = await ClientRequest.findByPk(request.id, { include: requestIncludes });
     res.status(201).json(full);
   } catch (err) {
@@ -317,6 +319,7 @@ router.put("/requests/:id", async (req: AuthRequest, res: Response) => {
       return;
     }
 
+    const previousStatus = request.status;
     await request.update({
       ...(title !== undefined && { title: String(title).trim() }),
       ...(description !== undefined && { description: String(description).trim() }),
@@ -327,6 +330,7 @@ router.put("/requests/:id", async (req: AuthRequest, res: Response) => {
       ...(reportedBy !== undefined && { reportedBy }),
     });
 
+    notifyRequestStatus(request, previousStatus, req.user!);
     const full = await ClientRequest.findByPk(request.id, { include: requestIncludes });
     res.json(full);
   } catch (err) {

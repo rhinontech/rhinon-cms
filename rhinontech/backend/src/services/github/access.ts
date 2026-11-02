@@ -1,6 +1,7 @@
 import { RepoAccess, User } from "../../models";
 import type { RepoPermission } from "../../models/GitHub";
 import { GitHubError, asInstallation, listAvailableRepos } from "./app";
+import { notify } from "../notifications";
 
 /**
  * Repo access for employees. GitHub can't create accounts for us, so this
@@ -33,6 +34,7 @@ export async function grantRepoAccess(user: User, repoIds: number[], permission:
         status: invite ? "invited" : "active",
         invitationId: invite?.id ?? null,
       });
+      await notify({ userIds: [user.id], type: "github.access_granted", title: `You were given access to ${repo.fullName}`, body: invite ? "Accept the invite GitHub emailed you." : null, link: "/profile", actorId: grantedById });
     } catch (err: any) {
       await row.update({ githubLogin: login, permission, status: "failed", error: String(err.message).slice(0, 300) });
     }
@@ -69,6 +71,7 @@ export async function revokeRepoAccess(row: RepoAccess): Promise<boolean> {
     return true;
   } catch (err: any) {
     await row.update({ status: "failed", error: `Could not remove: ${err.message}`.slice(0, 300) });
+    await notify({ userIds: [row.grantedById], type: "github.revoke_failed", title: `Couldn't remove ${row.githubLogin} from ${row.repoFullName}`, body: "Remove their access on GitHub by hand.", link: "/employees" });
     console.error(`[GitHub] Revoke ${row.repoFullName}/${row.githubLogin}:`, err.message);
     return false;
   }

@@ -1,12 +1,13 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
+import { NotificationBell } from "@/components/Admin/Common/Notifications/NotificationBell";
 import Link from "next/link";
 import Cookies from "js-cookie";
 import { clearPermissionsCache } from "@/context/PermissionsContext";
 import { useEffect, useState } from "react";
 import { LogOut } from "lucide-react";
-import { TbUser, TbChevronDown, TbChevronRight, TbBell, TbEye, TbMenu2 } from "react-icons/tb";
+import { TbUser, TbChevronDown, TbChevronRight, TbEye, TbMenu2 } from "react-icons/tb";
 import { useDashboard } from "@/components/Common/DashboardProvider/DashboardProvider";
 import {
   Popover,
@@ -173,9 +174,7 @@ export function SiteHeader() {
       <ThemeToggle />
 
       {/* Notifications */}
-      <button className="relative rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground" aria-label="Notifications">
-        <TbBell size={18} />
-      </button>
+      <NotificationBell />
 
       <div className="mx-0.5 h-5 w-px bg-foreground/10" />
 

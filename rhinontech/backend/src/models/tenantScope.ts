@@ -22,6 +22,7 @@ import { Subtask } from "./Subtask";
 import { TaskComment } from "./TaskComment";
 import { TeamChatConversation, TeamChatMember, TeamChatMessage, TeamChatReaction, TeamCallLink } from "./TeamChat";
 import { ProjectRepo, RepoCommit, ProjectSecret, RepoAccess, ProjectDaySummary } from "./GitHub";
+import { Notification } from "./Notification";
 import { TaskTag } from "./TaskTag";
 import { TaskDependency } from "./TaskDependency";
 import { TaskAttachment } from "./TaskAttachment";
@@ -126,7 +127,7 @@ export const TENANT_MODELS: ModelStatic<any>[] = [
   Chatbot, ChatbotSource, ChatConversation, ChatMessage, ChatbotCampaign,
   ChatbotTicket, ChatbotTicketMessage, HelpFolder, HelpArticle, ConnectedAccount,
   TeamChatConversation, TeamChatMember, TeamChatMessage, TeamChatReaction, TeamCallLink,
-  ProjectRepo, RepoCommit, ProjectSecret, RepoAccess, ProjectDaySummary,
+  ProjectRepo, RepoCommit, ProjectSecret, RepoAccess, ProjectDaySummary, Notification,
 ];
 
 const TENANT_MODEL_NAMES = new Set(TENANT_MODELS.map((m) => m.name));

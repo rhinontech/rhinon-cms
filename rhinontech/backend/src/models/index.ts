@@ -34,6 +34,7 @@ import { Subtask } from "./Subtask";
 import { TaskComment } from "./TaskComment";
 import { TeamChatConversation, TeamChatMember, TeamChatMessage, TeamChatReaction, TeamCallLink } from "./TeamChat";
 import { ProjectRepo, RepoCommit, ProjectSecret, RepoAccess, ProjectDaySummary } from "./GitHub";
+import { Notification } from "./Notification";
 import { TaskTag } from "./TaskTag";
 import { Site } from "./Site";
 import { Blog } from "./Blog";
@@ -504,7 +505,7 @@ export {
   Subtask,
   TaskComment,
   TeamChatConversation, TeamChatMember, TeamChatMessage, TeamChatReaction, TeamCallLink,
-  ProjectRepo, RepoCommit, ProjectSecret, RepoAccess, ProjectDaySummary,
+  ProjectRepo, RepoCommit, ProjectSecret, RepoAccess, ProjectDaySummary, Notification,
   TaskTag,
   Site,
   Blog,

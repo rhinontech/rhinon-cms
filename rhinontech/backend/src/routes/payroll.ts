@@ -9,6 +9,7 @@ import { payslipPaidEmail } from "../services/emailTemplates";
 import { env } from "../config/env";
 import { transactionalBrand } from "../services/companyProfile";
 import { applyDueRevisions } from "../services/compensationRevisions";
+import { notify } from "../services/notifications";
 
 const router = Router();
 
@@ -663,6 +664,9 @@ router.post("/admin/runs/:id/pay", authorize("payroll:write"), async (req: AuthR
 
   const paymentDate = new Date();
   await Payslip.update({ status: "paid", paymentDate }, { where: { payrollId: payroll.id } });
+  // A bulk update skips model hooks, so payslip notices are sent from here.
+  const paid = await Payslip.findAll({ ...{ where: { payrollId: payroll.id } }, attributes: ["userId"] });
+  void notify({ userIds: paid.map((p) => p.userId), type: "payroll.payslip_ready", title: "Your payslip is ready", link: "/payroll", actorId: req.user?.userId });
   const runSlipIds = (await Payslip.findAll({ where: { payrollId: payroll.id }, attributes: ["id"] })).map((p) => p.id);
   await markClaimsPaid(runSlipIds, paymentDate);
   await payroll.update({ status: "paid", processedById: req.user!.userId, processedAt: paymentDate });

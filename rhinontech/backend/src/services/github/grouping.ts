@@ -5,6 +5,7 @@ import { logActivity } from "../taskActivity";
 import { asInstallation } from "./app";
 import { backfillRange, completedStatusId, firstLine } from "./commits";
 import { runForOrg } from "../tenantContext";
+import { notify } from "../notifications";
 
 /**
  * AI grouping: developers commit in small steps, so 3-4 commits usually make
@@ -291,6 +292,11 @@ async function groupBatch(link: ProjectRepo, fetched: RepoCommit[]): Promise<Gro
 
 /* ---------- Background runs ---------- */
 
+async function notifyOwner(link: ProjectRepo, type: string, title: string, body?: string | null) {
+  const project = await Project.findByPk(link.projectId, { attributes: ["ownerId", "createdById"] });
+  await notify({ userIds: [project?.ownerId ?? project?.createdById], type, title, body, link: `/work/projects/${link.projectId}` });
+}
+
 /**
  * A run over a date range syncs from GitHub and then makes several AI calls —
  * minutes, not seconds, which is longer than nginx will hold a request open.
@@ -345,10 +351,12 @@ export function startGroupingJob(
       job.state = "grouping";
       job.result = await groupCommitsWithAI(link, range);
       job.state = "done";
+      if (job.result.created || job.result.extended) await notifyOwner(link, "github.cards_created", `AI added ${job.result.created} new card(s) from ${link.repoFullName}`);
     } catch (err: any) {
       job.state = "failed";
       job.error = err?.message || "Grouping failed";
       console.error(`[GitHub] Grouping ${link.repoFullName} failed:`, job.error);
+      await notifyOwner(link, "github.run_failed", `Creating cards from ${link.repoFullName} failed`, job.error);
     } finally {
       job.finishedAt = new Date().toISOString();
     }

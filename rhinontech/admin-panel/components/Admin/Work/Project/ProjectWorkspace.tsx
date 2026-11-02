@@ -98,6 +98,16 @@ export function ProjectWorkspace({
   const [openDay, setOpenDay] = useState<Date | null>(null);
   const ws = useProjectWorkspace(projectId, isPublic ? "public" : "internal");
   const loadedName = ws.project?.name;
+  // A notification links here with ?task=<id>: open that task once tasks load.
+  const hasTasks = ws.tasks.length > 0;
+  useEffect(() => {
+    if (!hasTasks || isPublic) return;
+    const id = new URLSearchParams(window.location.search).get("task");
+    const target = id ? ws.tasks.find((t) => t.id === id) : null;
+    if (target) setOpenTask(target);
+    // Only when the list first arrives; later edits must not reopen a closed drawer.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasTasks, projectId]);
   useEffect(() => {
     if (ws.project && onProjectLoaded) onProjectLoaded({ id: ws.project.id, name: ws.project.name });
     // Once per load or rename, not on every render.
