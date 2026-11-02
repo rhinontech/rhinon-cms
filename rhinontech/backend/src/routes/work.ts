@@ -10,6 +10,7 @@ import { collaboratorInviteEmail } from "../services/emailTemplates";
 import { ensureCollaboratorRole } from "../services/collaboratorRole";
 import { env } from "../config/env";
 import { deleteProject } from "../services/projectDeletion";
+import { projectDaySummary } from "../services/daySummary";
 import { auditRequest } from "../services/audit";
 import { transactionalBrand } from "../services/companyProfile";
 import {
@@ -225,6 +226,26 @@ router.delete("/projects/:id", requireInternal, authorizeAny("work:write"), asyn
   } catch (err: any) {
     console.error("[Work] Project delete failed:", err.message);
     res.status(500).json({ message: "Failed to delete project" });
+  }
+});
+
+/** GET /work/projects/:id/day-summary?date=YYYY-MM-DD — that IST day's work, with AI pointers. */
+router.get("/projects/:id/day-summary", requireInternal, async (req: AuthRequest, res: Response) => {
+  try {
+    const date = String(req.query.date ?? "");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || isNaN(+new Date(date))) {
+      res.status(400).json({ message: "A valid date is required." });
+      return;
+    }
+    const project = await Project.findByPk(req.params.id);
+    if (!project || !(await canAccessProject(project.id, req))) {
+      res.status(404).json({ message: "Project not found" });
+      return;
+    }
+    res.json(await projectDaySummary(project, date));
+  } catch (err: any) {
+    console.error("[Work] Day summary failed:", err.message);
+    res.status(500).json({ message: "Failed to load this day" });
   }
 });
 

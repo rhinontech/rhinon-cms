@@ -33,7 +33,7 @@ import { LinkedInToken } from "./LinkedInToken";
 import { Subtask } from "./Subtask";
 import { TaskComment } from "./TaskComment";
 import { TeamChatConversation, TeamChatMember, TeamChatMessage, TeamChatReaction, TeamCallLink } from "./TeamChat";
-import { ProjectRepo, RepoCommit, ProjectSecret, RepoAccess } from "./GitHub";
+import { ProjectRepo, RepoCommit, ProjectSecret, RepoAccess, ProjectDaySummary } from "./GitHub";
 import { TaskTag } from "./TaskTag";
 import { Site } from "./Site";
 import { Blog } from "./Blog";
@@ -504,7 +504,7 @@ export {
   Subtask,
   TaskComment,
   TeamChatConversation, TeamChatMember, TeamChatMessage, TeamChatReaction, TeamCallLink,
-  ProjectRepo, RepoCommit, ProjectSecret, RepoAccess,
+  ProjectRepo, RepoCommit, ProjectSecret, RepoAccess, ProjectDaySummary,
   TaskTag,
   Site,
   Blog,

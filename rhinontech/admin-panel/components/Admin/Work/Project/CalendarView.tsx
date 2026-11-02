@@ -75,8 +75,10 @@ function layoutWeek(days: Date[], tasks: ProjectTask[]): Bar[] {
 }
 
 export function CalendarView({
-  rows, onOpenTask, onCreateOnDate, readOnly = false,
+  rows, onOpenTask, onCreateOnDate, readOnly = false, onOpenDay,
 }: {
+  /** Click a date for that day's summary. Omitted where it isn't offered (portal, collaborators). */
+  onOpenDay?: (date: Date) => void;
   /** The public portal: no double-click to create. */
   readOnly?: boolean;
   rows: TaskRow[];
@@ -167,8 +169,9 @@ export function CalendarView({
                     return (
                       <button
                         key={d.toISOString()}
+                        onClick={() => onOpenDay?.(d)}
                         onDoubleClick={() => !readOnly && onCreateOnDate(d)}
-                        title={readOnly ? undefined : "Double-click to add a task on this day"}
+                        title={readOnly ? undefined : onOpenDay ? "Click for this day's work · double-click to add a task" : "Double-click to add a task on this day"}
                         className={cn(
                           "group h-full border-r px-2 pt-1.5 text-left align-top last:border-r-0",
                           !inMonth && "bg-muted/40"

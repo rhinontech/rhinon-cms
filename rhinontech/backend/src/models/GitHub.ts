@@ -293,3 +293,40 @@ RepoAccess.init(
   },
   { sequelize, tableName: "repo_access", timestamps: true, indexes: [{ unique: true, fields: ["userId", "repoId"] }] }
 );
+
+interface ProjectDaySummaryAttributes {
+  id: string;
+  projectId: string;
+  /** IST calendar day, YYYY-MM-DD. */
+  date: string;
+  /** Hash of the day's events; a mismatch means new work, so the summary is regenerated. */
+  fingerprint: string;
+  points: string[];
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+/** A saved AI summary of one project day, so reopening it never calls Gemini again. */
+export class ProjectDaySummary
+  extends Model<ProjectDaySummaryAttributes, Optional<ProjectDaySummaryAttributes, "id">>
+  implements ProjectDaySummaryAttributes
+{
+  declare id: string;
+  declare projectId: string;
+  declare date: string;
+  declare fingerprint: string;
+  declare points: string[];
+  declare readonly createdAt: Date;
+  declare readonly updatedAt: Date;
+}
+
+ProjectDaySummary.init(
+  {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    projectId: { type: DataTypes.UUID, allowNull: false },
+    date: { type: DataTypes.DATEONLY, allowNull: false },
+    fingerprint: { type: DataTypes.STRING(64), allowNull: false },
+    points: { type: DataTypes.JSONB, allowNull: false, defaultValue: [] },
+  },
+  { sequelize, tableName: "project_day_summaries", timestamps: true, indexes: [{ unique: true, fields: ["projectId", "date"] }] }
+);

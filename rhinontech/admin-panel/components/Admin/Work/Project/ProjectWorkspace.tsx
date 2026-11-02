@@ -16,6 +16,7 @@ import { WorkspaceToolbar } from "./WorkspaceToolbar";
 import { ProjectRail, accentFor } from "./ProjectRail";
 import { FilesView } from "./FilesView";
 import { GitHubView } from "./GitHubView";
+import { DaySummaryPanel } from "./DaySummaryPanel";
 import { PublicRequests } from "./PublicRequests";
 import { PublicTaskPanel } from "./PublicTaskPanel";
 import { useOrganization } from "@/lib/useOrganization";
@@ -94,6 +95,7 @@ export function ProjectWorkspace({
     return () => setSideNav(true);
   }, [setSideNav]);
   const [openTask, setOpenTask] = useState<ProjectTask | null>(null);
+  const [openDay, setOpenDay] = useState<Date | null>(null);
   const ws = useProjectWorkspace(projectId, isPublic ? "public" : "internal");
   const loadedName = ws.project?.name;
   useEffect(() => {
@@ -296,6 +298,7 @@ export function ProjectWorkspace({
             rows={ws.rows}
             onOpenTask={setOpenTask}
             readOnly={isPublic}
+            onOpenDay={mode === "internal" ? setOpenDay : undefined}
             onCreateOnDate={async (date) => {
               const title = (await promptDialog(`New task on ${date.toDateString()}`));
               if (title?.trim()) ws.createOnDate(title, date);
@@ -311,6 +314,7 @@ export function ProjectWorkspace({
       {/* Sibling of the rail + content column, not of the tab body — otherwise
           the drawer starts below the header and toolbar instead of running the
           full height of the panel. */}
+      {openDay && tab === "calendar" && <DaySummaryPanel projectId={projectId} date={openDay} onClose={() => setOpenDay(null)} />}
       {live && isPublic && (
         <PublicTaskPanel task={live} rows={ws.rows} onClose={() => setOpenTask(null)} onOpen={setOpenTask} />
       )}
