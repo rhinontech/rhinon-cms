@@ -64,9 +64,12 @@ const Hero1 = () => {
           {/* Main Heading */}
           <motion.h1
             variants={fadeUpVariant}
-            className="text-[42px] text-center sm:text-5xl md:text-[80px] font-sans font-normal leading-[1.1] tracking-[-0.02em] max-w-4xl mx-auto py-2 text-transparent bg-clip-text bg-linear-to-b from-white to-white/80 mb-6"
+            className="text-[36px] text-center sm:text-5xl md:text-[76px] font-sans font-normal leading-[1.12] tracking-[-0.02em] max-w-5xl mx-auto py-2 text-transparent bg-clip-text bg-linear-to-b from-white to-white/80 mb-6"
           >
-            Scale Your Operations, <br className="sm:hidden" /> <span className="font-serif italic text-transparent bg-clip-text bg-linear-to-r from-[#c7d4ff] via-[#8fa6ff] to-[#5b7bff] pr-2">Not Your Headcount.</span>
+            AI Automation & Custom Software <br />
+            <span className="font-serif italic text-transparent bg-clip-text bg-linear-to-r from-[#c7d4ff] via-[#8fa6ff] to-[#5b7bff] pr-2">
+              that Scales Your Operations.
+            </span>
           </motion.h1>
           {/* Subtitle */}
           <motion.p variants={fadeUpVariant} className="text-white/70 text-center sm:text-lg max-w-2xl mx-auto mb-8 sm:mb-10 px-4 sm:px-0">
