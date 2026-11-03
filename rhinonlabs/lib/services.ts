@@ -221,7 +221,7 @@ export const services: Service[] = [
     slug: "web-development",
     lastModified: "2026-10-10",
     name: "Website & Web App Development",
-    metaTitle: "Website & Web App Development for Startups and SMBs",
+    metaTitle: "Website & Web App Development for Startups",
     metaDescription:
       "Fast, SEO-ready websites and custom web applications for startups and growing businesses — from landing pages to full platforms. Designed and built by Rhinon Labs.",
     eyebrow: "Web Development",

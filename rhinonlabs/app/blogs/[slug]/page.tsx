@@ -24,19 +24,28 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+/** Crisp titles trimmed under 60 characters for Google SERP display  */
+const BLOG_TITLE_OVERRIDES: Record<string, string> = {
+  "automating-onboarding": "Automate Onboarding, Invoicing & Reporting: Founder's Guide",
+  "event-registration-system": "Build an Event Registration System with Auto Admin Panel",
+  "chatbot-vs-ai-agent-real-difference": "Chatbot vs AI Agent: What's the Real Difference?",
+};
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const blog = await getBlog(slug);
 
   if (!blog) return { title: "Blog Not Found" };
 
-  const ogTitle = blog.metaTitle || blog.title;
+  const seoTitle = blog.metaTitle || BLOG_TITLE_OVERRIDES[blog.slug] || blog.title;
+  const isCustomTitle = Boolean(blog.metaTitle || BLOG_TITLE_OVERRIDES[blog.slug]);
+  const ogTitle = seoTitle;
   const ogDescription = blog.metaDescription || blog.excerpt;
   const ogImage = blog.coverImage || `${SITE_URL}/og-image.jpg`;
 
   return {
-    // metaTitle is used verbatim (absolute); otherwise the root "%s | Rhinon Labs" template applies.
-    title: blog.metaTitle ? { absolute: blog.metaTitle } : blog.title,
+    // metaTitle / overrides are used verbatim (absolute) to guarantee they fit in SERPs (< 60 chars)
+    title: isCustomTitle ? { absolute: seoTitle } : seoTitle,
     description: ogDescription,
     alternates: { canonical: `${SITE_URL}/blogs/${blog.slug}` },
     openGraph: {
@@ -49,7 +58,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       images: [
         {
           url: ogImage,
-          alt: blog.title,
+          alt: seoTitle,
         },
       ],
     },

@@ -11,32 +11,39 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+/** Crisp titles trimmed under 60 characters for Google SERP display (SEO Audit #10) */
+const CASE_STUDY_TITLE_OVERRIDES: Record<string, string> = {
+  "furrcircle-the-all-in-one-app-for-pet-parents": "FurrCircle Pet Parent App – Case Study",
+};
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const cs = await getCaseStudy(slug);
 
   if (!cs) return { title: "Case Study Not Found" };
 
+  const seoTitle = CASE_STUDY_TITLE_OVERRIDES[cs.slug] || cs.title;
   const ogImage = cs.image || cs.images?.[0] || `${SITE_URL}/og-image.jpg`;
+
   return {
-    title: cs.title,
+    title: seoTitle,
     description: cs.description,
     alternates: { canonical: `${SITE_URL}/case-studies/${cs.slug}` },
     openGraph: {
-      title: cs.title,
+      title: seoTitle,
       description: cs.description,
       url: `${SITE_URL}/case-studies/${cs.slug}`,
       type: "article",
       images: [
         {
           url: ogImage,
-          alt: cs.title,
+          alt: seoTitle,
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title: cs.title,
+      title: seoTitle,
       description: cs.description,
       images: [ogImage],
     },
