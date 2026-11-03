@@ -9,6 +9,8 @@ export interface ServiceFaq {
 
 export interface Service {
   slug: string;
+  /** ISO date string (YYYY-MM-DD) when this service page content was last updated */
+  lastModified: string;
   /** Short name used in nav, cards and breadcrumbs */
   name: string;
   /** <title> (the layout template appends " | Rhinon Labs") */
@@ -35,6 +37,7 @@ export interface Service {
 export const services: Service[] = [
   {
     slug: "mvp-development",
+    lastModified: "2026-10-20",
     name: "MVP Development",
     metaTitle: "MVP Development for Startups — Launch in Weeks",
     metaDescription:
@@ -78,6 +81,7 @@ export const services: Service[] = [
   },
   {
     slug: "ai-agents",
+    lastModified: "2026-10-18",
     name: "AI Agents & Automation",
     metaTitle: "AI Agent Development for Businesses",
     metaDescription:
@@ -121,6 +125,7 @@ export const services: Service[] = [
   },
   {
     slug: "workflow-automation",
+    lastModified: "2026-10-15",
     name: "Workflow Automation",
     metaTitle: "Workflow Automation Services for SMBs",
     metaDescription:
@@ -164,6 +169,7 @@ export const services: Service[] = [
   },
   {
     slug: "internal-dashboards",
+    lastModified: "2026-10-12",
     name: "Internal Dashboards & Tools",
     metaTitle: "Custom Internal Dashboards & Business Tools",
     metaDescription:
@@ -207,6 +213,7 @@ export const services: Service[] = [
   },
   {
     slug: "web-development",
+    lastModified: "2026-10-10",
     name: "Website & Web App Development",
     metaTitle: "Website & Web App Development for Startups and SMBs",
     metaDescription:
@@ -250,6 +257,7 @@ export const services: Service[] = [
   },
   {
     slug: "mobile-app-development",
+    lastModified: "2026-10-08",
     name: "Mobile App Development",
     metaTitle: "Mobile App Development — iOS & Android",
     metaDescription:

@@ -31,6 +31,7 @@ export interface Blog {
   tags: string[];
   readTime: string;
   publishedAt: string;
+  updatedAt?: string;
 }
 
 export interface CaseStudyStat {
@@ -58,6 +59,7 @@ export interface CaseStudy {
   images?: string[];
   stats: CaseStudyStat[];
   displayOrder: number;
+  updatedAt?: string;
 }
 
 async function getJSON<T>(path: string): Promise<T | null> {
@@ -80,7 +82,8 @@ export async function getBlog(slug: string): Promise<Blog | null> {
 }
 
 export async function getCaseStudies(): Promise<CaseStudy[]> {
-  return (await getJSON<CaseStudy[]>("/public/case-studies")) ?? [];
+  const caseStudies = await getJSON<CaseStudy[]>("/public/case-studies");
+  return caseStudies ?? [];
 }
 
 export async function getCaseStudy(slug: string): Promise<CaseStudy | null> {
