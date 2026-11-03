@@ -131,6 +131,9 @@ export default async function BlogDetailsPage({ params }: PageProps) {
     notFound();
   }
 
+  // Clean stray whitespace before punctuation (e.g. "Admin Panel ?" -> "Admin Panel?")
+  const displayTitle = blog.title.replace(/\s+\?$/, "?");
+
   // Fetch all blogs to calculate related posts using topic + tag + category affinity
   const allBlogs = await getBlogs().catch(() => []);
   const relatedArticles = getRelatedArticles(blog, allBlogs);
@@ -149,7 +152,7 @@ export default async function BlogDetailsPage({ params }: PageProps) {
   const blogPostingSchema = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
-    headline: blog.title,
+    headline: displayTitle,
     description: blog.metaDescription || blog.excerpt,
     ...(blog.coverImage ? { image: [blog.coverImage] } : {}),
     datePublished: blog.publishedAt,
@@ -203,7 +206,7 @@ export default async function BlogDetailsPage({ params }: PageProps) {
             </>
           )}
           <span className="text-muted-foreground/60">»</span>
-          <span className="truncate font-medium text-muted-foreground">{blog.title}</span>
+          <span className="truncate font-medium text-muted-foreground">{displayTitle}</span>
         </nav>
 
         {/* 3-column layout: sticky TOC | scrollable article | sticky side rail */}
@@ -217,7 +220,7 @@ export default async function BlogDetailsPage({ params }: PageProps) {
           <article className="min-w-0">
             {/* Title + excerpt */}
             <h1 className="text-2xl md:text-[2.4rem] font-[600] text-foreground leading-[1.08] tracking-tight mb-7">
-              {blog.title}
+              {displayTitle}
             </h1>
             <p className="text-md md:text-lg text-muted-foreground leading-relaxed mb-10">
               {blog.excerpt}
@@ -292,7 +295,7 @@ export default async function BlogDetailsPage({ params }: PageProps) {
               <div className="relative mb-14 aspect-video w-full overflow-hidden rounded-3xl border border-white/10">
                 <Image
                   src={blog.coverImage}
-                  alt={blog.title}
+                  alt={displayTitle}
                   fill
                   priority
                   sizes="(min-width: 1280px) 760px, (min-width: 1024px) 60vw, 100vw"
