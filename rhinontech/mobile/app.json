@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "Rhinon",
+    "slug": "rhinon-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "tech.rhinon.mobile"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0E0F14",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "tech.rhinon.mobile"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FFFFFF",
+          "dark": {
+            "backgroundColor": "#0E0F14"
+          },
+          "image": "./assets/icon.png",
+          "imageWidth": 120
+        }
+      ]
+    ],
+    "scheme": "rhinon",
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

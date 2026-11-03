@@ -22,6 +22,7 @@ The repository is a monorepo containing several applications:
 |-----|------|-------|
 | **Admin Panel** | `rhinontech/admin-panel` | Next.js 16, React 19, Tailwind CSS v4, shadcn/ui, Zustand |
 | **Backend API** | `rhinontech/backend` | Express 4, TypeScript, Sequelize ORM, PostgreSQL + pgvector |
+| **Mobile App** | `rhinontech/mobile` | Expo SDK 58, Expo Router, React Native, NativeWind v4 |
 | **Chatbot Widget** | `bot-sdk` | React, TypeScript, Webpack (single-bundle SDK) |
 | **Rhinon Labs site** | `rhinonlabs` | Next.js |
 | **Uppercurve site** | `uppercurve` | Next.js |
