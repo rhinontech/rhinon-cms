@@ -41,7 +41,7 @@ export const services: Service[] = [
     name: "MVP Development",
     metaTitle: "MVP Development for Startups — Launch in Weeks",
     metaDescription:
-      "Turn your startup idea into a working MVP in weeks, not months. Rhinon Labs designs, builds and launches web and mobile MVPs for founders — no in-house tech team needed.",
+      "Turn your startup idea into a working MVP in weeks. Rhinon Labs designs, builds, and launches web and mobile MVPs — no in-house tech team needed.",
     eyebrow: "MVP Development",
     headline: "Launch your MVP in weeks,",
     headlineAccent: "without hiring a tech team",

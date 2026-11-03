@@ -31,6 +31,12 @@ const BLOG_TITLE_OVERRIDES: Record<string, string> = {
   "chatbot-vs-ai-agent-real-difference": "Chatbot vs AI Agent: What's the Real Difference?",
 };
 
+/** Meta descriptions trimmed between 140-155 characters for Google SERP display */
+const BLOG_DESCRIPTION_OVERRIDES: Record<string, string> = {
+  "mobile-app-development-cost-startups-india":
+    "Complete guide to mobile app development costs for Indian startups in 2026. Realistic pricing, agency vs freelancer rates, and tech stacks.",
+};
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const blog = await getBlog(slug);
@@ -40,17 +46,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const seoTitle = blog.metaTitle || BLOG_TITLE_OVERRIDES[blog.slug] || blog.title;
   const isCustomTitle = Boolean(blog.metaTitle || BLOG_TITLE_OVERRIDES[blog.slug]);
   const ogTitle = seoTitle;
-  const ogDescription = blog.metaDescription || blog.excerpt;
+  const seoDescription = blog.metaDescription || BLOG_DESCRIPTION_OVERRIDES[blog.slug] || blog.excerpt;
   const ogImage = blog.coverImage || `${SITE_URL}/og-image.jpg`;
 
   return {
     // metaTitle / overrides are used verbatim (absolute) to guarantee they fit in SERPs (< 60 chars)
     title: isCustomTitle ? { absolute: seoTitle } : seoTitle,
-    description: ogDescription,
+    description: seoDescription,
     alternates: { canonical: `${SITE_URL}/blogs/${blog.slug}` },
     openGraph: {
       title: ogTitle,
-      description: ogDescription,
+      description: seoDescription,
       url: `${SITE_URL}/blogs/${blog.slug}`,
       type: "article",
       publishedTime: blog.publishedAt,
@@ -65,7 +71,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     twitter: {
       card: "summary_large_image",
       title: ogTitle,
-      description: ogDescription,
+      description: seoDescription,
       images: [ogImage],
     },
   };

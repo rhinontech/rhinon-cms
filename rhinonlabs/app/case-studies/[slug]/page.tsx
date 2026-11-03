@@ -16,6 +16,14 @@ const CASE_STUDY_TITLE_OVERRIDES: Record<string, string> = {
   "furrcircle-the-all-in-one-app-for-pet-parents": "FurrCircle Pet Parent App – Case Study",
 };
 
+/** Meta descriptions trimmed between 140-155 characters for Google SERP display (SEO Audit #11) */
+const CASE_STUDY_DESCRIPTION_OVERRIDES: Record<string, string> = {
+  "furrcircle-the-all-in-one-app-for-pet-parents":
+    "How Rhinon Labs built FurrCircle: a cross-platform pet care mobile app with vet booking, health records, and an automated admin dashboard.",
+  srfitout:
+    "How Rhinon Labs built an interactive design studio and quoting web platform for SR Fitout, generating 3x more qualified client enquiries.",
+};
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const cs = await getCaseStudy(slug);
@@ -23,15 +31,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!cs) return { title: "Case Study Not Found" };
 
   const seoTitle = CASE_STUDY_TITLE_OVERRIDES[cs.slug] || cs.title;
+  const seoDescription = CASE_STUDY_DESCRIPTION_OVERRIDES[cs.slug] || cs.description;
   const ogImage = cs.image || cs.images?.[0] || `${SITE_URL}/og-image.jpg`;
 
   return {
     title: seoTitle,
-    description: cs.description,
+    description: seoDescription,
     alternates: { canonical: `${SITE_URL}/case-studies/${cs.slug}` },
     openGraph: {
       title: seoTitle,
-      description: cs.description,
+      description: seoDescription,
       url: `${SITE_URL}/case-studies/${cs.slug}`,
       type: "article",
       images: [
@@ -44,7 +53,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     twitter: {
       card: "summary_large_image",
       title: seoTitle,
-      description: cs.description,
+      description: seoDescription,
       images: [ogImage],
     },
   };
