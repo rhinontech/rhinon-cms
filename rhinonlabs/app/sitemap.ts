@@ -69,48 +69,43 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         })),
     ];
 
-    try {
-        const [blogs, caseStudies] = await Promise.all([
-            getBlogs(),
-            getCaseStudies()
-        ]);
+    const [blogs, caseStudies] = await Promise.all([
+        getBlogs(),
+        getCaseStudies()
+    ]);
 
-        const blogRoutes = blogs.map((blog) => {
-            let lastMod = new Date();
-            if (blog.publishedAt) {
-                const parsed = new Date(blog.publishedAt);
-                if (!isNaN(parsed.getTime())) {
-                    lastMod = parsed;
-                }
+    const blogRoutes = blogs.map((blog) => {
+        let lastMod = new Date();
+        if (blog.publishedAt) {
+            const parsed = new Date(blog.publishedAt);
+            if (!isNaN(parsed.getTime())) {
+                lastMod = parsed;
             }
-            return {
-                url: `${baseUrl}/blogs/${blog.slug}`,
-                lastModified: lastMod,
-                changeFrequency: 'weekly' as const,
-                priority: 0.8,
-            };
-        });
+        }
+        return {
+            url: `${baseUrl}/blogs/${blog.slug}`,
+            lastModified: lastMod,
+            changeFrequency: 'weekly' as const,
+            priority: 0.8,
+        };
+    });
 
-        const caseStudyRoutes = caseStudies.map((cs) => {
-            let lastMod = new Date();
-            if (cs.date) {
-                const parsed = new Date(cs.date);
-                if (!isNaN(parsed.getTime())) {
-                    lastMod = parsed;
-                }
+    const caseStudyRoutes = caseStudies.map((cs) => {
+        let lastMod = new Date();
+        if (cs.date) {
+            const parsed = new Date(cs.date);
+            if (!isNaN(parsed.getTime())) {
+                lastMod = parsed;
             }
-            return {
-                url: `${baseUrl}/case-studies/${cs.slug}`,
-                lastModified: lastMod,
-                changeFrequency: 'weekly' as const,
-                priority: 0.6,
-            };
-        });
+        }
+        return {
+            url: `${baseUrl}/case-studies/${cs.slug}`,
+            lastModified: lastMod,
+            changeFrequency: 'weekly' as const,
+            priority: 0.6,
+        };
+    });
 
-        return [...staticRoutes, ...blogRoutes, ...caseStudyRoutes];
-    } catch (error) {
-        console.error('Error generating dynamic sitemap:', error);
-        return staticRoutes;
-    }
+    return [...staticRoutes, ...blogRoutes, ...caseStudyRoutes];
 }
 
