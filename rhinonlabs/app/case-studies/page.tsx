@@ -19,21 +19,12 @@ export const metadata: Metadata = {
       "Explore real-world client case studies and technical builds delivered by Rhinon Labs.",
     url: `${SITE_URL}/case-studies`,
     type: "website",
-    images: [
-      {
-        url: `${SITE_URL}/og-image.jpg`,
-        width: 1200,
-        height: 630,
-        alt: "Rhinon Labs Case Studies",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Case Studies | Rhinon Labs",
     description:
       "Explore real-world client case studies and technical builds delivered by Rhinon Labs.",
-    images: [`${SITE_URL}/og-image.jpg`],
   },
 };
 

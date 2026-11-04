@@ -22,14 +22,12 @@ export const metadata: Metadata = {
     title: "Have a Startup Idea? Let's Build It. | Rhinon Labs",
     description:
       "Turn your startup idea into a launch-ready product without hiring a tech team. Rhinon Labs designs, builds, and launches your MVP fast.",
-    images: [{ url: "/og-image.jpg", width: 1200, height: 630, alt: "Rhinon Labs — build your startup MVP" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Have a Startup Idea? Let's Build It. | Rhinon Labs",
     description:
       "Turn your startup idea into a launch-ready product without hiring a tech team. Rhinon Labs designs, builds, and launches your MVP fast.",
-    images: ["/og-image.jpg"],
   },
 };
 
