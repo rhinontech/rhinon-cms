@@ -1,5 +1,3 @@
-'use client'
-import { motion } from "framer-motion";
 import { Problem } from "./Problem/Problem";
 import { Services } from "./Services/Services";
 import { Results } from "./Results/Results";
