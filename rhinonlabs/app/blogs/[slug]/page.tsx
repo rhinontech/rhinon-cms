@@ -24,41 +24,24 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-/** Crisp titles trimmed under 60 characters for Google SERP display  */
-const BLOG_TITLE_OVERRIDES: Record<string, string> = {
-  "automating-onboarding": "Automate Onboarding, Invoicing & Reporting: Founder's Guide",
-  "event-registration-system": "Build an Event Registration System with Auto Admin Panel",
-  "chatbot-vs-ai-agent-real-difference": "Chatbot vs AI Agent: What's the Real Difference?",
-  "how-long-does-it-take-to-build-an-mvp-india-guide":
-    "How Long to Build an MVP in India? (2026 Timelines Guide)",
-};
-
-/** Meta descriptions trimmed between 140-155 characters for Google SERP display */
-const BLOG_DESCRIPTION_OVERRIDES: Record<string, string> = {
-  "mobile-app-development-cost-startups-india":
-    "Complete guide to mobile app development costs for Indian startups in 2026. Realistic pricing, agency vs freelancer rates, and tech stacks.",
-};
-
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const blog = await getBlog(slug);
 
   if (!blog) return { title: "Blog Not Found" };
 
-  const seoTitle = BLOG_TITLE_OVERRIDES[blog.slug] || blog.metaTitle || blog.title;
-  const isCustomTitle = Boolean(BLOG_TITLE_OVERRIDES[blog.slug] || blog.metaTitle);
-  const ogTitle = seoTitle;
-  const seoDescription = BLOG_DESCRIPTION_OVERRIDES[blog.slug] || blog.metaDescription || blog.excerpt;
+  const ogTitle = blog.metaTitle || blog.title;
+  const ogDescription = blog.metaDescription || blog.excerpt;
   const ogImage = blog.coverImage || `${SITE_URL}/og-image.jpg`;
 
   return {
-    // metaTitle / overrides are used verbatim (absolute) to guarantee they fit in SERPs (< 60 chars)
-    title: isCustomTitle ? { absolute: seoTitle } : seoTitle,
-    description: seoDescription,
+    // metaTitle is used verbatim (absolute); otherwise the root "%s | Rhinon Labs" template applies.
+    title: blog.metaTitle ? { absolute: blog.metaTitle } : blog.title,
+    description: ogDescription,
     alternates: { canonical: `${SITE_URL}/blogs/${blog.slug}` },
     openGraph: {
       title: ogTitle,
-      description: seoDescription,
+      description: ogDescription,
       url: `${SITE_URL}/blogs/${blog.slug}`,
       type: "article",
       publishedTime: blog.publishedAt,
@@ -66,14 +49,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       images: [
         {
           url: ogImage,
-          alt: seoTitle,
+          alt: blog.title,
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
       title: ogTitle,
-      description: seoDescription,
+      description: ogDescription,
       images: [ogImage],
     },
   };

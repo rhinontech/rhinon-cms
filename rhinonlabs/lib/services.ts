@@ -41,7 +41,7 @@ export const services: Service[] = [
     name: "MVP Development",
     metaTitle: "MVP Development for Startups — Launch in Weeks",
     metaDescription:
-      "Turn your startup idea into a working MVP in weeks. Rhinon Labs designs, builds, and launches web and mobile MVPs — no in-house tech team needed.",
+      "Turn your startup idea into a working MVP in weeks, not months. Rhinon Labs designs, builds and launches web and mobile MVPs for founders — no in-house tech team needed.",
     eyebrow: "MVP Development",
     headline: "Launch your MVP in weeks,",
     headlineAccent: "without hiring a tech team",
@@ -221,7 +221,7 @@ export const services: Service[] = [
     slug: "web-development",
     lastModified: "2026-10-10",
     name: "Website & Web App Development",
-    metaTitle: "Website & Web App Development for Startups",
+    metaTitle: "Website & Web App Development for Startups and SMBs",
     metaDescription:
       "Fast, SEO-ready websites and custom web applications for startups and growing businesses — from landing pages to full platforms. Designed and built by Rhinon Labs.",
     eyebrow: "Web Development",
