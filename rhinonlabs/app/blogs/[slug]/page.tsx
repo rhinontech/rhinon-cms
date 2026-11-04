@@ -29,6 +29,8 @@ const BLOG_TITLE_OVERRIDES: Record<string, string> = {
   "automating-onboarding": "Automate Onboarding, Invoicing & Reporting: Founder's Guide",
   "event-registration-system": "Build an Event Registration System with Auto Admin Panel",
   "chatbot-vs-ai-agent-real-difference": "Chatbot vs AI Agent: What's the Real Difference?",
+  "how-long-does-it-take-to-build-an-mvp-india-guide":
+    "How Long to Build an MVP in India? (2026 Timelines Guide)",
 };
 
 /** Meta descriptions trimmed between 140-155 characters for Google SERP display */
@@ -43,10 +45,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!blog) return { title: "Blog Not Found" };
 
-  const seoTitle = blog.metaTitle || BLOG_TITLE_OVERRIDES[blog.slug] || blog.title;
-  const isCustomTitle = Boolean(blog.metaTitle || BLOG_TITLE_OVERRIDES[blog.slug]);
+  const seoTitle = BLOG_TITLE_OVERRIDES[blog.slug] || blog.metaTitle || blog.title;
+  const isCustomTitle = Boolean(BLOG_TITLE_OVERRIDES[blog.slug] || blog.metaTitle);
   const ogTitle = seoTitle;
-  const seoDescription = blog.metaDescription || BLOG_DESCRIPTION_OVERRIDES[blog.slug] || blog.excerpt;
+  const seoDescription = BLOG_DESCRIPTION_OVERRIDES[blog.slug] || blog.metaDescription || blog.excerpt;
   const ogImage = blog.coverImage || `${SITE_URL}/og-image.jpg`;
 
   return {
