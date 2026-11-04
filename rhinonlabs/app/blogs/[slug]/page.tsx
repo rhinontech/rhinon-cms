@@ -156,10 +156,16 @@ export default async function BlogDetailsPage({ params }: PageProps) {
     description: blog.metaDescription || blog.excerpt,
     ...(blog.coverImage ? { image: [blog.coverImage] } : {}),
     datePublished: blog.publishedAt,
+    dateModified: blog.updatedAt || blog.publishedAt,
     author: {
       "@type": "Person",
       name: blog.authorName,
       jobTitle: blog.authorRole,
+      url: `${SITE_URL}/about`,
+      sameAs: [
+        "https://www.linkedin.com/company/rhinonlabs",
+        "https://x.com/RhinonLabs",
+      ],
     },
     publisher: {
       "@type": "Organization",
@@ -171,6 +177,49 @@ export default async function BlogDetailsPage({ params }: PageProps) {
       "@type": "WebPage",
       "@id": pageUrl,
     },
+  };
+
+  const breadcrumbElements = [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "Home",
+      item: SITE_URL,
+    },
+    {
+      "@type": "ListItem",
+      position: 2,
+      name: "Blog",
+      item: `${SITE_URL}/blogs`,
+    },
+  ];
+
+  if (blog.category) {
+    breadcrumbElements.push({
+      "@type": "ListItem",
+      position: 3,
+      name: blog.category,
+      item: `${SITE_URL}/blogs?category=${encodeURIComponent(blog.category)}`,
+    });
+    breadcrumbElements.push({
+      "@type": "ListItem",
+      position: 4,
+      name: displayTitle,
+      item: pageUrl,
+    });
+  } else {
+    breadcrumbElements.push({
+      "@type": "ListItem",
+      position: 3,
+      name: displayTitle,
+      item: pageUrl,
+    });
+  }
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: breadcrumbElements,
   };
 
   const faqSchema =
@@ -189,6 +238,7 @@ export default async function BlogDetailsPage({ params }: PageProps) {
   return (
     <div className="blog-theme relative min-h-screen bg-background selection:bg-white/20 overflow-x-clip">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostingSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       {faqSchema && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       )}
