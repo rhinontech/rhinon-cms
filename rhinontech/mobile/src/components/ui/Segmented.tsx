@@ -1,32 +1,49 @@
-import { Pressable, View } from "react-native";
+import { useState } from "react";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import type { LucideIcon } from "lucide-react-native";
 import { cn } from "@/lib/cn";
 import { tap } from "@/lib/haptics";
+import { lift, useTheme } from "@/lib/theme";
 import { Text } from "./Text";
 
+const INSET = 3;
+
+/** The panel's `segmented` track, with its `segment-active` card on the selected option. */
 export function Segmented<T extends string>({
   options,
   value,
   onChange,
 }: {
-  options: { value: T; label: string }[];
+  options: { value: T; label: string; icon?: LucideIcon }[];
   value: T;
   onChange: (v: T) => void;
 }) {
+  const { colors } = useTheme();
+  const [width, setWidth] = useState(0);
+  const index = Math.max(0, options.findIndex((o) => o.value === value));
+  const segment = width ? (width - INSET * 2) / options.length : 0;
+
   return (
-    <View className="flex-row rounded-xl bg-muted p-1">
+    <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)} className="flex-row rounded-xl" style={{ padding: INSET, backgroundColor: colors.track }}>
+      {segment > 0 && (
+        <View style={[styles.thumb, { width: segment, transform: [{ translateX: index * segment }], backgroundColor: colors.card, borderColor: colors.glassCardBorder }, lift(colors.shadow)]} />
+      )}
       {options.map((o) => {
         const active = o.value === value;
+        const Icon = o.icon;
         return (
           <Pressable
             key={o.value}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: active }}
             onPress={() => {
               if (!active) tap();
               onChange(o.value);
             }}
-            className={cn("flex-1 items-center rounded-lg py-2", active && "bg-card")}
-            style={active ? { shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 4, shadowOffset: { width: 0, height: 1 } } : undefined}
+            className="flex-1 flex-row items-center justify-center gap-1.5 py-2"
           >
-            <Text className={cn("font-medium text-[13px]", active ? "text-foreground" : "text-muted-foreground")}>{o.label}</Text>
+            {Icon && <Icon size={15} color={active ? colors.foreground : colors.mutedForeground} />}
+            <Text className={cn("font-medium text-[13px] leading-[18px]", active ? "text-foreground" : "text-muted-foreground")}>{o.label}</Text>
           </Pressable>
         );
       })}
@@ -34,7 +51,7 @@ export function Segmented<T extends string>({
   );
 }
 
-/** Horizontally scrolling filter chips. */
+/** Horizontally scrolling filter chips. Sit them inside a 20px page gutter. */
 export function Chips<T extends string>({
   options,
   value,
@@ -44,23 +61,31 @@ export function Chips<T extends string>({
   value: T;
   onChange: (v: T) => void;
 }) {
+  const { colors } = useTheme();
   return (
-    <View className="flex-row flex-wrap gap-2">
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} className="-mx-5 grow-0" contentContainerStyle={{ paddingHorizontal: 20, gap: 8 }}>
       {options.map((o) => {
         const active = o.value === value;
         return (
           <Pressable
             key={o.value}
+            accessibilityRole="button"
+            accessibilityState={{ selected: active }}
             onPress={() => {
-              tap();
+              if (!active) tap();
               onChange(o.value);
             }}
-            className={cn("rounded-full border px-3.5 py-1.5", active ? "border-primary bg-primary" : "border-border bg-card")}
+            className="rounded-full px-3.5 py-1.5"
+            style={{ backgroundColor: active ? colors.selected : colors.track }}
           >
-            <Text className={cn("font-medium text-[13px]", active ? "text-primary-foreground" : "text-foreground")}>{o.label}</Text>
+            <Text className={cn("font-medium text-[13px] leading-[18px]", active ? "text-brand" : "text-muted-foreground")}>{o.label}</Text>
           </Pressable>
         );
       })}
-    </View>
+    </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  thumb: { position: "absolute", top: INSET, bottom: INSET, left: INSET, borderRadius: 9, borderWidth: StyleSheet.hairlineWidth },
+});

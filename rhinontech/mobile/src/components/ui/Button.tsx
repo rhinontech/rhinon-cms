@@ -1,14 +1,13 @@
-import { ActivityIndicator, Pressable, View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
 import { cn } from "@/lib/cn";
-import { tap } from "@/lib/haptics";
 import { useTheme } from "@/lib/theme";
+import { Tappable } from "./Tappable";
 import { Text } from "./Text";
 
-const base = "h-12 flex-row items-center justify-center gap-2 rounded-xl px-5 active:opacity-85";
 const variants = {
   primary: "bg-primary",
   secondary: "bg-muted",
-  outline: "border border-border bg-transparent",
+  outline: "border border-border bg-card",
   destructive: "bg-destructive/10",
   ghost: "bg-transparent",
 } as const;
@@ -40,23 +39,17 @@ export function Button({
   const { colors } = useTheme();
   const off = disabled || loading;
   return (
-    <Pressable
-      accessibilityRole="button"
-      disabled={off}
-      onPress={() => {
-        tap();
-        onPress();
-      }}
-      className={cn(base, variants[variant], off && "opacity-50", className)}
-    >
-      {loading ? (
-        <ActivityIndicator color={variant === "primary" ? colors.primaryForeground : colors.foreground} />
-      ) : (
-        <View className="flex-row items-center gap-2">
-          {icon}
-          <Text className={cn("font-semibold text-[15px]", labels[variant])}>{title}</Text>
-        </View>
-      )}
-    </Pressable>
+    <Tappable accessibilityRole="button" disabled={off} onPress={onPress} className={cn(off && "opacity-50", className)}>
+      <View className={cn("h-12 flex-row items-center justify-center gap-2 rounded-xl px-5", variants[variant])}>
+        {loading ? (
+          <ActivityIndicator color={variant === "primary" ? colors.primaryForeground : colors.foreground} />
+        ) : (
+          <>
+            {icon}
+            <Text className={cn("font-semibold text-[15px]", labels[variant])}>{title}</Text>
+          </>
+        )}
+      </View>
+    </Tappable>
   );
 }

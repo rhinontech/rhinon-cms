@@ -21,8 +21,10 @@ export type Tone = keyof typeof tones;
 
 export function Badge({ label, tone = "neutral", className }: { label: string; tone?: Tone; className?: string }) {
   return (
-    <View className={cn("self-start rounded-full px-2.5 py-1", tones[tone], className)}>
-      <Text className={cn("font-medium text-[11px] leading-[14px]", textTones[tone])}>{label}</Text>
+    <View className={cn("rounded-full px-2.5 py-1", tones[tone], className)}>
+      <Text numberOfLines={1} className={cn("font-medium text-[11px] leading-[14px]", textTones[tone])}>
+        {label}
+      </Text>
     </View>
   );
 }
@@ -31,8 +33,8 @@ export function Badge({ label, tone = "neutral", className }: { label: string; t
 export function CountDot({ count }: { count: number }) {
   if (count <= 0) return null;
   return (
-    <View className="min-w-[20px] items-center rounded-full bg-brand px-1.5 py-0.5">
-      <Text className="font-semibold text-[11px] leading-[14px] text-white">{count > 99 ? "99+" : count}</Text>
+    <View className="h-5 min-w-[20px] items-center justify-center rounded-full bg-brand px-1.5">
+      <Text className="font-semibold text-[11px] leading-[14px] text-brand-foreground">{count > 99 ? "99+" : count}</Text>
     </View>
   );
 }

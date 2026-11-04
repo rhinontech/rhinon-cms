@@ -30,6 +30,7 @@ export interface Lead {
   email: string;
   phone?: string | null;
   linkedinUrl: string | null;
+  instagramUrl?: string | null;
   status: LeadStatus;
   lifecycleStage: LifecycleStage;
   ownerId: string | null;

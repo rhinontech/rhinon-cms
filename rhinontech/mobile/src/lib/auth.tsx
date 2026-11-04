@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { api, ApiError, setSessionToken, setUnauthorizedHandler, tokenStore } from "./api";
+import { api, API_URL, ApiError, setSessionToken, setUnauthorizedHandler, tokenStore } from "./api";
 import type { LoginResponse, Me } from "./types";
 
 type SignInResult = { status: "ok" } | { status: "mfa"; mfaToken: string };
@@ -66,7 +66,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!token) return setStatus("signedOut");
       setSessionToken(token);
       try {
-        await loadMe();
+        // An unreachable server can hang for a minute; don't hold the first screen for it.
+        await Promise.race([
+          loadMe(),
+          new Promise<never>((_, reject) => setTimeout(() => reject(new ApiError(`Can't reach the server at ${API_URL}`, 0)), 8000)),
+        ]);
       } catch (err) {
         // Offline at launch is not "signed out" — only a rejected token is.
         if (err instanceof ApiError && err.status === 0) {

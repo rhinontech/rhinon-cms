@@ -1,15 +1,16 @@
 # Rhinon Mobile
 
 The Rhinon CMS admin panel's essentials as a native app: Expo SDK 58, Expo Router, NativeWind v4.
-It uses the same backend as `rhinontech/admin-panel`, and its design tokens match the panel's.
+It uses the same backend as `rhinontech/admin-panel`. Its colours and glass surfaces are the panel's (`src/global.css`, `src/lib/theme.ts`): ink for primary actions, one brand blue for selection and unread.
 
 | Tab | What it does | Backend | Permission |
 |-----|--------------|---------|------------|
 | Home | Greeting, today's attendance, unread badges, team/CRM stats, tasks, celebrations, new joiners | `GET /dashboard/stats`, `/inbox/counts`, `/team-chat/unread` | — |
 | Inbox | Folders (Inbox / Starred / Sent / Archive), search, thread view, reply, star / archive / trash | `/inbox` | `inbox:read`, `inbox:write` |
 | Chat | Conversations (DMs, channels, groups), unread filter, message thread, send | `/team-chat` | `chat:read`, `chat:write` |
-| CRM | Pipeline board by stage, leads list with status filters and search, lead detail | `/deals/board`, `/leads` | `crm:read` or `outreach:read` |
-| Settings | Profile, light / dark / system theme, workspace, 2-step status, sign out | `/auth/me`, `/auth/2fa/status` | — |
+| CRM (under More) | Pipeline board by stage, leads list with status filters and search, lead detail | `/deals/board`, `/leads` | `crm:read` or `outreach:read` |
+| Work | My tasks, projects by status, task status / subitems / comments, teams and members | `/tasks`, `/work/projects`, `/workflow/statuses`, `/teams` | `work:read` |
+| More | Attendance, Leave, Approvals, CRM, Notifications, Roles & permissions, Settings | `/attendance`, `/leave`, `/reimbursements/admin`, `/notifications`, `/roles`, `/permissions` | per item; the API enforces |
 
 A tab the user has no permission for is hidden. The API still enforces every permission.
 
@@ -52,7 +53,7 @@ src/
 - **Polling, not sockets (for now).** Chat polls every 4 s while a conversation is open, the chat list every 10 s,
   and the inbox every 45 s. Moving to Socket.IO (as the web chat does) is the natural next step.
 - **Theme.** `darkMode: "class"` lets Settings override the device theme. Colors are RGB channels of the admin
-  panel's oklch tokens, and `src/lib/theme.ts` has hex copies for icons and other non-className props.
+  panel's oklch tokens, and `src/lib/theme.ts` has hex copies for icons and other non-className props, plus its glass surfaces.
 - **`.npmrc` has `legacy-peer-deps=true`.** expo-router's web deps pull a `react-dom` that wants a newer React
   patch than SDK 58 pins.
 
