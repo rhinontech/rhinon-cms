@@ -29,20 +29,20 @@ export function ServiceSchema() {
       dangerouslySetInnerHTML={json({
         "@context": "https://schema.org",
         "@type": "Service",
-        serviceType: "MVP Development & AI Automation",
+        serviceType: "AI Automation & Custom Software Development",
         provider: { "@id": SCHEMA_IDS.organization },
         description:
-          "We help founders and SMBs design, build and launch websites, apps and AI products fast with affordable pricing.",
+          "We help growing businesses and SMBs build and deploy custom AI agents, workflow automations, and internal dashboards that scale operations without adding headcount.",
         areaServed: "Worldwide",
         hasOfferCatalog: {
           "@type": "OfferCatalog",
           name: "Development Services",
           itemListElement: [
-            "MVP Development",
-            "Custom Internal Dashboards",
             "Workflow Automation",
             "AI Agents & Smart Systems",
+            "Custom Internal Dashboards",
             "Websites & Landing Pages",
+            "MVP Development",
             "Mobile App Development",
           ].map((name) => ({ "@type": "Offer", itemOffered: { "@type": "Service", name } })),
         },

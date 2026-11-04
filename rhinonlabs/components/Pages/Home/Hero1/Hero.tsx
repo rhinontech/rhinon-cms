@@ -64,9 +64,12 @@ const Hero1 = () => {
           {/* Main Heading */}
           <motion.h1
             variants={fadeUpVariant}
-            className="text-[42px] text-center sm:text-5xl md:text-[80px] font-sans font-normal leading-[1.1] tracking-[-0.02em] max-w-4xl mx-auto py-2 text-transparent bg-clip-text bg-linear-to-b from-white to-white/80 mb-6"
+            className="text-[36px] text-center sm:text-5xl md:text-[76px] font-sans font-normal leading-[1.12] tracking-[-0.02em] max-w-5xl mx-auto py-2 text-transparent bg-clip-text bg-linear-to-b from-white to-white/80 mb-6"
           >
-            Scale Your Operations, <br className="sm:hidden" /> <span className="font-serif italic text-transparent bg-clip-text bg-linear-to-r from-[#c7d4ff] via-[#8fa6ff] to-[#5b7bff] pr-2">Not Your Headcount.</span>
+            AI Automation & Custom Software <br />
+            <span className="font-serif italic text-transparent bg-clip-text bg-linear-to-r from-[#c7d4ff] via-[#8fa6ff] to-[#5b7bff] pr-2">
+              that Scales Your Operations.
+            </span>
           </motion.h1>
           {/* Subtitle */}
           <motion.p variants={fadeUpVariant} className="text-white/70 text-center sm:text-lg max-w-2xl mx-auto mb-8 sm:mb-10 px-4 sm:px-0">
@@ -94,13 +97,13 @@ const Hero1 = () => {
             {/* Avatar Stack */}
             <div className="flex -space-x-4">
               <div className="w-12 h-12 rounded-full bg-gray-600 border-2 border-black flex items-center justify-center">
-                <img src="/assets/avatars/1.webp" alt="" width={48} height={48} className="w-full h-full rounded-full object-cover" />
+                <img src="/assets/avatars/1.webp" alt="Client avatar 1" width={48} height={48} className="w-full h-full rounded-full object-cover" />
               </div>
               <div className="w-12 h-12 rounded-full bg-gray-600 border-2 border-black flex items-center justify-center">
-                <img src="/assets/avatars/2.webp" alt="" width={48} height={48} className="w-full h-full rounded-full object-cover" />
+                <img src="/assets/avatars/2.webp" alt="Client avatar 2" width={48} height={48} className="w-full h-full rounded-full object-cover" />
               </div>
               <div className="w-12 h-12 rounded-full bg-gray-600 border-2 border-black flex items-center justify-center">
-                <img src="/assets/avatars/3.webp" alt="" width={48} height={48} className="w-full h-full rounded-full object-cover" />
+                <img src="/assets/avatars/3.webp" alt="Client avatar 3" width={48} height={48} className="w-full h-full rounded-full object-cover" />
               </div>
             </div>
 

@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
-import { getBlog } from "@/lib/api";
+import { getBlog, getBlogs, Blog } from "@/lib/api";
 import { format } from "date-fns";
-import { Minus, ShieldCheck, Sparkles } from "lucide-react";
+import { Minus, ShieldCheck, Sparkles, ArrowRight } from "lucide-react";
+
 import Link from "next/link";
 import Image from "next/image";
 import { MarkdownRenderer } from "@/components/Common/Markdown/MarkdownRenderer";
@@ -12,6 +13,7 @@ import { BlogFaq } from "@/components/Common/Blog/BlogFaq";
 import { BlogSideRail } from "@/components/Common/Blog/BlogSideRail";
 import { extractToc, extractTocFromMarkdown } from "@/components/Common/Blog/blocks";
 import StickyCallButton from "@/components/Common/CTA/StickyCallButton";
+import { getServiceByBlogSlug } from "@/lib/services";
 
 import { SCHEMA_IDS } from "@/lib/site";
 export const dynamic = "force-dynamic";
@@ -60,6 +62,52 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
+function getRelatedArticles(currentBlog: Blog, allBlogs: Blog[]): Blog[] {
+  const currentService = getServiceByBlogSlug(currentBlog.slug);
+  const currentCategory = (currentBlog.category || "").toLowerCase().trim();
+  const currentTags = (currentBlog.tags || []).map((t) => t.toLowerCase().trim());
+
+  return allBlogs
+    .filter((b) => b.slug !== currentBlog.slug)
+    .map((candidate) => {
+      let score = 0;
+      const candidateService = getServiceByBlogSlug(candidate.slug);
+      const candidateCategory = (candidate.category || "").toLowerCase().trim();
+      const candidateTags = (candidate.tags || []).map((t) => t.toLowerCase().trim());
+
+      // 1. Same target service (highest thematic alignment)
+      if (currentService && candidateService && currentService.slug === candidateService.slug) {
+        score += 5;
+      }
+
+      // 2. Tag matches
+      for (const curTag of currentTags) {
+        if (!curTag || curTag.length < 3) continue;
+        for (const canTag of candidateTags) {
+          if (!canTag || canTag.length < 3) continue;
+          if (curTag === canTag) {
+            score += 3;
+          } else if (curTag.includes(canTag) || canTag.includes(curTag)) {
+            score += 1.5;
+          }
+        }
+      }
+
+      // 3. Same category
+      if (currentCategory && candidateCategory && currentCategory === candidateCategory) {
+        score += 2;
+      }
+
+      return { blog: candidate, score };
+    })
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      return new Date(b.blog.publishedAt).getTime() - new Date(a.blog.publishedAt).getTime();
+    })
+    .slice(0, 3)
+    .map((item) => item.blog);
+}
+
 export default async function BlogDetailsPage({ params }: PageProps) {
   const { slug } = await params;
   const blog = await getBlog(slug);
@@ -67,6 +115,16 @@ export default async function BlogDetailsPage({ params }: PageProps) {
   if (!blog) {
     notFound();
   }
+
+  // Clean stray whitespace before punctuation (e.g. "Admin Panel ?" -> "Admin Panel?")
+  const displayTitle = blog.title.replace(/\s+\?$/, "?");
+
+  // Fetch all blogs to calculate related posts using topic + tag + category affinity
+  const allBlogs = await getBlogs().catch(() => []);
+  const relatedArticles = getRelatedArticles(blog, allBlogs);
+
+  // Contextual matching service derived from lib/services.ts (Single Source of Truth)
+  const matchingService = getServiceByBlogSlug(blog.slug);
 
   const blocks = blog.contentBlocks?.length ? blog.contentBlocks : null;
   const faqs = (blog.faqs || []).filter((f) => f.question?.trim() && f.answer?.trim());
@@ -79,14 +137,20 @@ export default async function BlogDetailsPage({ params }: PageProps) {
   const blogPostingSchema = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
-    headline: blog.title,
+    headline: displayTitle,
     description: blog.metaDescription || blog.excerpt,
     ...(blog.coverImage ? { image: [blog.coverImage] } : {}),
     datePublished: blog.publishedAt,
+    dateModified: blog.updatedAt || blog.publishedAt,
     author: {
       "@type": "Person",
       name: blog.authorName,
       jobTitle: blog.authorRole,
+      url: `${SITE_URL}/about`,
+      sameAs: [
+        "https://www.linkedin.com/company/rhinonlabs",
+        "https://x.com/RhinonLabs",
+      ],
     },
     publisher: {
       "@type": "Organization",
@@ -98,6 +162,49 @@ export default async function BlogDetailsPage({ params }: PageProps) {
       "@type": "WebPage",
       "@id": pageUrl,
     },
+  };
+
+  const breadcrumbElements = [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "Home",
+      item: SITE_URL,
+    },
+    {
+      "@type": "ListItem",
+      position: 2,
+      name: "Blog",
+      item: `${SITE_URL}/blogs`,
+    },
+  ];
+
+  if (blog.category) {
+    breadcrumbElements.push({
+      "@type": "ListItem",
+      position: 3,
+      name: blog.category,
+      item: `${SITE_URL}/blogs?category=${encodeURIComponent(blog.category)}`,
+    });
+    breadcrumbElements.push({
+      "@type": "ListItem",
+      position: 4,
+      name: displayTitle,
+      item: pageUrl,
+    });
+  } else {
+    breadcrumbElements.push({
+      "@type": "ListItem",
+      position: 3,
+      name: displayTitle,
+      item: pageUrl,
+    });
+  }
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: breadcrumbElements,
   };
 
   const faqSchema =
@@ -116,11 +223,12 @@ export default async function BlogDetailsPage({ params }: PageProps) {
   return (
     <div className="blog-theme relative min-h-screen bg-background selection:bg-white/20 overflow-x-clip">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostingSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       {faqSchema && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       )}
 
-      <div className="max-w-[1400px] mx-auto px-16 pt-28 pb-24 relative">
+      <div className="max-w-[1400px] mx-auto px-6 sm:px-12 lg:px-16 pt-28 pb-24 relative">
         {/* Breadcrumb */}
         <nav aria-label="Breadcrumb" className="mb-12 flex items-center gap-2 text-sm">
           <Link href="/blogs" className="font-bold text-foreground transition-opacity hover:opacity-70">
@@ -133,7 +241,7 @@ export default async function BlogDetailsPage({ params }: PageProps) {
             </>
           )}
           <span className="text-muted-foreground/60">»</span>
-          <span className="truncate font-medium text-muted-foreground">{blog.title}</span>
+          <span className="truncate font-medium text-muted-foreground">{displayTitle}</span>
         </nav>
 
         {/* 3-column layout: sticky TOC | scrollable article | sticky side rail */}
@@ -147,7 +255,7 @@ export default async function BlogDetailsPage({ params }: PageProps) {
           <article className="min-w-0">
             {/* Title + excerpt */}
             <h1 className="text-2xl md:text-[2.4rem] font-[600] text-foreground leading-[1.08] tracking-tight mb-7">
-              {blog.title}
+              {displayTitle}
             </h1>
             <p className="text-md md:text-lg text-muted-foreground leading-relaxed mb-10">
               {blog.excerpt}
@@ -222,7 +330,7 @@ export default async function BlogDetailsPage({ params }: PageProps) {
               <div className="relative mb-14 aspect-video w-full overflow-hidden rounded-3xl border border-white/10">
                 <Image
                   src={blog.coverImage}
-                  alt={blog.title}
+                  alt={displayTitle}
                   fill
                   priority
                   sizes="(min-width: 1280px) 760px, (min-width: 1024px) 60vw, 100vw"
@@ -259,6 +367,32 @@ export default async function BlogDetailsPage({ params }: PageProps) {
 
             {faqs.length > 0 && <BlogFaq faqs={faqs} />}
 
+            {/* Contextual matching service banner */}
+            {matchingService && (
+              <div className="mt-14 rounded-2xl border border-white/10 bg-linear-to-br from-white/[0.04] to-white/[0.01] p-6 sm:p-7 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+                  <div className="space-y-1.5 max-w-xl">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#A3B8CC]">
+                      Matching Solution
+                    </span>
+                    <h3 className="text-lg sm:text-xl font-semibold text-white tracking-tight">
+                      {matchingService.headline} {matchingService.headlineAccent}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-white/60 leading-relaxed">
+                      {matchingService.intro}
+                    </p>
+                  </div>
+                  <Link
+                    href={`/services/${matchingService.slug}`}
+                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-xs sm:text-sm font-bold text-slate-950 transition-all hover:bg-white/90 hover:translate-y-[-1px] group"
+                  >
+                    <span>Explore {matchingService.name}</span>
+                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                </div>
+              </div>
+            )}
+
             {/* Side rail content stacks below the article on mobile */}
             <div className="mt-14 lg:hidden">
               <BlogSideRail url={pageUrl} />
@@ -272,6 +406,68 @@ export default async function BlogDetailsPage({ params }: PageProps) {
             <BlogSideRail url={pageUrl} />
           </aside>
         </div>
+
+        {/* Related Articles Block */}
+        {relatedArticles.length > 0 && (
+          <section className="mt-20 pt-16 border-t border-white/10">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+              <div>
+                <span className="text-xs font-semibold tracking-widest text-[#A3B8CC] uppercase">
+                  Keep Reading
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-medium tracking-tight text-white mt-1">
+                  Related Articles
+                </h2>
+              </div>
+              <Link
+                href="/blogs"
+                className="text-xs sm:text-sm font-medium text-white/70 hover:text-white inline-flex items-center gap-1.5 transition-colors group"
+              >
+                <span>View all articles</span>
+                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {relatedArticles.map((item) => (
+                <Link
+                  key={item.slug}
+                  href={`/blogs/${item.slug}`}
+                  className="group flex flex-col rounded-2xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20 transition-all overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
+                >
+                  {item.coverImage && (
+                    <div className="relative aspect-16/10 w-full overflow-hidden bg-white/5">
+                      <Image
+                        src={item.coverImage}
+                        alt={item.title}
+                        fill
+                        sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-linear-to-t from-background/80 via-transparent to-transparent opacity-60" />
+                    </div>
+                  )}
+                  <div className="p-5 flex flex-col flex-1">
+                    {item.category && (
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-[#A3B8CC] mb-2">
+                        {item.category}
+                      </span>
+                    )}
+                    <h3 className="text-base font-semibold text-white group-hover:text-white/80 transition-colors line-clamp-2 leading-snug mb-2">
+                      {item.title}
+                    </h3>
+                    <p className="text-xs text-white/50 line-clamp-2 mb-4 leading-relaxed">
+                      {item.excerpt}
+                    </p>
+                    <span className="mt-auto text-[10px] text-white/40 pt-3 border-t border-white/5">
+                      {format(new Date(item.publishedAt), "MMM d, yyyy")} · {item.readTime}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
       <StickyCallButton />
     </div>
