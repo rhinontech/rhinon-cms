@@ -71,14 +71,14 @@ export function Orbit() {
       <p className={`${MONO} absolute left-1/2 top-[6%] -translate-x-1/2 text-[13px] tracking-[0.3em] text-white/80`}>LEARNS YOUR BUSINESS</p>
       <span className="absolute left-1/2 top-[13%] h-[18%] w-px -translate-x-1/2 bg-gradient-to-b from-white/30 to-transparent" />
 
-      {/* the orb */}
-      <div className="absolute left-1/2 top-[46%] h-[220px] w-[220px] -translate-x-1/2 -translate-y-1/2 sm:h-[250px] sm:w-[250px]">
-        {[0, 1, 2].map((i) => <span key={i} className="ai-ring absolute inset-0 rounded-full border border-[#8b7cff]/40" style={{ animationDelay: `${i * 1.4}s` }} />)}
-        <span className="ai-sweep absolute -inset-16 rounded-full opacity-70" style={{ background: "conic-gradient(from 0deg, transparent 0deg, transparent 300deg, rgb(139 124 255 / 0.55) 360deg)", maskImage: "radial-gradient(circle, transparent 38%, #000 39%, #000 70%, transparent 71%)", WebkitMaskImage: "radial-gradient(circle, transparent 38%, #000 39%, #000 70%, transparent 71%)" }} />
-        <div className="ai-orb absolute inset-[14%] flex flex-col items-center justify-center rounded-full border border-[#8b7cff]/60 bg-[radial-gradient(circle_at_50%_40%,#1a1440,#07060f_70%)]">
-          <span className={`${MONO} text-[10px] text-white/55`}>Company</span>
-          <Sparkles className="my-2 h-9 w-9 text-[#c4baff]" />
-          <span className="font-mono text-[15px] tracking-[0.12em] text-white/80">Rhinon AI</span>
+      {/* the orb: Rhinon AI is the mascot, in its own blue */}
+      <div className="absolute left-1/2 top-[46%] h-[240px] w-[240px] -translate-x-1/2 -translate-y-1/2 sm:h-[300px] sm:w-[300px]">
+        {[0, 1, 2].map((i) => <span key={i} className="ai-ring absolute inset-0 rounded-full border border-[#4f86ff]/45" style={{ animationDelay: `${i * 1.4}s` }} />)}
+        <span className="ai-sweep absolute -inset-16 rounded-full opacity-70" style={{ background: "conic-gradient(from 0deg, transparent 0deg, transparent 300deg, rgb(79 134 255 / 0.55) 360deg)", maskImage: "radial-gradient(circle, transparent 38%, #000 39%, #000 70%, transparent 71%)", WebkitMaskImage: "radial-gradient(circle, transparent 38%, #000 39%, #000 70%, transparent 71%)" }} />
+        <div className="ai-orb absolute inset-[12%] flex flex-col items-center justify-center rounded-full border border-[#4f86ff]/60 bg-[radial-gradient(circle_at_50%_38%,#16408f,#060d24_72%)]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/mascot.webp" alt="Rhinon AI, the Rhinon Tech mascot" width={420} height={560} className="mt-1 h-[132px] w-auto drop-shadow-[0_8px_18px_rgb(0_0_0_/_0.45)] sm:h-[172px]" />
+          <span className="mt-1 font-mono text-[12.5px] tracking-[0.14em] text-white/85">Rhinon AI</span>
         </div>
       </div>
     </div>

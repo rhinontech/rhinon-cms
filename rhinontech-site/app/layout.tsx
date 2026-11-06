@@ -4,6 +4,7 @@ import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import RhinonChatLoader from "@/components/RhinonChat";
+import { GoogleTagManagerHead, GoogleTagManagerNoscript } from "@/components/GoogleTagManager";
 import { ANALYTICS_KEY, API_URL, SITE_URL } from "@/components/site";
 
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -46,6 +47,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" className={`${geist.variable} ${geistMono.variable} ${dancing.variable}`}>
       <body className="font-sans">
+        <GoogleTagManagerNoscript />
+        <GoogleTagManagerHead />
         <Navbar />
         <main className="overflow-x-clip">{children}</main>
         <Footer />

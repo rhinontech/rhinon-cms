@@ -8,6 +8,7 @@ import FloatingContactButton from "@/components/Common/FloatingContactButton/Flo
 import { Navbar } from "@/components/Common/Header/Navbar";
 import StructuredData from "@/components/Common/SEO/StructuredData";
 import { PageviewTracker } from "@/components/Common/Analytics/PageviewTracker";
+import { GoogleAnalytics } from "@/components/Common/Analytics/GoogleAnalytics";
 import RhinonChatLoader from "@/components/RhinonChat";
 
 // const geistSans = Geist({
@@ -138,6 +139,7 @@ export default function RootLayout({
         className={`${inter.variable} ${instrumentSerif.variable} ${mulish.variable} relative font-sans antialiased text-foreground bg-background`}
       >
         <StructuredData />
+        <GoogleAnalytics />
         <Suspense fallback={null}>
           <PageviewTracker />
         </Suspense>

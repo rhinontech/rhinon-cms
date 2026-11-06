@@ -407,7 +407,7 @@ body {
 @keyframes ai-ring { 0% { transform: scale(0.72); opacity: 0.55; } 100% { transform: scale(1.7); opacity: 0; } }
 @keyframes ai-travel { from { left: 0; opacity: 0; } 12% { opacity: 1; } 88% { opacity: 1; } to { left: 100%; opacity: 0; } }
 @keyframes ai-travel-rev { from { left: 100%; opacity: 0; } 12% { opacity: 1; } 88% { opacity: 1; } to { left: 0; opacity: 0; } }
-@keyframes ai-breathe { 0%, 100% { box-shadow: 0 0 60px 6px rgb(124 92 255 / 0.35), inset 0 0 40px rgb(124 92 255 / 0.25); } 50% { box-shadow: 0 0 110px 18px rgb(124 92 255 / 0.5), inset 0 0 60px rgb(124 92 255 / 0.4); } }
+@keyframes ai-breathe { 0%, 100% { box-shadow: 0 0 60px 6px rgb(60 120 255 / 0.38), inset 0 0 40px rgb(60 120 255 / 0.28); } 50% { box-shadow: 0 0 110px 18px rgb(60 120 255 / 0.55), inset 0 0 60px rgb(60 120 255 / 0.42); } }
 @keyframes ai-twinkle { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
 
 .ai-marq { display: flex; width: max-content; animation: ai-marq 46s linear infinite; }
