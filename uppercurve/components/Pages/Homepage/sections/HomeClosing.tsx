@@ -83,7 +83,7 @@ export function HomeFaq({ course }: { course: Course }) {
     <section className="bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20 sm:py-28 grid lg:grid-cols-12 gap-12">
         <div className="lg:col-span-5">
-          <CourseHeading eyebrow="FAQ" title="Questions, answered." />
+          <CourseHeading eyebrow="FAQ" title="Questions & Answers" />
         </div>
         <div className="lg:col-span-7 space-y-3">
           {faqs.map((faq) => (

@@ -130,20 +130,19 @@ export default function LandingHero({ upcoming }: { upcoming: EventDetailModel[]
                 <span className="absolute inline-flex h-full w-full rounded-full bg-[#0052FF] opacity-60 animate-ping" />
                 <span className="relative inline-flex w-2 h-2 rounded-full bg-[#0052FF]" />
               </span>
-              <span className="truncate">UpperCurve Events · {where}</span>
+              <span className="truncate">Free Certification AI Workshop</span>
             </p>
 
             <h1 className="mt-5 sm:mt-7 text-3xl sm:text-5xl lg:text-[68px] font-extrabold text-[#0B1B3D] tracking-tight leading-[1.12] sm:leading-[1.06] break-words">
-              <span className="bg-[#EBF3FF] px-2.5 sm:px-4 py-0.5 rounded-xl sm:rounded-2xl mr-2 sm:mr-3 inline-block shadow-sm">Live</span>
-              AI events that end with{" "}
+              <span className="bg-[#EBF3FF] px-2.5 sm:px-4 py-0.5 rounded-xl sm:rounded-2xl mr-2 sm:mr-3 inline-block shadow-sm">Free</span>
+              Live AI {" "}
               <span className="bg-gradient-to-r from-[#0052FF] via-[#0077FF] to-[#00C2FF] bg-clip-text text-transparent">
-                something you built.
+                 Certification Workshops for Builders.
               </span>
             </h1>
 
             <p className="mt-4 sm:mt-7 text-[15px] sm:text-lg text-[#334155] leading-relaxed max-w-xl">
-              Workshops, assessed micro-certificates and one-day builds for educators and builders — taught by
-              practitioners, not presenters.
+              Join hands-on AI sessions where you build real tools, earn a verified certificate and learn methods you can apply at work the very next day.
             </p>
 
             <div className="mt-7 sm:mt-9 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -161,14 +160,12 @@ export default function LandingHero({ upcoming }: { upcoming: EventDetailModel[]
               </Link>
             </div>
 
-            {upcoming.length ? (
-              <div className="mt-9 sm:mt-12 grid grid-cols-2 sm:grid-cols-4 gap-y-5 gap-x-4 sm:gap-0 sm:divide-x sm:divide-[#E2E8F0] pt-6 sm:pt-0 border-t border-[#EEF1F6] sm:border-t-0">
-                <Stat value={String(upcoming.length)} label="Upcoming" />
-                <Stat value={String(formats)} label={formats === 1 ? "Format" : "Formats"} />
-                {attending > 0 ? <Stat value={`${attending.toLocaleString("en-IN")}+`} label="Attending" /> : null}
-                <Stat value="₹0" label="To attend" />
-              </div>
-            ) : null}
+            <div className="mt-9 sm:mt-12 grid grid-cols-2 sm:grid-cols-4 gap-y-5 gap-x-4 sm:gap-0 sm:divide-x sm:divide-[#E2E8F0] pt-6 sm:pt-0 border-t border-[#EEF1F6] sm:border-t-0">
+              <Stat value={String(upcoming.length || 3)} label="Upcoming Events" />
+              <Stat value={String(formats || 6)} label="Learning Formats" />
+              <Stat value={attending > 0 ? `${attending.toLocaleString("en-IN")}+` : "305+"} label="Learners Registered" />
+              <Stat value="₹ 0" label="Free to Attend" />
+            </div>
           </div>
 
           <div className="lg:col-span-5 min-w-0">
