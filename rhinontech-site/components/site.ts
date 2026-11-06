@@ -22,3 +22,6 @@ export const links = {
   privacy: "https://www.rhinonlabs.com/privacy-terms",
   contact: "/contact",
 };
+
+/** Public key for the Rhinon Tech brand in the admin panel's Analytics. Safe in page source: it can only add a pageview, and only from rhinontech.com. */
+export const ANALYTICS_KEY = process.env.NEXT_PUBLIC_ANALYTICS_KEY || "rt_5c485857d3734c95e7517515";

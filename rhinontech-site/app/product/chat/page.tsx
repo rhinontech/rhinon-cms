@@ -25,7 +25,7 @@ const FAQ = [
 
 export default function ChatPage() {
   return (
-    <div className="bg-[#050b24] text-white">
+    <div className="bg-[#030306] text-white">
       {/* Hero: a dark conversation with a glowing frame */}
       <section className="relative overflow-hidden pb-24 pt-14 sm:pt-20">
         <Aurora dark tones={["#2f5bff", "#2cd3ff", "#7c5cff"]} />
@@ -34,7 +34,7 @@ export default function ChatPage() {
             <Crumb slug="chat" dark center />
             <h1 className="font-display mx-auto mt-6 max-w-[900px] text-balance text-[44px] font-semibold leading-[1] sm:text-[76px]">Talk it through, <span className={G}>without leaving the work.</span></h1>
             <p className="mx-auto mt-6 max-w-[620px] text-[18px] leading-8 text-white/65 sm:text-[20px]">Message your team, start a group call, or share a meeting link with someone outside the company. All of it lives next to your projects and your customers.</p>
-            <div className="mt-9 flex flex-wrap justify-center gap-3"><Button href={links.signup} arrow>Get started free</Button><Button href={links.call} variant="glass">Book a demo</Button></div>
+            <div className="mt-9 flex flex-wrap justify-center gap-3"><Button href={links.signup}>Get started free</Button><Button href={links.call} variant="glass">Book a demo</Button></div>
           </Reveal>
         </div>
         <div className="relative mt-16 px-5"><Reveal delay={150}><ChatHero /></Reveal></div>
@@ -47,7 +47,7 @@ export default function ChatPage() {
       </section>
 
       {/* Call */}
-      <section className="relative border-y border-white/10 bg-[#070e2c] py-24 sm:py-32">
+      <section className="relative border-y border-white/10 bg-[#08080e] py-24 sm:py-32">
         <div className="mx-auto grid max-w-[1240px] items-center gap-12 px-5 lg:grid-cols-[0.85fr_1.15fr]">
           <Reveal>
             <Eyebrow dark>Group calls</Eyebrow>

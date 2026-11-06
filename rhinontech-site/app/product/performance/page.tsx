@@ -26,7 +26,7 @@ const FAQ = [
 
 export default function PerformancePage() {
   return (
-    <div className="bg-[#0a0720] text-white">
+    <div className="bg-[#030306] text-white">
       {/* Hero: copy left, three rings closing right */}
       <section className="relative overflow-hidden pb-24 pt-12 sm:pt-16">
         <Aurora dark tones={["#7c5cff", "#2f5bff", "#ff5fb0"]} />
@@ -35,7 +35,7 @@ export default function PerformancePage() {
             <Crumb slug="performance" dark />
             <h1 className="font-display mt-6 text-balance text-[42px] font-semibold leading-[1.02] sm:text-[68px]">Reviews people <span className={G}>actually finish.</span></h1>
             <p className="mt-6 max-w-[520px] text-[18px] leading-8 text-white/65">Run quarterly, annual or probation review cycles. Set goals for each person, collect reviews from the right people and see progress across your team.</p>
-            <div className="mt-8 flex flex-wrap gap-3"><Button href={links.signup} arrow>Get started free</Button><Button href={links.call} variant="glass">Book a demo</Button></div>
+            <div className="mt-8 flex flex-wrap gap-3"><Button href={links.signup}>Get started free</Button><Button href={links.call} variant="glass">Book a demo</Button></div>
           </Reveal>
           <Reveal delay={140}><RingsHero /></Reveal>
         </div>
@@ -48,7 +48,7 @@ export default function PerformancePage() {
       </section>
 
       {/* Goals */}
-      <section className="border-y border-white/10 bg-[#0e0a2e] py-24 sm:py-32">
+      <section className="border-y border-white/10 bg-[#08080e] py-24 sm:py-32">
         <div className="mx-auto grid max-w-[1240px] items-center gap-12 px-5 lg:grid-cols-[0.8fr_1.2fr]">
           <Reveal>
             <Eyebrow dark>Goals</Eyebrow>
@@ -66,7 +66,7 @@ export default function PerformancePage() {
       </section>
 
       {/* Team */}
-      <section className="border-y border-white/10 bg-[#0e0a2e] py-24 sm:py-32">
+      <section className="border-y border-white/10 bg-[#08080e] py-24 sm:py-32">
         <div className="mx-auto max-w-[1100px] px-5">
           <Reveal><SectionHead dark eyebrow="Team view" title={<>See who has finished, <span className={G}>and who has not.</span></>} sub="Managers get one view of the whole team, so a cycle never stalls without anyone noticing." /></Reveal>
           <div className="mt-14"><TeamSection /></div>

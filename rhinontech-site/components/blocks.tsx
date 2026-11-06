@@ -42,8 +42,8 @@ export function CtaBand({
   tone?: [string, string];
 }) {
   return (
-    <section className="px-5 pb-24 sm:pb-32">
-      <Reveal className="noise relative mx-auto max-w-[1240px] overflow-hidden rounded-[40px] bg-night px-6 py-20 text-center text-white sm:py-28">
+    <section className="px-5 pb-24 pt-4 sm:pb-32">
+      <Reveal className="noise relative mx-auto max-w-[1240px] overflow-hidden rounded-[40px] bg-[#0b0b14] px-6 py-20 text-center text-white sm:py-28">
         <Aurora dark tones={tone ? [tone[0], tone[1], "#ff5fb0"] : undefined} />
         <Image src="/brand/mark-white.png" alt="" width={520} height={520} aria-hidden className="pointer-events-none absolute -bottom-24 -right-16 w-[380px] opacity-[0.06]" />
         <div className="relative">

@@ -36,7 +36,7 @@ export default function PagesPage() {
             <div className="mt-6"><IconTile icon={p.icon} tone={p.tone} size={56} /></div>
             <h1 className={`${HEAD} mt-6 text-balance text-[40px] leading-[1.05] text-[#1d1a12] sm:text-[56px]`}>Your team's knowledge,<br className="hidden sm:block" /> <span className={`${INDIGO} sm:whitespace-nowrap`}>written down once.</span></h1>
             <p className="mt-6 max-w-[500px] text-[18px] leading-8 text-[#5d5640]">Nested pages for processes, plans, briefs and notes. Write them where the work happens, and find them again in a tree that makes sense.</p>
-            <div className="mt-8 flex flex-wrap gap-3"><Button href={links.signup} arrow>Get started free</Button><Button href={links.call} variant="ghost">Book a demo</Button></div>
+            <div className="mt-8 flex flex-wrap gap-3"><Button href={links.signup}>Get started free</Button><Button href={links.call} variant="soft">Book a demo</Button></div>
           </Reveal>
           <Reveal delay={140}><DocHero /></Reveal>
         </div>
@@ -49,7 +49,7 @@ export default function PagesPage() {
       </section>
 
       {/* Pinboard */}
-      <section className="border-y border-line bg-soft/60 py-24 sm:py-28">
+      <section className="border-t border-line py-24 sm:py-28">
         <div className="mx-auto max-w-[1240px] px-5">
           <Reveal className="mb-16 text-center"><Eyebrow>What teams keep here</Eyebrow><h2 className={`${HEAD} mx-auto mt-5 max-w-[760px] text-balance text-[38px] leading-[1.05] text-[#1d1a12] sm:text-[56px]`}>The things that should <span className={INDIGO}>outlast a chat.</span></h2></Reveal>
           <Reveal delay={100}><Pinboard /></Reveal>

@@ -32,6 +32,7 @@ function initials(name: string): string {
  */
 const BRAND_LOGOS: Record<string, { light: StaticImageData; dark: StaticImageData }> = {
   rhinonlabs: { light: adminImages.blueLogo, dark: adminImages.whiteLogo },
+  rhinontech: { light: adminImages.Mark_Rhinon_Tech_Navy, dark: adminImages.Mark_Rhinon_Tech_White },
   // One mark on both themes: the Uppercurve arrow carries its own gradient and
   // the navy U stays legible on a dark sidebar.
   uppercurve: { light: adminImages.Logo_Uppercurve, dark: adminImages.Logo_Uppercurve },

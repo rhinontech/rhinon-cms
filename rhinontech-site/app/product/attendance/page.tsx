@@ -29,14 +29,14 @@ export default function AttendancePage() {
   return (
     <div className="bg-white">
       {/* Hero: a dark teal room with a clock-in ring */}
-      <section className="relative overflow-hidden bg-[#04201f] pb-24 pt-12 text-white sm:pt-16">
+      <section className="relative overflow-hidden bg-[#030306] pb-24 pt-12 text-white sm:pt-16">
         <Aurora dark tones={["#10c98f", "#2cd3ff", "#14b8a6"]} />
         <div className="relative mx-auto grid max-w-[1240px] items-center gap-12 px-5 lg:grid-cols-[1fr_0.9fr]">
           <Reveal>
             <Crumb slug="attendance" dark />
             <h1 className="font-display mt-6 text-balance text-[42px] font-semibold leading-[1.02] sm:text-[66px]">Know who is in, <span className={GL}>and who is away.</span></h1>
             <p className="mt-6 max-w-[520px] text-[18px] leading-8 text-white/65">Clock in and out from the dashboard, request leave, and let managers approve in a tap. Balances and a team calendar keep everyone planning from the same facts.</p>
-            <div className="mt-8 flex flex-wrap gap-3"><Button href={links.signup} arrow>Get started free</Button><Button href={links.call} variant="glass">Book a demo</Button></div>
+            <div className="mt-8 flex flex-wrap gap-3"><Button href={links.signup}>Get started free</Button><Button href={links.call} variant="glass">Book a demo</Button></div>
           </Reveal>
           <Reveal delay={140}><ClockHero /></Reveal>
         </div>

@@ -35,7 +35,7 @@ export default function WorkPage() {
             <Crumb slug="work" center />
             <h1 className="font-display mx-auto mt-6 max-w-[900px] text-balance text-[42px] font-semibold leading-[1] sm:text-[72px]">Deliver client work <span className={G}>without the chaos.</span></h1>
             <p className="mx-auto mt-6 max-w-[620px] text-[18px] leading-8 text-ink-soft sm:text-[20px]">Projects, tasks, boards and a calendar for every piece of work, plus a private portal where clients follow progress and send change requests.</p>
-            <div className="mt-9 flex flex-wrap justify-center gap-3"><Button href={links.signup} arrow>Get started free</Button><Button href={links.call} variant="ghost">Book a demo</Button></div>
+            <div className="mt-9 flex flex-wrap justify-center gap-3"><Button href={links.signup}>Get started free</Button><Button href={links.call} variant="soft">Book a demo</Button></div>
           </Reveal>
         </div>
         <div className="relative mt-14 px-5"><Reveal delay={150}><GanttHero /></Reveal></div>

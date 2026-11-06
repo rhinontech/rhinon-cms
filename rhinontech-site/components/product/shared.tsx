@@ -20,7 +20,7 @@ export function Crumb({ slug, dark = false, center = false }: { slug: string; da
 /** A quiet row of links to the products this one works with. */
 export function PairsWith({ items, dark = false }: { items: { slug: string; line: string }[]; dark?: boolean }) {
   return (
-    <section className={dark ? "bg-night pb-24 pt-8" : "pb-24 pt-8"}>
+    <section className={dark ? "bg-[#030306] pb-24 pt-8" : "pb-24 pt-8"}>
       <div className="mx-auto max-w-[1240px] px-5">
         <p className={`font-mono text-[12px] uppercase tracking-[0.18em] ${dark ? "text-white/45" : "text-muted"}`}>Works with</p>
         <div className={`mt-4 grid divide-y rounded-3xl border md:grid-cols-3 md:divide-x md:divide-y-0 ${dark ? "divide-white/10 border-white/10" : "divide-line border-line"}`}>
@@ -46,7 +46,7 @@ export function PairsWith({ items, dark = false }: { items: { slug: string; line
 /** The FAQ block every product page ends with, plus its structured data. */
 export function ProductFaq({ title, items, dark = false }: { title: string; items: { q: string; a: string }[]; dark?: boolean }) {
   return (
-    <section className={dark ? "bg-night pb-8 pt-24 sm:pt-28" : "mx-auto max-w-[1240px] px-5 py-24 sm:py-28"}>
+    <section className={dark ? "bg-[#030306] pb-24 pt-24 sm:pt-28" : "mx-auto max-w-[1240px] px-5 py-24 sm:py-28"}>
       <div className={dark ? "mx-auto max-w-[1240px] px-5" : ""}>
         <Reveal><SectionHead dark={dark} eyebrow="FAQ" title={title} /></Reveal>
         <div className="mt-14"><Faq items={items} dark={dark} /></div>

@@ -25,7 +25,7 @@ const FAQ = [
 
 export default function OutreachPage() {
   return (
-    <div className="bg-night text-white">
+    <div className="bg-[#030306] text-white">
       {/* Hero: centred, with the composer doing its job underneath */}
       <section className="relative overflow-hidden pb-24 pt-14 sm:pt-20">
         <Aurora dark tones={["#7c5cff", "#e04dd6", "#2f5bff"]} />
@@ -39,7 +39,7 @@ export default function OutreachPage() {
               Write one email. AI researches each lead, tailors the message and queues it on your schedule. You approve before anything goes out.
             </p>
             <div className="mt-9 flex flex-wrap justify-center gap-3">
-              <Button href={links.signup} arrow>Get started free</Button>
+              <Button href={links.signup}>Get started free</Button>
               <Button href={links.call} variant="glass">Book a demo</Button>
             </div>
           </Reveal>
@@ -54,7 +54,7 @@ export default function OutreachPage() {
       </section>
 
       {/* Schedule */}
-      <section className="relative border-y border-white/10 bg-[#070d2b] py-24 sm:py-32">
+      <section className="relative border-y border-white/10 bg-[#08080e] py-24 sm:py-32">
         <div className="mx-auto grid max-w-[1240px] items-center gap-12 px-5 lg:grid-cols-[0.8fr_1.2fr]">
           <Reveal>
             <Eyebrow dark>Your schedule</Eyebrow>
@@ -76,7 +76,7 @@ export default function OutreachPage() {
       </section>
 
       {/* Memory */}
-      <section className="relative border-y border-white/10 bg-[#070d2b] py-24 sm:py-32">
+      <section className="relative border-y border-white/10 bg-[#08080e] py-24 sm:py-32">
         <div className="mx-auto max-w-[1240px] px-5">
           <Reveal><SectionHead dark eyebrow="Rhinon AI" title={<>A sales agent with a <span className="text-aurora-soft">memory.</span></>} sub="Teach it who you sell to and how you sound. It uses that on every draft, and writes the next email based on what has already happened with each lead." /></Reveal>
           <div className="mt-16"><MemorySection /></div>

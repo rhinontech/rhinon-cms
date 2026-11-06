@@ -55,8 +55,8 @@ export default function InboxPage() {
               Replies to your campaigns and mail to your support address land in one shared inbox, threaded, assigned and tracked until it is done.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button href={links.signup} arrow>Get started free</Button>
-              <Button href={links.call} variant="ghost">Book a demo</Button>
+              <Button href={links.signup}>Get started free</Button>
+              <Button href={links.call} variant="soft">Book a demo</Button>
             </div>
           </Reveal>
           <Reveal delay={140}><InboxZeroHero /></Reveal>
@@ -91,7 +91,7 @@ export default function InboxPage() {
       </section>
 
       {/* Status */}
-      <section className="border-y border-line bg-soft/60 py-24 sm:py-28">
+      <section className="border-t border-line py-24 sm:py-28">
         <div className="mx-auto max-w-[1240px] px-5">
           <Reveal><SectionHead eyebrow="Every conversation has a status" title={<>From open to closed, <span className="italic">nothing stalls.</span></>} sub="Open, in progress, resolved, closed. Everyone sees where each thread stands." /></Reveal>
           <div className="mt-14"><RiverSection /></div>
@@ -109,7 +109,7 @@ export default function InboxPage() {
       </section>
 
       {/* Address */}
-      <section className="border-y border-line bg-soft/60 py-24 sm:py-28">
+      <section className="border-t border-line py-24 sm:py-28">
         <div className="mx-auto max-w-[1240px] px-5">
           <Reveal><SectionHead eyebrow="Your address" title={<>Customers write to <span className="italic">your team.</span></>} sub="Every workspace gets its own company address. Whatever lands there reaches the people who should see it." /></Reveal>
           <div className="mt-14"><AddressSection /></div>

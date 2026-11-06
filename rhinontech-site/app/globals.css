@@ -87,12 +87,12 @@ body {
   }
   /* On a dark band the same button flips to white. */
   .bg-night .btn-primary, .bg-black .btn-primary, .bg-ink .btn-primary,
-  [class*="bg-[#030306]"] .btn-primary, [class*="bg-[#0b0b14]"] .btn-primary {
+  [class*="bg-[#030306]"] .btn-primary, [class*="bg-[#0b0b14]"] .btn-primary, [class*="bg-[#08080e]"] .btn-primary {
     color: #0a1128;
     background: #fff;
   }
   .bg-night .btn-primary:hover, .bg-black .btn-primary:hover, .bg-ink .btn-primary:hover,
-  [class*="bg-[#030306]"] .btn-primary:hover, [class*="bg-[#0b0b14]"] .btn-primary:hover {
+  [class*="bg-[#030306]"] .btn-primary:hover, [class*="bg-[#0b0b14]"] .btn-primary:hover, [class*="bg-[#08080e]"] .btn-primary:hover {
     background: #ececf1;
   }
   .btn-ghost {

@@ -36,7 +36,7 @@ export default function PayrollPage() {
             <div className="mt-6"><IconTile icon={p.icon} tone={p.tone} size={56} /></div>
             <h1 className="font-display mt-6 text-balance text-[42px] font-semibold leading-[1.02] sm:text-[64px]">Run payroll in the time it takes <span className={G}>to review it.</span></h1>
             <p className="mt-6 max-w-[520px] text-[18px] leading-8 text-ink-soft">Salary structures live on each person's record. Start a monthly run, check the numbers and mark it paid. Payslips are generated for everyone.</p>
-            <div className="mt-8 flex flex-wrap gap-3"><Button href={links.signup} arrow>Get started free</Button><Button href={links.call} variant="ghost">Book a demo</Button></div>
+            <div className="mt-8 flex flex-wrap gap-3"><Button href={links.signup}>Get started free</Button><Button href={links.call} variant="soft">Book a demo</Button></div>
             <p className="mt-5 flex flex-wrap gap-2 text-[12px] font-semibold">{["₹ amounts", "PF", "PT", "TDS"].map((c) => <span key={c} className="rounded-full border border-amber-200 bg-white px-3 py-1 text-amber-800">{c}</span>)}</p>
           </Reveal>
           <Reveal delay={140}><PayslipFan /></Reveal>
@@ -44,7 +44,7 @@ export default function PayrollPage() {
       </section>
 
       {/* The run */}
-      <section className="border-y border-line bg-soft/60 py-24 sm:py-32">
+      <section className="border-t border-line py-24 sm:py-32">
         <div className="mx-auto max-w-[1100px] px-5">
           <Reveal><SectionHead eyebrow="The run" title={<>Draft, processed, paid. <span className={G}>Three steps.</span></>} sub="Each run moves through the same three stages, and the numbers lock when you process it." /></Reveal>
           <div className="mt-14"><RunSection /></div>
@@ -58,7 +58,7 @@ export default function PayrollPage() {
       </section>
 
       {/* Payslips */}
-      <section className="border-y border-line bg-soft/60 py-24 sm:py-32">
+      <section className="border-t border-line py-24 sm:py-32">
         <div className="mx-auto grid max-w-[1240px] items-center gap-12 px-5 lg:grid-cols-[0.8fr_1.2fr]">
           <Reveal>
             <Eyebrow>Payslips</Eyebrow>

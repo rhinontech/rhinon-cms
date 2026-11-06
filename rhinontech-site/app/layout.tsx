@@ -4,7 +4,7 @@ import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import RhinonChatLoader from "@/components/RhinonChat";
-import { SITE_URL } from "@/components/site";
+import { ANALYTICS_KEY, API_URL, SITE_URL } from "@/components/site";
 
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -50,6 +50,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <main className="overflow-x-clip">{children}</main>
         <Footer />
         <RhinonChatLoader />
+        {process.env.NODE_ENV === "production" && <script async defer src={API_URL + "/t.js"} data-key={ANALYTICS_KEY} />}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ORGANIZATION) }} />
       </body>
     </html>

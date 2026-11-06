@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Aurora, Button, Eyebrow, IconTile, SectionHead } from "@/components/ui";
+import { Aurora, Button, IconTile } from "@/components/ui";
+import { Glow, H2, Kicker, LightSection } from "@/components/light";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand } from "@/components/blocks";
 import { links } from "@/components/site";
@@ -32,15 +33,15 @@ export default function CrmPage() {
           <Reveal>
             <Crumb slug="crm" />
             <div className="mt-6"><IconTile icon={p.icon} tone={p.tone} size={56} /></div>
-            <h1 className="font-display mt-6 text-[40px] font-semibold leading-[1.02] sm:text-[54px]">
+            <h1 className="font-display mt-6 text-[42px] font-semibold leading-[1.02] sm:text-[64px]">
               Every lead and deal, <span className="text-aurora">finally in one list.</span>
             </h1>
             <p className="mt-6 max-w-[520px] text-[18px] leading-8 text-ink-soft">
               Import a spreadsheet or let leads flow in from your website. Stages, owners and every conversation on one timeline, so nobody asks “where are we with them?” again.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button href={links.signup} arrow>Get started free</Button>
-              <Button href={links.call} variant="ghost">Book a demo</Button>
+              <Button href={links.signup}>Get started free</Button>
+              <Button href={links.call} variant="soft">Book a demo</Button>
             </div>
             <p className="mt-5 text-[13.5px] text-muted">Free for your whole team. No credit card.</p>
           </Reveal>
@@ -49,39 +50,49 @@ export default function CrmPage() {
       </section>
 
       {/* Capture */}
-      <section className="border-y border-line bg-soft/60 py-24 sm:py-32">
-        <div className="mx-auto max-w-[1240px] px-5">
-          <Reveal><SectionHead eyebrow="Capture" title={<>Leads from everywhere. <span className="text-aurora">One list.</span></>} sub="Import a CSV, point your website forms at it, or let the chatbot do the talking. Every lead lands in the same pipeline, and a repeat enquiry joins the lead you already have." /></Reveal>
-          <div className="mt-16"><ConvergeSection /></div>
-        </div>
-      </section>
+      <LightSection border>
+        <Reveal>
+          <Kicker>Capture</Kicker>
+          <H2 className="mt-4">Leads from everywhere.<br className="hidden sm:block" /> <span className="text-aurora">One list.</span></H2>
+          <p className="mt-5 max-w-[620px] text-[18px] leading-8 text-ink-soft">Import a CSV, point your website forms at it, or let the chatbot do the talking. Every lead lands in the same pipeline, and a repeat enquiry joins the lead you already have.</p>
+        </Reveal>
+        <div className="mt-16"><ConvergeSection /></div>
+      </LightSection>
 
-      {/* Lifecycle */}
-      <section className="relative bg-night pt-24 text-white sm:pt-32">
-        <Aurora dark tones={["#2f5bff", "#7c5cff", "#2cd3ff"]} />
-        <div className="relative mx-auto max-w-[1240px] px-5">
-          <Reveal><SectionHead dark eyebrow="Lifecycle" title={<>Follow one lead from hello to <span className="text-aurora-soft">deal.</span></>} sub="Scroll to move Priya through the pipeline. Her stage updates itself as things happen." /></Reveal>
+      {/* Lifecycle: the one dark band */}
+      <section className="relative overflow-x-clip bg-[#030306] px-5 pt-24 text-white sm:pt-32">
+        <Glow className="left-1/2 top-0 h-[420px] w-[900px] -translate-x-1/2" />
+        <div className="relative mx-auto max-w-[1240px]">
+          <Reveal>
+            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-white/45">Lifecycle</p>
+            <h2 className="font-display mt-4 text-[36px] font-semibold leading-[1.04] sm:text-[60px]">Follow one lead from<br className="hidden sm:block" /> hello to <span className="text-aurora-soft">deal.</span></h2>
+            <p className="mt-5 max-w-[560px] text-[18px] leading-8 text-white/55">Scroll to move Priya through the pipeline. Her stage updates itself as things happen.</p>
+          </Reveal>
           <div className="mt-16 pb-24"><LifecycleStory /></div>
         </div>
       </section>
 
       {/* Research */}
-      <section className="mx-auto max-w-[1240px] px-5 py-24 sm:py-32">
-        <Reveal><SectionHead eyebrow="Rhinon AI" title={<>Research before you <span className="text-aurora">reach out.</span></>} sub="Rhinon AI reads the lead's website and the web, then saves a short description, recent news and the likely pain point on the lead. Every email starts with something real." /></Reveal>
+      <LightSection>
+        <Reveal>
+          <Kicker>Rhinon AI</Kicker>
+          <H2 className="mt-4">Research before<br className="hidden sm:block" /> you <span className="text-aurora">reach out.</span></H2>
+          <p className="mt-5 max-w-[620px] text-[18px] leading-8 text-ink-soft">Rhinon AI reads the lead&apos;s website and the web, then saves a short description, recent news and the likely pain point on the lead. Every email starts with something real.</p>
+        </Reveal>
         <div className="mt-16"><ScanSection /></div>
-      </section>
+      </LightSection>
 
       {/* Value */}
-      <section className="border-y border-line bg-soft/60 py-24 sm:py-32">
-        <div className="mx-auto grid max-w-[1240px] items-center gap-14 px-5 lg:grid-cols-[0.8fr_1.2fr]">
+      <LightSection border>
+        <div className="grid items-center gap-14 lg:grid-cols-[0.8fr_1.2fr]">
           <Reveal>
-            <Eyebrow>Deals you can see</Eyebrow>
-            <h2 className="font-display mt-5 text-[38px] font-semibold leading-[1.04] sm:text-[52px]">Know where the <span className="text-aurora">money is.</span></h2>
+            <Kicker>Deals you can see</Kicker>
+            <H2 className="mt-4 !text-[36px] sm:!text-[52px]">Know where the <span className="text-aurora">money is.</span></H2>
             <p className="mt-5 max-w-[460px] text-[17px] leading-8 text-ink-soft">Deal value is tracked by stage, so a glance tells you what is open, what is close and what is won. Switch the period and the whole picture moves with you.</p>
           </Reveal>
           <Reveal delay={120}><BarsSection /></Reveal>
         </div>
-      </section>
+      </LightSection>
 
       <PairsWith items={[
         { slug: "outreach", line: "Turn a list into a campaign in one click." },

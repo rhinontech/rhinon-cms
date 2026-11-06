@@ -36,15 +36,15 @@ export default function ChatbotPage() {
           <Reveal>
             <Crumb slug="chatbot" />
             <div className="mt-6 flex items-center gap-3"><IconTile icon={p.icon} tone={p.tone} size={56} /><span className="rounded-full bg-pink/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-pink">Premium</span></div>
-            <h1 className="font-display mt-6 text-balance text-[42px] font-semibold leading-[1.02] sm:text-[58px]">
+            <h1 className="font-display mt-6 text-balance text-[42px] font-semibold leading-[1.02] sm:text-[64px]">
               A chatbot that answers like <span className={GRAD}>your best salesperson.</span>
             </h1>
             <p className="mt-6 max-w-[520px] text-[18px] leading-8 text-ink-soft">
               Train it on your website and documents in minutes. It answers visitors day and night, saves their details to the CRM and hands over to your team in live chat or a voice call.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button href={links.call} arrow>Talk to us</Button>
-              <Button href={links.signup} variant="ghost">Start with the free modules</Button>
+              <Button href={links.call}>Talk to us</Button>
+              <Button href={links.signup} variant="soft">Start with the free modules</Button>
             </div>
             <p className="mt-5 text-[13.5px] text-muted">The AI chatbot is the one paid product. Everything else is free.</p>
           </Reveal>
@@ -53,7 +53,7 @@ export default function ChatbotPage() {
       </section>
 
       {/* Train */}
-      <section className="border-y border-line bg-soft/60 py-24 sm:py-32">
+      <section className="border-t border-line py-24 sm:py-32">
         <div className="mx-auto grid max-w-[1240px] items-center gap-12 px-5 lg:grid-cols-[0.8fr_1.2fr]">
           <Reveal>
             <Eyebrow>Train it</Eyebrow>
@@ -71,7 +71,7 @@ export default function ChatbotPage() {
       </section>
 
       {/* Voice */}
-      <section className="relative overflow-hidden bg-[#1a1030] py-24 text-white sm:py-32">
+      <section className="relative overflow-hidden bg-[#0b0b14] py-24 text-white sm:py-32">
         <Aurora dark tones={["#ff8a4c", "#ff5fb0", "#7c5cff"]} />
         <div className="relative mx-auto grid max-w-[1240px] items-center gap-12 px-5 lg:grid-cols-[1fr_0.9fr]">
           <Reveal>
@@ -90,7 +90,7 @@ export default function ChatbotPage() {
       </section>
 
       {/* Install */}
-      <section className="border-y border-line bg-soft/60 py-24 sm:py-32">
+      <section className="border-t border-line py-24 sm:py-32">
         <div className="mx-auto max-w-[1240px] px-5">
           <Reveal><SectionHead eyebrow="Install" title={<>One line of code. <span className={GRAD}>That is the whole setup.</span></>} sub="Paste it on your site and the assistant appears. No developer, no plugin." /></Reveal>
           <div className="mt-14"><InstallSection /></div>
@@ -100,7 +100,7 @@ export default function ChatbotPage() {
       {/* The paid product, said plainly */}
       <section className="mx-auto max-w-[1240px] px-5 py-24 sm:py-28">
         <Reveal>
-          <div className="beam relative overflow-hidden rounded-[32px] bg-[#1a1030] p-8 text-white sm:p-12">
+          <div className="beam relative overflow-hidden rounded-[32px] bg-[#0b0b14] p-8 text-white sm:p-12">
             <div className="grid items-center gap-10 lg:grid-cols-[1fr_1fr]">
               <div>
                 <p className="font-mono text-[12px] uppercase tracking-[0.16em] text-[#ffb27a]">The one paid product</p>
