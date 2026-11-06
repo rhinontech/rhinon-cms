@@ -44,7 +44,8 @@ export function Footer() {
                 <Link key={c.href} href={c.href} className="block text-white/70 transition-colors hover:text-white">{c.label}</Link>
               ))}
               <a href={links.labs} className="block text-white/70 transition-colors hover:text-white">Rhinon Labs</a>
-              <a href={links.contact} className="block text-white/70 transition-colors hover:text-white">Contact</a>
+              <Link href="/demo" className="block text-white/70 transition-colors hover:text-white">Book a demo</Link>
+              <Link href="/contact" className="block text-white/70 transition-colors hover:text-white">Contact</Link>
               <a href={links.privacy} className="block text-white/70 transition-colors hover:text-white">Privacy & terms</a>
             </div>
           </div>

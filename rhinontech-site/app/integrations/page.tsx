@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Bot, CalendarDays, FileSignature, Mail, Send, Zap, type LucideIcon } from "lucide-react";
 import { links } from "@/components/site";
 import { Aurora, Button, SectionHead } from "@/components/ui";
@@ -42,7 +43,7 @@ export default function IntegrationsPage() {
             ))}
           </div>
           <Reveal delay={100}>
-            <p className="mt-12 text-center text-[15px] text-muted">Need something that is not here? <a href={links.contact} className="font-medium text-ink underline underline-offset-4">Tell us</a>. We build custom integrations at Rhinon Labs.</p>
+            <p className="mt-12 text-center text-[15px] text-muted">Need something that is not here? <Link href="/contact" className="font-medium text-ink underline underline-offset-4">Tell us</Link>. We build custom integrations at Rhinon Labs.</p>
           </Reveal>
         </div>
       </section>

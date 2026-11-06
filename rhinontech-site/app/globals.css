@@ -1,12 +1,18 @@
 @import "tailwindcss";
 
+/* The font loader defines these variables on <html>. `inline` makes each utility read them
+   where it is used; a plain @theme copies them onto :root first, which can leave them empty. */
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-geist-sans);
+  --font-signature: var(--font-dancing), "Segoe Script", cursive;
+}
+
+
 /* Rhinon Tech brand. `brand` is sampled from the logo; the vivid accents are
    the light that plays across it: electric blue into violet into pink. */
 @theme {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-display: var(--font-inter-tight);
-
   --color-ink: #0a1128;
   --color-ink-soft: #3a4466;
   --color-muted: #6b7494;
@@ -34,8 +40,8 @@ body {
 }
 
 .font-display {
-  font-family: var(--font-display), var(--font-geist-sans), system-ui, sans-serif;
-  letter-spacing: -0.04em;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  letter-spacing: -0.035em;
 }
 
 ::selection {
@@ -45,15 +51,19 @@ body {
 /* ───────────── Gradient text ───────────── */
 
 @layer components {
+  /* Mirrored so the tile repeats without a seam, and 200% wide so the animation below moves it by
+     exactly one tile and loops without a jump. */
   .text-aurora {
-    background: linear-gradient(100deg, #2f5bff 0%, #7c5cff 38%, #e04dd6 68%, #ff8a5c 100%);
-    background-size: 220% auto;
+    background: linear-gradient(100deg, #2f5bff 0%, #7c5cff 17%, #e04dd6 34%, #ff8a5c 50%, #e04dd6 66%, #7c5cff 83%, #2f5bff 100%);
+    background-size: 200% auto;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
     animation: shimmer 9s linear infinite;
   }
-  .text-aurora, .text-aurora-soft { display: inline-block; }
+  /* Kept whole on one line. background-clip: text only paints inside the box, and at a tight
+     line-height the box ends above the descenders, so the padding below buys them back. */
+  .text-aurora, .text-aurora-soft { display: inline-block; padding-bottom: 0.2em; margin-bottom: -0.2em; }
   .text-aurora-soft {
     background: linear-gradient(100deg, #8fb0ff 0%, #b9a6ff 45%, #ff9bd2 100%);
     -webkit-background-clip: text;
@@ -248,7 +258,7 @@ body {
 }
 
 @keyframes shimmer {
-  to { background-position: 220% center; }
+  to { background-position: 200% center; }
 }
 @keyframes blob {
   0%, 100% { transform: translate3d(0, 0, 0) scale(1); }

@@ -6,7 +6,7 @@ import { Avatar } from "@/components/ProductMocks";
 import { Cursor, Live, TypeText, useStepper } from "@/components/motion";
 
 const PAPER = "rounded-2xl border border-[#e9e1d1] bg-white shadow-[0_40px_90px_-40px_rgb(60_50_20_/_0.35)]";
-const SERIF = "font-[family-name:var(--font-serif)]";
+const HEAD = "font-display font-medium";
 const EASE = "cubic-bezier(.4,.1,.2,1)";
 
 /* ───────────── Hero: a page being written ───────────── */
@@ -39,7 +39,7 @@ function Doc({ live }: { live: boolean }) {
         <p className="mt-1 rounded-lg bg-indigo-50 px-2 py-1.5 text-[12.5px] font-semibold text-indigo-700" style={{ marginLeft: 12 }}>↳ {step >= 1 ? TITLE : "Untitled"}</p>
       </aside>
       <div className="relative min-h-[430px] p-6 sm:p-8">
-        <p className={`${SERIF} min-h-[44px] text-[36px] leading-[1.1] text-[#1d1a12]`}><TypeText key={cycle} text={TITLE} run speed={60} /></p>
+        <p className={`${HEAD} min-h-[44px] text-[32px] leading-[1.1] text-[#1d1a12]`}><TypeText key={cycle} text={TITLE} run speed={60} /></p>
         <p className="mt-4 min-h-[72px] text-[15px] leading-7 text-[#5d5640]"><TypeText key={`i${cycle}`} text={INTRO} run={step >= 1} speed={26} /></p>
         {menu && (
           <div className="pop-in relative mt-2 w-[220px] rounded-xl border border-[#e4dbc8] bg-white p-1.5 shadow-[0_24px_50px_-20px_rgb(60_50_20_/_0.45)]">
@@ -94,7 +94,7 @@ function Tree({ live }: { live: boolean }) {
         <p className="flex items-center gap-1.5 px-2 py-2 text-[13.5px] text-[#4b4431]"><FileText className="h-3.5 w-3.5 text-[#b0a68f]" />Meeting notes</p>
       </div>
       <div className="hidden p-8 sm:block">
-        <p className={`${SERIF} text-[34px] leading-tight text-[#1d1a12] transition-opacity duration-500`} style={{ opacity: step >= 3 ? 1 : 0.15 }}>{step >= 3 ? NAME : "Untitled"}</p>
+        <p className={`${HEAD} text-[30px] leading-tight text-[#1d1a12] transition-opacity duration-500`} style={{ opacity: step >= 3 ? 1 : 0.15 }}>{step >= 3 ? NAME : "Untitled"}</p>
         <div className="mt-5 space-y-3"><i className="block h-2.5 w-full rounded bg-[#efe8d9]" /><i className="block h-2.5 w-11/12 rounded bg-[#efe8d9]" /><i className="block h-2.5 w-2/3 rounded bg-[#efe8d9]" /></div>
         <p className="mt-8 text-[12.5px] text-[#a59b85]">{step >= 4 ? "Saved in Handbook" : "New page"}</p>
       </div>
@@ -125,7 +125,7 @@ export function Pinboard() {
         <div key={s.title} className="group relative" style={{ transform: `rotate(${s.rot}deg)`, transition: `transform .45s ${EASE}` }}>
           <i className="absolute -top-3 left-1/2 z-10 h-6 w-16 -translate-x-1/2 -rotate-3 rounded-sm bg-[#e9d9a8]/80 shadow-sm" />
           <div className="rounded-xl border border-[#e9e1d1] p-5 pt-7 shadow-[0_24px_50px_-28px_rgb(60_50_20_/_0.5)] transition-all duration-500 group-hover:-translate-y-2 group-hover:rotate-[-1deg] group-hover:shadow-[0_36px_60px_-28px_rgb(60_50_20_/_0.6)]" style={{ background: s.tint }}>
-            <p className={`${SERIF} text-[26px] leading-tight text-[#1d1a12]`}>{s.title}</p>
+            <p className={`${HEAD} text-[22px] leading-tight text-[#1d1a12]`}>{s.title}</p>
             <p className="mt-1 text-[13.5px] text-[#6d654f]">{s.line}</p>
             <div className="mt-4 space-y-2">
               {s.kind === "text" && <><i className="block h-2 w-full rounded bg-black/10" /><i className="block h-2 w-11/12 rounded bg-black/10" /><i className="block h-2 w-3/5 rounded bg-black/10" /></>}
@@ -155,7 +155,7 @@ function Switch({ live }: { live: boolean }) {
         {[0, 1, 2].map((k) => (
           <div key={k} className="absolute inset-6 transition-all duration-700" style={{ opacity: i === k ? 1 : 0, transform: i === k ? "none" : "translateY(10px)", pointerEvents: "none" }}>
             {k === 0 && <div className="grid grid-cols-3 gap-3">{["To do", "Doing", "Done"].map((c, ci) => <div key={c} className="rounded-xl bg-[#f7f2e6] p-2.5"><p className="mb-2 text-[11px] font-semibold text-[#8c8268]">{c}</p>{Array.from({ length: 2 - (ci === 2 ? 1 : 0) }, (_, x) => <p key={x} className="mb-2 flex items-center gap-2 rounded-lg bg-white p-2 text-[11.5px] shadow-sm"><Avatar name={`${c}${x}`} i={ci + x} size={18} />Task</p>)}</div>)}</div>}
-            {k === 1 && <div><p className={`${SERIF} text-[28px] text-[#1d1a12]`}>Client onboarding</p><div className="mt-4 space-y-2.5"><i className="block h-2.5 w-full rounded bg-[#efe8d9]" /><i className="block h-2.5 w-5/6 rounded bg-[#efe8d9]" /><i className="block h-2.5 w-2/3 rounded bg-[#efe8d9]" /></div></div>}
+            {k === 1 && <div><p className={`${HEAD} text-[24px] text-[#1d1a12]`}>Client onboarding</p><div className="mt-4 space-y-2.5"><i className="block h-2.5 w-full rounded bg-[#efe8d9]" /><i className="block h-2.5 w-5/6 rounded bg-[#efe8d9]" /><i className="block h-2.5 w-2/3 rounded bg-[#efe8d9]" /></div></div>}
             {k === 2 && <div className="space-y-2">{["Yusuf Khan", "Meera Rao", "Dev Patel"].map((n, x) => <p key={n} className="flex items-center gap-3 rounded-xl border border-[#efe8d9] bg-[#fdfbf7] p-3 text-[12.5px]"><Avatar name={n} i={x + 2} size={26} /><b className="font-semibold">{n}</b><span className="truncate text-[#8c8268]">Re: your question</span></p>)}</div>}
           </div>
         ))}

@@ -107,7 +107,7 @@ function Signature({ live }: { live: boolean }) {
         {drawn ? (
           <svg viewBox="0 0 230 80" className="absolute bottom-1 left-2 h-20 w-56" fill="none" aria-hidden><path d={SIG_PATH} pathLength={1} stroke="#4a2fa8" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray={1} style={{ strokeDashoffset: step >= 1 ? 0 : 1, transition: step === 0 ? "none" : "stroke-dashoffset 2.1s cubic-bezier(.5,0,.3,1)" }} /></svg>
         ) : (
-          <p className="absolute bottom-2 left-3 text-[38px] italic leading-none text-[#4a2fa8]" style={{ fontFamily: "'Snell Roundhand','Segoe Script','Brush Script MT',cursive" }}><TypeText text="Aarav Mehta" run={step >= 4} speed={90} /></p>
+          <p className="font-signature absolute bottom-1 left-3 text-[46px] leading-none text-[#4a2fa8]"><TypeText text="Aarav Mehta" run={step >= 4} speed={90} /></p>
         )}
         {stamped && <span key={step} className="stamp-in absolute -top-2 right-0 flex items-center gap-1.5 rounded-lg border-2 border-emerald-500 px-3 py-1.5 font-mono text-[12px] font-bold uppercase tracking-wider text-emerald-600"><Check className="h-4 w-4" strokeWidth={3.5} />Signed</span>}
       </div>

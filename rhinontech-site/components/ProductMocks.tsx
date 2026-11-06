@@ -335,7 +335,7 @@ function HrMock() {
         </div>
         <div className="mt-4 border-t border-dashed border-line pt-2.5">
           <p className="text-[10px] uppercase tracking-wider text-muted">Signature</p>
-          <p className="mt-1 text-[22px] italic leading-6 text-brand" style={{ fontFamily: "'Snell Roundhand','Segoe Script','Brush Script MT',cursive" }}>Aarav Mehta</p>
+          <p className="font-signature mt-1 text-[28px] leading-7 text-brand">Aarav Mehta</p>
         </div>
       </div>
     </div>
