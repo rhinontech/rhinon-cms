@@ -1,27 +1,25 @@
 @import "tailwindcss";
 
-@theme inline {
+/* Rhinon Tech brand. `brand` is sampled from the logo; the vivid accents are
+   the light that plays across it: electric blue into violet into pink. */
+@theme {
   --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
   --font-display: var(--font-inter-tight);
-  --color-ink: var(--ink);
-  --color-ink-soft: var(--ink-soft);
-  --color-muted: var(--muted);
-  --color-line: var(--line);
-  --color-accent: var(--accent);
-  --color-accent-soft: var(--accent-soft);
-  --color-night: var(--night);
-}
 
-/* White page, near-black type, one warm accent. Colour lives in the gradient
-   panels, the way the product's screenshots sit on them. */
-:root {
-  --ink: #111114;
-  --ink-soft: #3d3d45;
-  --muted: #74747e;
-  --line: #e9e9ee;
-  --accent: #ef5a2b;
-  --accent-soft: #fff0ea;
-  --night: #121214;
+  --color-ink: #0a1128;
+  --color-ink-soft: #3a4466;
+  --color-muted: #6b7494;
+  --color-line: #e6e9f4;
+  --color-soft: #f6f7fd;
+  --color-brand: #002c70;
+  --color-electric: #2f5bff;
+  --color-violet: #7c5cff;
+  --color-pink: #ff5fb0;
+  --color-cyan: #2cd3ff;
+  --color-amber: #ffb547;
+  --color-night: #050b24;
+  --color-night-2: #0a1340;
 }
 
 html {
@@ -30,144 +28,313 @@ html {
 
 body {
   background: #ffffff;
-  color: var(--ink);
+  color: var(--color-ink);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
 .font-display {
   font-family: var(--font-display), var(--font-geist-sans), system-ui, sans-serif;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.04em;
 }
 
 ::selection {
-  background: #ffd9cc;
+  background: #d9ccff;
 }
+
+/* ───────────── Gradient text ───────────── */
 
 @layer components {
-/* Violet into peach into aqua, with film grain on top so it reads as printed
-   colour rather than a flat CSS gradient. */
-.gradient-panel,
-.gradient-panel-alt {
-  position: relative;
-  isolation: isolate;
-}
-.gradient-panel {
-  background:
-    radial-gradient(90% 80% at 0% 0%, #a78bfa 0%, transparent 60%),
-    radial-gradient(80% 80% at 100% 100%, #5eead4 0%, transparent 55%),
-    linear-gradient(130deg, #c084fc 0%, #f0abfc 25%, #fdba74 52%, #fde68a 70%, #99f6e4 100%);
-}
-.gradient-panel-alt {
-  background:
-    radial-gradient(90% 80% at 100% 0%, #fb923c 0%, transparent 58%),
-    radial-gradient(90% 80% at 0% 100%, #67e8f9 0%, transparent 58%),
-    linear-gradient(220deg, #fdba74 0%, #f9a8d4 35%, #c4b5fd 68%, #a5f3fc 100%);
-}
-.gradient-panel::after,
-.gradient-panel-alt::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  opacity: 0.45;
-  mix-blend-mode: soft-light;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  .text-aurora {
+    background: linear-gradient(100deg, #2f5bff 0%, #7c5cff 38%, #e04dd6 68%, #ff8a5c 100%);
+    background-size: 220% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shimmer 9s linear infinite;
+  }
+  .text-aurora, .text-aurora-soft { display: inline-block; }
+  .text-aurora-soft {
+    background: linear-gradient(100deg, #8fb0ff 0%, #b9a6ff 45%, #ff9bd2 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
 }
 
-/* Faint diagonal line art behind the hero. */
-.line-art {
-  background-image:
-    repeating-linear-gradient(45deg, transparent 0 139px, rgb(17 17 20 / 0.045) 139px 140px),
-    repeating-linear-gradient(-45deg, transparent 0 139px, rgb(17 17 20 / 0.045) 139px 140px);
-  mask-image: linear-gradient(to bottom, black, transparent 85%);
-}
-
-/* An app window holding a real screenshot. */
-.frame {
-  background: #ffffff;
-  border: 2px solid var(--ink);
-  border-radius: 14px;
-  overflow: hidden;
-  box-shadow: 0 30px 60px -24px rgb(17 17 20 / 0.45);
-}
-
-/* The outlined event card: white, ink border, soft lift. */
-.event {
-  background: #ffffff;
-  border: 2px solid var(--ink);
-  border-radius: 14px;
-  box-shadow: 0 18px 40px -18px rgb(17 17 20 / 0.4);
-}
-}
+/* ───────────── Buttons ───────────── */
 
 @layer components {
-  /* A dark app card resting on a gradient: glassy edge, deep soft shadow. */
-  .dark-card {
-    background: linear-gradient(180deg, #1f1f24 0%, #17171b 100%);
-    color: #fafafa;
-    border: 1px solid rgb(255 255 255 / 0.09);
+  .btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    height: 48px;
+    padding: 0 22px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.25s, background-color 0.25s, border-color 0.25s;
+  }
+  .btn-primary {
+    color: #fff;
+    background: linear-gradient(120deg, #2f5bff 0%, #7c5cff 55%, #d45cf0 100%);
+    background-size: 170% 100%;
+    box-shadow: 0 12px 32px -12px rgb(91 92 255 / 0.75), inset 0 1px 0 rgb(255 255 255 / 0.28);
+  }
+  .btn-primary::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.4) 50%, transparent 70%);
+    transform: translateX(-130%);
+    transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    background-position: 100% 0;
+    box-shadow: 0 18px 40px -12px rgb(91 92 255 / 0.85), inset 0 1px 0 rgb(255 255 255 / 0.3);
+  }
+  .btn-primary:hover::after {
+    transform: translateX(130%);
+  }
+  .btn-ghost {
+    background: #fff;
+    color: var(--color-ink);
+    border: 1px solid var(--color-line);
+  }
+  .btn-ghost:hover {
+    transform: translateY(-2px);
+    border-color: #c9cfe6;
+    box-shadow: 0 14px 30px -18px rgb(10 17 40 / 0.35);
+  }
+  .btn-glass {
+    color: #fff;
+    background: rgb(255 255 255 / 0.08);
+    border: 1px solid rgb(255 255 255 / 0.2);
+    backdrop-filter: blur(10px);
+  }
+  .btn-glass:hover {
+    transform: translateY(-2px);
+    background: rgb(255 255 255 / 0.14);
+  }
+}
+
+/* ───────────── Backdrops ───────────── */
+
+@layer components {
+  .blob {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(80px);
+    opacity: 0.55;
+    animation: blob 24s ease-in-out infinite;
+    pointer-events: none;
+  }
+  .grid-lines {
+    background-image:
+      linear-gradient(to right, rgb(10 17 40 / 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(10 17 40 / 0.06) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000, transparent 75%);
+  }
+  .grid-lines-dark {
+    background-image:
+      linear-gradient(to right, rgb(255 255 255 / 0.07) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 0.07) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse 70% 70% at 50% 40%, #000, transparent 78%);
+  }
+  .noise::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.16;
+    mix-blend-mode: soft-light;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+}
+
+/* ───────────── Cards ───────────── */
+
+@layer components {
+  /* A card that lights up under the cursor. `--mx/--my` are set by <Spot>. */
+  .spot {
+    position: relative;
+    isolation: isolate;
+    background: #fff;
+    border: 1px solid var(--color-line);
+    border-radius: 24px;
+    transition: transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.4s, border-color 0.4s;
+  }
+  .spot::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 0.35s;
+    background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgb(124 92 255 / 0.14), transparent 62%);
+  }
+  .spot:hover {
+    transform: translateY(-4px);
+    border-color: rgb(124 92 255 / 0.4);
+    box-shadow: 0 28px 60px -28px rgb(70 60 200 / 0.4);
+  }
+  .spot:hover::before {
+    opacity: 1;
+  }
+  .spot-dark {
+    background: linear-gradient(180deg, rgb(255 255 255 / 0.07), rgb(255 255 255 / 0.025));
+    border-color: rgb(255 255 255 / 0.1);
+  }
+  .spot-dark::before {
+    background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgb(124 140 255 / 0.22), transparent 62%);
+  }
+  .spot-dark:hover {
+    border-color: rgb(160 150 255 / 0.5);
+    box-shadow: 0 28px 60px -28px rgb(0 0 0 / 0.8);
+  }
+
+  /* A travelling light around the edge, for the one card that matters. */
+  .beam {
+    position: relative;
+  }
+  .beam::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 2px;
+    background: conic-gradient(from var(--angle), transparent 0 62%, #2f5bff 76%, #7c5cff 86%, #ff5fb0 94%, transparent 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: spin-angle 5s linear infinite;
+    pointer-events: none;
+  }
+
+  /* App windows holding product UI. */
+  .window {
+    background: #fff;
+    border: 1px solid rgb(10 17 40 / 0.1);
+    border-radius: 20px;
+    overflow: hidden;
     box-shadow:
-      0 0 0 6px rgb(255 255 255 / 0.22),
-      0 1px 0 0 rgb(255 255 255 / 0.08) inset,
-      0 40px 70px -28px rgb(20 10 40 / 0.65);
+      0 0 0 8px rgb(255 255 255 / 0.5),
+      0 60px 120px -40px rgb(60 50 200 / 0.45),
+      0 30px 60px -30px rgb(10 17 40 / 0.35);
   }
-  .light-card {
-    background: #ffffff;
-    border: 1px solid rgb(17 17 20 / 0.08);
-    box-shadow: 0 0 0 6px rgb(255 255 255 / 0.4), 0 40px 70px -28px rgb(20 10 40 / 0.45);
+  .glass-chip {
+    background: rgb(255 255 255 / 0.9);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgb(10 17 40 / 0.08);
+    box-shadow: 0 20px 40px -18px rgb(40 40 140 / 0.45);
   }
 }
 
-/* ───────────── Motion ─────────────
-   Calm and purposeful: things arrive, settle, and breathe. All of it is
-   switched off for people who ask their system for reduced motion. */
+/* ───────────── Motion ───────────── */
 
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes shimmer {
+  to { background-position: 220% center; }
+}
+@keyframes blob {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33% { transform: translate3d(6%, -8%, 0) scale(1.15); }
+  66% { transform: translate3d(-7%, 6%, 0) scale(0.92); }
+}
+@keyframes spin-angle {
+  to { --angle: 360deg; }
+}
 @keyframes rise {
   from { opacity: 0; transform: translateY(28px); }
   to { opacity: 1; transform: none; }
 }
 @keyframes bob {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-9px); }
+  50% { transform: translateY(-10px); }
 }
-@keyframes drift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+@keyframes marquee {
+  to { transform: translateX(-50%); }
 }
-@keyframes draw {
-  from { stroke-dashoffset: 420; }
-  to { stroke-dashoffset: 0; }
+@keyframes flow {
+  to { stroke-dashoffset: -2.8; }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes spin-rev {
+  to { transform: rotate(-360deg); }
+}
+@keyframes blink {
+  50% { opacity: 0; }
+}
+@keyframes line-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
 }
 @keyframes grow {
   from { transform: scaleY(0); }
   to { transform: scaleY(1); }
+}
+@keyframes ping-soft {
+  0% { transform: scale(1); opacity: 0.6; }
+  80%, 100% { transform: scale(2.4); opacity: 0; }
+}
+@keyframes progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
 }
 
 @layer components {
   .reveal { opacity: 0; transform: translateY(28px); }
   .reveal[data-shown="true"] { animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) var(--delay, 0ms) both; }
 
-  /* Arcs and loops draw themselves once their panel is on screen. */
-  .reveal .arc { stroke-dasharray: 420; stroke-dashoffset: 420; }
-  .reveal[data-shown="true"] .arc { animation: draw 1.6s cubic-bezier(0.6, 0, 0.2, 1) calc(var(--delay, 0ms) + 250ms) both; }
-
   .float-a { animation: bob 6s ease-in-out infinite; }
-  .float-b { animation: bob 7s ease-in-out -2.5s infinite; }
+  .float-b { animation: bob 7.5s ease-in-out -2.5s infinite; }
+  .float-c { animation: bob 8.5s ease-in-out -4s infinite; }
 
-  .gradient-panel, .gradient-panel-alt { background-size: 160% 160%; animation: drift 18s ease-in-out infinite; }
+  .marquee { display: flex; width: max-content; animation: marquee 42s linear infinite; }
+  .marquee-wrap:hover .marquee { animation-play-state: paused; }
 
+  .flow { stroke-dasharray: 1.2 1.6; animation: flow 1.2s linear infinite; }
+
+  .orbit-spin { animation: spin 120s linear infinite; }
+  .orbit-node { animation: spin-rev 120s linear infinite; }
+  .orbit-wrap:hover .orbit-spin,
+  .orbit-wrap:hover .orbit-node { animation-play-state: paused; }
+
+  .caret::after { content: "▍"; margin-left: 1px; color: #7c5cff; animation: blink 1s steps(1) infinite; }
+  .line-in { opacity: 0; animation: line-in 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) var(--d, 0ms) both; }
   .bar { transform-origin: bottom; animation: grow 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  .ping-soft { animation: ping-soft 2.2s ease-out infinite; }
+  .progress { transform-origin: left; animation: progress var(--dur, 5500ms) linear both; }
 
   .lift { transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.35s; }
   .lift:hover { transform: translateY(-4px); }
 }
 
+/* The hero window starts tilted back and the scroll handler flattens it. */
+.hero-tilt { transform: perspective(1800px) rotateX(14deg) scale(0.95); }
+
 @media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .hero-tilt { transform: none; }
   .reveal, .reveal[data-shown="true"] { opacity: 1; transform: none; animation: none; }
-  .reveal .arc { stroke-dashoffset: 0; animation: none !important; }
-  .float-a, .float-b, .gradient-panel, .gradient-panel-alt, .bar { animation: none !important; }
-  .lift:hover { transform: none; }
+  .text-aurora, .blob, .beam::before, .float-a, .float-b, .float-c, .marquee, .flow,
+  .orbit-spin, .orbit-node, .bar, .ping-soft, .line-in, .progress { animation: none !important; }
+  .line-in { opacity: 1; }
+  .lift:hover, .spot:hover, .btn:hover { transform: none; }
 }

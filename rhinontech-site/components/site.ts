@@ -1,5 +1,8 @@
-/** Where sign-up and sign-in live: the dashboard, on its own subdomain. */
-export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://app.rhinontech.in";
+/** This marketing site. */
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://rhinontech.com";
+
+/** Where sign-up and sign-in live: the dashboard, on rhinontech.in. */
+export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://rhinontech.in";
 
 export const links = {
   signup: `${APP_URL}/auth/signup`,
