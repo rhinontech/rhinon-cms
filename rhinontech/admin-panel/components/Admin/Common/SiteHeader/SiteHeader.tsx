@@ -17,7 +17,7 @@ import {
 import { apiFetch } from "@/lib/api";
 import { siteSlugFromPath, useSites } from "@/lib/sites";
 import { ThemeToggle } from "@/components/Common/ThemeProvider/ThemeToggle";
-import { MODULES } from "@/components/Admin/Common/navConfig";
+import { MODULES, moduleTone } from "@/components/Admin/Common/navConfig";
 
 /** Ids, slugs with digits and tokens are not page names, so they never become a crumb. */
 const looksLikeId = (segment: string) => /\d/.test(segment) && segment.length > 6;
@@ -42,11 +42,14 @@ function Breadcrumbs({ pathname }: { pathname: string }) {
   const page = pageSegments[0] && !looksLikeId(pageSegments[0]) ? humanize(pageSegments[0]) : null;
   const moduleHref = `/${role}/${moduleKey}${brandSlug ? `/${brandSlug}` : ""}`;
   const Icon = mod.icon;
+  const tone = moduleTone(moduleKey);
 
   return (
     <nav aria-label="Breadcrumb" className="flex min-w-0 flex-1 items-center gap-1.5 text-[13px]">
       <Link href={moduleHref} className="flex min-w-0 items-center gap-2 rounded-md px-1.5 py-1 font-semibold text-foreground transition-colors hover:bg-foreground/[0.05]">
-        <Icon size={16} strokeWidth={1.9} className="shrink-0 text-muted-foreground" />
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md" style={{ background: `${tone}1f`, color: tone }}>
+          <Icon size={15} strokeWidth={1.9} />
+        </span>
         <span className="truncate">{mod.label}</span>
       </Link>
       {brandSlug && (

@@ -13,13 +13,16 @@ export const API_URL =
 
 /** The brand these forms file leads under in the CRM (falls back to the default brand if absent). */
 export const BRAND_SLUG = "rhinontech";
+/** The workspace's name in the API (Settings, Developers). Public content is read from /public/<ORG_SLUG>/..., so it never depends on the "no key means the platform workspace" fallback. */
+export const ORG_SLUG = "rhinontech";
+export const PUBLIC_API = `${API_URL}/public/${ORG_SLUG}`;
 
 export const links = {
   signup: `${APP_URL}/auth/signup`,
   login: `${APP_URL}/auth/login`,
   labs: "https://www.rhinonlabs.com",
   call: "/demo",
-  privacy: "https://www.rhinonlabs.com/privacy-terms",
+  privacy: "/privacy-terms",
   contact: "/contact",
 };
 

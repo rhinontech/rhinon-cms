@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { useSideNav } from "@/context/SideNavContext";
 import { TbX } from "react-icons/tb";
+import { isWithin } from "@/components/Admin/Common/navConfig";
 import { SidebarItem } from "@/components/Admin/Common/SidebarItem/SidebarItem";
 import { TbLayoutSidebarFilled, TbLayoutSidebarRightFilled } from "react-icons/tb";
 
@@ -75,7 +76,7 @@ export function CollapsibleSubNav({ title, items }: CollapsibleSubNavProps) {
                 label={item.label}
                 isCollapsible={item.isCollapsible}
                 isExpanded={item.isExpanded}
-                isActive={item.exact ? pathname === item.href : pathname.startsWith(item.href)}
+                isActive={item.exact ? pathname === item.href : isWithin(pathname, item.href)}
                 href={item.isCollapsible ? undefined : item.href}
               >
                 {item.children?.map((child, childIndex) => (

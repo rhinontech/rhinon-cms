@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, CalendarDays, Check, ChevronLeft, ChevronRight, Clock, Globe, Video } from "lucide-react";
-import { API_URL, BRAND_SLUG } from "@/components/site";
+import { BRAND_SLUG, PUBLIC_API } from "@/components/site";
 import { Logo } from "@/components/ui";
 
 /* The same booking flow as rhinonlabs.com/schedule-call, against the same API and calendar. */
@@ -47,7 +47,7 @@ export function Scheduler() {
   }, []);
 
   const loadSlots = async (date: string, signal?: AbortSignal) => {
-    const res = await fetch(`${API_URL}/public/schedule-call/availability?date=${encodeURIComponent(date)}`, { cache: "no-store", signal });
+    const res = await fetch(`${PUBLIC_API}/schedule-call/availability?date=${encodeURIComponent(date)}`, { cache: "no-store", signal });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw Object.assign(new Error(data.message || "load"), { code: data.code });
     return data.slots as Slot[];
@@ -91,7 +91,7 @@ export function Scheduler() {
     setError("");
     try {
       const message = [interests.length ? `Interested in: ${interests.join(", ")}.` : "", form.message.trim()].filter(Boolean).join(" ");
-      const res = await fetch(`${API_URL}/public/schedule-call`, {
+      const res = await fetch(`${PUBLIC_API}/schedule-call`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ site: BRAND_SLUG,

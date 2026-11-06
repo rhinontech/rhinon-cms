@@ -13,6 +13,7 @@ const NAV = [
   { href: "/integrations", label: "Integrations" },
   { href: "/security", label: "Security" },
   { href: "/pricing", label: "Pricing" },
+  { href: "/blog", label: "Blog" },
 ];
 
 export function Navbar() {

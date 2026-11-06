@@ -8,6 +8,7 @@ const COMPANY = [
   { label: "Integrations", href: "/integrations" },
   { label: "Security", href: "/security" },
   { label: "Pricing", href: "/pricing" },
+  { label: "Blog", href: "/blog" },
 ];
 
 const LINK = "block text-ink-soft transition-colors hover:text-ink";
@@ -47,7 +48,7 @@ export function Footer() {
               <a href={links.labs} className={LINK}>Rhinon Labs</a>
               <Link href="/demo" className={LINK}>Book a demo</Link>
               <Link href="/contact" className={LINK}>Contact</Link>
-              <a href={links.privacy} className={LINK}>Privacy & terms</a>
+              <Link href={links.privacy} className={LINK}>Privacy & terms</Link>
             </div>
           </div>
         </div>

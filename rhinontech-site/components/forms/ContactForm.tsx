@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Check } from "lucide-react";
-import { API_URL, BRAND_SLUG } from "@/components/site";
+import { BRAND_SLUG, PUBLIC_API } from "@/components/site";
 
 /* The same enquiry form as rhinonlabs.com/contact-us, posting to the same lead API. */
 
@@ -24,7 +24,7 @@ export function ContactForm() {
     if (form.hp) return setSent(true); // a bot filled the hidden field: look like success, send nothing
     setBusy(true);
     try {
-      const res = await fetch(`${API_URL}/public/web-leads`, {
+      const res = await fetch(`${PUBLIC_API}/web-leads`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: form.name.trim(), email: form.email.trim(), whatsapp: form.phone.trim(), company: form.company.trim(), projectType: form.topic, message: form.message.trim(), site: BRAND_SLUG }),
