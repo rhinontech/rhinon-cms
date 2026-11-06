@@ -10,7 +10,7 @@ import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
 import { HandoverSection, InstallSection, SiteHero, TicketSection, TrainSection, VoiceSection } from "@/components/product/chatbot";
 
 const p = bySlug("chatbot")!;
-const GRAD = "bg-gradient-to-r from-[#ff8a4c] to-[#ff5fb0] bg-clip-text text-transparent";
+const GRAD = "italic";
 
 export const metadata: Metadata = {
   title: "AI Chatbot: a website assistant trained on your content",
@@ -28,7 +28,7 @@ const FAQ = [
 
 export default function ChatbotPage() {
   return (
-    <div className="bg-[#fffaf6]">
+    <div className="bg-white">
       {/* Hero: a sunset gradient and a real-looking site */}
       <section className="relative pb-24 pt-12 sm:pt-16">
         <Aurora tones={["#ff8a4c", "#ff5fb0", "#ffb547"]} />
@@ -53,7 +53,7 @@ export default function ChatbotPage() {
       </section>
 
       {/* Train */}
-      <section className="border-y border-[#f6e6da] bg-[#fff3ea] py-24 sm:py-32">
+      <section className="border-y border-line bg-soft/60 py-24 sm:py-32">
         <div className="mx-auto grid max-w-[1240px] items-center gap-12 px-5 lg:grid-cols-[0.8fr_1.2fr]">
           <Reveal>
             <Eyebrow>Train it</Eyebrow>
@@ -76,7 +76,7 @@ export default function ChatbotPage() {
         <div className="relative mx-auto grid max-w-[1240px] items-center gap-12 px-5 lg:grid-cols-[1fr_0.9fr]">
           <Reveal>
             <Eyebrow dark>Voice calls</Eyebrow>
-            <h2 className="font-display mt-5 text-balance text-[38px] font-semibold leading-[1.04] sm:text-[52px]">Calls, not just <span className="bg-gradient-to-r from-[#ffb27a] to-[#ff8fc6] bg-clip-text text-transparent">chats.</span></h2>
+            <h2 className="font-display mt-5 text-balance text-[38px] font-semibold leading-[1.04] sm:text-[52px]">Calls, not just <span className="italic">chats.</span></h2>
             <p className="mt-5 max-w-[480px] text-[17px] leading-8 text-white/65">Some conversations are better spoken. Your team can call a visitor straight from the dashboard, without leaving the conversation or asking for a phone number first.</p>
           </Reveal>
           <Reveal delay={120}><VoiceSection /></Reveal>
@@ -90,7 +90,7 @@ export default function ChatbotPage() {
       </section>
 
       {/* Install */}
-      <section className="border-y border-[#f6e6da] bg-[#fff3ea] py-24 sm:py-32">
+      <section className="border-y border-line bg-soft/60 py-24 sm:py-32">
         <div className="mx-auto max-w-[1240px] px-5">
           <Reveal><SectionHead eyebrow="Install" title={<>One line of code. <span className={GRAD}>That is the whole setup.</span></>} sub="Paste it on your site and the assistant appears. No developer, no plugin." /></Reveal>
           <div className="mt-14"><InstallSection /></div>
@@ -104,7 +104,7 @@ export default function ChatbotPage() {
             <div className="grid items-center gap-10 lg:grid-cols-[1fr_1fr]">
               <div>
                 <p className="font-mono text-[12px] uppercase tracking-[0.16em] text-[#ffb27a]">The one paid product</p>
-                <h2 className="font-display mt-4 text-balance text-[34px] font-semibold leading-[1.06] sm:text-[46px]">Everything else is free. <span className="bg-gradient-to-r from-[#ffb27a] to-[#ff8fc6] bg-clip-text text-transparent">This is worth paying for.</span></h2>
+                <h2 className="font-display mt-4 text-balance text-[34px] font-semibold leading-[1.06] sm:text-[46px]">Everything else is free. <span className="italic">This is worth paying for.</span></h2>
                 <p className="mt-4 max-w-[460px] text-[16px] leading-7 text-white/65">Pricing depends on your site and what you need, so we talk first and give you a clear number.</p>
                 <div className="mt-7 flex flex-wrap gap-3"><Button href={links.call} arrow>Book a call</Button></div>
               </div>

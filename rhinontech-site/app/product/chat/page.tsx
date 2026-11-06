@@ -8,7 +8,7 @@ import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
 import { BentoSection, CallSection, ChatHero, GuestSection } from "@/components/product/chat";
 
 const p = bySlug("chat")!;
-const G = "bg-gradient-to-r from-cyan to-[#8fb0ff] bg-clip-text text-transparent";
+const G = "italic";
 
 export const metadata: Metadata = {
   title: "Team Chat & Meetings: talk it through without leaving the work",

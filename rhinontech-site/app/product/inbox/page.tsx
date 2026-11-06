@@ -40,7 +40,7 @@ const FAQ = [
 
 export default function InboxPage() {
   return (
-    <div className="bg-[#faf8f5]">
+    <div className="bg-white">
       {/* Hero: copy left, an inbox clearing itself right */}
       <section className="relative pb-24 pt-12 sm:pt-16">
         <Aurora tones={["#2cd3ff", "#2f5bff", "#7c5cff"]} />
@@ -49,7 +49,7 @@ export default function InboxPage() {
             <Crumb slug="inbox" />
             <div className="mt-6"><IconTile icon={p.icon} tone={p.tone} size={56} /></div>
             <h1 className="font-display mt-6 text-balance text-[42px] font-semibold leading-[1.02] sm:text-[60px]">
-              One inbox for your <span className="bg-gradient-to-r from-cyan to-electric bg-clip-text text-transparent">whole team.</span>
+              One inbox for your <span className="italic">whole team.</span>
             </h1>
             <p className="mt-6 max-w-[500px] text-[18px] leading-8 text-ink-soft">
               Replies to your campaigns and mail to your support address land in one shared inbox, threaded, assigned and tracked until it is done.
@@ -65,10 +65,10 @@ export default function InboxPage() {
 
       {/* Before and after */}
       <section className="mx-auto max-w-[1240px] px-5 py-24 sm:py-28">
-        <Reveal><SectionHead eyebrow="Why a shared inbox" title={<>Stop losing mail in <span className="bg-gradient-to-r from-cyan to-electric bg-clip-text text-transparent">someone's mailbox.</span></>} /></Reveal>
+        <Reveal><SectionHead eyebrow="Why a shared inbox" title={<>Stop losing mail in <span className="italic">someone's mailbox.</span></>} /></Reveal>
         <div className="mt-16 grid gap-5 md:grid-cols-2">
           <Reveal>
-            <div className="h-full rounded-[28px] border border-[#e9e3d8] bg-white/60 p-7 sm:p-9">
+            <div className="h-full rounded-[28px] border border-line bg-white/60 p-7 sm:p-9">
               <p className="font-mono text-[12px] uppercase tracking-[0.16em] text-muted">Before</p>
               <div className="mt-6 space-y-4">
                 {BEFORE.map((t, i) => (
@@ -91,9 +91,9 @@ export default function InboxPage() {
       </section>
 
       {/* Status */}
-      <section className="border-y border-[#ece6db] bg-[#f4efe7] py-24 sm:py-28">
+      <section className="border-y border-line bg-soft/60 py-24 sm:py-28">
         <div className="mx-auto max-w-[1240px] px-5">
-          <Reveal><SectionHead eyebrow="Every conversation has a status" title={<>From open to closed, <span className="bg-gradient-to-r from-cyan to-electric bg-clip-text text-transparent">nothing stalls.</span></>} sub="Open, in progress, resolved, closed. Everyone sees where each thread stands." /></Reveal>
+          <Reveal><SectionHead eyebrow="Every conversation has a status" title={<>From open to closed, <span className="italic">nothing stalls.</span></>} sub="Open, in progress, resolved, closed. Everyone sees where each thread stands." /></Reveal>
           <div className="mt-14"><RiverSection /></div>
         </div>
       </section>
@@ -102,23 +102,23 @@ export default function InboxPage() {
       <section className="mx-auto grid max-w-[1240px] items-center gap-12 px-5 py-24 sm:py-28 lg:grid-cols-[0.85fr_1.15fr]">
         <Reveal>
           <Eyebrow>Priority</Eyebrow>
-          <h2 className="font-display mt-5 text-balance text-[38px] font-semibold leading-[1.04] sm:text-[52px]">Urgent mail <span className="bg-gradient-to-r from-rose-500 to-orange-400 bg-clip-text text-transparent">jumps the queue.</span></h2>
+          <h2 className="font-display mt-5 text-balance text-[38px] font-semibold leading-[1.04] sm:text-[52px]">Urgent mail <span className="italic">jumps the queue.</span></h2>
           <p className="mt-5 max-w-[460px] text-[17px] leading-8 text-ink-soft">Mark a conversation from low to urgent, and the inbox sorts itself. Assign it to a teammate and they see it right away.</p>
         </Reveal>
         <Reveal delay={120}><PrioritySection /></Reveal>
       </section>
 
       {/* Address */}
-      <section className="border-y border-[#ece6db] bg-[#f4efe7] py-24 sm:py-28">
+      <section className="border-y border-line bg-soft/60 py-24 sm:py-28">
         <div className="mx-auto max-w-[1240px] px-5">
-          <Reveal><SectionHead eyebrow="Your address" title={<>Customers write to <span className="bg-gradient-to-r from-cyan to-electric bg-clip-text text-transparent">your team.</span></>} sub="Every workspace gets its own company address. Whatever lands there reaches the people who should see it." /></Reveal>
+          <Reveal><SectionHead eyebrow="Your address" title={<>Customers write to <span className="italic">your team.</span></>} sub="Every workspace gets its own company address. Whatever lands there reaches the people who should see it." /></Reveal>
           <div className="mt-14"><AddressSection /></div>
         </div>
       </section>
 
       {/* Replies stay with the lead */}
       <section className="mx-auto max-w-[1240px] px-5 py-24 sm:py-28">
-        <Reveal><SectionHead eyebrow="Connected" title={<>Replies stay with <span className="bg-gradient-to-r from-cyan to-electric bg-clip-text text-transparent">the lead.</span></>} sub="When someone answers a campaign, the reply lands in the inbox and the lead updates itself." /></Reveal>
+        <Reveal><SectionHead eyebrow="Connected" title={<>Replies stay with <span className="italic">the lead.</span></>} sub="When someone answers a campaign, the reply lands in the inbox and the lead updates itself." /></Reveal>
         <div className="mt-14"><ThreadSection /></div>
       </section>
 

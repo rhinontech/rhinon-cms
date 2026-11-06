@@ -8,7 +8,7 @@ import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
 import { PayslipFan, RunSection, StructureSection, WallSection } from "@/components/product/payroll";
 
 const p = bySlug("payroll")!;
-const G = "bg-gradient-to-r from-[#ffb547] to-[#ff6f4c] bg-clip-text text-transparent";
+const G = "italic";
 
 export const metadata: Metadata = {
   title: "Payroll: monthly runs and payslips, built for India",
@@ -26,7 +26,7 @@ const FAQ = [
 
 export default function PayrollPage() {
   return (
-    <div className="bg-[#fffaf0]">
+    <div className="bg-white">
       {/* Hero: copy left, a fan of payslips right */}
       <section className="relative pb-24 pt-12 sm:pt-16">
         <Aurora tones={["#ffb547", "#ff8a4c", "#ff5fb0"]} />
@@ -44,7 +44,7 @@ export default function PayrollPage() {
       </section>
 
       {/* The run */}
-      <section className="border-y border-amber-100 bg-[#fff4dc]/60 py-24 sm:py-32">
+      <section className="border-y border-line bg-soft/60 py-24 sm:py-32">
         <div className="mx-auto max-w-[1100px] px-5">
           <Reveal><SectionHead eyebrow="The run" title={<>Draft, processed, paid. <span className={G}>Three steps.</span></>} sub="Each run moves through the same three stages, and the numbers lock when you process it." /></Reveal>
           <div className="mt-14"><RunSection /></div>
@@ -58,7 +58,7 @@ export default function PayrollPage() {
       </section>
 
       {/* Payslips */}
-      <section className="border-y border-amber-100 bg-[#fff4dc]/60 py-24 sm:py-32">
+      <section className="border-y border-line bg-soft/60 py-24 sm:py-32">
         <div className="mx-auto grid max-w-[1240px] items-center gap-12 px-5 lg:grid-cols-[0.8fr_1.2fr]">
           <Reveal>
             <Eyebrow>Payslips</Eyebrow>

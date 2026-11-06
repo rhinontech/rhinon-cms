@@ -8,8 +8,8 @@ import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
 import { CalSection, ClockHero, FixSection, HeatSection, LeaveSection, NightSection } from "@/components/product/attendance";
 
 const p = bySlug("attendance")!;
-const G = "bg-gradient-to-r from-[#14b8a6] to-[#2cd3ff] bg-clip-text text-transparent";
-const GL = "bg-gradient-to-r from-[#34e3ad] to-[#7ff0ff] bg-clip-text text-transparent";
+const G = "italic";
+const GL = "italic";
 
 export const metadata: Metadata = {
   title: "Attendance & Leave: clock in, request leave, approve in a tap",
@@ -27,7 +27,7 @@ const FAQ = [
 
 export default function AttendancePage() {
   return (
-    <div className="bg-[#f4fbfa]">
+    <div className="bg-white">
       {/* Hero: a dark teal room with a clock-in ring */}
       <section className="relative overflow-hidden bg-[#04201f] pb-24 pt-12 text-white sm:pt-16">
         <Aurora dark tones={["#10c98f", "#2cd3ff", "#14b8a6"]} />

@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@rhinon/chat": "^1.1.1",
     "lucide-react": "^0.553.0",
     "next": "^16.1.1",
     "react": "^19.2.3",

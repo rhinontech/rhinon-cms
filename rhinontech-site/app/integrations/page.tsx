@@ -43,7 +43,7 @@ export default function IntegrationsPage() {
             ))}
           </div>
           <Reveal delay={100}>
-            <p className="mt-12 text-center text-[15px] text-muted">Need something that is not here? <Link href="/contact" className="font-medium text-ink underline underline-offset-4">Tell us</Link>. We build custom integrations at Rhinon Labs.</p>
+            <p className="mt-12 text-[15px] text-muted">Need something that is not here? <Link href="/contact" className="font-medium text-ink underline underline-offset-4">Tell us</Link>. We build custom integrations at Rhinon Labs.</p>
           </Reveal>
         </div>
       </section>

@@ -3,6 +3,7 @@ import { Dancing_Script, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import RhinonChatLoader from "@/components/RhinonChat";
 import { SITE_URL } from "@/components/site";
 
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -48,6 +49,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <Navbar />
         <main className="overflow-x-clip">{children}</main>
         <Footer />
+        <RhinonChatLoader />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ORGANIZATION) }} />
       </body>
     </html>

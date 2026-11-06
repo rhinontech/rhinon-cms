@@ -8,7 +8,7 @@ import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
 import { JourneyHero, OffboardSection, PhoneSection, RecordSection, RewriteSection, SignatureSection } from "@/components/product/hr";
 
 const p = bySlug("hr")!;
-const G = "bg-gradient-to-r from-[#ff5fb0] to-[#7c5cff] bg-clip-text text-transparent";
+const G = "italic";
 
 export const metadata: Metadata = {
   title: "HR & People: onboarding, records, offer letters and e-signing",
@@ -26,7 +26,7 @@ const FAQ = [
 
 export default function HrPage() {
   return (
-    <div className="bg-[#fcf8ff]">
+    <div className="bg-white">
       {/* Hero: centred, with a hire travelling from offer to day one */}
       <section className="relative pb-20 pt-12 sm:pt-16">
         <Aurora tones={["#ff5fb0", "#7c5cff", "#2f5bff"]} />

@@ -8,7 +8,7 @@ import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
 import { AnatomySection, GanttHero, PortalSection, RingsSection, ViewsSection } from "@/components/product/work";
 
 const p = bySlug("work")!;
-const G = "bg-gradient-to-r from-[#10c98f] to-[#2bbfd6] bg-clip-text text-transparent";
+const G = "italic";
 
 export const metadata: Metadata = {
   title: "Work: projects, tasks and a portal your clients love",
@@ -26,7 +26,7 @@ const FAQ = [
 
 export default function WorkPage() {
   return (
-    <div className="bg-[#f4fbf8]">
+    <div className="bg-white">
       {/* Hero: centred, with a timeline that builds itself */}
       <section className="relative pb-24 pt-12 sm:pt-16">
         <Aurora tones={["#10c98f", "#2bbfd6", "#2f9bff"]} />

@@ -8,7 +8,7 @@ import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
 import { CyclesSection, GoalsSection, ReviewSection, RingsHero, TeamSection } from "@/components/product/performance";
 
 const p = bySlug("performance")!;
-const G = "bg-gradient-to-r from-[#b9a6ff] to-[#8fb0ff] bg-clip-text text-transparent";
+const G = "italic";
 
 export const metadata: Metadata = {
   title: "Performance: review cycles, goals and feedback",

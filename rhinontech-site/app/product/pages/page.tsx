@@ -26,7 +26,7 @@ const FAQ = [
 
 export default function PagesPage() {
   return (
-    <div className="relative bg-[#faf6ee] [background-image:radial-gradient(#e2d9c5_1px,transparent_1px)] [background-size:24px_24px]">
+    <div className="relative bg-white [background-image:radial-gradient(#e2d9c5_1px,transparent_1px)] [background-size:24px_24px]">
       {/* Hero: a serif headline and a page being written */}
       <section className="relative pb-24 pt-12 sm:pt-16">
         <Aurora tones={["#4f6bff", "#a78bfa", "#ffb547"]} />
@@ -49,7 +49,7 @@ export default function PagesPage() {
       </section>
 
       {/* Pinboard */}
-      <section className="border-y border-[#ece3d0] bg-[#f4eddc]/70 py-24 sm:py-28">
+      <section className="border-y border-line bg-soft/60 py-24 sm:py-28">
         <div className="mx-auto max-w-[1240px] px-5">
           <Reveal className="mb-16 text-center"><Eyebrow>What teams keep here</Eyebrow><h2 className={`${HEAD} mx-auto mt-5 max-w-[760px] text-balance text-[38px] leading-[1.05] text-[#1d1a12] sm:text-[56px]`}>The things that should <span className={INDIGO}>outlast a chat.</span></h2></Reveal>
           <Reveal delay={100}><Pinboard /></Reveal>
