@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowRight, ChevronDown, Menu, Sparkles, X } from "lucide-react";
+import { ArrowRight, ChevronDown, Menu, X } from "lucide-react";
 import { GROUPS, PRODUCTS, byGroup } from "@/content/products";
 import { links } from "@/components/site";
 import { IconTile, Logo } from "@/components/ui";
@@ -132,11 +132,16 @@ export function Navbar() {
             <span aria-hidden className="blob -right-10 -top-10 h-48 w-48" style={{ background: "#7c5cff", opacity: 0.6 }} />
             <span aria-hidden className="blob -bottom-16 -left-10 h-44 w-44 [animation-delay:-9s]" style={{ background: "#ff5fb0", opacity: 0.4 }} />
             <span className="relative">
-              <Sparkles className="h-6 w-6 text-[#b9a6ff]" />
-              <span className="font-display mt-4 block text-[24px] font-semibold leading-[1.1]">Rhinon AI, built into every module.</span>
+              <span className="font-display block text-[24px] font-semibold leading-[1.1]">Rhinon AI, built into every module.</span>
               <span className="mt-2 block text-[13px] leading-5 text-white/65">Research, draft, answer and rewrite without leaving your work.</span>
             </span>
-            <span className="relative mt-6 flex items-center gap-1.5 text-[14px] font-semibold">See how it works <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></span>
+            {/* The mascot, in its own blue, on a soft glow of the same colour */}
+            <span className="relative my-4 flex flex-1 items-center justify-center">
+              <span aria-hidden className="absolute h-40 w-40 rounded-full bg-[#2f6bff]/45 blur-[46px] transition-opacity duration-500 group-hover:bg-[#2f6bff]/60" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/brand/mascot.webp" alt="" aria-hidden width={420} height={560} className="relative h-[150px] w-auto drop-shadow-[0_10px_20px_rgb(0_0_0_/_0.5)] transition-transform duration-500 group-hover:-translate-y-1 group-hover:rotate-[-2deg]" />
+            </span>
+            <span className="relative flex items-center gap-1.5 text-[14px] font-semibold">See how it works <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></span>
           </Link>
         </div>
       </div>
