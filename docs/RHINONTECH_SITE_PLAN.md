@@ -1,14 +1,14 @@
 # Rhinon Tech marketing site — revamp plan
 
-Status (2026-11-06): **phase 1 built locally, uncommitted** — home, /product, 11 product pages,
-/ai, /pricing, /security, /integrations, 404, sitemap, robots, OG image. Not yet built: solutions,
+Status (2026-11-06): **phase 1 built locally, uncommitted** — home, /product, **11 individually designed
+product pages** (one route and one set of components each, no shared template), /ai, /pricing, /security, /integrations, 404, sitemap, robots, OG image. Not yet built: solutions,
 compare, blog, changelog, careers, contact/demo form, legal pages (footer links to rhinonlabs.com for
 contact and privacy for now). Decisions: marketing site is **rhinontech.com** (bought on Route 53),
 the app stays on **rhinontech.in**; palette is the logo navy `#002C70` plus an electric blue → violet →
 pink gradient. Product UI is drawn in code (`components/ProductMocks.tsx`), not real screenshots.
 Owner: Prabhat. Code: `rhinontech-site/` (Next.js 16).
 The app it sells is the admin panel (`rhinontech/admin-panel`), signed into at
-`app.rhinontech.in` (see `rhinontech-site/components/site.ts`).
+`rhinontech.in` (see `rhinontech-site/components/site.ts`).
 
 Reference: ClickUp's site (clickup.com), for structure, density and motion —
 **not** its brand. We do not copy their logo, illustrations, screenshots, copy
@@ -132,20 +132,29 @@ signup CTA again, socials, `© Rhinon Tech`.
 
 ---
 
-## 5. Product page template (all 11 use it)
+## 5. Product pages — each one its own page
 
-1. Hero: eyebrow (group), H1, sub, CTAs, screenshot.
-2. 3 key outcomes (icon + line).
-3. Alternating feature rows (4–6), screenshot each, sticky on desktop.
-4. "Works with the rest of Rhinon" — how this module connects to 2–3 others.
-5. AI in this module (where it applies).
-6. Mini FAQ.
-7. Related products + final CTA.
+Revised 2026-11-06. The first build used one shared template with only the colour changing, which made
+every product page feel the same. Each product now has its own route (`app/product/<slug>/page.tsx`)
+and its own demo components (`components/product/<slug>.tsx`), with a different hero, theme and motion:
 
-Content lives in one typed file (`content/products.ts`) so all 11 pages come
-from one component and copy changes need no layout work.
+| Page | Theme | Hero | Signature motion |
+|---|---|---|---|
+| CRM | light, blue/violet | board with a deal dragged to Won by a cursor | scroll-driven lead lifecycle, sources converging |
+| Outreach | dark | AI composer researches, types, gets approved, sends | pulse flow, scheduler dial, live feed |
+| Inbox | warm light, cyan | inbox clearing to zero | status river, priority re-sort, address routing |
+| AI Chatbot | sunset gradient | widget answering on a real-looking site | training, human handover, voice call |
+| Work | mint | timeline building itself | task anatomy, list/board/calendar/team morph |
+| Team Chat | dark navy | conversation with thread and reactions | six micro-demos, call grid, guest join |
+| Pages | paper + serif | a page being written | page tree, pinboard, workspace switch |
+| HR & People | lavender | hire travelling offer to day one | signature drawing, phone onboarding, offboarding |
+| Payroll | amber | fan of payslips | run stepper, structure and donut, flip wall |
+| Attendance | dark teal | clock-in ring | heatmap, leave flow, 10 pm auto-close |
+| Performance | dark violet | three rings closing | cycle tabs, goals, review flow, team heat |
 
----
+Shared pieces live in `components/motion.tsx` (in-view loops, a gliding cursor, rings, counters, confetti,
+auto-advancing tabs, sticky scroll story). Shared nav data stays in `content/products.ts`; page copy lives
+in each page. Every demo loops only while on screen and rests on a finished frame under reduced motion.
 
 ## 6. Design system (inspired by ClickUp's feel, our own brand)
 

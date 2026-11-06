@@ -77,7 +77,7 @@ export function SectionHead({
   return (
     <div className={center ? "mx-auto max-w-[760px] text-center" : "max-w-[640px]"}>
       {eyebrow && <Eyebrow dark={dark}>{eyebrow}</Eyebrow>}
-      <h2 className={`font-display mt-5 text-[38px] font-semibold leading-[1.04] sm:text-[56px] ${dark ? "text-white" : "text-ink"}`}>
+      <h2 className={`font-display mt-5 text-balance text-[38px] font-semibold leading-[1.04] sm:text-[56px] ${dark ? "text-white" : "text-ink"}`}>
         {title}
       </h2>
       {sub && <p className={`mt-5 text-[17px] leading-8 sm:text-[18px] ${dark ? "text-white/65" : "text-ink-soft"}`}>{sub}</p>}
