@@ -84,9 +84,9 @@ const agenticAiLaunchpad: Course = {
   slug: "agentic-ai-launchpad",
   title: "Agentic AI",
   titleAccent: "Launchpad",
-  metaTitle: "Agentic AI Launchpad — UpperCurve",
+  metaTitle: "Agentic AI Launchpad | 6-Week Live Cohort | UpperCurve",
   metaDescription:
-    "6-Weeks Live Hands-On Program. You build & ship 10+ AI Agents, from No-Code Automations to Multi-Agent Systems, with a Mentor Guidance.",
+    "Build and Ship 10+ AI Agents in 6-Weeks | Live sessions | 1:1 Mentorship with a Verified Certificate.",
   eyebrow: " 6 Weeks Live Cohort · Limited Seats",
   tagline: "Go beyond just using AI, Learn to build AI Agents that actually Work.",
   cohortLabel: "Next cohort",

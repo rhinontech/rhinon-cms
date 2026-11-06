@@ -40,11 +40,13 @@ export function JobDetailsPage({ job }: { job: JobListing }) {
             <div className="flex items-start gap-4 sm:gap-5">
               {/* Logo box */}
               <div
-                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center text-base sm:text-lg tracking-wider font-extrabold shadow-xs border shrink-0 ${
+                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center text-sm sm:text-base tracking-wider font-extrabold shadow-xs border shrink-0 p-1 text-center overflow-hidden ${
                   job.logoBg || "bg-indigo-50 border-indigo-200 text-indigo-700"
                 }`}
               >
-                {job.logoText || job.company.slice(0, 2).toUpperCase()}
+                <span className="truncate max-w-full block leading-none">
+                  {job.logoText || job.company.slice(0, 2).toUpperCase()}
+                </span>
               </div>
 
               <div>
@@ -247,11 +249,13 @@ export function JobDetailsPage({ job }: { job: JobListing }) {
             {/* Modal Header */}
             <div className="flex items-center gap-3.5 mb-5 pr-8">
               <div
-                className={`w-11 h-11 rounded-xl flex items-center justify-center text-xs tracking-wider font-extrabold shadow-2xs border shrink-0 ${
+                className={`w-11 h-11 rounded-xl flex items-center justify-center text-xs tracking-wider font-extrabold shadow-2xs border shrink-0 p-1 text-center overflow-hidden ${
                   job.logoBg || "bg-indigo-50 border-indigo-200 text-indigo-700"
                 }`}
               >
-                {job.logoText || job.company.slice(0, 2).toUpperCase()}
+                <span className="truncate max-w-full block leading-none">
+                  {job.logoText || job.company.slice(0, 2).toUpperCase()}
+                </span>
               </div>
               <div>
                 <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-600">
