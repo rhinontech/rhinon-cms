@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, Check, KeyRound, Lock, Phone, Sparkles, Users } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Check, KeyRound, Lock, Phone, Sparkles } from "lucide-react";
 import { links } from "@/components/site";
 import { PRODUCTS, bySlug, type Product } from "@/content/products";
 import { CHATBOT_FEATURES, FREE_FEATURES } from "@/content/plans";
-import { Aurora, Button, Eyebrow, IconTile, SectionHead } from "@/components/ui";
+import { Button, IconTile } from "@/components/ui";
+import { Glow, H2, Kicker, LightSection, MONO } from "@/components/light";
 import { Reveal } from "@/components/Reveal";
-import { Spot } from "@/components/Spot";
 import { Counter } from "@/components/Counter";
 import { Typewriter } from "@/components/Typewriter";
 import { HeroWorkspace } from "@/components/HeroWorkspace";
@@ -28,36 +28,35 @@ const REPLACES = [
 
 function Hero() {
   return (
-    <section className="relative pt-14 sm:pt-20">
-      <Aurora />
-      <div className="relative mx-auto max-w-[1240px] px-5 text-center">
+    <section className="relative overflow-hidden px-5 pt-16 sm:pt-24">
+      <div className="lt-grid pointer-events-none absolute inset-0" />
+      <Glow className="left-1/2 top-[30%] h-[560px] w-[900px] -translate-x-1/2" />
+      <div className="relative mx-auto max-w-[1240px] text-center">
         <Reveal>
-          <Link href="/ai" className="group inline-flex items-center gap-2 rounded-full bg-white/80 py-1.5 pl-1.5 pr-4 text-[13.5px] font-medium ring-1 ring-line backdrop-blur transition-shadow hover:shadow-[0_10px_30px_-12px_rgb(100_80_255_/_0.5)]">
-            <span className="rounded-full bg-gradient-to-r from-electric to-violet px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white">New</span>
-            Rhinon AI is now in every module
+          <Link href="/ai" className="lt-badge group inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[14px] font-medium">
+            All new <b className="font-semibold">Rhinon AI</b>
             <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
           </Link>
-        </Reveal>
-        <Reveal delay={80}>
-          <h1 className="font-display mx-auto mt-7 max-w-[1000px] text-[46px] font-semibold leading-[0.98] sm:text-[84px]">
-            The workspace that <br className="hidden sm:block" /><span className="text-aurora">runs your whole company.</span>
+          <h1 className="font-display mx-auto mt-8 max-w-[1000px] text-[46px] font-semibold leading-[1.02] sm:text-[88px]">
+            One workspace for<br />your whole <em className="font-semibold">company.</em>
           </h1>
-        </Reveal>
-        <Reveal delay={160}>
-          <p className="mx-auto mt-7 max-w-[640px] text-[18px] leading-8 text-ink-soft sm:text-[20px]">
-            CRM, cold email, shared inbox, projects, chat and HR in one place, with AI built into every part. Free for your whole team.
-          </p>
-        </Reveal>
-        <Reveal delay={240}>
-          <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-            <Button href={links.signup} arrow>Get started free</Button>
-            <Button href={links.call} variant="ghost">Book a demo</Button>
+          <ul className="mx-auto mt-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-[16px] text-ink-soft sm:text-[18px]">
+            {["Eleven products, one login", "AI in every module", "Free for your whole team"].map((t) => (
+              <li key={t} className="flex items-center gap-2.5"><Check className="h-4 w-4 text-emerald-500" strokeWidth={3} />{t}</li>
+            ))}
+          </ul>
+          <div className="mt-10 flex flex-wrap justify-center gap-3">
+            <Button href={links.signup} variant="ink">Get started free</Button>
+            <Button href={links.call} variant="soft">Book a demo</Button>
           </div>
-          <p className="mt-4 text-[13.5px] text-muted">Free forever. No credit card. Only the AI website chatbot is paid.</p>
+          <p className="mt-4 text-[13.5px] text-muted">Free forever. No credit card.</p>
         </Reveal>
       </div>
-      <div className="relative mt-16 px-5 pb-24 sm:mt-20 sm:pb-32">
-        <HeroWorkspace />
+      <div className="relative mt-16 pb-24 sm:mt-20 sm:pb-32">
+        <div className="mx-auto max-w-[1180px]">
+          <div aria-hidden className="pointer-events-none absolute inset-x-[10%] top-6 h-[60%] rounded-full bg-[#7c5cff]/[0.14] blur-[110px]" />
+          <HeroWorkspace />
+        </div>
       </div>
     </section>
   );
@@ -73,15 +72,15 @@ function Replaces() {
         return (
           <span key={slug} className="flex items-center gap-2.5 rounded-full border border-line bg-white py-2 pl-2 pr-5 text-[15px] font-medium text-ink-soft">
             <IconTile icon={p.icon} tone={p.tone} size={28} />
-            <span className="decoration-pink/70 decoration-2 [text-decoration-line:line-through]">{label}</span>
+            <span className="decoration-ink/40 decoration-1 [text-decoration-line:line-through]">{label}</span>
           </span>
         );
       })}
     </div>
   );
   return (
-    <section className="border-y border-line bg-soft/60 py-9">
-      <p className="mb-6 text-center font-mono text-[12px] uppercase tracking-[0.18em] text-muted">One login replaces</p>
+    <section className="border-y border-line py-9">
+      <p className={`${MONO} mb-6 text-center text-muted`}>One login replaces</p>
       <div className="marquee-wrap overflow-hidden [mask-image:linear-gradient(to_right,transparent,#000_8%,#000_92%,transparent)]">
         <div className="marquee">{row}{row}</div>
       </div>
@@ -103,7 +102,7 @@ function TileExtra({ slug }: { slug: string }) {
     return (
       <span className="mt-auto flex gap-6 pt-5">
         {[["Sent", "4,812"], ["Opened", "41%"], ["Replied", "6.2%"]].map(([k, v]) => (
-          <span key={k}><span className="block text-[11px] text-muted">{k}</span><span className="font-display text-[22px] font-semibold tabular-nums">{v}</span></span>
+          <span key={k}><span className="block font-mono text-[10px] uppercase tracking-wider text-muted">{k}</span><span className="font-display text-[22px] font-semibold tabular-nums">{v}</span></span>
         ))}
         <span className="ml-auto hidden items-end gap-1 sm:flex">
           {[30, 44, 38, 58, 52, 74, 68, 90].map((h, i) => (
@@ -125,17 +124,17 @@ function TileExtra({ slug }: { slug: string }) {
 
 function Tile({ p }: { p: Product }) {
   return (
-    <Spot href={`/product/${p.slug}`} className={`group flex flex-col overflow-hidden p-6 ${SPAN[p.slug] ?? ""}`}>
+    <Link href={`/product/${p.slug}`} className={`lt-card group flex flex-col overflow-hidden rounded-2xl p-6 ${SPAN[p.slug] ?? ""}`}>
       <span className="flex items-start justify-between">
         <IconTile icon={p.icon} tone={p.tone} size={44} />
         <span className="flex h-9 w-9 items-center justify-center rounded-full border border-line text-muted transition-all duration-300 group-hover:border-transparent group-hover:bg-ink group-hover:text-white">
           <ArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
         </span>
       </span>
-      <span className="mt-5 font-mono text-[11px] uppercase tracking-[0.16em]" style={{ color: p.tone[0] }}>{p.group}</span>
+      <span className={`${MONO} mt-5 text-muted`}>{p.group}</span>
       <span className="font-display mt-1 flex items-center gap-2 text-[24px] font-semibold leading-tight">
         {p.name}
-        {p.premium && <span className="rounded-full bg-pink/15 px-2 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wide text-pink">Premium</span>}
+        {p.premium && <span className="rounded-full bg-violet/10 px-2 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wide text-violet">Premium</span>}
       </span>
       <span className="mt-1.5 text-[15px] leading-6 text-ink-soft">{p.short}</span>
       <TileExtra slug={p.slug} />
@@ -144,18 +143,22 @@ function Tile({ p }: { p: Product }) {
           <span className="block w-[112%] origin-top-left scale-[0.89]"><ProductMock k={p.mock} /></span>
         </span>
       )}
-    </Spot>
+    </Link>
   );
 }
 
 function Bento() {
   return (
-    <section className="mx-auto max-w-[1240px] px-5 py-28 sm:py-36">
-      <Reveal><SectionHead eyebrow="The platform" title={<>Eleven products. <span className="text-aurora">One login.</span></>} sub="Sell, deliver and run your team in the same place. Each product is useful on its own, and better together." /></Reveal>
-      <div className="mt-16 grid auto-rows-[minmax(250px,auto)] gap-4 sm:grid-cols-2 lg:auto-rows-[260px] lg:grid-cols-4">
+    <LightSection>
+      <Reveal>
+        <Kicker>The platform</Kicker>
+        <H2>Eleven products.<br className="hidden sm:block" /> One login.</H2>
+        <p className="mt-5 max-w-[560px] text-[18px] leading-8 text-ink-soft">Sell, deliver and run your team in the same place. Each product is useful on its own, and better together.</p>
+      </Reveal>
+      <div className="mt-14 grid auto-rows-[minmax(250px,auto)] gap-4 sm:grid-cols-2 lg:auto-rows-[260px] lg:grid-cols-4">
         {PRODUCTS.map((p) => <Tile key={p.slug} p={p} />)}
       </div>
-    </section>
+    </LightSection>
   );
 }
 
@@ -163,29 +166,29 @@ function Bento() {
 
 function OneBrain() {
   return (
-    <section className="relative overflow-hidden bg-soft py-28 sm:py-36">
-      <div aria-hidden className="grid-lines absolute inset-0 opacity-60" />
-      <div className="relative mx-auto grid max-w-[1240px] items-center gap-16 px-5 lg:grid-cols-[1fr_1.1fr]">
+    <LightSection border className="overflow-hidden">
+      <Glow className="-right-40 top-10 h-[480px] w-[640px]" />
+      <div className="relative grid items-center gap-16 lg:grid-cols-[1fr_1.1fr]">
         <Reveal>
-          <Eyebrow>Connected by design</Eyebrow>
-          <h2 className="font-display mt-5 text-[40px] font-semibold leading-[1.04] sm:text-[56px]">
-            One workspace, <span className="text-aurora">one memory.</span>
-          </h2>
+          <Kicker>Connected by design</Kicker>
+          <H2>One workspace,<br className="hidden sm:block" /> one memory.</H2>
           <p className="mt-5 max-w-[500px] text-[18px] leading-8 text-ink-soft">
             A lead becomes a project. A hire becomes a payslip. A chat becomes a ticket. Because everything lives in one place, nothing gets re-typed, exported or lost between tools.
           </p>
-          <ul className="mt-8 space-y-3.5">
+          <ul className="mt-8 space-y-4">
             {["A website visitor becomes a lead, then a deal, then a client project.", "A new hire's record feeds attendance, leave and payroll.", "Replies to your campaigns land in the same inbox as support."].map((t) => (
-              <li key={t} className="flex gap-3 text-[16px] leading-7">
-                <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-violet/15 text-violet"><Check className="h-3 w-3" strokeWidth={3} /></span>{t}
+              <li key={t} className="flex gap-3 text-[16px] leading-7 text-ink">
+                <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-violet/12 text-violet"><Check className="h-3 w-3" strokeWidth={3} /></span>{t}
               </li>
             ))}
           </ul>
-          <div className="mt-10"><Button href="/product" variant="ghost" arrow>Explore all products</Button></div>
+          <div className="mt-10"><Button href="/product" variant="soft" arrow>Explore all products</Button></div>
         </Reveal>
-        <Reveal delay={150}><Orbit /></Reveal>
+        <Reveal delay={150}>
+          <Orbit />
+        </Reveal>
       </div>
-    </section>
+    </LightSection>
   );
 }
 
@@ -199,34 +202,38 @@ const AI_CARDS = [
 
 function AiSection() {
   return (
-    <section className="relative overflow-hidden bg-night py-28 text-white sm:py-36">
-      <Aurora dark tones={["#2f5bff", "#7c5cff", "#ff5fb0"]} />
-      <div className="relative mx-auto max-w-[1240px] px-5">
-        <Reveal><SectionHead dark eyebrow="Rhinon AI" title={<>Built in, <span className="text-aurora-soft">not bolted on.</span></>} sub="The AI works inside the modules you already use. It researches, drafts, answers and rewrites, and you stay in charge of what goes out." /></Reveal>
-        <div className="mt-16 grid gap-5 lg:grid-cols-3">
+    <LightSection border className="overflow-hidden">
+      <Glow className="left-1/2 top-0 h-[420px] w-[900px] -translate-x-1/2" />
+      <div className="relative">
+        <Reveal>
+          <Kicker>Rhinon AI</Kicker>
+          <H2>Built in,<br className="hidden sm:block" /> not bolted on.</H2>
+          <p className="mt-5 max-w-[620px] text-[18px] leading-8 text-ink-soft">The AI works inside the modules you already use. It researches, drafts, answers and rewrites, and you stay in charge of what goes out.</p>
+        </Reveal>
+        <div className="mt-14 grid gap-4 lg:grid-cols-3">
           {AI_CARDS.map((c, i) => {
             const p = bySlug(c.slug)!;
             return (
               <Reveal key={c.slug} delay={i * 120}>
-                <Spot dark className="flex h-full flex-col p-6">
+                <div className="lt-card flex h-full flex-col rounded-2xl p-6">
                   <IconTile icon={p.icon} tone={p.tone} size={42} />
                   <p className="font-display mt-5 text-[24px] font-semibold">{c.title}</p>
-                  <p className="mt-1 text-[14px] text-white/55">{p.name}</p>
-                  <div className="mt-6 flex-1 rounded-2xl border border-white/10 bg-black/30 p-4">
-                    <p className="mb-2.5 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-[#b9a6ff]"><Sparkles className="h-3.5 w-3.5" />{c.label}</p>
+                  <p className="mt-1 text-[14px] text-muted">{p.name}</p>
+                  <div className="mt-6 flex-1 rounded-2xl bg-[#0b0b14] p-4 text-white">
+                    <p className={`${MONO} mb-2.5 flex items-center gap-1.5 text-[#b9a6ff]`}><Sparkles className="h-3.5 w-3.5" />{c.label}</p>
                     <Typewriter text={c.text} className="min-h-[148px] text-[14.5px] leading-6 text-white/85" speed={20 + i * 4} />
                   </div>
-                </Spot>
+                </div>
               </Reveal>
             );
           })}
         </div>
         <Reveal delay={200}>
-          <p className="mt-10 text-center text-[15px] text-white/55">Drafts wait for your approval. Nothing is sent without you.</p>
-          <div className="mt-6 flex justify-center"><Button href="/ai" variant="glass" arrow>See Rhinon AI</Button></div>
+          <p className="mt-10 text-[15px] text-muted">Drafts wait for your approval. Nothing is sent without you.</p>
+          <div className="mt-5"><Button href="/ai" variant="soft" arrow>See Rhinon AI</Button></div>
         </Reveal>
       </div>
-    </section>
+    </LightSection>
   );
 }
 
@@ -240,16 +247,16 @@ function Numbers() {
     { big: "24/7", label: "answers from your AI chatbot" },
   ];
   return (
-    <section className="mx-auto max-w-[1240px] px-5 py-24">
+    <LightSection border className="!py-20">
       <div className="grid grid-cols-2 gap-y-12 lg:grid-cols-4">
         {items.map((it, i) => (
-          <Reveal key={i} delay={i * 90} className="text-center">
-            <p className="font-display text-aurora text-[56px] font-semibold leading-none sm:text-[76px]">{it.big}</p>
-            <p className="mx-auto mt-3 max-w-[200px] text-[15px] leading-6 text-ink-soft">{it.label}</p>
+          <Reveal key={i} delay={i * 90}>
+            <p className="font-display text-[56px] font-semibold leading-none text-ink sm:text-[80px]">{it.big}</p>
+            <p className="mt-3 max-w-[200px] text-[15px] leading-6 text-ink-soft">{it.label}</p>
           </Reveal>
         ))}
       </div>
-    </section>
+    </LightSection>
   );
 }
 
@@ -262,11 +269,11 @@ function Trust() {
     { icon: Phone, title: "People, not tickets", body: "Questions or a custom need? Talk to the team that built it." },
   ];
   return (
-    <section className="border-y border-line bg-soft/60 py-24">
-      <div className="mx-auto grid max-w-[1240px] gap-12 px-5 lg:grid-cols-[1fr_1.5fr]">
+    <LightSection border>
+      <div className="grid gap-12 lg:grid-cols-[1fr_1.5fr]">
         <Reveal>
-          <Eyebrow>Who builds it</Eyebrow>
-          <h2 className="font-display mt-5 text-[38px] font-semibold leading-[1.06] sm:text-[48px]">Made by Rhinon Labs. Used by us every day.</h2>
+          <Kicker>Who builds it</Kicker>
+          <H2 className="!text-[36px] sm:!text-[48px]">Made by Rhinon Labs. Used by us every day.</H2>
           <p className="mt-5 text-[17px] leading-8 text-ink-soft">We build custom CRMs, AI automation and dashboards for growing companies, and we run our own business on Rhinon Tech.</p>
           <div className="mt-7 flex flex-wrap gap-x-6 gap-y-3 text-[15px] font-medium">
             <a href={links.labs} className="inline-flex items-center gap-1.5 underline underline-offset-4">Visit rhinonlabs.com <ArrowRight className="h-4 w-4" /></a>
@@ -276,16 +283,16 @@ function Trust() {
         <div className="grid gap-4 sm:grid-cols-3">
           {items.map(({ icon: Icon, title, body }, i) => (
             <Reveal key={title} delay={i * 110}>
-              <Spot className="h-full p-6">
+              <div className="lt-card h-full rounded-2xl p-6">
                 <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet/10 text-violet"><Icon className="h-5 w-5" /></span>
                 <p className="mt-5 text-[17px] font-semibold">{title}</p>
                 <p className="mt-2 text-[14.5px] leading-6 text-ink-soft">{body}</p>
-              </Spot>
+              </div>
             </Reveal>
           ))}
         </div>
       </div>
-    </section>
+    </LightSection>
   );
 }
 
@@ -293,33 +300,39 @@ function Trust() {
 
 function PricingTeaser() {
   return (
-    <section className="mx-auto max-w-[1240px] px-5 py-28 sm:py-36">
-      <Reveal><SectionHead eyebrow="Pricing" title={<>Free for everything. <span className="text-aurora">Pay only for the chatbot.</span></>} /></Reveal>
-      <div className="mx-auto mt-16 grid max-w-[940px] gap-5 md:grid-cols-2">
+    <LightSection border>
+      <Reveal>
+        <Kicker>Pricing</Kicker>
+        <H2>Free for everything.<br className="hidden sm:block" /> Pay only for the chatbot.</H2>
+      </Reveal>
+      <div className="mt-14 grid max-w-[940px] gap-4 md:grid-cols-2">
         <Reveal>
-          <div className="spot h-full p-8">
+          <div className="lt-card h-full rounded-2xl p-8">
             <p className="font-display text-[22px] font-semibold">Free</p>
             <p className="font-display mt-2 text-[56px] font-semibold leading-none">₹0</p>
             <p className="mt-2 text-[14px] text-muted">For your whole team, with no time limit.</p>
             <ul className="mt-7 space-y-3 text-[15px]">
               {FREE_FEATURES.map((f) => <li key={f} className="flex gap-2.5"><Check className="mt-0.5 h-[18px] w-[18px] shrink-0 text-emerald-500" />{f}</li>)}
             </ul>
-            <div className="mt-8"><Button href={links.signup} arrow>Get started free</Button></div>
+            <div className="mt-8"><Button href={links.signup} variant="ink">Get started free</Button></div>
           </div>
         </Reveal>
         <Reveal delay={120}>
-          <div className="beam h-full rounded-[24px] bg-night p-8 text-white shadow-[0_40px_80px_-30px_rgb(80_60_220_/_0.55)]">
-            <p className="font-display flex items-center gap-2 text-[22px] font-semibold">AI Chatbot <span className="rounded-full bg-pink/20 px-2 py-0.5 font-sans text-[11px] font-semibold uppercase tracking-wide text-pink">Premium</span></p>
-            <p className="font-display text-aurora-soft mt-2 text-[44px] font-semibold leading-[1.15]">Talk to us</p>
-            <p className="mt-2 text-[14px] text-white/55">Everything in Free, plus your AI website assistant.</p>
-            <ul className="mt-7 space-y-3 text-[15px] text-white/85">
-              {CHATBOT_FEATURES.map((f) => <li key={f} className="flex gap-2.5"><Check className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#b9a6ff]" />{f}</li>)}
-            </ul>
-            <div className="mt-8"><Button href={links.call} variant="glass" arrow>Book a call</Button></div>
+          <div className="relative h-full overflow-hidden rounded-2xl bg-[#0b0b14] p-8 text-white shadow-[0_40px_90px_-40px_rgb(124_92_255_/_0.7)]">
+            <div aria-hidden className="pointer-events-none absolute -right-20 -top-20 h-60 w-60 rounded-full bg-[#7c5cff]/30 blur-[80px]" />
+            <div className="relative">
+              <p className="font-display flex items-center gap-2 text-[22px] font-semibold">AI Chatbot <span className="rounded-full bg-white/10 px-2 py-0.5 font-sans text-[11px] font-semibold uppercase tracking-wide text-[#c4baff]">Premium</span></p>
+              <p className="font-display mt-2 text-[44px] font-semibold leading-[1.15]">Talk to us</p>
+              <p className="mt-2 text-[14px] text-white/55">Everything in Free, plus your AI website assistant.</p>
+              <ul className="mt-7 space-y-3 text-[15px] text-white/80">
+                {CHATBOT_FEATURES.map((f) => <li key={f} className="flex gap-2.5"><Check className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#b9a6ff]" />{f}</li>)}
+              </ul>
+              <div className="mt-8"><Button href={links.call} variant="glass" arrow>Book a call</Button></div>
+            </div>
           </div>
         </Reveal>
       </div>
-    </section>
+    </LightSection>
   );
 }
 
@@ -327,20 +340,16 @@ function PricingTeaser() {
 
 function FinalCta() {
   return (
-    <section className="px-5 pb-24 sm:pb-32">
-      <Reveal className="noise relative mx-auto max-w-[1240px] overflow-hidden rounded-[40px] bg-night px-6 py-24 text-center text-white sm:py-32">
-        <Aurora dark tones={["#2f5bff", "#7c5cff", "#ff5fb0"]} />
-        <Image src="/brand/mark-white.png" alt="" width={520} height={520} aria-hidden className="pointer-events-none absolute -bottom-24 -right-16 w-[420px] opacity-[0.06]" />
-        <div className="relative">
-          <h2 className="font-display mx-auto max-w-[820px] text-[42px] font-semibold leading-[1.02] sm:text-[72px]">
-            Run your whole company from <span className="text-aurora-soft">one tab.</span>
-          </h2>
-          <p className="mx-auto mt-6 max-w-[520px] text-[18px] leading-8 text-white/65">Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit.</p>
-          <div className="mt-10 flex flex-wrap justify-center gap-3">
-            <Button href={links.signup} arrow>Get started free</Button>
-            <Button href={links.call} variant="glass">Book a demo</Button>
-          </div>
-          <p className="mt-5 flex items-center justify-center gap-1.5 text-[13px] text-white/45"><Users className="h-3.5 w-3.5" />Built for teams of any size</p>
+    <section className="relative overflow-hidden border-t border-line px-5 py-28 text-center sm:py-40">
+      <div className="lt-grid pointer-events-none absolute inset-0" />
+      <Glow className="left-1/2 top-1/2 h-[420px] w-[820px] -translate-x-1/2 -translate-y-1/2" />
+      <Image src="/brand/mark-white.png" alt="" width={520} height={520} aria-hidden className="pointer-events-none absolute -bottom-24 -right-16 w-[420px] opacity-[0.04] invert" />
+      <Reveal className="relative">
+        <h2 className="font-display mx-auto max-w-[900px] text-[40px] font-semibold leading-[1.02] sm:text-[76px]">Run your whole company from one tab.</h2>
+        <p className="mx-auto mt-6 max-w-[520px] text-[18px] leading-8 text-ink-soft">Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit.</p>
+        <div className="mt-10 flex flex-wrap justify-center gap-3">
+          <Button href={links.signup} variant="ink">Get started free</Button>
+          <Button href={links.call} variant="soft">Book a demo</Button>
         </div>
       </Reveal>
     </section>

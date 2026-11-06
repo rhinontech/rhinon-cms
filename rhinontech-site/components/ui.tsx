@@ -16,7 +16,7 @@ export function Logo({ light = false, height = 40 }: { light?: boolean; height?:
   );
 }
 
-type Variant = "primary" | "ghost" | "glass";
+type Variant = "primary" | "ghost" | "glass" | "ink" | "soft";
 
 export function Button({
   href,
@@ -47,15 +47,7 @@ export function Button({
 
 export function Eyebrow({ children, dark = false }: { children: React.ReactNode; dark?: boolean }) {
   return (
-    <span
-      className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 font-mono text-[11px] font-medium uppercase tracking-[0.16em] ${
-        dark ? "border-white/15 bg-white/5 text-white/70" : "border-line bg-white text-ink-soft"
-      }`}
-    >
-      <span className="relative flex h-1.5 w-1.5">
-        <span className="ping-soft absolute inline-flex h-full w-full rounded-full bg-violet" />
-        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-violet" />
-      </span>
+    <span className={`inline-block font-mono text-[11px] font-medium uppercase tracking-[0.2em] ${dark ? "text-white/45" : "text-muted"}`}>
       {children}
     </span>
   );
@@ -66,21 +58,21 @@ export function SectionHead({
   title,
   sub,
   dark = false,
-  center = true,
 }: {
   eyebrow?: string;
   title: React.ReactNode;
   sub?: string;
   dark?: boolean;
+  /** Kept so existing callers compile; headings are always left-aligned now. */
   center?: boolean;
 }) {
   return (
-    <div className={center ? "mx-auto max-w-[760px] text-center" : "max-w-[640px]"}>
+    <div className="max-w-[820px]">
       {eyebrow && <Eyebrow dark={dark}>{eyebrow}</Eyebrow>}
-      <h2 className={`font-display mt-5 text-balance text-[38px] font-semibold leading-[1.04] sm:text-[56px] ${dark ? "text-white" : "text-ink"}`}>
+      <h2 className={`font-display text-balance text-[36px] font-semibold leading-[1.04] sm:text-[60px] ${eyebrow ? "mt-4" : ""} ${dark ? "text-white" : "text-ink"}`}>
         {title}
       </h2>
-      {sub && <p className={`mt-5 text-[17px] leading-8 sm:text-[18px] ${dark ? "text-white/65" : "text-ink-soft"}`}>{sub}</p>}
+      {sub && <p className={`mt-5 max-w-[640px] text-[17px] leading-8 sm:text-[18px] ${dark ? "text-white/55" : "text-ink-soft"}`}>{sub}</p>}
     </div>
   );
 }
@@ -103,14 +95,12 @@ export function IconTile({ icon: Icon, tone, size = 44 }: { icon: LucideIcon; to
   );
 }
 
-/** The backdrop behind a hero: soft moving colour over faint grid lines. */
+/** The backdrop behind a hero: a faint grid and one soft glow. `tones` is kept for callers; only the second is used. */
 export function Aurora({ tones = ["#2f5bff", "#7c5cff", "#ff5fb0"], dark = false }: { tones?: string[]; dark?: boolean }) {
   return (
-    <div aria-hidden className={`pointer-events-none absolute inset-0 overflow-hidden ${dark ? "" : "[mask-image:linear-gradient(to_bottom,#000_65%,transparent)]"}`}>
-      <div className={`${dark ? "grid-lines-dark" : "grid-lines"} absolute inset-0`} />
-      <span className="blob -left-24 top-[-10%] h-[460px] w-[460px]" style={{ background: tones[0], opacity: dark ? 0.35 : 0.28 }} />
-      <span className="blob right-[-6%] top-[-14%] h-[520px] w-[520px] [animation-delay:-8s]" style={{ background: tones[1], opacity: dark ? 0.4 : 0.3 }} />
-      <span className="blob left-[34%] top-[18%] h-[360px] w-[360px] [animation-delay:-15s]" style={{ background: tones[2], opacity: dark ? 0.28 : 0.22 }} />
+    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+      <div className={`${dark ? "grid-lines-dark" : "lt-grid"} absolute inset-0`} />
+      <span className="absolute left-1/2 top-[-6%] h-[480px] w-[860px] -translate-x-1/2 rounded-full blur-[130px]" style={{ background: tones[1] ?? "#7c5cff", opacity: dark ? 0.22 : 0.13 }} />
     </div>
   );
 }
