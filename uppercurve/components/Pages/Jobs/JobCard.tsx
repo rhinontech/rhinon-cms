@@ -19,11 +19,13 @@ export function JobCard({ job }: { job: JobListing }) {
         <div className="flex items-center gap-3.5 mb-5">
           {/* Logo container with cyan/indigo rim aura */}
           <div
-            className={`w-12 h-12 rounded-xl flex items-center justify-center text-sm tracking-wider font-extrabold shadow-sm border ${
+            className={`w-12 h-12 rounded-xl flex items-center justify-center text-xs tracking-wider font-extrabold shadow-sm border p-1 text-center shrink-0 ${
               job.logoBg || "bg-indigo-50 border-indigo-200 text-indigo-700"
             } transition-transform group-hover:scale-105 duration-300 relative overflow-hidden`}
           >
-            {job.logoText || job.company.slice(0, 2).toUpperCase()}
+            <span className="truncate max-w-full block leading-none">
+              {job.logoText || job.company.slice(0, 2).toUpperCase()}
+            </span>
           </div>
 
           <span className="text-sm font-semibold text-gray-700 tracking-tight">

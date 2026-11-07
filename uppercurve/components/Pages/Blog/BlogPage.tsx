@@ -21,17 +21,17 @@ export function BlogPage({ initialPosts }: { initialPosts?: BlogPost[] }) {
             <span className="bg-indigo-600 text-white text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
               Blog
             </span>
-            <span className="text-sm font-[450] text-indigo-950">Ideas for the way up</span>
+            {/* <span className="text-sm font-[450] text-indigo-950">Ideas for the way up</span> */}
           </div>
 
           <h1 className="text-5xl md:text-7xl font-bold text-gray-900 tracking-tight leading-[1.05] max-w-4xl mb-6">
-            <TextAnimation>Notes from</TextAnimation> <br className="hidden sm:inline" />
-            <TextAnimation>the UpperCurve</TextAnimation>
+            <TextAnimation>Practical AI Guides,
+</TextAnimation> <br className="hidden sm:inline" />
+            <TextAnimation>Insights and Career Advice </TextAnimation>
           </h1>
 
           <p className="text-gray-500 text-md font-normal max-w-xl leading-relaxed">
-            Practical writing on AI, careers, building, and growth — from mentors and
-            the UpperCurve community. No hype, no fluff.
+            Clear, hands-on writing on Agentic AI, AI in education, careers and building with AI, from the mentors and practitioners behind UpperCurve. 
           </p>
         </section>
       </div>
