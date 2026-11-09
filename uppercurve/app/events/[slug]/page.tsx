@@ -4,6 +4,8 @@ import EventDetail from "@/components/Pages/Events/EventDetail/EventDetail";
 import { buildEventDetail } from "@/components/Pages/Events/shared/model";
 import { CATEGORY_CONFIG } from "@/components/Pages/Events/shared/categoryConfig";
 import { getEventDetailBySlug, getPublishedEvents } from "@/services/eventService";
+import JsonLd from "@/components/SEO/JsonLd";
+import { buildEventSchema } from "@/components/SEO/schema";
 
 export const dynamic = "force-dynamic";
 
@@ -46,5 +48,10 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
     .sort((a, b) => (a.startsAt ?? "9999").localeCompare(b.startsAt ?? "9999"))
     .slice(0, 3);
 
-  return <EventDetail event={event} moreEvents={moreEvents} />;
+  return (
+    <>
+      <JsonLd schema={buildEventSchema(event, api)} />
+      <EventDetail event={event} moreEvents={moreEvents} />
+    </>
+  );
 }

@@ -3,6 +3,8 @@ import EventsLanding from "@/components/Pages/Events/EventsLanding/EventsLanding
 import { buildEventDetail } from "@/components/Pages/Events/shared/model";
 import { CATEGORY_CONFIG } from "@/components/Pages/Events/shared/categoryConfig";
 import { getPublishedEvents } from "@/services/eventService";
+import JsonLd from "@/components/SEO/JsonLd";
+import { buildEventCollectionSchema } from "@/components/SEO/schema";
 
 export const dynamic = "force-dynamic";
 
@@ -27,5 +29,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
   const upcoming = events.filter((e) => !e.isPast).sort(byStart);
   const past = events.filter((e) => e.isPast).sort((a, b) => byStart(b, a));
 
-  return <EventsLanding upcoming={upcoming} past={past} initialFormat={format} />;
+  return (
+    <>
+      <JsonLd schema={buildEventCollectionSchema(upcoming)} />
+      <EventsLanding upcoming={upcoming} past={past} initialFormat={format} />
+    </>
+  );
 }

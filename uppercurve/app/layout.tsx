@@ -4,6 +4,8 @@ import "./globals.css";
 import Navbar from "@/components/Navbar/Navbar";
 import Footer from "@/components/Footer/Footer";
 import SmoothScroll from "@/components/SmoothScroll/SmoothScroll";
+import JsonLd from "@/components/SEO/JsonLd";
+import { buildOrganizationSchema } from "@/components/SEO/schema";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -54,6 +56,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} ${plusJakarta.variable} ${poppins.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-white font-sans">
+        <JsonLd schema={buildOrganizationSchema()} />
         <SmoothScroll />
         <Navbar />
         {children}

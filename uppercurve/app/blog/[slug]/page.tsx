@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import BlogDetails from "@/components/Pages/Blog/BlogDetails/BlogDetails";
 import { getBlogBySlug, getBlogs } from "@/services/blogService";
+import JsonLd from "@/components/SEO/JsonLd";
+import { buildBlogSchema } from "@/components/SEO/schema";
 
 export const dynamic = "force-dynamic";
 
@@ -58,5 +60,10 @@ export default async function Page({
     notFound();
   }
 
-  return <BlogDetails post={post} relatedPosts={allPosts} />;
+  return (
+    <>
+      <JsonLd schema={buildBlogSchema(post)} />
+      <BlogDetails post={post} relatedPosts={allPosts} />
+    </>
+  );
 }

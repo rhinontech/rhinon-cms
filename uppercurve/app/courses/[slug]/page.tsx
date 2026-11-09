@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import CourseLanding from "@/components/Pages/Courses/CourseLanding/CourseLanding";
 import { COURSES, getCourse } from "@/components/Pages/Courses/courseData";
+import JsonLd from "@/components/SEO/JsonLd";
+import { buildCourseSchema } from "@/components/SEO/schema";
 
 export const dynamicParams = false;
 
@@ -25,5 +27,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const course = getCourse((await params).slug);
   if (!course) notFound();
-  return <CourseLanding course={course} />;
+  return (
+    <>
+      <JsonLd schema={buildCourseSchema(course)} />
+      <CourseLanding course={course} />
+    </>
+  );
 }
