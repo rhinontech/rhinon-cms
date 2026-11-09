@@ -4,7 +4,7 @@ import { getBlogs } from "@/services/blogService";
 import JsonLd from "@/components/SEO/JsonLd";
 import { buildBlogCollectionSchema } from "@/components/SEO/schema";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Practical AI Guides & Insights for Aspiring Engineers | UpperCurve",

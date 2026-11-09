@@ -117,7 +117,7 @@ export function adaptApiBlogToBlogPost(apiBlog: ApiBlog, index = 0): BlogPost {
 export async function fetchApiBlogs(): Promise<ApiBlog[]> {
   const url = `${API_BASE}/public/blogs?domain=${BLOG_DOMAIN}`;
   const res = await fetch(url, {
-    cache: "no-store",
+    next: { revalidate: 300 },
     headers: {
       Accept: "application/json",
     },
@@ -141,7 +141,7 @@ export async function fetchApiBlogs(): Promise<ApiBlog[]> {
 export async function fetchApiBlogBySlug(slug: string): Promise<ApiBlog | null> {
   const url = `${API_BASE}/public/blogs/${encodeURIComponent(slug)}?domain=${BLOG_DOMAIN}`;
   const res = await fetch(url, {
-    cache: "no-store",
+    next: { revalidate: 300 },
     headers: {
       Accept: "application/json",
     },

@@ -5,7 +5,7 @@ import { getBlogBySlug, getBlogs } from "@/services/blogService";
 import JsonLd from "@/components/SEO/JsonLd";
 import { buildBlogSchema } from "@/components/SEO/schema";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export async function generateMetadata({
   params,

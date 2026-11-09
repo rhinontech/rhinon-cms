@@ -7,7 +7,7 @@ import { getEventDetailBySlug, getPublishedEvents } from "@/services/eventServic
 import JsonLd from "@/components/SEO/JsonLd";
 import { buildEventSchema } from "@/components/SEO/schema";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export async function generateMetadata({
   params,

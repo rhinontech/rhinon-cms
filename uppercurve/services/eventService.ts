@@ -43,7 +43,7 @@ export interface ApiEvent {
  */
 export async function getPublishedEvents(): Promise<ApiEvent[]> {
   const res = await fetch(`${API_BASE}/public/events`, {
-    cache: "no-store",
+    next: { revalidate: 60 },
     headers: { Accept: "application/json" },
   });
   if (!res.ok) {
@@ -62,7 +62,7 @@ export async function getPublishedEvents(): Promise<ApiEvent[]> {
  */
 export async function getEventDetailBySlug(slug: string): Promise<ApiEvent | null> {
   const res = await fetch(`${API_BASE}/public/events/${encodeURIComponent(slug)}`, {
-    cache: "no-store",
+    next: { revalidate: 60 },
     headers: { Accept: "application/json" },
   });
   if (!res.ok) {

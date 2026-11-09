@@ -6,7 +6,7 @@ import { getPublishedEvents } from "@/services/eventService";
 import JsonLd from "@/components/SEO/JsonLd";
 import { buildEventCollectionSchema } from "@/components/SEO/schema";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "AI Events, Workshops & Certificates | UpperCurve",
