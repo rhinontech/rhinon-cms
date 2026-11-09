@@ -84,9 +84,9 @@ const agenticAiLaunchpad: Course = {
   slug: "agentic-ai-launchpad",
   title: "Agentic AI",
   titleAccent: "Launchpad",
-  metaTitle: "Agentic AI Launchpad — UpperCurve",
+  metaTitle: "Agentic AI Launchpad | 6-Week Live Cohort | UpperCurve",
   metaDescription:
-    "6-Weeks Live Hands-On Program. You build & ship 10+ AI Agents, from No-Code Automations to Multi-Agent Systems, with a Mentor Guidance.",
+    "Build and Ship 10+ AI Agents in 6-Weeks | Live sessions | 1:1 Mentorship with a Verified Certificate.",
   eyebrow: " 6 Weeks Live Cohort · Limited Seats",
   tagline: "Go beyond just using AI, Learn to build AI Agents that actually Work.",
   cohortLabel: "Next cohort",
@@ -248,10 +248,10 @@ const agenticAiLaunchpad: Course = {
     },
   ],
   rhythm: [
-    { cadence: "Every week", title: "Live build sessions", body: "Two evenings a week, building alongside the mentor — not watching slides." },
-    { cadence: "Every week", title: "Build labs & office hours", body: "Unblock your project in small groups before it turns into a lost weekend." },
-    { cadence: "Weeks 5–6", title: "1:1 capstone reviews", body: "Your design and your build, pressure-tested one-on-one before it goes live." },
-    { cadence: "Week 6", title: "Demo Day", body: "Present a deployed agent to mentors and the cohort. It goes straight into your portfolio." },
+    { cadence: "Every week", title: "Live Build Sessions", body: "You learn live from mentors who build AI agents at work, follow a simple weekly rhythm, and finish with a working agent in your portfolio." },
+    { cadence: "Every week", title: "Doubt-Solving Labs", body: "Stuck somewhere? Clear your doubts in small-group labs and office hours, so you never fall behind." },
+    { cadence: "Weeks 5–6", title: "Personal Mentor Reviews", body: "Get two 1:1 reviews on your capstone, so your agent is solid before it goes live." },
+    { cadence: "Week 6", title: "Demo Day Showcase", body: "Present your live agent to mentors and peers, and add a real project to your portfolio." },
   ],
   roles: [
     { title: "Forward deployed engineer", track: "Customer-facing", body: "Embed with customers and build agent solutions on-site. One of the fastest-growing titles in AI." },
@@ -264,55 +264,75 @@ const agenticAiLaunchpad: Course = {
     statement:
       "has completed the six-week Agentic AI Launchpad, shipped fifteen agentic projects and presented a production agent at a live Demo Day.",
     points: [
-      "Awarded on completion — tied to your Demo Day project",
-      "A unique ID anyone can verify",
-      "Backed by a portfolio of fifteen projects employers can open",
+      "Credible proof of hands - on agentic AI experience.",
+      "Verifiable online through a unique Credential ID.",
+      "Linked to real projects employers can open and review.",
     ],
   },
   testimonials: [],
   inclusions: [
-    { lead: "6 weeks of live sessions", rest: "with recordings of every one" },
-    { lead: "15 guided projects", rest: "including your own capstone agent" },
-    { lead: "Ready-made agent templates", rest: "for Claude Code and Codex, yours to reuse at work" },
-    { lead: "1:1 capstone mentorship", rest: "and a live Demo Day" },
-    { lead: "Private builder community", rest: "with weekly office hours" },
-    { lead: "Certificate in Agentic AI Engineering", rest: "shareable on LinkedIn" },
+    { lead: "6 weeks of live training,", rest: "with recordings of every session." },
+    { lead: "10+ guided projects,", rest: "including your own capstone agent." },
+    { lead: "Ready-to-use agent templates", rest: "for Claude Code and Codex, built for real work." },
+    { lead: "1:1 capstone mentorship,", rest: "followed by a live Demo Day presentation." },
+    { lead: "Private builder community", rest: "with weekly office hours." },
+    { lead: "Verified Certificate in Agentic AI Engineering,", rest: "shareable on LinkedIn." },
   ],
   faqs: [
     {
-      question: "Who is this cohort designed for?",
+      question: "What is the Agentic AI Launchpad?",
       answer:
-        "Professionals, founders, product people and developers who want to build with AI rather than just use it. You do not need to be an engineer — the first two modules are no-code, and code is introduced gradually.",
+        "The Agentic AI Launchpad is a 6-week live cohort where you learn to build, deploy and ship AI agents. You start with no-code automations and progress to multi-agent systems, with 1:1 mentor guidance and a capstone project presented at Demo Day.",
     },
     {
-      question: "Do I need coding experience?",
+      question: "What is agentic AI, and how is it different from ChatGPT?",
       answer:
-        "No. You start with no-code automation tools and move to code with AI coding assistants doing the heavy lifting. If you already code, the later modules go deep enough to stay interesting.",
+        "Agentic AI refers to AI systems that can plan, make decisions and take actions to complete a goal on their own. A chatbot like ChatGPT replies to your prompts. An AI agent can carry out multi-step tasks, such as researching, booking meetings or updating databases, using real tools and apps.",
     },
     {
-      question: "How much time does it take each week?",
+      question: "Who is this AI agents course designed for?",
       answer:
-        "Plan for six to eight hours: the live sessions, plus time on that week's build. Build labs and office hours are there so you are never stuck for long.",
+        "The course is designed for working professionals, students, founders, product managers and developers who want to build with AI rather than just use it. Beginners start comfortably with no-code tools, while experienced learners will find the advanced modules challenging.",
     },
     {
-      question: "What will I have at the end?",
+      question: "Can I learn to build AI agents without coding experience?",
       answer:
-        "Fifteen working projects, a deployed capstone agent you presented at Demo Day, and a certificate backed by that portfolio.",
+        "Yes. The first two weeks are completely no-code, using tools like n8n, Make.com and Lovable. Coding is introduced gradually, with AI coding assistants like Claude Code and Cursor doing most of the heavy lifting.",
+    },
+    {
+      question: "Which AI tools will I learn in this course?",
+      answer:
+        "You’ll work hands-on with Claude, Claude Code, OpenAI, n8n, Make.com, CrewAI, LangGraph, MCP, ElevenLabs, Lovable, Supabase, Cursor, Python and Hugging Face. These are the tools teams use to build and deploy AI agents today.",
+    },
+    {
+      question: "What kind of AI agents will I build?",
+      answer:
+        "You’ll build 10+ projects. They include workflow automations, an AI voice agent, a “chat with your data” RAG agent, a multi-agent research team and a full-stack web app. Your capstone is a personal AI assistant connected to your calendar, files and apps.",
+    },
+    {
+      question: "How much time do I need to commit each week?",
+      answer:
+        "Plan for around 3–4 hours per week. That covers two live evening sessions plus time to work on your weekly project. Build labs and office hours make sure you never stay stuck for long.",
     },
     {
       question: "What if I miss a live session?",
       answer:
-        "Every session is recorded and shared the same week. Office hours are the place to catch up on anything you missed.",
+        "Every live session is recorded and shared within the same week, so you can catch up at your own pace. You can also bring any questions to the weekly office hours.",
     },
     {
-      question: "Is there a certificate?",
+      question: "Will I receive a certificate after completing the course?",
       answer:
-        "Yes — the Certificate in Agentic AI Engineering, awarded on completion of the capstone. Every certificate carries an ID anyone can verify.",
+        "Yes. You’ll earn the Certificate in Agentic AI Engineering after presenting your capstone at Demo Day. Each certificate carries a unique credential ID that employers can verify, and you can share it directly on LinkedIn.",
     },
     {
-      question: "How do I get in touch with questions?",
+      question: "How will this course help my career?",
       answer:
-        "Join the UpperCurve community and ask there, or come to one of our free live events first to see how we teach.",
+        "You’ll graduate with a portfolio of deployed AI agents, which is practical proof of your skills. This prepares you for in-demand roles such as AI Product Manager, AI Agent Engineer, Forward Deployed Engineer and AI Automation Consultant.",
+    },
+    {
+      question: "How can I contact the UpperCurve team?",
+      answer:
+        "You can reach us by joining the UpperCurve community or by attending one of our free live workshops.",
     },
   ],
 };

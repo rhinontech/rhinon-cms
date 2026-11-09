@@ -36,7 +36,7 @@ export const DUMMY_JOBS: JobListing[] = [
     postedAt: "Posted 1 month ago",
     applyUrl: "https://www.infovision.com/careers",
     logoBg: "bg-white border-gray-200 text-rose-600",
-    logoText: "INFOVISION",
+    logoText: "IV",
     minimumQualifications: [
       "Bachelor's Degree in Information Technology, Business or related field of study",
       "4+ years experience in product management, information technology, or related field such as business analysis",

@@ -7,9 +7,9 @@ import { getPublishedEvents } from "@/services/eventService";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Events — UpperCurve",
+  title: "AI Events, Workshops & Certificates | UpperCurve",
   description:
-    "Free live AI workshops, assessed micro-certificates, Claude intensives and one-day builds for educators and builders. Online and in Bengaluru.",
+    "Discover upcoming UpperCurve Events: Free AI Certificate Workshops that help you learn and grow.",
 };
 
 const byStart = (a: { startsAt: string | null }, b: { startsAt: string | null }) =>

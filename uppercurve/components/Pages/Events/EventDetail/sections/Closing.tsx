@@ -15,7 +15,7 @@ export function FaqSection({ event, config }: { event: EventDetailModel; config:
   if (!faqs.length) return null;
   return (
     <Section id="faq">
-      <SectionHeading eyebrow="FAQ" title="Questions, answered" accentClass={config.accent.text} />
+      <SectionHeading eyebrow="FAQ" title="Questions & Answers" accentClass={config.accent.text} />
       <div className="mt-8 divide-y divide-[#E8ECF3] border-y border-[#E8ECF3]">
         {faqs.map((faq) => (
           <details key={faq.question} className="group py-5 [&_summary::-webkit-details-marker]:hidden">

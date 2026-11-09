@@ -5,9 +5,9 @@ import { getBlogs } from "@/services/blogService";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Blog — UpperCurve",
+  title: "Practical AI Guides & Insights for Aspiring Engineers | UpperCurve",
   description:
-    "Practical writing on AI, careers, building, and growth — from mentors and the UpperCurve community.",
+    "Learn how AI Agents really work and how to put them to use. Clear, Hands-On Articles on Agentic AI, Learning, Careers & building with AI.",
 };
 
 export default async function Page() {

@@ -43,8 +43,8 @@ export default function Roles({ course }: { course: Course }) {
           <CourseHeading
             dark
             eyebrow="Where this takes you"
-            title="These roles barely existed two years ago. They are hiring now."
-            description="Finish the cohort with a portfolio of working agents and you are a credible candidate for the fastest-growing roles in tech."
+            title="These Job Titles Might Not Even Exist 2 Years Ago."
+            description="Move from using AI to building with it & become the person every team wants."
           />
           <p className="inline-flex items-center gap-2 font-mono text-[10.5px] tracking-[0.2em] uppercase text-emerald-300">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" aria-hidden />

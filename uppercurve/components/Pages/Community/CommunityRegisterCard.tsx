@@ -89,7 +89,7 @@ export function CommunityRegisterCard() {
           Join the UpperCurve Community
         </h3>
         <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-          Skip the noise. Get high-signal AI updates, production architectures, code reviews, and weekend session invites.
+        Share a few details and get instant access to our WhatsApp community.     
         </p>
       </div>
 

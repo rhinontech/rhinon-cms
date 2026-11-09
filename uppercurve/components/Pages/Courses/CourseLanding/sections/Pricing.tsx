@@ -14,9 +14,9 @@ export default function Pricing({ course }: { course: Course }) {
         <div className="lg:col-span-7">
           <CourseHeading
             dark
-            eyebrow="Your seat"
-            title="An investment in who you become next."
-            description="This isn't a course purchase. It's a decision about which side of the AI divide you stand on six weeks from now."
+            eyebrow="Apply for the Cohort"
+            title="An Investment in Your Next Career Move."
+            description="In 6 Weeks, you can go from using AI to building and deploying your own AI agents with confidence. Everything you need to get there is included in one seat."
           />
           <ul className="mt-10 border-t border-white/10">
             {course.inclusions.map((item) => (
@@ -48,7 +48,7 @@ export default function Pricing({ course }: { course: Course }) {
               </>
             )}
             <div className="mt-7 grid grid-cols-2 gap-2.5">
-              {["6 weeks of live training", "15 hands-on projects", "1:1 capstone mentorship", "Certificate for LinkedIn"].map((item) => (
+              {["6 weeks of live training", "10+ guided projects", "1:1 capstone mentorship", "Certificate for LinkedIn"].map((item) => (
                 <span
                   key={item}
                   className="flex items-start gap-2 rounded-xl border border-[#E6EAF2] bg-[#F8FAFC] px-3 py-2.5 text-[13px] font-medium text-[#334155] leading-snug"
