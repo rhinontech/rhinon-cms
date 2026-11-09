@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import type { IconType } from "react-icons";
 import { TbPin, TbPinFilled } from "react-icons/tb";
 import { cn } from "@/lib/utils";
-import { MODULES } from "@/components/Admin/Common/navConfig";
+import { MODULES, isWithin, moduleTone } from "@/components/Admin/Common/navConfig";
 import { useDashboard } from "../../../Common/DashboardProvider/DashboardProvider";
 import { usePermissions } from "@/context/PermissionsContext";
 import { apiFetch } from "@/lib/api";
@@ -145,15 +145,16 @@ export function Sidebar() {
       <nav className="flex min-h-0 flex-1 flex-col overflow-y-auto py-3">
         <div className="space-y-0.5 px-2">
           {navItems.map((item) => {
-            const active = pathname.startsWith(item.href);
+            const active = isWithin(pathname, item.href);
             const Icon = item.icon;
+            const tone = moduleTone(moduleKeyOf(item.href));
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 title={expanded ? undefined : item.title}
                 className={cn(
-                  "group relative flex h-9 items-center gap-3 rounded-lg px-2.5 text-[13px] font-medium transition-[background-color,color,box-shadow] duration-150",
+                  "group relative flex h-10 items-center gap-3 rounded-lg px-2 text-[13px] font-medium transition-[background-color,color,box-shadow] duration-150",
                   expanded ? "justify-start" : "justify-center",
                   active
                     ? "bg-card text-foreground shadow-xs ring-1 ring-foreground/[0.06] dark:bg-white/[0.08] dark:shadow-none dark:ring-white/[0.06]"
@@ -161,7 +162,13 @@ export function Sidebar() {
                 )}
               >
                 <span className="relative shrink-0">
-                  <Icon size={19} strokeWidth={1.8} className={cn("transition-colors", active ? "text-brand" : "text-current")} />
+                  {/* Each module keeps its own colour: a soft tile at rest, solid when it is the one you are in. */}
+                  <span
+                    className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors duration-150"
+                    style={{ background: active ? tone : `${tone}1f`, color: active ? "#fff" : tone }}
+                  >
+                    <Icon size={17} strokeWidth={1.9} />
+                  </span>
                   {/* Collapsed rail has no room for a count — a dot still signals "something new". */}
                   {!expanded && !!item.badge && (
                     <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-brand ring-2 ring-background" />

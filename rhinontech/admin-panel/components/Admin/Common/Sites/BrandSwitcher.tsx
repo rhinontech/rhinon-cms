@@ -30,8 +30,11 @@ function initials(name: string): string {
  * coloured initials, which is what keeps this from breaking the moment someone
  * adds a third brand.
  */
-const BRAND_LOGOS: Record<string, { light: StaticImageData; dark: StaticImageData }> = {
+const BRAND_LOGOS: Record<string, { light: StaticImageData; dark: StaticImageData; bleed?: boolean }> = {
   rhinonlabs: { light: adminImages.blueLogo, dark: adminImages.whiteLogo },
+  // The app icon is a complete tile on its own (navy square, rounded corners), so it
+  // fills the whole slot: no padding, no grey box behind it, same on both themes.
+  rhinontech: { light: adminImages.Icon_Rhinon_Tech, dark: adminImages.Icon_Rhinon_Tech, bleed: true },
   // One mark on both themes: the Uppercurve arrow carries its own gradient and
   // the navy U stays legible on a dark sidebar.
   uppercurve: { light: adminImages.Logo_Uppercurve, dark: adminImages.Logo_Uppercurve },
@@ -62,6 +65,14 @@ function host(siteUrl: string | null): string | null {
 function Glyph({ name, slug, size = "md" }: { name: string; slug: string; size?: "md" | "sm" }) {
   const box = size === "md" ? "h-9 w-9" : "h-8 w-8";
   const logo = BRAND_LOGOS[slug];
+
+  if (logo?.bleed) {
+    return (
+      <span className={cn("block shrink-0 overflow-hidden rounded-lg", box)}>
+        <Image src={logo.light} alt="" aria-hidden loading="eager" className="h-full w-full object-cover" />
+      </span>
+    );
+  }
 
   if (logo) {
     return (

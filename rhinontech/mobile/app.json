@@ -39,6 +39,12 @@
           "image": "./assets/icon.png",
           "imageWidth": 120
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Rhinon needs your photos so you can attach them to chats and emails."
+        }
       ]
     ],
     "scheme": "rhinon",

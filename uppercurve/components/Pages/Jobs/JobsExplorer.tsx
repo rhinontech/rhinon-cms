@@ -57,7 +57,7 @@ export function JobsExplorer() {
       {/* ================= 1. CATEGORY TABS ================= */}
       <div className="flex justify-center mb-10">
         <div className="inline-flex items-center p-1 rounded-xl bg-gray-100 border border-gray-200/80 shadow-xs">
-          {(["ALL", "PRODUCT", "ENGINEERING"] as const).map((cat) => {
+          {(["ALL", /* "PRODUCT", */ "ENGINEERING"] as const).map((cat) => {
             const isActive = activeCategory === cat;
             return (
               <button

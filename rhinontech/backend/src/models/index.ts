@@ -18,6 +18,7 @@ import { CampaignTemplate } from "./CampaignTemplate";
 import { Campaign } from "./Campaign";
 import { CampaignActivity } from "./CampaignActivity";
 import { ContactGroup } from "./ContactGroup";
+import { Meeting } from "./Meeting";
 import { ContactGroupMember } from "./ContactGroupMember";
 import { AttendanceRequest } from "./AttendanceRequest";
 import { AttendancePolicy } from "./AttendancePolicy";
@@ -491,6 +492,7 @@ export {
   CampaignActivity,
   ContactGroup,
   ContactGroupMember,
+  Meeting,
   AttendanceRequest,
   AttendancePolicy,
   LeaveType,

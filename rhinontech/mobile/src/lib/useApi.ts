@@ -48,8 +48,12 @@ export function useApi<T>(path: string | null, { enabled = true, pollMs }: Optio
     void load("initial");
   }, [path, enabled, load]);
 
+  // Coming back to a screen (say, from an edit form) shows the latest data.
+  const focusedBefore = useRef(false);
   useFocusEffect(
     useCallback(() => {
+      if (enabled && focusedBefore.current) void load("silent");
+      focusedBefore.current = true;
       if (!enabled || !pollMs) return;
       const id = setInterval(() => void load("silent"), pollMs);
       return () => clearInterval(id);

@@ -12,7 +12,7 @@ export default function Cohort({ course }: { course: Course }) {
     <section className="bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
         <CourseHeading
-          eyebrow={instructor ? "Who teaches this" : "How the cohort runs"}
+          eyebrow={instructor ? "Who teaches this" : "HOW YOU’LL LEARN"}
           title={instructor ? "Learn from someone who builds this for a living." : "Built live, reviewed 1:1, shipped in public."}
           description={
             instructor

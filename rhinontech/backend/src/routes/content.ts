@@ -7,7 +7,7 @@ import type { BlogDomain } from "../models/Blog";
 import { authenticate, authorize, requirePlatformOrg, AuthRequest } from "../middleware/authenticate";
 import { uploadBuffer, publicUrl } from "../services/storage";
 import eventsRouter from "./events";
-import { generateBlogDraft, readTimeFor, type LinkTarget } from "../services/blogGenerator";
+import { generateBlogDraft, readTimeFor, RHINONTECH_BRAND, type LinkTarget } from "../services/blogGenerator";
 import { generateBlogImage } from "../services/aiImage";
 import { pingIndexNow } from "../services/indexNow";
 
@@ -155,10 +155,31 @@ const RHINONLABS_SERVICE_PAGES: LinkTarget[] = [
   { title: "Contact us", path: "/contact-us" },
 ];
 
+// The Rhinon Tech marketing site: its blog lives at /blog and the products at /product/<slug>.
+const RHINONTECH_PAGES: LinkTarget[] = [
+  { title: "CRM", path: "/product/crm" },
+  { title: "Outreach (AI cold email)", path: "/product/outreach" },
+  { title: "Shared inbox", path: "/product/inbox" },
+  { title: "AI chatbot", path: "/product/chatbot" },
+  { title: "Work: projects and client portal", path: "/product/work" },
+  { title: "Team chat and meetings", path: "/product/chat" },
+  { title: "Pages: docs and wiki", path: "/product/pages" },
+  { title: "HR & People", path: "/product/hr" },
+  { title: "Payroll", path: "/product/payroll" },
+  { title: "Attendance & Leave", path: "/product/attendance" },
+  { title: "Performance reviews", path: "/product/performance" },
+  { title: "Rhinon AI", path: "/ai" },
+  { title: "Pricing", path: "/pricing" },
+  { title: "Book a demo", path: "/demo" },
+];
+
 async function linkTargetsFor(site: Site | null): Promise<LinkTarget[]> {
   const where: any = { status: "Published" };
   if (site) where.siteId = site.id;
   const blogs = await Blog.findAll({ where, attributes: ["title", "slug"], order: [["publishedAt", "DESC"]], limit: 40 });
+  if (site?.slug === "rhinontech") {
+    return [...blogs.map((b) => ({ title: b.title, path: `/blog/${b.slug}` })), ...RHINONTECH_PAGES];
+  }
   const targets: LinkTarget[] = blogs.map((b) => ({ title: b.title, path: `/blogs/${b.slug}` }));
   if (!site || site.slug === "rhinonlabs") {
     const studies = await CaseStudy.findAll({ where: { status: "Published" } as any, attributes: ["title", "slug"], limit: 20 });
@@ -174,7 +195,7 @@ async function runTopicGeneration(topicId: string, userId: string): Promise<void
   if (!topic) return;
   try {
     const site = topic.siteId ? await Site.findByPk(topic.siteId) : await resolveSite({});
-    const draft = await generateBlogDraft(topic, await linkTargetsFor(site));
+    const draft = await generateBlogDraft({ ...topic.toJSON(), brand: site?.slug === "rhinontech" ? RHINONTECH_BRAND : undefined }, await linkTargetsFor(site));
     // Byline matches the site's real posts: reuse the latest published post's
     // author, so a new avatar uploaded there carries over automatically.
     const latest = await Blog.findOne({

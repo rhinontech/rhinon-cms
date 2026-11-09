@@ -16,6 +16,8 @@ export interface LeadCaptureInput {
   source: string;
   summary?: string | null;
   raw?: Record<string, unknown> | null;
+  /** The brand whose form captured it; unset leaves the row unbranded. */
+  siteId?: string | null;
 }
 
 /**
@@ -56,5 +58,6 @@ export async function findOrMergeLead(input: LeadCaptureInput): Promise<Lead> {
     source: input.source,
     status: "New",
     raw: input.raw,
+    ...(input.siteId ? { siteId: input.siteId } : {}),
   } as any);
 }

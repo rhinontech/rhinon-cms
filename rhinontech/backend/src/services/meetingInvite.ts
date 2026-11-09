@@ -63,7 +63,7 @@ export function buildMeetingIcs(event: MeetingEvent, kind: InviteKind, sender: I
     method: kind === "cancel" ? "CANCEL" : "REQUEST",
     sequence,
     title: event.summary,
-    description: event.meetLink ? `Join with Google Meet: ${event.meetLink}` : event.description || undefined,
+    description: event.meetLink ? `Join the meeting: ${event.meetLink}` : event.description || undefined,
     location: event.meetLink || event.location || undefined,
     url: event.meetLink || undefined,
     status: kind === "cancel" ? "CANCELLED" : "CONFIRMED",
@@ -94,7 +94,7 @@ function buildBody(event: MeetingEvent, kind: InviteKind, sender: InviteSender, 
 
   const meetBlock =
     !cancelled && event.meetLink
-      ? `<p><strong>Join with Google Meet:</strong> <a href="${event.meetLink}">${event.meetLink}</a></p>`
+      ? `<p><strong>Join the meeting:</strong> <a href="${event.meetLink}">${event.meetLink}</a></p>`
       : "";
   const locationBlock =
     !cancelled && !event.meetLink && event.location ? `<p><strong>Where:</strong> ${event.location}</p>` : "";

@@ -44,5 +44,7 @@ Docs: https://docs.expo.dev/eas/index.md
 
 - Talks to `rhinontech/backend`; response shapes are typed in `src/lib/types.ts` — check the backend route before changing them.
 - Style with NativeWind classes against the tokens in `src/global.css`; use `useTheme().colors` only for props that can't take a className.
+- NativeWind does not style `Animated.*` views: keep `className` on a plain `View` inside or around them.
+- Match the admin panel's glass system: every screen sits on `Backdrop` under a `GlassHeader`. No bright gradients; ink for primary actions, brand only for selection and unread.
 - Never render email or user HTML as markup — convert with `htmlToText` (`src/lib/format.ts`).
 - Hide UI by permission with `useAuth().can(...)`, but rely on the backend to enforce it.

@@ -1,7 +1,22 @@
+import Constants from "expo-constants";
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 
-export const API_URL = (process.env.EXPO_PUBLIC_API_URL || "http://localhost:5000").replace(/\/$/, "");
+const CONFIGURED_URL = (process.env.EXPO_PUBLIC_API_URL || "http://localhost:5000").replace(/\/$/, "");
+
+/**
+ * In development the laptop's address changes with the network, and a stale one
+ * leaves the app waiting on a host that isn't there. Metro's host is by definition
+ * reachable from this device, so a local backend URL follows it. Real hostnames
+ * (and release builds, which have no Metro) are left alone.
+ */
+function resolveApiUrl(): string {
+  const metroHost = Constants.expoConfig?.hostUri?.split(":")[0];
+  if (!__DEV__ || !metroHost) return CONFIGURED_URL;
+  return CONFIGURED_URL.replace(/^http:\/\/(localhost|127\.0\.0\.1|192\.168\.[\d.]+|10\.[\d.]+|172\.(?:1[6-9]|2\d|3[01])\.[\d.]+)(?=:|$)/, `http://${metroHost}`);
+}
+
+export const API_URL = resolveApiUrl();
 
 const TOKEN_KEY = "rhinon.authToken";
 
@@ -42,6 +57,10 @@ export function setSessionToken(token: string | null) {
   currentToken = token;
 }
 
+export function getSessionToken() {
+  return currentToken;
+}
+
 /** Called once by the auth provider so an expired session signs the user out. */
 export function setUnauthorizedHandler(handler: (() => void) | null) {
   onUnauthorized = handler;
@@ -79,4 +98,5 @@ export const api = {
     apiFetch<T>(path, { method: "POST", body: body === undefined ? undefined : JSON.stringify(body) }),
   patch: <T>(path: string, body: unknown) => apiFetch<T>(path, { method: "PATCH", body: JSON.stringify(body) }),
   put: <T>(path: string, body: unknown) => apiFetch<T>(path, { method: "PUT", body: JSON.stringify(body) }),
+  delete: <T>(path: string) => apiFetch<T>(path, { method: "DELETE" }),
 };

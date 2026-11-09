@@ -1,12 +1,15 @@
-import { Pressable, View, type ViewProps } from "react-native";
+import { View, type ViewProps } from "react-native";
 import { cn } from "@/lib/cn";
-import { tap } from "@/lib/haptics";
+import { lift, useTheme } from "@/lib/theme";
+import { Tappable } from "./Tappable";
 
-export function Card({ className, ...props }: ViewProps & { className?: string }) {
+/** The panel's `glass-card`: translucent over the backdrop, with a hairline edge. */
+export function Card({ className, style, ...props }: ViewProps & { className?: string }) {
+  const { colors } = useTheme();
   return (
     <View
-      className={cn("rounded-2xl border border-border bg-card", className)}
-      style={{ shadowColor: "#0B0C10", shadowOpacity: 0.04, shadowRadius: 12, shadowOffset: { width: 0, height: 4 } }}
+      className={cn("rounded-2xl", className)}
+      style={[{ backgroundColor: colors.glassCard, borderWidth: 1, borderColor: colors.glassCardBorder }, lift(colors.shadow), style]}
       {...props}
     />
   );
@@ -22,14 +25,8 @@ export function PressableCard({
   children: React.ReactNode;
 }) {
   return (
-    <Pressable
-      onPress={() => {
-        tap();
-        onPress();
-      }}
-      className={cn("rounded-2xl border border-border bg-card active:opacity-80", className)}
-    >
-      {children}
-    </Pressable>
+    <Tappable className={className} onPress={onPress} scale={0.98}>
+      <Card>{children}</Card>
+    </Tappable>
   );
 }

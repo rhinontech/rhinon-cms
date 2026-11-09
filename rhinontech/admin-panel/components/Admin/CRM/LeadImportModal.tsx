@@ -11,6 +11,7 @@ interface MappedLead {
   company: string;
   title: string;
   linkedinUrl: string;
+  instagramUrl: string;
   phone: string;
   seniority: string;
   department: string;
@@ -75,6 +76,7 @@ function mapRow(raw: Record<string, string>): MappedLead {
     company: pick(n, "company name", "company"),
     title: pick(n, "title"),
     linkedinUrl: pick(n, "person linkedin url", "linkedin url"),
+    instagramUrl: pick(n, "instagram url", "instagram"),
     phone,
     seniority: pick(n, "seniority"),
     department: pick(n, "departments", "department", "sub departments"),

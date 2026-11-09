@@ -8,6 +8,7 @@ import FloatingContactButton from "@/components/Common/FloatingContactButton/Flo
 import { Navbar } from "@/components/Common/Header/Navbar";
 import StructuredData from "@/components/Common/SEO/StructuredData";
 import { PageviewTracker } from "@/components/Common/Analytics/PageviewTracker";
+import { GoogleAnalytics } from "@/components/Common/Analytics/GoogleAnalytics";
 import RhinonChatLoader from "@/components/RhinonChat";
 
 // const geistSans = Geist({
@@ -63,23 +64,23 @@ export const metadata: Metadata = {
   },
   description:
     "We help founders and SMBs design, build and launch websites, apps and AI products and internal tools fast with affordable pricing. AI-powered development for startups.",
-  keywords: [
-    "MVP Development",
-    "AI SaaS Development",
-    "Startup Web Development",
-    "Mobile App Development",
-    "Landing Page Design",
-    "Internal Tools",
-    "AI Development",
-    "Rapid Prototyping",
-    "Founder-Friendly Development",
-    "SMB Software Development",
-  ],
+  // keywords: [
+  //   "MVP Development",
+  //   "AI SaaS Development",
+  //   "Startup Web Development",
+  //   "Mobile App Development",
+  //   "Landing Page Design",
+  //   "Internal Tools",
+  //   "AI Development",
+  //   "Rapid Prototyping",
+  //   "Founder-Friendly Development",
+  //   "SMB Software Development",
+  // ],
   authors: [{ name: "Rhinon Labs" }],
   creator: "Rhinon Labs",
   openGraph: {
     type: "website",
-    locale: "en_US",
+    locale: "en_IN",
     url: "https://www.rhinonlabs.com/",
     title: "Rhinon Labs | Ship Your Product 3x Faster",
     description:
@@ -138,6 +139,7 @@ export default function RootLayout({
         className={`${inter.variable} ${instrumentSerif.variable} ${mulish.variable} relative font-sans antialiased text-foreground bg-background`}
       >
         <StructuredData />
+        <GoogleAnalytics />
         <Suspense fallback={null}>
           <PageviewTracker />
         </Suspense>

@@ -31,6 +31,7 @@ export interface Blog {
   tags: string[];
   readTime: string;
   publishedAt: string;
+  updatedAt?: string;
 }
 
 export interface CaseStudyStat {
@@ -58,16 +59,18 @@ export interface CaseStudy {
   images?: string[];
   stats: CaseStudyStat[];
   displayOrder: number;
+  updatedAt?: string;
 }
 
 async function getJSON<T>(path: string): Promise<T | null> {
-  try {
-    const res = await fetch(`${API_BASE}${path}`, { cache: "no-store" });
-    if (!res.ok) return null;
-    return (await res.json()) as T;
-  } catch {
+  const res = await fetch(`${API_BASE}${path}`, { cache: "no-store" });
+  if (res.status === 404) {
     return null;
   }
+  if (!res.ok) {
+    throw new Error(`API request failed with status ${res.status}: ${res.statusText} (${path})`);
+  }
+  return (await res.json()) as T;
 }
 
 export async function getBlogs(): Promise<Blog[]> {
@@ -79,7 +82,8 @@ export async function getBlog(slug: string): Promise<Blog | null> {
 }
 
 export async function getCaseStudies(): Promise<CaseStudy[]> {
-  return (await getJSON<CaseStudy[]>("/public/case-studies")) ?? [];
+  const caseStudies = await getJSON<CaseStudy[]>("/public/case-studies");
+  return caseStudies ?? [];
 }
 
 export async function getCaseStudy(slug: string): Promise<CaseStudy | null> {

@@ -197,7 +197,7 @@ function StatCard({ icon, label, value, sub, tone = "sky" }: { icon: React.React
 function SectionTitle({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
     <div className="flex items-center gap-2 border-b border-border px-5 py-3">
-      <span className="text-muted-foreground">{icon}</span>
+      <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand/10 text-brand">{icon}</span>
       <h2 className="text-sm font-semibold text-foreground">{title}</h2>
     </div>
   );

@@ -12,6 +12,7 @@ import {
   Geist_500Medium,
   Geist_600SemiBold,
   Geist_700Bold,
+  Geist_800ExtraBold,
 } from "@expo-google-fonts/geist";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { useTheme } from "@/lib/theme";
@@ -45,7 +46,7 @@ function RootNavigator() {
 }
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({ Geist_400Regular, Geist_500Medium, Geist_600SemiBold, Geist_700Bold });
+  const [fontsLoaded] = useFonts({ Geist_400Regular, Geist_500Medium, Geist_600SemiBold, Geist_700Bold, Geist_800ExtraBold });
   const schemeReady = usePersistedColorScheme();
 
   if (!fontsLoaded || !schemeReady) return null;

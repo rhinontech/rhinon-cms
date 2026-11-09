@@ -109,7 +109,7 @@ export interface ChatMessage {
   editedAt: string | null;
   deleted: boolean;
   reactions: { emoji: string; userIds: string[] }[];
-  attachments: { name: string; url: string | null }[];
+  attachments: { key?: string; name: string; size?: number; mimeType?: string; url: string | null }[];
   createdAt: string;
 }
 
@@ -139,6 +139,7 @@ export interface Lead {
   email: string;
   phone?: string | null;
   linkedinUrl?: string | null;
+  instagramUrl?: string | null;
   website?: string | null;
   status: LeadStatus;
   source: string;
@@ -154,6 +155,8 @@ export interface Deal {
   value: string | number;
   currency?: string | null;
   status: string;
+  stageId?: string | null;
+  primaryLeadId?: string | null;
   expectedCloseDate?: string | null;
   account?: { id: string; name: string } | null;
 }
@@ -167,4 +170,154 @@ export interface PipelineStage {
   deals: Deal[];
   dealCount: number;
   totalValue: number;
+}
+
+export interface AttendanceDay {
+  id: string | null;
+  date: string;
+  clockIn: string | null;
+  clockOut: string | null;
+  status: "present" | "absent" | "weekend" | "holiday" | "leave";
+  note?: string | null;
+  breaks?: { start: string; end: string | null }[];
+  durationMinutes: number;
+}
+
+export interface TeamToday {
+  date: string;
+  summary: { total: number; present: number; absent: number; active: number; onBreak: number };
+  employees: {
+    userId: string;
+    fullName: string;
+    department: string | null;
+    attendance: { status: string; clockIn: string | null; clockOut: string | null; durationMinutes: number; onBreak: boolean };
+  }[];
+}
+
+export type RequestStatus = "Pending" | "Approved" | "Rejected";
+
+export interface AttendanceRequest {
+  id: string;
+  type: string;
+  date: string;
+  reason: string;
+  requestedTime: string | null;
+  status: RequestStatus;
+  userName?: string;
+}
+
+export interface LeaveBalance {
+  leaveTypeId: string;
+  name: string;
+  color: string | null;
+  allocated: number;
+  used: number;
+  remaining: number;
+}
+
+export interface LeaveRequest {
+  id: string;
+  userId: string;
+  startDate: string;
+  endDate: string;
+  days: number;
+  reason: string | null;
+  status: RequestStatus;
+  managerNote?: string | null;
+  userName?: string;
+  department?: string | null;
+  leaveTypeName?: string;
+  leaveTypeColor?: string | null;
+}
+
+export interface ReimbursementClaim {
+  id: string;
+  category: string;
+  description: string;
+  amount: string | number;
+  status: string;
+  employee?: { id: string; fullName: string; department: string | null } | null;
+}
+
+export interface WorkflowStatus {
+  id: string;
+  name: string;
+  color: string | null;
+  group: string;
+  order: number;
+}
+
+export interface Task {
+  id: string;
+  title: string;
+  description?: string | null;
+  descriptionHtml?: string | null;
+  status: string;
+  statusId?: string | null;
+  priority?: string | null;
+  dueDate?: string | null;
+  projectId?: string | null;
+  assignee?: { id: string; fullName: string } | null;
+  project?: { id: string; name: string } | null;
+  workflowStatus?: WorkflowStatus | null;
+  subtasks?: { id: string; title: string; done: boolean }[];
+}
+
+export interface TaskComment {
+  id: string;
+  body: string;
+  createdAt: string;
+  author?: { id: string; fullName: string } | null;
+}
+
+export interface Project {
+  id: string;
+  name: string;
+  description?: string | null;
+  status?: string | null;
+  notes?: string | null;
+  visibility?: "workspace" | "team" | "private";
+  teamId?: string | null;
+  taskCount: number;
+}
+
+export interface TeamMember {
+  id: string;
+  userId: string;
+  role: "owner" | "member";
+  user?: { id: string; fullName: string; companyEmail: string; department: string | null } | null;
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  description?: string | null;
+  members?: TeamMember[];
+  projectCount?: number;
+}
+
+export interface Permission {
+  id: string;
+  name: string;
+  resource: string;
+  action: string;
+}
+
+export interface Role {
+  id: string;
+  name: string;
+  slug: string;
+  usersCount?: number;
+  Permissions?: Permission[];
+}
+
+export interface AppNotification {
+  id: string;
+  type: string;
+  title: string;
+  body: string | null;
+  link: string | null;
+  count: number;
+  readAt: string | null;
+  updatedAt: string;
 }

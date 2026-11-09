@@ -3,14 +3,7 @@ import { initials } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import { Text } from "./Text";
 
-// Stable per-name tint so the same person always gets the same colour.
-const TINTS = ["#6366F1", "#0EA5E9", "#10B981", "#F59E0B", "#EC4899", "#8B5CF6", "#14B8A6", "#F97316"];
-function tintFor(seed: string) {
-  let h = 0;
-  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) | 0;
-  return TINTS[Math.abs(h) % TINTS.length];
-}
-
+/** Initials on the panel's quiet brand tint, or the person's photo. */
 export function Avatar({
   name,
   uri,
@@ -24,25 +17,21 @@ export function Avatar({
   online?: boolean;
   className?: string;
 }) {
-  const tint = tintFor(name || "?");
   return (
     <View className={cn("relative", className)} style={{ width: size, height: size }}>
       {uri ? (
         <Image source={{ uri }} style={{ width: size, height: size, borderRadius: size / 2 }} />
       ) : (
-        <View
-          className="items-center justify-center"
-          style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: `${tint}22` }}
-        >
-          <Text className="font-semibold" style={{ color: tint, fontSize: size * 0.36 }}>
+        <View className="items-center justify-center bg-brand/10" style={{ width: size, height: size, borderRadius: size / 2 }}>
+          <Text className="font-semibold text-brand" style={{ fontSize: size * 0.36, lineHeight: size * 0.46 }}>
             {initials(name)}
           </Text>
         </View>
       )}
       {online !== undefined && (
         <View
-          className={cn("absolute bottom-0 right-0 rounded-full border-2 border-background", online ? "bg-success" : "bg-muted-foreground/40")}
-          style={{ width: size * 0.3, height: size * 0.3 }}
+          className={cn("absolute bottom-0 right-0 rounded-full border-2 border-card", online ? "bg-success" : "bg-muted-foreground/40")}
+          style={{ width: Math.max(11, size * 0.28), height: Math.max(11, size * 0.28) }}
         />
       )}
     </View>

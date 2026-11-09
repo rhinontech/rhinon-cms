@@ -7,7 +7,7 @@ export function CourseFaq({ course }: { course: Course }) {
     <section className="bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20 sm:py-28 grid lg:grid-cols-12 gap-12">
         <div className="lg:col-span-5">
-          <CourseHeading eyebrow="Asked before enrolling" title="The questions everyone actually asks." />
+          <CourseHeading eyebrow="FREQUENTLY ASKED QUESTIONS" title="Everything You Need to Know" />
         </div>
         <div className="lg:col-span-7 space-y-3">
           {course.faqs.map((faq) => (
@@ -42,17 +42,17 @@ export function CourseCta({ course }: { course: Course }) {
               <span className="w-1.5 h-1.5 rounded-full bg-[#00C2FF] animate-pulse" aria-hidden />
               {course.cohortLabel} · Seats limited
             </p>
-            <h2 className="mt-8 text-[44px] sm:text-7xl lg:text-[96px] font-extrabold tracking-[-0.045em] leading-[0.92] uppercase">
-              <span className="block text-white/30">Stop prompting.</span>
+            <h2 className="mt-8 text-[44px] sm:text-7xl lg:text-[96px] font-extrabold tracking-[-0.045em] leading-[0.92] ">
+              <span className="block text-white/30">Stop Prompting-</span>
               <span className="block">
-                Start <GradientText>shipping.</GradientText>
+                Start <GradientText>Shipping.</GradientText>
               </span>
             </h2>
             <p className="mt-8 text-[16px] sm:text-lg text-white/65 max-w-md mx-auto leading-relaxed">
-              The next cohort starts soon. Seats are capped so every capstone gets a real 1:1 review.
+              Learn to design, build and deploy AI agents in a small, mentor-led cohort built for hands-on learning, Not Theory. 
             </p>
             <PrimaryCta href="#pricing" className="mt-10">
-              Join the next cohort
+              Apply Now
             </PrimaryCta>
           </div>
         </div>
