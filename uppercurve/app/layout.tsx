@@ -34,9 +34,13 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.uppercurve.in"),
   title: "UpperCurve — Move Beyond Your Learning Curve",
   description:
     "UpperCurve is a career growth platform where ambitious people learn practical skills, build real experience, connect with the right people, and move their careers forward.",
+  alternates: {
+    canonical: "/",
+  },
 };
 
 export default function RootLayout({

@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   title: "AI Events, Workshops & Certificates | UpperCurve",
   description:
     "Discover upcoming UpperCurve Events: Free AI Certificate Workshops that help you learn and grow.",
+  alternates: {
+    canonical: "/events",
+  },
 };
 
 const byStart = (a: { startsAt: string | null }, b: { startsAt: string | null }) =>

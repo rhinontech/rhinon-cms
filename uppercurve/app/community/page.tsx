@@ -5,6 +5,9 @@ export const metadata: Metadata = {
   title: "Free AI Community on WhatsApp | UpperCurve Community",
   description:
     "Join UpperCurve’s Free AI Community on WhatsApp. Get curated AI Updates, Tools and Templates, and early invites to live workshops and masterclasses.",
+  alternates: {
+    canonical: "/community",
+  },
   openGraph: {
     title: "UpperCurve Community — Free Tech & AI Community on WhatsApp & Discord",
     description:

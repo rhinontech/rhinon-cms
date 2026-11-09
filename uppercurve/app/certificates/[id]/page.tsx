@@ -10,7 +10,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   const cert = await verifyCertificate(id);
   return cert.valid
-    ? { title: `${cert.name} — ${cert.certificateName} · UpperCurve`, description: `Verified UpperCurve certificate for ${cert.event?.title}.` }
+    ? {
+        title: `${cert.name} — ${cert.certificateName} · UpperCurve`,
+        description: `Verified UpperCurve certificate for ${cert.event?.title}.`,
+        alternates: {
+          canonical: `/certificates/${id}`,
+        },
+      }
     : { title: "Certificate not found — UpperCurve", robots: { index: false } };
 }
 

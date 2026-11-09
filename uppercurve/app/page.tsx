@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   title: "UpperCurve | Learn AI by Building It",
   description:
     "Join the 6-Weeks live Agentic AI Launchpad. Build & Ship 10+ AI Agents with Expert Mentors.",
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "UpperCurve | Learn AI by Building It",
     description:

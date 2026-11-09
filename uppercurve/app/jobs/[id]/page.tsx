@@ -22,6 +22,9 @@ export async function generateMetadata({
   return {
     title: `${job.title} at ${job.company} — UpperCurve Careers`,
     description: `Apply for ${job.title} role at ${job.company} in ${job.location}. ${job.description.slice(0, 150)}...`,
+    alternates: {
+      canonical: `/jobs/${id}`,
+    },
     openGraph: {
       title: `${job.title} at ${job.company} — UpperCurve Careers`,
       description: `Apply for ${job.title} role at ${job.company} in ${job.location}.`,
