@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/jobs",
   },
+  robots: {
+    index: false,
+    follow: true,
+  },
   openGraph: {
     title: "Jobs & Careers — UpperCurve",
     description:
