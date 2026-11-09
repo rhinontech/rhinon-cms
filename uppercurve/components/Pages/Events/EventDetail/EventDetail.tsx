@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import type { EventCategory, EventDetailModel } from "../shared/model";
+import type { BlogPost } from "@/components/Pages/Blog/blogData";
+import type { Course } from "@/components/Pages/Courses/courseData";
 import { CATEGORY_CONFIG, type CategoryConfig } from "../shared/categoryConfig";
 import { RegistrationProvider } from "./registration";
 import Hero from "./sections/Hero";
@@ -14,6 +16,7 @@ import {
   SpeakersSection,
 } from "./sections/ContentSections";
 import { FaqSection, FinalCta, MobileRegisterBar, MoreEvents } from "./sections/Closing";
+import RelatedArticles from "./sections/RelatedArticles";
 
 type SectionKey = "about" | "highlight" | "outcomes" | "schedule" | "speakers" | "certificate" | "audience" | "faq";
 
@@ -61,9 +64,13 @@ function renderSection(key: SectionKey, event: EventDetailModel, config: Categor
 export default function EventDetail({
   event,
   moreEvents,
+  relatedBlogs,
+  relatedCourse,
 }: {
   event: EventDetailModel;
   moreEvents: EventDetailModel[];
+  relatedBlogs?: BlogPost[];
+  relatedCourse?: Course;
 }) {
   const config = CATEGORY_CONFIG[event.category];
 
@@ -95,6 +102,7 @@ export default function EventDetail({
 
         <FinalCta event={event} config={config} />
         <MoreEvents events={moreEvents} />
+        <RelatedArticles blogs={relatedBlogs} course={relatedCourse} />
         <MobileRegisterBar event={event} />
       </main>
     </RegistrationProvider>

@@ -4,6 +4,9 @@ import EventDetail from "@/components/Pages/Events/EventDetail/EventDetail";
 import { buildEventDetail } from "@/components/Pages/Events/shared/model";
 import { CATEGORY_CONFIG } from "@/components/Pages/Events/shared/categoryConfig";
 import { getEventDetailBySlug, getPublishedEvents } from "@/services/eventService";
+import { getBlogs } from "@/services/blogService";
+import { getRelatedBlogsForEvent } from "@/services/recommendations";
+import { COURSES } from "@/components/Pages/Courses/courseData";
 import JsonLd from "@/components/SEO/JsonLd";
 import { buildEventSchema } from "@/components/SEO/schema";
 
@@ -38,7 +41,11 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   const { slug } = await params;
   // Rendered on the server so the page arrives complete — no loader, and the
   // content is there for search engines and link previews.
-  const [api, all] = await Promise.all([getEventDetailBySlug(slug), getPublishedEvents()]);
+  const [api, all, allBlogs] = await Promise.all([
+    getEventDetailBySlug(slug),
+    getPublishedEvents(),
+    getBlogs(),
+  ]);
   if (!api) notFound();
 
   const event = buildEventDetail(api);
@@ -48,10 +55,17 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
     .sort((a, b) => (a.startsAt ?? "9999").localeCompare(b.startsAt ?? "9999"))
     .slice(0, 3);
 
+  const relatedBlogs = getRelatedBlogsForEvent(allBlogs, event, 2);
+
   return (
     <>
       <JsonLd schema={buildEventSchema(event, api)} />
-      <EventDetail event={event} moreEvents={moreEvents} />
+      <EventDetail
+        event={event}
+        moreEvents={moreEvents}
+        relatedBlogs={relatedBlogs}
+        relatedCourse={COURSES[0]}
+      />
     </>
   );
 }

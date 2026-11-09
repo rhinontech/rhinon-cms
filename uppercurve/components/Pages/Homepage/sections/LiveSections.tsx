@@ -139,8 +139,8 @@ export function LatestPosts({ posts }: { posts: BlogPost[] }) {
           <CourseHeading eyebrow="From the blog" title="Notes from the curve." />
           <SeeAll href="/blog">Read the blog</SeeAll>
         </div>
-        <div className="mt-12 grid md:grid-cols-3 gap-5">
-          {posts.slice(0, 3).map((post) => (
+        <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {posts.slice(0, 4).map((post) => (
             <Link
               key={post.slug}
               href={`/blog/${post.slug}`}

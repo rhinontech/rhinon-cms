@@ -2,10 +2,13 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import CourseLanding from "@/components/Pages/Courses/CourseLanding/CourseLanding";
 import { COURSES, getCourse } from "@/components/Pages/Courses/courseData";
+import { getBlogs } from "@/services/blogService";
+import { getRelatedBlogsForCourse } from "@/services/recommendations";
 import JsonLd from "@/components/SEO/JsonLd";
 import { buildCourseSchema } from "@/components/SEO/schema";
 
 export const dynamicParams = false;
+export const revalidate = 300;
 
 export function generateStaticParams() {
   return COURSES.map((course) => ({ slug: course.slug }));
@@ -27,10 +30,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const course = getCourse((await params).slug);
   if (!course) notFound();
+
+  const allBlogs = await getBlogs();
+  const relatedBlogs = getRelatedBlogsForCourse(allBlogs, course, 3);
+
   return (
     <>
       <JsonLd schema={buildCourseSchema(course)} />
-      <CourseLanding course={course} />
+      <CourseLanding course={course} relatedBlogs={relatedBlogs} />
     </>
   );
 }
