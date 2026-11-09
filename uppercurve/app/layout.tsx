@@ -43,6 +43,21 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
+  openGraph: {
+    title: "UpperCurve — Move Beyond Your Learning Curve",
+    description:
+      "UpperCurve is a career growth platform where ambitious people learn practical skills, build real experience, connect with the right people, and move their careers forward.",
+    url: "https://www.uppercurve.in",
+    siteName: "UpperCurve",
+    locale: "en_IN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "UpperCurve — Move Beyond Your Learning Curve",
+    description:
+      "UpperCurve is a career growth platform where ambitious people learn practical skills, build real experience, connect with the right people, and move their careers forward.",
+  },
 };
 
 export default function RootLayout({
