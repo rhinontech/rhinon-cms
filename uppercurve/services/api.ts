@@ -18,6 +18,7 @@ export interface ApiBlog {
   category?: string | null;
   readTime: string;
   publishedAt: string;
+  updatedAt?: string;
   content?: string;
   contentBlocks?: BlogApiBlock[];
   faqs?: BlogFaq[];
