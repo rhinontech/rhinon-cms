@@ -42,19 +42,16 @@ export interface ApiEvent {
  * visitor could click straight from the listing into a dead page.
  */
 export async function getPublishedEvents(): Promise<ApiEvent[]> {
-  try {
-    const res = await fetch(`${API_BASE}/public/events`, {
-      cache: "no-store",
-      headers: { Accept: "application/json" },
-    });
-    if (!res.ok) return [];
-    const data = await res.json();
-    const list = Array.isArray(data) ? data : data?.events;
-    return Array.isArray(list) ? (list as ApiEvent[]) : [];
-  } catch (err) {
-    console.warn("[getPublishedEvents] Could not fetch events:", err);
-    return [];
+  const res = await fetch(`${API_BASE}/public/events`, {
+    cache: "no-store",
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) {
+    throw new Error(`[getPublishedEvents] Failed to fetch events: ${res.status} ${res.statusText}`);
   }
+  const data = await res.json();
+  const list = Array.isArray(data) ? data : data?.events;
+  return Array.isArray(list) ? (list as ApiEvent[]) : [];
 }
 
 /**
@@ -64,19 +61,17 @@ export async function getPublishedEvents(): Promise<ApiEvent[]> {
  * does not fall back to static mock data, so a bad slug is a real 404.
  */
 export async function getEventDetailBySlug(slug: string): Promise<ApiEvent | null> {
-  try {
-    const res = await fetch(`${API_BASE}/public/events/${encodeURIComponent(slug)}`, {
-      cache: "no-store",
-      headers: { Accept: "application/json" },
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    const event = data?.event || data;
-    return event && (event.eventSlug || event.slug) ? (event as ApiEvent) : null;
-  } catch (err) {
-    console.warn(`[getEventDetailBySlug] Could not fetch event ${slug}:`, err);
-    return null;
+  const res = await fetch(`${API_BASE}/public/events/${encodeURIComponent(slug)}`, {
+    cache: "no-store",
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) {
+    if (res.status === 404) return null;
+    throw new Error(`[getEventDetailBySlug] Failed to fetch event "${slug}": ${res.status} ${res.statusText}`);
   }
+  const data = await res.json();
+  const event = data?.event || data;
+  return event && (event.eventSlug || event.slug) ? (event as ApiEvent) : null;
 }
 
 export interface RegisterGuestPayload {
