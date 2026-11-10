@@ -127,7 +127,7 @@ export default function Hero({ event, config }: { event: EventDetailModel; confi
                       className="relative w-9 h-9 rounded-full ring-2 ring-white overflow-hidden bg-[#E2E8F0]"
                     >
                       {host.photoUrl ? (
-                        <Image src={host.photoUrl} alt="" fill sizes="36px" className="object-cover" />
+                        <Image src={host.photoUrl} alt={host.name} fill sizes="36px" className="object-cover" />
                       ) : (
                         <span className="grid place-items-center w-full h-full text-xs font-bold text-[#475569]">
                           {host.name.charAt(0)}

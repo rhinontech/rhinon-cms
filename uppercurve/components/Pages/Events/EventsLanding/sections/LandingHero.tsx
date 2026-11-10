@@ -25,7 +25,7 @@ function Spotlight({ next, after }: { next: EventDetailModel; after?: EventDetai
           aria-hidden
           className="hidden sm:block absolute top-8 bottom-24 left-16 -right-5 rotate-[6deg] rounded-[26px] overflow-hidden shadow-[0_30px_60px_-30px_rgba(11,27,61,0.45)]"
         >
-          <Image src={after.bannerUrl} alt="" fill sizes="440px" className="object-cover" />
+          <Image src={after.bannerUrl} alt={after.title} fill sizes="440px" className="object-cover" />
           <div className="absolute inset-0 bg-[#0B1B3D]/25" />
         </div>
       ) : null}
@@ -85,7 +85,7 @@ function Spotlight({ next, after }: { next: EventDetailModel; after?: EventDetai
             {host ? (
               <div className="flex items-center gap-2.5 min-w-0">
                 <span className="relative w-8 h-8 rounded-full overflow-hidden bg-[#E2E8F0] shrink-0">
-                  {host.photoUrl ? <Image src={host.photoUrl} alt="" fill sizes="32px" className="object-cover" /> : null}
+                  {host.photoUrl ? <Image src={host.photoUrl} alt={host.name} fill sizes="32px" className="object-cover" /> : null}
                 </span>
                 <span className="min-w-0 text-[12.5px] leading-tight">
                   <span className="block font-bold text-[#0B1B3D] truncate">{host.name}</span>

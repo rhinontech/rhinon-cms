@@ -98,7 +98,7 @@ export function Navbar() {
           <Link href="/" className="flex items-center gap-2.5 cursor-pointer group">
             <img
               src="/uppercurve_logo_nav.png"
-              alt="UpperCurve logo"
+              alt="UpperCurve"
               className="h-8 w-auto group-hover:scale-105 transition-transform"
             />
             <span className="text-xl tracking-tight font-extrabold [font-family:var(--font-montserrat)]">
@@ -201,7 +201,7 @@ export function Navbar() {
             <Link href="/" className="flex items-center gap-2.5">
               <img
                 src="/uppercurve_logo_nav.png"
-                alt="UpperCurve logo"
+                alt="UpperCurve"
                 className="h-7 w-auto"
               />
               <span className="text-lg tracking-tight font-extrabold [font-family:var(--font-montserrat)]">

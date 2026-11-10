@@ -21,7 +21,7 @@ export default function Testimonials({ course }: { course: Course }) {
               <blockquote className="text-[15.5px] text-[#334155] leading-relaxed">“{item.quote}”</blockquote>
               <figcaption className="mt-auto pt-7 flex items-center gap-3">
                 <span className="relative w-11 h-11 rounded-full overflow-hidden bg-[#E2E8F0] shrink-0">
-                  {item.photoUrl ? <Image src={item.photoUrl} alt="" fill sizes="44px" className="object-cover" /> : null}
+                  {item.photoUrl ? <Image src={item.photoUrl} alt={item.name} fill sizes="44px" className="object-cover" /> : null}
                 </span>
                 <span className="text-[13px] leading-tight">
                   <span className="block font-bold text-[#0B1B3D] text-[14.5px]">{item.name}</span>

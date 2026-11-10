@@ -150,7 +150,7 @@ export function LatestPosts({ posts }: { posts: BlogPost[] }) {
                 {post.coverImage ? (
                   // Blog covers can live on any host an editor pastes, so no next/image here.
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={post.coverImage} alt="" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.05]" />
+                  <img src={post.coverImage} alt={post.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.05]" />
                 ) : null}
               </div>
               <div className="p-6 flex flex-col flex-1">
