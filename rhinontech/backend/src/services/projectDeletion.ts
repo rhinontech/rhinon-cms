@@ -1,7 +1,7 @@
 import { Op } from "sequelize";
 import { sequelize } from "../config/database";
 import {
-  ClientRequest, FieldDefinition, Project, ProjectMember, ProjectRepo, ProjectSecret, RepoCommit,
+  ClientRequest, FieldDefinition, Project, ProjectDaySummary, ProjectMember, ProjectRepo, ProjectSecret, RepoCommit,
   Subtask, Task, TaskActivity, TaskAttachment, TaskComment, TaskDependency, TaskTag,
   TeamChatConversation, TimeEntry, WorkflowStatus,
 } from "../models";
@@ -63,6 +63,7 @@ export async function deleteProject(projectId: string): Promise<ProjectDeletionS
     await RepoCommit.destroy({ where: { projectId }, ...t });
     await ProjectRepo.destroy({ where: { projectId }, ...t });
     await ProjectSecret.destroy({ where: { projectId }, ...t });
+    await ProjectDaySummary.destroy({ where: { projectId }, ...t });
     await TeamChatConversation.update({ projectId: null }, { where: { projectId }, ...t });
     await Project.destroy({ where: { id: projectId }, ...t });
   });

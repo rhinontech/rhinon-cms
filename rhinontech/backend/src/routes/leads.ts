@@ -30,6 +30,15 @@ const LIST_INCLUDES = [
   { model: Account, as: "account", attributes: ["id", "name", "domain"] },
 ];
 
+/** "@name", "name" or a profile URL all become the profile URL; blank clears it. */
+function normalizeInstagram(input: unknown): string | null {
+  const raw = typeof input === "string" ? input.trim() : "";
+  if (!raw) return null;
+  if (/^https?:\/\//i.test(raw)) return raw;
+  if (/^(www\.)?instagram\.com\//i.test(raw)) return `https://${raw}`;
+  return `https://instagram.com/${raw.replace(/^@/, "")}`;
+}
+
 const readAccess = authorizeAny("crm:read", "outreach:read");
 const writeAccess = authorizeAny("crm:write", "outreach:write");
 
@@ -158,6 +167,7 @@ router.post("/", writeAccess, async (req: AuthRequest, res: Response) => {
 
     const lead = await Lead.create({
       ...req.body,
+      instagramUrl: normalizeInstagram(req.body?.instagramUrl),
       email,
       ownerId: req.body?.ownerId ?? req.user!.userId,
     });
@@ -353,6 +363,7 @@ router.post("/import", writeAccess, async (req: AuthRequest, res: Response) => {
         company: str(raw.company) ?? "—",
         title: str(raw.title),
         linkedinUrl: str(raw.linkedinUrl),
+        instagramUrl: normalizeInstagram(raw.instagramUrl),
         phone: str(raw.phone),
         seniority: str(raw.seniority),
         department: str(raw.department),
@@ -514,7 +525,7 @@ router.post("/merge", writeAccess, async (req: AuthRequest, res: Response) => {
 
     // Fill only the gaps on the survivor.
     const fillable = [
-      "title", "phone", "linkedinUrl", "seniority", "department", "industry",
+      "title", "phone", "linkedinUrl", "instagramUrl", "seniority", "department", "industry",
       "location", "website", "companyLinkedinUrl", "annualRevenue", "technologies",
       "keywords", "accountId", "ownerId",
     ] as const;
@@ -639,6 +650,7 @@ router.get("/export.csv", readAccess, async (req: AuthRequest, res: Response) =>
       { key: "location", label: "Location" },
       { key: "website", label: "Website" },
       { key: "linkedinUrl", label: "LinkedIn" },
+      { key: "instagramUrl", label: "Instagram" },
       { key: "lastActivityAt", label: "Last activity" },
       { key: "addedAt", label: "Added" },
     ],
@@ -790,6 +802,7 @@ router.put("/:id", writeAccess, async (req: AuthRequest, res: Response) => {
   // Only re-validate when the caller actually sends an email; partial updates
   // (status, notes, …) must not trip over an address they never touched.
   const patch = { ...req.body };
+  if (patch.instagramUrl !== undefined) patch.instagramUrl = normalizeInstagram(patch.instagramUrl);
   if (patch.email !== undefined) {
     const email = normalizeEmail(patch.email);
     if (!isValidEmail(email)) {

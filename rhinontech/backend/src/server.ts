@@ -19,6 +19,8 @@ import { runTenancyMigration, auditOrphanRows } from "./services/tenancyMigratio
 import { provisionAllOrganizations } from "./services/orgProvisioning";
 import { runAsSystem } from "./services/tenantContext";
 import { startGroupingJob } from "./services/github/grouping";
+import { runNotificationSweep } from "./services/notifications";
+import { registerNotificationEvents } from "./services/notificationEvents";
 import { githubConfigured } from "./services/github/app";
 import { refreshSendingDomains } from "./services/siteSender";
 import { dispatchDueEventEmails } from "./services/eventReminderJob";
@@ -256,6 +258,13 @@ function listen() {
         }
       }, { timezone: "Asia/Kolkata" });
     }
+
+    registerNotificationEvents();
+
+    // Task due/overdue reminders and notification retention, 9 AM IST.
+    cron.schedule("0 9 * * *", () => {
+      runNotificationSweep().catch((err) => console.error("[Notify] Sweep failed:", err.message));
+    }, { timezone: "Asia/Kolkata" });
 
     // Salary revisions / promotions whose effective date has arrived
     cron.schedule("10 0 * * *", async () => {

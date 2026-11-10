@@ -7,6 +7,10 @@ import {
   type DragEndEvent, type DragStartEvent,
 } from "@dnd-kit/core";
 import { cn } from "@/lib/utils";
+import { confirmDialog, promptDialog } from "@/components/ui/dialogs";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   TbCalendar, TbDots, TbPaperclip, TbPlus, TbSubtask, TbX,
 } from "react-icons/tb";
@@ -112,9 +116,18 @@ function DraggableCard(props: { task: ProjectTask; childCount: number; onOpen: (
   );
 }
 
+const COLUMN_COLORS = ["blue", "indigo", "cyan", "amber", "green", "stone", "red", "purple"];
+
+export interface ColumnActions {
+  add: (name: string) => void;
+  update: (id: string, patch: { name?: string; color?: string }) => void;
+  remove: (id: string) => void;
+}
+
 function Column({
-  status, tasks, childCountOf, onOpen, onCreate, readOnly,
+  status, tasks, childCountOf, onOpen, onCreate, readOnly, columns,
 }: {
+  columns?: ColumnActions;
   readOnly: boolean;
   status: WorkflowStatus;
   tasks: ProjectTask[];
@@ -141,9 +154,47 @@ function Column({
             >
               <TbPlus size={14} />
             </button>
-            <button className="rounded p-0.5 opacity-40" title="Column options (coming soon)" disabled>
-              <TbDots size={14} />
-            </button>
+            {columns ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="rounded p-0.5 opacity-70 hover:bg-foreground/10 hover:opacity-100" title="Column options">
+                    <TbDots size={14} />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onSelect={async () => {
+                      const name = await promptDialog({ title: "Rename column", confirmText: "Rename" }, status.name);
+                      if (name?.trim() && name.trim() !== status.name) columns.update(status.id, { name: name.trim() });
+                    }}
+                  >
+                    Rename
+                  </DropdownMenuItem>
+                  <div className="flex gap-1.5 px-2 py-1.5">
+                    {COLUMN_COLORS.map((c) => (
+                      <button
+                        key={c}
+                        title={c}
+                        onClick={() => c !== status.color && columns.update(status.id, { color: c })}
+                        className={cn("h-4 w-4 rounded-full", STATUS_DOT[c], status.color === c && "ring-2 ring-foreground/60 ring-offset-1 ring-offset-popover")}
+                      />
+                    ))}
+                  </div>
+                  <DropdownMenuItem
+                    className="text-red-600 dark:text-red-300"
+                    onSelect={async () => {
+                      if (await confirmDialog(`Delete the "${status.name}" column?`)) columns.remove(status.id);
+                    }}
+                  >
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <button className="rounded p-0.5 opacity-40" title="Column options aren't available here" disabled>
+                <TbDots size={14} />
+              </button>
+            )}
           </>
         )}
       </div>
@@ -195,8 +246,10 @@ function Column({
 }
 
 export function BoardView({
-  rows, statuses, people, onPatch, onCreateInStatus, onOpenTask, readOnly = false,
+  rows, statuses, people, onPatch, onCreateInStatus, onOpenTask, readOnly = false, columns,
 }: {
+  /** Column editing. Omitted where it isn't allowed (portal, collaborators). */
+  columns?: ColumnActions;
   /** The public portal: no drag, no create. */
   readOnly?: boolean;
   rows: TaskRow[];
@@ -276,8 +329,20 @@ export function BoardView({
               onOpen={onOpenTask}
               onCreate={onCreateInStatus}
               readOnly={readOnly}
+              columns={columns}
             />
           ))}
+          {columns && (
+            <button
+              onClick={async () => {
+                const name = await promptDialog({ title: "New column", confirmText: "Add column", placeholder: "Column name" });
+                if (name?.trim()) columns.add(name.trim());
+              }}
+              className="flex h-10 w-[160px] shrink-0 items-center justify-center gap-1 rounded-xl border border-dashed border-border text-xs text-muted-foreground hover:text-foreground"
+            >
+              <TbPlus size={13} /> Add column
+            </button>
+          )}
         </div>
       </div>
       <DragOverlay dropAnimation={null}>

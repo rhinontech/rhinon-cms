@@ -10,6 +10,8 @@ import { collaboratorInviteEmail } from "../services/emailTemplates";
 import { ensureCollaboratorRole } from "../services/collaboratorRole";
 import { env } from "../config/env";
 import { deleteProject } from "../services/projectDeletion";
+import { notifyRequestCreated, notifyRequestStatus } from "../services/workNotifications";
+import { projectDaySummary } from "../services/daySummary";
 import { auditRequest } from "../services/audit";
 import { transactionalBrand } from "../services/companyProfile";
 import {
@@ -228,6 +230,26 @@ router.delete("/projects/:id", requireInternal, authorizeAny("work:write"), asyn
   }
 });
 
+/** GET /work/projects/:id/day-summary?date=YYYY-MM-DD — that IST day's work, with AI pointers. */
+router.get("/projects/:id/day-summary", requireInternal, async (req: AuthRequest, res: Response) => {
+  try {
+    const date = String(req.query.date ?? "");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || isNaN(+new Date(date))) {
+      res.status(400).json({ message: "A valid date is required." });
+      return;
+    }
+    const project = await Project.findByPk(req.params.id);
+    if (!project || !(await canAccessProject(project.id, req))) {
+      res.status(404).json({ message: "Project not found" });
+      return;
+    }
+    res.json(await projectDaySummary(project, date));
+  } catch (err: any) {
+    console.error("[Work] Day summary failed:", err.message);
+    res.status(500).json({ message: "Failed to load this day" });
+  }
+});
+
 router.get("/requests", async (req: AuthRequest, res: Response) => {
   try {
     const where: Record<string, unknown> = {};
@@ -273,6 +295,7 @@ router.post("/requests", async (req: AuthRequest, res: Response) => {
       createdById: req.user!.userId,
     });
 
+    notifyRequestCreated(request, req.user!);
     const full = await ClientRequest.findByPk(request.id, { include: requestIncludes });
     res.status(201).json(full);
   } catch (err) {
@@ -296,6 +319,7 @@ router.put("/requests/:id", async (req: AuthRequest, res: Response) => {
       return;
     }
 
+    const previousStatus = request.status;
     await request.update({
       ...(title !== undefined && { title: String(title).trim() }),
       ...(description !== undefined && { description: String(description).trim() }),
@@ -306,6 +330,7 @@ router.put("/requests/:id", async (req: AuthRequest, res: Response) => {
       ...(reportedBy !== undefined && { reportedBy }),
     });
 
+    notifyRequestStatus(request, previousStatus, req.user!);
     const full = await ClientRequest.findByPk(request.id, { include: requestIncludes });
     res.json(full);
   } catch (err) {

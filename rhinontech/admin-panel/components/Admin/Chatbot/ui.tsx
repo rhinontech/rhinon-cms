@@ -88,7 +88,7 @@ export function Panel({
       )}
     >
       {(title || actions) && (
-        <div className={cn("flex items-start gap-3", padded ? "px-6 pt-5" : "border-b border-border/70 px-5 py-4")}>
+        <div className={cn("flex items-start gap-3", padded ? "px-6 pt-5" : "border-b border-border/70 px-5 py-4", padded && children === undefined && "pb-5")}>
           {icon && <IconChip>{icon}</IconChip>}
           <div className="min-w-0 flex-1">
             {title && <h2 className={cn("text-sm font-semibold text-foreground", tone === "danger" && "text-red-600 dark:text-red-400")}>{title}</h2>}

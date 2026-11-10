@@ -82,7 +82,7 @@ export function LeadsPage() {
   const [exporting, setExporting] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const [form, setForm] = useState({ name: "", company: "", email: "", title: "", linkedinUrl: "", notes: "" });
+  const [form, setForm] = useState({ name: "", company: "", email: "", title: "", phone: "", linkedinUrl: "", instagramUrl: "", notes: "" });
 
   // A view is just the filter values the list endpoint already accepts, so
   // applying one is a straight assignment rather than a separate query path.
@@ -293,7 +293,7 @@ export function LeadsPage() {
   };
 
   const startCreate = () => {
-    setForm({ name: "", company: "", email: "", title: "", linkedinUrl: "", notes: "" });
+    setForm({ name: "", company: "", email: "", title: "", phone: "", linkedinUrl: "", instagramUrl: "", notes: "" });
     setPanelMode("create");
     setPanelOpen(true);
   };
@@ -302,7 +302,7 @@ export function LeadsPage() {
     if (!selected) return;
     setForm({
       name: selected.name, company: selected.company, email: selected.email,
-      title: selected.title || "", linkedinUrl: selected.linkedinUrl || "", notes: selected.notes || "",
+      title: selected.title || "", phone: selected.phone || "", linkedinUrl: selected.linkedinUrl || "", instagramUrl: selected.instagramUrl || "", notes: selected.notes || "",
     });
     setPanelMode("edit");
   };
@@ -735,7 +735,9 @@ export function LeadsPage() {
                     <FormField label="Job title" value={form.title} onChange={(v) => setForm({ ...form, title: v })} />
                   </div>
                   <FormField label="Email" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} required />
+                  <FormField label="Phone" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />
                   <FormField label="LinkedIn URL" value={form.linkedinUrl} onChange={(v) => setForm({ ...form, linkedinUrl: v })} />
+                  <FormField label="Instagram (@name or URL)" value={form.instagramUrl} onChange={(v) => setForm({ ...form, instagramUrl: v })} />
                   <label className="block">
                     <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Notes</span>
                     <textarea
@@ -802,6 +804,7 @@ function DetailFields({ lead }: { lead: Lead }) {
     { label: "Email", value: lead.email },
     { label: "Phone", value: lead.phone },
     { label: "LinkedIn", value: lead.linkedinUrl, link: true },
+    { label: "Instagram", value: lead.instagramUrl, link: true },
     { label: "Website", value: lead.website, link: true },
     { label: "Seniority", value: lead.seniority },
     { label: "Department", value: lead.department },

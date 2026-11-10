@@ -18,6 +18,7 @@ import { CampaignTemplate } from "./CampaignTemplate";
 import { Campaign } from "./Campaign";
 import { CampaignActivity } from "./CampaignActivity";
 import { ContactGroup } from "./ContactGroup";
+import { Meeting } from "./Meeting";
 import { ContactGroupMember } from "./ContactGroupMember";
 import { AttendanceRequest } from "./AttendanceRequest";
 import { AttendancePolicy } from "./AttendancePolicy";
@@ -33,7 +34,8 @@ import { LinkedInToken } from "./LinkedInToken";
 import { Subtask } from "./Subtask";
 import { TaskComment } from "./TaskComment";
 import { TeamChatConversation, TeamChatMember, TeamChatMessage, TeamChatReaction, TeamCallLink } from "./TeamChat";
-import { ProjectRepo, RepoCommit, ProjectSecret, RepoAccess } from "./GitHub";
+import { ProjectRepo, RepoCommit, ProjectSecret, RepoAccess, ProjectDaySummary } from "./GitHub";
+import { Notification } from "./Notification";
 import { TaskTag } from "./TaskTag";
 import { Site } from "./Site";
 import { Blog } from "./Blog";
@@ -490,6 +492,7 @@ export {
   CampaignActivity,
   ContactGroup,
   ContactGroupMember,
+  Meeting,
   AttendanceRequest,
   AttendancePolicy,
   LeaveType,
@@ -504,7 +507,7 @@ export {
   Subtask,
   TaskComment,
   TeamChatConversation, TeamChatMember, TeamChatMessage, TeamChatReaction, TeamCallLink,
-  ProjectRepo, RepoCommit, ProjectSecret, RepoAccess,
+  ProjectRepo, RepoCommit, ProjectSecret, RepoAccess, ProjectDaySummary, Notification,
   TaskTag,
   Site,
   Blog,

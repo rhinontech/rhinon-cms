@@ -1,12 +1,13 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
+import { NotificationBell } from "@/components/Admin/Common/Notifications/NotificationBell";
 import Link from "next/link";
 import Cookies from "js-cookie";
 import { clearPermissionsCache } from "@/context/PermissionsContext";
 import { useEffect, useState } from "react";
 import { LogOut } from "lucide-react";
-import { TbUser, TbChevronDown, TbChevronRight, TbBell, TbEye, TbMenu2 } from "react-icons/tb";
+import { TbUser, TbChevronDown, TbChevronRight, TbEye, TbMenu2 } from "react-icons/tb";
 import { useDashboard } from "@/components/Common/DashboardProvider/DashboardProvider";
 import {
   Popover,
@@ -16,7 +17,7 @@ import {
 import { apiFetch } from "@/lib/api";
 import { siteSlugFromPath, useSites } from "@/lib/sites";
 import { ThemeToggle } from "@/components/Common/ThemeProvider/ThemeToggle";
-import { MODULES } from "@/components/Admin/Common/navConfig";
+import { MODULES, moduleTone } from "@/components/Admin/Common/navConfig";
 
 /** Ids, slugs with digits and tokens are not page names, so they never become a crumb. */
 const looksLikeId = (segment: string) => /\d/.test(segment) && segment.length > 6;
@@ -41,11 +42,14 @@ function Breadcrumbs({ pathname }: { pathname: string }) {
   const page = pageSegments[0] && !looksLikeId(pageSegments[0]) ? humanize(pageSegments[0]) : null;
   const moduleHref = `/${role}/${moduleKey}${brandSlug ? `/${brandSlug}` : ""}`;
   const Icon = mod.icon;
+  const tone = moduleTone(moduleKey);
 
   return (
     <nav aria-label="Breadcrumb" className="flex min-w-0 flex-1 items-center gap-1.5 text-[13px]">
       <Link href={moduleHref} className="flex min-w-0 items-center gap-2 rounded-md px-1.5 py-1 font-semibold text-foreground transition-colors hover:bg-foreground/[0.05]">
-        <Icon size={16} strokeWidth={1.9} className="shrink-0 text-muted-foreground" />
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md" style={{ background: `${tone}1f`, color: tone }}>
+          <Icon size={15} strokeWidth={1.9} />
+        </span>
         <span className="truncate">{mod.label}</span>
       </Link>
       {brandSlug && (
@@ -173,9 +177,7 @@ export function SiteHeader() {
       <ThemeToggle />
 
       {/* Notifications */}
-      <button className="relative rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground" aria-label="Notifications">
-        <TbBell size={18} />
-      </button>
+      <NotificationBell />
 
       <div className="mx-0.5 h-5 w-px bg-foreground/10" />
 

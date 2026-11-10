@@ -229,7 +229,7 @@ router.post("/web-leads", async (req: Request, res: Response) => {
       // Which brand's form this was. Uppercurve posts `?domain=uppercurve`;
       // rhinonlabs.com posts nothing and lands on the default site — so a
       // website lead shows up in the CRM of the site that actually captured it.
-      const site = await resolvePublicSite(b.site ?? b.domain ?? req.query.domain);
+      const site = await resolvePublicSite(b.site ?? b.domain ?? req.query.domain, req);
       await Lead.create({
         name,
         email,
@@ -375,7 +375,7 @@ router.post("/track", express.text({ type: ["text/plain"] }), async (req: Reques
     // the Uppercurve front-end does; rhinonlabs.com sends nothing and falls
     // through to the workspace's default site, which is Rhinon Labs.
     const b = parseBeaconBody(req.body);
-    const site = await resolvePublicSite(b.site ?? b.domain ?? req.query.domain);
+    const site = await resolvePublicSite(b.site ?? b.domain ?? req.query.domain, req);
 
     const view = await recordPageview(req, b, { siteId: site?.id ?? null, companyLookup: true });
     res.status(204).end(); // junk is ignored silently, and so are failures below
@@ -440,7 +440,7 @@ router.post("/visitors", express.text({ type: ["text/plain"] }), async (req: Req
         label: "visit-ref",
       });
     } else {
-      const site = await resolvePublicSite(b.site ?? b.domain ?? req.query.domain);
+      const site = await resolvePublicSite(b.site ?? b.domain ?? req.query.domain, req);
       await Visitor.create({ ...row, siteId: site?.id ?? null });
     }
 
@@ -460,7 +460,7 @@ router.get("/blogs", async (req: Request, res: Response) => {
   try {
     // Site, not domain: ?domain= is kept as the legacy spelling the Uppercurve
     // site still sends, and resolves to that workspace's matching site.
-    const site = await resolvePublicSite(req.query.domain);
+    const site = await resolvePublicSite(req.query.domain, req);
     const blogs = await Blog.findAll({
       where: { status: "Published", ...(site ? { siteId: site.id } : {}) },
       attributes: PUBLIC_BLOG_LIST_FIELDS as unknown as string[],
@@ -476,7 +476,7 @@ router.get("/blogs", async (req: Request, res: Response) => {
 // GET /public/blogs/:slug?domain=rhinonlabs|uppercurve — single published blog
 router.get("/blogs/:slug", async (req: Request, res: Response) => {
   try {
-    const site = await resolvePublicSite(req.query.domain);
+    const site = await resolvePublicSite(req.query.domain, req);
     const blog = await Blog.findOne({
       where: {
         slug: req.params.slug,

@@ -6,6 +6,7 @@ import { useSideNav } from "@/context/SideNavContext";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { TbAlertCircle, TbBriefcase, TbChecklist } from "react-icons/tb";
+import { useModuleTone } from "@/components/Admin/Common/useModuleTone";
 
 interface WorkRequest {
   id: string;
@@ -36,6 +37,7 @@ export function WorkOverview() {
     apiFetch<WorkOverviewResponse>("/work/overview").then(setData).catch(() => {});
   }, []);
 
+  const tone = useModuleTone();
   const cards = [
     { label: "Total tasks", value: data?.totalTasks ?? "—", icon: <TbChecklist size={18} /> },
     { label: "Projects / clients", value: data?.totalProjects ?? "—", icon: <TbBriefcase size={18} /> },
@@ -57,8 +59,10 @@ export function WorkOverview() {
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {cards.map((card) => (
             <section key={card.label} className="rounded-xl glass-card p-5">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                {card.icon}
+              <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: `${tone}1f`, color: tone }}>
+                  {card.icon}
+                </span>
                 {card.label}
               </div>
               <p className="mt-4 text-3xl font-semibold text-foreground">{card.value}</p>

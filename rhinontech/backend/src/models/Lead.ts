@@ -21,6 +21,7 @@ interface LeadAttributes {
   title?: string | null;
   email: string;
   linkedinUrl?: string | null;
+  instagramUrl?: string | null;
   // Enrichment fields (e.g. populated from an Apollo CSV import)
   phone?: string | null;
   seniority?: string | null;
@@ -62,7 +63,7 @@ interface LeadAttributes {
 interface LeadCreationAttributes
   extends Optional<
     LeadAttributes,
-    "siteId" | "id" | "title" | "linkedinUrl" | "campaignId" | "aiDraft" | "source" | "notes" | "addedAt"
+    "siteId" | "id" | "title" | "linkedinUrl" | "instagramUrl" | "campaignId" | "aiDraft" | "source" | "notes" | "addedAt"
     | "phone" | "seniority" | "department" | "industry" | "employeeCount" | "location"
     | "website" | "companyLinkedinUrl" | "emailStatus" | "emailConfidence" | "keywords" | "apolloContactId"
     | "technologies" | "annualRevenue" | "raw" | "enrichment" | "draftSubject" | "draftApproved"
@@ -78,6 +79,7 @@ export class Lead extends Model<LeadAttributes, LeadCreationAttributes> implemen
   declare title: string | null;
   declare email: string;
   declare linkedinUrl: string | null;
+  declare instagramUrl: string | null;
   declare phone: string | null;
   declare seniority: string | null;
   declare department: string | null;
@@ -121,6 +123,7 @@ Lead.init(
     title: { type: DataTypes.STRING, allowNull: true },
     email: { type: DataTypes.STRING, allowNull: false },
     linkedinUrl: { type: DataTypes.STRING, allowNull: true },
+    instagramUrl: { type: DataTypes.STRING, allowNull: true },
     phone: { type: DataTypes.STRING, allowNull: true },
     seniority: { type: DataTypes.STRING, allowNull: true },
     department: { type: DataTypes.STRING, allowNull: true },

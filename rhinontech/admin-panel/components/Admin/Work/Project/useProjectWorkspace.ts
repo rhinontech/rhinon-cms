@@ -321,7 +321,42 @@ export function useProjectWorkspace(projectId: string, source: "internal" | "pub
     }
   }, [loadMeta]);
 
+  /** Copies shared columns to this project on first edit; returns the id to edit now. */
+  const ownColumnId = useCallback(async (id?: string) => {
+    const { map } = await apiFetch<{ map: Record<string, string> }>("/workflow/statuses/fork", {
+      method: "POST",
+      body: JSON.stringify({ projectId }),
+    });
+    return id ? map[id] ?? id : undefined;
+  }, [projectId]);
+
+  const runColumnEdit = useCallback(async (edit: () => Promise<unknown>, fallback: string) => {
+    try {
+      await edit();
+    } catch (err: any) {
+      toast.error(err.message || fallback);
+    }
+    // Reload even after a failure: the copy may have happened before the edit failed.
+    await Promise.all([loadMeta(), loadTasks()]);
+  }, [loadMeta, loadTasks]);
+
+  const addColumn = useCallback((name: string) => runColumnEdit(async () => {
+    await ownColumnId();
+    await apiFetch("/workflow/statuses", { method: "POST", body: JSON.stringify({ name, projectId, group: "Active" }) });
+  }, "Could not add the column"), [ownColumnId, runColumnEdit, projectId]);
+
+  const updateColumn = useCallback((id: string, patch: { name?: string; color?: string }) => runColumnEdit(async () => {
+    const own = await ownColumnId(id);
+    await apiFetch(`/workflow/statuses/${own}`, { method: "PUT", body: JSON.stringify(patch) });
+  }, "Could not update the column"), [ownColumnId, runColumnEdit]);
+
+  const removeColumn = useCallback((id: string) => runColumnEdit(async () => {
+    const own = await ownColumnId(id);
+    await apiFetch(`/workflow/statuses/${own}`, { method: "DELETE" });
+  }, "Could not delete the column"), [ownColumnId, runColumnEdit]);
+
   return {
+    addColumn, updateColumn, removeColumn,
     project, tasks, rows, statuses, fields, people, rosterAvailable, loading, collapsed,
     filters, setFilters, sort, setSort, group, setGroup,
     /** Unfiltered total, so the toolbar can say "12 of 40". */

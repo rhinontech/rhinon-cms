@@ -62,7 +62,10 @@ router.put("/:id/permissions", authorize("settings:write"), async (req: AuthRequ
   const allowed = new Set(permissionsForOrg(Boolean(req.user?.isPlatformOrg)));
   const requested = await Permission.findAll({ where: { id: permissionIds ?? [] } });
   const granted = requested.filter((p) => allowed.has(p.name));
-  const refused = requested.filter((p) => !allowed.has(p.name));
+  // Only a real platform module is refused. Retired names (projects:*, replaced by
+  // work:*) are still on old roles and sent back by the panel; saving drops them.
+  const catalog = new Set(permissionsForOrg(true));
+  const refused = requested.filter((p) => catalog.has(p.name) && !allowed.has(p.name));
   if (refused.length) {
     res.status(403).json({
       message: `Not available to this workspace: ${refused.map((p) => p.name).join(", ")}`,

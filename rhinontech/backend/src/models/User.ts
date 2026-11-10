@@ -49,6 +49,8 @@ interface UserAttributes {
   workLocation?: string;
   /** GitHub username — how commits are attributed to this person (Work ↔ GitHub). */
   githubLogin?: string | null;
+  /** Notification categories this person has turned off. */
+  notificationMutes?: string[];
   paymentFrequency?: string;
   legalName?: string;
   roleTitle?: string;
@@ -112,6 +114,7 @@ interface UserCreationAttributes
     | "remotePosition"
     | "workLocation"
     | "githubLogin"
+    | "notificationMutes"
     | "paymentFrequency"
     | "legalName"
     | "roleTitle"
@@ -175,6 +178,7 @@ export class User
   declare remotePosition: boolean;
   declare workLocation: string;
   declare githubLogin: string | null;
+  declare notificationMutes: string[];
   declare paymentFrequency: string;
   declare legalName: string;
   declare roleTitle: string;
@@ -259,6 +263,7 @@ User.init(
     workSchedule: { type: DataTypes.STRING, allowNull: true, defaultValue: "11 AM – 8 PM (Mon–Sat)" },
     remotePosition: { type: DataTypes.BOOLEAN, allowNull: true, defaultValue: false },
     workLocation: { type: DataTypes.STRING, allowNull: true },
+    notificationMutes: { type: DataTypes.JSONB, allowNull: false, defaultValue: [] },
     githubLogin: {
       type: DataTypes.STRING(100),
       allowNull: true,
