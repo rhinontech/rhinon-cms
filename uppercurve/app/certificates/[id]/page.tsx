@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BadgeCheck, Download, Linkedin, ShieldAlert } from "lucide-react";
+import { notFound } from "next/navigation";
+import { BadgeCheck, Download, Linkedin } from "lucide-react";
 import { verifyCertificate } from "@/services/eventService";
 import { GuestCard, GuestShell, primaryButton, secondaryButton } from "@/components/Pages/Events/Guest/GuestShell";
 
@@ -11,13 +12,17 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const cert = await verifyCertificate(id);
   return cert.valid
     ? {
-        title: `${cert.name} — ${cert.certificateName} · UpperCurve`,
+        title: `${cert.name} — ${cert.certificateName} | UpperCurve`,
         description: `Verified UpperCurve certificate for ${cert.event?.title}.`,
         alternates: {
           canonical: `/certificates/${id}`,
         },
+        robots: {
+          index: false,
+          follow: false,
+        },
       }
-    : { title: "Certificate not found — UpperCurve", robots: { index: false } };
+    : { title: "Certificate not found | UpperCurve", robots: { index: false, follow: false} };
 }
 
 /** Public: anyone holding a certificate ID can confirm it's genuine. */
@@ -26,18 +31,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   const cert = await verifyCertificate(id);
 
   if (!cert.valid) {
-    return (
-      <GuestShell eyebrow="Certificate check">
-        <GuestCard className="text-center">
-          <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-[#FEF2F2] text-[#DC2626]"><ShieldAlert className="size-7" /></span>
-          <h1 className="mt-5 text-2xl font-extrabold tracking-tight">We couldn&apos;t verify this certificate</h1>
-          <p className="mx-auto mt-2 max-w-md text-[15px] text-[#475569]">
-            No certificate with the ID <span className="font-mono">{id.toUpperCase()}</span> has been issued. Check the ID on the certificate, including the dashes.
-          </p>
-          <Link href="/events" className={`${primaryButton} mt-6`}>Browse events</Link>
-        </GuestCard>
-      </GuestShell>
-    );
+    notFound();
   }
 
   const issued = cert.issuedAt ? new Date(cert.issuedAt) : null;
