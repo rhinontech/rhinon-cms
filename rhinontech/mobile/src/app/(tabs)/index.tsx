@@ -35,13 +35,15 @@ function FocusTile({ name, label, stat, index, selected, onPress }: { name: Tone
   const t = useTheme();
   const c = tone(t, name);
   return (
-    <Pressable onPress={onPress} style={{ flexBasis: "48%", flexGrow: 1, minHeight: 136, padding: 18, justifyContent: "space-between", gap: 12, borderRadius: t.c.radius + 14, backgroundColor: c.bg, borderWidth: 3, borderColor: selected ? t.c.ink : "transparent" }}>
+    <View style={{ flexBasis: "48%", flexGrow: 1, margin: -3, padding: 3, borderRadius: t.c.radius + 17, borderWidth: 2, borderColor: selected ? t.c.ink : "transparent" }}>
+    <Pressable onPress={onPress} style={{ minHeight: 130, padding: 18, justifyContent: "space-between", gap: 12, borderRadius: t.c.radius + 14, backgroundColor: c.bg }}>
       <Eyebrow color={c.fg}>{stat}</Eyebrow>
       <View style={{ flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between" }}>
         <Display size="md" color={c.fg} style={{ flexShrink: 1 }}>{label.join("\n")}</Display>
         <Eyebrow color={c.fg}>{index}</Eyebrow>
       </View>
     </Pressable>
+    </View>
   );
 }
 
@@ -128,7 +130,7 @@ export default function Home() {
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
           <Logo />
-          <Eyebrow color={`${t.c.ink}B3`} style={{ letterSpacing: 3 }}>Rhinon</Eyebrow>
+          <Eyebrow color={`${t.c.ink}B3`} style={t.id === "admin" ? undefined : { letterSpacing: 3 }}>Rhinon</Eyebrow>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <IconBtn label="Notifications" onPress={() => go("/notifications")} dot={notifs.some((n) => n.unread)}><Bell size={20} color={t.c.ink} /></IconBtn>

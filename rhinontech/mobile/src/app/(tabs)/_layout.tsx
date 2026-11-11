@@ -3,6 +3,7 @@ import { House, Inbox, LayoutGrid, MessageCircle, SquareCheckBig, type LucideIco
 import { Pressable, StyleSheet, Text as RNText, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useApp } from "@/data/store";
 import { tone, type Tone } from "@/ui";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -21,12 +22,17 @@ function TabBar({ state, navigateToTab }: BarProps) {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   const glass = t.id === "admin";
+  const brand = useApp((s) => s.brand);
+  const mail = useApp((s) => s.threads).filter((x) => x.unread && x.folder === "inbox" && x.brand === brand).length;
+  const chats = useApp((s) => s.chats).reduce((n, c) => n + c.unread, 0);
+  const approvals = useApp((s) => s.approvals).length;
+  const badge: Record<string, number> = { inbox: mail, chat: chats, more: approvals };
   return (
     <View
       style={{
         position: "absolute", left: 16, right: 16, bottom: insets.bottom + 10,
         flexDirection: "row", alignItems: "center", gap: 4, padding: 6, borderRadius: 99,
-        backgroundColor: glass ? "rgba(255,255,255,0.86)" : t.id === "midnight" ? t.c.card : t.c.ink,
+        backgroundColor: glass ? "rgba(255,255,255,0.97)" : t.id === "midnight" ? t.c.card : t.c.ink,
         borderWidth: glass ? StyleSheet.hairlineWidth : t.id === "brutal" ? 2 : 0,
         borderColor: t.id === "brutal" ? t.c.ink : t.c.line,
       }}
@@ -51,9 +57,14 @@ function TabBar({ state, navigateToTab }: BarProps) {
           >
             <Icon size={21} color={active ? fill.fg : idle} strokeWidth={active ? 2.4 : 2} />
             {active ? (
-              <RNText style={{ fontFamily: t.f.monoMed, fontSize: 11, letterSpacing: 1.4, textTransform: "uppercase", color: fill.fg }}>
+              <RNText style={{ fontFamily: t.f.monoMed, fontSize: glass ? 13 : 11, letterSpacing: glass ? 0 : 1.4, textTransform: glass ? "none" : "uppercase", color: fill.fg }}>
                 {def.label}
               </RNText>
+            ) : null}
+            {!active && (badge[r.name] ?? 0) > 0 ? (
+              <View style={{ position: "absolute", right: 6, top: 2, minWidth: 18, height: 18, paddingHorizontal: 4, borderRadius: 9, backgroundColor: t.c.hues.coral.solid, alignItems: "center", justifyContent: "center" }}>
+                <RNText style={{ fontFamily: t.f.monoMed, fontSize: 10, color: t.c.hues.coral.on }}>{badge[r.name]}</RNText>
+              </View>
             ) : null}
           </Pressable>
         );

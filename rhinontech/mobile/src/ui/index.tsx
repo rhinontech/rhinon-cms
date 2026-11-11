@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react-native";
 import type { ReactNode } from "react";
+import { LinearGradient } from "expo-linear-gradient";
 import { Pressable, ScrollView, StyleSheet, Text as RNText, View, type StyleProp, type TextStyle, type ViewStyle } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -24,7 +25,7 @@ export function Text({ style, bold, ...p }: React.ComponentProps<typeof RNText> 
 export function Eyebrow({ children, color, style }: { children: ReactNode; color?: string; style?: StyleProp<TextStyle> }) {
   const t = useTheme();
   return (
-    <RNText style={[{ fontFamily: t.f.mono, fontSize: 11, letterSpacing: 1.4, textTransform: "uppercase", color: color ?? `${t.c.ink}99` }, style]}>
+    <RNText style={[{ fontFamily: t.f.mono, fontSize: t.id === "admin" ? 12.5 : 11, letterSpacing: t.id === "admin" ? 0 : 1.4, textTransform: t.id === "admin" ? "none" : "uppercase", color: color ?? `${t.c.ink}99` }, style]}>
       {children}
     </RNText>
   );
@@ -51,6 +52,9 @@ export function Screen({ children, scroll = true, style }: { children: ReactNode
   const pad = { paddingTop: insets.top + 16, paddingHorizontal: 20, paddingBottom: 120 };
   return (
     <View style={{ flex: 1, backgroundColor: t.c.paper }}>
+      {t.id === "admin" || t.id === "midnight" ? (
+        <LinearGradient pointerEvents="none" colors={t.id === "admin" ? ["#dfe4fb", "#e4f0f8", "rgba(243,244,248,0)"] : ["rgba(76,50,160,0.55)", "rgba(76,50,160,0)"]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: 320 }} />
+      ) : null}
       {scroll ? (
         <ScrollView contentContainerStyle={[pad, style as object]} showsVerticalScrollIndicator={false}>
           {children}
@@ -190,7 +194,7 @@ export function Chip({ children, active, onPress, count, name = "ink" }: { child
   const c = tone(t, name);
   return (
     <Pressable onPress={onPress} style={{ flexDirection: "row", alignItems: "center", gap: 8, height: 38, paddingHorizontal: 16, borderRadius: 99, backgroundColor: active ? c.bg : "transparent", borderWidth: active ? 0 : t.id === "brutal" ? 2 : 1, borderColor: t.id === "brutal" ? t.c.ink : t.c.line }}>
-      <RNText style={{ fontFamily: t.f.monoMed, fontSize: 11, letterSpacing: 1.2, textTransform: "uppercase", color: active ? c.fg : t.c.ink }}>{children}</RNText>
+      <RNText style={{ fontFamily: t.f.monoMed, fontSize: 11, letterSpacing: t.id === "admin" ? 0 : 1.2, textTransform: t.id === "admin" ? "none" : "uppercase", color: active ? c.fg : t.c.ink }}>{children}</RNText>
       {count ? <RNText style={{ fontFamily: t.f.monoMed, fontSize: 11, color: active ? c.fg : `${t.c.ink}80` }}>{count}</RNText> : null}
     </Pressable>
   );
@@ -233,7 +237,7 @@ export function Badge({ children, name = "ink" }: { children: ReactNode; name?: 
   const c = tone(t, name);
   return (
     <View style={{ paddingHorizontal: 10, height: 22, borderRadius: 99, backgroundColor: name === "ink" ? t.c.paperDeep : `${c.bg}33`, justifyContent: "center" }}>
-      <RNText style={{ fontFamily: t.f.monoMed, fontSize: 10, letterSpacing: 1, textTransform: "uppercase", color: name === "ink" ? t.c.ink : c.text }}>{children}</RNText>
+      <RNText style={{ fontFamily: t.f.monoMed, fontSize: 10.5, letterSpacing: t.id === "admin" ? 0 : 1, textTransform: t.id === "admin" ? "none" : "uppercase", color: name === "ink" ? t.c.ink : c.text }}>{children}</RNText>
     </View>
   );
 }
