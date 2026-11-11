@@ -1,0 +1,164 @@
+import type { LucideIcon } from "lucide-react-native";
+import type { ReactNode } from "react";
+import { Pressable, ScrollView, StyleSheet, Text as RNText, View, type StyleProp, type TextStyle, type ViewStyle } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import { useTheme, type Theme } from "@/theme/ThemeProvider";
+import type { Hue } from "@/theme/tokens";
+
+export type Tone = Hue | "ink" | "paper";
+
+/** One place that turns a tone into fill / foreground / text-on-paper colours for the active theme. */
+export function tone(t: Theme, name: Tone): { bg: string; fg: string; text: string } {
+  if (name === "ink") return { bg: t.c.ink, fg: t.c.paper, text: t.c.ink };
+  if (name === "paper") return { bg: t.c.card, fg: t.c.ink, text: t.c.ink };
+  const h = t.c.hues[name];
+  return { bg: h.solid, fg: h.on, text: h.deep };
+}
+
+export function Text({ style, bold, ...p }: React.ComponentProps<typeof RNText> & { bold?: boolean }) {
+  const t = useTheme();
+  return <RNText {...p} style={[{ color: t.c.ink, fontFamily: bold ? t.f.sansBold : t.f.sans, fontSize: 15 }, style]} />;
+}
+
+export function Eyebrow({ children, color, style }: { children: ReactNode; color?: string; style?: StyleProp<TextStyle> }) {
+  const t = useTheme();
+  return (
+    <RNText style={[{ fontFamily: t.f.mono, fontSize: 11, letterSpacing: 1.4, textTransform: "uppercase", color: color ?? `${t.c.ink}99` }, style]}>
+      {children}
+    </RNText>
+  );
+}
+
+const DISPLAY = { hero: 76, xl: 56, lg: 38, md: 26 } as const;
+
+/** Big headline. Size scales by the theme's own factor so a condensed face and a grotesque both fit the screen. */
+export function Display({ children, size = "hero", style, color }: { children: ReactNode; size?: keyof typeof DISPLAY; style?: StyleProp<TextStyle>; color?: string }) {
+  const t = useTheme();
+  const px = DISPLAY[size] * t.c.ds;
+  return (
+    <RNText
+      style={[{ fontFamily: t.f.display, fontSize: px, lineHeight: px * (0.84 + t.c.dl), letterSpacing: t.c.tracking * px, color: color ?? t.c.ink }, style]}
+    >
+      {children}
+    </RNText>
+  );
+}
+
+export function Screen({ children, scroll = true, style }: { children: ReactNode; scroll?: boolean; style?: StyleProp<ViewStyle> }) {
+  const t = useTheme();
+  const insets = useSafeAreaInsets();
+  const pad = { paddingTop: insets.top + 16, paddingHorizontal: 20, paddingBottom: 120 };
+  return (
+    <View style={{ flex: 1, backgroundColor: t.c.paper }}>
+      {scroll ? (
+        <ScrollView contentContainerStyle={[pad, style as object]} showsVerticalScrollIndicator={false}>
+          {children}
+        </ScrollView>
+      ) : (
+        <View style={[{ flex: 1 }, pad, style]}>{children}</View>
+      )}
+    </View>
+  );
+}
+
+export function SectionLabel({ children }: { children: ReactNode }) {
+  const t = useTheme();
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginTop: 28, marginBottom: 14 }}>
+      <Eyebrow>{children}</Eyebrow>
+      <View style={{ flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: t.c.line }} />
+    </View>
+  );
+}
+
+export function Card({ children, style, onPress }: { children: ReactNode; style?: StyleProp<ViewStyle>; onPress?: () => void }) {
+  const t = useTheme();
+  const base: ViewStyle = {
+    backgroundColor: t.c.card,
+    borderRadius: t.c.radius + 14,
+    borderWidth: t.id === "brutal" ? 2 : StyleSheet.hairlineWidth,
+    borderColor: t.id === "brutal" ? t.c.ink : t.c.line,
+    padding: 16,
+    ...(t.id === "brutal" ? { shadowColor: t.c.ink, shadowOffset: { width: 4, height: 4 }, shadowOpacity: 1, shadowRadius: 0 } : null),
+  };
+  return onPress ? (
+    <Pressable onPress={onPress} style={({ pressed }) => [base, pressed && { opacity: 0.85 }, style]}>
+      {children}
+    </Pressable>
+  ) : (
+    <View style={[base, style]}>{children}</View>
+  );
+}
+
+/** A colour block: the app's signature surface. */
+export function Tile({ name, label, stat, badge, wide, onPress }: { name: Tone; label: string; stat: string; badge?: number; wide?: boolean; onPress?: () => void }) {
+  const t = useTheme();
+  const c = tone(t, name);
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => ({
+        flexBasis: wide ? "100%" : "48%",
+        flexGrow: 1,
+        minHeight: 128,
+        justifyContent: "space-between",
+        padding: 16,
+        borderRadius: t.c.radius + 14,
+        backgroundColor: c.bg,
+        borderWidth: t.id === "brutal" ? 2 : 0,
+        borderColor: t.c.ink,
+        opacity: pressed ? 0.88 : 1,
+      })}
+    >
+      <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8 }}>
+        <Eyebrow color={c.fg}>{stat}</Eyebrow>
+        {badge ? (
+          <View style={{ minWidth: 24, paddingHorizontal: 6, borderRadius: 99, backgroundColor: t.c.paper, alignItems: "center", justifyContent: "center" }}>
+            <RNText style={{ fontFamily: t.f.monoMed, fontSize: 11, color: t.c.ink }}>{badge}</RNText>
+          </View>
+        ) : null}
+      </View>
+      <Display size="md" color={c.fg} style={{ marginTop: 18 }}>
+        {label}
+      </Display>
+    </Pressable>
+  );
+}
+
+export function Button({ children, onPress, tone: name = "ink", icon: Icon, disabled }: { children: ReactNode; onPress?: () => void; tone?: Tone; icon?: LucideIcon; disabled?: boolean }) {
+  const t = useTheme();
+  const c = tone(t, name);
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      style={({ pressed }) => ({
+        height: 56,
+        borderRadius: 99,
+        backgroundColor: c.bg,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 10,
+        opacity: disabled ? 0.4 : pressed ? 0.85 : 1,
+        borderWidth: t.id === "brutal" ? 2 : 0,
+        borderColor: t.c.ink,
+      })}
+    >
+      {Icon ? <Icon size={20} color={c.fg} /> : null}
+      <RNText style={{ fontFamily: t.f.sansBold, fontSize: 16, color: c.fg }}>{children}</RNText>
+    </Pressable>
+  );
+}
+
+export function Avatar({ name, size = 44, hue = "violet" }: { name: string; size?: number; hue?: Hue }) {
+  const t = useTheme();
+  const initials = name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+  const h = t.c.hues[hue];
+  return (
+    <View style={{ width: size, height: size, borderRadius: size * t.c.avatarRadius, backgroundColor: h.solid, alignItems: "center", justifyContent: "center" }}>
+      <RNText style={{ fontFamily: t.f.sansBold, fontSize: size * 0.36, color: h.on }}>{initials}</RNText>
+    </View>
+  );
+}
