@@ -328,3 +328,7 @@ export function ToastLayer() {
     </View>
   );
 }
+
+export function NoAccess({ area }: { area: string }) {
+  return <Empty title="No access" body={`Your role can't open ${area}. Ask a super admin to change it in Settings → Roles.`} />;
+}
