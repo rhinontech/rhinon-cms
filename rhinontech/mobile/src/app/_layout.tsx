@@ -1,8 +1,11 @@
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+
+import { getSession, onSession, restoreSession } from "@/lib/api";
+import { useWorkspaceTheme } from "@/theme/useWorkspaceTheme";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { FONT_FILES } from "@/theme/fonts";
@@ -13,6 +16,17 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function Shell() {
   const t = useTheme();
+  const router = useRouter();
+  const segments = useSegments();
+  const [, bump] = useState(0);
+  useWorkspaceTheme();
+  useEffect(() => onSession(() => bump((n) => n + 1)), []);
+  const signedIn = !!getSession();
+  const onLogin = segments[0] === "login";
+  useEffect(() => {
+    if (!signedIn && !onLogin) router.replace("/login" as never);
+    else if (signedIn && onLogin) router.replace("/" as never);
+  }, [signedIn, onLogin, router]);
   return (
     <>
       <StatusBar style={t.dark ? "light" : "dark"} />
@@ -24,10 +38,12 @@ function Shell() {
 
 export default function RootLayout() {
   const [loaded, error] = useFonts(FONT_FILES);
+  const [ready, setReady] = useState(false);
+  useEffect(() => { restoreSession().finally(() => setReady(true)); }, []);
   useEffect(() => {
     if (loaded || error) SplashScreen.hideAsync().catch(() => {});
   }, [loaded, error]);
-  if (!loaded && !error) return null;
+  if ((!loaded && !error) || !ready) return null;
   return (
     <SafeAreaProvider>
       <ThemeProvider>

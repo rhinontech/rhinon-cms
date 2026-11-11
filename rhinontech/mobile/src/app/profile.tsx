@@ -1,5 +1,7 @@
 import { Switch, View } from "react-native";
 
+import { logout } from "@/lib/api";
+import { Button } from "@/ui";
 import { ME } from "@/data/mock-data";
 import { ROLE_LABEL, actions, useApp, type Role } from "@/data/store";
 import { useTheme } from "@/theme/ThemeProvider";
@@ -35,6 +37,7 @@ export default function Profile() {
           </View>
         ))}
       </View>
+      <View style={{ marginTop: 28 }}><Button tone="paper" onPress={() => void logout()}>Sign out</Button></View>
     </Screen>
   );
 }
