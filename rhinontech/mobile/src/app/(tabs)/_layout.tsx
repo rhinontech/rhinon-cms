@@ -1,5 +1,6 @@
 import { Tabs } from "expo-router";
 import { House, Inbox, LayoutGrid, MessageCircle, SquareCheckBig, type LucideIcon } from "lucide-react-native";
+import Animated, { Easing, interpolateColor, useAnimatedStyle, useDerivedValue, withTiming } from "react-native-reanimated";
 import { Pressable, StyleSheet, Text as RNText, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -16,6 +17,32 @@ const TABS: Record<string, { label: string; icon: LucideIcon; tone: Tone | "blac
 };
 
 /** Floating pill bar. The selected tab expands with its label; Home's pill is always black. */
+/** One tab. The active pill grows and its label fades in over 300ms, like the prototype's transition-all. */
+function TabItem({ label, Icon, active, fill, idle, count, glass, onPress }: { label: string; Icon: LucideIcon; active: boolean; fill: { bg: string; fg: string }; idle: string; count: number; glass: boolean; onPress: () => void }) {
+  const t = useTheme();
+  const p = useDerivedValue(() => withTiming(active ? 1 : 0, { duration: 300, easing: Easing.out(Easing.cubic) }), [active]);
+  const pill = useAnimatedStyle(() => ({
+    flexGrow: 1 + p.value * 1.1,
+    backgroundColor: interpolateColor(p.value, [0, 1], [`${fill.bg}00`, fill.bg]),
+  }));
+  const text = useAnimatedStyle(() => ({ opacity: p.value, maxWidth: p.value * 70, marginLeft: p.value * 8 }));
+  return (
+    <Animated.View style={[{ flexBasis: 0, height: 48, borderRadius: 99 }, pill]}>
+      <Pressable accessibilityLabel={label} onPress={onPress} style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+        <Icon size={21} color={active ? fill.fg : idle} strokeWidth={active ? 2.4 : 2} />
+        <Animated.View style={[{ overflow: "hidden" }, text]}>
+          <RNText numberOfLines={1} style={{ fontFamily: t.f.monoMed, fontSize: glass ? 13 : 11, letterSpacing: glass ? 0 : 1.4, textTransform: glass ? "none" : "uppercase", color: fill.fg }}>{label}</RNText>
+        </Animated.View>
+      </Pressable>
+      {!active && count > 0 ? (
+        <View pointerEvents="none" style={{ position: "absolute", right: 6, top: 2, minWidth: 18, height: 18, paddingHorizontal: 4, borderRadius: 9, backgroundColor: t.c.hues.coral.solid, alignItems: "center", justifyContent: "center" }}>
+          <RNText style={{ fontFamily: t.f.monoMed, fontSize: 10, color: t.c.hues.coral.on }}>{count}</RNText>
+        </View>
+      ) : null}
+    </Animated.View>
+  );
+}
+
 type BarProps = { state: { index: number; routes: { key: string; name: string }[] }; navigateToTab: (routeKey: string) => void };
 
 function TabBar({ state, navigateToTab }: BarProps) {
@@ -40,33 +67,10 @@ function TabBar({ state, navigateToTab }: BarProps) {
       {state.routes.map((r, i) => {
         const def = TABS[r.name];
         if (!def) return null;
-        const active = state.index === i;
-        const Icon = def.icon;
-        const fill = def.tone === "black" ? { bg: "#000", fg: "#fff" } : tone(t, def.tone);
+        const fill = def.tone === "black" ? { bg: "#000000", fg: "#ffffff" } : tone(t, def.tone);
         const idle = glass ? `${t.c.ink}94` : t.id === "midnight" ? t.c.inkSoft : `${t.c.paper}A6`;
         return (
-          <Pressable
-            key={r.key}
-            accessibilityLabel={def.label}
-            onPress={() => navigateToTab(r.key)}
-            style={{
-              flex: active ? 2.1 : 1, height: 48, borderRadius: 99, flexDirection: "row",
-              alignItems: "center", justifyContent: "center", gap: 8,
-              backgroundColor: active ? fill.bg : "transparent",
-            }}
-          >
-            <Icon size={21} color={active ? fill.fg : idle} strokeWidth={active ? 2.4 : 2} />
-            {active ? (
-              <RNText style={{ fontFamily: t.f.monoMed, fontSize: glass ? 13 : 11, letterSpacing: glass ? 0 : 1.4, textTransform: glass ? "none" : "uppercase", color: fill.fg }}>
-                {def.label}
-              </RNText>
-            ) : null}
-            {!active && (badge[r.name] ?? 0) > 0 ? (
-              <View style={{ position: "absolute", right: 6, top: 2, minWidth: 18, height: 18, paddingHorizontal: 4, borderRadius: 9, backgroundColor: t.c.hues.coral.solid, alignItems: "center", justifyContent: "center" }}>
-                <RNText style={{ fontFamily: t.f.monoMed, fontSize: 10, color: t.c.hues.coral.on }}>{badge[r.name]}</RNText>
-              </View>
-            ) : null}
-          </Pressable>
+          <TabItem key={r.key} label={def.label} Icon={def.icon} active={state.index === i} fill={fill} idle={idle} count={badge[r.name] ?? 0} glass={glass} onPress={() => navigateToTab(r.key)} />
         );
       })}
     </View>
