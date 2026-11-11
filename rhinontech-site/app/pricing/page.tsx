@@ -5,7 +5,8 @@ import { CHATBOT_FEATURES, FREE_FEATURES } from "@/content/plans";
 import { Aurora, Button, IconTile, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { Spot } from "@/components/Spot";
-import { CtaBand, Faq, faqJsonLd } from "@/components/blocks";
+import { CtaBand, Faq } from "@/components/blocks";
+import { JsonLd, breadcrumbNode, faqNode, graphJsonLd, softwareAppNode } from "@/components/schema";
 
 export const metadata = pageMeta({
   title: "Pricing",
@@ -78,7 +79,16 @@ export default function PricingPage() {
       <section className="mx-auto max-w-[1240px] px-5 py-28 sm:py-32">
         <Reveal><SectionHead eyebrow="FAQ" title="Pricing questions, answered." /></Reveal>
         <div className="mt-14"><Faq items={FAQ} /></div>
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(FAQ)) }} />
+        <JsonLd
+          data={graphJsonLd([
+            softwareAppNode(),
+            breadcrumbNode([
+              { name: "Home", path: "/" },
+              { name: "Pricing", path: "/pricing" },
+            ]),
+            faqNode(FAQ),
+          ])}
+        />
       </section>
 
       <CtaBand title={<>Start free. <span className="text-aurora-soft">Add AI when you are ready.</span></>} sub="Set up your workspace in a few minutes and bring your whole team." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "Book a call", href: links.call }} />

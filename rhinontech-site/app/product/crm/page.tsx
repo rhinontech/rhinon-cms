@@ -99,7 +99,7 @@ export default function CrmPage() {
         { slug: "inbox", line: "Replies land on the lead's timeline." },
         { slug: "chatbot", line: "Chat visitors become leads automatically." },
       ]} />
-      <ProductFaq title="CRM questions, answered." items={FAQ} />
+      <ProductFaq slug="crm" title="CRM questions, answered." items={FAQ} />
       <CtaBand tone={p.tone} title={<>Start with the CRM, <span className="text-aurora-soft">free.</span></>} sub="Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
     </>
   );

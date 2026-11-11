@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Check, ChevronDown } from "lucide-react";
 import { DEFAULT_OG_IMAGE, links, SITE_URL } from "@/components/site";
 import { CtaBand } from "@/components/blocks";
+import { JsonLd, blogPostingGraph } from "@/components/schema";
 import { getBlog, getBlogs, formatDate, toneFor, withHeadingIds, youtubeId, type BlogBlock } from "@/lib/blog";
 import { Avatar, CategoryKicker, Cover, PostMeta } from "@/components/blog/parts";
 
@@ -93,20 +94,7 @@ export default async function BlogPostPage({ params }: { params: Params }) {
   const related = all.filter((p) => p.slug !== blog.slug && (blog.category ? p.category === blog.category : true)).slice(0, 3);
   const tone = toneFor(blog.category);
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    headline: blog.title,
-    description: blog.excerpt,
-    datePublished: blog.publishedAt,
-    author: { "@type": "Person", name: blog.authorName },
-    publisher: { "@type": "Organization", name: "Rhinon Tech", url: SITE_URL },
-    mainEntityOfPage: `${SITE_URL}/blog/${blog.slug}`,
-    ...(blog.coverImage ? { image: blog.coverImage } : {}),
-  };
-  const faqLd = blog.faqs?.length
-    ? { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: blog.faqs.map((f) => ({ "@type": "Question", name: f.question, acceptedAnswer: { "@type": "Answer", text: f.answer } })) }
-    : null;
+  const structuredData = blogPostingGraph(blog);
 
   return (
     <>
@@ -211,8 +199,7 @@ export default async function BlogPostPage({ params }: { params: Params }) {
 
       <CtaBand title={<>Run your whole company from <span className="text-aurora-soft">one tab.</span></>} sub="Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
 
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      {faqLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />}
+      <JsonLd data={structuredData} />
     </>
   );
 }

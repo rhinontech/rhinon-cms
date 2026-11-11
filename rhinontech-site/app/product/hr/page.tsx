@@ -92,7 +92,7 @@ export default function HrPage() {
         { slug: "attendance", line: "Attendance and leave follow the same record." },
         { slug: "performance", line: "Reviews attach to each person." },
       ]} />
-      <ProductFaq title="HR questions, answered." items={FAQ} />
+      <ProductFaq slug="hr" title="HR questions, answered." items={FAQ} />
       <CtaBand tone={p.tone} title={<>Welcome people <span className="text-aurora-soft">properly.</span></>} sub="Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
     </div>
   );

@@ -127,7 +127,7 @@ export default function InboxPage() {
         { slug: "crm", line: "Link a conversation to its lead." },
         { slug: "chatbot", line: "Chat tickets and email in one view of support." },
       ]} />
-      <ProductFaq title="Inbox questions, answered." items={FAQ} />
+      <ProductFaq slug="inbox" title="Inbox questions, answered." items={FAQ} />
       <CtaBand tone={p.tone} title={<>Get to <span className="text-aurora-soft">inbox zero.</span></>} sub="Set up your shared inbox in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
     </div>
   );

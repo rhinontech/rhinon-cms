@@ -3,7 +3,8 @@ import { ArrowUpRight, ChevronRight } from "lucide-react";
 import { bySlug } from "@/content/products";
 import { IconTile, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
-import { Faq, faqJsonLd } from "@/components/blocks";
+import { Faq } from "@/components/blocks";
+import { JsonLd, breadcrumbNode, faqNode, graphJsonLd, moduleSoftwareAppNode } from "@/components/schema";
 
 /** "Product › Sell › CRM" above a product's headline. */
 export function Crumb({ slug, dark = false, center = false }: { slug: string; dark?: boolean; center?: boolean }) {
@@ -44,14 +45,27 @@ export function PairsWith({ items, dark = false }: { items: { slug: string; line
 }
 
 /** The FAQ block every product page ends with, plus its structured data. */
-export function ProductFaq({ title, items, dark = false }: { title: string; items: { q: string; a: string }[]; dark?: boolean }) {
+export function ProductFaq({ title, items, slug, dark = false }: { title: string; items: { q: string; a: string }[]; slug?: string; dark?: boolean }) {
+  const product = slug ? bySlug(slug) : undefined;
+  const nodes: Record<string, unknown>[] = product
+    ? [
+        moduleSoftwareAppNode(product.slug),
+        breadcrumbNode([
+          { name: "Home", path: "/" },
+          { name: "Products", path: "/product" },
+          { name: product.name, path: `/product/${product.slug}` },
+        ]),
+        faqNode(items),
+      ]
+    : [faqNode(items)];
+
   return (
     <section className={dark ? "bg-[#030306] pb-24 pt-24 sm:pt-28" : "mx-auto max-w-[1240px] px-5 py-24 sm:py-28"}>
       <div className={dark ? "mx-auto max-w-[1240px] px-5" : ""}>
         <Reveal><SectionHead dark={dark} eyebrow="FAQ" title={title} /></Reveal>
         <div className="mt-14"><Faq items={items} dark={dark} /></div>
       </div>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(items)) }} />
+      <JsonLd data={graphJsonLd(nodes)} />
     </section>
   );
 }

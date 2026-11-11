@@ -74,7 +74,7 @@ export default function WorkPage() {
         { slug: "pages", line: "Keep briefs and notes in the same workspace." },
         { slug: "attendance", line: "Know who is working and who is away." },
       ]} />
-      <ProductFaq title="Work questions, answered." items={FAQ} />
+      <ProductFaq slug="work" title="Work questions, answered." items={FAQ} />
       <CtaBand tone={p.tone} title={<>Run your next project <span className="text-aurora-soft">here.</span></>} sub="Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
     </div>
   );

@@ -71,7 +71,7 @@ export default function PagesPage() {
         { slug: "hr", line: "Keep your handbook and policies in one place." },
         { slug: "chat", line: "Talk about a page with the people it affects." },
       ]} />
-      <ProductFaq title="Pages questions, answered." items={FAQ} />
+      <ProductFaq slug="pages" title="Pages questions, answered." items={FAQ} />
       <CtaBand tone={p.tone} title={<>Write it down <span className="text-aurora-soft">once.</span></>} sub="Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
     </div>
   );

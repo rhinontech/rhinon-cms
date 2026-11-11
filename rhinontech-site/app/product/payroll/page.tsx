@@ -74,7 +74,7 @@ export default function PayrollPage() {
         { slug: "attendance", line: "Attendance and leave inform the month." },
         { slug: "performance", line: "Bring appraisals into pay decisions." },
       ]} />
-      <ProductFaq title="Payroll questions, answered." items={FAQ} />
+      <ProductFaq slug="payroll" title="Payroll questions, answered." items={FAQ} />
       <CtaBand tone={p.tone} title={<>Close the month <span className="text-aurora-soft">with confidence.</span></>} sub="Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
     </div>
   );

@@ -121,7 +121,7 @@ export default function ChatbotPage() {
         { slug: "inbox", line: "Follow up by email from the same place." },
         { slug: "outreach", line: "Warm leads can join a campaign." },
       ]} />
-      <ProductFaq title="Chatbot questions, answered." items={FAQ} />
+      <ProductFaq slug="chatbot" title="Chatbot questions, answered." items={FAQ} />
       <CtaBand tone={p.tone} title={<>Put an assistant on <span className="text-aurora-soft">your website.</span></>} sub="Tell us about your site and we will set up your chatbot with you." primary={{ label: "Book a call", href: links.call }} secondary={{ label: "See all products", href: "/product" }} />
     </div>
   );

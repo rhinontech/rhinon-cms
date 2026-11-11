@@ -69,7 +69,7 @@ export default function ChatPage() {
         { slug: "hr", line: "Run interviews and one-to-ones in a call." },
         { slug: "crm", line: "Take sales calls from the lead record." },
       ]} />
-      <ProductFaq dark title="Chat questions, answered." items={FAQ} />
+      <ProductFaq slug="chat" dark title="Chat questions, answered." items={FAQ} />
       <CtaBand tone={p.tone} title={<>Keep the conversation <span className="text-aurora-soft">with the work.</span></>} sub="Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
       <div className="h-24" />
     </div>

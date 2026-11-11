@@ -13,6 +13,7 @@ import { Typewriter } from "@/components/Typewriter";
 import { HeroWorkspace } from "@/components/HeroWorkspace";
 import { Orbit } from "@/components/Orbit";
 import { ProductMock } from "@/components/ProductMocks";
+import { JsonLd, graphJsonLd, softwareAppNode } from "@/components/schema";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -368,6 +369,7 @@ export default function Home() {
       <Trust />
       <PricingTeaser />
       <FinalCta />
+      <JsonLd data={graphJsonLd([softwareAppNode()])} />
     </>
   );
 }

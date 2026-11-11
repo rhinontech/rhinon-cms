@@ -78,7 +78,7 @@ export default function PerformancePage() {
         { slug: "payroll", line: "Bring appraisals into pay decisions." },
         { slug: "work", line: "Review the work that was actually done." },
       ]} />
-      <ProductFaq dark title="Performance questions, answered." items={FAQ} />
+      <ProductFaq slug="performance" dark title="Performance questions, answered." items={FAQ} />
       <CtaBand tone={p.tone} title={<>Make reviews <span className="text-aurora-soft">worth doing.</span></>} sub="Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
       <div className="h-24" />
     </div>

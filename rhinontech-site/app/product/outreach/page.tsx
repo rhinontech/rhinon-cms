@@ -94,7 +94,7 @@ export default function OutreachPage() {
         { slug: "inbox", line: "Replies come back to your shared inbox." },
         { slug: "chatbot", line: "Warm up leads that visit your site." },
       ]} />
-      <ProductFaq dark title="Outreach questions, answered." items={FAQ} />
+      <ProductFaq slug="outreach" dark title="Outreach questions, answered." items={FAQ} />
       <CtaBand tone={p.tone} title={<>Write one email. <span className="text-aurora-soft">Reach everyone.</span></>} sub="Set up your first campaign in a few minutes. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
       <div className="h-24" />
     </div>

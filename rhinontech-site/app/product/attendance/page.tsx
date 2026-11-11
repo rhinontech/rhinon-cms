@@ -85,7 +85,7 @@ export default function AttendancePage() {
         { slug: "hr", line: "Part of every employee record." },
         { slug: "work", line: "Plan work around who is away." },
       ]} />
-      <ProductFaq title="Attendance questions, answered." items={FAQ} />
+      <ProductFaq slug="attendance" title="Attendance questions, answered." items={FAQ} />
       <CtaBand tone={p.tone} title={<>Make attendance <span className="text-aurora-soft">effortless.</span></>} sub="Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
     </div>
   );

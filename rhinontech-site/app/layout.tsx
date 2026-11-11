@@ -6,6 +6,7 @@ import { Footer } from "@/components/Footer";
 import RhinonChatLoader from "@/components/RhinonChat";
 import { GoogleTagManagerHead, GoogleTagManagerNoscript } from "@/components/GoogleTagManager";
 import { ANALYTICS_KEY, API_URL, SITE_URL } from "@/components/site";
+import { JsonLd, siteWideGraph } from "@/components/schema";
 
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -35,15 +36,6 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { themeColor: "#ffffff" };
 
-const ORGANIZATION = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  name: "Rhinon Tech",
-  url: SITE_URL,
-  logo: `${SITE_URL}/brand/logo-navy.png`,
-  parentOrganization: { "@type": "Organization", name: "Rhinon Labs", url: "https://www.rhinonlabs.com" },
-};
-
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${geist.variable} ${geistMono.variable} ${dancing.variable}`}>
@@ -55,7 +47,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <Footer />
         <RhinonChatLoader />
         {process.env.NODE_ENV === "production" && <script async defer src={API_URL + "/t.js"} data-key={ANALYTICS_KEY} />}
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ORGANIZATION) }} />
+        <JsonLd data={siteWideGraph()} />
       </body>
     </html>
   );
