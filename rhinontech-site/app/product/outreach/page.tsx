@@ -9,8 +9,8 @@ import { ComposerHero, FeedSection, FlowSection, LinkedInSection, MemorySection,
 const p = bySlug("outreach")!;
 
 export const metadata = pageMeta({
-  title: "Outreach: AI cold email that sounds like you wrote it",
-  description: "Write one email. AI researches each lead, tailors the message and queues it on your schedule. You approve before anything goes out.",
+  title: "AI Cold Email Outreach Software",
+  description: "Free AI cold email outreach for your whole team. AI researches each lead, drafts tailored emails and waits for your approval.",
   path: "/product/outreach",
   hasOgImage: true,
 });

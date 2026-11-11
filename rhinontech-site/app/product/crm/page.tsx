@@ -10,8 +10,8 @@ import { BarsSection, ConvergeSection, LifecycleStory, PipelineHero, ScanSection
 const p = bySlug("crm")!;
 
 export const metadata = pageMeta({
-  title: "CRM: every lead and deal in one list",
-  description: "Import leads, capture them from your website, and follow each one from first hello to won deal. Free for your whole team.",
+  title: "Free CRM Software for Teams",
+  description: "Free CRM software for your whole team: import leads, capture them from your site and follow every deal from first hello to won.",
   path: "/product/crm",
   hasOgImage: true,
 });

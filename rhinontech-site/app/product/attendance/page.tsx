@@ -11,8 +11,8 @@ const G = "italic";
 const GL = "italic";
 
 export const metadata = pageMeta({
-  title: "Attendance & Leave: clock in, request leave, approve in a tap",
-  description: "Clock in and out from the dashboard, request leave, and let managers approve in a tap. Balances and a team calendar keep everyone planning from the same facts.",
+  title: "Attendance & Leave Management",
+  description: "Free attendance and leave software for your whole team. Track clock-ins, leave balances, approvals and the team calendar easily.",
   path: "/product/attendance",
   hasOgImage: true,
 });

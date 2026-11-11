@@ -10,8 +10,8 @@ import { AddressSection, InboxZeroHero, PrioritySection, RiverSection, ThreadSec
 const p = bySlug("inbox")!;
 
 export const metadata = pageMeta({
-  title: "Inbox: one shared inbox for your whole team",
-  description: "Replies to your campaigns and mail to your support address land in one shared inbox, threaded, assigned and tracked until it is done.",
+  title: "Shared Team Inbox Software",
+  description: "Free shared team inbox software for your whole team. Keep campaign replies and support emails threaded, assigned and tracked.",
   path: "/product/inbox",
   hasOgImage: true,
 });

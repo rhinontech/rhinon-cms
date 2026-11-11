@@ -11,8 +11,8 @@ const HEAD = "font-display font-medium";
 const INDIGO = "text-indigo-600 underline decoration-wavy decoration-indigo-300 decoration-[3px] underline-offset-[10px]";
 
 export const metadata = pageMeta({
-  title: "Pages: your team's knowledge, written down once",
-  description: "Nested pages for processes, plans, briefs and notes. Write them where the work happens, and find them again in a tree that makes sense.",
+  title: "Team Wiki & Knowledge Pages",
+  description: "Free team wiki and knowledge software for your whole team. Write nested docs, briefs and processes right next to your projects.",
   path: "/product/pages",
   hasOgImage: true,
 });

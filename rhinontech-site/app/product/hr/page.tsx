@@ -10,8 +10,8 @@ const p = bySlug("hr")!;
 const G = "italic";
 
 export const metadata = pageMeta({
-  title: "HR & People: onboarding, records, offer letters and e-signing",
-  description: "A directory, a full record for every person, an onboarding flow for new hires and offer letters signed inside the app.",
+  title: "HR Software: Onboarding, Offers & E-Sign",
+  description: "Free HR software for your whole team: employee directory, records, new-hire onboarding and e-signed offer letters in one place.",
   path: "/product/hr",
   hasOgImage: true,
 });

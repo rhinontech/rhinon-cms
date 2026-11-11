@@ -10,8 +10,8 @@ const p = bySlug("performance")!;
 const G = "italic";
 
 export const metadata = pageMeta({
-  title: "Performance: review cycles, goals and feedback",
-  description: "Run quarterly, annual or probation review cycles. Set goals for each person, collect reviews from the right people and see progress across your team.",
+  title: "Performance Reviews & Goals Software",
+  description: "Free performance management software for your whole team. Run quarterly review cycles, track employee goals and gather feedback.",
   path: "/product/performance",
   hasOgImage: true,
 });

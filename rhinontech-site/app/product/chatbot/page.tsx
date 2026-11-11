@@ -12,8 +12,8 @@ const p = bySlug("chatbot")!;
 const GRAD = "italic";
 
 export const metadata = pageMeta({
-  title: "AI Chatbot: a website assistant trained on your content",
-  description: "Train it on your website and documents in minutes. It answers visitors day and night, saves their details to the CRM and hands over to your team.",
+  title: "AI Website Chatbot Trained on Your Content",
+  description: "AI website chatbot software trained on your site and docs. Answer visitors day and night, capture CRM leads and hand over live.",
   path: "/product/chatbot",
   hasOgImage: true,
 });

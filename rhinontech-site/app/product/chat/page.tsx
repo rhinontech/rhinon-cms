@@ -10,8 +10,8 @@ const p = bySlug("chat")!;
 const G = "italic";
 
 export const metadata = pageMeta({
-  title: "Team Chat & Meetings: talk it through without leaving the work",
-  description: "Message your team, start a group call, or share a meeting link with someone outside the company. All of it lives next to your projects and your customers.",
+  title: "Team Chat & Video Meetings",
+  description: "Free team chat and video meeting software for your whole team. Message channels, start calls and invite external guests by link.",
   path: "/product/chat",
   hasOgImage: true,
 });

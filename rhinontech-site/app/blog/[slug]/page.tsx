@@ -20,9 +20,10 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const blog = await getBlog((await params).slug);
   if (!blog) return { title: "Article not found" };
-  const title = blog.metaTitle || blog.title;
+  const rawTitle = (blog.metaTitle || blog.title).trim();
+  const title = rawTitle.replace(/(?:\s*\|\s*Rhinon Tech)+$/i, "").trim();
   const description = blog.metaDescription || blog.excerpt;
-  const fullTitle = title.includes("Rhinon Tech") ? title : `${title} | Rhinon Tech`;
+  const fullTitle = `${title} | Rhinon Tech`;
   return {
     title,
     description,

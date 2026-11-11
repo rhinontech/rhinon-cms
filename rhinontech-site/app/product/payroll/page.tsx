@@ -10,8 +10,8 @@ const p = bySlug("payroll")!;
 const G = "italic";
 
 export const metadata = pageMeta({
-  title: "Payroll: monthly runs and payslips, built for India",
-  description: "Salary structures live on each person's record. Start a monthly run, check the numbers and mark it paid. Payslips are generated for everyone.",
+  title: "Payroll Software for India",
+  description: "Free payroll software for your whole team in India. Manage salary structures, PF/PT/TDS runs and monthly payslips in one place.",
   path: "/product/payroll",
   hasOgImage: true,
 });

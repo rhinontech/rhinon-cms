@@ -10,8 +10,8 @@ const p = bySlug("work")!;
 const G = "italic";
 
 export const metadata = pageMeta({
-  title: "Work: projects, tasks and a portal your clients love",
-  description: "Projects, tasks, boards and a calendar for every piece of work, plus a private portal where clients follow progress and send change requests.",
+  title: "Project Management with a Client Portal",
+  description: "Free project management software for your whole team. Manage tasks, boards, calendars and a private client portal in one place.",
   path: "/product/work",
   hasOgImage: true,
 });
