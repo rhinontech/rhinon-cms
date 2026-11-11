@@ -1,0 +1,32 @@
+# Rhinon Tech
+
+> Free all-in-one business workspace: CRM, AI outreach, shared inbox, projects, Pages, team chat, HR, attendance, payroll and performance — built by Rhinon Labs. Only the AI website chatbot add-on is paid.
+
+Based in Hyderabad, Telangana, India (https://www.rhinonlabs.com). Core modules are free for your whole team with no time limit.
+
+## Products
+
+- [All Products](https://www.rhinontech.com/product): Overview of all 11 workspace modules in one tab.
+- [CRM](https://www.rhinontech.com/product/crm): Leads, deals and every email on one timeline (free).
+- [Outreach](https://www.rhinontech.com/product/outreach): AI cold email that sounds like you wrote it (free).
+- [Inbox](https://www.rhinontech.com/product/inbox): One shared inbox for replies and support (free).
+- [AI Chatbot](https://www.rhinontech.com/product/chatbot): A website assistant trained on your own content (paid add-on).
+- [Work](https://www.rhinontech.com/product/work): Projects, tasks and a portal your clients love (free).
+- [Team Chat & Meetings](https://www.rhinontech.com/product/chat): Chat, group calls and meeting links (free).
+- [Pages](https://www.rhinontech.com/product/pages): Docs and notes in a tree, next to the work (free).
+- [HR & People](https://www.rhinontech.com/product/hr): Onboarding, records, offer letters and e-signing (free).
+- [Payroll](https://www.rhinontech.com/product/payroll): Monthly runs and payslips, built for India (free).
+- [Attendance & Leave](https://www.rhinontech.com/product/attendance): Clock in, request leave, approve in a tap (free).
+- [Performance](https://www.rhinontech.com/product/performance): Review cycles, goals and feedback (free).
+
+## Platform & Resources
+
+- [Rhinon AI](https://www.rhinontech.com/ai): AI built into CRM, outreach, chatbot and HR with human approval.
+- [Integrations](https://www.rhinontech.com/integrations): Connect your mailbox, calendar, LinkedIn, Slack, GitHub and website.
+- [Pricing](https://www.rhinontech.com/pricing): Free for your whole team; custom pricing for the AI website chatbot add-on.
+- [Security](https://www.rhinontech.com/security): Tenant isolation, role-based access control and encrypted connections.
+- [Blog](https://www.rhinontech.com/blog): Guides and updates for teams running sales, projects, people and AI in one workspace.
+- [Book a demo](https://www.rhinontech.com/demo): 30-minute walkthrough over Google Meet.
+- [Contact](https://www.rhinontech.com/contact): Reach the team by enquiry form or +91 8249291789.
+- [Privacy & Terms](https://www.rhinontech.com/privacy-terms): How Rhinon Tech handles data and workspace terms of service.
+
