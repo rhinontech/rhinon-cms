@@ -31,6 +31,12 @@ export function Eyebrow({ children, color, style }: { children: ReactNode; color
   );
 }
 
+/** Native text is clipped to its line box; the web's is not. Pad it and pull the layout back so tight headlines keep their ascenders and descenders. */
+const overflowRoom = (px: number) => {
+  const room = Math.ceil(px * 0.16);
+  return { paddingTop: room, paddingBottom: room, marginTop: -room, marginBottom: -room };
+};
+
 const DISPLAY = { hero: 76, xl: 56, lg: 38, md: 26 } as const;
 
 /** Big headline. Size scales by the theme's own factor so a condensed face and a grotesque both fit the screen. */
@@ -39,7 +45,7 @@ export function Display({ children, size = "hero", style, color }: { children: R
   const px = DISPLAY[size] * t.c.ds;
   return (
     <RNText
-      style={[{ fontFamily: t.f.display, fontSize: px, lineHeight: px * (0.84 + t.c.dl), letterSpacing: t.c.tracking * px, color: color ?? t.c.ink }, style]}
+      style={[{ fontFamily: t.f.display, fontSize: px, lineHeight: px * (0.84 + t.c.dl), letterSpacing: t.c.tracking * px, color: color ?? t.c.ink, ...overflowRoom(px) }, style]}
     >
       {children}
     </RNText>

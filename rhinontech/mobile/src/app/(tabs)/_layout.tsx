@@ -1,5 +1,6 @@
 import { Tabs } from "expo-router";
 import { House, Inbox, LayoutGrid, MessageCircle, SquareCheckBig, type LucideIcon } from "lucide-react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import Animated, { Easing, interpolateColor, useAnimatedStyle, useDerivedValue, withTiming } from "react-native-reanimated";
 import { Pressable, StyleSheet, Text as RNText, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -77,9 +78,17 @@ function TabBar({ state, navigateToTab }: BarProps) {
   );
 }
 
+/** Content fades into the page colour above the bar, so rows never run hard into it. */
+function Fade() {
+  const t = useTheme();
+  const insets = useSafeAreaInsets();
+  const h = insets.bottom + 140;
+  return <LinearGradient pointerEvents="none" colors={[`${t.c.paper}00`, `${t.c.paper}E6`, t.c.paper]} locations={[0, 0.55, 1]} style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: h }} />;
+}
+
 export default function TabsLayout() {
   return (
-    <Tabs tabBar={(p) => <TabBar {...p} />} screenOptions={{ headerShown: false }}>
+    <Tabs tabBar={(p) => <><Fade /><TabBar {...p} /></>} screenOptions={{ headerShown: false }}>
       <Tabs.Screen name="index" />
       <Tabs.Screen name="work" />
       <Tabs.Screen name="inbox" />
