@@ -1,8 +1,10 @@
+import { DEMO } from "@/lib/demo";
+import { loadActivities } from "@/lib/live";
 import { brandOf } from "@/lib/mock-data";
 import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable, TextInput } from "@/components/rn";
 import { Mail, MessageCircle, NotebookPen, Phone, Plus } from "@/components/icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Avatar,
   Badge,
@@ -54,6 +56,9 @@ export default function CrmPage() {
   const allowed = usePerm("crm");
   const [tab, setTab] = useState<Tab>("pipeline");
   const [open, setOpen] = useState<Target>(null);
+  useEffect(() => {
+    if (open && !DEMO) void loadActivities(open.id, open.kind).catch(() => {});
+  }, [open?.id, open?.kind]);
   const [logging, setLogging] = useState<string | null>(null);
   if (!allowed) {
     return (

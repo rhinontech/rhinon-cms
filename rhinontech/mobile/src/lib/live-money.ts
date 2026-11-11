@@ -1,4 +1,5 @@
-import { api } from "./api";
+import { api, upload } from "./api";
+import { filePart, type Picked } from "./pick";
 import { MONTHS_LONG, MONTHS, defineLive, replace, shortDate, write } from "./live-core";
 import { PAYSLIPS, type Claim, type PayLine, type Payslip } from "./mock-data";
 import { actions, hydrate } from "./store";
@@ -34,6 +35,20 @@ async function syncMoney() {
       status: status(c.status), payout: c.payout === "direct" ? "Direct" : "With payslip", ...(c.reviewNote ? { note: c.reviewNote } : {}),
     })),
   });
+}
+
+/** File a reimbursement claim with its bill. The API needs the bill, the category, the amount and the month spent. */
+export async function submitClaim(input: { category: string; description: string; amount: number; receipt: Picked }): Promise<void> {
+  const d = new Date();
+  const form = new FormData();
+  form.append("category", input.category);
+  form.append("description", input.description);
+  form.append("amount", String(input.amount));
+  form.append("expenseMonth", String(d.getMonth() + 1));
+  form.append("expenseYear", String(d.getFullYear()));
+  form.append("receipt", await filePart(input.receipt), input.receipt.name);
+  await upload("/reimbursements/me", form);
+  await syncMoney();
 }
 
 defineLive({

@@ -1,3 +1,4 @@
+import { startDmRemote } from "@/lib/live";
 import { DEMO } from "@/lib/demo";
 import { useRev } from "@/lib/store";
 import { View, Text, Pressable, Link } from "@/components/rn";
@@ -187,8 +188,9 @@ export default function ChatPage() {
           {PEOPLE.map((p) => (
             <View key={p.id}>
               <Pressable
-                onPress={() => {
-                  const id = actions.startDm(p.id);
+                onPress={async () => {
+                  const id = DEMO ? actions.startDm(p.id) : await startDmRemote(p.id).catch(() => null);
+                  if (!id) return;
                   setPicking(false);
                   void router.navigate({
                     to: "/chat/$chatId",

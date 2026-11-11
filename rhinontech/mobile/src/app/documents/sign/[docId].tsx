@@ -1,10 +1,13 @@
+import { DEMO } from "@/lib/demo";
+import { signDocument } from "@/lib/live";
+import type { SignatureHandle } from "@/components/rhinon/signature";
 import { getSession } from "@/lib/api";
 import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable, TextInput } from "@/components/rn";
 import { useLocalSearchParams } from "expo-router";
 import { useRouter } from "@/lib/router";
 import { Check, ShieldCheck } from "@/components/icons";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { SignaturePad } from "@/components/rhinon/signature";
 import {
   Button,
@@ -34,6 +37,8 @@ export default function SignPage() {
   const [inked, setInked] = useState(false);
   const [agree, setAgree] = useState(false);
   const [done, setDone] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const pad = useRef<SignatureHandle>(null);
   if (!doc) {
     return (
       <Screen>
@@ -140,7 +145,7 @@ export default function SignPage() {
             </View>
           </View>
         ) : (
-          <SignaturePad onInk={setInked} />
+          <SignaturePad ref={pad} onInk={setInked} />
         )}
       </View>
 
@@ -164,10 +169,24 @@ export default function SignPage() {
         tone="ink"
         className="mt-5"
         icon={ShieldCheck}
-        disabled={!ready}
-        onClick={() => {
-          actions.signDoc(doc.id);
-          setDone(true);
+        disabled={!ready || busy}
+        onClick={async () => {
+          if (DEMO) {
+            actions.signDoc(doc.id);
+            setDone(true);
+            return;
+          }
+          setBusy(true);
+          try {
+            const image = mode === "draw" ? await pad.current?.toDataURL() : null;
+            if (mode === "draw" && !image) throw new Error("Draw your signature first.");
+            await signDocument(doc.id, mode === "type" ? { type: "typed", fullName: name.trim() } : { type: "drawn", signatureImageBase64: image! });
+            setDone(true);
+          } catch (e) {
+            actions.toast(e instanceof Error ? e.message : "That didn't sign. Try again.", "coral");
+          } finally {
+            setBusy(false);
+          }
         }}
       >
         Sign and submit

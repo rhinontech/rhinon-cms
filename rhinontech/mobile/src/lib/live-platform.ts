@@ -1,6 +1,6 @@
 import { api, getSession } from "./api";
 import { MONTHS, ago, defineLive, replace, write } from "./live-core";
-import { AUDIT, type AuditEntry, type AuditKind, type Idea, type IdeaStatus } from "./mock-more";
+import { AUDIT, EVENTS, type AuditEntry, type AuditKind, type Idea, type IdeaStatus } from "./mock-more";
 import { actions, hydrate } from "./store";
 
 const meId = () => getSession()?.userId ?? "";
@@ -59,3 +59,12 @@ async function syncAudit() {
 }
 
 defineLive({ name: "audit", sync: syncAudit, blank: () => replace(AUDIT, []) });
+
+/* ── content and events ──────────────────────────────────────────────────────
+ * Events, check-in and the post approval queue belong to the platform workspace's content module.
+ * Until their adapters land they are emptied so no sample event or post shows next to a real account. */
+defineLive({
+  name: "content",
+  sync: async () => {},
+  blank: () => { replace(EVENTS, []); hydrate({ guests: {}, posts: [] }); },
+});

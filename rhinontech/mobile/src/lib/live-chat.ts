@@ -24,6 +24,13 @@ async function syncChat() {
   });
 }
 
+/** Open (or create) the direct conversation with a person and return its real id. */
+export async function startDmRemote(personId: string): Promise<string> {
+  const c = await api<{ id: string }>("/team-chat/conversations/direct", { method: "POST", body: { userId: personId } });
+  await syncChat();
+  return c.id;
+}
+
 export async function loadChatMessages(id: string) {
   const me = getSession()?.userId ?? "";
   const res = await api<{ messages?: ApiMsg[] } | ApiMsg[]>(`/team-chat/conversations/${id}/messages`);
@@ -59,12 +66,6 @@ defineLive({
       write("chat", () => api(`/team-chat/conversations/${id}/messages`, { method: "POST", body: { body: text } }), () => { void loadChatMessages(id); });
     };
     actions.markChatRead = () => undefined;
-    actions.startDm = (personId) => {
-      const id = orig.startDm(personId);
-      // the real conversation is created server-side; the screen opens the optimistic one until the next sync
-      void api<{ id: string }>("/team-chat/conversations", { method: "POST", body: { kind: "direct", memberIds: [personId] } }).then(() => syncChat()).catch(() => {});
-      return id;
-    };
   },
 });
 

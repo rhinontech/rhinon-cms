@@ -31,6 +31,10 @@ export { loadActivities } from "./live-crm";
 export { loadThread } from "./live-inbox";
 export { loadPage, createPageRemote } from "./live-pages";
 export { loadTicket } from "./live-chatbot";
+export { signDocument } from "./live-ops";
+export { submitClaim } from "./live-money";
+export { startDmRemote } from "./live-chat";
+export { useLoad } from "./use-load";
 
 /** Blank every connected module so sample data never shows next to a real account. */
 export function blankLive() {

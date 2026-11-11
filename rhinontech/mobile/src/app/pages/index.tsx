@@ -1,3 +1,5 @@
+import { DEMO } from "@/lib/demo";
+import { createPageRemote } from "@/lib/live";
 import { useRev } from "@/lib/store";
 import { View, Pressable, TextInput, Link } from "@/components/rn";
 import { useRouter } from "@/lib/router";
@@ -149,8 +151,9 @@ export default function PagesPage() {
       <NewPageSheet
         open={creating}
         onClose={() => setCreating(false)}
-        onCreate={(title, parent) => {
-          const id = actions.createPage(title, parent);
+        onCreate={async (title, parent) => {
+          const id = DEMO ? actions.createPage(title, parent) : await createPageRemote(title, parent).catch(() => null);
+          if (!id) return;
           void router.navigate({
             to: "/pages/$pageId",
             params: {

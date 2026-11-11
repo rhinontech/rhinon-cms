@@ -1,3 +1,4 @@
+import { loadTicket, useLoad } from "@/lib/live";
 import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable, TextInput } from "@/components/rn";
 import { useLocalSearchParams } from "expo-router";
@@ -30,6 +31,7 @@ export default function TicketPage() {
   const { ticketId } = useLocalSearchParams<{
     ticketId: string;
   }>();
+  useLoad(loadTicket, ticketId);
   const ticket = useApp((s) => s.tickets.find((t) => t.id === ticketId));
   const [reply, setReply] = useState("");
   if (!ticket) {

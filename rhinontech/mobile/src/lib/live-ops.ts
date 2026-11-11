@@ -1,6 +1,6 @@
 import { api, getSession } from "./api";
 import { MONTHS, ago, defineLive, parseDay, shortDate, toneAt, write } from "./live-core";
-import { OPENINGS, type Candidate, type DocItem, type DocKind, type DocRequest, type Goal, type HiringStage, type Interview, type Opening } from "./mock-more";
+import { DOC_BODY, OPENINGS, type Candidate, type DocItem, type DocKind, type DocRequest, type Goal, type HiringStage, type Interview, type Opening } from "./mock-more";
 import { actions, getState, hydrate } from "./store";
 import { replace } from "./live-core";
 
@@ -11,7 +11,8 @@ const fmtDate = (iso: string | null) => (iso ? `${parseDay(iso).getDate()} ${MON
 
 /* ── documents ───────────────────────────────────────────────────────────── */
 
-type ApiDoc = { id: string; title: string; category: string; fileSize: number | null; fileKey: string | null; isRequest: boolean; requestNote: string | null; signingToken: string | null; signedAt: string | null; createdAt: string; uploader?: { fullName: string } | null };
+type LetterBlock = { kind: string; text?: string; num?: string; marker?: string };
+type ApiDoc = { contentBlocks?: LetterBlock[] | null; id: string; title: string; category: string; fileSize: number | null; fileKey: string | null; isRequest: boolean; requestNote: string | null; signingToken: string | null; signedAt: string | null; createdAt: string; uploader?: { fullName: string } | null };
 const KIND: [RegExp, DocKind][] = [[/offer/i, "offer"], [/contract|agreement/i, "contract"], [/id|aadhaar|pan|passport/i, "id"], [/apprais/i, "appraisal"], [/nda|non-disclosure/i, "nda"]];
 const kindOf = (category: string, title: string): DocKind => KIND.find(([re]) => re.test(category) || re.test(title))?.[1] ?? "other";
 /** token + document id for the documents waiting on this person's signature. */
@@ -20,6 +21,7 @@ export const signing = new Map<string, string>();
 async function syncDocs() {
   const rows = await api<ApiDoc[]>("/documents?employeeId=self").catch(() => [] as ApiDoc[]);
   signing.clear();
+  for (const k of Object.keys(DOC_BODY)) delete DOC_BODY[k];
   const docs: DocItem[] = [];
   const requests: DocRequest[] = [];
   for (const d of rows) {
@@ -28,6 +30,10 @@ async function syncDocs() {
       continue;
     }
     if (d.signingToken && !d.signedAt) signing.set(d.id, d.signingToken);
+    // Letters (offer, NDA) carry their text as blocks; a file document is read on the web or in the file itself.
+    if (d.contentBlocks?.length) {
+      DOC_BODY[d.id] = d.contentBlocks.filter((b) => b.text).map((b) => (b.kind === "heading" ? `${b.num ? `${b.num} ` : ""}${b.text}` : b.kind === "bullet" || b.kind === "numbered" ? `${b.marker ?? "•"} ${b.text}` : b.text!));
+    }
     docs.push({ id: d.id, name: d.title, kind: kindOf(d.category, d.title), date: shortDate(d.createdAt), size: fmtSize(d.fileSize), state: d.signedAt ? "signed" : d.signingToken ? "to-sign" : "ok" });
   }
   hydrate({ docs, docRequests: requests });
@@ -81,10 +87,18 @@ async function syncHiring() {
   hydrate({ candidates, interviews });
 }
 
+/** Sign a document that is waiting on this person, typed or drawn, with the signing link the API issued for it. */
+export async function signDocument(id: string, sig: { type: "typed"; fullName: string } | { type: "drawn"; signatureImageBase64: string }): Promise<void> {
+  const token = signing.get(id);
+  if (!token) throw new Error("This document can't be signed in the app. Ask HR to send the signing link again.");
+  await api(`/document-signing/${token}/documents/${id}/sign`, { method: "POST", body: sig, auth: false });
+  await syncDocs();
+}
+
 defineLive({
   name: "documents",
   sync: syncDocs,
-  blank: () => hydrate({ docs: [], docRequests: [] }),
+  blank: () => { for (const k of Object.keys(DOC_BODY)) delete DOC_BODY[k]; hydrate({ docs: [], docRequests: [] }); },
   install: ({ orig }) => {
     actions.signDoc = (id) => { orig.signDoc(id); };
   },

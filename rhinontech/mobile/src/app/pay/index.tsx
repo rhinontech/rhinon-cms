@@ -1,3 +1,6 @@
+import { DEMO } from "@/lib/demo";
+import { submitClaim } from "@/lib/live";
+import { pickFile, type Picked } from "@/lib/pick";
 import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable, TextInput, Link } from "@/components/rn";
 import { ChevronRight, Download, Eye, EyeOff, Plus, Receipt } from "@/components/icons";
@@ -305,25 +308,36 @@ export default function PayPage() {
     </Screen>
   );
 }
-const CATEGORIES = ["Travel", "Meals", "Learning", "Equipment", "Other"];
+/** The API only accepts these categories; the design preview keeps its own sample ones. */
+const CATEGORIES = DEMO ? ["Travel", "Meals", "Learning", "Equipment", "Other"] : ["Internet", "Phone", "Travel", "Equipment", "Other"];
 function ClaimSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("Travel");
   const [amount, setAmount] = useState("");
   const [payout, setPayout] = useState<Claim["payout"]>("With payslip");
-  const [receipt, setReceipt] = useState(false);
+  const [receipt, setReceipt] = useState<Picked | null>(null);
+  const [busy, setBusy] = useState(false);
   const value = Number(amount.replace(/[^\d]/g, ""));
-  const submit = () => {
+  const submit = async () => {
     if (!title.trim() || !value) return;
-    actions.addClaim({
-      title: title.trim(),
-      category,
-      amount: value,
-      payout,
-    });
+    if (DEMO) {
+      actions.addClaim({ title: title.trim(), category, amount: value, payout });
+    } else {
+      if (!receipt) { actions.toast("Add a photo of the bill first", "coral"); return; }
+      setBusy(true);
+      try {
+        await submitClaim({ category, description: title.trim(), amount: value, receipt });
+        actions.toast("Claim submitted", "sun");
+      } catch (e) {
+        actions.toast(e instanceof Error ? e.message : "That didn't send. Try again.", "coral");
+        setBusy(false);
+        return;
+      }
+      setBusy(false);
+    }
     setTitle("");
     setAmount("");
-    setReceipt(false);
+    setReceipt(null);
     onClose();
   };
   return (
@@ -359,26 +373,32 @@ function ClaimSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
             ))}
           </View>
         </Field>
-        <Field label="Paid out">
-          <View className="flex gap-2">
-            {(["With payslip", "Direct"] as Claim["payout"][]).map((p) => (
-              <Chip key={p} active={payout === p} onClick={() => setPayout(p)}>
-                {p}
-              </Chip>
-            ))}
-          </View>
-        </Field>
+        {DEMO ? (
+          <Field label="Paid out">
+            <View className="flex gap-2">
+              {(["With payslip", "Direct"] as Claim["payout"][]).map((p) => (
+                <Chip key={p} active={payout === p} onClick={() => setPayout(p)}>
+                  {p}
+                </Chip>
+              ))}
+            </View>
+          </Field>
+        ) : null}
         <Pressable
-          onPress={() => setReceipt((r) => !r)}
+          onPress={async () => {
+            if (DEMO) { setReceipt((r) => (r ? null : { uri: "", name: "receipt-1184.jpg", mime: "image/jpeg" })); return; }
+            const f = await pickFile();
+            if (f) setReceipt(f);
+          }}
           className={cn(
             "press flex h-16 w-full items-center justify-center gap-3 rounded-2xl border-2 border-dashed text-[15px] font-medium",
             receipt ? "border-leaf bg-leaf/10 text-ink" : "border-ink/25 text-ink/60",
           )}
         >
           <Receipt size={20} />
-          {receipt ? "receipt-1184.jpg attached" : "Add a photo of the receipt"}
+          {receipt ? `${receipt.name} attached` : "Add a photo of the bill"}
         </Pressable>
-        <Button tone="ink" onClick={submit} disabled={!title.trim() || !value}>
+        <Button tone="ink" onClick={() => void submit()} disabled={!title.trim() || !value || busy}>
           Submit claim
         </Button>
       </View>

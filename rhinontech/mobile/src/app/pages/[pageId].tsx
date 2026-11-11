@@ -1,3 +1,4 @@
+import { loadPage, useLoad } from "@/lib/live";
 import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable, TextInput, Link } from "@/components/rn";
 import { useLocalSearchParams } from "expo-router";
@@ -64,6 +65,7 @@ export default function PageView() {
   const { pageId } = useLocalSearchParams<{
     pageId: string;
   }>();
+  useLoad(loadPage, pageId);
   const page = useApp((s) => s.pages.find((p) => p.id === pageId));
   const children = useApp((s) => s.pages).filter((p) => p.parent === pageId);
   const [editing, setEditing] = useState(false);

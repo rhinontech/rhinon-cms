@@ -1,3 +1,4 @@
+import { loadThread, useLoad } from "@/lib/live";
 import { useRev } from "@/lib/store";
 import { View, Text, Pressable, TextInput } from "@/components/rn";
 import { Path, Svg } from "react-native-svg";
@@ -27,6 +28,7 @@ export default function ThreadPage() {
   const { threadId } = useLocalSearchParams<{
     threadId: string;
   }>();
+  useLoad(loadThread, threadId);
   const thread = useApp((s) => s.threads.find((t) => t.id === threadId));
   const [reply, setReply] = useState("");
   const [drafted, setDrafted] = useState(false);

@@ -1,3 +1,4 @@
+import { loadChatMessages, useLoad } from "@/lib/live";
 import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable, TextInput } from "@/components/rn";
 import { useLocalSearchParams } from "expo-router";
@@ -31,6 +32,7 @@ export default function ChatThread() {
   const { chatId } = useLocalSearchParams<{
     chatId: string;
   }>();
+  useLoad(loadChatMessages, chatId);
   const chat = useApp((s) => s.chats.find((c) => c.id === chatId));
   const [text, setText] = useState("");
   const [typing, setTyping] = useState(false);

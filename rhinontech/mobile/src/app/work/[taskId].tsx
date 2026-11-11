@@ -1,3 +1,4 @@
+import { loadTaskComments, useLoad } from "@/lib/live";
 import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable, TextInput } from "@/components/rn";
 import { useLocalSearchParams } from "expo-router";
@@ -30,6 +31,7 @@ export default function TaskDetail() {
   const { taskId } = useLocalSearchParams<{
     taskId: string;
   }>();
+  useLoad(loadTaskComments, taskId);
   const task = useApp((s) => s.tasks.find((t) => t.id === taskId));
   const [comment, setComment] = useState("");
   const [sub, setSub] = useState("");
