@@ -16,19 +16,21 @@ import { cn } from "@/lib/utils";
 /* ── Page background: paper + the theme's soft colour glows (--phone-bg) ──── */
 
 const oklch = (s: string) => toCss(parseColor(convertOklchIn(s))!);
+const stopRgb = (s: string) => { const c = parseColor(convertOklchIn(s))!; return `rgb(${c.r},${c.g},${c.b})`; };
+const stopAlpha = (s: string) => parseColor(convertOklchIn(s))!.a;
 
 export function PhoneBackground() {
   const env = useEnv();
   const { width: W, height: H } = env;
-  const glows: { cx: number; cy: number; rx: number; ry: number; color: string; stop: number }[] =
+  const glows: { cx: number; cy: number; rx: number; ry: number; rgb: string; alpha: number; stop: number }[] =
     env.id === "admin"
       ? [
-          { cx: W * 0.06, cy: H * -0.04, rx: 430, ry: 330, color: oklch("oklch(0.86 0.075 268 / 0.55)"), stop: 0.62 },
-          { cx: W * 1.08, cy: H * 0.04, rx: 410, ry: 330, color: oklch("oklch(0.9 0.055 218 / 0.45)"), stop: 0.58 },
-          { cx: W * 0.46, cy: H * 1.1, rx: 470, ry: 430, color: oklch("oklch(0.92 0.045 305 / 0.38)"), stop: 0.62 },
+          { cx: W * 0.06, cy: H * -0.04, rx: 430, ry: 330, rgb: stopRgb("oklch(0.86 0.075 268 / 0.55)"), alpha: stopAlpha("oklch(0.86 0.075 268 / 0.55)"), stop: 0.62 },
+          { cx: W * 1.08, cy: H * 0.04, rx: 410, ry: 330, rgb: stopRgb("oklch(0.9 0.055 218 / 0.45)"), alpha: stopAlpha("oklch(0.9 0.055 218 / 0.45)"), stop: 0.58 },
+          { cx: W * 0.46, cy: H * 1.1, rx: 470, ry: 430, rgb: stopRgb("oklch(0.92 0.045 305 / 0.38)"), alpha: stopAlpha("oklch(0.92 0.045 305 / 0.38)"), stop: 0.62 },
         ]
       : env.id === "midnight"
-        ? [{ cx: W * 0.5, cy: H * -0.04, rx: W * 0.9, ry: H * 0.42, color: oklch("oklch(0.34 0.11 285 / 0.6)"), stop: 0.72 }]
+        ? [{ cx: W * 0.5, cy: H * -0.04, rx: W * 0.9, ry: H * 0.42, rgb: stopRgb("oklch(0.34 0.11 285 / 0.6)"), alpha: stopAlpha("oklch(0.34 0.11 285 / 0.6)"), stop: 0.72 }]
         : [];
   return (
     <RNView pointerEvents="none" style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, backgroundColor: env.c.paper }}>
@@ -37,8 +39,9 @@ export function PhoneBackground() {
           <Defs>
             {glows.map((g, i) => (
               <RadialGradient key={i} id={`g${i}`} cx={g.cx} cy={g.cy} rx={g.rx} ry={g.ry} fx={g.cx} fy={g.cy} gradientUnits="userSpaceOnUse">
-                <Stop offset={0} stopColor={g.color} />
-                <Stop offset={g.stop} stopColor={withAlpha(g.color, 0)} />
+                {/* iOS ignores the alpha inside stopColor, so the colour and its opacity are given separately */}
+                <Stop offset={0} stopColor={g.rgb} stopOpacity={g.alpha} />
+                <Stop offset={g.stop} stopColor={g.rgb} stopOpacity={0} />
               </RadialGradient>
             ))}
           </Defs>
@@ -66,10 +69,12 @@ function TabItem({ tab, active, count }: { tab: (typeof TABS)[number]; active: b
   const solid = home ? "#000000" : colorOf(tab.tone === "paper" ? "ink" : tab.tone, env)!;
   const on = home ? "#ffffff" : colorOf(tab.tone === "paper" ? "paper" : `${tab.tone}-foreground`, env)!;
   const idle = glass ? "rgba(27,33,48,0.58)" : withAlpha(env.c.paper, 0.65);
-  const p = useDerivedValue(() => withTiming(active ? 1 : 0, { duration: 300, easing: Easing.out(Easing.cubic) }), [active]);
+  // Worklets run on the UI thread and cannot call plain JS functions, so every colour is resolved here first.
+  const clear = withAlpha(solid, 0);
+  const p = useDerivedValue(() => withTiming(active ? 1 : 0, { duration: 300, easing: Easing.out(Easing.cubic) }));
   const pill = useAnimatedStyle(() => ({
     flexGrow: 1 + p.value * 1.1,
-    backgroundColor: interpolateColor(p.value, [0, 1], [withAlpha(solid, 0).replace(/^rgba\((\d+),(\d+),(\d+),0\)$/, "rgba($1,$2,$3,0)"), solid]),
+    backgroundColor: interpolateColor(p.value, [0, 1], [clear, solid]),
   }));
   const label = useAnimatedStyle(() => ({ opacity: p.value, maxWidth: p.value * 80, marginLeft: p.value * 8 }));
   const Icon = tab.icon;

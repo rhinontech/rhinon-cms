@@ -1,9 +1,21 @@
+import Constants from "expo-constants";
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 
+/**
+ * In development the API runs on the same machine as Metro, so the API host is Metro's host: it follows the Mac
+ * when its Wi-Fi address changes (a pinned IP in .env goes stale). EXPO_PUBLIC_API_URL still wins when set.
+ */
+function metroHost(): string | null {
+  const uri = Constants.expoConfig?.hostUri ?? (Constants as unknown as { expoGoConfig?: { debuggerHost?: string } }).expoGoConfig?.debuggerHost;
+  return uri ? (uri.split(":")[0] ?? null) : null;
+}
 /** Android emulators reach the host machine at 10.0.2.2; iOS simulators and web use localhost. */
 const DEFAULT_BASE = Platform.OS === "android" ? "http://10.0.2.2:5055" : "http://localhost:5055";
-export const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? DEFAULT_BASE;
+const envUrl = process.env.EXPO_PUBLIC_API_URL;
+const isLan = (u: string) => /^https?:\/\/(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(u);
+/** A pinned LAN address in a dev build is ignored (it goes stale when the Wi-Fi address changes); a real server URL is honoured. */
+export const API_BASE = envUrl && !(__DEV__ && metroHost() && isLan(envUrl)) ? envUrl : metroHost() ? `http://${metroHost()}:5055` : DEFAULT_BASE;
 
 const KEY = "rhinon-session";
 export type Session = { token: string; userId: string; fullName: string; roleSlug: string; orgName: string };

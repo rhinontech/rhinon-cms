@@ -390,10 +390,10 @@ function base(tok: string, st: St, env: TwEnv, flags: TwFlags): boolean {
     case "flex-1": s.flexGrow = 1; s.flexShrink = 1; s.flexBasis = 0; return true;
     case "flex-auto": s.flexGrow = 1; s.flexShrink = 1; s.flexBasis = "auto"; return true;
     case "flex-none": s.flexGrow = 0; s.flexShrink = 0; return true;
-    case "grow": s.flexGrow = 1; return true;
-    case "grow-0": s.flexGrow = 0; return true;
-    case "shrink-0": s.flexShrink = 0; return true;
-    case "shrink": s.flexShrink = 1; return true;
+    case "grow": case "flex-grow": s.flexGrow = 1; return true;
+    case "grow-0": case "flex-grow-0": s.flexGrow = 0; return true;
+    case "shrink-0": case "flex-shrink-0": s.flexShrink = 0; return true;
+    case "shrink": case "flex-shrink": s.flexShrink = 1; return true;
     case "absolute": case "fixed": s.position = "absolute"; return true;
     case "relative": case "sticky": s.position = "relative"; return true;
     case "uppercase": inh.transform = "uppercase"; return true;

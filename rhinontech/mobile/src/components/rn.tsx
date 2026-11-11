@@ -184,15 +184,14 @@ function prepare(children: ReactNode, meta: Meta, style: Record<string, any>, en
 /* ── Animation ───────────────────────────────────────────────────────────── */
 
 const ease = Easing.bezier(0.2, 0.8, 0.2, 1);
-type EnterSpec = { ms: number; easing: any; style: (t: number) => Record<string, unknown> };
-const clamp = (t: number) => Math.min(1, Math.max(0, t));
-const ENTER: Record<string, EnterSpec> = {
-  rise: { ms: 500, easing: ease, style: (t) => ({ opacity: clamp(t), transform: [{ translateY: (1 - t) * 14 }] }) },
-  screen: { ms: 340, easing: ease, style: (t) => ({ opacity: clamp(t), transform: [{ translateY: (1 - t) * 10 }] }) },
-  pop: { ms: 360, easing: Easing.bezier(0.2, 1.5, 0.4, 1), style: (t) => ({ opacity: clamp(t * 1.6), transform: [{ scale: 0.85 + 0.15 * t }] }) },
-  "fade-in": { ms: 220, easing: Easing.out(Easing.ease), style: (t) => ({ opacity: clamp(t) }) },
-  toast: { ms: 420, easing: Easing.bezier(0.2, 1.2, 0.3, 1), style: (t) => ({ opacity: clamp(t * 1.6), transform: [{ translateY: (1 - t) * -16 }, { scale: 0.96 + 0.04 * t }] }) },
-  grow: { ms: 900, easing: ease, style: (t) => ({ transform: [{ scaleX: clamp(t) }] }) },
+/** Timing only (read on the JS thread). The per-frame maths is inline in the worklet below: a worklet may not call plain JS functions. */
+const ENTER: Record<string, { ms: number; easing: any }> = {
+  rise: { ms: 500, easing: ease },
+  screen: { ms: 340, easing: ease },
+  pop: { ms: 360, easing: Easing.bezier(0.2, 1.5, 0.4, 1) },
+  "fade-in": { ms: 220, easing: Easing.out(Easing.ease) },
+  toast: { ms: 420, easing: Easing.bezier(0.2, 1.2, 0.3, 1) },
+  grow: { ms: 900, easing: ease },
 };
 
 /** One-shot entrance. Plain shared values rather than layout animations: those take the element out of flow on web. */
@@ -204,7 +203,19 @@ function Enter({ kind, delay, style, children, ...rest }: { kind: string; delay:
     return () => cancelAnimation(v);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const a = useAnimatedStyle(() => spec.style(v.value) as never);
+  const a = useAnimatedStyle(() => {
+    const t = v.value;
+    const o = Math.min(1, Math.max(0, t));
+    const o2 = Math.min(1, Math.max(0, t * 1.6));
+    switch (kind) {
+      case "rise": return { opacity: o, transform: [{ translateY: (1 - t) * 14 }] };
+      case "screen": return { opacity: o, transform: [{ translateY: (1 - t) * 10 }] };
+      case "pop": return { opacity: o2, transform: [{ scale: 0.85 + 0.15 * t }] };
+      case "fade-in": return { opacity: o };
+      case "toast": return { opacity: o2, transform: [{ translateY: (1 - t) * -16 }, { scale: 0.96 + 0.04 * t }] };
+      default: return { transform: [{ scaleX: o }] };
+    }
+  });
   return <Animated.View {...rest} style={[style, a]}>{children}</Animated.View>;
 }
 const LOOPS = new Set(["spin", "shimmer", "pulse", "ping-soft", "scan"]);

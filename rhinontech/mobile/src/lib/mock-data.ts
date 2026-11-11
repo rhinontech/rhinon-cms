@@ -148,10 +148,16 @@ export const PEOPLE: Person[] = [
 /** The signed-in person's name once a real session exists; the sample persona before that. */
 export const myName = (): string => getSession()?.fullName || ME.name;
 
-export const nameOf = (id: string): string =>
-  id === "me" ? myName() : (PEOPLE.find((p) => p.id === id)?.name ?? id);
+const looksLikeId = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(id);
 
-export const personOf = (id: string): Person => PEOPLE.find((p) => p.id === id) ?? PEOPLE[0]!;
+export const nameOf = (id: string): string =>
+  id === "me" ? myName() : (PEOPLE.find((p) => p.id === id)?.name ?? (looksLikeId(id) || !id ? "Teammate" : id));
+
+/** Always returns someone, so a screen never crashes on a person who isn't in the directory (yet). */
+export const personOf = (id: string): Person =>
+  PEOPLE.find((p) => p.id === id) ?? {
+    id, name: nameOf(id), role: "", dept: "", email: id === "me" ? ME.email : "", phone: id === "me" ? ME.phone : "", online: false, location: id === "me" ? ME.location : "",
+  };
 
 /* ── Brands (Inbox, CRM and Outreach are split per brand) ────────────────── */
 

@@ -2,7 +2,6 @@ import { useId, useState } from "react";
 import Svg, { Circle, Defs, LinearGradient, Path, Pattern, Rect, Stop } from "react-native-svg";
 
 import { Span, View, useEnv } from "@/components/rn";
-import { withAlpha } from "@/lib/color";
 import { TONES, type Tone } from "@/lib/tone";
 import { tw } from "@/lib/tw";
 import { cn } from "@/lib/utils";
@@ -65,7 +64,7 @@ export function VisitorMap({ points }: { points: { id: string; x: number; y: num
       <Svg pointerEvents="none" width="100%" height="100%" style={{ position: "absolute", top: 0, left: 0 }}>
         <Defs>
           <Pattern id={id} patternUnits="userSpaceOnUse" width={14} height={14}>
-            <Circle cx={7} cy={7} r={1.3} fill={withAlpha(env.c.ink, 0.22)} />
+            <Circle cx={7} cy={7} r={1.3} fill={env.c.ink} fillOpacity={0.22} />
           </Pattern>
         </Defs>
         <Rect x={0} y={0} width="100%" height="100%" fill={`url(#${id})`} />
