@@ -1,17 +1,16 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowUpRight, CalendarDays, LifeBuoy, Wrench } from "lucide-react";
 import { Aurora, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { Spot } from "@/components/Spot";
 import { ContactForm } from "@/components/forms/ContactForm";
-import { links } from "@/components/site";
+import { links, pageMeta } from "@/components/site";
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "Contact",
   description: "Ask a question, talk about pricing or the AI chatbot, or tell us what you need. We reply by email.",
-  alternates: { canonical: "/contact" },
-};
+  path: "/contact",
+});
 
 const WAYS = [
   { icon: CalendarDays, title: "Book a demo", body: "A 30 minute walk through the workspace, built around your team.", href: "/demo", tone: ["#2f5bff", "#7c5cff"] },

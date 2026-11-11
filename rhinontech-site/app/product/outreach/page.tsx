@@ -1,19 +1,19 @@
-import type { Metadata } from "next";
 import { Aurora, Button, Eyebrow, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand } from "@/components/blocks";
-import { links } from "@/components/site";
+import { links, pageMeta } from "@/components/site";
 import { bySlug } from "@/content/products";
 import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
 import { ComposerHero, FeedSection, FlowSection, LinkedInSection, MemorySection, ScheduleSection } from "@/components/product/outreach";
 
 const p = bySlug("outreach")!;
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "Outreach: AI cold email that sounds like you wrote it",
   description: "Write one email. AI researches each lead, tailors the message and queues it on your schedule. You approve before anything goes out.",
-  alternates: { canonical: "/product/outreach" },
-};
+  path: "/product/outreach",
+  hasOgImage: true,
+});
 
 const FAQ = [
   { q: "Will it send emails without my approval?", a: "No. Drafts are saved for your review, and you decide what goes out." },

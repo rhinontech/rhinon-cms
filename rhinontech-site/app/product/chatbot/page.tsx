@@ -1,9 +1,8 @@
-import type { Metadata } from "next";
 import { Check } from "lucide-react";
 import { Aurora, Button, Eyebrow, IconTile, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand } from "@/components/blocks";
-import { links } from "@/components/site";
+import { links, pageMeta } from "@/components/site";
 import { CHATBOT_FEATURES } from "@/content/plans";
 import { bySlug } from "@/content/products";
 import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
@@ -12,11 +11,12 @@ import { HandoverSection, InstallSection, SiteHero, TicketSection, TrainSection,
 const p = bySlug("chatbot")!;
 const GRAD = "italic";
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "AI Chatbot: a website assistant trained on your content",
   description: "Train it on your website and documents in minutes. It answers visitors day and night, saves their details to the CRM and hands over to your team.",
-  alternates: { canonical: "/product/chatbot" },
-};
+  path: "/product/chatbot",
+  hasOgImage: true,
+});
 
 const FAQ = [
   { q: "How do I add it to my site?", a: "Paste one line of code before the closing body tag. The same snippet adds visitor analytics." },

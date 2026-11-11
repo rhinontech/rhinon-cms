@@ -1,20 +1,20 @@
-import type { Metadata } from "next";
 import { Aurora, Button, IconTile } from "@/components/ui";
 import { Glow, H2, Kicker, LightSection } from "@/components/light";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand } from "@/components/blocks";
-import { links } from "@/components/site";
+import { links, pageMeta } from "@/components/site";
 import { bySlug } from "@/content/products";
 import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
 import { BarsSection, ConvergeSection, LifecycleStory, PipelineHero, ScanSection } from "@/components/product/crm";
 
 const p = bySlug("crm")!;
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "CRM: every lead and deal in one list",
   description: "Import leads, capture them from your website, and follow each one from first hello to won deal. Free for your whole team.",
-  alternates: { canonical: "/product/crm" },
-};
+  path: "/product/crm",
+  hasOgImage: true,
+});
 
 const FAQ = [
   { q: "Can I import my existing contacts?", a: "Yes. Upload a CSV and your leads appear in the pipeline with their details." },

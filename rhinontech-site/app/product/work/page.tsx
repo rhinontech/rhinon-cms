@@ -1,8 +1,7 @@
-import type { Metadata } from "next";
 import { Aurora, Button, Eyebrow, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand } from "@/components/blocks";
-import { links } from "@/components/site";
+import { links, pageMeta } from "@/components/site";
 import { bySlug } from "@/content/products";
 import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
 import { AnatomySection, GanttHero, PortalSection, RingsSection, ViewsSection } from "@/components/product/work";
@@ -10,11 +9,12 @@ import { AnatomySection, GanttHero, PortalSection, RingsSection, ViewsSection } 
 const p = bySlug("work")!;
 const G = "italic";
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "Work: projects, tasks and a portal your clients love",
   description: "Projects, tasks, boards and a calendar for every piece of work, plus a private portal where clients follow progress and send change requests.",
-  alternates: { canonical: "/product/work" },
-};
+  path: "/product/work",
+  hasOgImage: true,
+});
 
 const FAQ = [
   { q: "Do my clients need an account?", a: "No. They open a private link to follow progress and send requests." },

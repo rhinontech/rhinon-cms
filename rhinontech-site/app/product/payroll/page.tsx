@@ -1,8 +1,7 @@
-import type { Metadata } from "next";
 import { Aurora, Button, Eyebrow, IconTile, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand } from "@/components/blocks";
-import { links } from "@/components/site";
+import { links, pageMeta } from "@/components/site";
 import { bySlug } from "@/content/products";
 import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
 import { PayslipFan, RunSection, StructureSection, WallSection } from "@/components/product/payroll";
@@ -10,11 +9,12 @@ import { PayslipFan, RunSection, StructureSection, WallSection } from "@/compone
 const p = bySlug("payroll")!;
 const G = "italic";
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "Payroll: monthly runs and payslips, built for India",
   description: "Salary structures live on each person's record. Start a monthly run, check the numbers and mark it paid. Payslips are generated for everyone.",
-  alternates: { canonical: "/product/payroll" },
-};
+  path: "/product/payroll",
+  hasOgImage: true,
+});
 
 const FAQ = [
   { q: "Does it handle Indian deductions?", a: "Yes. Payroll supports PF, PT and TDS configuration, and amounts are in ₹." },

@@ -28,6 +28,7 @@ export const metadata: Metadata = {
     url: SITE_URL,
     siteName: "Rhinon Tech",
     type: "website",
+    locale: "en_IN",
   },
   twitter: { card: "summary_large_image" },
 };

@@ -1,8 +1,7 @@
-import type { Metadata } from "next";
 import { Aurora, Button, Eyebrow, IconTile, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand } from "@/components/blocks";
-import { links } from "@/components/site";
+import { links, pageMeta } from "@/components/site";
 import { bySlug } from "@/content/products";
 import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
 import { DocHero, Pinboard, SwitchSection, TreeSection } from "@/components/product/pages";
@@ -11,11 +10,12 @@ const p = bySlug("pages")!;
 const HEAD = "font-display font-medium";
 const INDIGO = "text-indigo-600 underline decoration-wavy decoration-indigo-300 decoration-[3px] underline-offset-[10px]";
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "Pages: your team's knowledge, written down once",
   description: "Nested pages for processes, plans, briefs and notes. Write them where the work happens, and find them again in a tree that makes sense.",
-  alternates: { canonical: "/product/pages" },
-};
+  path: "/product/pages",
+  hasOgImage: true,
+});
 
 const FAQ = [
   { q: "What is Pages for?", a: "Processes, plans, briefs and notes: anything your team should write down once and find again. It sits in the same workspace as your projects and customers." },

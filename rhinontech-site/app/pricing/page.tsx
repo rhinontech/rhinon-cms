@@ -1,6 +1,5 @@
-import type { Metadata } from "next";
 import { Check, Minus } from "lucide-react";
-import { links } from "@/components/site";
+import { links, pageMeta } from "@/components/site";
 import { PRODUCTS } from "@/content/products";
 import { CHATBOT_FEATURES, FREE_FEATURES } from "@/content/plans";
 import { Aurora, Button, IconTile, SectionHead } from "@/components/ui";
@@ -8,11 +7,12 @@ import { Reveal } from "@/components/Reveal";
 import { Spot } from "@/components/Spot";
 import { CtaBand, Faq, faqJsonLd } from "@/components/blocks";
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "Pricing",
   description: "Rhinon Tech is free for your whole team, with no time limit. Only the AI website chatbot is a paid product.",
-  alternates: { canonical: "/pricing" },
-};
+  path: "/pricing",
+  hasOgImage: true,
+});
 
 const FAQ = [
   { q: "Is Rhinon Tech really free?", a: "Yes. Every product except the AI website chatbot is free for your whole team, with no time limit and no credit card." },

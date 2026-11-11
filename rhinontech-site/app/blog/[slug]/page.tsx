@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Check, ChevronDown } from "lucide-react";
-import { links, SITE_URL } from "@/components/site";
+import { DEFAULT_OG_IMAGE, links, SITE_URL } from "@/components/site";
 import { CtaBand } from "@/components/blocks";
 import { getBlog, getBlogs, formatDate, toneFor, withHeadingIds, youtubeId, type BlogBlock } from "@/lib/blog";
 import { Avatar, CategoryKicker, Cover, PostMeta } from "@/components/blog/parts";
@@ -21,12 +21,28 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   if (!blog) return { title: "Article not found" };
   const title = blog.metaTitle || blog.title;
   const description = blog.metaDescription || blog.excerpt;
+  const fullTitle = title.includes("Rhinon Tech") ? title : `${title} | Rhinon Tech`;
   return {
     title,
     description,
     alternates: { canonical: `/blog/${blog.slug}` },
-    openGraph: { title, description, type: "article", url: `${SITE_URL}/blog/${blog.slug}`, publishedTime: blog.publishedAt, authors: [blog.authorName], ...(blog.coverImage ? { images: [{ url: blog.coverImage }] } : {}) },
-    twitter: { card: "summary_large_image", title, description, ...(blog.coverImage ? { images: [blog.coverImage] } : {}) },
+    openGraph: {
+      title: fullTitle,
+      description,
+      type: "article",
+      url: `${SITE_URL}/blog/${blog.slug}`,
+      siteName: "Rhinon Tech",
+      locale: "en_IN",
+      publishedTime: blog.publishedAt,
+      authors: [blog.authorName],
+      images: [blog.coverImage ? { url: blog.coverImage } : DEFAULT_OG_IMAGE],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: fullTitle,
+      description,
+      images: [blog.coverImage || DEFAULT_OG_IMAGE.url],
+    },
   };
 }
 

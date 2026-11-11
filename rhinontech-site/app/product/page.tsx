@@ -1,17 +1,17 @@
-import type { Metadata } from "next";
 import { ArrowUpRight } from "lucide-react";
 import { GROUPS, byGroup } from "@/content/products";
-import { links } from "@/components/site";
+import { links, pageMeta } from "@/components/site";
 import { Aurora, Button, IconTile, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { Spot } from "@/components/Spot";
 import { CtaBand } from "@/components/blocks";
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "Products",
   description: "CRM, outreach, inbox, AI chatbot, projects, team chat, HR, payroll, attendance and performance in one workspace.",
-  alternates: { canonical: "/product" },
-};
+  path: "/product",
+  hasOgImage: true,
+});
 
 export default function ProductsPage() {
   return (

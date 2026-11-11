@@ -1,5 +1,7 @@
+import type { Metadata } from "next";
+
 /** This marketing site. */
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinontech.com";
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinontech.com").replace(/\/$/, "");
 
 /** Where sign-up and sign-in live: the dashboard, on rhinontech.in. */
 export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://rhinontech.in";
@@ -28,3 +30,49 @@ export const links = {
 
 /** Public key for the Rhinon Tech brand in the admin panel's Analytics. Safe in page source: it can only add a pageview, and only from www.rhinontech.com (or rhinontech.com). */
 export const ANALYTICS_KEY = process.env.NEXT_PUBLIC_ANALYTICS_KEY || "rt_5c485857d3734c95e7517515";
+
+export const DEFAULT_OG_IMAGE = {
+  url: "/opengraph-image",
+  width: 1200,
+  height: 630,
+  alt: "Rhinon Tech: run your whole company from one workspace",
+};
+
+/**
+ * Shared metadata builder so every page keeps its own Open Graph and Twitter tags
+ * (Next.js shallow-replaces `openGraph`, otherwise child pages inherit the homepage).
+ */
+export function pageMeta({
+  title,
+  description,
+  path,
+  hasOgImage = false,
+}: {
+  title: string;
+  description: string;
+  path: string;
+  hasOgImage?: boolean;
+}): Metadata {
+  const fullTitle = title.includes("Rhinon Tech") ? title : `${title} | Rhinon Tech`;
+  const url = path === "/" ? SITE_URL : `${SITE_URL}${path}`;
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: {
+      title: fullTitle,
+      description,
+      url,
+      siteName: "Rhinon Tech",
+      type: "website",
+      locale: "en_IN",
+      ...(hasOgImage ? {} : { images: [DEFAULT_OG_IMAGE] }),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: fullTitle,
+      description,
+      ...(hasOgImage ? {} : { images: [DEFAULT_OG_IMAGE.url] }),
+    },
+  };
+}

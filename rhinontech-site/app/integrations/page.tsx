@@ -1,17 +1,16 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { Bot, CalendarDays, FileSignature, Mail, Send, Zap, type LucideIcon } from "lucide-react";
-import { links } from "@/components/site";
+import { links, pageMeta } from "@/components/site";
 import { Aurora, Button, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { Spot } from "@/components/Spot";
 import { CtaBand } from "@/components/blocks";
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "Integrations",
   description: "Connect your mailbox, calendar, LinkedIn, Slack, GitHub and website. Everything else lives in one place.",
-  alternates: { canonical: "/integrations" },
-};
+  path: "/integrations",
+});
 
 const ITEMS: { name: string; body: string; icon: LucideIcon; tone: [string, string] }[] = [
   { name: "Gmail & Outlook", body: "Send campaigns and replies from your own mailbox.", icon: Mail, tone: ["#ff5fb0", "#ff8a4c"] },

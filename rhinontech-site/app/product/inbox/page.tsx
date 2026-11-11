@@ -1,20 +1,20 @@
-import type { Metadata } from "next";
 import { Check, X } from "lucide-react";
 import { Aurora, Button, Eyebrow, IconTile, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand } from "@/components/blocks";
-import { links } from "@/components/site";
+import { links, pageMeta } from "@/components/site";
 import { bySlug } from "@/content/products";
 import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
 import { AddressSection, InboxZeroHero, PrioritySection, RiverSection, ThreadSection } from "@/components/product/inbox";
 
 const p = bySlug("inbox")!;
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "Inbox: one shared inbox for your whole team",
   description: "Replies to your campaigns and mail to your support address land in one shared inbox, threaded, assigned and tracked until it is done.",
-  alternates: { canonical: "/product/inbox" },
-};
+  path: "/product/inbox",
+  hasOgImage: true,
+});
 
 const BEFORE = [
   "Replies buried in one person's mailbox",

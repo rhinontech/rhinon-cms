@@ -1,8 +1,7 @@
-import type { Metadata } from "next";
 import { Aurora, Button, Eyebrow, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand } from "@/components/blocks";
-import { links } from "@/components/site";
+import { links, pageMeta } from "@/components/site";
 import { bySlug } from "@/content/products";
 import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
 import { BentoSection, CallSection, ChatHero, GuestSection } from "@/components/product/chat";
@@ -10,11 +9,12 @@ import { BentoSection, CallSection, ChatHero, GuestSection } from "@/components/
 const p = bySlug("chat")!;
 const G = "italic";
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "Team Chat & Meetings: talk it through without leaving the work",
   description: "Message your team, start a group call, or share a meeting link with someone outside the company. All of it lives next to your projects and your customers.",
-  alternates: { canonical: "/product/chat" },
-};
+  path: "/product/chat",
+  hasOgImage: true,
+});
 
 const FAQ = [
   { q: "Can people outside my company join a meeting?", a: "Yes. Share a meeting link and guests can join without an account." },

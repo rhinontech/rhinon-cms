@@ -1,8 +1,7 @@
-import type { Metadata } from "next";
 import { Aurora, Button, Eyebrow, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand } from "@/components/blocks";
-import { links } from "@/components/site";
+import { links, pageMeta } from "@/components/site";
 import { bySlug } from "@/content/products";
 import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
 import { CyclesSection, GoalsSection, ReviewSection, RingsHero, TeamSection } from "@/components/product/performance";
@@ -10,11 +9,12 @@ import { CyclesSection, GoalsSection, ReviewSection, RingsHero, TeamSection } fr
 const p = bySlug("performance")!;
 const G = "italic";
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "Performance: review cycles, goals and feedback",
   description: "Run quarterly, annual or probation review cycles. Set goals for each person, collect reviews from the right people and see progress across your team.",
-  alternates: { canonical: "/product/performance" },
-};
+  path: "/product/performance",
+  hasOgImage: true,
+});
 
 const FAQ = [
   { q: "What kinds of review cycle are there?", a: "Quarterly, annual and probation cycles. You can start one in minutes and choose who takes part." },

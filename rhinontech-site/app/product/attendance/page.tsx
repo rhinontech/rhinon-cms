@@ -1,8 +1,7 @@
-import type { Metadata } from "next";
 import { Aurora, Button, Eyebrow, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand } from "@/components/blocks";
-import { links } from "@/components/site";
+import { links, pageMeta } from "@/components/site";
 import { bySlug } from "@/content/products";
 import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
 import { CalSection, ClockHero, FixSection, HeatSection, LeaveSection, NightSection } from "@/components/product/attendance";
@@ -11,11 +10,12 @@ const p = bySlug("attendance")!;
 const G = "italic";
 const GL = "italic";
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "Attendance & Leave: clock in, request leave, approve in a tap",
   description: "Clock in and out from the dashboard, request leave, and let managers approve in a tap. Balances and a team calendar keep everyone planning from the same facts.",
-  alternates: { canonical: "/product/attendance" },
-};
+  path: "/product/attendance",
+  hasOgImage: true,
+});
 
 const FAQ = [
   { q: "Can employees fix a missed clock-in or clock-out?", a: "Yes. They file a regularization request and a manager approves it." },

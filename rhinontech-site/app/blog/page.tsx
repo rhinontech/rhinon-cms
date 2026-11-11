@@ -1,6 +1,6 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
+import { pageMeta } from "@/components/site";
 import { Aurora } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { LightSection } from "@/components/light";
@@ -9,11 +9,11 @@ import { BlogIndex } from "@/components/blog/BlogIndex";
 import { CategoryKicker, Cover, PostMeta } from "@/components/blog/parts";
 import { SubscribeForm } from "@/components/blog/SubscribeForm";
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "Blog",
   description: "Ideas, guides and updates for teams that run their whole company in one workspace: sales, projects, people and AI.",
-  alternates: { canonical: "/blog" },
-};
+  path: "/blog",
+});
 
 export const revalidate = 300;
 

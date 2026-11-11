@@ -1,8 +1,7 @@
-import type { Metadata } from "next";
 import { Aurora, Button, Eyebrow, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand } from "@/components/blocks";
-import { links } from "@/components/site";
+import { links, pageMeta } from "@/components/site";
 import { bySlug } from "@/content/products";
 import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
 import { JourneyHero, OffboardSection, PhoneSection, RecordSection, RewriteSection, SignatureSection } from "@/components/product/hr";
@@ -10,11 +9,12 @@ import { JourneyHero, OffboardSection, PhoneSection, RecordSection, RewriteSecti
 const p = bySlug("hr")!;
 const G = "italic";
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "HR & People: onboarding, records, offer letters and e-signing",
   description: "A directory, a full record for every person, an onboarding flow for new hires and offer letters signed inside the app.",
-  alternates: { canonical: "/product/hr" },
-};
+  path: "/product/hr",
+  hasOgImage: true,
+});
 
 const FAQ = [
   { q: "Do candidates need an account to sign?", a: "No. They open a link and sign with a typed or drawn signature." },
