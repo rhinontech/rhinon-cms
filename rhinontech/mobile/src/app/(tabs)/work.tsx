@@ -5,6 +5,7 @@ import { Check } from "lucide-react-native";
 import { PROJECTS, TEAMS, nameOf, type DueGroup, type Task } from "@/data/mock-data";
 import { actions, useApp } from "@/data/store";
 import { useTheme } from "@/theme/ThemeProvider";
+import { go } from "@/lib/nav";
 import { AvatarStack, Card, Chip, Display, Empty, Eyebrow, ProgressBar, Screen, SectionLabel, Segmented, Text, tone, toneOfPerson, Avatar } from "@/ui";
 
 type Tab = "mine" | "projects" | "teams";
@@ -20,7 +21,7 @@ function TaskRow({ task }: { task: Task }) {
   const t = useTheme();
   const done = task.status === "Done";
   return (
-    <Card style={{ flexDirection: "row", alignItems: "center", gap: 14, padding: 14 }}>
+    <Card onPress={() => go(`/work/${task.id}`)} style={{ flexDirection: "row", alignItems: "center", gap: 14, padding: 14 }}>
       <Pressable onPress={() => actions.toggleTask(task.id)} accessibilityLabel="Toggle done" style={{ width: 28, height: 28, borderRadius: 9, borderWidth: 2, borderColor: done ? t.c.hues.leaf.solid : `${t.c.ink}55`, backgroundColor: done ? t.c.hues.leaf.solid : "transparent", alignItems: "center", justifyContent: "center" }}>
         {done ? <Check size={16} color={t.c.hues.leaf.on} strokeWidth={3.2} /> : null}
       </Pressable>

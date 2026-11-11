@@ -2,6 +2,8 @@ import { useState } from "react";
 import { View } from "react-native";
 import { Paperclip, Star } from "lucide-react-native";
 
+import { Pressable } from "react-native";
+import { go } from "@/lib/nav";
 import { useApp } from "@/data/store";
 import { useTheme } from "@/theme/ThemeProvider";
 import { Avatar, Badge, Chip, Display, Empty, Eyebrow, Screen, Text, tone, toneOfPerson } from "@/ui";
@@ -33,7 +35,7 @@ export default function Inbox() {
           const last = th.messages[th.messages.length - 1];
           const from = last?.from ?? "";
           return (
-            <View key={th.id} style={{ flexDirection: "row", gap: 14, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: t.c.line }}>
+            <Pressable key={th.id} onPress={() => go(`/inbox/${th.id}`)} style={{ flexDirection: "row", gap: 14, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: t.c.line }}>
               <Avatar name={from} size={46} hue={toneOfPerson(from)} />
               <View style={{ flex: 1 }}>
                 <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8 }}>
@@ -48,7 +50,7 @@ export default function Inbox() {
                   {th.starred ? <Star size={14} color={t.c.hues.sun.deep} fill={t.c.hues.sun.solid} /> : null}
                 </View>
               </View>
-            </View>
+            </Pressable>
           );
         })}
       </View>

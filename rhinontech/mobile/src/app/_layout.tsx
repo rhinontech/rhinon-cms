@@ -7,6 +7,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { FONT_FILES } from "@/theme/fonts";
 import { ThemeProvider, useTheme } from "@/theme/ThemeProvider";
+import { ToastLayer } from "@/ui";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -16,6 +17,7 @@ function Shell() {
     <>
       <StatusBar style={t.dark ? "light" : "dark"} />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.c.paper } }} />
+      <ToastLayer />
     </>
   );
 }

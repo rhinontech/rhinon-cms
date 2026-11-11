@@ -4,6 +4,7 @@ import { MEETINGS, PEOPLE } from "@/data/mock-data";
 import { ANALYTICS } from "@/data/mock-more";
 import { lakh } from "@/data/format";
 import { ROLE_LABEL, useApp } from "@/data/store";
+import { go } from "@/lib/nav";
 import { Display, Eyebrow, Screen, SectionLabel, Text, Tile, type Tone } from "@/ui";
 
 type Mod = { id: string; label: string; tone: Tone; stat: string; perm?: string; wide?: boolean; badge?: number };
@@ -57,7 +58,7 @@ export default function More() {
         <View key={g.title}>
           <SectionLabel>{g.title}</SectionLabel>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
-            {g.mods.map((m) => <Tile key={m.id} name={m.tone} label={m.label} stat={m.stat} wide={m.wide} {...(m.badge ? { badge: m.badge } : {})} />)}
+            {g.mods.map((m) => <Tile key={m.id} onPress={() => go(`/${m.id}`)} name={m.tone} label={m.label} stat={m.stat} wide={m.wide} {...(m.badge ? { badge: m.badge } : {})} />)}
           </View>
         </View>
       ))}

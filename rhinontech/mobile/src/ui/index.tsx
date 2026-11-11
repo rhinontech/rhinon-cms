@@ -237,3 +237,94 @@ export function Badge({ children, name = "ink" }: { children: ReactNode; name?: 
     </View>
   );
 }
+
+/* ── Navigation + overlays ─────────────────────────────────────────────── */
+import { ArrowLeft, Plus } from "lucide-react-native";
+import { KeyboardAvoidingView, Modal, Platform, TextInput, type TextInputProps } from "react-native";
+
+import { useApp } from "@/data/store";
+import { back } from "@/lib/nav";
+
+/** Header for pushed screens: round back button, centred title, optional right slot. */
+export function TopBar({ title, fallback = "/", right }: { title?: string; fallback?: string; right?: ReactNode }) {
+  const t = useTheme();
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 18, minHeight: 44 }}>
+      <Pressable onPress={() => back(fallback)} accessibilityLabel="Back" style={{ width: 44, height: 44, borderRadius: 22, borderWidth: t.id === "brutal" ? 2 : 1, borderColor: t.id === "brutal" ? t.c.ink : t.c.line, backgroundColor: t.c.card, alignItems: "center", justifyContent: "center" }}>
+        <ArrowLeft size={20} color={t.c.ink} />
+      </Pressable>
+      {title ? <Eyebrow>{title}</Eyebrow> : null}
+      <View style={{ minWidth: 44, alignItems: "flex-end" }}>{right}</View>
+    </View>
+  );
+}
+
+export function Sheet({ open, onClose, title, children }: { open: boolean; onClose: () => void; title?: string; children: ReactNode }) {
+  const t = useTheme();
+  return (
+    <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, justifyContent: "flex-end" }}>
+        <Pressable onPress={onClose} style={{ ...StyleSheet.absoluteFill, backgroundColor: "rgba(0,0,0,0.45)" }} />
+        <View style={{ maxHeight: "88%", backgroundColor: t.c.paper, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, paddingBottom: 36, borderWidth: t.id === "brutal" ? 2 : 0, borderColor: t.c.ink }}>
+          <View style={{ alignSelf: "center", width: 44, height: 5, borderRadius: 3, backgroundColor: t.c.line, marginBottom: 14 }} />
+          {title ? <Display size="md" style={{ marginBottom: 14 }}>{title}</Display> : null}
+          <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>{children}</ScrollView>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
+
+export function Field({ label, style, ...p }: TextInputProps & { label?: string }) {
+  const t = useTheme();
+  return (
+    <View style={{ marginBottom: 14 }}>
+      {label ? <Eyebrow style={{ marginBottom: 6 }}>{label}</Eyebrow> : null}
+      <TextInput
+        placeholderTextColor={`${t.c.ink}66`}
+        {...p}
+        style={[{ minHeight: 52, borderRadius: t.c.radius + 4, paddingHorizontal: 16, paddingVertical: 12, fontFamily: t.f.sans, fontSize: 16, color: t.c.ink, backgroundColor: t.c.card, borderWidth: t.id === "brutal" ? 2 : 1, borderColor: t.id === "brutal" ? t.c.ink : t.c.line }, p.multiline ? { minHeight: 96, textAlignVertical: "top" } : null, style]}
+      />
+    </View>
+  );
+}
+
+export function Fab({ onPress, label = "Add" }: { onPress: () => void; label?: string }) {
+  const t = useTheme();
+  const insets = useSafeAreaInsets();
+  return (
+    <Pressable onPress={onPress} accessibilityLabel={label} style={{ position: "absolute", right: 20, bottom: insets.bottom + 92, width: 58, height: 58, borderRadius: 29, backgroundColor: t.c.ink, alignItems: "center", justifyContent: "center", borderWidth: t.id === "brutal" ? 2 : 0, borderColor: t.c.ink }}>
+      <Plus size={26} color={t.c.paper} />
+    </Pressable>
+  );
+}
+
+/** A tappable list row: title, subtitle, optional trailing text. */
+export function Row({ title, sub, right, left, onPress }: { title: string; sub?: string; right?: ReactNode; left?: ReactNode; onPress?: () => void }) {
+  return (
+    <Card onPress={onPress as () => void} style={{ flexDirection: "row", alignItems: "center", gap: 14, padding: 14 }}>
+      {left}
+      <View style={{ flex: 1 }}>
+        <Text bold style={{ fontSize: 16 }}>{title}</Text>
+        {sub ? <Text style={{ fontSize: 13, opacity: 0.55, marginTop: 2 }}>{sub}</Text> : null}
+      </View>
+      {right}
+    </Card>
+  );
+}
+
+/** Mounted once at the root: shows store toasts for a couple of seconds. */
+export function ToastLayer() {
+  const t = useTheme();
+  const toasts = useApp((s) => s.toasts);
+  const insets = useSafeAreaInsets();
+  return (
+    <View pointerEvents="none" style={{ position: "absolute", left: 16, right: 16, top: insets.top + 8, gap: 8 }}>
+      {toasts.map((x) => (
+        <View key={x.id} style={{ padding: 14, borderRadius: 18, backgroundColor: t.c.ink }}>
+          <RNText style={{ fontFamily: t.f.sansBold, fontSize: 14, color: t.c.paper }}>{x.text}</RNText>
+        </View>
+      ))}
+    </View>
+  );
+}

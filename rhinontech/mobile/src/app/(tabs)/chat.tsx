@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Pressable, View } from "react-native";
 import { Video } from "lucide-react-native";
 
+import { go } from "@/lib/nav";
 import { useApp } from "@/data/store";
 import { useTheme } from "@/theme/ThemeProvider";
 import { Avatar, Card, Chip, Display, Empty, Eyebrow, Screen, Text, tone } from "@/ui";
@@ -47,7 +48,7 @@ export default function Chat() {
         {rows.map((c) => {
           const last = c.messages[c.messages.length - 1];
           return (
-            <Card key={c.id} style={{ flexDirection: "row", alignItems: "center", gap: 14, padding: 14 }}>
+            <Card key={c.id} onPress={() => go(`/chat/${c.id}`)} style={{ flexDirection: "row", alignItems: "center", gap: 14, padding: 14 }}>
               <Avatar name={c.kind === "dm" ? c.name : `# ${c.name}`} size={48} hue={c.tone === "ink" || c.tone === "paper" ? "violet" : c.tone} />
               <View style={{ flex: 1 }}>
                 <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
