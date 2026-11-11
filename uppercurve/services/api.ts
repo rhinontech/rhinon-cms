@@ -18,6 +18,7 @@ export interface ApiBlog {
   category?: string | null;
   readTime: string;
   publishedAt: string;
+  updatedAt?: string;
   content?: string;
   contentBlocks?: BlogApiBlock[];
   faqs?: BlogFaq[];
@@ -114,29 +115,23 @@ export function adaptApiBlogToBlogPost(apiBlog: ApiBlog, index = 0): BlogPost {
  * Endpoint: GET http://localhost:5003/public/blogs?domain=uppercurve
  */
 export async function fetchApiBlogs(): Promise<ApiBlog[]> {
-  try {
-    const url = `${API_BASE}/public/blogs?domain=${BLOG_DOMAIN}`;
-    const res = await fetch(url, {
-      cache: "no-store",
-      headers: {
-        Accept: "application/json",
-      },
-    });
+  const url = `${API_BASE}/public/blogs?domain=${BLOG_DOMAIN}`;
+  const res = await fetch(url, {
+    next: { revalidate: 300 },
+    headers: {
+      Accept: "application/json",
+    },
+  });
 
-    if (!res.ok) {
-      console.error(`[API] Failed to fetch blogs: ${res.status} ${res.statusText}`);
-      return [];
-    }
-
-    const data = await res.json();
-    if (Array.isArray(data)) {
-      return data as ApiBlog[];
-    }
-    return [];
-  } catch (err) {
-    console.error("[API] Network error fetching blogs:", err);
-    return [];
+  if (!res.ok) {
+    throw new Error(`[API] Failed to fetch blogs: ${res.status} ${res.statusText}`);
   }
+
+  const data = await res.json();
+  if (Array.isArray(data)) {
+    return data as ApiBlog[];
+  }
+  return [];
 }
 
 /**
@@ -144,25 +139,19 @@ export async function fetchApiBlogs(): Promise<ApiBlog[]> {
  * Endpoint: GET http://localhost:5003/public/blogs/:slug?domain=uppercurve
  */
 export async function fetchApiBlogBySlug(slug: string): Promise<ApiBlog | null> {
-  try {
-    const url = `${API_BASE}/public/blogs/${encodeURIComponent(slug)}?domain=${BLOG_DOMAIN}`;
-    const res = await fetch(url, {
-      cache: "no-store",
-      headers: {
-        Accept: "application/json",
-      },
-    });
+  const url = `${API_BASE}/public/blogs/${encodeURIComponent(slug)}?domain=${BLOG_DOMAIN}`;
+  const res = await fetch(url, {
+    next: { revalidate: 300 },
+    headers: {
+      Accept: "application/json",
+    },
+  });
 
-    if (!res.ok) {
-      if (res.status === 404) return null;
-      console.error(`[API] Failed to fetch blog "${slug}": ${res.status} ${res.statusText}`);
-      return null;
-    }
-
-    const data = await res.json();
-    return (data as ApiBlog) || null;
-  } catch (err) {
-    console.error(`[API] Network error fetching blog "${slug}":`, err);
-    return null;
+  if (!res.ok) {
+    if (res.status === 404) return null;
+    throw new Error(`[API] Failed to fetch blog "${slug}": ${res.status} ${res.statusText}`);
   }
+
+  const data = await res.json();
+  return (data as ApiBlog) || null;
 }

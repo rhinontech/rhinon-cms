@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   title: "UpperCurve | Learn AI by Building It",
   description:
     "Join the 6-Weeks live Agentic AI Launchpad. Build & Ship 10+ AI Agents with Expert Mentors.",
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "UpperCurve | Learn AI by Building It",
     description:
@@ -18,8 +21,8 @@ export const metadata: Metadata = {
   },
 };
 
-// Events change daily and the API is read without caching, as on /events.
-export const dynamic = "force-dynamic";
+// Revalidate every 60 seconds (ISR) for fast edge caching with fresh events.
+export const revalidate = 60;
 
 const byStart = (a: { startsAt: string | null }, b: { startsAt: string | null }) =>
   (a.startsAt ?? "9999").localeCompare(b.startsAt ?? "9999");

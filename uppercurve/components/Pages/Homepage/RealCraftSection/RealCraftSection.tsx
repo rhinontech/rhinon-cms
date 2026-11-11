@@ -207,7 +207,7 @@ export function RealCraftSection() {
                 <img
                   className="w-full h-full object-cover"
                   src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80"
-                  alt="mentor1"
+                  alt="UpperCurve industry mentor"
                 />
               </div>
 
@@ -216,7 +216,7 @@ export function RealCraftSection() {
                 <img
                   className="w-full h-full object-cover"
                   src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=400&q=80"
-                  alt="mentor2"
+                  alt="UpperCurve industry mentor"
                 />
               </div>
             </div>

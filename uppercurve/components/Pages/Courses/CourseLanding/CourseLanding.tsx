@@ -1,4 +1,5 @@
 import type { Course } from "../courseData";
+import type { BlogPost } from "@/components/Pages/Blog/blogData";
 import Hero from "./sections/Hero";
 import Curriculum from "./sections/Curriculum";
 import Builds from "./sections/Builds";
@@ -7,13 +8,20 @@ import Roles from "./sections/Roles";
 import Certificate from "./sections/Certificate";
 import Testimonials from "./sections/Testimonials";
 import Pricing from "./sections/Pricing";
+import RelatedReading from "./sections/RelatedReading";
 import { CourseCta, CourseFaq } from "./sections/Closing";
 
 /**
  * One course's landing page. Nothing between <main> and the curriculum may
  * clip overflow, or the stacking module cards lose their sticky positioning.
  */
-export default function CourseLanding({ course }: { course: Course }) {
+export default function CourseLanding({
+  course,
+  relatedBlogs,
+}: {
+  course: Course;
+  relatedBlogs?: BlogPost[];
+}) {
   return (
     <main className="w-full bg-white text-[#0B1B3D] font-[family-name:var(--font-plus-jakarta)]">
       <Hero course={course} />
@@ -25,6 +33,7 @@ export default function CourseLanding({ course }: { course: Course }) {
       <Testimonials course={course} />
       <Pricing course={course} />
       <CourseFaq course={course} />
+      <RelatedReading blogs={relatedBlogs} />
       <CourseCta course={course} />
     </main>
   );

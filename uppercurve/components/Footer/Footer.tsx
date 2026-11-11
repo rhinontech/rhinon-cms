@@ -68,7 +68,7 @@ export function Footer() {
             <Link href="/" className="flex items-center gap-2.5">
               <img
                 src="/uppercurve_logo_nav.png"
-                alt="UpperCurve logo"
+                alt="UpperCurve"
                 className="h-7 w-auto"
               />
               <span className="text-xl tracking-tight font-extrabold [font-family:var(--font-montserrat)]">
@@ -89,7 +89,7 @@ export function Footer() {
               Site map
             </div>
             {[
-              { name: "Courses", href: "/courses" },
+              { name: "Courses", href: "/courses/agentic-ai-launchpad" },
               { name: "Events", href: "/events" },
               { name: "Community", href: "/community" },
               { name: "Blogs", href: "/blog" },
@@ -143,9 +143,9 @@ export function Footer() {
             {/* Student Avatars pill */}
             <div className="flex items-center md:justify-end gap-2 text-xs font-bold text-gray-700">
               <div className="flex -space-x-2">
-                <img className="w-6 h-6 rounded-full border border-white object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=60&q=80" alt="std" />
-                <img className="w-6 h-6 rounded-full border border-white object-cover" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=60&q=80" alt="std" />
-                <img className="w-6 h-6 rounded-full border border-white object-cover" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=60&q=80" alt="std" />
+                <img className="w-6 h-6 rounded-full border border-white object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=60&q=80" alt="" aria-hidden="true" />
+                <img className="w-6 h-6 rounded-full border border-white object-cover" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=60&q=80" alt="" aria-hidden="true" />
+                <img className="w-6 h-6 rounded-full border border-white object-cover" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=60&q=80" alt="" aria-hidden="true" />
               </div>
               <span className="text-[11px] text-gray-500 font-normal">Join the <b className="text-gray-900">UpperCurve</b> community</span>
             </div>

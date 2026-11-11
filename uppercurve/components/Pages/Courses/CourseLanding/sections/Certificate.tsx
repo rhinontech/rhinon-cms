@@ -18,7 +18,7 @@ function CertificateCard({ course }: { course: Course }) {
           <div className="flex items-start justify-between">
             <p className="font-mono text-[2.2cqw] tracking-[0.3em] uppercase text-[#7DD3FC]">UpperCurve · Credential</p>
             <span className="flex items-center gap-[1.2cqw]">
-              <Image src="/uppercurve_logo_nav.png" alt="" width={160} height={87} className="w-[8cqw] h-auto brightness-0 invert" />
+              <Image src="/uppercurve_logo_nav.png" alt="UpperCurve" width={160} height={87} className="w-[8cqw] h-auto brightness-0 invert" />
               <span className="text-[2.8cqw] font-extrabold tracking-tight">UPPERCURVE</span>
             </span>
           </div>
