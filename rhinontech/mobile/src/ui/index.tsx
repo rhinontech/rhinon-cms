@@ -162,3 +162,78 @@ export function Avatar({ name, size = 44, hue = "violet" }: { name: string; size
     </View>
   );
 }
+
+export function toneOfPerson(name: string): Hue {
+  const h = [...name].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) >>> 0, 7);
+  const all: Hue[] = ["coral", "cobalt", "leaf", "violet", "sun", "rose", "sky"];
+  return all[h % all.length]!;
+}
+
+export function Segmented<T extends string>({ value, onChange, options }: { value: T; onChange: (v: T) => void; options: { value: T; label: string }[] }) {
+  const t = useTheme();
+  return (
+    <View style={{ flexDirection: "row", padding: 4, borderRadius: 99, backgroundColor: t.c.paperDeep }}>
+      {options.map((o) => {
+        const on = o.value === value;
+        return (
+          <Pressable key={o.value} onPress={() => onChange(o.value)} style={{ flex: 1, height: 40, borderRadius: 99, alignItems: "center", justifyContent: "center", backgroundColor: on ? (t.id === "midnight" ? t.c.card : t.id === "admin" ? "#fff" : t.c.ink) : "transparent" }}>
+            <RNText style={{ fontFamily: t.f.sansBold, fontSize: 14, color: on ? (t.id === "midnight" || t.id === "admin" ? t.c.ink : t.c.paper) : `${t.c.ink}99` }}>{o.label}</RNText>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+export function Chip({ children, active, onPress, count, name = "ink" }: { children: ReactNode; active?: boolean; onPress?: () => void; count?: number; name?: Tone }) {
+  const t = useTheme();
+  const c = tone(t, name);
+  return (
+    <Pressable onPress={onPress} style={{ flexDirection: "row", alignItems: "center", gap: 8, height: 38, paddingHorizontal: 16, borderRadius: 99, backgroundColor: active ? c.bg : "transparent", borderWidth: active ? 0 : t.id === "brutal" ? 2 : 1, borderColor: t.id === "brutal" ? t.c.ink : t.c.line }}>
+      <RNText style={{ fontFamily: t.f.monoMed, fontSize: 11, letterSpacing: 1.2, textTransform: "uppercase", color: active ? c.fg : t.c.ink }}>{children}</RNText>
+      {count ? <RNText style={{ fontFamily: t.f.monoMed, fontSize: 11, color: active ? c.fg : `${t.c.ink}80` }}>{count}</RNText> : null}
+    </Pressable>
+  );
+}
+
+export function ProgressBar({ value, color, track, height = 8 }: { value: number; color: string; track: string; height?: number }) {
+  return (
+    <View style={{ height, borderRadius: 99, backgroundColor: track, overflow: "hidden" }}>
+      <View style={{ width: `${Math.max(0, Math.min(1, value)) * 100}%`, height: "100%", borderRadius: 99, backgroundColor: color }} />
+    </View>
+  );
+}
+
+export function AvatarStack({ names, size = 28, max = 3 }: { names: string[]; size?: number; max?: number }) {
+  const t = useTheme();
+  const shown = names.slice(0, max);
+  return (
+    <View style={{ flexDirection: "row" }}>
+      {shown.map((n, i) => (
+        <View key={n} style={{ marginLeft: i ? -size * 0.3 : 0, borderRadius: size, borderWidth: 2, borderColor: t.c.paper }}>
+          <Avatar name={n} size={size} hue={toneOfPerson(n)} />
+        </View>
+      ))}
+      {names.length > max ? <Text style={{ marginLeft: 6, fontSize: 12, alignSelf: "center" }}>+{names.length - max}</Text> : null}
+    </View>
+  );
+}
+
+export function Empty({ title, body }: { title: string; body: string }) {
+  return (
+    <View style={{ alignItems: "center", paddingVertical: 48, gap: 6 }}>
+      <Display size="md">{title}</Display>
+      <Text style={{ opacity: 0.6, textAlign: "center", maxWidth: 260 }}>{body}</Text>
+    </View>
+  );
+}
+
+export function Badge({ children, name = "ink" }: { children: ReactNode; name?: Tone }) {
+  const t = useTheme();
+  const c = tone(t, name);
+  return (
+    <View style={{ paddingHorizontal: 10, height: 22, borderRadius: 99, backgroundColor: name === "ink" ? t.c.paperDeep : `${c.bg}33`, justifyContent: "center" }}>
+      <RNText style={{ fontFamily: t.f.monoMed, fontSize: 10, letterSpacing: 1, textTransform: "uppercase", color: name === "ink" ? t.c.ink : c.text }}>{children}</RNText>
+    </View>
+  );
+}
