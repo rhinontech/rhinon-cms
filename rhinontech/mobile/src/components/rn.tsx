@@ -11,7 +11,7 @@ import {
   useId, useMemo, useState, useSyncExternalStore, type ReactElement, type ReactNode,
 } from "react";
 import {
-  Pressable as RNPressable, ScrollView as RNScrollView, StyleSheet, Text as RNText, TextInput as RNTextInput,
+  Platform, Pressable as RNPressable, ScrollView as RNScrollView, StyleSheet, Text as RNText, TextInput as RNTextInput,
   View as RNView, useWindowDimensions,
   type PressableProps, type ScrollViewProps, type TextInputProps, type TextProps, type ViewProps,
 } from "react-native";
@@ -22,6 +22,7 @@ import { withAlpha } from "@/lib/color";
 import { navigate } from "@/lib/router";
 import { tw, type Gradient, type Inherit, type Meta, type TwEnv } from "@/lib/tw";
 import { fontName } from "@/theme/fonts";
+import { naturalLine } from "@/theme/metrics";
 import { useTheme } from "@/theme/ThemeProvider";
 
 /* ── Environment + inherited text style ──────────────────────────────────── */
@@ -285,6 +286,7 @@ export const View = forwardRef<any, ViewProps & BoxProps>(function View({ classN
   const own = hasKeys(p.inherit);
   const h = own ? mergeInherit(parent, p.inherit) : parent;
   const dir = useContext(DirCtx);
+  const inText = useContext(InTextCtx);
   const myDir: Mode = p.meta.scroll === "x" ? "row" : modeOf(p.style, p.meta);
   const flat = StyleSheet.flatten(style) as Record<string, any> | undefined;
   const delay = flat?.animationDelay !== undefined ? parseFloat(String(flat.animationDelay)) || 0 : 0;
@@ -295,6 +297,7 @@ export const View = forwardRef<any, ViewProps & BoxProps>(function View({ classN
   let body = prepare(children, p.meta, p.style, env);
   if (own) body = <InheritCtx.Provider value={h}>{body}</InheritCtx.Provider>;
   if (myDir !== dir) body = <DirCtx.Provider value={myDir}>{body}</DirCtx.Provider>;
+  if (inText) body = <InTextCtx.Provider value={false}>{body}</InTextCtx.Provider>;
   const common = { ...rest, ...(pe ? { pointerEvents: pe } : null) } as ViewProps;
   const meta = p.meta;
 
@@ -342,17 +345,27 @@ function TextImpl({ className, style, children, ...rest }: TextProps & BoxProps)
   const ts = textStyle(h, env);
   const box = p.style;
 
-  // React Native clips glyphs to the line box and the web does not; tight display leading needs room.
+  // When the line height is below the font's natural height, the web centres the overflow above and below the line
+  // box, but native text engines put all of it above, so the glyph tops are clipped and the text sits too high.
+  // Reserve the room as top padding and shift the text down by half the overflow (matching the web), with margins
+  // that keep the layout box exactly `lineHeight` tall. Style overrides (avatars, big numerals) are included.
+  const flat = StyleSheet.flatten(style) as Record<string, any> | undefined;
+  const fs = (flat?.fontSize ?? ts.fontSize) as number;
+  const lh = (flat?.lineHeight ?? ts.lineHeight) as number | undefined;
   let room: Record<string, number> | undefined;
-  if (!inText && ts.lineHeight && ts.lineHeight < ts.fontSize * 1.08) {
-    const r = Math.ceil(ts.fontSize * 0.16);
-    const n = (v: unknown) => (typeof v === "number" ? v : 0);
-    room = {
-      paddingTop: n(box.paddingTop ?? box.paddingVertical ?? box.padding) + r,
-      paddingBottom: n(box.paddingBottom ?? box.paddingVertical ?? box.padding) + r,
-      marginTop: n(box.marginTop ?? box.marginVertical ?? box.margin) - r,
-      marginBottom: n(box.marginBottom ?? box.marginVertical ?? box.margin) - r,
-    };
+  if (!inText && Platform.OS !== "web" && lh !== undefined) {
+    const need = naturalLine((flat?.fontFamily ?? ts.fontFamily) as string) * fs - lh;
+    if (need > 0.5) {
+      const n = (v: unknown) => (typeof v === "number" ? v : 0);
+      const half = +(need / 2).toFixed(2);
+      const pt = n(box.paddingTop ?? box.paddingVertical ?? box.padding), pb = n(box.paddingBottom ?? box.paddingVertical ?? box.padding);
+      const mt = n(box.marginTop ?? box.marginVertical ?? box.margin), mb = n(box.marginBottom ?? box.marginVertical ?? box.margin);
+      room = Platform.OS === "ios"
+        // verified on the iOS simulator: the overflow all lands above the line box
+        ? { paddingTop: pt + +(need + 1).toFixed(2), marginTop: mt - half - 1, marginBottom: mb - half }
+        // not verified: room on both sides, no shift
+        : { paddingTop: pt + half + 1, paddingBottom: pb + half + 1, marginTop: mt - half - 1, marginBottom: mb - half - 1 };
+    }
   }
   const lines = h.lines;
   const kids = inText ? children : <InTextCtx.Provider value>{children}</InTextCtx.Provider>;

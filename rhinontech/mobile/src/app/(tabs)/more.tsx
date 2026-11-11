@@ -295,13 +295,11 @@ export default function MorePage() {
                       </View>
                     ) : null}
                   </View>
-                  <Span className="font-display text-[length:calc(36px*var(--ds))] leading-[0.86]">
+                  <View className="font-display text-[length:calc(36px*var(--ds))] leading-[0.86]">
                     {m.label.map((l) => (
-                      <View key={l} className="block">
-                        {l}
-                      </View>
+                      <Text key={l}>{l}</Text>
                     ))}
-                  </Span>
+                  </View>
                 </Link>
               );
             })}

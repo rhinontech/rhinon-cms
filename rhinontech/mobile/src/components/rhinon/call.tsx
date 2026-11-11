@@ -61,13 +61,13 @@ export function CallOverlay({
                 i === 0 && "outline outline-[3px] outline-offset-2 outline-paper/80",
               )}
             >
-              <Span className="self-end">
+              <View className="self-end">
                 {mine && muted ? (
                   <View className="grid size-8 place-items-center rounded-full bg-ink/70 text-paper">
                     <MicOff size={15} />
                   </View>
                 ) : null}
-              </Span>
+              </View>
               <View>
                 <Text className="font-display text-[length:calc(56px*var(--ds))] font-black leading-[0.8]">
                   {n
