@@ -1,3 +1,4 @@
+import { getSession } from "@/lib/api";
 import type { Attachment } from "./mock-more";
 import type { Tone } from "./tone";
 
@@ -144,8 +145,11 @@ export const PEOPLE: Person[] = [
   },
 ];
 
+/** The signed-in person's name once a real session exists; the sample persona before that. */
+export const myName = (): string => getSession()?.fullName || ME.name;
+
 export const nameOf = (id: string): string =>
-  id === "me" ? ME.name : (PEOPLE.find((p) => p.id === id)?.name ?? id);
+  id === "me" ? myName() : (PEOPLE.find((p) => p.id === id)?.name ?? id);
 
 export const personOf = (id: string): Person => PEOPLE.find((p) => p.id === id) ?? PEOPLE[0]!;
 

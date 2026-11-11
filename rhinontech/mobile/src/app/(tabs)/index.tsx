@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Pressable, ScrollView, Text as RNText, View } from "react-native";
 
 import { hm, pad, rupee } from "@/data/format";
-import { CELEBRATIONS, ME, MEETINGS, PAYSLIPS, TODAY, nameOf, net } from "@/data/mock-data";
+import { CELEBRATIONS, ME, myName, MEETINGS, PAYSLIPS, TODAY, nameOf, net } from "@/data/mock-data";
 import { actions, useApp, useNow, usePerm, workedMs } from "@/data/store";
 import { go } from "@/lib/nav";
 import { useTheme } from "@/theme/ThemeProvider";
@@ -134,7 +134,7 @@ export default function Home() {
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <IconBtn label="Notifications" onPress={() => go("/notifications")} dot={notifs.some((n) => n.unread)}><Bell size={20} color={t.c.ink} /></IconBtn>
-          <Pressable onPress={() => go("/profile")} accessibilityLabel="Profile"><Avatar name={ME.name} size={44} hue="violet" /></Pressable>
+          <Pressable onPress={() => go("/profile")} accessibilityLabel="Profile"><Avatar name={myName()} size={44} hue="violet" /></Pressable>
         </View>
       </View>
 

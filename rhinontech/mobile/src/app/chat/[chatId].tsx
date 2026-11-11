@@ -4,6 +4,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View 
 import { Send } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { loadChatMessages } from "@/data/live";
 import { actions, useApp } from "@/data/store";
 import { useTheme } from "@/theme/ThemeProvider";
 import { Eyebrow, Text, TopBar } from "@/ui";
@@ -14,6 +15,7 @@ export default function ChatThread() {
   const { chatId } = useLocalSearchParams<{ chatId: string }>();
   const chat = useApp((s) => s.chats.find((c) => c.id === chatId));
   const [text, setText] = useState("");
+  useEffect(() => { if (chatId) void loadChatMessages(chatId); }, [chatId]);
   useEffect(() => { if (chat?.unread) actions.markChatRead(chat.id); }, [chat?.id, chat?.unread]);
   if (!chat) return null;
   const title = chat.kind === "dm" ? chat.name : `# ${chat.name}`;

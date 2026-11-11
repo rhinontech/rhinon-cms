@@ -1,9 +1,10 @@
 import { useLocalSearchParams } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
 import { Check } from "lucide-react-native";
 
 import { nameOf, type TaskStatus } from "@/data/mock-data";
+import { loadTaskComments } from "@/data/live";
 import { actions, useApp } from "@/data/store";
 import { useTheme } from "@/theme/ThemeProvider";
 import { Avatar, Badge, Button, Card, Chip, Display, Empty, Eyebrow, Field, Screen, SectionLabel, Text, TopBar, toneOfPerson } from "@/ui";
@@ -14,6 +15,7 @@ export default function TaskDetail() {
   const t = useTheme();
   const { taskId } = useLocalSearchParams<{ taskId: string }>();
   const task = useApp((s) => s.tasks.find((x) => x.id === taskId));
+  useEffect(() => { if (taskId) void loadTaskComments(taskId).catch(() => {}); }, [taskId]);
   const [sub, setSub] = useState("");
   const [comment, setComment] = useState("");
   if (!task) return <Screen><TopBar fallback="/work" /><Empty title="Not found" body="This task was removed." /></Screen>;

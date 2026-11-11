@@ -6,7 +6,7 @@ const DEFAULT_BASE = Platform.OS === "android" ? "http://10.0.2.2:5055" : "http:
 export const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? DEFAULT_BASE;
 
 const KEY = "rhinon-session";
-export type Session = { token: string; fullName: string; roleSlug: string; orgName: string };
+export type Session = { token: string; userId: string; fullName: string; roleSlug: string; orgName: string };
 
 let session: Session | null = null;
 const listeners = new Set<() => void>();
@@ -44,7 +44,10 @@ export async function api<T>(path: string, init: { method?: string; body?: unkno
 }
 
 type LoginReply = { token?: string; fullName?: string; roleSlug?: string; organization?: { name: string }; mfaRequired?: boolean; mfaToken?: string };
-const toSession = (r: LoginReply): Session => ({ token: r.token!, fullName: r.fullName ?? "", roleSlug: r.roleSlug ?? "", orgName: r.organization?.name ?? "" });
+const userIdOf = (token: string): string => {
+  try { const b = token.split(".")[1]!.replace(/-/g, "+").replace(/_/g, "/"); return (JSON.parse(globalThis.atob(b)) as { userId?: string }).userId ?? ""; } catch { return ""; }
+};
+const toSession = (r: LoginReply): Session => ({ token: r.token!, userId: userIdOf(r.token!), fullName: r.fullName ?? "", roleSlug: r.roleSlug ?? "", orgName: r.organization?.name ?? "" });
 
 /** Returns an mfaToken when the account needs a code, else signs in. */
 export async function login(email: string, password: string): Promise<{ mfaToken: string } | null> {

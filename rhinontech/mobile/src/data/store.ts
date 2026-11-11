@@ -221,6 +221,16 @@ export function useApp<T>(selector: (s: AppState) => T): T {
   );
 }
 
+/** Replace slices of state wholesale (used when real data arrives from the API). */
+export function hydrate(patch: Partial<AppState>) {
+  set((s) => ({ ...s, ...patch }));
+}
+export const getState = () => state;
+/** Back to the seeded prototype data (sign-out). */
+export function resetState() {
+  set(() => INITIAL);
+}
+
 /** A ticking clock that is `null` until the browser has mounted, so server and client markup agree. */
 export function useNow(active: boolean, ms = 1000): number | null {
   const [now, setNow] = useState<number | null>(() =>

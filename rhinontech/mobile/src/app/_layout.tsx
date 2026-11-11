@@ -4,7 +4,9 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 
+import { clearLive, blankLive, installLive, syncAll } from "@/data/live";
 import { getSession, onSession, restoreSession } from "@/lib/api";
+import { AppState } from "react-native";
 import { useWorkspaceTheme } from "@/theme/useWorkspaceTheme";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
@@ -22,6 +24,15 @@ function Shell() {
   useWorkspaceTheme();
   useEffect(() => onSession(() => bump((n) => n + 1)), []);
   const signedIn = !!getSession();
+  useEffect(() => {
+    if (!signedIn) { clearLive(); return; }
+    installLive();
+    blankLive();
+    void syncAll();
+    const timer = setInterval(() => void syncAll(), 45_000);
+    const sub = AppState.addEventListener("change", (s) => { if (s === "active") void syncAll(); });
+    return () => { clearInterval(timer); sub.remove(); };
+  }, [signedIn]);
   const onLogin = segments[0] === "login";
   useEffect(() => {
     if (!signedIn && !onLogin) router.replace("/login" as never);

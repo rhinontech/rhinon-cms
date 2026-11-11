@@ -2,7 +2,7 @@ import { Switch, View } from "react-native";
 
 import { logout } from "@/lib/api";
 import { Button } from "@/ui";
-import { ME } from "@/data/mock-data";
+import { ME, myName } from "@/data/mock-data";
 import { ROLE_LABEL, actions, useApp, type Role } from "@/data/store";
 import { useTheme } from "@/theme/ThemeProvider";
 import { Avatar, Card, Chip, Display, Eyebrow, Screen, SectionLabel, Text, TopBar } from "@/ui";
@@ -16,8 +16,8 @@ export default function Profile() {
   return (
     <Screen>
       <TopBar title="Profile" fallback="/more" />
-      <Avatar name={ME.name} size={84} />
-      <Display size="lg" style={{ marginTop: 14 }}>{ME.name}</Display>
+      <Avatar name={myName()} size={84} />
+      <Display size="lg" style={{ marginTop: 14 }}>{myName()}</Display>
       <Text style={{ opacity: 0.65, marginTop: 4 }}>{ME.role} · {ME.dept}</Text>
       <Card style={{ marginTop: 18, gap: 8 }}>
         {([["Email", ME.email], ["Phone", ME.phone], ["Joined", ME.joined], ["Manager", ME.manager], ["Location", ME.location]] as [string, string][]).map(([k, v]) => (
