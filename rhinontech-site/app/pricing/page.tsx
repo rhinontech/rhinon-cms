@@ -27,7 +27,7 @@ export default function PricingPage() {
       <section className="relative pb-24 pt-16 sm:pt-24">
         <Aurora />
         <div className="relative mx-auto max-w-[1240px] px-5">
-          <Reveal><SectionHead eyebrow="Pricing" title={<>Free for everything. <span className="text-aurora">Pay only for the chatbot.</span></>} sub="No seats to count, no trial clock, no credit card. Start with the whole workspace and add the AI chatbot when you want it." /></Reveal>
+          <Reveal><SectionHead as="h1" eyebrow="Pricing" title={<>Free CRM, HR and project software. <span className="text-aurora">Pay only for the chatbot.</span></>} sub="No seats to count, no trial clock, no credit card. Start with the whole workspace and add the AI chatbot when you want it." /></Reveal>
           <div className="mt-16 grid max-w-[960px] gap-5 md:grid-cols-2">
             <Reveal>
               <div className="spot h-full p-8">

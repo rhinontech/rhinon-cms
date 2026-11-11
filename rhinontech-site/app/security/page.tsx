@@ -30,7 +30,7 @@ export default function SecurityPage() {
         <Aurora />
         <div className="relative mx-auto max-w-[1240px] px-5">
           <Reveal>
-            <SectionHead eyebrow="Security" title={<>Your company's data, <span className="text-aurora">kept yours.</span></>} sub="How we keep workspaces separate, permissions real and secrets safe. Plain answers, without the jargon." />
+            <SectionHead as="h1" eyebrow="Security" title={<>Your company's data, <span className="text-aurora">kept yours.</span></>} sub="How we keep workspaces separate, permissions real and secrets safe. Plain answers, without the jargon." />
             <div className="mt-9 flex flex-wrap gap-3">
               <Button href={links.signup} arrow>Get started free</Button>
               <Button href={links.contact} variant="ghost">Ask us a question</Button>

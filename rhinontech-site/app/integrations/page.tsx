@@ -29,7 +29,7 @@ export default function IntegrationsPage() {
         <Aurora />
         <div className="relative mx-auto max-w-[1240px] px-5">
           <Reveal>
-            <SectionHead eyebrow="Integrations" title={<>Works with the tools <span className="text-aurora">you already use.</span></>} sub="Connect your mailbox, calendar and website. Everything else lives in one place." />
+            <SectionHead as="h1" eyebrow="Integrations" title={<>Works with the tools <span className="text-aurora">you already use.</span></>} sub="Connect your mailbox, calendar and website. Everything else lives in one place." />
           </Reveal>
           <div className="mt-16 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {ITEMS.map(({ name, body, icon: Icon, tone }, i) => (
