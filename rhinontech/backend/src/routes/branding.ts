@@ -77,4 +77,28 @@ router.put("/company", authorize("settings:write"), async (req: AuthRequest, res
   });
 });
 
+const MOBILE_THEMES = ["admin", "blocks", "midnight", "brutal"] as const;
+
+/** The design system the mobile app renders in — readable by every signed-in user. */
+router.get("/mobile-theme", async (req: AuthRequest, res: Response) => {
+  const org = await Organization.findByPk(req.user!.organizationId);
+  res.json({ theme: org?.settings?.mobileTheme ?? "admin", options: MOBILE_THEMES });
+});
+
+router.put("/mobile-theme", async (req: AuthRequest, res: Response) => {
+  if (req.user?.roleSlug !== "superadmin") {
+    res.status(403).json({ message: "Only a super admin can change the mobile theme" });
+    return;
+  }
+  const theme = req.body?.theme;
+  if (!MOBILE_THEMES.includes(theme)) {
+    res.status(400).json({ message: "Unknown theme" });
+    return;
+  }
+  const org = await Organization.findByPk(req.user!.organizationId);
+  if (!org) { res.status(404).json({ message: "Workspace not found" }); return; }
+  await org.update({ settings: { ...(org.settings ?? {}), mobileTheme: theme } });
+  res.json({ theme });
+});
+
 export default router;
