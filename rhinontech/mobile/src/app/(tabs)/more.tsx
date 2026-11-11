@@ -35,10 +35,17 @@ export default function More() {
     { title: "Together", mods: [
       { id: "meetings", label: "Meetings", tone: "cobalt", stat: `${MEETINGS.filter((m) => m.day === "Today").length} today`, perm: "meetings" },
       { id: "people", label: "People", tone: "coral", stat: `${PEOPLE.length} teammates` },
+      { id: "pages", label: "Pages", tone: "cobalt", stat: "Wiki", perm: "pages" },
+      { id: "hiring", label: "Hiring", tone: "leaf", stat: "Interviews", perm: "hiring" },
     ] },
     { title: "Sales and platform", mods: [
       { id: "crm", label: "CRM", tone: "rose", stat: `${lakh(pipeline)} open`, perm: "crm", wide: true },
+      { id: "outreach", label: "Outreach", tone: "coral", stat: "AI drafts", perm: "outreach" },
+      { id: "chatbot", label: "Chatbot", tone: "sky", stat: "Live chats", perm: "chatbot" },
       { id: "analytics", label: "Traffic", tone: "violet", stat: `${ANALYTICS[brand].now} on site now`, perm: "analytics" },
+      { id: "ideas", label: "Ideas", tone: "sun", stat: "Startup ideas", perm: "ideas" },
+      { id: "content", label: "Content", tone: "rose", stat: "Posts · events", perm: "content" },
+      { id: "audit", label: "Audit", tone: "ink", stat: "Read-only", perm: "audit" },
       { id: "settings", label: "Settings", tone: "ink", stat: "Roles · accounts", perm: "settings" },
     ] },
     { title: "You", mods: [
