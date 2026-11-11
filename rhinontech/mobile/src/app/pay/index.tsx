@@ -1,3 +1,4 @@
+import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable, TextInput, Link } from "@/components/rn";
 import { ChevronRight, Download, Eye, EyeOff, Plus, Receipt } from "@/components/icons";
 import { useState } from "react";
@@ -7,6 +8,7 @@ import {
   Button,
   Chip,
   Display,
+  Empty,
   Eyebrow,
   Fab,
   Field,
@@ -15,6 +17,7 @@ import {
   SectionLabel,
   Segmented,
   Sheet,
+  TopBar,
   inputClass,
   stagger,
 } from "@/components/rhinon/ui";
@@ -30,13 +33,21 @@ const CLAIM_TONE = {
   Rejected: "coral",
 } as const;
 export default function PayPage() {
+  useRev();
   const [tab, setTab] = useState<Tab>("slips");
   const { hidden, toggle, overlay } = usePayGate();
   const claims = useApp((s) => s.claims);
   const [claiming, setClaiming] = useState(false);
   const latest = PAYSLIPS[0];
   const ytd = PAYSLIPS.slice(0, 7);
-  if (!latest) return null;
+  if (!latest) {
+    return (
+      <Screen>
+        <TopBar title="Pay" fallback="/more" />
+        <Empty title="No payslips yet" body="Payslips appear here once payroll has run." tone="sun" />
+      </Screen>
+    );
+  }
   const takeHome = net(latest) / gross(latest);
   return (
     <Screen fab={tab === "claims"}>

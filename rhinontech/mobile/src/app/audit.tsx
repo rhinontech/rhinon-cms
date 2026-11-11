@@ -1,3 +1,4 @@
+import { useRev } from "@/lib/store";
 import { View, Text, Span, TextInput } from "@/components/rn";
 import {
   FileText,
@@ -88,6 +89,7 @@ function Row({ e, i }: { e: AuditEntry; i: number }) {
   );
 }
 export default function AuditPage() {
+  useRev();
   const allowed = usePerm("audit");
   const [filter, setFilter] = useState<"All" | AuditKind>("All");
   const [q, setQ] = useState("");

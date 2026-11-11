@@ -1,3 +1,4 @@
+import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable, Link } from "@/components/rn";
 import { Path, Svg } from "react-native-svg";
 import { ArrowRight, Bell, Check, Pause, Play } from "@/components/icons";
@@ -10,6 +11,7 @@ import { TONES, type Tone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 type Focus = "work" | "inbox" | "time" | "pay";
 export default function Home() {
+  useRev();
   const allTasks = useApp(s => s.tasks);
   const tasks = allTasks.filter(x => x.assignee === "me");
   const threads = useApp(s => s.threads);
@@ -49,7 +51,7 @@ export default function Home() {
     id: "pay",
     tone: "sun",
     label: ["Check", "pay"],
-    stat: "October paid"
+    stat: latest ? `${latest.month.split(" ")[0]} paid` : "No payslips yet"
   }];
   const lastFrom = topThread?.messages.at(-1)?.from ?? "";
   const cards: Record<Focus, {
@@ -66,7 +68,7 @@ export default function Home() {
     },
     inbox: {
       title: topThread?.subject ?? "Inbox zero",
-      caption: topThread ? `${lastFrom} · ${topThread.time} · AI draft ready` : "Every thread is handled.",
+      caption: topThread ? `${lastFrom} · ${topThread.time}${topThread.copilot ? " · AI draft ready" : ""}` : "Every thread is handled.",
       cta: topThread ? "Open thread" : "Open inbox",
       to: topThread ? `/inbox/${topThread.id}` : "/inbox"
     },
@@ -77,10 +79,10 @@ export default function Home() {
       to: "/attendance"
     },
     pay: {
-      title: "October payslip is ready",
-      caption: latest ? `${rupee(net(latest))} net · paid ${latest.paidOn.slice(0, 6)}` : "",
-      cta: "View payslip",
-      to: "/pay/oct-2026"
+      title: latest ? `${latest.month.split(" ")[0]} payslip is ready` : "No payslip yet",
+      caption: latest ? `${rupee(net(latest))} net · paid ${latest.paidOn.slice(0, 6)}` : "Payslips appear here once payroll has run.",
+      cta: latest ? "View payslip" : "Open pay",
+      to: latest ? `/pay/${latest.id}` : "/pay"
     }
   };
   const active = tiles.find(t => t.id === focus) ?? tiles[0]!;

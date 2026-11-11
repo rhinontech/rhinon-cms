@@ -1,3 +1,4 @@
+import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable, TextInput } from "@/components/rn";
 import { useLocalSearchParams } from "expo-router";
 import { Phone, Plus, Send, Video } from "@/components/icons";
@@ -26,6 +27,7 @@ const REPLIES = [
   "Thanks! Sending it over now.",
 ];
 export default function ChatThread() {
+  useRev();
   const { chatId } = useLocalSearchParams<{
     chatId: string;
   }>();

@@ -1,3 +1,4 @@
+import { useRev } from "@/lib/store";
 import { Portal, View, Text, Pressable } from "@/components/rn";
 import {
   BadgeCheck,
@@ -47,6 +48,7 @@ const KIND: Record<
   },
 };
 export default function NotificationsPage() {
+  useRev();
   const notifs = useApp((s) => s.notifs);
   const push = useApp((s) => s.pushPermission);
   const [asking, setAsking] = useState(false);

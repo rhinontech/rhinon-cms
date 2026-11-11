@@ -1,3 +1,4 @@
+import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable, TextInput } from "@/components/rn";
 import { useLocalSearchParams } from "expo-router";
 import { MoreHorizontal, Plus, Send } from "@/components/icons";
@@ -25,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { Check } from "@/components/icons";
 const STATUSES: TaskStatus[] = ["Pending", "In progress", "Done"];
 export default function TaskDetail() {
+  useRev();
   const { taskId } = useLocalSearchParams<{
     taskId: string;
   }>();

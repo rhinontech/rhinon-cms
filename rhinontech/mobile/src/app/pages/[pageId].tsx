@@ -1,3 +1,4 @@
+import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable, TextInput, Link } from "@/components/rn";
 import { useLocalSearchParams } from "expo-router";
 import {
@@ -59,6 +60,7 @@ const SNIPPETS = [
   },
 ] as const;
 export default function PageView() {
+  useRev();
   const { pageId } = useLocalSearchParams<{
     pageId: string;
   }>();

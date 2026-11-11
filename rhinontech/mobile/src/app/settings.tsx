@@ -1,3 +1,5 @@
+import { getSession } from "@/lib/api";
+import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable, Link } from "@/components/rn";
 import {
   CalendarCheck,
@@ -27,6 +29,7 @@ import { TONES } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 const GROUPS = ["Everyday", "People", "Sales and support", "Platform"] as const;
 export default function SettingsPage() {
+  useRev();
   const allowed = usePerm("settings");
   const perms = useApp((s) => s.perms);
   const [role, setRole] = useState<RoleId | null>(null);
@@ -47,7 +50,7 @@ export default function SettingsPage() {
     <Screen>
       <TopBar title="Settings" fallback="/more" />
       <View className="animate-rise">
-        <Eyebrow>Rhinon Tech workspace</Eyebrow>
+        <Eyebrow>{getSession()?.orgName || "Your"} workspace</Eyebrow>
         <Display size="hero" className="mt-3">
           Set the
           {"\n"}

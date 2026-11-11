@@ -1,3 +1,4 @@
+import { useRev } from "@/lib/store";
 import { View, Text, Pressable, TextInput } from "@/components/rn";
 import { useLocalSearchParams } from "expo-router";
 import { Bot, Info, Phone, Send } from "@/components/icons";
@@ -22,6 +23,7 @@ const QUICK = [
   "I'll book that demo now.",
 ];
 export default function BotChatPage() {
+  useRev();
   const { chatId } = useLocalSearchParams<{
     chatId: string;
   }>();

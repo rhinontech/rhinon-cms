@@ -168,6 +168,9 @@ export const BRANDS: { id: BrandId; name: string; tone: Tone; domain: string }[]
   { id: "uppercurve", name: "Uppercurve", tone: "leaf", domain: "uppercurve.in" },
 ];
 
+/** The brand with this id; a placeholder while the workspace's brands are still loading, never undefined. */
+export const brandOf = (id: string) => BRANDS.find((b) => b.id === id) ?? BRANDS[0] ?? { id: "", name: "—", tone: "ink" as Tone, domain: "" };
+
 /* ── Work ────────────────────────────────────────────────────────────────── */
 
 export type Priority = "High" | "Medium" | "Low";

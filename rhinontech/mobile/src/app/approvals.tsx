@@ -1,3 +1,4 @@
+import { useRev } from "@/lib/store";
 import { View, Text, TextInput } from "@/components/rn";
 import { Check } from "@/components/icons";
 import { useState } from "react";
@@ -44,6 +45,7 @@ const KIND: Record<
   },
 };
 export default function ApprovalsPage() {
+  useRev();
   const approvals = useApp((s) => s.approvals);
   const allowed = usePerm("approvals");
   const [filter, setFilter] = useState<Filter>("all");

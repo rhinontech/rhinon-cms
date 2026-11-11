@@ -2290,3 +2290,7 @@ export const ROLE_META: {
     blurb: "Own work, time, pay and documents.",
   },
 ];
+
+/** Traffic numbers for a brand; zeros while they load (or when nothing is tracked yet), never undefined. */
+export const statsOf = (id: string): BrandStats =>
+  ANALYTICS[id] ?? { visitors: 0, views: 0, avgTime: "—", bounce: 0, now: 0, series7: [], series30: [], sources: [], pages: [], places: [] };

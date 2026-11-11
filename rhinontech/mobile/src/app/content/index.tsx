@@ -1,3 +1,4 @@
+import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable, Link } from "@/components/rn";
 import { ScanLine } from "@/components/icons";
 import { useState } from "react";
@@ -26,6 +27,7 @@ const POST_TONE: Record<Post["status"], Tone> = {
   "Changes requested": "coral",
 };
 export default function ContentPage() {
+  useRev();
   const guests = useApp((s) => s.guests);
   const posts = useApp((s) => s.posts);
   const allowed = usePerm("content");

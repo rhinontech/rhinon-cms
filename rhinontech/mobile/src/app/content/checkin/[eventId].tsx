@@ -1,3 +1,4 @@
+import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable, TextInput } from "@/components/rn";
 import { useLocalSearchParams } from "expo-router";
 import { Check, ScanLine, Search } from "@/components/icons";
@@ -25,6 +26,7 @@ const TICKET_TONE: Record<Guest["ticket"], Tone> = {
   Speaker: "violet",
 };
 export default function CheckInPage() {
+  useRev();
   const { eventId } = useLocalSearchParams<{
     eventId: string;
   }>();

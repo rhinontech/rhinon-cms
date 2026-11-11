@@ -23,7 +23,7 @@ export function AreaChart({ data, tone = "cobalt", height = 132 }: { data: numbe
   const last = pts[pts.length - 1];
   return (
     <View className="w-full" style={{ height }} onLayout={(e) => setW(e.nativeEvent.layout.width)} accessibilityLabel="Trend">
-      {w > 0 ? (
+      {w > 0 && data.length > 1 ? (
         <Svg width={w} height={height} style={{ overflow: "visible" }}>
           <Defs>
             <LinearGradient id={id} x1="0" x2="0" y1="0" y2="1">

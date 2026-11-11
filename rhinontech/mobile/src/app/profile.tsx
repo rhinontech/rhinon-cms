@@ -1,3 +1,5 @@
+import { DEMO } from "@/lib/demo";
+import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable } from "@/components/rn";
 import { useRouter } from "@/lib/router";
 import { LogOut, ShieldCheck } from "@/components/icons";
@@ -51,6 +53,7 @@ const PREFS: {
   },
 ];
 export default function ProfilePage() {
+  useRev();
   const prefs = useApp((s) => s.prefs);
   const role = useApp((s) => s.role);
   const router = useRouter();
@@ -176,7 +179,7 @@ export default function ProfilePage() {
         Sign out
       </Button>
       <Text className="mt-5 text-center font-mono text-[10px] uppercase tracking-[0.16em] text-ink/35">
-        Rhinon Mobile · prototype 0.1 · dummy data
+        Rhinon Mobile · 1.0{DEMO ? " · sample data" : ""}
       </Text>
     </Screen>
   );

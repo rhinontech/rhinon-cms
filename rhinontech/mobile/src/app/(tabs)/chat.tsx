@@ -1,3 +1,5 @@
+import { DEMO } from "@/lib/demo";
+import { useRev } from "@/lib/store";
 import { View, Text, Pressable, Link } from "@/components/rn";
 import { useRouter } from "@/lib/router";
 import { PenLine, Video } from "@/components/icons";
@@ -20,6 +22,7 @@ import { actions, useApp } from "@/lib/store";
 import { cn } from "@/lib/utils";
 type Filter = "all" | "unread" | "dm" | "channel";
 export default function ChatPage() {
+  useRev();
   const chats = useApp((s) => s.chats);
   const [filter, setFilter] = useState<Filter>("all");
   const [call, setCall] = useState(false);
@@ -51,6 +54,7 @@ export default function ChatPage() {
         </Display>
       </View>
 
+      {DEMO ? (
       <View
         className="mt-6 flex animate-rise items-center gap-3 rounded-3xl bg-sky p-3.5 text-sky-foreground"
         style={stagger(1)}
@@ -75,6 +79,7 @@ export default function ChatPage() {
           Join
         </Pressable>
       </View>
+      ) : null}
 
       <View className="no-scrollbar -mx-5 mt-5 flex gap-2 overflow-x-auto px-5 pb-1">
         {(

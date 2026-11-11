@@ -7,6 +7,7 @@ import { Platform } from "react-native";
  * when its Wi-Fi address changes (a pinned IP in .env goes stale). EXPO_PUBLIC_API_URL still wins when set.
  */
 function metroHost(): string | null {
+  if (Platform.OS === "web" && typeof location !== "undefined") return location.hostname || null;
   const uri = Constants.expoConfig?.hostUri ?? (Constants as unknown as { expoGoConfig?: { debuggerHost?: string } }).expoGoConfig?.debuggerHost;
   return uri ? (uri.split(":")[0] ?? null) : null;
 }

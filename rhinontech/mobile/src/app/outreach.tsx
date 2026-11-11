@@ -1,3 +1,4 @@
+import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable, TextInput } from "@/components/rn";
 import { Check, Pause, Pencil, Play, X } from "@/components/icons";
 import { useState } from "react";
@@ -110,6 +111,7 @@ function DraftCard({ d, index }: { d: OutreachDraft; index: number }) {
   );
 }
 export default function OutreachPage() {
+  useRev();
   const brand = useApp((s) => s.brand);
   const drafts = useApp((s) => s.drafts);
   const campaigns = useApp((s) => s.campaigns);

@@ -228,6 +228,9 @@ export function useApp<T>(selector: (s: AppState) => T): T {
 export function hydrate(patch: Partial<AppState>) {
   set((s) => ({ ...s, ...patch, rev: s.rev + 1 }));
 }
+/** Subscribe a page to live-data replacements (people, projects, payslips…) so it renders again when they change. */
+export const useRev = (): number => useApp((s) => s.rev);
+
 /** Re-render every screen after a module-level list was replaced in place. */
 export function bumpRev() {
   set((s) => ({ ...s, rev: s.rev + 1 }));

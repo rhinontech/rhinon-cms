@@ -1,3 +1,4 @@
+import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable, TextInput } from "@/components/rn";
 import { useLocalSearchParams } from "expo-router";
 import { Check, Send } from "@/components/icons";
@@ -25,6 +26,7 @@ const PRIORITY_TONE: Record<Ticket["priority"], Tone> = {
   Low: "sky",
 };
 export default function TicketPage() {
+  useRev();
   const { ticketId } = useLocalSearchParams<{
     ticketId: string;
   }>();

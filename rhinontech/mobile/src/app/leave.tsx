@@ -1,3 +1,5 @@
+import { fyLabel } from "@/lib/format";
+import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable, TextInput } from "@/components/rn";
 import { ChevronLeft, ChevronRight, Plus } from "@/components/icons";
 import { useState } from "react";
@@ -9,6 +11,7 @@ import { actions, useApp } from "@/lib/store";
 import { TONES } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 export default function LeavePage() {
+  useRev();
   const balances = useApp(s => s.balances);
   const leave = useApp(s => s.leave);
   const [applying, setApplying] = useState(false);
@@ -17,7 +20,7 @@ export default function LeavePage() {
       <TimeSwitch current="leave" />
 
       <View className="mt-7 animate-rise">
-        <Eyebrow tone="sky">Leave · FY 2026–27</Eyebrow>
+        <Eyebrow tone="sky">Leave · {fyLabel()}</Eyebrow>
         <Display size="hero" className="mt-3">
           Time off,
           {"\n"}
@@ -80,7 +83,7 @@ export default function LeavePage() {
             </Text>
             <Text className="mt-2.5 text-[14.5px] text-ink/75">{r.reason}</Text>
             {r.note ? <Text className="mt-2.5 rounded-xl bg-paper-deep px-3 py-2 text-[13.5px] italic text-ink/70">
-                “{r.note}” — Vikram
+                “{r.note}” — Manager
               </Text> : null}
           </View>)}
       </View>

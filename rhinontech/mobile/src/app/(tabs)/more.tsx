@@ -1,8 +1,9 @@
+import { useRev } from "@/lib/store";
 import { View, Text, Span, Link } from "@/components/rn";
 import { Display, Eyebrow, SectionLabel, Screen, stagger } from "@/components/rhinon/ui";
-import { lakh } from "@/lib/format";
-import { MEETINGS, PEOPLE } from "@/lib/mock-data";
-import { ANALYTICS } from "@/lib/mock-more";
+import { cycleLabel, lakh } from "@/lib/format";
+import { MEETINGS, PEOPLE, PAYSLIPS, myName} from "@/lib/mock-data";
+import { ANALYTICS, statsOf } from "@/lib/mock-more";
 import { ROLE_LABEL, useApp } from "@/lib/store";
 import { TONES, type Tone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
@@ -22,6 +23,7 @@ type Group = {
   mods: Mod[];
 };
 export default function MorePage() {
+  useRev();
   const role = useApp((s) => s.role);
   const perms = useApp((s) => s.perms[s.role]);
   const approvals = useApp((s) => s.approvals);
@@ -36,6 +38,7 @@ export default function MorePage() {
   const ideas = useApp((s) => s.ideas);
   const posts = useApp((s) => s.posts);
   const brand = useApp((s) => s.brand);
+  const balances = useApp((s) => s.balances);
   const pipeline = deals.filter((d) => d.stage !== "won").reduce((s, d) => s + d.value, 0);
   const fresh = notifs.filter((n) => n.unread).length;
   const toSign = docs.filter((d) => d.state === "to-sign").length;
@@ -75,14 +78,14 @@ export default function MorePage() {
           to: "/leave",
           label: ["Leave"],
           tone: "sky",
-          stat: "5 days left",
+          stat: `${Math.max(0, balances.reduce((n, b) => n + b.total - b.used, 0))} days left`,
         },
         {
           id: "pay",
           to: "/pay",
           label: ["Pay"],
           tone: "sun",
-          stat: "Oct paid",
+          stat: PAYSLIPS[0] ? `${PAYSLIPS[0].short} paid` : "No payslips yet",
         },
         {
           id: "documents",
@@ -98,7 +101,7 @@ export default function MorePage() {
           to: "/performance",
           label: ["Goals"],
           tone: "violet",
-          stat: "H2 2026 review",
+          stat: `${cycleLabel()} review`,
           perm: "performance",
           wide: true,
         },
@@ -181,7 +184,7 @@ export default function MorePage() {
           to: "/analytics",
           label: ["Traffic"],
           tone: "violet",
-          stat: `${ANALYTICS[brand].now} on site now`,
+          stat: `${statsOf(brand).now} on site now`,
           perm: "analytics",
         },
         {
@@ -237,7 +240,7 @@ export default function MorePage() {
           to: "/profile",
           label: ["Profile"],
           tone: "ink",
-          stat: "Kabir Mehra",
+          stat: myName(),
         },
       ],
     },

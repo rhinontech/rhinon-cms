@@ -1,3 +1,4 @@
+import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable, Link } from "@/components/rn";
 import { useLocalSearchParams } from "expo-router";
 import { ChevronRight, Upload } from "@/components/icons";
@@ -86,6 +87,7 @@ function BoardCard({ task, index }: { task: Task; index: number }) {
   );
 }
 export default function ProjectPage() {
+  useRev();
   const { projectId } = useLocalSearchParams<{
     projectId: string;
   }>();

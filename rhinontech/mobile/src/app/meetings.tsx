@@ -1,3 +1,4 @@
+import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable, TextInput } from "@/components/rn";
 import { MapPin, Plus, Video } from "@/components/icons";
 import { useState } from "react";
@@ -14,6 +15,7 @@ function addMinutes(hhmm: string, mins: number): string {
   return `${pad(Math.floor(total / 60) % 24)}:${pad(total % 60)}`;
 }
 export default function MeetingsPage() {
+  useRev();
   const [list, setList] = useState<Meeting[]>(MEETINGS);
   const [day, setDay] = useState<"Today" | "Tomorrow">("Today");
   const [adding, setAdding] = useState(false);
@@ -45,7 +47,7 @@ export default function MeetingsPage() {
             </View>
             <View className="size-2.5 shrink-0 rounded-full bg-coral" />
             <View className="h-px flex-1 bg-coral/50" />
-            <Span className="font-mono text-[11px] text-coral-deep">9:41</Span>
+            <Span className="font-mono text-[11px] text-coral-deep">{`${new Date().getHours()}:${String(new Date().getMinutes()).padStart(2, "0")}`}</Span>
           </View> : null}
         {rows.map((m, i) => {
         const next = m.state === "next";

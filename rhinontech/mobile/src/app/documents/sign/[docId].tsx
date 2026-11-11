@@ -1,3 +1,5 @@
+import { getSession } from "@/lib/api";
+import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable, TextInput } from "@/components/rn";
 import { useLocalSearchParams } from "expo-router";
 import { useRouter } from "@/lib/router";
@@ -21,6 +23,7 @@ import { DOC_BODY } from "@/lib/mock-more";
 import { actions, useApp } from "@/lib/store";
 import { cn } from "@/lib/utils";
 export default function SignPage() {
+  useRev();
   const { docId } = useLocalSearchParams<{
     docId: string;
   }>();
@@ -95,7 +98,7 @@ export default function SignPage() {
           </Text>
         ))}
         <Text className="pt-2 font-mono text-[10px] uppercase tracking-[0.14em] text-ink/40">
-          Rhinon Tech Private Limited · Page 1 of 1
+          {getSession()?.orgName || "Rhinon Tech"} · Page 1 of 1
         </Text>
       </View>
 

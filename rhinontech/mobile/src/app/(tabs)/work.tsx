@@ -1,3 +1,4 @@
+import { useRev } from "@/lib/store";
 import { View, Text, Span, Link } from "@/components/rn";
 import { Plus } from "@/components/icons";
 import { useState } from "react";
@@ -48,6 +49,7 @@ const GROUPS: {
   },
 ];
 export default function WorkPage() {
+  useRev();
   const all = useApp((s) => s.tasks);
   const tasks = all.filter((t) => t.assignee === "me");
   const [tab, setTab] = useState<Tab>("mine");

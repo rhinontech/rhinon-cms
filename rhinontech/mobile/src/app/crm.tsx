@@ -1,3 +1,5 @@
+import { brandOf } from "@/lib/mock-data";
+import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable, TextInput } from "@/components/rn";
 import { Mail, MessageCircle, NotebookPen, Phone, Plus } from "@/components/icons";
 import { useState } from "react";
@@ -44,7 +46,9 @@ const KIND_LABEL: Record<ActivityKind, string> = {
   note: "Note",
 };
 export default function CrmPage() {
+  useRev();
   const deals = useApp((s) => s.deals);
+  const brand = useApp((s) => s.brand);
   const leads = useApp((s) => s.leads);
   const accounts = useApp((s) => s.accounts);
   const allowed = usePerm("crm");
@@ -71,7 +75,7 @@ export default function CrmPage() {
     <Screen>
       <TopBar title="CRM" fallback="/more" />
       <View className="animate-rise">
-        <Eyebrow tone="rose">Rhinon Tech · pipeline</Eyebrow>
+        <Eyebrow tone="rose">{brandOf(brand).name} · pipeline</Eyebrow>
         <Display size="hero" className="mt-3">
           Close
           {"\n"}

@@ -1,13 +1,15 @@
+import { useRev } from "@/lib/store";
 import { View, Text, Span } from "@/components/rn";
 import { useState } from "react";
 import { BrandChip, BrandPickSheet } from "@/components/rhinon/brand";
 import { AreaChart, BarRow, VisitorMap } from "@/components/rhinon/charts";
 import { Display, Eyebrow, NoAccess, Screen, SectionLabel, Segmented, TopBar, stagger } from "@/components/rhinon/ui";
 import { BRANDS } from "@/lib/mock-data";
-import { ANALYTICS, VISITORS } from "@/lib/mock-more";
+import { ANALYTICS, statsOf, VISITORS } from "@/lib/mock-more";
 import { useApp, usePerm } from "@/lib/store";
 const fmt = (n: number) => n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n);
 export default function AnalyticsPage() {
+  useRev();
   const brand = useApp(s => s.brand);
   const allowed = usePerm("analytics");
   const [range, setRange] = useState<"7d" | "30d">("7d");
@@ -18,7 +20,7 @@ export default function AnalyticsPage() {
         <NoAccess title="No Analytics access" body="Traffic analytics are limited to admins. Ask an admin to grant analytics:read." />
       </Screen>;
   }
-  const stats = ANALYTICS[brand];
+  const stats = statsOf(brand);
   const series = range === "7d" ? stats.series7 : stats.series30;
   const half = Math.floor(series.length / 2);
   const now = series.slice(half).reduce((a, b) => a + b, 0);

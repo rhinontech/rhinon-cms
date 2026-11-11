@@ -1,3 +1,4 @@
+import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable } from "@/components/rn";
 import { Mail } from "@/components/icons";
 import { useState } from "react";
@@ -27,6 +28,7 @@ const STATUS_TONE: Record<IdeaStatus, Tone> = {
   Archived: "ink",
 };
 export default function IdeasPage() {
+  useRev();
   const ideas = useApp((s) => s.ideas);
   const allowed = usePerm("ideas");
   const [filter, setFilter] = useState<"All" | IdeaStatus>("All");

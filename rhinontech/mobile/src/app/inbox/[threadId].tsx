@@ -1,3 +1,4 @@
+import { useRev } from "@/lib/store";
 import { View, Text, Pressable, TextInput } from "@/components/rn";
 import { Path, Svg } from "react-native-svg";
 import { useLocalSearchParams } from "expo-router";
@@ -22,6 +23,7 @@ import { actions, useApp } from "@/lib/store";
 import { TONES } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 export default function ThreadPage() {
+  useRev();
   const { threadId } = useLocalSearchParams<{
     threadId: string;
   }>();

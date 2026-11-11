@@ -106,3 +106,8 @@ export function rangeLabel(fromIsoDate: string, toIsoDate: string): string {
   }
   return `${shortDate(fromIsoDate)} – ${shortDate(toIsoDate)}`;
 }
+
+/** "H2 2026": the half-year review cycle the date falls in. */
+export const cycleLabel = (d = new Date()) => `${d.getMonth() < 6 ? "H1" : "H2"} ${d.getFullYear()}`;
+/** "FY 2026–27": India's April-to-March financial year. */
+export const fyLabel = (d = new Date()) => { const y = d.getMonth() >= 3 ? d.getFullYear() : d.getFullYear() - 1; return `FY ${y}–${String((y + 1) % 100).padStart(2, "0")}`; };

@@ -1,3 +1,5 @@
+import { cycleLabel } from "@/lib/format";
+import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable, TextInput } from "@/components/rn";
 import { Slider } from "@/components/rhinon/slider";
 import { Check, Plus } from "@/components/icons";
@@ -45,6 +47,7 @@ const TEAM_TONE: Record<TeamReview["status"], Tone> = {
   Completed: "leaf",
 };
 export default function PerformancePage() {
+  useRev();
   const goals = useApp((s) => s.goals);
   const self = useApp((s) => s.selfReview);
   const team = useApp((s) => s.teamReviews);
@@ -64,7 +67,7 @@ export default function PerformancePage() {
     <Screen fab={tab === "goals"}>
       <TopBar title="Performance" fallback="/more" />
       <View className="animate-rise">
-        <Eyebrow tone="violet">H2 2026 · {goals.length} goals</Eyebrow>
+        <Eyebrow tone="violet">{cycleLabel()} · {goals.length} goals</Eyebrow>
         <Display size="hero" className="mt-3">
           Grow,
           {"\n"}
@@ -162,7 +165,7 @@ export default function PerformancePage() {
               <View>
                 <Eyebrow tone="muted">Current cycle</Eyebrow>
                 <Display as="h3" size="lg" className="mt-1.5">
-                  H2 2026 review
+                  {cycleLabel()} review
                 </Display>
               </View>
               <Badge tone={self.submitted ? "leaf" : "coral"}>
@@ -324,7 +327,7 @@ function NewGoalSheet({ open, onClose }: { open: boolean; onClose: () => void })
     onClose();
   };
   return (
-    <Sheet open={open} onClose={onClose} eyebrow="H2 2026" title="What will you achieve?">
+    <Sheet open={open} onClose={onClose} eyebrow={cycleLabel()} title="What will you achieve?">
       <View className="space-y-5">
         <Field label="Goal">
           <TextInput
@@ -369,7 +372,7 @@ function SelfReviewSheet({ open, onClose }: { open: boolean; onClose: () => void
     onClose();
   };
   return (
-    <Sheet open={open} onClose={onClose} eyebrow="H2 2026" title="How did it go?">
+    <Sheet open={open} onClose={onClose} eyebrow={cycleLabel()} title="How did it go?">
       <View className="space-y-5">
         <Field label="Overall, you were">
           <RatingPicker value={rating} onChange={setRating} />
@@ -393,7 +396,7 @@ function SelfReviewSheet({ open, onClose }: { open: boolean; onClose: () => void
           />
         </Field>
         <Button tone="ink" disabled={!rating} onClick={send}>
-          Submit to Vikram
+          Submit to your manager
         </Button>
       </View>
     </Sheet>

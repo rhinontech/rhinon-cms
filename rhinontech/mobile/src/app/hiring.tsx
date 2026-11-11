@@ -1,3 +1,4 @@
+import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable, TextInput } from "@/components/rn";
 import { Video } from "@/components/icons";
 import { useState } from "react";
@@ -43,6 +44,7 @@ const STAGE_TONE: Record<HiringStage, Tone> = {
 const FEEDBACK_LABELS = ["Strong no", "No", "Mixed", "Yes", "Strong yes"];
 const DAYS: Interview["day"][] = ["Yesterday", "Today", "Tomorrow", "Fri"];
 export default function HiringPage() {
+  useRev();
   const candidates = useApp((s) => s.candidates);
   const interviews = useApp((s) => s.interviews);
   const allowed = usePerm("hiring");

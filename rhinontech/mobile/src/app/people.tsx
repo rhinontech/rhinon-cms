@@ -1,3 +1,4 @@
+import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable, TextInput } from "@/components/rn";
 import { useRouter } from "@/lib/router";
 import { Mail, MessageCircle, Phone, Search, type LucideIcon } from "@/components/icons";
@@ -20,6 +21,7 @@ import { TONES, toneFor } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 const DEPTS = ["All", ...Array.from(new Set(PEOPLE.map((p) => p.dept)))];
 export default function PeoplePage() {
+  useRev();
   const [q, setQ] = useState("");
   const [dept, setDept] = useState("All");
   const [sel, setSel] = useState<Person | null>(null);

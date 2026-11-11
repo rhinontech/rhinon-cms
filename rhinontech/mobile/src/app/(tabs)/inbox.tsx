@@ -1,3 +1,4 @@
+import { useRev } from "@/lib/store";
 import { View, Text, Pressable, TextInput, Link } from "@/components/rn";
 import { Check, ChevronDown, Paperclip, PenLine, Search, Star } from "@/components/icons";
 import { useState } from "react";
@@ -17,7 +18,7 @@ import {
   stagger,
 } from "@/components/rhinon/ui";
 import { AttachmentRow, AttachSheet } from "@/components/rhinon/attach";
-import { BRANDS, type Thread } from "@/lib/mock-data";
+import { BRANDS, brandOf, type Thread } from "@/lib/mock-data";
 import type { Attachment } from "@/lib/mock-more";
 import { actions, useApp } from "@/lib/store";
 import { TONES } from "@/lib/tone";
@@ -29,13 +30,14 @@ function senderOf(t: Thread): string {
   return other?.from ?? "You";
 }
 export default function InboxPage() {
+  useRev();
   const threads = useApp((s) => s.threads);
   const brand = useApp((s) => s.brand);
   const [folder, setFolder] = useState<Folder>("inbox");
   const [q, setQ] = useState("");
   const [picking, setPicking] = useState(false);
   const [composing, setComposing] = useState(false);
-  const current = BRANDS.find((b) => b.id === brand) ?? BRANDS[0]!;
+  const current = brandOf(brand);
   const mine = threads.filter((t) => t.brand === brand);
   const unread = mine.filter((t) => t.unread && t.folder === "inbox").length;
   const query = q.trim().toLowerCase();

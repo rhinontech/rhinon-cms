@@ -1,3 +1,4 @@
+import { useRev } from "@/lib/store";
 import { View, Pressable, TextInput, Link } from "@/components/rn";
 import { useRouter } from "@/lib/router";
 import { ChevronDown, ChevronRight, Plus, Search } from "@/components/icons";
@@ -59,6 +60,7 @@ function PageRow({
   );
 }
 export default function PagesPage() {
+  useRev();
   const pages = useApp((s) => s.pages);
   const router = useRouter();
   const [q, setQ] = useState("");

@@ -1,6 +1,6 @@
 import { View, Text, Pressable } from "@/components/rn";
 import { Check, ChevronDown } from "@/components/icons";
-import { BRANDS } from "@/lib/mock-data";
+import { BRANDS, brandOf } from "@/lib/mock-data";
 import { actions, useApp } from "@/lib/store";
 import { TONES } from "@/lib/tone";
 import { cn } from "@/lib/utils";
@@ -9,7 +9,7 @@ import { Sheet } from "./ui";
 /** The brand a module is showing, as a pill. Tap it to switch. */
 export function BrandChip({ onClick }: { onClick: () => void }) {
   const brand = useApp((s) => s.brand);
-  const current = BRANDS.find((b) => b.id === brand) ?? BRANDS[0]!;
+  const current = brandOf(brand);
   return (
     <Pressable
       onPress={onClick}

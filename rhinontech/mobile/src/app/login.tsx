@@ -1,3 +1,4 @@
+import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable, TextInput } from "@/components/rn";
 import { ArrowRight, Eye, EyeOff, TriangleAlert } from "@/components/icons";
 import { useEffect, useRef, useState } from "react";
@@ -62,6 +63,7 @@ function Pillars({ small = false }: { small?: boolean }) {
   );
 }
 export default function LoginPage() {
+  useRev();
   const [step, setStep] = useState<Step>("credentials");
   const [email, setEmail] = useState(DEMO ? "kabir@rhinontech.in" : "");
   const [password, setPassword] = useState("");

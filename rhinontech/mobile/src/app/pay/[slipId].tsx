@@ -1,3 +1,4 @@
+import { useRev } from "@/lib/store";
 import { View, Text, Span } from "@/components/rn";
 import { useLocalSearchParams } from "expo-router";
 import { Download, Eye, EyeOff, Share2 } from "@/components/icons";
@@ -16,6 +17,7 @@ import {
 import { PAYSLIPS, SALARY_STRUCTURE, deducted, gross, net } from "@/lib/mock-data";
 import { actions } from "@/lib/store";
 export default function PayslipPage() {
+  useRev();
   const { slipId } = useLocalSearchParams<{
     slipId: string;
   }>();

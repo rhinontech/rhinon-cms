@@ -1,3 +1,4 @@
+import { useRev } from "@/lib/store";
 import { View, Text, Span, TextInput } from "@/components/rn";
 import { Coffee, Play, RotateCcw, Square } from "@/components/icons";
 import { useState } from "react";
@@ -21,6 +22,7 @@ const STATUS_LABEL = {
   done: "Day logged"
 } as const;
 export default function AttendancePage() {
+  useRev();
   const clock = useApp(s => s.clock);
   const regs = useApp(s => s.regularizations);
   const running = clock.status === "in" || clock.status === "break";

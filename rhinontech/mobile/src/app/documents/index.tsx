@@ -1,3 +1,4 @@
+import { useRev } from "@/lib/store";
 import { View, Text, Pressable, Link } from "@/components/rn";
 import { Camera, FileSignature, FolderOpen, ImageIcon, Plus } from "@/components/icons";
 import { useState } from "react";
@@ -16,6 +17,7 @@ const asFile = (d: DocItem): Attachment => ({
   size: d.size
 });
 export default function DocumentsPage() {
+  useRev();
   const docs = useApp(s => s.docs);
   const requests = useApp(s => s.docRequests);
   const [tab, setTab] = useState<Tab>("vault");

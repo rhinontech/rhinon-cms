@@ -1,3 +1,4 @@
+import { myName } from "@/lib/mock-data";
 import { Portal, View, Text, Span, Pressable } from "@/components/rn";
 import { Mic, MicOff, PhoneOff, Video, VideoOff, Volume2, VolumeX } from "@/components/icons";
 import { useEffect, useState } from "react";
@@ -51,7 +52,7 @@ export function CallOverlay({
       >
         {all.map((n, i) => {
           const mine = n === "You";
-          const tone = toneFor(mine ? "Kabir Mehra" : n);
+          const tone = toneFor(mine ? myName() : n);
           return (
             <View
               key={n}

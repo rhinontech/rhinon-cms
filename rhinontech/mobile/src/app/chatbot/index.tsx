@@ -1,3 +1,4 @@
+import { useRev } from "@/lib/store";
 import { View, Text, Span, Link } from "@/components/rn";
 import { ChevronRight } from "@/components/icons";
 import { useState } from "react";
@@ -57,6 +58,7 @@ const TICKET_TONE: Record<Ticket["status"], Tone> = {
 };
 const ORDER: BotChat["status"][] = ["waiting", "agent", "bot", "closed"];
 export default function ChatbotPage() {
+  useRev();
   const chats = useApp((s) => s.botChats);
   const tickets = useApp((s) => s.tickets);
   const allowed = usePerm("chatbot");
