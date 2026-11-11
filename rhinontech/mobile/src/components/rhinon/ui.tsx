@@ -9,6 +9,7 @@ import { TONES, toneFor, type Tone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { useRouteName } from "@/lib/nav";
 import { PhoneBackground } from "./shell";
+import { useApp } from "@/lib/store";
 
 /* ── Links ───────────────────────────────────────────────────────────────── */
 
@@ -82,6 +83,7 @@ export const stagger = (i: number) => ({ animationDelay: `${i * 55}ms` });
 /** Scrolls under the tab bar (or the pushed-screen inset). The page background lives once, behind the navigator. */
 export function Screen({ children, className, fab = false }: { children: ReactNode; className?: string | undefined; fab?: boolean }) {
   const tabs = isRootPath(useRouteName());
+  useApp((s) => s.rev); // live data replaced in place somewhere: render again
   return (
     <RNView style={{ flex: 1 }}>
       <PhoneBackground />

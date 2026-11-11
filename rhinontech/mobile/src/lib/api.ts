@@ -9,6 +9,9 @@ const KEY = "rhinon-session";
 export type Session = { token: string; userId: string; fullName: string; roleSlug: string; orgName: string };
 
 let session: Session | null = null;
+/** The brand (site) the Inbox, CRM, Outreach and Analytics are scoped to; the API reads it from X-Site-Slug. */
+let siteSlug: string | null = null;
+export const setSiteSlug = (slug: string | null) => { siteSlug = slug; };
 const listeners = new Set<() => void>();
 export const getSession = () => session;
 export const onSession = (l: () => void) => { listeners.add(l); return () => { listeners.delete(l); }; };
@@ -34,7 +37,7 @@ export class ApiError extends Error { constructor(message: string, readonly stat
 export async function api<T>(path: string, init: { method?: string; body?: unknown; auth?: boolean } = {}): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     method: init.method ?? "GET",
-    headers: { "Content-Type": "application/json", ...(init.auth !== false && session ? { Authorization: `Bearer ${session.token}` } : {}) },
+    headers: { "Content-Type": "application/json", ...(init.auth !== false && session ? { Authorization: `Bearer ${session.token}` } : {}), ...(siteSlug ? { "X-Site-Slug": siteSlug } : {}) },
     ...(init.body !== undefined ? { body: JSON.stringify(init.body) } : {}),
   });
   const data = (await res.json().catch(() => ({}))) as { message?: string };
@@ -60,3 +63,12 @@ export async function loginMfa(mfaToken: string, code: string) {
   await setSession(toSession(await api<LoginReply>("/auth/login/mfa", { method: "POST", body: { mfaToken, code }, auth: false })));
 }
 export const logout = () => setSession(null);
+
+/** POST a multipart form (a receipt, a document). The boundary header is set by fetch. */
+export async function upload<T>(path: string, form: FormData, method = "POST"): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, { method, headers: { ...(session ? { Authorization: `Bearer ${session.token}` } : {}), ...(siteSlug ? { "X-Site-Slug": siteSlug } : {}) }, body: form });
+  const data = (await res.json().catch(() => ({}))) as { message?: string };
+  if (res.status === 401) await setSession(null);
+  if (!res.ok) throw new ApiError(data.message ?? `Upload failed (${res.status})`, res.status);
+  return data as T;
+}

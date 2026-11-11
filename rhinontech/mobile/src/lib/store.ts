@@ -103,6 +103,8 @@ export const ROLE_LABEL: Record<Role, string> = {
   employee: "Employee",
 };
 export type AppState = {
+  /** Bumped whenever live data replaces a module-level list (people, projects, payslips…), so every screen re-renders. */
+  rev: number;
   role: Role;
   offline: boolean;
   clock: ClockState;
@@ -146,6 +148,7 @@ export type AppState = {
 };
 
 const INITIAL: AppState = {
+  rev: 0,
   role: "admin",
   offline: false,
   clock: { status: "out", inAt: null, breakAt: null, breakMs: 0, outAt: null },
@@ -223,7 +226,11 @@ export function useApp<T>(selector: (s: AppState) => T): T {
 
 /** Replace slices of state wholesale (used when real data arrives from the API). */
 export function hydrate(patch: Partial<AppState>) {
-  set((s) => ({ ...s, ...patch }));
+  set((s) => ({ ...s, ...patch, rev: s.rev + 1 }));
+}
+/** Re-render every screen after a module-level list was replaced in place. */
+export function bumpRev() {
+  set((s) => ({ ...s, rev: s.rev + 1 }));
 }
 export const getState = () => state;
 /** Back to the seeded prototype data (sign-out). */

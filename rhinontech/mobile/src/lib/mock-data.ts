@@ -155,7 +155,7 @@ export const personOf = (id: string): Person => PEOPLE.find((p) => p.id === id) 
 
 /* ── Brands (Inbox, CRM and Outreach are split per brand) ────────────────── */
 
-export type BrandId = "tech" | "labs" | "uppercurve";
+export type BrandId = string;
 export const BRANDS: { id: BrandId; name: string; tone: Tone; domain: string }[] = [
   { id: "tech", name: "Rhinon Tech", tone: "coral", domain: "rhinontech.in" },
   { id: "labs", name: "Rhinon Labs", tone: "cobalt", domain: "rhinonlabs.com" },
