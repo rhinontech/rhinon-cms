@@ -11,12 +11,27 @@ function metroHost(): string | null {
   const uri = Constants.expoConfig?.hostUri ?? (Constants as unknown as { expoGoConfig?: { debuggerHost?: string } }).expoGoConfig?.debuggerHost;
   return uri ? (uri.split(":")[0] ?? null) : null;
 }
-/** Android emulators reach the host machine at 10.0.2.2; iOS simulators and web use localhost. */
-const DEFAULT_BASE = Platform.OS === "android" ? "http://10.0.2.2:5055" : "http://localhost:5055";
 const envUrl = process.env.EXPO_PUBLIC_API_URL;
-const isLan = (u: string) => /^https?:\/\/(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(u);
-/** A pinned LAN address in a dev build is ignored (it goes stale when the Wi-Fi address changes); a real server URL is honoured. */
-export const API_BASE = envUrl && !(__DEV__ && metroHost() && isLan(envUrl)) ? envUrl : metroHost() ? `http://${metroHost()}:5055` : DEFAULT_BASE;
+const LAN = /^https?:\/\/(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/;
+const URL_PARTS = /^(https?:\/\/)([^/:]+)(:\d+)?(.*)$/;
+
+/**
+ * Where the API is. EXPO_PUBLIC_API_URL wins. A LAN address pinned in that file goes stale when the Mac's Wi-Fi
+ * address changes, so in dev builds its host is replaced with Metro's current host while its port and path are kept
+ * (the port decides which backend, and so which database, you reach). With no setting, the dev backend's port on
+ * Metro's host. Android emulators reach the host machine at 10.0.2.2.
+ */
+function resolveBase(): string {
+  const host = metroHost();
+  if (envUrl) {
+    const m = envUrl.match(URL_PARTS);
+    if (__DEV__ && host && m && LAN.test(envUrl)) return `${m[1]}${host}${m[3] ?? ""}${(m[4] ?? "").replace(/\/$/, "")}`;
+    return envUrl;
+  }
+  if (host) return `http://${host}:5002`;
+  return Platform.OS === "android" ? "http://10.0.2.2:5002" : "http://localhost:5002";
+}
+export const API_BASE = resolveBase();
 
 const KEY = "rhinon-session";
 export type Session = { token: string; userId: string; fullName: string; roleSlug: string; orgName: string };
