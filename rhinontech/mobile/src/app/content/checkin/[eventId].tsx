@@ -25,13 +25,16 @@ const TICKET_TONE: Record<Guest["ticket"], Tone> = {
   VIP: "sun",
   Speaker: "violet",
 };
+/** One shared empty list: a selector must return the same reference each time or React loops forever. */
+const NO_GUESTS: never[] = [];
+
 export default function CheckInPage() {
   useRev();
   const { eventId } = useLocalSearchParams<{
     eventId: string;
   }>();
   const event = EVENTS.find((e) => e.id === eventId);
-  const guests = useApp((s) => s.guests[eventId] ?? []);
+  const guests = useApp((s) => s.guests[eventId] ?? NO_GUESTS);
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<"All" | "Waiting" | "In">("All");
   const [last, setLast] = useState<
