@@ -33,14 +33,12 @@ export interface Blog extends BlogSummary {
   metaDescription: string | null;
 }
 
+// Return null only on 404 (not found); throw on other errors so Next.js keeps the last good cache.
 async function getJSON<T>(path: string): Promise<T | null> {
-  try {
-    const res = await fetch(`${PUBLIC_API}${path}`, { next: { revalidate: 300 } });
-    return res.ok ? ((await res.json()) as T) : null;
-  } catch {
-    // The API being down must never take the page down: show the empty state instead.
-    return null;
-  }
+  const res = await fetch(`${PUBLIC_API}${path}`, { next: { revalidate: 300 } });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`Blog API failed (${res.status}) for ${path}`);
+  return (await res.json()) as T;
 }
 
 export async function getBlogs(): Promise<BlogSummary[]> {
