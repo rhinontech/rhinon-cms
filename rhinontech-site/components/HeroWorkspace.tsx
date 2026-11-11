@@ -17,13 +17,23 @@ const DURATION = 6000;
 export function HeroWorkspace() {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [inView, setInView] = useState(true);
+  const rootRef = useRef<HTMLDivElement>(null);
   const tilt = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (paused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const el = rootRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting));
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (paused || !inView || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const t = setTimeout(() => setActive((a) => (a + 1) % VIEWS.length), DURATION);
     return () => clearTimeout(t);
-  }, [active, paused]);
+  }, [active, paused, inView]);
 
   useEffect(() => {
     const el = tilt.current;
@@ -32,8 +42,9 @@ export function HeroWorkspace() {
     const update = () => {
       frame = 0;
       const vh = window.innerHeight;
-      const top = el.getBoundingClientRect().top;
-      const p = Math.min(1, Math.max(0, (vh * 0.98 - top) / (vh * 0.62)));
+      const rect = el.getBoundingClientRect();
+      if (rect.bottom < 0 || rect.top > vh) return;
+      const p = Math.min(1, Math.max(0, (vh * 0.98 - rect.top) / (vh * 0.62)));
       el.style.transform = `perspective(1800px) rotateX(${(1 - p) * 14}deg) scale(${0.95 + p * 0.05})`;
     };
     const onScroll = () => {
@@ -52,7 +63,7 @@ export function HeroWorkspace() {
   const current = VIEWS[active];
 
   return (
-    <div className="relative mx-auto max-w-[1080px]" onPointerEnter={() => setPaused(true)} onPointerLeave={() => setPaused(false)}>
+    <div ref={rootRef} className="relative mx-auto max-w-[1080px]" onPointerEnter={() => setPaused(true)} onPointerLeave={() => setPaused(false)}>
       {/* Events landing on the workspace */}
       <div className="glass-chip float-a absolute -top-7 right-[9%] z-10 hidden items-center gap-2.5 rounded-2xl px-3.5 py-2.5 lg:flex">
         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 text-white"><Mail className="h-4 w-4" /></span>

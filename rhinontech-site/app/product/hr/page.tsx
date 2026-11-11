@@ -1,3 +1,4 @@
+import { Dancing_Script } from "next/font/google";
 import { Aurora, Button, Eyebrow, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand } from "@/components/blocks";
@@ -8,6 +9,8 @@ import { JourneyHero, OffboardSection, PhoneSection, RecordSection, RewriteSecti
 
 const p = bySlug("hr")!;
 const G = "italic";
+/** Loaded only on /product/hr where the e-signature demo renders. */
+const dancing = Dancing_Script({ variable: "--font-dancing", subsets: ["latin"], weight: ["600"] });
 
 export const metadata = pageMeta({
   title: "HR Software: Onboarding, Offers & E-Sign",
@@ -26,7 +29,7 @@ const FAQ = [
 
 export default function HrPage() {
   return (
-    <div className="bg-white">
+    <div className={`bg-white ${dancing.variable}`}>
       {/* Hero: centred, with a hire travelling from offer to day one */}
       <section className="relative pb-20 pt-12 sm:pt-16">
         <Aurora tones={["#ff5fb0", "#7c5cff", "#2f5bff"]} />

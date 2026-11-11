@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Dancing_Script, Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -10,8 +10,6 @@ import { JsonLd, siteWideGraph } from "@/components/schema";
 
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
-/** The typed-signature face the app uses when someone signs a document. */
-const dancing = Dancing_Script({ variable: "--font-dancing", subsets: ["latin"], weight: ["600"] });
 
 const DESCRIPTION =
   "One workspace for your CRM, AI email outreach, shared inbox, projects and HR. Free for your whole team. Built by Rhinon Labs.";
@@ -38,7 +36,7 @@ export const viewport: Viewport = { themeColor: "#ffffff" };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${geist.variable} ${geistMono.variable} ${dancing.variable}`}>
+    <html lang="en" className={`${geist.variable} ${geistMono.variable}`}>
       <body className="font-sans">
         <GoogleTagManagerNoscript />
         <GoogleTagManagerHead />

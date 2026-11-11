@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Check, FileText, Lock, Mail, PenLine, Sparkles, Wrench } from "lucide-react";
-import { Avatar, Pill } from "@/components/ProductMocks";
+import { Avatar, Pill } from "@/components/mockPrimitives";
 import { AutoTabs, Cursor, Live, Ring, TypeText, useReducedMotion, useStepper } from "@/components/motion";
 
 const CARD = "rounded-3xl border border-fuchsia-100 bg-white shadow-[0_40px_90px_-40px_rgb(190_60_190_/_0.4)]";

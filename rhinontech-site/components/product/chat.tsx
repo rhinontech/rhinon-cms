@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Bell, Camera, Check, Headphones, Hash, Mic, MonitorUp, PhoneOff, SmilePlus, Video } from "lucide-react";
-import { Avatar } from "@/components/ProductMocks";
+import { Avatar } from "@/components/mockPrimitives";
 import { Cursor, Live, TypeText, useStepper } from "@/components/motion";
 
 const GLASS = "rounded-3xl border border-white/10 bg-white/[0.045] backdrop-blur-md";
