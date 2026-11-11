@@ -3,16 +3,17 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-
-import { clearLive, blankLive, installLive, syncAll } from "@/data/live";
-import { getSession, onSession, restoreSession } from "@/lib/api";
 import { AppState } from "react-native";
-import { useWorkspaceTheme } from "@/theme/useWorkspaceTheme";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import { OfflineBar, TabBarGate, ToastLayer } from "@/components/rhinon/shell";
+import { PortalHost, TwProvider } from "@/components/rn";
+import { getSession, onSession, restoreSession } from "@/lib/api";
+import { DEMO } from "@/lib/demo";
+import { blankLive, clearLive, installLive, syncAll } from "@/lib/live";
 import { FONT_FILES } from "@/theme/fonts";
 import { ThemeProvider, useTheme } from "@/theme/ThemeProvider";
-import { ToastLayer } from "@/ui";
+import { useWorkspaceTheme } from "@/theme/useWorkspaceTheme";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -23,8 +24,9 @@ function Shell() {
   const [, bump] = useState(0);
   useWorkspaceTheme();
   useEffect(() => onSession(() => bump((n) => n + 1)), []);
-  const signedIn = !!getSession();
+  const signedIn = DEMO || !!getSession();
   useEffect(() => {
+    if (DEMO) return;
     if (!signedIn) { clearLive(); return; }
     installLive();
     blankLive();
@@ -35,15 +37,19 @@ function Shell() {
   }, [signedIn]);
   const onLogin = segments[0] === "login";
   useEffect(() => {
+    if (DEMO) return;
     if (!signedIn && !onLogin) router.replace("/login" as never);
     else if (signedIn && onLogin) router.replace("/" as never);
   }, [signedIn, onLogin, router]);
   return (
-    <>
+    <TwProvider>
       <StatusBar style={t.dark ? "light" : "dark"} />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.c.paper } }} />
+      <TabBarGate />
+      <OfflineBar />
+      <PortalHost />
       <ToastLayer />
-    </>
+    </TwProvider>
   );
 }
 

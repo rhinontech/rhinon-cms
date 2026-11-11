@@ -1,128 +1,256 @@
+import { View, Text, Span, Link } from "@/components/rn";
+import { Plus } from "@/components/icons";
 import { useState } from "react";
-import { Pressable, View } from "react-native";
-import { Check } from "lucide-react-native";
-
-import { PROJECTS, TEAMS, nameOf, type DueGroup, type Task } from "@/data/mock-data";
-import { actions, useApp } from "@/data/store";
-import { useTheme } from "@/theme/ThemeProvider";
-import { go } from "@/lib/nav";
-import { AvatarStack, Card, Chip, Display, Empty, Eyebrow, ProgressBar, Screen, SectionLabel, Segmented, Text, tone, toneOfPerson, Avatar } from "@/ui";
-
+import {
+  AvatarStack,
+  Display,
+  Empty,
+  Eyebrow,
+  Fab,
+  ProgressBar,
+  Screen,
+  SectionLabel,
+  Segmented,
+  Chip,
+  stagger,
+} from "@/components/rhinon/ui";
+import { AddTaskSheet, TaskRow } from "@/components/rhinon/work";
+import { PROJECTS, TEAMS, nameOf, type DueGroup } from "@/lib/mock-data";
+import { useApp } from "@/lib/store";
+import { TONES } from "@/lib/tone";
+import { cn } from "@/lib/utils";
 type Tab = "mine" | "projects" | "teams";
 type Filter = "all" | "overdue" | "today" | "upcoming";
-const GROUPS: { key: DueGroup; label: string; filter: Filter }[] = [
-  { key: "overdue", label: "Overdue", filter: "overdue" },
-  { key: "today", label: "Today", filter: "today" },
-  { key: "week", label: "This week", filter: "upcoming" },
-  { key: "later", label: "Later", filter: "upcoming" },
+const GROUPS: {
+  key: DueGroup;
+  label: string;
+  filter: Filter;
+}[] = [
+  {
+    key: "overdue",
+    label: "Overdue",
+    filter: "overdue",
+  },
+  {
+    key: "today",
+    label: "Today",
+    filter: "today",
+  },
+  {
+    key: "week",
+    label: "This week",
+    filter: "upcoming",
+  },
+  {
+    key: "later",
+    label: "Later",
+    filter: "upcoming",
+  },
 ];
-
-function TaskRow({ task }: { task: Task }) {
-  const t = useTheme();
-  const done = task.status === "Done";
-  return (
-    <Card onPress={() => go(`/work/${task.id}`)} style={{ flexDirection: "row", alignItems: "center", gap: 14, padding: 14 }}>
-      <Pressable onPress={() => actions.toggleTask(task.id)} accessibilityLabel="Toggle done" style={{ width: 28, height: 28, borderRadius: 9, borderWidth: 2, borderColor: done ? t.c.hues.leaf.solid : `${t.c.ink}55`, backgroundColor: done ? t.c.hues.leaf.solid : "transparent", alignItems: "center", justifyContent: "center" }}>
-        {done ? <Check size={16} color={t.c.hues.leaf.on} strokeWidth={3.2} /> : null}
-      </Pressable>
-      <View style={{ flex: 1 }}>
-        <Text bold style={{ fontSize: 16, textDecorationLine: done ? "line-through" : "none", opacity: done ? 0.45 : 1 }}>{task.title}</Text>
-        <Eyebrow style={{ marginTop: 4 }}>{task.project} · {task.due}</Eyebrow>
-      </View>
-    </Card>
-  );
-}
-
-export default function Work() {
-  const t = useTheme();
+export default function WorkPage() {
   const all = useApp((s) => s.tasks);
-  const tasks = all.filter((x) => x.assignee === "me");
+  const tasks = all.filter((t) => t.assignee === "me");
   const [tab, setTab] = useState<Tab>("mine");
   const [filter, setFilter] = useState<Filter>("all");
-  const cobalt = tone(t, "cobalt");
-
-  const todays = tasks.filter((x) => x.group === "overdue" || x.group === "today");
-  const done = todays.filter((x) => x.status === "Done").length;
+  const [adding, setAdding] = useState(false);
+  const todays = tasks.filter((t) => t.group === "overdue" || t.group === "today");
+  const done = todays.filter((t) => t.status === "Done").length;
   const dueOpen = todays.length - done;
-  const count = (f: Filter) => tasks.filter((x) => x.status !== "Done" && GROUPS.some((g) => g.key === x.group && (f === "all" || g.filter === f))).length;
-
+  const count = (f: Filter) =>
+    tasks.filter(
+      (t) =>
+        t.status !== "Done" &&
+        GROUPS.some((g) => g.key === t.group && (f === "all" || g.filter === f)),
+    ).length;
   return (
-    <Screen>
-      <Eyebrow color={cobalt.text}>Work · {dueOpen} due today</Eyebrow>
-      <Display style={{ marginTop: 12 }}>{"Get it\ndone."}</Display>
+    <Screen fab={tab === "mine"}>
+      <View className="animate-rise">
+        <Eyebrow tone="cobalt">Work · {dueOpen} due today</Eyebrow>
+        <Display size="hero" className="mt-3">
+          Get it
+          {"\n"}
+          done.
+        </Display>
+      </View>
 
-      <View style={{ marginTop: 24, padding: 20, borderRadius: t.c.radius + 14, backgroundColor: cobalt.bg }}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" }}>
-          <Display size="xl" color={cobalt.fg}>{done}<Display size="lg" color={`${cobalt.fg}99`}>/{todays.length}</Display></Display>
-          <Eyebrow color={cobalt.fg}>{"done\ntoday"}</Eyebrow>
+      <View
+        className="mt-6 animate-rise overflow-hidden rounded-[calc(var(--radius)+14px)] bg-cobalt p-5 text-cobalt-foreground"
+        style={stagger(1)}
+      >
+        <View className="flex items-end justify-between">
+          <Text className="font-display text-[length:calc(88px*var(--ds))] font-black leading-[0.8]">
+            {done}
+            <Span className="text-[length:calc(52px*var(--ds))] opacity-60">/{todays.length}</Span>
+          </Text>
+          <Text className="pb-1 text-right font-mono text-[11px] uppercase leading-relaxed tracking-[0.16em] opacity-90">
+            done
+            {"\n"}
+            today
+          </Text>
         </View>
-        <View style={{ marginTop: 18 }}><ProgressBar value={todays.length ? done / todays.length : 0} color={cobalt.fg} track={`${cobalt.fg}33`} height={10} /></View>
-        <Text style={{ marginTop: 12, color: cobalt.fg, opacity: 0.85 }}>{dueOpen === 0 ? "All clear. Take a breath." : `${dueOpen} to go — start with the overdue one.`}</Text>
+        <ProgressBar
+          value={todays.length ? done / todays.length : 0}
+          tone="paper"
+          track="bg-paper/20"
+          className="mt-5 h-2.5"
+        />
+        <Text className="mt-3 text-[14px] opacity-85">
+          {dueOpen === 0
+            ? "All clear. Take a breath."
+            : `${dueOpen} to go — start with the overdue one.`}
+        </Text>
       </View>
 
-      <View style={{ marginTop: 24 }}>
-        <Segmented value={tab} onChange={setTab} options={[{ value: "mine", label: "Mine" }, { value: "projects", label: "Projects" }, { value: "teams", label: "Teams" }]} />
-      </View>
+      <Segmented
+        className="mt-6"
+        value={tab}
+        onChange={setTab}
+        options={[
+          {
+            value: "mine",
+            label: "Mine",
+          },
+          {
+            value: "projects",
+            label: "Projects",
+          },
+          {
+            value: "teams",
+            label: "Teams",
+          },
+        ]}
+      />
 
       {tab === "mine" ? (
-        <View style={{ marginTop: 20 }}>
-          <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
-            <Chip active={filter === "all"} onPress={() => setFilter("all")} count={count("all")}>All</Chip>
-            <Chip active={filter === "overdue"} onPress={() => setFilter("overdue")} count={count("overdue")}>Overdue</Chip>
-            <Chip active={filter === "today"} onPress={() => setFilter("today")}>Today</Chip>
-            <Chip active={filter === "upcoming"} onPress={() => setFilter("upcoming")}>Upcoming</Chip>
+        <View className="mt-5">
+          <View className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5 pb-1">
+            <Chip active={filter === "all"} onClick={() => setFilter("all")} count={count("all")}>
+              All
+            </Chip>
+            <Chip
+              active={filter === "overdue"}
+              onClick={() => setFilter("overdue")}
+              count={count("overdue")}
+            >
+              Overdue
+            </Chip>
+            <Chip active={filter === "today"} onClick={() => setFilter("today")}>
+              Today
+            </Chip>
+            <Chip active={filter === "upcoming"} onClick={() => setFilter("upcoming")}>
+              Upcoming
+            </Chip>
           </View>
+
           {GROUPS.map((g) => {
             if (filter !== "all" && g.filter !== filter) return null;
-            const rows = tasks.filter((x) => x.group === g.key).sort((a, b) => Number(a.status === "Done") - Number(b.status === "Done"));
-            if (!rows.length) return null;
+            const rows = tasks
+              .filter((t) => t.group === g.key)
+              .sort((a, b) => Number(a.status === "Done") - Number(b.status === "Done"));
+            if (rows.length === 0) return null;
             return (
-              <View key={g.key}>
-                <SectionLabel>{g.label} · {rows.length}</SectionLabel>
-                <View style={{ gap: 10 }}>{rows.map((x) => <TaskRow key={x.id} task={x} />)}</View>
+              <View key={g.key} className="mt-6">
+                <SectionLabel
+                  right={<Span className="font-mono text-[11px] text-ink/50">{rows.length}</Span>}
+                  className="mb-3"
+                >
+                  {g.label}
+                </SectionLabel>
+                <View className="space-y-2.5">
+                  {rows.map((t, i) => (
+                    <TaskRow key={t.id} task={t} index={i} />
+                  ))}
+                </View>
               </View>
             );
           })}
-          {tasks.filter((x) => filter === "all" || GROUPS.find((g) => g.key === x.group)?.filter === filter).length === 0 ? <Empty title="Nothing here" body="No tasks match this filter." /> : null}
+
+          {tasks.filter(
+            (t) => filter === "all" || GROUPS.find((g) => g.key === t.group)?.filter === filter,
+          ).length === 0 ? (
+            <Empty
+              title="Nothing here"
+              body="No tasks match this filter. Add one with the plus button."
+              tone="cobalt"
+            />
+          ) : null}
         </View>
       ) : null}
 
       {tab === "projects" ? (
-        <View style={{ marginTop: 20, gap: 12 }}>
-          {PROJECTS.map((p) => {
-            const c = tone(t, p.tone);
+        <View className="mt-5 space-y-3">
+          {PROJECTS.map((p, i) => {
+            const light = p.tone === "sun" || p.tone === "rose" || p.tone === "sky";
             return (
-              <View key={p.id} style={{ padding: 20, borderRadius: t.c.radius + 14, backgroundColor: c.bg, borderWidth: t.id === "brutal" ? 2 : 0, borderColor: t.c.ink }}>
-                <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                  <Eyebrow color={c.fg}>{p.status}</Eyebrow>
-                  <Eyebrow color={c.fg}>{Math.round(p.progress * 100)}%</Eyebrow>
+              <Link
+                key={p.id}
+                to="/work/project/$projectId"
+                params={{
+                  projectId: p.id,
+                }}
+                className={cn("press block animate-rise rounded-3xl p-5", TONES[p.tone].solid)}
+                style={stagger(i)}
+              >
+                <View className="flex items-center justify-between font-mono text-[11px] font-medium uppercase tracking-[0.16em]">
+                  <Span className="opacity-90">{p.status}</Span>
+                  <Span>{Math.round(p.progress * 100)}%</Span>
                 </View>
-                <Display size="lg" color={c.fg} style={{ marginTop: 26 }}>{p.name}</Display>
-                <View style={{ marginTop: 14 }}><ProgressBar value={p.progress} color={c.fg} track={`${c.fg}33`} /></View>
-                <View style={{ marginTop: 14, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                  <AvatarStack names={p.members.map(nameOf)} />
-                  <Eyebrow color={c.fg}>{p.tasks} tasks · due {p.due}</Eyebrow>
+                <Display as="h3" size="lg" className="mt-7">
+                  {p.name}
+                </Display>
+                <ProgressBar
+                  value={p.progress}
+                  tone={light ? "ink" : "paper"}
+                  track={light ? "bg-ink/15" : "bg-paper/25"}
+                  className="mt-4"
+                />
+                <View className="mt-4 flex items-center justify-between">
+                  <AvatarStack
+                    names={p.members.map(nameOf)}
+                    size={28}
+                    max={3}
+                    ring={TONES[p.tone].border}
+                  />
+                  <Span className="font-mono text-[11px] uppercase tracking-[0.12em] opacity-90">
+                    {p.tasks} tasks · due {p.due}
+                  </Span>
                 </View>
-              </View>
+              </Link>
             );
           })}
         </View>
       ) : null}
 
       {tab === "teams" ? (
-        <View style={{ marginTop: 20, gap: 10 }}>
-          {TEAMS.map((tm) => (
-            <Card key={tm.id} style={{ flexDirection: "row", alignItems: "center", gap: 14, padding: 14 }}>
-              <Avatar name={tm.name} size={56} hue={toneOfPerson(tm.name)} />
-              <View style={{ flex: 1 }}>
-                <Text bold style={{ fontSize: 17 }}>{tm.name}</Text>
-                <Text style={{ fontSize: 13, opacity: 0.55, marginTop: 2 }}>{tm.open} open · led by {nameOf(tm.lead)}</Text>
+        <View className="mt-5 space-y-2.5">
+          {TEAMS.map((t, i) => (
+            <View
+              key={t.id}
+              className="flex animate-rise items-center gap-4 rounded-2xl border border-line/70 bg-card p-3.5"
+              style={stagger(i)}
+            >
+              <View
+                className={cn(
+                  "grid size-14 shrink-0 place-items-center rounded-2xl font-display text-[length:calc(30px*var(--ds))] font-black",
+                  TONES[t.tone].solid,
+                )}
+              >
+                {t.name[0]}
               </View>
-              <AvatarStack names={tm.members.map(nameOf)} size={26} />
-            </Card>
+              <View className="min-w-0 flex-1">
+                <Text className="text-[17px] font-semibold leading-tight">{t.name}</Text>
+                <Text className="mt-0.5 text-[13px] text-ink/55">
+                  {t.open} open · led by {nameOf(t.lead)}
+                </Text>
+              </View>
+              <AvatarStack names={t.members.map(nameOf)} size={26} max={3} />
+            </View>
           ))}
         </View>
       ) : null}
+
+      {tab === "mine" ? <Fab icon={Plus} label="Add task" onClick={() => setAdding(true)} /> : null}
+      <AddTaskSheet open={adding} onClose={() => setAdding(false)} />
     </Screen>
   );
 }
