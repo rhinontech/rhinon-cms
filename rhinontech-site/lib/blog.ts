@@ -23,6 +23,7 @@ export interface BlogSummary {
   category: string | null;
   readTime: string;
   publishedAt: string;
+  updatedAt?: string | null;
 }
 
 export interface Blog extends BlogSummary {

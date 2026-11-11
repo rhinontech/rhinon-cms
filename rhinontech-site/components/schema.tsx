@@ -157,7 +157,7 @@ interface BlogSchemaInput {
   excerpt: string;
   slug: string;
   publishedAt: string;
-  updatedAt?: string;
+  updatedAt?: string | null;
   authorName: string;
   coverImage?: string | null;
   faqs?: { question: string; answer: string }[];
