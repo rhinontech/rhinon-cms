@@ -85,3 +85,116 @@ export function youtubeId(url: string): string | null {
   const m = url.match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([A-Za-z0-9_-]{11})/);
   return m ? m[1] : null;
 }
+
+
+export interface ProductGuideTarget {
+  slug: string;
+  name: string;
+  short: string;
+  group: string;
+}
+
+const GUIDE_STOPWORDS = new Set([
+  "a", "an", "and", "are", "as", "at", "be", "but", "by", "for", "from",
+  "has", "have", "how", "in", "into", "is", "it", "its", "of", "on", "one",
+  "or", "our", "out", "own", "so", "that", "the", "their", "them", "they",
+  "this", "to", "up", "use", "way", "what", "when", "where", "who", "will",
+  "with", "without", "you", "your", "all", "every", "just", "make", "makes",
+  "more", "most", "some", "such", "than", "then", "these", "those", "very",
+  "team", "teams", "company", "business", "software", "people", "work",
+  "tool", "tools", "workspace", "rhinon", "tech", "whole", "single", "place",
+]);
+
+function tokenizeGuideText(text: string): string[] {
+  return text.toLowerCase().match(/[a-z0-9]+/g) ?? [];
+}
+
+function stemGuideToken(token: string): string {
+  if (token.length >= 5 && token.endsWith("s") && !token.endsWith("ss") && !token.endsWith("us")) {
+    return token.slice(0, -1);
+  }
+  return token;
+}
+
+function normalizeGuidePhrase(text: string): string {
+  return tokenizeGuideText(text).join(" ");
+}
+
+function hasWholePhrase(haystackPhrase: string, needlePhrase: string): boolean {
+  if (!haystackPhrase || !needlePhrase) return false;
+  return ` ${haystackPhrase} `.includes(` ${needlePhrase} `);
+}
+
+/**
+ * Dynamically ranks and returns blog posts relevant to a product module based on
+ * the product's slug, name, description, and group — with no hardcoded blog slugs.
+ */
+export function matchBlogsForProduct(
+  product: ProductGuideTarget,
+  posts: BlogSummary[],
+  limit = 3,
+): BlogSummary[] {
+  const slugPhrase = normalizeGuidePhrase(product.slug);
+  const namePhrase = normalizeGuidePhrase(product.name);
+  const identityPhrases = Array.from(new Set([slugPhrase, namePhrase].filter(Boolean)));
+  const identityTokenSet = new Set(identityPhrases.flatMap(tokenizeGuideText).map(stemGuideToken));
+  const shortTokens = Array.from(
+    new Set(
+      tokenizeGuideText(product.short)
+        .filter((t) => t.length >= 4 && !GUIDE_STOPWORDS.has(t))
+        .map(stemGuideToken),
+    ),
+  ).filter((t) => !identityTokenSet.has(t));
+  const groupToken = stemGuideToken(tokenizeGuideText(product.group)[0] ?? "");
+
+  const scored: { post: BlogSummary; score: number }[] = [];
+
+  for (const post of posts) {
+    const titlePhrase = normalizeGuidePhrase(post.title);
+    const postSlugPhrase = normalizeGuidePhrase(post.slug);
+    const tagPhrases = (post.tags ?? []).map(normalizeGuidePhrase).filter(Boolean);
+    const excerptPhrase = normalizeGuidePhrase(post.excerpt ?? "");
+    const categoryTokens = new Set(tokenizeGuideText(post.category ?? "").map(stemGuideToken));
+    const primaryTokenSet = new Set(
+      [
+        ...tokenizeGuideText(post.title),
+        ...tokenizeGuideText(post.slug),
+        ...(post.tags ?? []).flatMap(tokenizeGuideText),
+      ].map(stemGuideToken),
+    );
+    const excerptTokenSet = new Set(tokenizeGuideText(post.excerpt ?? "").map(stemGuideToken));
+
+    let identityScore = 0;
+    for (const phrase of identityPhrases) {
+      if (tagPhrases.some((t) => hasWholePhrase(t, phrase))) identityScore += 10;
+      if (hasWholePhrase(postSlugPhrase, phrase)) identityScore += 8;
+      if (hasWholePhrase(titlePhrase, phrase)) identityScore += 8;
+      if (hasWholePhrase(excerptPhrase, phrase)) identityScore += 4;
+    }
+
+    let shortScore = 0;
+    let shortHits = 0;
+    for (const tok of shortTokens) {
+      if (primaryTokenSet.has(tok)) {
+        shortScore += 3;
+        shortHits += 1;
+      } else if (excerptTokenSet.has(tok)) {
+        shortScore += 1;
+      }
+    }
+
+    const relevant = identityScore >= 8 || (identityScore >= 4 && shortHits >= 1) || shortHits >= 2;
+    if (!relevant) continue;
+
+    const groupBonus = groupToken && categoryTokens.has(groupToken) ? 2 : 0;
+    scored.push({ post, score: identityScore + shortScore + groupBonus });
+  }
+
+  scored.sort(
+    (a, b) =>
+      b.score - a.score ||
+      Date.parse(b.post.publishedAt) - Date.parse(a.post.publishedAt),
+  );
+
+  return scored.slice(0, limit).map((item) => item.post);
+}

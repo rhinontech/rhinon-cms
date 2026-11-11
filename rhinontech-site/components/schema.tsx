@@ -25,11 +25,13 @@ const ORGANIZATION_CONTACT = {
   availableLanguage: ["English"],
 };
 
-const ORGANIZATION_SAME_AS = [
-  "https://www.linkedin.com/company/rhinonlabs",
-  "https://x.com/RhinonLabs",
-  "https://www.instagram.com/rhinonlabs/",
-];
+export const SOCIAL_LINKS = [
+  { label: "LinkedIn", href: "https://www.linkedin.com/company/rhinonlabs" },
+  { label: "X", href: "https://x.com/RhinonLabs" },
+  { label: "Instagram", href: "https://www.instagram.com/rhinonlabs/" },
+] as const;
+
+const ORGANIZATION_SAME_AS = SOCIAL_LINKS.map((s) => s.href);
 
 const FREE_OFFER = {
   "@type": "Offer",
