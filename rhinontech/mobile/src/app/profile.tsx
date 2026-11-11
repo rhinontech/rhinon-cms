@@ -1,3 +1,4 @@
+import { logout } from "@/lib/api";
 import { DEMO } from "@/lib/demo";
 import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable } from "@/components/rn";
@@ -170,10 +171,13 @@ export default function ProfilePage() {
         icon={LogOut}
         className="mt-8 border-coral/50 text-coral-deep"
         onClick={() => {
-          actions.toast("Signed out", "coral");
-          void router.navigate({
-            to: "/login",
-          });
+          if (DEMO) {
+            actions.toast("Signed out", "coral");
+            void router.navigate({ to: "/login" });
+            return;
+          }
+          // The root layout sees the session go and shows the sign-in screen.
+          void logout();
         }}
       >
         Sign out

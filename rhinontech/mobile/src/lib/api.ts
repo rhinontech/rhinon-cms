@@ -75,7 +75,11 @@ export async function login(email: string, password: string): Promise<{ mfaToken
 export async function loginMfa(mfaToken: string, code: string) {
   await setSession(toSession(await api<LoginReply>("/auth/login/mfa", { method: "POST", body: { mfaToken, code }, auth: false })));
 }
-export const logout = () => setSession(null);
+/** Sign out: tell the server (best effort), then forget the session on this device. */
+export async function logout(): Promise<void> {
+  try { await api("/auth/logout", { method: "POST" }); } catch { /* offline or already expired: the local sign-out still happens */ }
+  await setSession(null);
+}
 
 /** POST a multipart form (a receipt, a document). The boundary header is set by fetch. */
 export async function upload<T>(path: string, form: FormData, method = "POST"): Promise<T> {

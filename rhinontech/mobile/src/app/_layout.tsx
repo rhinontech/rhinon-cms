@@ -27,7 +27,7 @@ function Shell() {
   const signedIn = DEMO || !!getSession();
   useEffect(() => {
     if (DEMO) return;
-    if (!signedIn) { clearLive(); return; }
+    if (!signedIn) { clearLive(); blankLive(); return; }
     installLive();
     blankLive();
     void syncAll();
