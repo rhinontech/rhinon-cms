@@ -13,6 +13,7 @@ import { Typewriter } from "@/components/Typewriter";
 import { HeroWorkspace } from "@/components/HeroWorkspace";
 import { Orbit } from "@/components/Orbit";
 import { ProductMock } from "@/components/ProductMocks";
+import { GetStartedButton } from "@/components/forms/GetStartedButton";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -46,7 +47,7 @@ function Hero() {
             ))}
           </ul>
           <div className="mt-10 flex flex-wrap justify-center gap-3">
-            <Button href={links.signup} variant="ink">Get started free</Button>
+            <GetStartedButton placement="Home hero" />
             <Button href={links.call} variant="soft">Book a demo</Button>
           </div>
           <p className="mt-4 text-[13.5px] text-muted">Free forever. No credit card.</p>
@@ -348,7 +349,7 @@ function FinalCta() {
         <h2 className="font-display mx-auto max-w-[900px] text-[40px] font-semibold leading-[1.02] sm:text-[76px]">Run your whole company from one tab.</h2>
         <p className="mx-auto mt-6 max-w-[520px] text-[18px] leading-8 text-ink-soft">Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit.</p>
         <div className="mt-10 flex flex-wrap justify-center gap-3">
-          <Button href={links.signup} variant="ink">Get started free</Button>
+          <GetStartedButton placement="Home final CTA" />
           <Button href={links.call} variant="soft">Book a demo</Button>
         </div>
       </Reveal>
