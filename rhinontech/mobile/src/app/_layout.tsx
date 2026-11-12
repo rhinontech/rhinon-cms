@@ -1,63 +1,71 @@
-import "../global.css";
-
-import { useEffect } from "react";
-import { Stack } from "expo-router";
+import { useFonts } from "expo-font";
+import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { useEffect, useState } from "react";
+import { AppState } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import {
-  useFonts,
-  Geist_400Regular,
-  Geist_500Medium,
-  Geist_600SemiBold,
-  Geist_700Bold,
-  Geist_800ExtraBold,
-} from "@expo-google-fonts/geist";
-import { AuthProvider, useAuth } from "@/lib/auth";
-import { useTheme } from "@/lib/theme";
-import { usePersistedColorScheme } from "@/lib/colorScheme";
 
-void SplashScreen.preventAutoHideAsync();
+import { OfflineBar, TabBarGate, ToastLayer } from "@/components/rhinon/shell";
+import { PortalHost, TwProvider } from "@/components/rn";
+import { getSession, onSession, restoreSession } from "@/lib/api";
+import { DEMO } from "@/lib/demo";
+import { blankLive, clearLive, installLive, syncAll } from "@/lib/live";
+import { FONT_FILES } from "@/theme/fonts";
+import { ThemeProvider, useTheme } from "@/theme/ThemeProvider";
+import { useWorkspaceTheme } from "@/theme/useWorkspaceTheme";
 
-function RootNavigator() {
-  const { status } = useAuth();
-  const { colors, isDark } = useTheme();
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
+function Shell() {
+  const t = useTheme();
+  const router = useRouter();
+  const segments = useSegments();
+  const [, bump] = useState(0);
+  useWorkspaceTheme();
+  useEffect(() => onSession(() => bump((n) => n + 1)), []);
+  const signedIn = DEMO || !!getSession();
   useEffect(() => {
-    if (status !== "loading") void SplashScreen.hideAsync();
-  }, [status]);
-
-  if (status === "loading") return null;
-
+    if (DEMO) return;
+    if (!signedIn) { clearLive(); blankLive(); return; }
+    installLive();
+    blankLive();
+    void syncAll();
+    const timer = setInterval(() => void syncAll(), 45_000);
+    const sub = AppState.addEventListener("change", (s) => { if (s === "active") void syncAll(); });
+    return () => { clearInterval(timer); sub.remove(); };
+  }, [signedIn]);
+  const onLogin = segments[0] === "login";
+  useEffect(() => {
+    if (DEMO) return;
+    if (!signedIn && !onLogin) router.replace("/login" as never);
+    else if (signedIn && onLogin) router.replace("/" as never);
+  }, [signedIn, onLogin, router]);
   return (
-    <>
-      <StatusBar style={isDark ? "light" : "dark"} />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
-        <Stack.Protected guard={status === "signedIn"}>
-          <Stack.Screen name="(app)" />
-        </Stack.Protected>
-        <Stack.Protected guard={status !== "signedIn"}>
-          <Stack.Screen name="login" options={{ animation: "fade" }} />
-        </Stack.Protected>
-      </Stack>
-    </>
+    <TwProvider>
+      <StatusBar style={t.dark ? "light" : "dark"} />
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.c.paper } }} />
+      <TabBarGate />
+      <OfflineBar />
+      <PortalHost />
+      <ToastLayer />
+    </TwProvider>
   );
 }
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({ Geist_400Regular, Geist_500Medium, Geist_600SemiBold, Geist_700Bold, Geist_800ExtraBold });
-  const schemeReady = usePersistedColorScheme();
-
-  if (!fontsLoaded || !schemeReady) return null;
-
+  const [loaded, error] = useFonts(FONT_FILES);
+  const [ready, setReady] = useState(false);
+  useEffect(() => { restoreSession().finally(() => setReady(true)); }, []);
+  useEffect(() => {
+    if (loaded || error) SplashScreen.hideAsync().catch(() => {});
+  }, [loaded, error]);
+  if ((!loaded && !error) || !ready) return null;
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <AuthProvider>
-          <RootNavigator />
-        </AuthProvider>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <Shell />
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
