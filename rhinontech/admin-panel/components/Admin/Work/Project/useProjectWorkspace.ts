@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, API_URL } from "@/lib/api";
 import type {
   FieldDefinition, PersonOption, ProjectSummary, ProjectTask, TaskRow, WorkflowStatus,
 } from "./types";
@@ -15,7 +15,8 @@ import { EMPTY_FILTERS, type GroupKey, type SortKey, type WorkspaceFilters } fro
  * Kept in one hook so switching tabs never refetches, and so an edit made in the
  * Table is immediately reflected in Board, Calendar and Gantt.
  */
-export function useProjectWorkspace(projectId: string) {
+export function useProjectWorkspace(projectId: string, source: "internal" | "public" = "internal") {
+  const isPublic = source === "public";
   const [project, setProject] = useState<ProjectSummary | null>(null);
   const [tasks, setTasks] = useState<ProjectTask[]>([]);
   const [statuses, setStatuses] = useState<WorkflowStatus[]>([]);
@@ -29,14 +30,35 @@ export function useProjectWorkspace(projectId: string) {
   const [sort, setSort] = useState<SortKey>("position");
   const [group, setGroup] = useState<GroupKey>("none");
 
+  /**
+   * The client portal: one unauthenticated read of the whole workspace. Plain
+   * fetch, not apiFetch — a stray admin cookie in the visitor's browser must
+   * not be sent along, and nothing here needs it.
+   */
+  const loadPublic = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_URL}/public/projects/${projectId}/workspace`);
+      if (!res.ok) throw new Error(String(res.status));
+      const d = await res.json();
+      setProject(d.project);
+      setTasks(d.tasks);
+      setStatuses(d.statuses);
+      setFields(d.fields);
+    } catch {
+      setProject(null);
+      setTasks([]);
+    }
+  }, [projectId]);
+
   const loadTasks = useCallback(async () => {
+    if (isPublic) return loadPublic();
     try {
       // scope=all: inside a project the whole team's work is the point, not just mine.
       setTasks(await apiFetch<ProjectTask[]>(`/tasks?scope=all&projectId=${projectId}`));
     } catch {
       setTasks([]);
     }
-  }, [projectId]);
+  }, [projectId, isPublic, loadPublic]);
 
   const loadMeta = useCallback(async () => {
     const [s, f] = await Promise.all([
@@ -49,6 +71,10 @@ export function useProjectWorkspace(projectId: string) {
 
   useEffect(() => {
     setLoading(true);
+    if (isPublic) {
+      loadPublic().finally(() => setLoading(false));
+      return;
+    }
     Promise.all([
       apiFetch<ProjectSummary[]>("/work/projects")
         .then((all) => setProject(all.find((p) => p.id === projectId) ?? null))
@@ -65,7 +91,7 @@ export function useProjectWorkspace(projectId: string) {
         // whoever already appears on the project's tasks.
         .catch(() => { setRoster([]); setRosterAvailable(false); }),
     ]).finally(() => setLoading(false));
-  }, [projectId, loadTasks, loadMeta]);
+  }, [projectId, isPublic, loadPublic, loadTasks, loadMeta]);
 
   /**
    * The assignee picker's options.
@@ -295,7 +321,42 @@ export function useProjectWorkspace(projectId: string) {
     }
   }, [loadMeta]);
 
+  /** Copies shared columns to this project on first edit; returns the id to edit now. */
+  const ownColumnId = useCallback(async (id?: string) => {
+    const { map } = await apiFetch<{ map: Record<string, string> }>("/workflow/statuses/fork", {
+      method: "POST",
+      body: JSON.stringify({ projectId }),
+    });
+    return id ? map[id] ?? id : undefined;
+  }, [projectId]);
+
+  const runColumnEdit = useCallback(async (edit: () => Promise<unknown>, fallback: string) => {
+    try {
+      await edit();
+    } catch (err: any) {
+      toast.error(err.message || fallback);
+    }
+    // Reload even after a failure: the copy may have happened before the edit failed.
+    await Promise.all([loadMeta(), loadTasks()]);
+  }, [loadMeta, loadTasks]);
+
+  const addColumn = useCallback((name: string) => runColumnEdit(async () => {
+    await ownColumnId();
+    await apiFetch("/workflow/statuses", { method: "POST", body: JSON.stringify({ name, projectId, group: "Active" }) });
+  }, "Could not add the column"), [ownColumnId, runColumnEdit, projectId]);
+
+  const updateColumn = useCallback((id: string, patch: { name?: string; color?: string }) => runColumnEdit(async () => {
+    const own = await ownColumnId(id);
+    await apiFetch(`/workflow/statuses/${own}`, { method: "PUT", body: JSON.stringify(patch) });
+  }, "Could not update the column"), [ownColumnId, runColumnEdit]);
+
+  const removeColumn = useCallback((id: string) => runColumnEdit(async () => {
+    const own = await ownColumnId(id);
+    await apiFetch(`/workflow/statuses/${own}`, { method: "DELETE" });
+  }, "Could not delete the column"), [ownColumnId, runColumnEdit]);
+
   return {
+    addColumn, updateColumn, removeColumn,
     project, tasks, rows, statuses, fields, people, rosterAvailable, loading, collapsed,
     filters, setFilters, sort, setSort, group, setGroup,
     /** Unfiltered total, so the toolbar can say "12 of 40". */

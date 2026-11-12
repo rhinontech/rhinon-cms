@@ -2,6 +2,7 @@ import { Router, Response } from "express";
 import { Op } from "sequelize";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 import { Project, Team, TeamMember, User } from "../models";
+import { notifyTeamAdded } from "../services/workNotifications";
 import { getUserTeamIds } from "../services/workAccess";
 
 const router = Router();
@@ -82,6 +83,7 @@ router.post("/", async (req: AuthRequest, res: Response) => {
       { teamId: team.id, userId: req.user!.userId, role: "owner" as const },
       ...ids.map((userId) => ({ teamId: team.id, userId, role: "member" as const })),
     ]);
+    notifyTeamAdded(ids, team.name, req.user!);
 
     const full = await Team.findByPk(team.id, { include: memberInclude });
     res.status(201).json(full);
@@ -192,6 +194,7 @@ router.post("/:id/members", async (req: AuthRequest, res: Response) => {
 
     if (toAdd.length) {
       await TeamMember.bulkCreate(toAdd.map((userId) => ({ teamId: team.id, userId, role: "member" as const })));
+      notifyTeamAdded(toAdd, team.name, req.user!);
     }
 
     const full = await Team.findByPk(team.id, { include: memberInclude });

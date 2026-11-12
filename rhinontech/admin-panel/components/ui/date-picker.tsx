@@ -43,7 +43,7 @@ export function DatePicker({
             "group flex w-full min-w-0 items-center gap-1.5 text-left text-sm outline-none transition disabled:opacity-50",
             variant === "cell"
               ? "rounded border border-transparent px-1.5 py-1 hover:border-border focus:border-blue-500 focus:bg-card"
-              : "rounded-lg border border-border bg-card/80 px-2 py-1.5 focus:ring-2 focus:ring-blue-500",
+              : "rounded-lg border border-border bg-card/80 px-2 py-1.5 focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60",
             className
           )}
         >

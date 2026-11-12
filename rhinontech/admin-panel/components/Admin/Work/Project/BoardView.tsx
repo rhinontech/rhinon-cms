@@ -7,6 +7,10 @@ import {
   type DragEndEvent, type DragStartEvent,
 } from "@dnd-kit/core";
 import { cn } from "@/lib/utils";
+import { confirmDialog, promptDialog } from "@/components/ui/dialogs";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   TbCalendar, TbDots, TbPaperclip, TbPlus, TbSubtask, TbX,
 } from "react-icons/tb";
@@ -61,6 +65,13 @@ function BoardCard({
       )}
       <button data-task-opener onClick={() => onOpen?.(task)} className="block w-full px-3 py-2.5 text-left">
         <p className="text-sm font-medium leading-snug text-foreground">{task.title}</p>
+        {!!task.tags?.length && (
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            {task.tags.map((t) => (
+              <span key={t.id} className={cn("rounded px-1.5 py-0.5 text-[10px] font-medium", STATUS_CHIP[t.color] ?? STATUS_CHIP.stone)}>{t.label}</span>
+            ))}
+          </div>
+        )}
         <div className="mt-2 flex items-center justify-between gap-2">
           {task.assignee ? (
             <span
@@ -105,9 +116,19 @@ function DraggableCard(props: { task: ProjectTask; childCount: number; onOpen: (
   );
 }
 
+const COLUMN_COLORS = ["blue", "indigo", "cyan", "amber", "green", "stone", "red", "purple"];
+
+export interface ColumnActions {
+  add: (name: string) => void;
+  update: (id: string, patch: { name?: string; color?: string }) => void;
+  remove: (id: string) => void;
+}
+
 function Column({
-  status, tasks, childCountOf, onOpen, onCreate,
+  status, tasks, childCountOf, onOpen, onCreate, readOnly, columns,
 }: {
+  columns?: ColumnActions;
+  readOnly: boolean;
   status: WorkflowStatus;
   tasks: ProjectTask[];
   childCountOf: (id: string) => number;
@@ -124,16 +145,58 @@ function Column({
         <span className={cn("h-2 w-2 shrink-0 rounded-full", STATUS_DOT[status.color] ?? STATUS_DOT.stone)} />
         <span className="truncate text-sm font-semibold">{status.name}</span>
         <span className="text-xs opacity-70">{tasks.length}</span>
-        <button
-          onClick={() => setAdding(true)}
-          className="ml-auto rounded p-0.5 opacity-70 hover:bg-foreground/10 hover:opacity-100"
-          title="Add a task here"
-        >
-          <TbPlus size={14} />
-        </button>
-        <button className="rounded p-0.5 opacity-40" title="Column options (coming soon)" disabled>
-          <TbDots size={14} />
-        </button>
+        {!readOnly && (
+          <>
+            <button
+              onClick={() => setAdding(true)}
+              className="ml-auto rounded p-0.5 opacity-70 hover:bg-foreground/10 hover:opacity-100"
+              title="Add a task here"
+            >
+              <TbPlus size={14} />
+            </button>
+            {columns ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="rounded p-0.5 opacity-70 hover:bg-foreground/10 hover:opacity-100" title="Column options">
+                    <TbDots size={14} />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onSelect={async () => {
+                      const name = await promptDialog({ title: "Rename column", confirmText: "Rename" }, status.name);
+                      if (name?.trim() && name.trim() !== status.name) columns.update(status.id, { name: name.trim() });
+                    }}
+                  >
+                    Rename
+                  </DropdownMenuItem>
+                  <div className="flex gap-1.5 px-2 py-1.5">
+                    {COLUMN_COLORS.map((c) => (
+                      <button
+                        key={c}
+                        title={c}
+                        onClick={() => c !== status.color && columns.update(status.id, { color: c })}
+                        className={cn("h-4 w-4 rounded-full", STATUS_DOT[c], status.color === c && "ring-2 ring-foreground/60 ring-offset-1 ring-offset-popover")}
+                      />
+                    ))}
+                  </div>
+                  <DropdownMenuItem
+                    className="text-red-600 dark:text-red-300"
+                    onSelect={async () => {
+                      if (await confirmDialog(`Delete the "${status.name}" column?`)) columns.remove(status.id);
+                    }}
+                  >
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <button className="rounded p-0.5 opacity-40" title="Column options aren't available here" disabled>
+                <TbDots size={14} />
+              </button>
+            )}
+          </>
+        )}
       </div>
 
       <div
@@ -158,16 +221,18 @@ function Column({
               onChange={(e) => setTitle(e.target.value)}
               onBlur={() => { if (!title.trim()) setAdding(false); }}
               placeholder="Task name…"
-              className="w-full rounded-lg border border-border px-2.5 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg border border-border px-2.5 py-2 text-sm outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
             />
           </form>
         )}
 
-        {tasks.map((t) => (
+        {tasks.map((t) => readOnly ? (
+          <BoardCard key={t.id} task={t} childCount={childCountOf(t.id)} onOpen={onOpen} />
+        ) : (
           <DraggableCard key={t.id} task={t} childCount={childCountOf(t.id)} onOpen={onOpen} />
         ))}
 
-        {!tasks.length && !adding && (
+        {!tasks.length && !adding && !readOnly && (
           <button
             onClick={() => setAdding(true)}
             className="flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-border py-3 text-xs text-muted-foreground hover:border-border hover:text-foreground/70"
@@ -181,8 +246,12 @@ function Column({
 }
 
 export function BoardView({
-  rows, statuses, people, onPatch, onCreateInStatus, onOpenTask,
+  rows, statuses, people, onPatch, onCreateInStatus, onOpenTask, readOnly = false, columns,
 }: {
+  /** Column editing. Omitted where it isn't allowed (portal, collaborators). */
+  columns?: ColumnActions;
+  /** The public portal: no drag, no create. */
+  readOnly?: boolean;
   rows: TaskRow[];
   statuses: WorkflowStatus[];
   people: PersonOption[];
@@ -235,7 +304,7 @@ export function BoardView({
     setActive(null);
     const task = (e.active.data.current as { task?: ProjectTask } | undefined)?.task;
     const statusId = (e.over?.data.current as { statusId?: string } | undefined)?.statusId;
-    if (!task || !statusId || task.statusId === statusId) return;
+    if (readOnly || !task || !statusId || task.statusId === statusId) return;
     onPatch(task.id, { statusId });
   };
 
@@ -259,8 +328,21 @@ export function BoardView({
               childCountOf={(id) => childCounts.get(id) ?? 0}
               onOpen={onOpenTask}
               onCreate={onCreateInStatus}
+              readOnly={readOnly}
+              columns={columns}
             />
           ))}
+          {columns && (
+            <button
+              onClick={async () => {
+                const name = await promptDialog({ title: "New column", confirmText: "Add column", placeholder: "Column name" });
+                if (name?.trim()) columns.add(name.trim());
+              }}
+              className="flex h-10 w-[160px] shrink-0 items-center justify-center gap-1 rounded-xl border border-dashed border-border text-xs text-muted-foreground hover:text-foreground"
+            >
+              <TbPlus size={13} /> Add column
+            </button>
+          )}
         </div>
       </div>
       <DragOverlay dropAnimation={null}>

@@ -57,8 +57,8 @@ export default function Certificate({ course }: { course: Course }) {
         <div>
           <CourseHeading
             eyebrow="Proof you can show"
-            title="Get recognised for your agentic expertise."
-            description="Finish the cohort and earn a certificate backed by real shipped work, not watch-time. Put it on LinkedIn next to the projects it certifies."
+            title="Earn Recognition for Your Agentic AI Expertise."
+            description="Earn Recognition for Your Agentic AI Expertise. "
           />
           <ul className="mt-9 divide-y divide-[#E2E8F0] border-y border-[#E2E8F0] max-w-xl">
             {course.certificate.points.map((point) => (

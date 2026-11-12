@@ -139,7 +139,7 @@ export function AccountsPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search name, domain, industry…"
-              className="w-full rounded-md border border-border bg-card/70 py-1.5 pl-8 pr-3 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40"
+              className="w-full rounded-md border border-border bg-card/70 py-1.5 pl-8 pr-3 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
             />
           </div>
 
@@ -348,7 +348,7 @@ function EditAccountForm({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const INPUT = "w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40";
+  const INPUT = "w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40";
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -427,7 +427,7 @@ function EditAccountForm({
         <textarea
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
-          className="h-20 w-full resize-none rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40"
+          className="h-20 w-full resize-none rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
         />
       </Field>
 
@@ -469,7 +469,7 @@ function NewAccountDialog({ onClose }: { onClose: (created: boolean) => void }) 
     }
   };
 
-  const INPUT = "w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40";
+  const INPUT = "w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center glass-overlay p-4" onClick={() => onClose(false)}>

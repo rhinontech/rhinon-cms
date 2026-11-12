@@ -9,6 +9,8 @@ export interface ServiceFaq {
 
 export interface Service {
   slug: string;
+  /** ISO date string (YYYY-MM-DD) when this service page content was last updated */
+  lastModified: string;
   /** Short name used in nav, cards and breadcrumbs */
   name: string;
   /** <title> (the layout template appends " | Rhinon Labs") */
@@ -35,6 +37,7 @@ export interface Service {
 export const services: Service[] = [
   {
     slug: "mvp-development",
+    lastModified: "2026-10-20",
     name: "MVP Development",
     metaTitle: "MVP Development for Startups — Launch in Weeks",
     metaDescription:
@@ -73,11 +76,12 @@ export const services: Service[] = [
       { question: "Will I own the code?", answer: "Yes. The code, designs and infrastructure accounts are yours. Nothing is locked into our systems." },
       { question: "What happens after launch?", answer: "You can take the product in-house, or keep us on an optional monthly or quarterly retainer to keep improving it as you learn from users." },
     ],
-    relatedBlogs: ["automate-first-in-a-product-led-growth-motion"],
+    relatedBlogs: ["mvp-development-cost-india-2026-guide", "how-long-does-it-take-to-build-an-mvp-india-guide"],
     relatedCaseStudies: ["apexispro", "furrcircle-the-all-in-one-app-for-pet-parents"],
   },
   {
     slug: "ai-agents",
+    lastModified: "2026-10-18",
     name: "AI Agents & Automation",
     metaTitle: "AI Agent Development for Businesses",
     metaDescription:
@@ -116,11 +120,12 @@ export const services: Service[] = [
       { question: "What if the agent makes a mistake?", answer: "Agents are built with guardrails: limited permissions, human approval for sensitive actions, and a full log of every step so mistakes are visible and easy to correct." },
       { question: "Which AI models do you use?", answer: "We pick the model per task based on accuracy, cost and privacy needs, and keep the system able to switch models as better ones arrive." },
     ],
-    relatedBlogs: ["chatbot-vs-ai-agent-real-difference", "ai-agents-vs-traditional-automatio"],
+    relatedBlogs: ["chatbot-vs-ai-agent-real-difference", "ai-agent-security-for-businesses-india-2026", "ai-agents-vs-traditional-automatio"],
     relatedCaseStudies: [],
   },
   {
     slug: "workflow-automation",
+    lastModified: "2026-10-15",
     name: "Workflow Automation",
     metaTitle: "Workflow Automation Services for SMBs",
     metaDescription:
@@ -159,11 +164,18 @@ export const services: Service[] = [
       { question: "Will automation disrupt our current operations?", answer: "No. We roll changes out in stages and run new automations alongside the old process until they're proven." },
       { question: "What if something breaks?", answer: "Every automation has error handling and alerts, so failures are caught immediately. Optional support plans cover fixes and changes." },
     ],
-    relatedBlogs: ["zapier-vs-custom-automation", "why-arent-your-tools-talking-to-each-other", "automating-onboarding", "time-triggered-email-automation"],
+    relatedBlogs: [
+      "zapier-vs-custom-automation",
+      "why-arent-your-tools-talking-to-each-other",
+      "automating-onboarding",
+      "time-triggered-email-automation",
+      "automate-first-in-a-product-led-growth-motion",
+    ],
     relatedCaseStudies: [],
   },
   {
     slug: "internal-dashboards",
+    lastModified: "2026-10-12",
     name: "Internal Dashboards & Tools",
     metaTitle: "Custom Internal Dashboards & Business Tools",
     metaDescription:
@@ -207,6 +219,7 @@ export const services: Service[] = [
   },
   {
     slug: "web-development",
+    lastModified: "2026-10-10",
     name: "Website & Web App Development",
     metaTitle: "Website & Web App Development for Startups and SMBs",
     metaDescription:
@@ -250,6 +263,7 @@ export const services: Service[] = [
   },
   {
     slug: "mobile-app-development",
+    lastModified: "2026-10-08",
     name: "Mobile App Development",
     metaTitle: "Mobile App Development — iOS & Android",
     metaDescription:
@@ -288,12 +302,19 @@ export const services: Service[] = [
       { question: "Can the app share a backend with our website?", answer: "Yes. The app can use the same backend and data as your web platform, so everything stays in sync." },
       { question: "Can you maintain the app after launch?", answer: "Yes — OS updates, bug fixes and new features on an optional support plan." },
     ],
-    relatedBlogs: [],
+    relatedBlogs: ["mobile-app-development-cost-startups-india"],
     relatedCaseStudies: ["furrcircle-the-all-in-one-app-for-pet-parents", "apexispro"],
   },
 ];
 
 export const getService = (slug: string) => services.find((s) => s.slug === slug);
+
+/**
+ * Resolves the primary service related to a blog post by its slug in `relatedBlogs`.
+ */
+export const getServiceByBlogSlug = (blogSlug: string): Service | undefined => {
+  return services.find((s) => s.relatedBlogs.includes(blogSlug));
+};
 
 /** 16:9 banner for a service (Gemini-generated, in public/assets/services). Also its social share image. */
 export const serviceBanner = (slug: string) => `/assets/services/${slug}.jpg`;

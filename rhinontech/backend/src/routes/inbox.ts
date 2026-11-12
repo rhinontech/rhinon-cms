@@ -11,6 +11,8 @@ import { defaultSenderName } from "../services/companyProfile";
 import { outboundBlockedReason } from "../services/emailVerification";
 import { findMailbox, mailboxesFor, ownerVariants, type UserMailbox } from "../services/userMailboxes";
 import { reserveUsage } from "../services/usage";
+import { emailPreview } from "../services/emailPreview";
+import { bounceReport, notBounceNoticeWhere } from "../services/bounceReport";
 
 type Att = { key: string; name: string; size: number; mimeType: string };
 
@@ -108,18 +110,23 @@ function pickSender(mailboxes: UserMailbox[], requested: unknown, fallback: User
 }
 
 const folders = new Set(["inbox", "sent", "drafts", "archive", "trash"]);
+/** Page cursors are row ids; anything else is dropped rather than sent to Postgres. */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 router.get("/", authorize("inbox:read"), async (req: AuthRequest, res: Response) => {
-  const { folder = "inbox", search, starred, mailbox: only } = req.query;
+  const { folder = "inbox", search, starred, mailbox: only, limit, before, beforeId } = req.query;
   const mailboxes = await requireMailboxes(req, res);
   if (!mailboxes) return;
   // ?mailbox= narrows to one of the caller's addresses; anything else is ignored.
   const chosen = findMailbox(mailboxes, only);
   const where: WhereOptions = { ownerEmail: ownedBy(chosen ? [chosen] : mailboxes), isInternal: false };
+  const and: WhereOptions[] = [];
 
   if (typeof folder === "string" && folders.has(folder)) {
     where.folder = folder;
   }
+  // Bounce notices are counted in their own tab (GET /bounces); the Inbox is for people.
+  if (folder === "inbox") and.push(notBounceNoticeWhere);
 
   if (starred === "true") {
     where.isStarred = true;
@@ -136,13 +143,65 @@ router.get("/", authorize("inbox:read"), async (req: AuthRequest, res: Response)
     ];
   }
 
+  // Pages are opt-in, so a client that expects every row still gets them all.
+  const pageSize = Math.min(Math.max(Math.trunc(Number(limit)) || 0, 0), 200);
+  if (pageSize && typeof before === "string" && !Number.isNaN(Date.parse(before))) {
+    const cursor = new Date(before);
+    and.push(
+      typeof beforeId === "string" && UUID.test(beforeId)
+        ? { [Op.or]: [{ sentAt: { [Op.lt]: cursor } }, { sentAt: cursor, id: { [Op.lt]: beforeId } }] }
+        : { sentAt: { [Op.lt]: cursor } }
+    );
+  }
+  if (and.length) where[Op.and as keyof WhereOptions] = and;
+
   const emails = await InboxEmail.findAll({
     where,
-    order: [["sentAt", "DESC"]],
+    order: [["sentAt", "DESC"], ["id", "DESC"]],
+    ...(pageSize ? { limit: pageSize } : {}),
     include: [{ model: Campaign, as: "campaign", attributes: ["id", "name"] }],
   });
 
-  res.json(emails);
+  // The list never shows a body, so none is sent: a busy Sent folder ran to
+  // megabytes. The preview is rebuilt from the body instead of trusting the
+  // stored snippet, which for older inbound mail was the sender's raw text part.
+  res.json(
+    emails.map((email) => {
+      const { body, ...row } = email.toJSON();
+      return { ...row, snippet: emailPreview(body) || row.snippet };
+    })
+  );
+});
+
+// Unread mail waiting in the Inbox, for its tab. Scoped exactly like the list.
+router.get("/counts", authorize("inbox:read"), async (req: AuthRequest, res: Response) => {
+  const mailboxes = await requireMailboxes(req, res);
+  if (!mailboxes) return;
+  const chosen = findMailbox(mailboxes, req.query.mailbox);
+  const unread = await InboxEmail.count({
+    where: {
+      [Op.and]: [
+        { ownerEmail: ownedBy(chosen ? [chosen] : mailboxes), isInternal: false, folder: "inbox", isRead: false },
+        notBounceNoticeWhere,
+      ],
+    },
+  });
+  res.json({ unread });
+});
+
+/**
+ * Every address our mail bounced from, with how often it was written to and how
+ * often it came back, read from the delivery notices the Inbox list leaves out.
+ */
+router.get("/bounces", authorize("inbox:read"), async (req: AuthRequest, res: Response) => {
+  const mailboxes = await requireMailboxes(req, res);
+  if (!mailboxes) return;
+  const chosen = findMailbox(mailboxes, req.query.mailbox);
+  // Free-form notices quote our own sending address too; it is never the one that bounced.
+  const ourDomains = new Set(ownerVariants(mailboxes).map((address) => address.split("@")[1]));
+  res.json(
+    await bounceReport(ownedBy(chosen ? [chosen] : mailboxes), (address) => ourDomains.has(address.split("@")[1] ?? ""))
+  );
 });
 
 /**
@@ -375,7 +434,9 @@ router.post("/:id/reply", authorize("inbox:write"), async (req: AuthRequest, res
     folder: "sent",
     fromName: sender.name || req.user?.fullName || (await defaultSenderName()),
     fromEmail: replyFrom,
-    toEmails: [original.fromEmail],
+    // Answering our own message (opened from Sent) goes to whoever it was sent
+    // to; it used to go back to our own address.
+    toEmails: ownsEmail(mailboxes, original.fromEmail) && original.toEmails.length ? original.toEmails : [original.fromEmail],
     ccEmails: [],
     subject: original.subject.startsWith("Re:") ? original.subject : `Re: ${original.subject}`,
     body: (body || "").trim(),

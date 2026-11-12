@@ -1,4 +1,4 @@
-import type { RequestHandler } from "express";
+import type { Request, RequestHandler } from "express";
 import { Organization } from "../models/Organization";
 import { Site } from "../models/Site";
 import { hashApiKey } from "./orgProvisioning";
@@ -71,17 +71,34 @@ export function publicTenantContext(): RequestHandler {
   };
 }
 
+const hostOf = (url: string | null | undefined): string | null => {
+  if (!url) return null;
+  try {
+    return new URL(url.includes("://") ? url : `https://${url}`).hostname.toLowerCase().replace(/^www\./, "");
+  } catch {
+    return null;
+  }
+};
+
 /**
  * Picks a site within the already-resolved workspace.
  *
- * `?domain=uppercurve` is the legacy spelling the Uppercurve site (a separate
- * repo) still sends, so it keeps resolving; anything unrecognised falls back to
- * the workspace's default site rather than 404ing a marketing page.
+ * Order: an explicit name (`?domain=uppercurve`, the legacy spelling the Uppercurve
+ * site still sends), then the brand whose `siteUrl` host matches the request's
+ * Origin/Referer, then the workspace default. The Origin step is what keeps
+ * rhinonlabs.com's forms and beacon — which name no brand — on Rhinon Labs now that
+ * the default is another brand.
  */
-export async function resolvePublicSite(slug?: unknown): Promise<Site | null> {
+export async function resolvePublicSite(slug?: unknown, req?: Pick<Request, "header">): Promise<Site | null> {
   if (typeof slug === "string" && slug) {
     const match = await Site.findOne({ where: { slug } });
     if (match) return match;
+  }
+  const from = hostOf(req?.header("origin")) ?? hostOf(req?.header("referer"));
+  if (from) {
+    const sites = await Site.findAll({ attributes: ["id", "siteUrl"] });
+    const hit = sites.find((s) => hostOf(s.siteUrl) === from);
+    if (hit) return hit;
   }
   return (await Site.findOne({ where: { isDefault: true } })) ?? (await Site.findOne());
 }

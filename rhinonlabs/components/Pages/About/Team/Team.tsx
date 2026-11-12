@@ -40,7 +40,7 @@ const Team = () => {
                             viewport={{ once: true, amount: 0.5 }} // 👈 only animate on first view
                         >
                             <div className="absolute inset-0 -z-10 [mask-image:linear-gradient(to_bottom,rgba(180,180,180,1),rgba(180,180,180,1)_70%,transparent)]">
-                                <img src={team.image} className="w-full h-full group-hover:opacity-50 opacity-80 transition-all duration-300 object-cover" alt="" />
+                                <img src={team.image} className="w-full h-full group-hover:opacity-50 opacity-80 transition-all duration-300 object-cover" alt={team.name} />
                             </div>
 
                             <div className="w-full flex">

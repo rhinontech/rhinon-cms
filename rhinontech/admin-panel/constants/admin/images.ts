@@ -4,6 +4,7 @@ import Logo_Rhinon_Tech_Dark from "@/images/Logo_Rhinon_Tech_Dark.png";
 import whiteLogo from "@/images/whiteLogo.png";
 import Logo_Rhinon_Tech_White from "@/images/Logo_Rhinon_Tech_White.png";
 import Logo_Uppercurve from "@/images/Logo_Uppercurve.png";
+import Icon_Rhinon_Tech from "@/images/Icon_Rhinon_Tech.png";
 
 const adminImages = {
     blueLogo,
@@ -11,6 +12,7 @@ const adminImages = {
     whiteLogo,
     Logo_Rhinon_Tech_White,
     Logo_Uppercurve,
+    Icon_Rhinon_Tech,
 };
 
 export default adminImages;

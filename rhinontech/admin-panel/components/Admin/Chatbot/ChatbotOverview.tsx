@@ -32,7 +32,8 @@ export function ChatbotOverview() {
   const base = useModuleBase();
   const confirm = useConfirm();
   const { site } = useCurrentSite();
-  const { has } = usePermissions();
+  const { has, effectiveRoleSlug } = usePermissions();
+  const roleSlug = effectiveRoleSlug;
   const canEdit = has("chatbot:write");
   const { state, error, reload, save, setState } = useChatbot();
   const [stats, setStats] = useState<Stats | null>(null);
@@ -124,7 +125,12 @@ export function ChatbotOverview() {
             body="It answers visitors from your own pages and documents, saves their details to the CRM, and hands them to your team when they want a person."
             action={
               state.plan.blockedReason ? (
-                <Notice tone="warning" testId="chatbot-plan-blocked">{state.plan.blockedReason}</Notice>
+                <div className="flex flex-col items-center gap-3">
+                  <Notice tone="warning" testId="chatbot-plan-blocked">{state.plan.blockedReason}</Notice>
+                  <Button asChild size="lg">
+                    <Link href={`/${roleSlug}/settings/billing`}>See plans</Link>
+                  </Button>
+                </div>
               ) : canEdit ? (
                 <Button size="lg" onClick={create} disabled={busy} data-testid="create-chatbot">
                   {busy ? <Spinner /> : <TbMessageChatbot size={18} />} Create chatbot

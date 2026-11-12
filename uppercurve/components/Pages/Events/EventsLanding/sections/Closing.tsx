@@ -58,7 +58,7 @@ const FAQS = [
 export function LandingFaq() {
   return (
     <section className="max-w-3xl mx-auto px-4 sm:px-6 py-20 sm:py-24">
-      <SectionHeading align="center" eyebrow="FAQ" title="Questions, answered" />
+      <SectionHeading align="center" eyebrow="FAQ" title="Questions & Answers" />
       <div className="mt-12 divide-y divide-[#E8ECF3] border-y border-[#E8ECF3]">
         {FAQS.map((faq) => (
           <details key={faq.question} className="group py-5 [&_summary::-webkit-details-marker]:hidden">
@@ -115,8 +115,7 @@ export function LandingCta() {
               Never miss the next one.
             </h2>
             <p className="mt-4 text-[15px] sm:text-base text-[#334155] max-w-xl leading-relaxed">
-              New events are announced to the UpperCurve community first — along with the recordings, prompt libraries
-              and build notes from every session.
+ Join the UpperCurve community for early access to upcoming workshops, plus recordings, prompt libraries and build notes from every session. 
             </p>
           </div>
           <div className="flex flex-wrap gap-3">

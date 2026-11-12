@@ -20,6 +20,9 @@ import { CompensationRevision } from "./CompensationRevision";
 import { Task } from "./Task";
 import { Subtask } from "./Subtask";
 import { TaskComment } from "./TaskComment";
+import { TeamChatConversation, TeamChatMember, TeamChatMessage, TeamChatReaction, TeamCallLink } from "./TeamChat";
+import { ProjectRepo, RepoCommit, ProjectSecret, RepoAccess, ProjectDaySummary } from "./GitHub";
+import { Notification } from "./Notification";
 import { TaskTag } from "./TaskTag";
 import { TaskDependency } from "./TaskDependency";
 import { TaskAttachment } from "./TaskAttachment";
@@ -50,6 +53,7 @@ import { Campaign } from "./Campaign";
 import { CampaignTemplate } from "./CampaignTemplate";
 import { CampaignActivity } from "./CampaignActivity";
 import { ContactGroup } from "./ContactGroup";
+import { Meeting } from "./Meeting";
 import { ContactGroupMember } from "./ContactGroupMember";
 import { LeaveType } from "./LeaveType";
 import { LeaveBalance } from "./LeaveBalance";
@@ -85,6 +89,7 @@ import { UsageCounter } from "./UsageCounter";
 import { AuditLog } from "./AuditLog";
 import { DocsAccess } from "./DocsAccess";
 import { StartupIdea } from "./StartupIdea";
+import { LeadFinderTarget } from "./LeadFinderTarget";
 import { BlogTopic } from "./BlogTopic";
 import { Deployment } from "./Deployment";
 import { PageView } from "./PageView";
@@ -99,7 +104,7 @@ import { Visitor } from "./Visitor";
  *   - RolePermission— reached only through a scoped Role
  */
 export const TENANT_MODELS: ModelStatic<any>[] = [
-  User, Role,
+  User, Role, Meeting,
   InboxConversation, InboxMessage, InboxEmail,
   Payroll, Payslip, ReimbursementClaim,
   JobOpening, Candidate, Interview, CompensationRevision,
@@ -118,10 +123,12 @@ export const TENANT_MODELS: ModelStatic<any>[] = [
   Workflow, WorkflowEnrollment,
   Account, PipelineStage, Deal, Activity, SavedView,
   Unsubscribe, UsageCounter, AuditLog, DocsAccess,
-  StartupIdea, Deployment, BlogTopic,
+  StartupIdea, Deployment, BlogTopic, LeadFinderTarget,
   PageView, Visitor,
   Chatbot, ChatbotSource, ChatConversation, ChatMessage, ChatbotCampaign,
   ChatbotTicket, ChatbotTicketMessage, HelpFolder, HelpArticle, ConnectedAccount,
+  TeamChatConversation, TeamChatMember, TeamChatMessage, TeamChatReaction, TeamCallLink,
+  ProjectRepo, RepoCommit, ProjectSecret, RepoAccess, ProjectDaySummary, Notification,
 ];
 
 const TENANT_MODEL_NAMES = new Set(TENANT_MODELS.map((m) => m.name));

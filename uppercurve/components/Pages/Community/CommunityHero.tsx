@@ -3,13 +3,11 @@
 import React from "react";
 
 interface CommunityHeroProps {
-  founderName?: string;
-  founderTitle?: string;
+  trustBadge?: string;
 }
 
 export function CommunityHero({
-  founderName = "Vaibhav Sisinty",
-  founderTitle = "Founder, GrowthSchool",
+  trustBadge = "✓ 100% Free · ✓ No Spam · ✓ Leave Anytime",
 }: CommunityHeroProps) {
   const scrollToForm = () => {
     const el = document.getElementById("join-form");
@@ -28,19 +26,19 @@ export function CommunityHero({
 
         {/* Main Title */}
         <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold text-gray-950 tracking-tight mb-4 [font-family:var(--font-montserrat),sans-serif]">
-          Staying Ahead
+          Stay Ahead in AI
         </h1>
 
         {/* Subheading */}
         <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 tracking-tight mb-6">
-          Your unfair advantage in AI.
+          With a Free Community of Builders
         </h2>
 
         {/* Descriptive Text */}
-        <p className="text-gray-600 text-sm sm:text-base md:text-lg leading-relaxed max-w-md mx-auto mb-4">
-          Skip the noise. Get the signal. AI updates,
+        <p className="text-gray-600 text-sm sm:text-base md:text-lg leading-relaxed  mx-auto mb-4">
+          Get curated AI updates, practical tools and early invites to live 
           <br className="hidden sm:inline" />
-          {" "}tools, and live sessions straight to
+          {" "}sessions, delivered straight to WhatsApp
         </p>
 
         {/* WhatsApp Brand Highlight */}
@@ -51,23 +49,9 @@ export function CommunityHero({
           <span>WhatsApp.</span>
         </div>
 
-        {/* Founder / Mentor Profile Pill */}
-        <div className="inline-flex items-center gap-3 p-1.5 pr-4 rounded-xl bg-white border border-gray-200/90 text-left mb-12 shadow-sm">
-          <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 shrink-0 border border-gray-200/60">
-            <img
-              src="/instructor/image1.avif"
-              alt="Ankit Kumar"
-              className="w-full h-full object-cover object-top"
-            />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xs sm:text-sm font-bold text-gray-900 leading-tight">
-              {founderName}
-            </span>
-            <span className="text-[11px] text-gray-500 font-medium leading-tight mt-0.5">
-              {founderTitle}
-            </span>
-          </div>
+        {/* Trust Badges */}
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 border border-gray-200 text-xs sm:text-sm font-medium text-gray-700 mb-12 shadow-2xs">
+          <span>{trustBadge}</span>
         </div>
 
         {/* Scroll Chevron */}

@@ -2,14 +2,16 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { useSideNav } from "@/context/SideNavContext";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { ProjectCollaborators } from "./ProjectCollaborators";
-import { TbLayoutSidebarFilled, TbLayoutSidebarRightFilled, TbPlus, TbSearch, TbExternalLink, TbLock, TbUsers, TbLayoutGrid } from "react-icons/tb";
+import { portalPath } from "./Project/portalUrl";
+import { TbLayoutSidebarFilled, TbLayoutSidebarRightFilled, TbPlus, TbSearch, TbExternalLink, TbLock, TbUsers, TbLayoutGrid, TbInfoCircle, TbArrowRight, TbTrash } from "react-icons/tb";
+import { promptDialog } from "@/components/ui/dialogs";
 
 import { NativeSelect } from "@/components/ui/native-select";
 type ProjectStatus = "Active" | "Paused" | "Completed" | "Pipeline";
@@ -59,6 +61,7 @@ const emptyForm = {
 export function WorkProjectsPage() {
   const { isExpanded: isSubNavExpanded } = useSideNav();
   const roleSlug = usePathname().split("/")[1];
+  const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [employees, setEmployees] = useState<EmployeeOption[]>([]);
   const [teams, setTeams] = useState<TeamOption[]>([]);
@@ -71,6 +74,7 @@ export function WorkProjectsPage() {
   const [mode, setMode] = useState<PanelMode>("view");
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchProjects = async () => {
     try {
@@ -160,6 +164,40 @@ export function WorkProjectsPage() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!selectedProject) return;
+    const typed = await promptDialog({
+      title: `Delete "${selectedProject.name}"?`,
+      description:
+        "This permanently deletes the project with all its tasks, files, comments, time logs, change requests, " +
+        "linked GitHub repositories (and their deploy keys) and stored secrets. It cannot be undone. " +
+        "Type the project name to confirm.",
+      placeholder: selectedProject.name,
+      confirmText: "Delete project",
+      destructive: true,
+    });
+    if (typed == null) return;
+    if (typed.trim() !== selectedProject.name.trim()) {
+      toast.error("The name didn't match — nothing was deleted.");
+      return;
+    }
+    setDeleting(true);
+    try {
+      const out = await apiFetch<{ tasks: number }>(`/work/projects/${selectedProject.id}`, {
+        method: "DELETE",
+        body: JSON.stringify({ confirmName: typed }),
+      });
+      toast.success(`Deleted "${selectedProject.name}" and ${out.tasks} task${out.tasks === 1 ? "" : "s"}`);
+      setSelectedProject(null);
+      setMode("view");
+      await fetchProjects();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete project");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className="flex h-full min-h-0 overflow-hidden">
       <main className={cn("flex h-full min-h-0 w-full flex-col overflow-hidden glass-panel", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
@@ -192,13 +230,13 @@ export function WorkProjectsPage() {
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search by name, point of contact, or notes"
-                className="w-full rounded-lg border border-border py-2 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-lg border border-border py-2 pl-10 pr-4 text-sm outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
               />
             </div>
             <NativeSelect
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value as ProjectStatus | "All")}
-              className="w-[180px] rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-[180px] rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
             >
               <option>All</option>
               <option>Active</option>
@@ -209,35 +247,53 @@ export function WorkProjectsPage() {
           </div>
 
           <div className="mt-8 overflow-hidden rounded-xl glass-card">
-            <div className="min-w-[680px] grid grid-cols-[1.7fr_0.9fr_1fr_0.7fr_0.8fr] border-b bg-muted px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <div className="min-w-[680px] grid grid-cols-[1.7fr_0.9fr_1fr_0.7fr_0.8fr_64px] border-b bg-muted px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               <span>Name</span>
               <span>Status</span>
               <span>Point of contact</span>
               <span>Tasks</span>
               <span>Changes</span>
+              <span />
             </div>
             {visibleProjects.map((project) => (
-              <button
+              // The row opens the project's workspace: that is where the work is.
+              // Its details are one click away on the info button.
+              <div
                 key={project.id}
-                onClick={() => {
-                  setSelectedProject(project);
-                  setMode("view");
-                  (setIsPreviewExpanded(true), setMobileDetail(true));
-                }}
+                role="link"
+                tabIndex={0}
+                onClick={() => router.push(`/${roleSlug}/work/projects/${project.id}`)}
+                onKeyDown={(e) => { if (e.key === "Enter") router.push(`/${roleSlug}/work/projects/${project.id}`); }}
                 className={cn(
-                  "grid w-full grid-cols-[1.7fr_0.9fr_1fr_0.7fr_0.8fr] items-center border-b px-4 py-3 text-left text-sm hover:bg-muted/40",
-                  selectedProject?.id === project.id && "bg-blue-50 dark:bg-blue-400/10 hover:bg-blue-50 dark:hover:bg-blue-400/10"
+                  "group grid w-full cursor-pointer grid-cols-[1.7fr_0.9fr_1fr_0.7fr_0.8fr_64px] items-center border-b px-4 py-3 text-left text-sm outline-none hover:bg-muted/40 focus-visible:bg-muted/40",
+                  selectedProject?.id === project.id && isPreviewExpanded && "bg-[var(--surface-selected)] hover:bg-[var(--surface-selected)]"
                 )}
               >
                 <span className="flex min-w-0 items-center gap-2 font-medium text-foreground">
-                  <span className="truncate">{project.name}</span>
+                  <span className="truncate group-hover:text-brand">{project.name}</span>
                   <VisibilityBadge visibility={project.visibility} teamName={project.team?.name} />
                 </span>
                 <span className="text-foreground/70">{project.status}</span>
                 <span className="truncate text-foreground/70">{project.pointOfContact || "—"}</span>
-                <span className="text-foreground/70">{project.taskCount}</span>
-                <span className="text-foreground/70">{project.requestCount}</span>
-              </button>
+                <span className="tabular-nums text-foreground/70">{project.taskCount}</span>
+                <span className="tabular-nums text-foreground/70">{project.requestCount}</span>
+                <span className="flex items-center justify-end gap-1">
+                  <button
+                    type="button"
+                    title="Project details"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedProject(project);
+                      setMode("view");
+                      (setIsPreviewExpanded(true), setMobileDetail(true));
+                    }}
+                    className="rounded-md p-1.5 text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground"
+                  >
+                    <TbInfoCircle size={16} />
+                  </button>
+                  <TbArrowRight size={15} className="text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                </span>
+              </div>
             ))}
             {!visibleProjects.length && (
               <div className="px-4 py-10 text-center text-sm text-muted-foreground">No projects found.</div>
@@ -298,7 +354,7 @@ export function WorkProjectsPage() {
                     <ProjectCollaborators projectId={selectedProject.id} />
                     {selectedProject.visibility === "workspace" ? (
                       <a
-                        href={`/p/${selectedProject.id}`}
+                        href={portalPath(selectedProject.name, selectedProject.id)}
                         target="_blank"
                         rel="noreferrer"
                         className="flex w-full items-center justify-center gap-2 rounded-lg border border-blue-200 dark:border-blue-400/25 bg-blue-50 dark:bg-blue-400/10 px-4 py-2 text-sm font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-400/15"
@@ -327,7 +383,7 @@ export function WorkProjectsPage() {
                   <NativeSelect
                     value={form.status}
                     onChange={(event) => setForm((current) => ({ ...current, status: event.target.value as ProjectStatus }))}
-                    className="rounded-lg border border-border bg-card px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
+                    className="rounded-lg border border-border bg-card px-3 py-2 font-normal outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                   >
                     <option>Active</option>
                     <option>Paused</option>
@@ -340,7 +396,7 @@ export function WorkProjectsPage() {
                   <NativeSelect
                     value={form.pointOfContact}
                     onChange={(event) => setForm((current) => ({ ...current, pointOfContact: event.target.value }))}
-                    className="rounded-lg border border-border bg-card px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
+                    className="rounded-lg border border-border bg-card px-3 py-2 font-normal outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                   >
                     <option value="">Select employee</option>
                     {employees.map((employee) => (
@@ -355,7 +411,7 @@ export function WorkProjectsPage() {
                   <NativeSelect
                     value={form.visibility}
                     onChange={(event) => setForm((current) => ({ ...current, visibility: event.target.value as ProjectVisibility }))}
-                    className="rounded-lg border border-border bg-card px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
+                    className="rounded-lg border border-border bg-card px-3 py-2 font-normal outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                   >
                     <option value="workspace">Everyone at the company</option>
                     <option value="team">A specific team</option>
@@ -369,7 +425,7 @@ export function WorkProjectsPage() {
                       value={form.teamId}
                       onChange={(event) => setForm((current) => ({ ...current, teamId: event.target.value }))}
                       required
-                      className="rounded-lg border border-border bg-card px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
+                      className="rounded-lg border border-border bg-card px-3 py-2 font-normal outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                     >
                       <option value="">Select a team…</option>
                       {teams.map((team) => (
@@ -397,10 +453,20 @@ export function WorkProjectsPage() {
                   <textarea
                     value={form.notes}
                     onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
-                    className="min-h-32 rounded-lg border border-border px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
+                    className="min-h-32 rounded-lg border border-border px-3 py-2 font-normal outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                   />
                 </label>
                 <div className="flex items-center justify-end gap-3 border-t pt-4">
+                  {mode === "edit" && (
+                    <button
+                      type="button"
+                      onClick={handleDelete}
+                      disabled={deleting}
+                      className="mr-auto flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-400/10 disabled:opacity-60"
+                    >
+                      <TbTrash size={15} /> {deleting ? "Deleting..." : "Delete project"}
+                    </button>
+                  )}
                   <button type="button" onClick={() => setMode("view")} className="rounded-lg px-4 py-2 text-sm font-medium text-foreground/85 hover:bg-muted">
                     Cancel
                   </button>
@@ -452,7 +518,7 @@ function FormInput({ label, value, onChange, required }: { label: string; value:
         value={value}
         onChange={(event) => onChange(event.target.value)}
         required={required}
-        className="rounded-lg border border-border px-3 py-2 font-normal outline-none focus:ring-2 focus:ring-blue-500"
+        className="rounded-lg border border-border px-3 py-2 font-normal outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
       />
     </label>
   );

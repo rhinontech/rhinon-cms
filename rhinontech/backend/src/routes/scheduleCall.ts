@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { fallbackFromAddress, getCompanyProfile } from "../services/companyProfile";
-import { CalendarNotConnectedError, createEvent, getBusyIntervals } from "../services/googleCalendar";
+import { resolvePublicSite } from "../services/publicTenant";
+import { publicCalendar } from "../services/meetingCalendar";
 import { sendMeetingInvite } from "../services/meetingInvite";
 import { findOrMergeLead, str } from "../services/leadCapture";
 import { logMeetingOnLeads } from "../services/crmActivity";
@@ -44,7 +45,7 @@ async function publicSender() {
 }
 
 // GET /public/schedule-call/availability?date=YYYY-MM-DD
-// Slots already taken on the shared calendar come back available:false — including meetings
+// Slots already taken on the calendar come back available:false — including meetings
 // booked from the admin Meetings tab, since that's the same calendar.
 router.get("/schedule-call/availability", async (req: Request, res: Response) => {
   try {
@@ -60,7 +61,8 @@ router.get("/schedule-call/availability", async (req: Request, res: Response) =>
       return;
     }
 
-    const busy = await getBusyIntervals(slots[0].startTime, slots[slots.length - 1].endTime);
+    const { busy: getBusy } = await publicCalendar();
+    const busy = await getBusy(slots[0].startTime, slots[slots.length - 1].endTime);
 
     res.json({
       date,
@@ -73,11 +75,6 @@ router.get("/schedule-call/availability", async (req: Request, res: Response) =>
       })),
     });
   } catch (error: any) {
-    if (error instanceof CalendarNotConnectedError) {
-      // Don't advertise slots we can't actually book.
-      res.status(503).json({ code: "CALENDAR_UNAVAILABLE", message: "Booking is temporarily unavailable." });
-      return;
-    }
     console.error("Failed to compute schedule-call availability:", error.message);
     res.status(500).json({ message: "Could not load available times." });
   }
@@ -128,7 +125,8 @@ router.post("/schedule-call", async (req: Request, res: Response) => {
     // There's still a narrow window between this check and the insert below — acceptable at
     // this booking volume, and a double-booking surfaces on the shared calendar either way.
     const dayEnd = new Date(startTime.getTime() + 24 * 60 * 60_000);
-    const busy = await getBusyIntervals(new Date(startTime.getTime() - 24 * 60 * 60_000), dayEnd);
+    const { calendar, busy: getBusy } = await publicCalendar();
+    const busy = await getBusy(new Date(startTime.getTime() - 24 * 60 * 60_000), dayEnd);
     const slot = findBookableSlot(startTime, busy);
     if (!slot) {
       res.status(409).json({ code: "SLOT_TAKEN", message: "That time was just taken. Please pick another slot." });
@@ -155,7 +153,9 @@ router.post("/schedule-call", async (req: Request, res: Response) => {
     };
 
     // Capture the lead first so a calendar hiccup can never lose the enquiry.
+    const site = await resolvePublicSite(b.site ?? b.domain ?? req.query.domain, req);
     const lead = await findOrMergeLead({
+      siteId: site?.id ?? null,
       name,
       email,
       company,
@@ -172,7 +172,7 @@ router.post("/schedule-call", async (req: Request, res: Response) => {
     let inviteSent = false;
 
     try {
-      const event = await createEvent({
+      const event = await calendar.create({
         summary: `Discovery Call: ${name}${company !== "Platform Lead" ? ` (${company})` : ""}`,
         description: summary || "Booked via rhinonlabs.com/schedule-call",
         startTime: slot.startTime,

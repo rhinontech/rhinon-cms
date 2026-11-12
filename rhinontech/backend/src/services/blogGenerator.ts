@@ -19,6 +19,27 @@ const TEXT_MODEL = process.env.BLOG_AI_MODEL || "gemini-2.5-pro";
 const FALLBACK_MODEL = "gemini-2.5-flash";
 const API = "https://generativelanguage.googleapis.com/v1beta/models";
 
+/**
+ * Who the post is written for. Without one the generator writes as Rhinon Labs (the
+ * software studio), which is what it was built for; a brand's own profile swaps the
+ * company description, the studio wording and the call to action.
+ */
+export interface BrandProfile {
+  name: string;
+  /** How the company is described to the model, e.g. "a business software company". */
+  kind: string;
+  about: string;
+}
+
+export const RHINONTECH_BRAND: BrandProfile = {
+  name: "Rhinon Tech",
+  kind: "a business software company",
+  about: `Rhinon Tech is one workspace for a whole company, made by Rhinon Labs. It replaces a CRM, a cold-email tool, a shared inbox, a live-chat widget, a project tracker, team chat, a wiki, HR software, payroll and leave tracking with eleven connected products behind one login.
+Products: CRM, Outreach (AI cold email), Inbox (shared team inbox), AI Chatbot (the one paid product), Work (projects, tasks, client portal), Team Chat & Meetings, Pages (docs and wiki), HR & People (records, onboarding, offer letters and NDAs signed in the app), Payroll (monthly runs and payslips, built for India with PF, PT and TDS), Attendance & Leave, Performance (review cycles and goals).
+Everything except the AI chatbot is free for the whole team, with no time limit and no credit card. Rhinon AI is built into the modules: it researches leads, drafts emails, answers website visitors and rewrites sentences in letters, and a person approves before anything is sent. It runs on Google's Gemini models.
+Voice: plain, practical, specific. Written for founders, operations leads and small-company managers, mostly in India. Never claim customer numbers, awards, certifications or benchmarks. Do not invent features.`,
+};
+
 export interface TopicInput {
   title: string;
   keyword?: string | null;
@@ -26,6 +47,7 @@ export interface TopicInput {
   notes?: string | null;
   targetPage?: string | null;
   withImages: boolean;
+  brand?: BrandProfile;
 }
 
 export interface LinkTarget {
@@ -78,7 +100,7 @@ async function generate(body: unknown): Promise<string> {
 }
 
 async function research(topic: TopicInput): Promise<string> {
-  const prompt = `You are researching a blog post for a software studio's website.
+  const prompt = `You are researching a blog post for ${topic.brand ? topic.brand.kind : "a software studio"}'s website.
 Topic: "${topic.title}"${topic.keyword ? `\nTarget search phrase: "${topic.keyword}"` : ""}${topic.audience ? `\nReader: ${topic.audience}` : ""}
 
 Search the web and return concise research notes (plain text, bullet points):
@@ -94,7 +116,7 @@ Do not write the article. Notes only.`;
   }
 }
 
-const STYLE_GUIDE = `WRITING RULES (follow strictly):
+const styleGuide = (brand: string, studio: boolean) => `WRITING RULES (follow strictly):
 - Write like an experienced founder/engineer explaining this to a peer: direct, specific, opinionated where justified.
 - Open with the reader's actual problem or a concrete situation in 2-3 sentences. Never open with "In today's fast-paced world", "In the ever-evolving", "Are you looking to", or a definition.
 - Banned words/phrases: delve, landscape, realm, leverage (as a verb), seamless, robust, game-changer, unlock, elevate, navigate the complexities, it's important to note, in conclusion, ultimately, furthermore, moreover, crucial, embark.
@@ -104,10 +126,10 @@ const STYLE_GUIDE = `WRITING RULES (follow strictly):
 - Where the topic suits it, include a step-by-step section: one <h3> per step with the number in the heading text ("Step 1: Define the core workflow"), followed by <p> paragraphs. NEVER put headings, paragraphs or images inside <li> — list items hold a single line of plain or bold text only.
 - Use 5-8 <h2> sections, <h3> sub-points where useful, bullet lists, and at most one table if it genuinely helps comparison.
 - 1,400-2,200 words. End with a short, practical next step (not "In conclusion").
-- Mention the studio (Rhinon Labs) at most twice, naturally, with one call to action linking to the target page.`;
+- Mention ${studio ? "the studio (Rhinon Labs)" : brand} at most twice, naturally, with one call to action linking to the target page.`;
 
 function buildWritePrompt(topic: TopicInput, notes: string, links: LinkTarget[], company: string): string {
-  return `You are writing a blog post for the Rhinon Labs website.
+  return `You are writing a blog post for the ${topic.brand?.name ?? "Rhinon Labs"} website.
 
 ABOUT THE COMPANY (for context and the CTA only):
 ${company.slice(0, 2500)}
@@ -124,7 +146,7 @@ ${notes || "(none — rely on well-established knowledge, avoid specific statist
 INTERNAL LINKS you may use (2-4 of them, only where genuinely relevant, as <a href="PATH">natural anchor text</a>):
 ${links.map((l) => `- ${l.title} -> ${l.path}`).join("\n") || "- (none)"}
 
-${STYLE_GUIDE}
+${styleGuide(topic.brand?.name ?? "Rhinon Labs", !topic.brand)}
 
 IMAGES: ${topic.withImages ? `Place 2-3 image markers where a visual genuinely helps (a process diagram-like illustration, a comparison, a concept). A marker is its own paragraph exactly like <p>[[IMAGE 1]]</p>, numbered from 1. For each, provide a detailed visual prompt describing an editorial illustration (no text in the image) and descriptive alt text.` : "Do not include image markers."}
 
@@ -135,7 +157,7 @@ Return ONLY a JSON object with this shape:
   "excerpt": "1-2 sentence summary for the blog card, max 200 chars",
   "metaTitle": "max 60 chars",
   "metaDescription": "max 155 chars, includes the search phrase, written to earn the click",
-  "category": "one short category, e.g. MVP Development, Automation, AI Agents",
+  "category": "one short category, e.g. ${topic.brand ? "Sales, Inbox, People, AI, Projects" : "MVP Development, Automation, AI Agents"}",
   "tags": ["3-6 lowercase tags"],
   "html": "the full article body as HTML using only h2, h3, p, ul, ol, li, strong, em, a, blockquote, table, thead, tbody, tr, th, td. No <h1>, no title repeated at the top, no inline styles.",
   "faqs": [{"question": "...", "answer": "2-4 sentence answer"}],
@@ -197,7 +219,7 @@ export async function generateBlogDraft(topic: TopicInput, links: LinkTarget[]):
 
   const notes = await research(topic);
   const raw = await generate({
-    contents: [{ parts: [{ text: buildWritePrompt(topic, notes, links, getSalesMemory()) }] }],
+    contents: [{ parts: [{ text: buildWritePrompt(topic, notes, links, topic.brand ? topic.brand.about : getSalesMemory()) }] }],
     generationConfig: { responseMimeType: "application/json", temperature: 0.8 },
   });
   const out = parseJson(raw);

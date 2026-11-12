@@ -27,73 +27,51 @@ export function TopicFAQSection({ academyName = "UpperCurve Academy" }: TopicFAQ
       name: "Program",
       faqs: [
         {
-          question: `What is ${academyName}?`,
+          question: "What is the UpperCurve Community?",
           answer: (
-            <div className="space-y-4 text-gray-600 text-sm sm:text-[15px] leading-relaxed">
+            <div className="space-y-3 text-gray-600 text-sm sm:text-[15px] leading-relaxed">
               <p>
-                {academyName} is a structured upskilling institution for engineers across Software Engineering, AI, and Data domains who want to transition into strong product-based roles.
-              </p>
-              <p>
-                Our programs are built on deep core engineering principles and real production thinking. At the same time, we ensure learners understand how to work effectively in an Applied GenAI-driven ecosystem, where AI enhances engineering workflows rather than replaces them.
-              </p>
-              <p>
-                With live mentorship, structured practice, peer learning, and career guidance, we help working professionals move from execution-focused roles to ownership-driven roles in serious product companies.
+                The UpperCurve Community is a free WhatsApp community for students, professionals and builders who want to stay ahead in AI. Members get curated AI updates, practical resources and early invites to live workshops and events.
               </p>
             </div>
           ),
         },
         {
-          question: `Who is eligible for ${academyName}?`,
+          question: "Is the UpperCurve Community free to join?",
           answer: (
             <div className="space-y-3 text-gray-600 text-sm sm:text-[15px] leading-relaxed">
               <p>
-                Working tech professionals, software engineers, and passionate learners looking to switch to high-growth product companies or upgrade their core skills in Software Engineering, Machine Learning, and Applied AI are eligible.
-              </p>
-              <p>
-                A basic familiarity with programming fundamentals is recommended. Our admissions team conducts a short profile review to recommend the best cohort for your career stage.
+                Yes, joining is completely free. There are no fees, no hidden charges and no commitments.
               </p>
             </div>
           ),
         },
         {
-          question: "When are the live classes held?",
+          question: "Who can join the UpperCurve Community?",
           answer: (
             <div className="space-y-3 text-gray-600 text-sm sm:text-[15px] leading-relaxed">
               <p>
-                Live sessions are scheduled on weekday evenings and weekends (usually 8:00 PM – 10:00 PM IST or Saturday/Sunday mornings) to accommodate working professionals and college schedules without conflict.
+                Anyone interested in AI can join, whether you’re a student, working professional, developer, educator or career switcher. No coding experience is needed.
               </p>
             </div>
           ),
         },
         {
-          question: "What if I miss a live lecture?",
+          question: "What will I get after joining the community?",
           answer: (
             <div className="space-y-3 text-gray-600 text-sm sm:text-[15px] leading-relaxed">
               <p>
-                Every live class is recorded in high definition and uploaded to your learning dashboard within a few hours, accompanied by structured session notes, code repositories, and assignments.
-              </p>
-              <p>
-                You can also attend dedicated weekly doubt-resolution sessions or schedule a 1:1 slot with teaching assistants to clear any questions from missed sessions.
+                You’ll receive curated AI news, hand-picked tools and tutorials, free templates and starter kits, and early access to UpperCurve’s live workshops and masterclasses.
               </p>
             </div>
           ),
         },
         {
-          question: `Does ${academyName} give certificates?`,
+          question: "Can I leave the community anytime?",
           answer: (
             <div className="space-y-3 text-gray-600 text-sm sm:text-[15px] leading-relaxed">
               <p>
-                Yes. Upon successful completion of all core curriculum modules, capstone production projects, and assessments, you will receive a verifiable industry-recognized Certificate of Completion.
-              </p>
-            </div>
-          ),
-        },
-        {
-          question: `Is ${academyName}'s certification worth it?`,
-          answer: (
-            <div className="space-y-3 text-gray-600 text-sm sm:text-[15px] leading-relaxed">
-              <p>
-                Yes. The certification signifies hands-on mastery of production-grade architectures and verified project portfolios evaluated by senior industry engineers, providing strong credibility during recruitment interviews.
+                Yes. You can leave the WhatsApp community or unsubscribe from emails whenever you like. We keep updates useful and never send spam.
               </p>
             </div>
           ),

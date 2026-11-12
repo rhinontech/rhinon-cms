@@ -15,7 +15,11 @@ export const metadata: Metadata = {
     description: "MVPs, AI agents, workflow automation, internal tools, websites and mobile apps — delivered in weeks.",
     url: `${SITE_URL}/services`,
     type: "website",
-    images: [{ url: `${SITE_URL}/og-image.jpg`, width: 1200, height: 630, alt: "Rhinon Labs services" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Services | Rhinon Labs",
+    description: "MVPs, AI agents, workflow automation, internal tools, websites and mobile apps — delivered in weeks.",
   },
 };
 

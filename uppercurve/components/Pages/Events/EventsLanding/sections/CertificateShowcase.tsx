@@ -31,14 +31,13 @@ export default function CertificateShowcase({ upcoming }: { upcoming: EventDetai
               Proof you built something, <span className="font-serif italic font-normal">not just that you showed up.</span>
             </h2>
             <p className="mt-5 text-[15px] sm:text-base text-white/75 leading-relaxed max-w-lg">
-              Micro-certificates are awarded only after a live review of what you shipped. Workshops and build days
-              issue a certificate of participation. Every one carries an ID anyone can verify.
+              Complete an UpperCurve workshop or programme and receive a verified certificate that shows your New AI Skills
             </p>
             <ul className="mt-8 space-y-3.5">
               {[
-                { icon: BadgeCheck, text: "Assessed micro-certificates, reviewed live" },
-                { icon: ShieldCheck, text: "A unique ID on every certificate" },
-                { icon: Linkedin, text: "Add it to LinkedIn in one click" },
+                { icon: BadgeCheck, text: "Issued for Workshops, Intensives & Certificate Programmes." },
+                { icon: ShieldCheck, text: "Unique credential ID on every Certificate." },
+                { icon: Linkedin, text: "Add it to LinkedIn in 1 Click." },
               ].map((item) => (
                 <li key={item.text} className="flex items-center gap-3 text-[15px] text-white/90">
                   <span className="grid place-items-center w-8 h-8 rounded-lg bg-white/10 border border-white/15">
@@ -49,10 +48,10 @@ export default function CertificateShowcase({ upcoming }: { upcoming: EventDetai
               ))}
             </ul>
             <Link
-              href={`/events/${front.slug}`}
+              href="#upcoming"
               className="mt-10 inline-flex items-center gap-2 bg-white hover:bg-[#EBF3FF] text-[#0B1B3D] font-bold text-xs sm:text-[13px] tracking-wider uppercase px-7 py-3.5 rounded-[4px] transition-colors"
             >
-              See the {CATEGORY_CONFIG[front.category].label.toLowerCase()} <ArrowRight className="w-4 h-4" aria-hidden />
+              Explore Events <ArrowRight className="w-4 h-4" aria-hidden />
             </Link>
           </div>
 

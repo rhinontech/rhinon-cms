@@ -18,6 +18,7 @@ import { CampaignTemplate } from "./CampaignTemplate";
 import { Campaign } from "./Campaign";
 import { CampaignActivity } from "./CampaignActivity";
 import { ContactGroup } from "./ContactGroup";
+import { Meeting } from "./Meeting";
 import { ContactGroupMember } from "./ContactGroupMember";
 import { AttendanceRequest } from "./AttendanceRequest";
 import { AttendancePolicy } from "./AttendancePolicy";
@@ -32,6 +33,9 @@ import { LetterTemplate } from "./LetterTemplate";
 import { LinkedInToken } from "./LinkedInToken";
 import { Subtask } from "./Subtask";
 import { TaskComment } from "./TaskComment";
+import { TeamChatConversation, TeamChatMember, TeamChatMessage, TeamChatReaction, TeamCallLink } from "./TeamChat";
+import { ProjectRepo, RepoCommit, ProjectSecret, RepoAccess, ProjectDaySummary } from "./GitHub";
+import { Notification } from "./Notification";
 import { TaskTag } from "./TaskTag";
 import { Site } from "./Site";
 import { Blog } from "./Blog";
@@ -69,6 +73,7 @@ import { FieldDefinition } from "./FieldDefinition";
 import { TimeEntry } from "./TimeEntry";
 import { TaskActivity } from "./TaskActivity";
 import { StartupIdea } from "./StartupIdea";
+import { LeadFinderTarget } from "./LeadFinderTarget";
 import { BlogTopic } from "./BlogTopic";
 import { Deployment } from "./Deployment";
 import { Chatbot } from "./Chatbot";
@@ -82,7 +87,7 @@ import { HelpFolder } from "./HelpFolder";
 import { HelpArticle } from "./HelpArticle";
 import { ConnectedAccount } from "./ConnectedAccount";
 import { Organization } from "./Organization";
-import { DataTypes } from "sequelize";
+import { DataTypes, Op } from "sequelize";
 import { sequelize } from "../config/database";
 import { TENANT_MODELS, installTenantScope, assertTenantColumns } from "./tenantScope";
 import { SITE_MODELS, installSiteScope, assertSiteColumns } from "./siteScope";
@@ -153,6 +158,36 @@ TaskComment.belongsTo(Task, { foreignKey: "taskId", as: "task" });
 Task.hasMany(TaskComment, { foreignKey: "taskId", as: "comments", onDelete: "CASCADE" });
 TaskComment.belongsTo(User, { foreignKey: "userId", as: "author" });
 User.hasMany(TaskComment, { foreignKey: "userId", as: "taskComments" });
+
+// Team chat (internal, Teams-style)
+TeamChatConversation.hasMany(TeamChatMember, { foreignKey: "conversationId", as: "members", onDelete: "CASCADE" });
+TeamChatMember.belongsTo(TeamChatConversation, { foreignKey: "conversationId", as: "conversation" });
+TeamChatMember.belongsTo(User, { foreignKey: "userId", as: "user" });
+TeamChatConversation.hasMany(TeamChatMessage, { foreignKey: "conversationId", as: "messages", onDelete: "CASCADE" });
+TeamChatMessage.belongsTo(TeamChatConversation, { foreignKey: "conversationId", as: "conversation" });
+TeamChatMessage.hasMany(TeamChatReaction, { foreignKey: "messageId", as: "reactions", onDelete: "CASCADE" });
+TeamChatReaction.belongsTo(TeamChatMessage, { foreignKey: "messageId", as: "message" });
+TeamChatConversation.hasMany(TeamCallLink, { foreignKey: "conversationId", as: "callLinks", onDelete: "CASCADE" });
+
+// GitHub integration (Work)
+Project.hasMany(ProjectRepo, { foreignKey: "projectId", as: "repos", onDelete: "CASCADE" });
+ProjectRepo.belongsTo(Project, { foreignKey: "projectId", as: "project" });
+ProjectRepo.hasMany(RepoCommit, { foreignKey: "projectRepoId", as: "commits", onDelete: "CASCADE" });
+RepoCommit.belongsTo(ProjectRepo, { foreignKey: "projectRepoId", as: "repo" });
+RepoCommit.belongsTo(Project, { foreignKey: "projectId", as: "project" });
+RepoCommit.belongsTo(User, { foreignKey: "userId", as: "author" });
+Project.hasMany(ProjectSecret, { foreignKey: "projectId", as: "secrets", onDelete: "CASCADE" });
+ProjectSecret.belongsTo(Project, { foreignKey: "projectId", as: "project" });
+ProjectSecret.belongsTo(User, { foreignKey: "createdById", as: "creator" });
+// Setting a GitHub username claims that person's earlier, unattributed commits —
+// matching otherwise only happens as commits arrive.
+User.afterSave(async (user, options) => {
+  if (!user.changed("githubLogin") || !user.githubLogin) return;
+  await RepoCommit.update(
+    { userId: user.id },
+    { where: { authorLogin: { [Op.iLike]: user.githubLogin }, userId: null }, transaction: options.transaction }
+  );
+});
 
 // --- Wrike-parity task graph -------------------------------------------------
 
@@ -457,6 +492,7 @@ export {
   CampaignActivity,
   ContactGroup,
   ContactGroupMember,
+  Meeting,
   AttendanceRequest,
   AttendancePolicy,
   LeaveType,
@@ -470,6 +506,8 @@ export {
   LinkedInToken,
   Subtask,
   TaskComment,
+  TeamChatConversation, TeamChatMember, TeamChatMessage, TeamChatReaction, TeamCallLink,
+  ProjectRepo, RepoCommit, ProjectSecret, RepoAccess, ProjectDaySummary, Notification,
   TaskTag,
   Site,
   Blog,
@@ -507,6 +545,7 @@ export {
   TimeEntry,
   TaskActivity,
   StartupIdea,
+  LeadFinderTarget,
   BlogTopic,
   Deployment,
   Chatbot,

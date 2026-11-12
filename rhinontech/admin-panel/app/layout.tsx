@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { DialogHost } from "@/components/ui/dialogs";
 import { ThemeProvider } from "@/components/Common/ThemeProvider/ThemeProvider";
+import { VisitRefListener } from "@/components/Common/VisitRef/VisitRefListener";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -40,6 +41,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
+          <VisitRefListener />
           <Toaster position="bottom-right" richColors />
           <DialogHost />
         </ThemeProvider>

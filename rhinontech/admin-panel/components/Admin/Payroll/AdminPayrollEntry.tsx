@@ -198,7 +198,7 @@ export function AdminPayrollEntry() {
                       <NativeSelect
                         value={month}
                         onChange={(e) => setMonth(Number(e.target.value))}
-                        className="w-full appearance-none border border-border rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card"
+                        className="w-full appearance-none border border-border rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60 bg-card"
                       >
                         {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
                       </NativeSelect>
@@ -211,7 +211,7 @@ export function AdminPayrollEntry() {
                       <NativeSelect
                         value={year}
                         onChange={(e) => setYear(Number(e.target.value))}
-                        className="w-full appearance-none border border-border rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card"
+                        className="w-full appearance-none border border-border rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60 bg-card"
                       >
                         {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
                       </NativeSelect>
@@ -225,7 +225,7 @@ export function AdminPayrollEntry() {
                     <NativeSelect
                       value={selectedId}
                       onChange={(e) => handleEmployeeChange(e.target.value)}
-                      className="w-full appearance-none border border-border rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card"
+                      className="w-full appearance-none border border-border rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60 bg-card"
                     >
                       <option value="">{loading ? "Loading..." : "Select employee"}</option>
                       {employees.map((e) => (
@@ -260,7 +260,7 @@ export function AdminPayrollEntry() {
                         <input
                           type="number" min={0} value={value}
                           onChange={(e) => { set(e.target.value); setError(""); }}
-                          className="w-full pl-6 pr-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full pl-6 pr-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                           placeholder="0"
                         />
                       </div>
@@ -294,7 +294,7 @@ export function AdminPayrollEntry() {
                     <div className="relative">
                       <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">₹</span>
                       <input type="number" min={0} value={ptAmount} onChange={(e) => setPtAmount(e.target.value)}
-                        className="w-full pl-6 pr-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="200" />
+                        className="w-full pl-6 pr-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60" placeholder="200" />
                     </div>
                   </label>
                   <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
@@ -302,7 +302,7 @@ export function AdminPayrollEntry() {
                     <div className="relative">
                       <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">₹</span>
                       <input type="number" min={0} value={tdsAmount} onChange={(e) => setTdsAmount(e.target.value)}
-                        className="w-full pl-6 pr-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0" />
+                        className="w-full pl-6 pr-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60" placeholder="0" />
                     </div>
                   </label>
                 </div>
@@ -326,14 +326,14 @@ export function AdminPayrollEntry() {
                       value={r.label}
                       onChange={(e) => { setReimbursement(i, { label: e.target.value }); setError(""); }}
                       placeholder="Internet – Aug 2026"
-                      className="flex-1 px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="flex-1 px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                     />
                     <div className="relative w-36">
                       <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">₹</span>
                       <input
                         type="number" min={0} value={r.amount}
                         onChange={(e) => { setReimbursement(i, { amount: e.target.value }); setError(""); }}
-                        className="w-full pl-6 pr-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full pl-6 pr-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                         placeholder="0"
                       />
                     </div>

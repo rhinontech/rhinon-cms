@@ -2,6 +2,7 @@ import { Router, Response } from "express";
 import { Op } from "sequelize";
 import multer from "multer";
 import { keepTenantContext } from "../services/tenantContext";
+import { notifyTaskChanged, notifyTaskComment, notifyTaskCreated } from "../services/workNotifications";
 import { ClientRequest, Project, Subtask, Task, TaskActivity, TaskAttachment, TaskComment, TaskDependency, TaskTag, TimeEntry, User, WorkflowStatus } from "../models";
 import { uploadBuffer, getPresignedReadUrl, deleteObject } from "../services/storage";
 import { legacyStatusFor, defaultStatusFor } from "../services/taskStatus";
@@ -252,6 +253,8 @@ router.post("/", async (req: AuthRequest, res: Response) => {
       await logActivity(parentTaskId, req.user!.userId, "subitem_added", `added the subitem "${task.title}"`, { childId: task.id });
     }
 
+    notifyTaskCreated(task, req.user!);
+
     const full = await Task.findByPk(task.id, { include: taskIncludes });
     res.status(201).json(full);
   } catch (err) {
@@ -388,6 +391,7 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
     }
 
     await logTaskDiff(before, task, req.user!.userId);
+    notifyTaskChanged(before, task, req.user!);
 
     const full = await Task.findByPk(task.id, { include: taskIncludes });
     res.json(full);
@@ -487,6 +491,7 @@ router.post("/:id/comments", async (req: AuthRequest, res: Response) => {
       }
     }
     const comment = await TaskComment.create({ taskId: req.params.id, userId: req.user!.userId, body: body.trim() });
+    notifyTaskComment(comment.taskId, comment.body, req.user!);
     const full = await TaskComment.findByPk(comment.id, { include: [{ model: User.unscoped(), as: "author", attributes: ["id", "fullName", "userType"] }] });
     res.status(201).json(full);
   } catch { res.status(500).json({ message: "Failed to create comment" }); }

@@ -1,7 +1,8 @@
 import app from "./app";
+import { runLeadFinderQueue } from "./services/leadFinderQueue";
 import { env } from "./config/env";
 import { sequelize } from "./config/database";
-import { syncDatabase } from "./models";
+import { syncDatabase, ProjectRepo } from "./models";
 import { Campaign } from "./models/Campaign";
 import { Attendance } from "./models/Attendance";
 import { finalizeDueOffboardings } from "./services/offboarding";
@@ -17,12 +18,17 @@ import { ensureCollaboratorRole } from "./services/collaboratorRole";
 import { runTenancyMigration, auditOrphanRows } from "./services/tenancyMigration";
 import { provisionAllOrganizations } from "./services/orgProvisioning";
 import { runAsSystem } from "./services/tenantContext";
+import { startGroupingJob } from "./services/github/grouping";
+import { runNotificationSweep } from "./services/notifications";
+import { registerNotificationEvents } from "./services/notificationEvents";
+import { githubConfigured } from "./services/github/app";
 import { refreshSendingDomains } from "./services/siteSender";
 import { dispatchDueEventEmails } from "./services/eventReminderJob";
 import { purgeDueWorkspaces } from "./services/workspaceLifecycle";
 import { beat } from "./services/heartbeat";
 import { applyDueRevisions } from "./services/compensationRevisions";
-import { attachChatSocket } from "./services/chatbot/realtime";
+import { attachChatSocket, socketServer } from "./services/chatbot/realtime";
+import { attachTeamChatSocket } from "./services/teamChat/realtime";
 import { ensureVectorSchema } from "./services/chatbot/vectorStore";
 
 async function autoClockOut() {
@@ -178,6 +184,8 @@ function listen() {
     // Live chat for the website widget rides on the same port, so nginx only
     // needs to allow the WebSocket upgrade on the API host.
     attachChatSocket(server);
+    // Internal team chat: its own namespace on the same Socket.IO server.
+    attachTeamChatSocket(socketServer()!);
 
     // Stale-intel refresh: nightly at 3:30 AM IST, well clear of the outreach
     // scheduler. No-ops unless LEAD_REENRICH_ENABLED=true.
@@ -194,6 +202,16 @@ function listen() {
       }, { timezone: "Asia/Kolkata" });
       console.log("[Re-enrichment] Nightly refresh scheduled for 3:30 AM IST.");
     }
+
+    // Lead Finder queue: 7:00 AM IST, so the day's new leads are in the CRM
+    // before anyone sits down to build campaigns.
+    cron.schedule("0 7 * * *", async () => {
+      try {
+        await runLeadFinderQueue();
+      } catch (err: any) {
+        console.error("[Cron] Lead Finder run failed:", err.message);
+      }
+    }, { timezone: "Asia/Kolkata" });
 
     // Auto clock-out: runs every day at 4:00 AM IST, closing out anyone still
     // clocked in (covers late/overnight shifts) without disturbing which day's
@@ -216,6 +234,37 @@ function listen() {
         console.error("[Cron] Workspace purge failed:", err.message);
       }
     });
+
+    // Work ↔ GitHub pipeline: at 2 AM IST, the previous 24h (2 AM → 2 AM) of
+    // commits is synced and grouped into feature cards. 2 AM rather than
+    // midnight so late-night work lands with the day it belongs to.
+    if (githubConfigured()) {
+      cron.schedule("0 2 * * *", async () => {
+        const to = new Date();
+        to.setSeconds(0, 0);
+        const from = new Date(+to - 86400_000);
+        const links = await runAsSystem("cron:github-grouping", () =>
+          ProjectRepo.findAll({ where: { autoCreateTasks: true } })
+        );
+        for (const link of links) {
+          try {
+            const job = await startGroupingJob(link, { from, to }, "nightly").done;
+            if (job.result?.commits) {
+              console.log(`[GitHub] ${link.repoFullName}: grouped ${job.result.commits} commits → ${job.result.created} new, ${job.result.extended} extended`);
+            }
+          } catch (err: any) {
+            console.error(`[GitHub] Nightly grouping ${link.repoFullName}:`, err.message);
+          }
+        }
+      }, { timezone: "Asia/Kolkata" });
+    }
+
+    registerNotificationEvents();
+
+    // Task due/overdue reminders and notification retention, 9 AM IST.
+    cron.schedule("0 9 * * *", () => {
+      runNotificationSweep().catch((err) => console.error("[Notify] Sweep failed:", err.message));
+    }, { timezone: "Asia/Kolkata" });
 
     // Salary revisions / promotions whose effective date has arrived
     cron.schedule("10 0 * * *", async () => {

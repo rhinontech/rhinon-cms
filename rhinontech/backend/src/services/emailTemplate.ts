@@ -80,6 +80,22 @@ function inlineListStyles(html: string, textColor: string = "#18181b"): string {
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 /**
+ * People mark a call to action in the editor as "[ Book a Free Call Now ]":
+ * a link wrapped in square brackets, often bold. In the inbox that reads as
+ * stray punctuation, so it becomes a real button. Table-free inline-block so
+ * it survives Gmail and Apple Mail; Outlook shows a solid link, which is fine.
+ */
+function promoteBracketLinks(html: string): string {
+  return html.replace(
+    /(?:<strong>)?\[\s*(?:<\/strong>)?\s*<a\s([^>]*href="([^"]+)"[^>]*)>([\s\S]*?)<\/a>\s*(?:<strong>)?\s*\](?:<\/strong>)?/gi,
+    (_m, _attrs, href: string, label: string) => {
+      const text = label.replace(/<[^>]+>/g, "").trim();
+      return `<a href="${href}" target="_blank" style="display:inline-block;margin:6px 0 2px 0;padding:11px 20px;border-radius:8px;background:#18181b;color:#ffffff !important;font-weight:600;font-size:14px;line-height:1.2;text-decoration:none;">${text}</a>`;
+    }
+  );
+}
+
+/**
  * Who the mail is sent on behalf of. Footers, titles and the unsubscribe link
  * all follow it; without one the platform's own branding is used, which is what
  * every caller did before workspaces existed.
@@ -95,6 +111,8 @@ const PLATFORM_BRAND: EmailBrand = { name: "Rhinon Labs", isPlatform: true, orga
 
 interface RenderContext {
   brandName: string;
+  /** Postal address for the footer; marketing-mail rules (CAN-SPAM) expect one. */
+  brandAddress: string;
   richTextHtml: string;
   preheader: string;
   imageBlock: string;
@@ -110,7 +128,7 @@ function buildContext(
   textColor: string = "#18181b",
   brand: EmailBrand = PLATFORM_BRAND
 ): RenderContext {
-  const preparedHtml = inlineListStyles(richTextHtml, textColor);
+  const preparedHtml = inlineListStyles(promoteBracketLinks(richTextHtml), textColor);
   const plain = stripHtml(preparedHtml);
   const firstLine = plain.split(/\n/).find((l) => l.trim()) || `A quick note from ${brand.name}`;
   const preheader = esc(firstLine.slice(0, 120));
@@ -135,6 +153,7 @@ function buildContext(
 
   return {
     brandName: esc(brand.name),
+    brandAddress: brand.address ? esc(brand.address) : "",
     richTextHtml: preparedHtml,
     preheader,
     imageBlock,
@@ -161,15 +180,18 @@ export function renderTemplate1(ctx: RenderContext): string {
     :root { color-scheme: light dark; supported-color-schemes: light dark; }
     body,table,td,p,a { -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; }
     img { -ms-interpolation-mode:bicubic; border:0; outline:none; text-decoration:none; }
-    a { color:#2563eb; text-decoration:underline; }
-    .email-body { font-size:15px; line-height:1.65; color:#18181b; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; }
+    a { color:#1d4ed8; text-decoration:underline; text-underline-offset:2px; }
+    .email-body { font-size:15px; line-height:1.7; color:#18181b; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; }
     .email-body p { margin:0 0 16px 0; color:#18181b; }
     .email-body ul { margin:0 0 16px 0; padding-left:20px; list-style-type:disc; color:#18181b; }
     .email-body ol { margin:0 0 16px 0; padding-left:20px; list-style-type:decimal; color:#18181b; }
     .email-body li { margin:0 0 6px 0; color:#18181b; }
     .email-body strong { color:#09090b; }
+    /* Bold text inside a link or button keeps the link's colour: buttons are white-on-colour. */
+    .email-body a strong, .email-body a b { color:inherit !important; }
     @media only screen and (max-width:620px) {
-      .outer-cell { padding: 20px 16px !important; }
+      .outer-cell { padding: 24px 18px 32px 18px !important; }
+      .email-body, .email-body p, .email-body li { font-size:16px !important; }
       .container { width:100% !important; max-width:100% !important; }
     }
     @media (prefers-color-scheme: dark) {
@@ -187,19 +209,20 @@ export function renderTemplate1(ctx: RenderContext): string {
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all">${ctx.preheader}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="bg-main" style="background:#ffffff;">
     <tr>
-      <td class="outer-cell" align="left" style="padding:36px 24px 44px 24px;">
-        <!--[if mso]><table role="presentation" width="580" cellpadding="0" cellspacing="0" align="center"><tr><td><![endif]-->
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="container card-wrap" style="max-width:580px;margin:0 auto;background:#ffffff;">
+      <td class="outer-cell" align="left" style="padding:40px 24px 48px 24px;">
+        <!--[if mso]><table role="presentation" width="560" cellpadding="0" cellspacing="0" align="center"><tr><td><![endif]-->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="container card-wrap" style="max-width:560px;margin:0 auto;background:#ffffff;">
           ${ctx.imageBlock}
           <tr>
             <td style="padding:0 0 32px 0;">
-              <div class="email-body" style="font-size:15px;line-height:1.65;color:#18181b;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">${ctx.richTextHtml}</div>
+              <div class="email-body" style="font-size:15px;line-height:1.7;color:#18181b;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">${ctx.richTextHtml}</div>
             </td>
           </tr>
           <tr>
             <td class="border-line" style="border-top:1px solid #f0f0f2;padding-top:20px;text-align:left;">
               <p class="text-muted" style="margin:0;font-size:12px;line-height:1.6;color:#a1a1aa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-                ${ctx.brandName} · <a href="${ctx.unsubscribeUrl}" target="_blank" style="color:#71717a;text-decoration:underline;">Unsubscribe</a>
+                Sent by ${ctx.brandName}${ctx.brandAddress ? ` · ${ctx.brandAddress}` : ""}<br>
+                You're receiving this because we thought it might be relevant to your work. <a href="${ctx.unsubscribeUrl}" target="_blank" style="color:#71717a;text-decoration:underline;">Unsubscribe</a>
               </p>
             </td>
           </tr>
@@ -238,6 +261,8 @@ export function renderTemplate2(ctx: RenderContext): string {
     .email-body ol { margin:0 0 16px 0; padding-left:20px; list-style-type:decimal; color:#1e293b; }
     .email-body li { margin:0 0 6px 0; color:#1e293b; }
     .email-body strong { color:#0f172a; }
+    /* Bold text inside a link or button keeps the link's colour: buttons are white-on-colour. */
+    .email-body a strong, .email-body a b { color:inherit !important; }
     .email-body a { color:#2563eb; font-weight:500; }
     @media only screen and (max-width:620px) {
       .outer-cell { padding: 14px 10px !important; }
@@ -337,6 +362,8 @@ export function renderTemplate3(ctx: RenderContext): string {
     .email-body ol { margin:0 0 18px 0; padding-left:20px; list-style-type:decimal; color:#111827 !important; }
     .email-body li { margin:0 0 7px 0; color:#111827 !important; }
     .email-body strong { color:#000000 !important; font-weight:700; }
+    /* Bold text inside a link or button keeps the link's colour: buttons are white-on-colour. */
+    .email-body a strong, .email-body a b { color:inherit !important; }
     
     @media only screen and (max-width:620px) {
       .outer-cell { padding: 16px 10px !important; }
@@ -444,6 +471,8 @@ export function renderTemplate4(ctx: RenderContext): string {
     .email-body ol { margin:0 0 18px 0; padding-left:22px; list-style-type:decimal; color:#27272a; }
     .email-body li { margin:0 0 6px 0; color:#27272a; }
     .email-body strong { color:#09090b; }
+    /* Bold text inside a link or button keeps the link's colour: buttons are white-on-colour. */
+    .email-body a strong, .email-body a b { color:inherit !important; }
     @media only screen and (max-width:620px) {
       .outer-cell { padding: 18px 12px !important; }
       .container { width:100% !important; max-width:100% !important; border-radius:8px !important; }

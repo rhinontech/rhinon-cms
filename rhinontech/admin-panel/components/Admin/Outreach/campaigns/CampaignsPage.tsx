@@ -12,7 +12,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "../shared/EmptyState";
 import { isLinkedInChannel } from "../shared/ChannelIcon";
-import { CampaignCard } from "./CampaignCard";
+import { CampaignCard, CampaignTableHeader } from "./CampaignCard";
 import { NewCampaignDialog } from "./NewCampaignDialog";
 import type { Campaign, CampaignStage } from "../shared/types";
 
@@ -133,9 +133,9 @@ export function CampaignsPage() {
         </Tabs>
 
         {loading ? (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="space-y-2">
             {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-44 rounded-xl" />
+              <Skeleton key={i} className="h-14 rounded-lg" />
             ))}
           </div>
         ) : filtered.length === 0 ? (
@@ -152,7 +152,10 @@ export function CampaignsPage() {
             }
           />
         ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          // Scrolls sideways on narrow screens rather than crushing the numbers.
+          <div className="overflow-x-auto rounded-xl glass-card">
+            <div className="min-w-[960px]">
+            <CampaignTableHeader />
             {filtered.map((c) => (
               <CampaignCard
                 key={c.id}
@@ -164,6 +167,7 @@ export function CampaignsPage() {
                 onDelete={() => handleDelete(c)}
               />
             ))}
+            </div>
           </div>
         )}
       </div>

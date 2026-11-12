@@ -21,12 +21,13 @@ import { PageView } from "./PageView";
 import { Visitor } from "./Visitor";
 import { Chatbot } from "./Chatbot";
 import { ChatConversation } from "./ChatConversation";
+import { LeadFinderTarget } from "./LeadFinderTarget";
 
 /**
  * Site-owned models, by module:
  *
  *   Inbox       InboxConversation, InboxMessage, InboxEmail
- *   CRM         Lead, Account, Deal, Activity
+ *   CRM         Lead, Account, Deal, Activity, LeadFinderTarget
  *   Outreach    Campaign, CampaignTemplate, ContactGroup
  *   Automation  Workflow, WorkflowEnrollment
  *   Analytics   PageView, Visitor
@@ -44,7 +45,7 @@ import { ChatConversation } from "./ChatConversation";
  */
 export const SITE_MODELS: ModelStatic<any>[] = [
   InboxConversation, InboxMessage, InboxEmail,
-  Lead, Account, Deal, Activity,
+  Lead, Account, Deal, Activity, LeadFinderTarget,
   Campaign, CampaignTemplate, ContactGroup,
   Workflow, WorkflowEnrollment,
   PageView, Visitor,

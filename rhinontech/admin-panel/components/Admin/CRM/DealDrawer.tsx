@@ -16,7 +16,7 @@ import { useModuleBase } from "@/lib/sites";
 import { NativeSelect } from "@/components/ui/native-select";
 import { confirmDialog } from "@/components/ui/dialogs";
 const INPUT =
-  "w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40";
+  "w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40";
 
 /**
  * Deal detail. Won/Lost are done by moving to a stage of that type rather than
@@ -311,7 +311,7 @@ export function DealDrawer({
                 <textarea
                   value={form.notes}
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                  className="h-20 w-full resize-none rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40"
+                  className="h-20 w-full resize-none rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
                 />
               </Field>
 

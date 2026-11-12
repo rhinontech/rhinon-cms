@@ -1,7 +1,8 @@
 import express, { Router, Response, Request } from "express";
 import { Op } from "sequelize";
-import { ClientRequest, Project, User, Lead, Blog, CaseStudy, Event, EventGuest, PageView, DocsAccess, WorkflowEnrollment, CampaignActivity, Visitor, Unsubscribe, StartupIdea } from "../models";
+import { ClientRequest, FieldDefinition, Task, TaskDependency, TaskTag, WorkflowStatus, Project, User, Lead, Blog, CaseStudy, Event, EventGuest, PageView, DocsAccess, WorkflowEnrollment, CampaignActivity, Visitor, Unsubscribe, StartupIdea } from "../models";
 import { registerEventHandler } from "./events";
+import { workflowFor } from "../services/taskStatus";
 import { verifyGuestToken } from "../services/eventEmail";
 import { certificateDownloadUrl } from "../services/eventCertificate";
 import { verifyUnsubscribe } from "../services/unsubscribeToken";
@@ -13,7 +14,8 @@ import { env } from "../config/env";
 import { classifyChannel, parseHost, isBotUserAgent } from "../services/analytics";
 import { enrollRealtimeLead } from "../services/workflowEngine";
 import { extractClientIp, lookupIpLocation, lookupIpLocationCached } from "../services/geolocation";
-import { runForOrg } from "../services/tenantContext";
+import { runAsSystem, runForOrg } from "../services/tenantContext";
+import { verifyVisitRef } from "../services/visitRef";
 import { legal } from "../config/legal";
 import { parseBeaconBody, recordPageview, enrichGeoInBackground } from "../services/pageviewIngest";
 
@@ -135,6 +137,52 @@ router.get("/projects/:projectId/requests", async (req: Request, res: Response) 
   }
 });
 
+/**
+ * GET /public/projects/:projectId/workspace — the client portal's read-only
+ * workspace: every task in the project (Table/Board/Gantt/Calendar), its
+ * workflow columns and custom fields.
+ *
+ * Same rule as the requests list above: only "workspace"-visibility projects
+ * are ever served. Deliberately left out: files, comments, activity, creator
+ * and assignee emails — the portal shows the work, not the team's internals.
+ */
+router.get("/projects/:projectId/workspace", async (req: Request, res: Response) => {
+  try {
+    const { projectId } = req.params;
+    const project = await Project.findByPk(projectId, { attributes: ["id", "name", "status", "visibility"] });
+    if (!project || project.visibility !== "workspace") {
+      res.status(404).json({ message: "Project not found" });
+      return;
+    }
+
+    const [tasks, statuses, fields] = await Promise.all([
+      Task.findAll({
+        where: { projectId: project.id },
+        attributes: [
+          "id", "title", "description", "descriptionHtml", "status", "statusId", "priority",
+          "startDate", "dueDate", "completedAt", "projectId", "parentTaskId", "position",
+          "assigneeId", "customFields", "createdAt",
+        ],
+        include: [
+          { model: User.unscoped(), as: "assignee", attributes: ["id", "fullName"] },
+          { model: WorkflowStatus, as: "workflowStatus", attributes: ["id", "name", "color", "group", "order"] },
+          { model: TaskTag, as: "tags", attributes: ["id", "label", "color"] },
+          { model: TaskDependency, as: "dependsOn", attributes: ["id", "predecessorId", "type", "lagDays"], separate: true },
+        ],
+        order: [["position", "ASC"], ["createdAt", "ASC"]],
+      }),
+      workflowFor(project.id),
+      FieldDefinition.findAll({ where: { projectId: [null, project.id] } as any, order: [["order", "ASC"]] }),
+    ]);
+
+    const { visibility, ...publicProject } = project.toJSON() as any;
+    res.json({ project: publicProject, tasks, statuses, fields });
+  } catch (err) {
+    console.error("Failed to fetch public project workspace:", err);
+    res.status(500).json({ message: "Failed to fetch project data" });
+  }
+});
+
 // POST /public/web-leads — unauthenticated lead capture from the marketing site.
 // Saves into the same Lead table the admin-panel Outreach module reads from.
 router.post("/web-leads", async (req: Request, res: Response) => {
@@ -181,7 +229,7 @@ router.post("/web-leads", async (req: Request, res: Response) => {
       // Which brand's form this was. Uppercurve posts `?domain=uppercurve`;
       // rhinonlabs.com posts nothing and lands on the default site — so a
       // website lead shows up in the CRM of the site that actually captured it.
-      const site = await resolvePublicSite(b.site ?? b.domain ?? req.query.domain);
+      const site = await resolvePublicSite(b.site ?? b.domain ?? req.query.domain, req);
       await Lead.create({
         name,
         email,
@@ -327,7 +375,7 @@ router.post("/track", express.text({ type: ["text/plain"] }), async (req: Reques
     // the Uppercurve front-end does; rhinonlabs.com sends nothing and falls
     // through to the workspace's default site, which is Rhinon Labs.
     const b = parseBeaconBody(req.body);
-    const site = await resolvePublicSite(b.site ?? b.domain ?? req.query.domain);
+    const site = await resolvePublicSite(b.site ?? b.domain ?? req.query.domain, req);
 
     const view = await recordPageview(req, b, { siteId: site?.id ?? null, companyLookup: true });
     res.status(204).end(); // junk is ignored silently, and so are failures below
@@ -351,9 +399,16 @@ router.post("/visitors", express.text({ type: ["text/plain"] }), async (req: Req
     }
     b = b || {};
 
-    const rawEmail = typeof b.email === "string" ? b.email.trim().toLowerCase() : "";
+    // Preferred: the signed visit code from a campaign link (?r=…), which names
+    // the lead without the address ever appearing in a URL. The plain ?email=
+    // form still works for links already sent, but it proves nothing.
+    const leadId = verifyVisitRef(b.ref);
+    const lead = leadId
+      ? await runAsSystem("visit-ref", () => Lead.findByPk(leadId, { attributes: ["id", "email", "organizationId", "siteId"] }))
+      : null;
+    const rawEmail = lead ? lead.email.trim().toLowerCase() : typeof b.email === "string" ? b.email.trim().toLowerCase() : "";
     if (!rawEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawEmail)) {
-      res.status(400).json({ message: "Valid email is required" });
+      res.status(400).json({ message: "A visit code or a valid email is required" });
       return;
     }
 
@@ -364,10 +419,7 @@ router.post("/visitors", express.text({ type: ["text/plain"] }), async (req: Req
     const referrer = typeof b.referrer === "string" ? b.referrer.slice(0, 1024) : null;
     const userAgent = (req.headers["user-agent"] as string) || null;
 
-    const site = await resolvePublicSite(b.site ?? b.domain ?? req.query.domain);
-
-    const visitor = await Visitor.create({
-      siteId: site?.id ?? null,
+    const row = {
       email: rawEmail,
       ip,
       city: geo.city,
@@ -380,14 +432,26 @@ router.post("/visitors", express.text({ type: ["text/plain"] }), async (req: Req
       referrer,
       userAgent: userAgent ? userAgent.slice(0, 1024) : null,
       visitedAt: new Date(),
-    });
+    };
 
-    res.status(201).json({ success: true, visitor });
+    if (lead && (lead as any).organizationId) {
+      // Recorded in the lead's own workspace and brand, whichever site they landed on.
+      await runForOrg((lead as any).organizationId, () => Visitor.create({ ...row, leadId: lead.id, siteId: (lead as any).siteId ?? null }), {
+        label: "visit-ref",
+      });
+    } else {
+      const site = await resolvePublicSite(b.site ?? b.domain ?? req.query.domain, req);
+      await Visitor.create({ ...row, siteId: site?.id ?? null });
+    }
+
+    // Nothing about the stored row goes back to an anonymous caller.
+    res.status(201).json({ success: true });
   } catch (err) {
     console.error("Failed to record visitor:", err);
-    res.status(204).end();
+    res.status(500).json({ message: "Failed to record visitor" });
   }
 });
+
 
 // GET /public/blogs?domain=rhinonlabs|uppercurve — published blogs for the marketing site,
 // newest first. `domain` defaults to rhinonlabs so the existing Rhinon Labs site (which doesn't
@@ -396,7 +460,7 @@ router.get("/blogs", async (req: Request, res: Response) => {
   try {
     // Site, not domain: ?domain= is kept as the legacy spelling the Uppercurve
     // site still sends, and resolves to that workspace's matching site.
-    const site = await resolvePublicSite(req.query.domain);
+    const site = await resolvePublicSite(req.query.domain, req);
     const blogs = await Blog.findAll({
       where: { status: "Published", ...(site ? { siteId: site.id } : {}) },
       attributes: PUBLIC_BLOG_LIST_FIELDS as unknown as string[],
@@ -412,7 +476,7 @@ router.get("/blogs", async (req: Request, res: Response) => {
 // GET /public/blogs/:slug?domain=rhinonlabs|uppercurve — single published blog
 router.get("/blogs/:slug", async (req: Request, res: Response) => {
   try {
-    const site = await resolvePublicSite(req.query.domain);
+    const site = await resolvePublicSite(req.query.domain, req);
     const blog = await Blog.findOne({
       where: {
         slug: req.params.slug,

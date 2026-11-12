@@ -4,6 +4,7 @@ import { hasCalendarAccess } from "./connectedAccounts";
 import { accountFor } from "./emailIdentity";
 import * as google from "./googleCalendar";
 import * as microsoft from "./microsoftCalendar";
+import * as native from "./nativeCalendar";
 import type { EventInput, MeetingEvent } from "./googleCalendar";
 
 /**
@@ -12,12 +13,14 @@ import type { EventInput, MeetingEvent } from "./googleCalendar";
  *
  *   GOOGLE / MICROSOFT — their own calendar. The provider sends the invites
  *                        (with a Meet / Teams link) from their own address.
- *   platform           — the workspace's shared Google calendar, if one is
+ *   workspace          — the workspace's shared Google calendar, if one is
  *                        connected; invites go out as .ics from their platform
  *                        address (meetingInvite.ts).
+ *   native             — Rhinon's built-in calendar, the default when nothing
+ *                        above is connected, so no Google/Microsoft is needed.
  */
 export interface MeetingCalendar {
-  source: "workspace" | "GOOGLE" | "MICROSOFT";
+  source: "native" | "workspace" | "GOOGLE" | "MICROSOFT";
   /** The calendar owner's address, for display. */
   email: string | null;
   /** True when the provider emails attendees itself, so we must not send our own .ics. */
@@ -76,9 +79,42 @@ const workspace: MeetingCalendar = {
   remove: (id) => google.deleteEvent(id),
 };
 
-export async function calendarFor(userId: string): Promise<MeetingCalendar> {
+function builtIn(userId: string | null, email: string | null): MeetingCalendar {
+  return {
+    source: "native",
+    email,
+    providerSendsInvites: false,
+    list: (from, to) => native.listEvents(from, to),
+    create: (input) => native.createEvent(input, email, userId),
+    update: (id, input) => native.updateEvent(id, input),
+    get: (id) => native.getEvent(id),
+    remove: (id) => native.deleteEvent(id),
+  };
+}
+
+export async function calendarFor(userId: string, userEmail: string | null = null): Promise<MeetingCalendar> {
   const account = await accountFor(userId, "meetings");
   if (account) return personal(account);
   const status = await google.getConnectionStatus();
-  return { ...workspace, email: status.connectedEmail };
+  if (status.connected) return { ...workspace, email: status.connectedEmail };
+  return builtIn(userId, userEmail);
+}
+
+/**
+ * The calendar behind the public booking page, which has no signed-in user: the shared
+ * Google calendar when one is connected, otherwise the built-in one.
+ */
+export async function publicCalendar(): Promise<{
+  calendar: MeetingCalendar;
+  busy(from: Date, to: Date): Promise<{ start: Date; end: Date }[]>;
+}> {
+  const status = await google.getConnectionStatus();
+  if (status.connected) {
+    return {
+      calendar: { ...workspace, email: status.connectedEmail },
+      // Meetings made on the built-in calendar earlier still block the slot.
+      busy: async (from, to) => [...(await google.getBusyIntervals(from, to)), ...(await native.getBusyIntervals(from, to))],
+    };
+  }
+  return { calendar: builtIn(null, null), busy: native.getBusyIntervals };
 }

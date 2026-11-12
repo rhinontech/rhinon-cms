@@ -53,7 +53,7 @@ export function GroupList({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search groups..."
-            className="w-full rounded-lg border border-border py-1.5 pl-8 pr-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-lg border border-border py-1.5 pl-8 pr-2 text-sm outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
           />
         </div>
         <button
@@ -72,7 +72,7 @@ export function GroupList({
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             placeholder="Group name..."
-            className="w-full rounded-lg border border-border px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-lg border border-border px-2 py-1.5 text-sm outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
           />
           <button
             type="submit"

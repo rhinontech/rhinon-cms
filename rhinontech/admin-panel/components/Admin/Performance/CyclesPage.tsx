@@ -225,7 +225,7 @@ export function CyclesPage() {
               <div className="space-y-1">
                 <label className="text-xs text-muted-foreground">Cycle Name *</label>
                 <input
-                  className="w-full rounded-lg border border-border px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                   value={form.name}
                   onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                   placeholder="e.g. Q1 2026 Review"
@@ -235,7 +235,7 @@ export function CyclesPage() {
               <div className="space-y-1">
                 <label className="text-xs text-muted-foreground">Type</label>
                 <NativeSelect
-                  className="w-full rounded-lg border border-border px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                   value={form.type}
                   onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as ReviewCycle["type"] }))}
                 >
@@ -250,7 +250,7 @@ export function CyclesPage() {
                   <label className="text-xs text-muted-foreground">Start Date</label>
                   <input
                     type="date"
-                    className="w-full rounded-lg border border-border px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-lg border border-border px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                     value={form.startDate}
                     onChange={(e) => setForm((f) => ({ ...f, startDate: e.target.value }))}
                   />
@@ -259,7 +259,7 @@ export function CyclesPage() {
                   <label className="text-xs text-muted-foreground">End Date</label>
                   <input
                     type="date"
-                    className="w-full rounded-lg border border-border px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-lg border border-border px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                     value={form.endDate}
                     onChange={(e) => setForm((f) => ({ ...f, endDate: e.target.value }))}
                   />

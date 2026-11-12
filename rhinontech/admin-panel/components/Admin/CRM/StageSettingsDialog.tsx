@@ -10,7 +10,7 @@ import { StageDot, TBtn } from "./ui";
 import { NativeSelect } from "@/components/ui/native-select";
 import { confirmDialog } from "@/components/ui/dialogs";
 const INPUT =
-  "w-full rounded border border-border bg-card px-2 py-1 text-[12px] outline-none focus:ring-2 focus:ring-blue-500/40";
+  "w-full rounded border border-border bg-card px-2 py-1 text-[12px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40";
 
 /**
  * Pipeline stage management. Stages are rows, so renaming, reordering, and

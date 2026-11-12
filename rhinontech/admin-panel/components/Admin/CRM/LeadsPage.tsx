@@ -19,9 +19,10 @@ import { DuplicatesDialog } from "./DuplicatesDialog";
 import { Timeline } from "./Timeline";
 import { SavedViews, type SavedView } from "./SavedViews";
 import { RelatedTasks } from "./RelatedTasks";
+import { LeadVisits } from "./LeadVisits";
 import { LIFECYCLE_STAGES, type Lead, type LifecycleStage, type UserRef } from "./types";
 import {
-  Avatar, DataRow, EmptyState, HeaderRow, OutreachStatus,
+  Avatar, DataRow, EmptyState, HeaderRow, LIFECYCLE_TINT, OutreachStatus,
   Pagination, SkeletonRows, TableShell, TBtn, relativeTime,
 } from "./ui";
 import { useModuleBase } from "@/lib/sites";
@@ -34,7 +35,7 @@ import { confirmDialog } from "@/components/ui/dialogs";
  * lower-priority ones (account, outreach state, last touch) drop out instead —
  * they're still on the record, just not worth a scrollbar.
  */
-const COLS_FULL = "26px minmax(180px,2.2fr) minmax(110px,1.1fr) minmax(120px,1.2fr) 104px 132px 84px 78px 28px";
+const COLS_FULL = "26px minmax(200px,2.2fr) minmax(140px,1.2fr) minmax(150px,1.3fr) 118px 150px 104px 84px 32px";
 const COLS_COMPACT = "26px minmax(150px,2.4fr) 104px 34px 28px";
 const LIMIT = 50;
 
@@ -81,7 +82,7 @@ export function LeadsPage() {
   const [exporting, setExporting] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const [form, setForm] = useState({ name: "", company: "", email: "", title: "", linkedinUrl: "", notes: "" });
+  const [form, setForm] = useState({ name: "", company: "", email: "", title: "", phone: "", linkedinUrl: "", instagramUrl: "", notes: "" });
 
   // A view is just the filter values the list endpoint already accepts, so
   // applying one is a straight assignment rather than a separate query path.
@@ -292,7 +293,7 @@ export function LeadsPage() {
   };
 
   const startCreate = () => {
-    setForm({ name: "", company: "", email: "", title: "", linkedinUrl: "", notes: "" });
+    setForm({ name: "", company: "", email: "", title: "", phone: "", linkedinUrl: "", instagramUrl: "", notes: "" });
     setPanelMode("create");
     setPanelOpen(true);
   };
@@ -301,7 +302,7 @@ export function LeadsPage() {
     if (!selected) return;
     setForm({
       name: selected.name, company: selected.company, email: selected.email,
-      title: selected.title || "", linkedinUrl: selected.linkedinUrl || "", notes: selected.notes || "",
+      title: selected.title || "", phone: selected.phone || "", linkedinUrl: selected.linkedinUrl || "", instagramUrl: selected.instagramUrl || "", notes: selected.notes || "",
     });
     setPanelMode("edit");
   };
@@ -338,7 +339,7 @@ export function LeadsPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search name, company, email…"
-                className="w-full rounded-md border border-border bg-card/70 py-1.5 pl-8 pr-3 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40"
+                className="w-full rounded-md border border-border bg-card/70 py-1.5 pl-8 pr-3 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
               />
             </div>
             <Select value={lifecycleFilter} onChange={(v) => { setLifecycleFilter(v); setOffset(0); }}>
@@ -412,7 +413,7 @@ export function LeadsPage() {
             </div>
           )}
 
-          <TableShell>
+          <TableShell minWidth={compact ? undefined : 1040}>
             <HeaderRow cols={COLS}>
               <span className="flex justify-center">
                 <input type="checkbox" checked={allSelected} onChange={toggleAll} className="h-3.5 w-3.5 cursor-pointer accent-blue-600" title="Select all" />
@@ -491,26 +492,30 @@ export function LeadsPage() {
                     <NativeSelect
                       value={lead.lifecycleStage}
                       onChange={(e) => patchLead(lead.id, { lifecycleStage: e.target.value as LifecycleStage })}
-                      className="w-full cursor-pointer appearance-none rounded bg-transparent text-[11px] outline-none"
+                      // A coloured pill that is also the editor: reads as a status, opens as a menu.
+                      className={cn(
+                        "!h-6 w-fit max-w-full cursor-pointer gap-1 rounded-full border-0 px-2.5 text-[11.5px] font-medium shadow-none ring-1 ring-inset [&_svg]:!size-3 [&_svg]:opacity-60",
+                        LIFECYCLE_TINT[lead.lifecycleStage] ?? LIFECYCLE_TINT.New
+                      )}
                     >
                       {LIFECYCLE_STAGES.map((s) => <option key={s} value={s}>{s}</option>)}
                     </NativeSelect>
                   </span>
 
                   <span onClick={(e) => e.stopPropagation()} className="flex min-w-0 items-center gap-1.5">
-                    <Avatar name={lead.owner?.fullName} size={18} />
+                    {(lead.ownerId || compact) && <Avatar name={lead.owner?.fullName} size={20} />}
                     {!compact && (
                       <NativeSelect
                         value={lead.ownerId || ""}
                         onChange={(e) => patchLead(lead.id, { ownerId: e.target.value || null })}
-                        // Unassigned reads as a quiet dash rather than the word
-                        // repeated down every row.
+                        // Borderless until hovered, so a column of owners reads as names,
+                        // not as a stack of form fields.
                         className={cn(
-                          "min-w-0 flex-1 cursor-pointer truncate rounded bg-transparent text-[11px] outline-none",
-                          lead.ownerId ? "text-foreground/70" : "text-muted-foreground/70"
+                          "!h-7 min-w-0 flex-1 cursor-pointer truncate border-transparent bg-transparent px-1.5 text-[12px] shadow-none hover:border-input hover:bg-card dark:bg-transparent",
+                          lead.ownerId ? "text-foreground/80" : "text-muted-foreground/70"
                         )}
                       >
-                        <option value="">—</option>
+                        <option value="">Unassigned</option>
                         {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}
                       </NativeSelect>
                     )}
@@ -527,7 +532,7 @@ export function LeadsPage() {
                   <span className="text-right">
                     <button
                       onClick={(e) => { e.stopPropagation(); remove(lead.id); }}
-                      className="rounded p-1 text-muted-foreground/70 hover:bg-rose-50 dark:hover:bg-rose-400/10 hover:text-rose-600 dark:hover:text-rose-300"
+                      className="rounded-md p-1.5 text-muted-foreground/70 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 hover:bg-rose-50 dark:hover:bg-rose-400/10 hover:text-rose-600 dark:hover:text-rose-300"
                       title="Delete lead"
                     >
                       <TbTrash size={13} />
@@ -590,7 +595,7 @@ export function LeadsPage() {
                         <NativeSelect
                           value={selected.lifecycleStage}
                           onChange={(e) => patchLead(selected.id, { lifecycleStage: e.target.value as LifecycleStage })}
-                          className="w-full cursor-pointer rounded border border-border bg-card px-2 py-1 text-[12px] outline-none focus:ring-2 focus:ring-blue-500/40"
+                          className="w-full cursor-pointer rounded border border-border bg-card px-2 py-1 text-[12px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
                         >
                           {LIFECYCLE_STAGES.map((st) => <option key={st} value={st}>{st}</option>)}
                         </NativeSelect>
@@ -600,7 +605,7 @@ export function LeadsPage() {
                         <NativeSelect
                           value={selected.ownerId || ""}
                           onChange={(e) => patchLead(selected.id, { ownerId: e.target.value || null })}
-                          className="w-full cursor-pointer rounded border border-border bg-card px-2 py-1 text-[12px] outline-none focus:ring-2 focus:ring-blue-500/40"
+                          className="w-full cursor-pointer rounded border border-border bg-card px-2 py-1 text-[12px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
                         >
                           <option value="">Unassigned</option>
                           {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}
@@ -715,6 +720,8 @@ export function LeadsPage() {
 
                   <RelatedTasks leadId={selected.id} owners={owners} />
 
+                  <LeadVisits leadId={selected.id} />
+
                   <div>
                     <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Activity</p>
                     <Timeline leadId={selected.id} onLogged={load} />
@@ -728,13 +735,15 @@ export function LeadsPage() {
                     <FormField label="Job title" value={form.title} onChange={(v) => setForm({ ...form, title: v })} />
                   </div>
                   <FormField label="Email" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} required />
+                  <FormField label="Phone" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />
                   <FormField label="LinkedIn URL" value={form.linkedinUrl} onChange={(v) => setForm({ ...form, linkedinUrl: v })} />
+                  <FormField label="Instagram (@name or URL)" value={form.instagramUrl} onChange={(v) => setForm({ ...form, instagramUrl: v })} />
                   <label className="block">
                     <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Notes</span>
                     <textarea
                       value={form.notes}
                       onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                      className="h-24 w-full resize-none rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40"
+                      className="h-24 w-full resize-none rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
                     />
                   </label>
                   <div className="flex justify-end gap-2 border-t border-border pt-3">
@@ -778,7 +787,7 @@ function Select({ value, onChange, children }: { value: string; onChange: (v: st
     <NativeSelect
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="rounded-md border border-border bg-card/70 px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500/40"
+      className="rounded-md border border-border bg-card/70 px-2 py-1.5 text-xs outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
     >
       {children}
     </NativeSelect>
@@ -795,6 +804,7 @@ function DetailFields({ lead }: { lead: Lead }) {
     { label: "Email", value: lead.email },
     { label: "Phone", value: lead.phone },
     { label: "LinkedIn", value: lead.linkedinUrl, link: true },
+    { label: "Instagram", value: lead.instagramUrl, link: true },
     { label: "Website", value: lead.website, link: true },
     { label: "Seniority", value: lead.seniority },
     { label: "Department", value: lead.department },
@@ -840,7 +850,7 @@ function FormField({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40"
+        className="w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
       />
     </label>
   );

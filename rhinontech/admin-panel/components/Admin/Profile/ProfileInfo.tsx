@@ -24,6 +24,7 @@ interface UserProfile {
   workSchedule?: string;
   remotePosition?: boolean;
   workLocation?: string;
+  githubLogin?: string | null;
   paymentFrequency?: string;
   role?: { name: string; slug: string };
 }
@@ -54,7 +55,7 @@ function InputField({ label, name, value, onChange, type = "text", disabled = fa
       <input
         type={type} name={name} value={value}
         onChange={(e) => onChange(e.target.value)} disabled={disabled}
-        className="px-3 py-2 text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-muted/40 disabled:text-muted-foreground disabled:cursor-not-allowed"
+        className="px-3 py-2 text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60 disabled:bg-muted/40 disabled:text-muted-foreground disabled:cursor-not-allowed"
       />
       {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
     </div>
@@ -94,6 +95,7 @@ export function ProfileInfo() {
           compensationType: form.compensationType, workSchedule: form.workSchedule,
           remotePosition: form.remotePosition, workLocation: form.workLocation,
           paymentFrequency: form.paymentFrequency,
+          githubLogin: form.githubLogin ?? "",
         }),
       });
       setProfile(updated); setForm(updated); setEditing(false);
@@ -193,6 +195,7 @@ export function ProfileInfo() {
                   <Field label="Compensation Type" value={profile.compensationType ?? "Salaried"} />
                   <Field label="Work Schedule"     value={profile.workSchedule ?? "11 AM – 8 PM (Mon–Sat)"} />
                   <Field label="Work Location"     value={profile.workLocation} />
+                  <Field label="GitHub Username"   value={profile.githubLogin ?? undefined} />
                   <Field label="Remote Position"   value={profile.remotePosition ? "Yes" : "No"} />
                   <Field label="Payment Frequency" value={profile.paymentFrequency ?? "Monthly"} />
                 </div>
@@ -204,6 +207,7 @@ export function ProfileInfo() {
                   <InputField label="Department" name="department" value={profile.department} onChange={() => {}} disabled hint="Set by admin" />
                   <InputField label="PAN" name="pan" value={form.pan ?? ""} onChange={(v) => setForm((f) => ({ ...f, pan: v.toUpperCase() }))} hint="10-character PAN number" />
                   <InputField label="Work Location" name="workLocation" value={form.workLocation ?? ""} onChange={(v) => setForm((f) => ({ ...f, workLocation: v }))} />
+                  <InputField label="GitHub Username" name="githubLogin" value={form.githubLogin ?? ""} onChange={(v) => setForm((f) => ({ ...f, githubLogin: v }))} hint="Links your commits to you in Work" />
 
                   {(["employmentType", "compensationType", "paymentFrequency"] as const).map((key) => {
                     const opts: Record<string, string[]> = {
@@ -222,7 +226,7 @@ export function ProfileInfo() {
                         <NativeSelect
                           value={(form[key] as string) ?? opts[key][0]}
                           onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
-                          className="px-3 py-2 text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="px-3 py-2 text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                         >
                           {opts[key].map((v) => <option key={v}>{v}</option>)}
                         </NativeSelect>

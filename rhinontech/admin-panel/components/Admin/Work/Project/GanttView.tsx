@@ -31,8 +31,10 @@ function intervalOf(t: ProjectTask): { start: Date; end: Date } | null {
 }
 
 export function GanttView({
-  rows, statuses, collapsed, onToggleCollapsed, onPatch, onOpenTask, onAddDependency, onRemoveDependency,
+  rows, statuses, collapsed, onToggleCollapsed, onPatch, onOpenTask, onAddDependency, onRemoveDependency, readOnly = false,
 }: {
+  /** The public portal: bars open the task instead of dragging or linking. */
+  readOnly?: boolean;
   rows: TaskRow[];
   statuses: WorkflowStatus[];
   collapsed: Set<string>;
@@ -125,7 +127,7 @@ export function GanttView({
 
   /** Drag a bar to reschedule; the right edge resizes the duration. */
   const onBarPointerDown = (e: React.PointerEvent, p: Placed, mode: "move" | "resize") => {
-    if (p.startOffset === null || p.isSummary) return;
+    if (readOnly || p.startOffset === null || p.isSummary) return;
     e.preventDefault();
     e.stopPropagation();
     const startX = e.clientX;
@@ -306,19 +308,19 @@ export function GanttView({
                   >
                     <div
                       onPointerDown={(e) => onBarPointerDown(e, p, "move")}
-                      onClick={() => linkFrom !== null && handleLinkClick(p.row.task.id)}
-                      title={p.isSummary ? "Rolled up from subitems" : "Drag to reschedule"}
+                      onClick={() => readOnly ? onOpenTask(p.row.task) : linkFrom !== null && handleLinkClick(p.row.task.id)}
+                      title={p.isSummary ? "Rolled up from subitems" : readOnly ? p.row.task.title : "Drag to reschedule"}
                       className={cn(
                         "group relative flex h-full w-full items-center overflow-hidden px-1.5",
                         p.isSummary
                           ? "rounded-sm bg-muted-foreground/40"
-                          : cn("cursor-grab rounded", STATUS_CHIP[color] ?? STATUS_CHIP.stone),
+                          : cn(readOnly ? "cursor-pointer rounded" : "cursor-grab rounded", STATUS_CHIP[color] ?? STATUS_CHIP.stone),
                         linkFrom === p.row.task.id && "ring-2 ring-blue-500"
                       )}
                     >
                       <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", STATUS_DOT[color] ?? STATUS_DOT.stone)} />
                       <span className="ml-1 truncate text-[10px] font-medium">{p.row.task.title}</span>
-                      {!p.isSummary && (
+                      {!p.isSummary && !readOnly && (
                         <>
                           <button
                             onClick={(e) => { e.stopPropagation(); handleLinkClick(p.row.task.id); }}

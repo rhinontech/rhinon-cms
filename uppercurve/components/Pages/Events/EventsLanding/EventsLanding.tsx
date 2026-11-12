@@ -23,9 +23,9 @@ export default function EventsLanding({
       <section id="events" className="scroll-mt-24 max-w-7xl mx-auto px-4 sm:px-6 pb-20 sm:pb-24">
         <div className="flex flex-wrap items-end justify-between gap-4 mb-10">
           <SectionHeading
-            eyebrow="Upcoming"
-            title="Pick your next session"
-            description="Filter by format or by where you want to be. Everything here is free to attend."
+            eyebrow="UPCOMING EVENTS"
+            title="Upcoming AI Workshops & Certificate Programmes "
+            description="Explore our upcoming live AI sessions, all Free to attend. Reserve your seat in a few clicks & your joining details arrive straight in your inbox."
           />
         </div>
         {/* Keyed on the format so following a ?format= link from further down

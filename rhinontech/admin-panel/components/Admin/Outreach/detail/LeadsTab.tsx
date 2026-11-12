@@ -11,6 +11,8 @@ import { EmptyState } from "../shared/EmptyState";
 import { LeadDraftSheet } from "./LeadDraftSheet";
 import { SendConsole, type SendLogLine, type SendProgress } from "./SendConsole";
 import type { Campaign, CampaignLead } from "../shared/types";
+import { OutreachStatus } from "../../CRM/ui";
+import type { LeadStatus } from "../../CRM/types";
 
 // Above this many leads a send takes long enough that a spinner reads as a hang,
 // so it runs through the streaming endpoint and shows a live console instead.
@@ -270,36 +272,34 @@ export function LeadsTab({
               {leads.map((lead) => (
                 <TableRow key={lead.id}>
                   <TableCell>
-                    <p className="font-bold text-foreground">{lead.name}</p>
-                    <p className="text-[10px] font-medium uppercase text-muted-foreground">{lead.company}</p>
+                    <p className="font-medium text-foreground">{lead.name}</p>
+                    <p className="text-xs text-muted-foreground">{[lead.company, lead.email].filter(Boolean).join(" · ")}</p>
                   </TableCell>
                   <TableCell>
-                    <span className="rounded border border-border bg-muted px-2 py-0.5 text-[10px] font-bold text-foreground/70">
-                      {lead.status}
-                    </span>
+                    <OutreachStatus status={lead.status as LeadStatus} />
                   </TableCell>
                   <TableCell>
                     {lead.aiDraft ? (
                       <button
                         onClick={() => setDraftLead(lead)}
-                        className="text-[10px] font-bold text-blue-600 dark:text-blue-300 hover:underline"
+                        className="text-xs font-medium text-brand hover:underline"
                       >
                         View draft
                       </button>
                     ) : (
-                      <span className="text-[10px] font-bold italic uppercase text-muted-foreground/70">Pending</span>
+                      <span className="text-xs text-muted-foreground/70">Not drafted</span>
                     )}
                   </TableCell>
                   <TableCell>
                     {lead.emailOpened ? (
                       <span
                         title={lead.openedAt ? new Date(lead.openedAt).toLocaleString() : undefined}
-                        className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-300"
+                        className="inline-flex items-center gap-1 text-xs font-medium text-sky-600 dark:text-sky-400"
                       >
                         <TbEye size={13} /> Opened
                       </span>
                     ) : (
-                      <span className="text-[10px] font-bold italic uppercase text-muted-foreground/70">—</span>
+                      <span className="text-xs text-muted-foreground/60">—</span>
                     )}
                   </TableCell>
                   <TableCell>

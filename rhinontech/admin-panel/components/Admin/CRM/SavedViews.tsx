@@ -161,7 +161,7 @@ export function SavedViews({
                     if (e.key === "Escape") setNaming(false);
                   }}
                   placeholder="View name"
-                  className="min-w-0 flex-1 rounded border border-border px-2 py-1 text-[12px] outline-none focus:ring-2 focus:ring-blue-500/40"
+                  className="min-w-0 flex-1 rounded border border-border px-2 py-1 text-[12px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
                 />
                 <button
                   onClick={save}

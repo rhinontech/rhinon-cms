@@ -239,7 +239,7 @@ export function AdminPayrollEmployees() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by name, department or role..."
-              className="w-full pl-9 pr-4 py-1.5 sm:py-2 text-xs sm:text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-9 pr-4 py-1.5 sm:py-2 text-xs sm:text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
             />
           </div>
 
@@ -498,7 +498,7 @@ export function AdminPayrollEmployees() {
                           min={0}
                           value={form[key] as string}
                           onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
-                          className="w-full pl-6 pr-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card"
+                          className="w-full pl-6 pr-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60 bg-card"
                           placeholder="0"
                         />
                       </div>
@@ -526,14 +526,14 @@ export function AdminPayrollEmployees() {
                       Professional Tax (₹/mo)
                       <div className="relative">
                         <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">₹</span>
-                        <input type="number" min={0} value={form.ptAmount} onChange={(e) => setForm((f) => ({ ...f, ptAmount: e.target.value }))} className="w-full pl-6 pr-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card" placeholder="200" />
+                        <input type="number" min={0} value={form.ptAmount} onChange={(e) => setForm((f) => ({ ...f, ptAmount: e.target.value }))} className="w-full pl-6 pr-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60 bg-card" placeholder="200" />
                       </div>
                     </label>
                     <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                       TDS (₹/mo)
                       <div className="relative">
                         <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">₹</span>
-                        <input type="number" min={0} value={form.tdsAmount} onChange={(e) => setForm((f) => ({ ...f, tdsAmount: e.target.value }))} className="w-full pl-6 pr-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card" placeholder="0" />
+                        <input type="number" min={0} value={form.tdsAmount} onChange={(e) => setForm((f) => ({ ...f, tdsAmount: e.target.value }))} className="w-full pl-6 pr-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60 bg-card" placeholder="0" />
                       </div>
                     </label>
                   </div>

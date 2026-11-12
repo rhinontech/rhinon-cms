@@ -42,6 +42,13 @@ export function Signup({ className, ...props }: React.ComponentProps<"div">) {
   const [error, setError] = useState("");
   const [slugState, setSlugState] = useState<SlugState>({ kind: "idle" });
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+
+  // The landing page (rhinontech.in) sends people here with ?email=… from its
+  // hero form, so they don't type their address twice.
+  useEffect(() => {
+    const fromLanding = new URLSearchParams(window.location.search).get("email");
+    if (fromLanding && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fromLanding)) setPersonalEmail((v) => v || fromLanding);
+  }, []);
   const legal = useLegal();
 
   // The workspace name writes the slug until the user takes it over, so the

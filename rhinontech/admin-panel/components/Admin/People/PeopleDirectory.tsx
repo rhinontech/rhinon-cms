@@ -14,6 +14,7 @@ import { RewriteToolbar } from "@/components/Admin/People/RewriteToolbar";
 import { NewTemplateDialog } from "@/components/Admin/People/NewTemplateDialog";
 import type { LetterBlock } from "@/types/letterBlocks";
 import { useOrganization } from "@/lib/useOrganization";
+import { GitHubAccessPanel } from "./GitHubAccessPanel";
 
 import { NativeSelect } from "@/components/ui/native-select";
 import { confirmDialog, alertDialog } from "@/components/ui/dialogs";
@@ -54,6 +55,7 @@ interface Employee {
   workSchedule?: string;
   remotePosition?: boolean;
   workLocation?: string;
+  githubLogin?: string | null;
   paymentFrequency?: string;
   legalName?: string;
   roleTitle?: string;
@@ -94,6 +96,7 @@ type EmployeeForm = {
   workSchedule: string;
   remotePosition: boolean;
   workLocation: string;
+  githubLogin: string;
   paymentFrequency: string;
   legalName: string;
   roleTitle: string;
@@ -131,6 +134,7 @@ const emptyForm: EmployeeForm = {
   workSchedule: "11 AM – 8 PM (Mon–Sat)",
   remotePosition: false,
   workLocation: "",
+  githubLogin: "",
   paymentFrequency: "Monthly",
   legalName: "",
   roleTitle: "",
@@ -185,6 +189,7 @@ function employeeToForm(employee: Employee): EmployeeForm {
     workSchedule: employee.workSchedule ?? "11 AM – 8 PM (Mon–Sat)",
     remotePosition: employee.remotePosition ?? false,
     workLocation: employee.workLocation ?? "",
+    githubLogin: employee.githubLogin ?? "",
     paymentFrequency: employee.paymentFrequency ?? "Monthly",
     legalName: employee.legalName ?? employee.fullName,
     roleTitle: employee.roleTitle ?? employee.role?.name ?? "",
@@ -285,7 +290,7 @@ function OffboardDialog({
               type="date"
               value={exitDate}
               onChange={(e) => setExitDate(e.target.value)}
-              className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
               required
             />
           </label>
@@ -294,7 +299,7 @@ function OffboardDialog({
             <NativeSelect
               value={exitReason}
               onChange={(e) => setExitReason(e.target.value)}
-              className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
             >
               {EXIT_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
             </NativeSelect>
@@ -306,7 +311,7 @@ function OffboardDialog({
               onChange={(e) => setExitNotes(e.target.value)}
               rows={3}
               placeholder="Handover details, exit interview notes..."
-              className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
             />
           </label>
         </div>
@@ -444,7 +449,7 @@ function FormInput({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
         required={required}
       />
     </label>
@@ -483,7 +488,7 @@ function FormSelect({
       <NativeSelect
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-lg border border-border px-3 py-2 font-normal bg-card focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="rounded-lg border border-border px-3 py-2 font-normal bg-card focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
         required={required}
       >
         {options.map((opt) => (
@@ -499,7 +504,7 @@ function FormSelect({
 export function PeopleDirectory() {
   // Company addresses live on the workspace's own subdomain, so the suffix in
   // the Add-Employee form has to come from the org, not a hardcoded constant.
-  const { emailDomain } = useOrganization();
+  const { emailDomain, organization } = useOrganization();
   const { isExpanded: isSubNavExpanded } = useSideNav();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [attachDocs, setAttachDocs] = useState(true);
@@ -1082,7 +1087,7 @@ export function PeopleDirectory() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search..."
-                className="w-full pl-8 sm:pl-9 pr-3 py-1.5 sm:py-2 text-xs border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:w-56 md:w-64 bg-card"
+                className="w-full pl-8 sm:pl-9 pr-3 py-1.5 sm:py-2 text-xs border border-border rounded-lg focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60 sm:w-56 md:w-64 bg-card"
               />
             </div>
             {canManage && (
@@ -1294,11 +1299,16 @@ export function PeopleDirectory() {
                       <Detail label="Role title" value={selectedEmployee.roleTitle || selectedEmployee.role?.name || "-"} />
                       <Detail label="Department" value={selectedEmployee.department} />
                       <Detail label="Work location" value={selectedEmployee.workLocation || "-"} />
+                      <Detail label="GitHub" value={selectedEmployee.githubLogin || "-"} />
                       <Detail label="Employment type" value={selectedEmployee.employmentType || "-"} />
                       <Detail label="Work schedule" value={selectedEmployee.workSchedule || "-"} />
                       <Detail label="Remote" value={selectedEmployee.remotePosition ? "Yes" : "No"} />
                       <Detail label="Joining date" value={formatDate(selectedEmployee.joiningDate)} />
                     </div>
+
+                    {canManage && organization?.isPlatform && (
+                      <GitHubAccessPanel userId={selectedEmployee.id} githubLogin={selectedEmployee.githubLogin} />
+                    )}
 
                     {/* Admin-only sections */}
                     {canManage && (
@@ -1493,22 +1503,22 @@ export function PeopleDirectory() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                       Full name
-                      <input value={form.fullName} onChange={(e) => updateForm("fullName", e.target.value)} className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                      <input value={form.fullName} onChange={(e) => updateForm("fullName", e.target.value)} className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60" required />
                     </label>
                     <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                       Personal email
-                      <input type="email" value={form.personalEmail} onChange={(e) => updateForm("personalEmail", e.target.value)} className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                      <input type="email" value={form.personalEmail} onChange={(e) => updateForm("personalEmail", e.target.value)} className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60" required />
                     </label>
                     <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                       Role
-                      <NativeSelect value={form.roleId} onChange={(e) => updateForm("roleId", e.target.value)} className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                      <NativeSelect value={form.roleId} onChange={(e) => updateForm("roleId", e.target.value)} className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60" required>
                         <option value="">Select role</option>
                         {roles.map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}
                       </NativeSelect>
                     </label>
                     <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                       Department
-                      <input value={form.department} onChange={(e) => updateForm("department", e.target.value)} className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                      <input value={form.department} onChange={(e) => updateForm("department", e.target.value)} className="rounded-lg border border-border px-3 py-2 font-normal focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60" required />
                     </label>
                     <FormInput label="Legal name" value={form.legalName} onChange={(value) => updateForm("legalName", value)} />
                     <FormInput label="PAN" value={form.pan} onChange={(value) => updateForm("pan", value)} />
@@ -1516,6 +1526,7 @@ export function PeopleDirectory() {
                     <FormInput label="Joining date" type="date" value={form.joiningDate} onChange={(value) => updateForm("joiningDate", value)} required />
                     <FormInput label="Date of birth" type="date" value={form.dateOfBirth} onChange={(value) => updateForm("dateOfBirth", value)} />
                     <FormInput label="Work location" value={form.workLocation} onChange={(value) => updateForm("workLocation", value)} />
+                    <FormInput label="GitHub username" value={form.githubLogin} onChange={(value) => updateForm("githubLogin", value)} />
                     <FormSelect label="Employment type" value={form.employmentType} onChange={(value) => updateForm("employmentType", value)} options={EMPLOYMENT_TYPES} />
                     <FormSelect label="Compensation type" value={form.compensationType} onChange={(value) => updateForm("compensationType", value)} options={COMPENSATION_TYPES} />
                     <div className="col-span-2 flex flex-col gap-1.5">

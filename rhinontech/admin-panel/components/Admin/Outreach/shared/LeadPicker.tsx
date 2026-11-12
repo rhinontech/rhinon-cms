@@ -161,7 +161,7 @@ export function LeadPicker({
                   type="checkbox"
                   checked={selectedIds.has(lead.id)}
                   onChange={() => toggle(lead.id)}
-                  className="rounded border-border text-blue-600 dark:text-blue-300 focus:ring-blue-500"
+                  className="rounded border-border text-blue-600 dark:text-blue-300 focus:ring-ring/40"
                 />
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-foreground">{lead.name}</p>

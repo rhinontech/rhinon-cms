@@ -22,6 +22,8 @@ export interface OrganizationSettings {
    * told so, rather than borrowing the platform's own pitch.
    */
   companyKnowledge?: string | null;
+  /** Which design system the mobile app renders in. Only a superadmin changes it; absent = "admin". */
+  mobileTheme?: "admin" | "blocks" | "midnight" | "brutal";
   /**
    * Set at signup, cleared when the owner clicks the link we email them. While
    * true the workspace cannot send outreach or automation mail: every tenant is

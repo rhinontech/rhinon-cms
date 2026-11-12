@@ -1,6 +1,6 @@
 import { Router, Response } from "express";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
-import { CalendarNotConnectedError, getConnectionStatus, type EventInput, type MeetingEvent } from "../services/googleCalendar";
+import { CalendarNotConnectedError, type EventInput, type MeetingEvent } from "../services/googleCalendar";
 import { CalendarReconnectError, calendarFor, type MeetingCalendar } from "../services/meetingCalendar";
 import { sendMeetingInvite, type InviteKind } from "../services/meetingInvite";
 import { logMeetingOnLeads } from "../services/crmActivity";
@@ -56,8 +56,8 @@ function str(v: unknown, max = 2000): string | null {
 // GET /meetings/status — lets the Meetings tab show a "not connected yet" state.
 router.get("/status", authenticate, authorize("meetings:read"), async (req: AuthRequest, res: Response) => {
   try {
-    const cal = await calendarFor(req.user!.userId);
-    const connected = cal.source !== "workspace" || (await getConnectionStatus()).connected;
+    const cal = await calendarFor(req.user!.userId, req.user?.companyEmail ?? null);
+    const connected = true; // the built-in calendar is always available
     res.json({ connected, connectedEmail: cal.email, source: cal.source });
   } catch (error: any) {
     handleError(error, res, "Failed to read calendar status");
@@ -77,7 +77,7 @@ router.get("/", authenticate, authorize("meetings:read"), async (req: AuthReques
       res.status(400).json({ message: "`to` must be after `from`" });
       return;
     }
-    res.json(await (await calendarFor(req.user!.userId)).list(from, to));
+    res.json(await (await calendarFor(req.user!.userId, req.user?.companyEmail ?? null)).list(from, to));
   } catch (error: any) {
     handleError(error, res, "Failed to fetch meetings");
   }
@@ -109,7 +109,7 @@ router.post("/", authenticate, authorize("meetings:write"), async (req: AuthRequ
           .filter((a): a is string => Boolean(a && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a)))
       : [];
 
-    const cal = await calendarFor(req.user!.userId);
+    const cal = await calendarFor(req.user!.userId, req.user?.companyEmail ?? null);
     const event = await cal.create({
       summary,
       description: str(req.body?.description, 5000),
@@ -180,7 +180,7 @@ router.patch("/:id", authenticate, authorize("meetings:write"), async (req: Auth
       return;
     }
 
-    const cal = await calendarFor(req.user!.userId);
+    const cal = await calendarFor(req.user!.userId, req.user?.companyEmail ?? null);
     const event = await cal.update(req.params.id, patch);
     // Same UID with a bumped SEQUENCE, so clients update the existing entry in place
     // rather than showing a second copy of the meeting.
@@ -200,7 +200,7 @@ router.delete("/:id", authenticate, authorize("meetings:write"), async (req: Aut
   try {
     // Read it first — once it's deleted we can't recover the attendee list or the iCalUID
     // that the CANCEL notice has to reference.
-    const cal = await calendarFor(req.user!.userId);
+    const cal = await calendarFor(req.user!.userId, req.user?.companyEmail ?? null);
     let existing: MeetingEvent | null = null;
     try {
       existing = await cal.get(req.params.id);

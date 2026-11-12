@@ -21,25 +21,39 @@ const nextConfig: NextConfig = {
         destination: "/blogs/ai-agents-vs-traditional-automation",
         permanent: true,
       },
+      {
+        source: "/startup",
+        destination: "/build",
+        permanent: true,
+      },
     ];
   },
-  /* config options here */
-  // images: {
-  //   remotePatterns: [
-  //     {
-  //       protocol: "https",
-  //       hostname: "images6.alphacoders.com",
-  //     },
-  //     {
-  //       protocol: "https",
-  //       hostname: "wallpapercave.com",
-  //     },
-  //     {
-  //       protocol: "https",
-  //       hostname: "wallpaper.forfun.com",
-  //     },
-  //   ],
-  // },
+  // Security headers for browser protection, clickjacking defense, and MIME-sniffing prevention
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          {
+            key: "X-Content-Type-Options",
+            value: "nosniff",
+          },
+          {
+            key: "X-Frame-Options",
+            value: "DENY",
+          },
+          {
+            key: "Referrer-Policy",
+            value: "strict-origin-when-cross-origin",
+          },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=()",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

@@ -82,7 +82,7 @@ export function AddToGroupMenu({ leadIds, onDone }: { leadIds: string[]; onDone:
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             placeholder="New group name..."
-            className="w-full rounded-lg border border-border px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-lg border border-border px-2 py-1.5 text-xs outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
           />
           <button
             onClick={createAndAdd}

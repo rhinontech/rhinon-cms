@@ -9,6 +9,10 @@ import { sendEmail } from "../services/mailer";
 import { collaboratorInviteEmail } from "../services/emailTemplates";
 import { ensureCollaboratorRole } from "../services/collaboratorRole";
 import { env } from "../config/env";
+import { deleteProject } from "../services/projectDeletion";
+import { notifyRequestCreated, notifyRequestStatus } from "../services/workNotifications";
+import { projectDaySummary } from "../services/daySummary";
+import { auditRequest } from "../services/audit";
 import { transactionalBrand } from "../services/companyProfile";
 import {
   canAccessProject,
@@ -196,6 +200,56 @@ router.put("/projects/:id", requireInternal, async (req: AuthRequest, res: Respo
   }
 });
 
+/**
+ * DELETE /work/projects/:id — permanent, with everything inside it (see
+ * services/projectDeletion.ts). Owner or superadmin only, and the caller must
+ * echo the project's name back: one stray request should never be enough.
+ */
+router.delete("/projects/:id", requireInternal, authorizeAny("work:write"), async (req: AuthRequest, res: Response) => {
+  try {
+    const project = await Project.findByPk(req.params.id);
+    if (!project || !(await canAccessProject(project.id, req))) {
+      res.status(404).json({ message: "Project not found" });
+      return;
+    }
+    const isOwner = (project.ownerId ?? project.createdById) === req.user!.userId;
+    if (!isOwner && req.user?.roleSlug !== "superadmin") {
+      res.status(403).json({ message: "Only the project owner or a super admin can delete a project." });
+      return;
+    }
+    if (typeof req.body?.confirmName !== "string" || req.body.confirmName.trim() !== project.name.trim()) {
+      res.status(400).json({ message: "Type the project name exactly to confirm." });
+      return;
+    }
+    const summary = await deleteProject(project.id);
+    auditRequest(req, "project.deleted", { entityType: "project", entityId: project.id, metadata: { name: project.name, ...summary } });
+    res.json({ message: "Project deleted", ...summary });
+  } catch (err: any) {
+    console.error("[Work] Project delete failed:", err.message);
+    res.status(500).json({ message: "Failed to delete project" });
+  }
+});
+
+/** GET /work/projects/:id/day-summary?date=YYYY-MM-DD — that IST day's work, with AI pointers. */
+router.get("/projects/:id/day-summary", requireInternal, async (req: AuthRequest, res: Response) => {
+  try {
+    const date = String(req.query.date ?? "");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || isNaN(+new Date(date))) {
+      res.status(400).json({ message: "A valid date is required." });
+      return;
+    }
+    const project = await Project.findByPk(req.params.id);
+    if (!project || !(await canAccessProject(project.id, req))) {
+      res.status(404).json({ message: "Project not found" });
+      return;
+    }
+    res.json(await projectDaySummary(project, date));
+  } catch (err: any) {
+    console.error("[Work] Day summary failed:", err.message);
+    res.status(500).json({ message: "Failed to load this day" });
+  }
+});
+
 router.get("/requests", async (req: AuthRequest, res: Response) => {
   try {
     const where: Record<string, unknown> = {};
@@ -241,6 +295,7 @@ router.post("/requests", async (req: AuthRequest, res: Response) => {
       createdById: req.user!.userId,
     });
 
+    notifyRequestCreated(request, req.user!);
     const full = await ClientRequest.findByPk(request.id, { include: requestIncludes });
     res.status(201).json(full);
   } catch (err) {
@@ -264,6 +319,7 @@ router.put("/requests/:id", async (req: AuthRequest, res: Response) => {
       return;
     }
 
+    const previousStatus = request.status;
     await request.update({
       ...(title !== undefined && { title: String(title).trim() }),
       ...(description !== undefined && { description: String(description).trim() }),
@@ -274,6 +330,7 @@ router.put("/requests/:id", async (req: AuthRequest, res: Response) => {
       ...(reportedBy !== undefined && { reportedBy }),
     });
 
+    notifyRequestStatus(request, previousStatus, req.user!);
     const full = await ClientRequest.findByPk(request.id, { include: requestIncludes });
     res.json(full);
   } catch (err) {

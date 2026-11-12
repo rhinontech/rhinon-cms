@@ -41,6 +41,8 @@ export const PERMISSION_CATALOG = [
   { name: "startupIdeas:write", resource: "startupIdeas", action: "write" },
   { name: "meetings:read",      resource: "meetings",     action: "read"  },
   { name: "meetings:write",     resource: "meetings",     action: "write" },
+  { name: "chat:read",          resource: "chat",         action: "read"  },
+  { name: "chat:write",         resource: "chat",         action: "write" },
   { name: "chatbot:read",       resource: "chatbot",      action: "read"  },
   { name: "chatbot:write",      resource: "chatbot",      action: "write" },
   // Deploy: read = see the build history, trigger = restart a backend.
@@ -91,6 +93,7 @@ export const DEFAULT_ROLE_GRANTS: Record<string, string[]> = {
     // The support@rhinon.tech calendar is company-wide reference — everyone can see it,
     // but only superadmin gets meetings:write by default (grant it per role in Settings).
     "meetings:read",
+    "chat:read", "chat:write",
   ],
   employee: [
     "leave:read",
@@ -99,6 +102,7 @@ export const DEFAULT_ROLE_GRANTS: Record<string, string[]> = {
     "attendance:read",
     "work:read",
     "meetings:read",
+    "chat:read", "chat:write",
   ],
 };
 

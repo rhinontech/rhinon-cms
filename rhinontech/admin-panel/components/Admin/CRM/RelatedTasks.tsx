@@ -115,19 +115,19 @@ export function RelatedTasks({
             onChange={(e) => setTitle(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") create(); if (e.key === "Escape") setAdding(false); }}
             placeholder="Call back about pricing…"
-            className="w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-blue-500/40"
+            className="w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
           />
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
             <input
               type="date"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
-              className="rounded border border-border bg-card px-2 py-1 text-[11px] outline-none focus:ring-2 focus:ring-blue-500/40"
+              className="rounded border border-border bg-card px-2 py-1 text-[11px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
             />
             <NativeSelect
               value={assigneeId}
               onChange={(e) => setAssigneeId(e.target.value)}
-              className="rounded border border-border bg-card px-2 py-1 text-[11px] outline-none focus:ring-2 focus:ring-blue-500/40"
+              className="rounded border border-border bg-card px-2 py-1 text-[11px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
             >
               <option value="">Me</option>
               {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}

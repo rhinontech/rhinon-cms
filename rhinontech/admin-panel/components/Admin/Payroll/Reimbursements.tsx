@@ -95,7 +95,7 @@ function NewClaimDialog({ isAdmin, onClose, onCreated }: { isAdmin: boolean; onC
     onCreated();
   };
 
-  const input = "w-full px-3 py-2 text-sm bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500";
+  const input = "w-full px-3 py-2 text-sm bg-card border border-border rounded-lg focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60";
   const years = [now.getFullYear(), now.getFullYear() - 1];
 
   return (
@@ -214,7 +214,7 @@ function ReviewDialog({ claim, onClose, onDone }: { claim: Claim; onClose: () =>
         )}
 
         <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Note (optional)"
-          className="w-full px-3 py-2 text-sm bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          className="w-full px-3 py-2 text-sm bg-card border border-border rounded-lg focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60" />
 
         <div className="flex gap-2">
           <button onClick={() => act("reject")} disabled={busy}

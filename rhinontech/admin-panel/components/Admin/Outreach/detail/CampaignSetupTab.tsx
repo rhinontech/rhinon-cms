@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { TbCircleCheck, TbCircleX, TbUsers, TbUsersGroup } from "react-icons/tb";
+import { TbCircleCheck, TbCircleX, TbFlask, TbSend, TbUsers, TbUsersGroup } from "react-icons/tb";
+import Cookies from "js-cookie";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { EmailBodyEditor } from "../shared/EmailBodyEditor";
 import type { Campaign } from "../shared/types";
 
@@ -24,14 +24,14 @@ function SetupSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
-      <div className="mb-3.5 sm:mb-4 flex items-center gap-2.5">
+    <div className="rounded-xl glass-card p-4 sm:p-5">
+      <div className="mb-3 flex items-center gap-2">
         {complete ? (
-          <TbCircleCheck className="shrink-0 text-emerald-500 dark:text-emerald-400" size={22} />
+          <TbCircleCheck className="shrink-0 text-emerald-500 dark:text-emerald-400" size={18} />
         ) : (
-          <TbCircleX className="shrink-0 text-red-400" size={22} />
+          <TbCircleX className="shrink-0 text-rose-400" size={18} />
         )}
-        <h3 className="text-base font-bold text-foreground">{title}</h3>
+        <h3 className="text-sm font-semibold tracking-tight text-foreground">{title}</h3>
       </div>
       {children}
     </div>
@@ -98,16 +98,18 @@ export function CampaignSetupTab({
   return (
     <div className="mx-auto space-y-3 sm:space-y-4">
       <SetupSection title="Sender" complete={!!senderEmail.trim() && !!senderName.trim()}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-          <div className="space-y-1.5">
-            <Label>Sender Name</Label>
-            <Input value={senderName || "—"} disabled className="bg-muted/40 font-medium text-foreground" />
+        {/* Set by the campaign's mailbox, not editable here: read-only text,
+            not a pair of greyed-out inputs that look broken. */}
+        <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <dt className="text-xs text-muted-foreground">Name</dt>
+            <dd className="mt-0.5 text-sm font-medium text-foreground">{senderName || "—"}</dd>
           </div>
-          <div className="space-y-1.5">
-            <Label>Sender Email</Label>
-            <Input value={senderEmail || "—"} disabled className="bg-muted/40 font-medium text-foreground" />
+          <div>
+            <dt className="text-xs text-muted-foreground">Email</dt>
+            <dd className="mt-0.5 break-all text-sm font-medium text-foreground">{senderEmail || "—"}</dd>
           </div>
-        </div>
+        </dl>
       </SetupSection>
 
       <SetupSection title="Recipients" complete={leadsTotal > 0}>
@@ -168,6 +170,71 @@ export function CampaignSetupTab({
           )}
         </div>
       </SetupSection>
+
+      <TestSend
+        campaignId={campaign.id}
+        ready={!!subject.trim() && !!stripHtml(body)}
+        // Unsaved edits go out with the test, so what lands is what's on screen.
+        saveFirst={async () => {
+          if (subjectDirty || bodyDirty) await patch({ ...(subjectDirty ? { subject } : {}), ...(bodyDirty ? { body } : {}) });
+        }}
+      />
+    </div>
+  );
+}
+
+/** One copy of this campaign's email to a test inbox before it goes to the list. */
+function TestSend({ campaignId, ready, saveFirst }: { campaignId: string; ready: boolean; saveFirst: () => Promise<void> }) {
+  const [to, setTo] = useState("");
+  const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    const token = Cookies.get("authToken");
+    try {
+      const payload = token ? JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))) : null;
+      if (payload?.companyEmail) setTo((current) => current || payload.companyEmail);
+    } catch { /* no prefill */ }
+  }, []);
+
+  const send = async () => {
+    setSending(true);
+    try {
+      await saveFirst();
+      const result = await apiFetch<{ sentTo: string; sampleLead: string }>(`/campaigns/${campaignId}/test`, {
+        method: "POST",
+        body: JSON.stringify({ to: to.trim() }),
+      });
+      toast.success(`Test sent to ${result.sentTo}`, { description: `Variables filled in as for ${result.sampleLead}.` });
+    } catch (err: any) {
+      toast.error(err.message || "Test send failed");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="rounded-xl border border-dashed border-brand/30 bg-[var(--surface-selected)] p-4 sm:p-5">
+      <div className="flex items-center gap-2">
+        <TbFlask className="shrink-0 text-brand" size={18} />
+        <h3 className="text-sm font-semibold tracking-tight text-foreground">Send a test</h3>
+      </div>
+      <p className="mt-1 text-xs text-muted-foreground">
+        {"Get this exact email in your own inbox before it goes to everyone. Nobody on the list receives it, and the campaign isn't changed."}
+      </p>
+      <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+        <Input
+          type="email"
+          value={to}
+          onChange={(e) => setTo(e.target.value)}
+          placeholder="you@company.com"
+          className="sm:max-w-sm"
+          onKeyDown={(e) => { if (e.key === "Enter" && ready && !sending) send(); }}
+        />
+        <Button size="sm" className="h-9" onClick={send} disabled={!ready || sending || !to.trim()}>
+          <TbSend /> {sending ? "Sending…" : "Send test email"}
+        </Button>
+      </div>
+      {!ready && <p className="mt-2 text-xs text-muted-foreground">{"Add a subject and email body to send a test."}</p>}
     </div>
   );
 }

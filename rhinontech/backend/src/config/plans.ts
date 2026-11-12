@@ -37,7 +37,8 @@ export interface PlanLimits {
 }
 
 export const PLAN_LIMITS: Record<OrganizationPlan, PlanLimits> = {
-  free: { label: "Free trial", seats: 5, emailsPerDay: 50, aiPerDay: 20, customDomains: 0, chatbots: 1, botRepliesPerDay: 50 },
+  // Free covers the whole suite except the website chatbot, which is the paid feature.
+  free: { label: "Free", seats: 5, emailsPerDay: 50, aiPerDay: 20, customDomains: 0, chatbots: 0, botRepliesPerDay: 0 },
   starter: { label: "Starter", seats: 25, emailsPerDay: 500, aiPerDay: 200, customDomains: 1, chatbots: 1, botRepliesPerDay: 1000 },
   enterprise: { label: "Enterprise", seats: null, emailsPerDay: null, aiPerDay: null, customDomains: 1, chatbots: 3, botRepliesPerDay: null },
 };
