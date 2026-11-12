@@ -1,8 +1,7 @@
-import type { Metadata } from "next";
 import { Aurora, Button, Eyebrow, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand } from "@/components/blocks";
-import { links } from "@/components/site";
+import { links, pageMeta } from "@/components/site";
 import { bySlug } from "@/content/products";
 import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
 import { BentoSection, CallSection, ChatHero, GuestSection } from "@/components/product/chat";
@@ -10,11 +9,12 @@ import { BentoSection, CallSection, ChatHero, GuestSection } from "@/components/
 const p = bySlug("chat")!;
 const G = "italic";
 
-export const metadata: Metadata = {
-  title: "Team Chat & Meetings: talk it through without leaving the work",
-  description: "Message your team, start a group call, or share a meeting link with someone outside the company. All of it lives next to your projects and your customers.",
-  alternates: { canonical: "/product/chat" },
-};
+export const metadata = pageMeta({
+  title: "Team Chat & Video Meetings",
+  description: "Free team chat and video meeting software for your whole team. Message channels, start calls and invite external guests by link.",
+  path: "/product/chat",
+  hasOgImage: true,
+});
 
 const FAQ = [
   { q: "Can people outside my company join a meeting?", a: "Yes. Share a meeting link and guests can join without an account." },
@@ -69,7 +69,7 @@ export default function ChatPage() {
         { slug: "hr", line: "Run interviews and one-to-ones in a call." },
         { slug: "crm", line: "Take sales calls from the lead record." },
       ]} />
-      <ProductFaq dark title="Chat questions, answered." items={FAQ} />
+      <ProductFaq slug="chat" dark title="Chat questions, answered." items={FAQ} />
       <CtaBand tone={p.tone} title={<>Keep the conversation <span className="text-aurora-soft">with the work.</span></>} sub="Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
       <div className="h-24" />
     </div>

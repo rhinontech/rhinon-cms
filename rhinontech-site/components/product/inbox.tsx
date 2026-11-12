@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Check, Mail, Target } from "lucide-react";
-import { Avatar, Pill } from "@/components/ProductMocks";
+import { Avatar, Pill } from "@/components/mockPrimitives";
 import { Confetti, CountTo, Live, Ring, TypeText, useReducedMotion, useStepper } from "@/components/motion";
 
 const SHEET = "rounded-3xl border border-[#e9e3d8] bg-white shadow-[0_40px_90px_-40px_rgb(20_60_140_/_0.35)]";

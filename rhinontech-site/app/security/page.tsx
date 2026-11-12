@@ -1,16 +1,15 @@
-import type { Metadata } from "next";
 import { Cloud, FileLock2, Gauge, KeyRound, Lock, Mail, ShieldCheck, UsersRound, type LucideIcon } from "lucide-react";
-import { links } from "@/components/site";
+import { links, pageMeta } from "@/components/site";
 import { Aurora, Button, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { Spot } from "@/components/Spot";
 import { CtaBand } from "@/components/blocks";
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "Security",
   description: "How Rhinon Tech keeps your workspace separate, your roles enforced and your connected accounts encrypted.",
-  alternates: { canonical: "/security" },
-};
+  path: "/security",
+});
 
 const PILLARS: { icon: LucideIcon; tone: [string, string]; title: string; body: string }[] = [
   { icon: ShieldCheck, tone: ["#2f5bff", "#7c5cff"], title: "Every workspace is isolated", body: "Your data lives in your own workspace. Every query is filtered to it automatically, so one customer can never see another's records." },
@@ -30,7 +29,7 @@ export default function SecurityPage() {
         <Aurora />
         <div className="relative mx-auto max-w-[1240px] px-5">
           <Reveal>
-            <SectionHead eyebrow="Security" title={<>Your company's data, <span className="text-aurora">kept yours.</span></>} sub="How we keep workspaces separate, permissions real and secrets safe. Plain answers, without the jargon." />
+            <SectionHead as="h1" eyebrow="Security" title={<>Your company's data, <span className="text-aurora">kept yours.</span></>} sub="How we keep workspaces separate, permissions real and secrets safe. Plain answers, without the jargon." />
             <div className="mt-9 flex flex-wrap gap-3">
               <Button href={links.signup} arrow>Get started free</Button>
               <Button href={links.contact} variant="ghost">Ask us a question</Button>

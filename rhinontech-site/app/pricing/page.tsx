@@ -1,18 +1,19 @@
-import type { Metadata } from "next";
 import { Check, Minus } from "lucide-react";
-import { links } from "@/components/site";
+import { links, pageMeta } from "@/components/site";
 import { PRODUCTS } from "@/content/products";
 import { CHATBOT_FEATURES, FREE_FEATURES } from "@/content/plans";
 import { Aurora, Button, IconTile, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { Spot } from "@/components/Spot";
-import { CtaBand, Faq, faqJsonLd } from "@/components/blocks";
+import { CtaBand, Faq } from "@/components/blocks";
+import { JsonLd, breadcrumbNode, faqNode, graphJsonLd, softwareAppNode } from "@/components/schema";
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "Pricing",
   description: "Rhinon Tech is free for your whole team, with no time limit. Only the AI website chatbot is a paid product.",
-  alternates: { canonical: "/pricing" },
-};
+  path: "/pricing",
+  hasOgImage: true,
+});
 
 const FAQ = [
   { q: "Is Rhinon Tech really free?", a: "Yes. Every product except the AI website chatbot is free for your whole team, with no time limit and no credit card." },
@@ -27,7 +28,7 @@ export default function PricingPage() {
       <section className="relative pb-24 pt-16 sm:pt-24">
         <Aurora />
         <div className="relative mx-auto max-w-[1240px] px-5">
-          <Reveal><SectionHead eyebrow="Pricing" title={<>Free for everything. <span className="text-aurora">Pay only for the chatbot.</span></>} sub="No seats to count, no trial clock, no credit card. Start with the whole workspace and add the AI chatbot when you want it." /></Reveal>
+          <Reveal><SectionHead as="h1" eyebrow="Pricing" title={<>Free CRM, HR and project software. <span className="text-aurora">Pay only for the chatbot.</span></>} sub="No seats to count, no trial clock, no credit card. Start with the whole workspace and add the AI chatbot when you want it." /></Reveal>
           <div className="mt-16 grid max-w-[960px] gap-5 md:grid-cols-2">
             <Reveal>
               <div className="spot h-full p-8">
@@ -78,7 +79,16 @@ export default function PricingPage() {
       <section className="mx-auto max-w-[1240px] px-5 py-28 sm:py-32">
         <Reveal><SectionHead eyebrow="FAQ" title="Pricing questions, answered." /></Reveal>
         <div className="mt-14"><Faq items={FAQ} /></div>
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(FAQ)) }} />
+        <JsonLd
+          data={graphJsonLd([
+            softwareAppNode(),
+            breadcrumbNode([
+              { name: "Home", path: "/" },
+              { name: "Pricing", path: "/pricing" },
+            ]),
+            faqNode(FAQ),
+          ])}
+        />
       </section>
 
       <CtaBand title={<>Start free. <span className="text-aurora-soft">Add AI when you are ready.</span></>} sub="Set up your workspace in a few minutes and bring your whole team." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "Book a call", href: links.call }} />

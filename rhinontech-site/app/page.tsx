@@ -11,8 +11,8 @@ import { Reveal } from "@/components/Reveal";
 import { Counter } from "@/components/Counter";
 import { Typewriter } from "@/components/Typewriter";
 import { HeroWorkspace } from "@/components/HeroWorkspace";
-import { Orbit } from "@/components/Orbit";
-import { ProductMock } from "@/components/ProductMocks";
+import { LazyCrmPreview, LazyOrbit } from "@/components/HomeLazyMocks";
+import { JsonLd, graphJsonLd, softwareAppNode } from "@/components/schema";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -140,7 +140,7 @@ function Tile({ p }: { p: Product }) {
       <TileExtra slug={p.slug} />
       {p.slug === "crm" && (
         <span className="mt-6 block min-h-0 flex-1 overflow-hidden rounded-t-2xl border border-b-0 border-line bg-white [mask-image:linear-gradient(to_bottom,#000_62%,transparent)]">
-          <span className="block w-[112%] origin-top-left scale-[0.89]"><ProductMock k={p.mock} /></span>
+          <LazyCrmPreview />
         </span>
       )}
     </Link>
@@ -185,7 +185,7 @@ function OneBrain() {
           <div className="mt-10"><Button href="/product" variant="soft" arrow>Explore all products</Button></div>
         </Reveal>
         <Reveal delay={150}>
-          <Orbit />
+          <LazyOrbit />
         </Reveal>
       </div>
     </LightSection>
@@ -368,6 +368,7 @@ export default function Home() {
       <Trust />
       <PricingTeaser />
       <FinalCta />
+      <JsonLd data={graphJsonLd([softwareAppNode()])} />
     </>
   );
 }

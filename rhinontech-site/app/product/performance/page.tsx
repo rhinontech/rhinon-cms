@@ -1,8 +1,7 @@
-import type { Metadata } from "next";
 import { Aurora, Button, Eyebrow, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand } from "@/components/blocks";
-import { links } from "@/components/site";
+import { links, pageMeta } from "@/components/site";
 import { bySlug } from "@/content/products";
 import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
 import { CyclesSection, GoalsSection, ReviewSection, RingsHero, TeamSection } from "@/components/product/performance";
@@ -10,11 +9,12 @@ import { CyclesSection, GoalsSection, ReviewSection, RingsHero, TeamSection } fr
 const p = bySlug("performance")!;
 const G = "italic";
 
-export const metadata: Metadata = {
-  title: "Performance: review cycles, goals and feedback",
-  description: "Run quarterly, annual or probation review cycles. Set goals for each person, collect reviews from the right people and see progress across your team.",
-  alternates: { canonical: "/product/performance" },
-};
+export const metadata = pageMeta({
+  title: "Performance Reviews & Goals Software",
+  description: "Free performance management software for your whole team. Run quarterly review cycles, track employee goals and gather feedback.",
+  path: "/product/performance",
+  hasOgImage: true,
+});
 
 const FAQ = [
   { q: "What kinds of review cycle are there?", a: "Quarterly, annual and probation cycles. You can start one in minutes and choose who takes part." },
@@ -78,7 +78,7 @@ export default function PerformancePage() {
         { slug: "payroll", line: "Bring appraisals into pay decisions." },
         { slug: "work", line: "Review the work that was actually done." },
       ]} />
-      <ProductFaq dark title="Performance questions, answered." items={FAQ} />
+      <ProductFaq slug="performance" dark title="Performance questions, answered." items={FAQ} />
       <CtaBand tone={p.tone} title={<>Make reviews <span className="text-aurora-soft">worth doing.</span></>} sub="Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
       <div className="h-24" />
     </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Check } from "lucide-react";
-import { Avatar, Pill } from "@/components/ProductMocks";
+import { Avatar, Pill } from "@/components/mockPrimitives";
 import { Confetti, CountTo, Cursor, Live, useStepper } from "@/components/motion";
 
 const INR = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;

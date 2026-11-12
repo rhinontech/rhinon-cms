@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { BookOpen, Check, FileText, Globe, Mic, MessageCircle, PhoneOff, Sparkles, Ticket, Volume2 } from "lucide-react";
-import { Avatar, Pill } from "@/components/ProductMocks";
+import { Avatar, Pill } from "@/components/mockPrimitives";
 import { Cursor, Live, TypeText, useReducedMotion, useStepper } from "@/components/motion";
 
 const CARD_BASE = "rounded-3xl border bg-white shadow-[0_40px_90px_-40px_rgb(255_95_140_/_0.45)]";

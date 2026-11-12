@@ -1,8 +1,7 @@
-import type { Metadata } from "next";
 import { Aurora, Button, Eyebrow, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand } from "@/components/blocks";
-import { links } from "@/components/site";
+import { links, pageMeta } from "@/components/site";
 import { bySlug } from "@/content/products";
 import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
 import { AnatomySection, GanttHero, PortalSection, RingsSection, ViewsSection } from "@/components/product/work";
@@ -10,11 +9,12 @@ import { AnatomySection, GanttHero, PortalSection, RingsSection, ViewsSection } 
 const p = bySlug("work")!;
 const G = "italic";
 
-export const metadata: Metadata = {
-  title: "Work: projects, tasks and a portal your clients love",
-  description: "Projects, tasks, boards and a calendar for every piece of work, plus a private portal where clients follow progress and send change requests.",
-  alternates: { canonical: "/product/work" },
-};
+export const metadata = pageMeta({
+  title: "Project Management with a Client Portal",
+  description: "Free project management software for your whole team. Manage tasks, boards, calendars and a private client portal in one place.",
+  path: "/product/work",
+  hasOgImage: true,
+});
 
 const FAQ = [
   { q: "Do my clients need an account?", a: "No. They open a private link to follow progress and send requests." },
@@ -74,7 +74,7 @@ export default function WorkPage() {
         { slug: "pages", line: "Keep briefs and notes in the same workspace." },
         { slug: "attendance", line: "Know who is working and who is away." },
       ]} />
-      <ProductFaq title="Work questions, answered." items={FAQ} />
+      <ProductFaq slug="work" title="Work questions, answered." items={FAQ} />
       <CtaBand tone={p.tone} title={<>Run your next project <span className="text-aurora-soft">here.</span></>} sub="Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
     </div>
   );

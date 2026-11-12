@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import { Aurora, Button } from "@/components/ui";
+
+export const metadata: Metadata = {
+  title: "Page not found",
+  description: "The page you are looking for could not be found. Explore Rhinon Tech products, pricing, or the blog.",
+  robots: { index: false, follow: true },
+};
 
 export default function NotFound() {
   return (
@@ -11,6 +18,8 @@ export default function NotFound() {
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Button href="/" arrow>Back to home</Button>
           <Button href="/product" variant="ghost">See products</Button>
+          <Button href="/pricing" variant="ghost">Pricing</Button>
+          <Button href="/blog" variant="ghost">Blog</Button>
         </div>
       </div>
     </section>

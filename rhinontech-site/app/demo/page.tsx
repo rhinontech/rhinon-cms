@@ -1,12 +1,12 @@
-import type { Metadata } from "next";
+import { pageMeta } from "@/components/site";
 import { Aurora } from "@/components/ui";
 import { Scheduler } from "@/components/forms/Scheduler";
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "Book a demo",
   description: "Pick a time for a 30 minute walk through Rhinon Tech over Google Meet, built around your team.",
-  alternates: { canonical: "/demo" },
-};
+  path: "/demo",
+});
 
 export default function DemoPage() {
   return (

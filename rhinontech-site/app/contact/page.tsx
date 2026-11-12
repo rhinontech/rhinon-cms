@@ -1,17 +1,16 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowUpRight, CalendarDays, LifeBuoy, Wrench } from "lucide-react";
 import { Aurora, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { Spot } from "@/components/Spot";
 import { ContactForm } from "@/components/forms/ContactForm";
-import { links } from "@/components/site";
+import { links, pageMeta } from "@/components/site";
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "Contact",
   description: "Ask a question, talk about pricing or the AI chatbot, or tell us what you need. We reply by email.",
-  alternates: { canonical: "/contact" },
-};
+  path: "/contact",
+});
 
 const WAYS = [
   { icon: CalendarDays, title: "Book a demo", body: "A 30 minute walk through the workspace, built around your team.", href: "/demo", tone: ["#2f5bff", "#7c5cff"] },
@@ -25,7 +24,7 @@ export default function ContactPage() {
       <section className="relative pb-24 pt-14 sm:pt-20">
         <Aurora />
         <div className="relative mx-auto max-w-[1240px] px-5">
-          <Reveal><SectionHead eyebrow="Contact" title={<>We would love to <span className="text-aurora">hear from you.</span></>} sub="Ask a question, talk about pricing or the AI chatbot, or tell us what you need. We read every message and reply by email." /></Reveal>
+          <Reveal><SectionHead as="h1" eyebrow="Contact" title={<>We would love to <span className="text-aurora">hear from you.</span></>} sub="Ask a question, talk about pricing or the AI chatbot, or tell us what you need. We read every message and reply by email." /></Reveal>
           <div className="mt-16 grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
             <div className="space-y-4">
               {WAYS.map(({ icon: Icon, title, body, href, tone }, i) => {

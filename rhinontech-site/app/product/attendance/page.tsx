@@ -1,8 +1,7 @@
-import type { Metadata } from "next";
 import { Aurora, Button, Eyebrow, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand } from "@/components/blocks";
-import { links } from "@/components/site";
+import { links, pageMeta } from "@/components/site";
 import { bySlug } from "@/content/products";
 import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
 import { CalSection, ClockHero, FixSection, HeatSection, LeaveSection, NightSection } from "@/components/product/attendance";
@@ -11,11 +10,12 @@ const p = bySlug("attendance")!;
 const G = "italic";
 const GL = "italic";
 
-export const metadata: Metadata = {
-  title: "Attendance & Leave: clock in, request leave, approve in a tap",
-  description: "Clock in and out from the dashboard, request leave, and let managers approve in a tap. Balances and a team calendar keep everyone planning from the same facts.",
-  alternates: { canonical: "/product/attendance" },
-};
+export const metadata = pageMeta({
+  title: "Attendance & Leave Management",
+  description: "Free attendance and leave software for your whole team. Track clock-ins, leave balances, approvals and the team calendar easily.",
+  path: "/product/attendance",
+  hasOgImage: true,
+});
 
 const FAQ = [
   { q: "Can employees fix a missed clock-in or clock-out?", a: "Yes. They file a regularization request and a manager approves it." },
@@ -85,7 +85,7 @@ export default function AttendancePage() {
         { slug: "hr", line: "Part of every employee record." },
         { slug: "work", line: "Plan work around who is away." },
       ]} />
-      <ProductFaq title="Attendance questions, answered." items={FAQ} />
+      <ProductFaq slug="attendance" title="Attendance questions, answered." items={FAQ} />
       <CtaBand tone={p.tone} title={<>Make attendance <span className="text-aurora-soft">effortless.</span></>} sub="Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
     </div>
   );

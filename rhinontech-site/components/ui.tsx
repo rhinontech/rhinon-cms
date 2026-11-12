@@ -58,20 +58,23 @@ export function SectionHead({
   title,
   sub,
   dark = false,
+  as = "h2",
 }: {
   eyebrow?: string;
   title: React.ReactNode;
   sub?: string;
   dark?: boolean;
+  as?: "h1" | "h2";
   /** Kept so existing callers compile; headings are always left-aligned now. */
   center?: boolean;
 }) {
+  const Tag = as;
   return (
     <div className="max-w-[820px]">
       {eyebrow && <Eyebrow dark={dark}>{eyebrow}</Eyebrow>}
-      <h2 className={`font-display text-balance text-[36px] font-semibold leading-[1.04] sm:text-[60px] ${eyebrow ? "mt-4" : ""} ${dark ? "text-white" : "text-ink"}`}>
+      <Tag className={`font-display text-balance text-[36px] font-semibold leading-[1.04] sm:text-[60px] ${eyebrow ? "mt-4" : ""} ${dark ? "text-white" : "text-ink"}`}>
         {title}
-      </h2>
+      </Tag>
       {sub && <p className={`mt-5 max-w-[640px] text-[17px] leading-8 sm:text-[18px] ${dark ? "text-white/55" : "text-ink-soft"}`}>{sub}</p>}
     </div>
   );
