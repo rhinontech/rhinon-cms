@@ -4,23 +4,24 @@ import { MapPin, Plus, Video } from "@/components/icons";
 import { useState } from "react";
 import { CallOverlay } from "@/components/rhinon/call";
 import { AvatarStack, Badge, Button, Chip, Display, Eyebrow, Fab, Field, Screen, Segmented, Sheet, TopBar, inputClass, stagger } from "@/components/rhinon/ui";
-import { pad } from "@/lib/format";
+import { createMeetingRemote } from "@/lib/live";
 import { MEETINGS, nameOf, type Meeting } from "@/lib/mock-data";
 import { actions } from "@/lib/store";
 import { cn } from "@/lib/utils";
 const SLOTS = ["10:30", "13:00", "15:30", "17:00"];
-function addMinutes(hhmm: string, mins: number): string {
+/** Minutes from now until hh:mm today (negative if it has passed). */
+function minsUntil(hhmm: string): number {
   const [h, m] = hhmm.split(":").map(Number);
-  const total = (h ?? 0) * 60 + (m ?? 0) + mins;
-  return `${pad(Math.floor(total / 60) % 24)}:${pad(total % 60)}`;
+  const now = new Date();
+  return Math.round(((h ?? 0) * 60 + (m ?? 0) - (now.getHours() * 60 + now.getMinutes())));
 }
 export default function MeetingsPage() {
   useRev();
-  const [list, setList] = useState<Meeting[]>(MEETINGS);
   const [day, setDay] = useState<"Today" | "Tomorrow">("Today");
   const [adding, setAdding] = useState(false);
   const [joining, setJoining] = useState<Meeting | null>(null);
-  const rows = list.filter(m => m.day === day).sort((a, b) => a.start.localeCompare(b.start));
+  // Read the live calendar directly so sync (live-people) shows through; useRev() re-renders on replace.
+  const rows = MEETINGS.filter(m => m.day === day).sort((a, b) => a.start.localeCompare(b.start));
   return <Screen fab>
       <TopBar title="Meetings" fallback="/more" />
       <View className="animate-rise">
@@ -66,7 +67,7 @@ export default function MeetingsPage() {
                   </Text>
                   {next ? <View className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-coral px-2.5 py-1 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-coral-foreground">
                       <View className="size-1.5 animate-ping-soft rounded-full bg-coral-foreground" />
-                      in 19 min
+                      {minsUntil(m.start) > 0 ? `in ${minsUntil(m.start)} min` : "now"}
                     </View> : client ? <Badge tone="paper">Client</Badge> : null}
                 </View>
                 <View className={cn("mt-2 flex items-center gap-1.5 text-[13.5px]", next ? "text-paper/60" : client ? "opacity-85" : "text-ink/55")}>
@@ -84,9 +85,10 @@ export default function MeetingsPage() {
       </View>
 
       <Fab icon={Plus} label="New meeting" tone="cobalt" pushed onClick={() => setAdding(true)} />
-      <NewMeetingSheet open={adding} onClose={() => setAdding(false)} day={day} onAdd={m => {
-      setList(l => [...l, m]);
-      actions.toast("Meeting added · invites sent", "cobalt");
+      <NewMeetingSheet open={adding} onClose={() => setAdding(false)} day={day} onAdd={(title, slot) => {
+      createMeetingRemote({ title, day, slot })
+        .then(() => actions.toast("Meeting added · invite sent", "cobalt"))
+        .catch(e => actions.toast(e instanceof Error ? e.message : "Could not add the meeting", "coral"));
     }} />
       <CallOverlay open={joining !== null} onClose={() => setJoining(null)} title={joining?.title ?? ""} names={(joining?.people ?? []).map(nameOf)} video />
     </Screen>;
@@ -100,24 +102,14 @@ function NewMeetingSheet({
   open: boolean;
   onClose: () => void;
   day: "Today" | "Tomorrow";
-  onAdd: (m: Meeting) => void;
+  onAdd: (title: string, slot: string) => void;
 }) {
   const [title, setTitle] = useState("");
   const [slot, setSlot] = useState(SLOTS[0] ?? "10:30");
   const [kind, setKind] = useState<Meeting["kind"]>("internal");
   const submit = () => {
     if (!title.trim()) return;
-    onAdd({
-      id: `mt${Date.now()}`,
-      title: title.trim(),
-      start: slot,
-      end: addMinutes(slot, 30),
-      day,
-      kind,
-      where: "Google Meet",
-      people: ["aanya", "dev"],
-      state: "later"
-    });
+    onAdd(title.trim(), slot);
     setTitle("");
     onClose();
   };

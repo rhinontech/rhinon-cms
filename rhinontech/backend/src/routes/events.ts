@@ -45,18 +45,25 @@ function isValidSlug(slug: string): boolean {
 // registration counts so the list can show demand without a request per row.
 router.get("/", async (_req: AuthRequest, res: Response) => {
   try {
-    const [events, counts] = await Promise.all([
+    const [events, counts, checkedIn] = await Promise.all([
       Event.findAll({ order: [["createdAt", "DESC"]] }),
       EventGuest.findAll({
         attributes: ["eventId", "guestType", [fn("COUNT", col("id")), "count"]],
         group: ["eventId", "guestType"],
         raw: true,
       }) as unknown as Promise<{ eventId: string; guestType: string; count: string }[]>,
+      EventGuest.findAll({
+        attributes: ["eventId", [fn("COUNT", col("id")), "count"]],
+        where: { checkedInAt: { [Op.ne]: null } },
+        group: ["eventId"],
+        raw: true,
+      }) as unknown as Promise<{ eventId: string; count: string }[]>,
     ]);
 
-    const byEvent = new Map<string, { total: number; approved: number; waitlist: number }>();
+    const inByEvent = new Map(checkedIn.map((r) => [r.eventId, Number(r.count) || 0]));
+    const byEvent = new Map<string, { total: number; approved: number; waitlist: number; checkedIn: number }>();
     for (const row of counts) {
-      const entry = byEvent.get(row.eventId) || { total: 0, approved: 0, waitlist: 0 };
+      const entry = byEvent.get(row.eventId) || { total: 0, approved: 0, waitlist: 0, checkedIn: inByEvent.get(row.eventId) || 0 };
       const n = Number(row.count) || 0;
       entry.total += n;
       if (row.guestType === "Approved") entry.approved += n;
@@ -68,7 +75,7 @@ router.get("/", async (_req: AuthRequest, res: Response) => {
       result: "SUCCESS",
       events: events.map((e) => ({
         ...e.toJSON(),
-        registrations: byEvent.get(String(e.id)) || { total: 0, approved: 0, waitlist: 0 },
+        registrations: byEvent.get(String(e.id)) || { total: 0, approved: 0, waitlist: 0, checkedIn: inByEvent.get(String(e.id)) || 0 },
       })),
     });
   } catch (error: any) {
@@ -699,6 +706,47 @@ router.post("/upload", keepTenantContext(upload.single("file")), async (req: Aut
   } catch (error: any) {
     console.error("Event image upload failed:", error);
     return res.status(500).json({ message: error.message || "Upload failed" });
+  }
+});
+
+/* ----------------------------- DOOR CHECK-IN ----------------------------- */
+
+// GET /events/:id/guests — the approved guest list for the door, with who is already in.
+router.get("/:id/guests", async (req: AuthRequest, res: Response) => {
+  try {
+    const event = await Event.findByPk(req.params.id, { attributes: ["id"] });
+    if (!event) { res.status(404).json({ result: "ERROR", message: "Event not found" }); return; }
+    const guests = await EventGuest.findAll({
+      where: { eventId: req.params.id, guestType: "Approved" },
+      attributes: ["id", "name", "email", "role", "collegeName", "checkedInAt"],
+      order: [["name", "ASC"]],
+    });
+    res.json({
+      result: "SUCCESS",
+      guests: guests.map((g) => ({
+        id: g.id,
+        name: g.name,
+        company: g.collegeName || g.role || "",
+        // We don't track ticket tiers; surface Speaker when the role says so, otherwise General.
+        ticket: /speaker/i.test(g.role || "") ? "Speaker" : "General",
+        checkedIn: !!g.checkedInAt,
+      })),
+    });
+  } catch (error: any) {
+    res.status(500).json({ result: "ERROR", message: error.message || "Failed to load guests" });
+  }
+});
+
+// POST /events/:id/guests/:guestId/checkin — mark a guest present (or undo it with { value: false }).
+router.post("/:id/guests/:guestId/checkin", async (req: AuthRequest, res: Response) => {
+  try {
+    const guest = await EventGuest.findOne({ where: { id: req.params.guestId, eventId: req.params.id } });
+    if (!guest) { res.status(404).json({ result: "ERROR", message: "Guest not found" }); return; }
+    const value = req.body?.value !== false; // default true
+    await guest.update({ checkedInAt: value ? new Date() : null });
+    res.json({ result: "SUCCESS", id: guest.id, checkedIn: !!guest.checkedInAt });
+  } catch (error: any) {
+    res.status(500).json({ result: "ERROR", message: error.message || "Failed to check in" });
   }
 });
 

@@ -1960,6 +1960,9 @@ export type EventItem = {
   capacity: number;
   brand: BrandId;
   tone: Tone;
+  /** Live counts for the list card; set by sync so the index needn't load every guest. */
+  approved?: number;
+  checkedIn?: number;
 };
 export const EVENTS: EventItem[] = [
   {

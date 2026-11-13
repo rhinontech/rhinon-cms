@@ -86,6 +86,7 @@ import { ChatbotTicketMessage } from "./ChatbotTicketMessage";
 import { HelpFolder } from "./HelpFolder";
 import { HelpArticle } from "./HelpArticle";
 import { ConnectedAccount } from "./ConnectedAccount";
+import { DeviceToken } from "./DeviceToken";
 import { Organization } from "./Organization";
 import { DataTypes, Op } from "sequelize";
 import { sequelize } from "../config/database";
@@ -558,6 +559,7 @@ export {
   HelpFolder,
   HelpArticle,
   ConnectedAccount,
+  DeviceToken,
 };
 
 export async function syncDatabase(force = false) {

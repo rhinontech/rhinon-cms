@@ -23,6 +23,7 @@ import "./live-platform";
 import "./live-outreach";
 import "./live-analytics";
 import "./live-chatbot";
+import "./live-content";
 
 export { loadChatMessages } from "./live-chat";
 export { loadTaskComments } from "./live-work";
@@ -34,6 +35,8 @@ export { loadTicket } from "./live-chatbot";
 export { signDocument } from "./live-ops";
 export { submitClaim } from "./live-money";
 export { startDmRemote } from "./live-chat";
+export { createMeetingRemote } from "./live-people";
+export { loadEventGuests } from "./live-content";
 export { useLoad } from "./use-load";
 
 /** Blank every connected module so sample data never shows next to a real account. */

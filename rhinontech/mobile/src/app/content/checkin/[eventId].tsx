@@ -16,6 +16,7 @@ import {
   TopBar,
   inputClass,
 } from "@/components/rhinon/ui";
+import { loadEventGuests, useLoad } from "@/lib/live";
 import { EVENTS, type Guest } from "@/lib/mock-more";
 import { actions, useApp } from "@/lib/store";
 import type { Tone } from "@/lib/tone";
@@ -33,6 +34,7 @@ export default function CheckInPage() {
   const { eventId } = useLocalSearchParams<{
     eventId: string;
   }>();
+  useLoad(loadEventGuests, eventId);
   const event = EVENTS.find((e) => e.id === eventId);
   const guests = useApp((s) => s.guests[eventId] ?? NO_GUESTS);
   const [q, setQ] = useState("");

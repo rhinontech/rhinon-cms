@@ -58,6 +58,15 @@ export async function setSession(s: Session | null) {
   session = s;
   try { if (s) await store.set(JSON.stringify(s)); else await store.del(); } catch { /* session just won't survive a restart */ }
   listeners.forEach((l) => l());
+  // Register or deregister the push token whenever the session changes.
+  // Imported lazily to avoid a circular dep; also a no-op in Expo Go.
+  if (s) {
+    import("./live-push").then((m) => m.registerPush()).catch(() => {});
+    import("./live-socket").then((m) => m.connectSocket()).catch(() => {});
+  } else {
+    import("./live-push").then((m) => m.unregisterPush()).catch(() => {});
+    import("./live-socket").then((m) => m.disconnectSocket()).catch(() => {});
+  }
 }
 
 export class ApiError extends Error { constructor(message: string, readonly status: number) { super(message); } }

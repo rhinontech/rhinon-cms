@@ -5,6 +5,20 @@ import { authenticate, authorize, AuthRequest } from "../middleware/authenticate
 const router = Router();
 router.use(authenticate, authorize("people:read"));
 
+// Credentials and one-time tokens must never leave the server for anyone — a
+// directory read (people:read) must not hand out another member's TOTP secret,
+// recovery codes or reset/onboarding links.
+const SECRET_FIELDS = [
+  "passwordHash",
+  "totpSecret",
+  "totpRecoveryCodes",
+  "totpLastStep",
+  "resetToken",
+  "resetTokenExpiry",
+  "onboardingToken",
+  "onboardingTokenExpiry",
+];
+
 // Active members by default (assignee pickers etc.); ?include=all adds relieved
 // members for the Team directory's Alumni view.
 router.get("/", async (req: AuthRequest, res: Response) => {
@@ -14,7 +28,7 @@ router.get("/", async (req: AuthRequest, res: Response) => {
   const employees = await User.findAll({
     where: includeAll ? { userType: "internal" } : { status: "active", userType: "internal" },
     include: [{ model: Role, as: "role", attributes: ["name", "slug"] }],
-    attributes: { exclude: ["passwordHash"] },
+    attributes: { exclude: SECRET_FIELDS },
     order: [["fullName", "ASC"]],
   });
   res.json(employees);
@@ -23,7 +37,7 @@ router.get("/", async (req: AuthRequest, res: Response) => {
 router.get("/:id", async (req: AuthRequest, res: Response) => {
   const employee = await User.findByPk(req.params.id, {
     include: [{ model: Role, as: "role", attributes: ["name", "slug"] }],
-    attributes: { exclude: ["passwordHash"] },
+    attributes: { exclude: SECRET_FIELDS },
   });
   if (!employee) { res.status(404).json({ message: "Employee not found" }); return; }
   res.json(employee);

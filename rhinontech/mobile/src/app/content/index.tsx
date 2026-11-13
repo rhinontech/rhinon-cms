@@ -79,7 +79,9 @@ export default function ContentPage() {
         <View className="mt-5 space-y-3">
           {EVENTS.map((e, i) => {
             const list = guests[e.id] ?? [];
-            const inside = list.filter((g) => g.checkedIn).length;
+            // Live counts from sync when present; otherwise fall back to any loaded guest list.
+            const total = e.approved ?? list.length;
+            const inside = e.checkedIn ?? list.filter((g) => g.checkedIn).length;
             const brand = BRANDS.find((b) => b.id === e.brand);
             return (
               <View

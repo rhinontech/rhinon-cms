@@ -1,7 +1,7 @@
 import { Router, Response } from "express";
 import { Op } from "sequelize";
 import { authenticate, AuthRequest } from "../middleware/authenticate";
-import { Notification, User } from "../models";
+import { DeviceToken, Notification, User } from "../models";
 import { NOTIFICATION_CATEGORIES } from "../services/notifications";
 
 /** The signed-in user's own notifications; every query is pinned to their id. */
@@ -65,6 +65,41 @@ router.post("/:id/read", async (req: AuthRequest, res: Response) => {
     res.json({ ok: true });
   } catch {
     res.status(500).json({ message: "Failed to update notification" });
+  }
+});
+
+/* ── Device tokens (mobile push) ── */
+
+// POST /notifications/device-token — register or refresh a push token after login
+router.post("/device-token", async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const organizationId = req.user!.organizationId ?? null;
+    const { token, platform = "ios" } = req.body ?? {};
+    if (!token || typeof token !== "string") {
+      return res.status(400).json({ message: "token is required" });
+    }
+    // Upsert: one row per (userId, token) pair so a reinstall just refreshes.
+    await DeviceToken.upsert({ userId, token, platform, organizationId } as any);
+    res.json({ ok: true });
+  } catch {
+    res.status(500).json({ message: "Failed to register device token" });
+  }
+});
+
+// DELETE /notifications/device-token — called on logout so the device stops receiving pushes
+router.delete("/device-token", async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const { token } = req.body ?? {};
+    if (token) {
+      await DeviceToken.destroy({ where: { userId, token } });
+    } else {
+      await DeviceToken.destroy({ where: { userId } });
+    }
+    res.json({ ok: true });
+  } catch {
+    res.status(500).json({ message: "Failed to remove device token" });
   }
 });
 
