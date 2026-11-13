@@ -1,7 +1,6 @@
 'use client'
 import { Button } from "@/components/ui/button"
 import { TextGenerateEffect } from "@/components/ui/text-generate-effect"
-import { Star } from "lucide-react"
 import { motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 
@@ -23,7 +22,7 @@ const Hero = () => {
                     >ABOUT</motion.p>
 
                     <div className="flex w-fit text-center">
-                        <TextGenerateEffect className="lg:text-7xl md:text-5xl text-4xl" words={"Re-engineering the <br /> digital enterprise."} />
+                        <TextGenerateEffect className="lg:text-7xl md:text-5xl text-4xl" words={"A product studio <br /> built for builders."} />
                     </div>
                     <motion.p
                         className="text-center max-w-2xl text-lg text-white/80"
@@ -31,7 +30,7 @@ const Hero = () => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, ease: "easeOut", }}
                         viewport={{ once: true }} // 👈 only animate on first view
-                    >Rhinon Labs is not a traditional agency. We are a specialized product studio dedicated to building high-performance dashboards, internal tools, and mission-critical software.</motion.p>
+                    >Rhinon Labs is a focused product studio. We build internal dashboards, workflow automations and AI-powered tools for Indian startups and SMBs — with a small, hands-on team that ships in 2–4 weeks.</motion.p>
                 </div>
                 <motion.div
                     className="flex items-center max-md:flex-col max-md:gap-5 justify-center gap-10"
@@ -47,29 +46,10 @@ const Hero = () => {
                     </div>
 
                     {/* Social Proof */}
-                    <div className="flex items-center gap-4">
-                        {/* Avatar Stack */}
-                        <div className="flex -space-x-4">
-                            <div className="w-12 h-12 rounded-full bg-gray-600 border-2 border-black flex items-center justify-center">
-                                <img src="https://randomuser.me/api/portraits/women/1.jpg" alt="User 1" className="w-full h-full rounded-full object-cover" />
-                            </div>
-                            <div className="w-12 h-12 rounded-full bg-gray-600 border-2 border-black flex items-center justify-center">
-                                <img src="https://randomuser.me/api/portraits/men/2.jpg" alt="User 2" className="w-full h-full rounded-full object-cover" />
-                            </div>
-                            <div className="w-12 h-12 rounded-full bg-gray-600 border-2 border-black flex items-center justify-center">
-                                <img src="https://randomuser.me/api/portraits/women/3.jpg" alt="User 3" className="w-full h-full rounded-full object-cover" />
-                            </div>
-                        </div>
-
-                        {/* Rating & Trust Text */}
-                        <div className="flex flex-col gap-2">
-                            <div className="flex gap-1">
-                                {[...Array(5)].map((_, i) => (
-                                    <Star key={i} className="w-3 h-3 fill-white text-white" />
-                                ))}
-                            </div>
-                            <span className="text-white/70 text-sm">Trusted by modern organizations worldwide.</span>
-                        </div>
+                    <div className="flex items-center gap-3 border border-white/10 rounded-full px-4 py-2">
+                        <span className="text-white/60 text-sm">Built in India</span>
+                        <span className="w-1 h-1 rounded-full bg-white/30" />
+                        <span className="text-white/60 text-sm">Serving Indian startups &amp; SMBs</span>
                     </div>
                 </motion.div>
             </div>
@@ -150,8 +130,8 @@ const Hero = () => {
             </div>
             <TextGenerateEffect
                 className="text-3xl font-medium text-center leading-relaxed text-white/50"
-                words={"At Rhinon Labs, we're passionate about designing intelligent digital ecosystems that leave a lasting impression. Our mission is to transform your complex workflows into seamless reality with a blend of AI-driven innovation, engineering expertise, and attention to detail. We believe the key to exceptional results lies in deep partnership."}
-                highlight={["Rhinon", "Labs", "intelligent", "digital", "ecosystems", "that", "leave", "a", "lasting", "impression", "AIdriven", "innovation", "engineering", "expertise", "and", "attention", "to", "detail", "deep", "partnership"]}
+                words={"We have shipped products people use every day — a pet-parent app on iOS and Android, a construction SaaS managing drawings and snag tracking across sites, a client portal that replaced a folder of WhatsApp threads. That hands-on build experience is what we bring to your project."}
+                highlight={["shipped", "products", "people", "use", "every", "day", "iOS", "Android", "construction", "SaaS", "drawings", "snag", "tracking", "client", "portal", "WhatsApp", "hands-on", "build", "experience"]}
                 highlightClassName="text-white"
                 textColor=""
             />

@@ -114,7 +114,7 @@ const Hero1 = () => {
                   <Star key={i} className="w-3 h-3 fill-white text-white" />
                 ))}
               </div>
-              <span className="text-white/70 text-sm">Trusted by 20+ startups and SMBs worldwide.</span>
+              <span className="text-white/70 text-sm">Trusted by startups and SMBs across India.</span>
             </div>
           </div>
         </motion.div>
@@ -155,7 +155,7 @@ const Hero1 = () => {
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
           viewport={{ once: true }}
         >
-          <span>Fast Delivery • Affordable Pricing • AI-Powered Development</span>
+          <span>Fast Delivery • Fixed Scope, No Hourly Billing • AI-Powered</span>
         </motion.div>
 
         {/* Photo carousel - visible on desktop (md+), hidden on mobile */}

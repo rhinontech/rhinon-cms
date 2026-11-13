@@ -40,6 +40,61 @@ Everything except the AI chatbot is free for the whole team, with no time limit 
 Voice: plain, practical, specific. Written for founders, operations leads and small-company managers, mostly in India. Never claim customer numbers, awards, certifications or benchmarks. Do not invent features.`,
 };
 
+/**
+ * Rhinon Labs content brand — sourced from the site-brief SEO crawl.
+ * Used for all rhinonlabs.com blog generation instead of the generic sales memory.
+ */
+export const RHINONLABS_BRAND: BrandProfile = {
+  name: "Rhinon Labs",
+  kind: "a custom software and AI automation studio",
+  about: `Rhinon Labs is a product studio that builds custom internal dashboards, workflow automations, AI agents, MVPs and web/mobile apps for startups and SMBs in India, so they can scale operations without adding headcount. Internal dashboards are the top service by revenue.
+
+POSITIONING — always present Rhinon Labs as:
+- A "tech partner" or "product studio", NEVER an "agency"
+- Premium, not cheap. Never use the words cheap, affordable, low-cost or budget.
+- End-to-end: "we build it, we deploy it, we maintain it"
+- A team that connects existing tools instead of replacing them
+
+REAL PROOF (use these; do not invent others):
+- FurrCircle: a pet-parent app on web, iOS and Android — Rhinon Labs built it in-house
+- SR Fitout: a Bengaluru interiors studio — marketing site, project-intake portal and admin dashboard
+- Apexis Pro: construction SaaS for drawings, snags, RFIs and handover on web and native mobile; client paid ₹4,00,000
+- Delivery timeline: 2–4 weeks for a focused build (this is real and may be cited)
+- Full ownership: the client owns 100% of the code, designs and infrastructure accounts
+
+STATS YOU MUST NEVER CITE (owner confirmed unverified):
+- "20+ startups and SMBs served", "85% less manual work", "98% workflows run without a human fix",
+  "50+ tools connected", "80% of routine FAQs", "10 hrs/week saved per person", "50+ hours weekly",
+  "100s of hours saved per month". Do not use these or any variation of them.
+
+PRIMARY READER: Ops leads and COOs at growing Indian startups. They own the processes,
+they're drowning in spreadsheets and disconnected tools, and they need visibility without
+hiring more people. Secondary reader: non-technical founders scoping an MVP.
+
+READER'S FEARS (address these):
+1. Paying for a system nobody on the team actually uses
+2. Getting locked in and not owning the code or accounts
+3. Long timelines and scope creep
+4. Disruption: having to rip out tools the team already relies on
+
+SAY / NEVER SAY:
+- Always: "without adding headcount", "studio", "tech partner", "product team", "end-to-end",
+  "connect your existing tools instead of replacing them", "fixed scope", "weekly releases"
+- Never: "agency" (for Rhinon Labs), "cheap", "affordable", "low-cost", "cutting-edge",
+  "next-generation", "state-of-the-art", "revolutionize", "game-changer", "seamless", "unlock",
+  "leverage" (as verb), "empower", "In today's fast-paced world", "Look no further"
+
+MONEY PAGES (internal links should point here when relevant):
+- /services/internal-dashboards — top priority
+- /services/workflow-automation
+- /services/ai-agents
+- /services/mvp-development
+- /schedule-call — conversion page
+
+PRIMARY CTA: "Book a Free Discovery Call" linking to /schedule-call
+SECONDARY CTA: "Assess My Idea" linking to /contact-us`,
+};
+
 export interface TopicInput {
   title: string;
   keyword?: string | null;
@@ -117,16 +172,29 @@ Do not write the article. Notes only.`;
 }
 
 const styleGuide = (brand: string, studio: boolean) => `WRITING RULES (follow strictly):
+
+VOICE & TONE:
 - Write like an experienced founder/engineer explaining this to a peer: direct, specific, opinionated where justified.
 - Open with the reader's actual problem or a concrete situation in 2-3 sentences. Never open with "In today's fast-paced world", "In the ever-evolving", "Are you looking to", or a definition.
-- Banned words/phrases: delve, landscape, realm, leverage (as a verb), seamless, robust, game-changer, unlock, elevate, navigate the complexities, it's important to note, in conclusion, ultimately, furthermore, moreover, crucial, embark.
-- Use concrete numbers, tool names, timeframes and examples (Indian startup context with INR where natural, USD where it's the norm). Never invent statistics: use the research notes or say "in our experience".
-- Weave in the author's first-hand notes as real experience ("When we built…", "On one project…"). Do not fabricate client names.
+- Use the contrast device: "doesn't X, it Y" and "X, not Y" ("in weeks, not months"). Short, declarative sentences. Occasional imperative ("Stop thinking about cost in a vacuum.").
+- Banned words/phrases: delve, landscape, realm, leverage (as a verb), seamless, robust, game-changer, unlock, elevate, navigate the complexities, it's important to note, in conclusion, ultimately, furthermore, moreover, crucial, embark, revolutionize, cutting-edge, next-generation, state-of-the-art, empower.
+
+FACTS & PROOF:
+- Use concrete numbers, tool names, timeframes and examples (Indian startup context with INR where natural, USD where it's the norm).
+- NEVER invent statistics. Use only: (a) numbers from the research notes with their source named inline, (b) the author's first-hand notes marked "in our experience" or "when we built…", or (c) well-established publicly known figures. No made-up percentages.
+- Weave in the author's first-hand notes as real experience ("When we built…", "On one project…"). Do not fabricate client names unless they are in the ABOUT section.
+
+STRUCTURE (also for GEO/AI-search citations):
+- Write every <h2> as the question a reader would actually search. Put a complete 2-sentence answer in the first <p> directly under that heading — no warm-up. These two sentences must make sense copied out of context, because AI search tools lift them verbatim.
 - Vary sentence length. Short paragraphs (1-4 sentences). No fluff summaries at the end of sections.
 - Where the topic suits it, include a step-by-step section: one <h3> per step with the number in the heading text ("Step 1: Define the core workflow"), followed by <p> paragraphs. NEVER put headings, paragraphs or images inside <li> — list items hold a single line of plain or bold text only.
 - Use 5-8 <h2> sections, <h3> sub-points where useful, bullet lists, and at most one table if it genuinely helps comparison.
-- 1,400-2,200 words. End with a short, practical next step (not "In conclusion").
-- Mention ${studio ? "the studio (Rhinon Labs)" : brand} at most twice, naturally, with one call to action linking to the target page.`;
+- 1,800-2,400 words. End with a short, practical next step (not "In conclusion").
+- Mention ${studio ? "the studio (Rhinon Labs)" : brand} at most twice, naturally, with one call to action linking to the target page.
+
+SEO:
+- Include the primary search phrase in the first 100 words, one <h2>, and the meta description — naturally, with normal capitalisation.
+- After the body, include a visible FAQ section (this will be rendered separately — still include in html as <h2>Frequently Asked Questions</h2> followed by <h3> question / <p> answer pairs, 4-6 questions). These questions must be ones the reader would actually type into Google or ask an AI.`;
 
 function buildWritePrompt(topic: TopicInput, notes: string, links: LinkTarget[], company: string): string {
   return `You are writing a blog post for the ${topic.brand?.name ?? "Rhinon Labs"} website.

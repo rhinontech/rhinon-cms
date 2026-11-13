@@ -28,7 +28,7 @@ const examples = [
 
     // Column 3: AI Agents
     { title: 'AI Email Triage', desc: 'An agent that reads incoming mail, tags it, and drafts replies.', category: 'AI Agents & Smart Systems' },
-    { title: '24/7 Support Bot', desc: 'An AI trained on your docs to answer 80% of routine FAQs.', category: 'AI Agents & Smart Systems' },
+    { title: '24/7 Support Bot', desc: 'An AI trained on your docs to handle routine FAQs around the clock.', category: 'AI Agents & Smart Systems' },
     { title: 'Smart Lead Researcher', desc: 'AI scans a lead\'s website and writes a personalized intro.', category: 'AI Agents & Smart Systems' },
     { title: 'Auto-Content Repurposer', desc: 'Turn one long-form blog or video into 10 social media posts.', category: 'AI Agents & Smart Systems' },
     { title: 'Document Data Extractor', desc: 'AI reads PDFs/Invoices and enters the data into your system.', category: 'AI Agents & Smart Systems' },

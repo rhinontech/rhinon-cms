@@ -131,7 +131,7 @@ export default function ServiceDetail({ service, blogs }: { service: Service; bl
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.6 }}
           >
-            Fast Delivery • Affordable Pricing • AI-Powered Development
+            Fast Delivery • Fixed Scope, No Hourly Billing • AI-Powered
           </motion.p>
 
         </div>

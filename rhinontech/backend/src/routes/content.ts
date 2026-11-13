@@ -7,7 +7,7 @@ import type { BlogDomain } from "../models/Blog";
 import { authenticate, authorize, requirePlatformOrg, AuthRequest } from "../middleware/authenticate";
 import { uploadBuffer, publicUrl } from "../services/storage";
 import eventsRouter from "./events";
-import { generateBlogDraft, readTimeFor, RHINONTECH_BRAND, type LinkTarget } from "../services/blogGenerator";
+import { generateBlogDraft, readTimeFor, RHINONTECH_BRAND, RHINONLABS_BRAND, type LinkTarget } from "../services/blogGenerator";
 import { generateBlogImage } from "../services/aiImage";
 import { pingIndexNow } from "../services/indexNow";
 
@@ -195,7 +195,8 @@ async function runTopicGeneration(topicId: string, userId: string): Promise<void
   if (!topic) return;
   try {
     const site = topic.siteId ? await Site.findByPk(topic.siteId) : await resolveSite({});
-    const draft = await generateBlogDraft({ ...topic.toJSON(), brand: site?.slug === "rhinontech" ? RHINONTECH_BRAND : undefined }, await linkTargetsFor(site));
+    const brand = site?.slug === "rhinontech" ? RHINONTECH_BRAND : site?.slug === "rhinonlabs" ? RHINONLABS_BRAND : undefined;
+    const draft = await generateBlogDraft({ ...topic.toJSON(), brand }, await linkTargetsFor(site));
     // Byline matches the site's real posts: reuse the latest published post's
     // author, so a new avatar uploaded there carries over automatically.
     const latest = await Blog.findOne({

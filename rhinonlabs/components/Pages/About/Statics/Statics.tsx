@@ -1,56 +1,56 @@
 'use client'
-import { CountUp } from "../CountUp/CountUp";
-
 import { motion } from "framer-motion";
 
-const statics = [
+const proofPoints = [
     {
-        number: 98,
-        title: 'Client Retention',
-        subs: "Building long-term partnerships.",
+        label: '2–4 weeks',
+        heading: 'Typical delivery',
+        body: "From kickoff to a live, working product. Not a prototype — something your team can actually use.",
     },
     {
-        number: 50,
-        title: 'Enterprise Projects',
-        subs: "Delivered for global organizations.",
+        label: 'Yours to keep',
+        heading: 'Full code ownership',
+        body: "You get the code, the designs and every account we set up. No lock-in, no ongoing licence, no dependency on us to run it.",
     },
     {
-        number: 100,
-        title: 'On-Time Delivery',
-        subs: "Precision in execution.",
-    }
+        label: 'Weekly',
+        heading: 'Release cadence',
+        body: "We ship to a live staging link every week so you see real progress — not a big reveal at the end.",
+    },
+    {
+        label: '30+',
+        heading: 'Integrations supported',
+        body: "CRMs, accounting tools, WhatsApp, Google Workspace, Tally, Slack and more — we connect what you already use.",
+    },
 ]
 
 const Statics = () => {
     return (
-        <div className=" py-20 px-5 flex flex-col gap-20 max-w-[1200px] mx-auto" >
-            <div className="flex flex-col gap-5">
-                <p>BY THE NUMBERS</p>
-                <h2 className="text-3xl md:text-5xl lg:text-7xl"> Our Impact <br /> by the numbers</h2>
+        <div className="py-20 px-5 flex flex-col gap-14 max-w-[1200px] mx-auto">
+            <div className="flex flex-col gap-4">
+                <p className="text-xs font-semibold tracking-widest text-white/50 uppercase">How We Work</p>
+                <h2 className="text-3xl md:text-5xl font-medium tracking-tight">
+                    What to expect<br />
+                    <span className="text-white/50">when you work with us.</span>
+                </h2>
             </div>
-            <div className='grid grid-cols-1 gap-3 w-full  md:grid-cols-2 lg:grid-cols-3'>
-                {statics.map((stat, index) => (
+            <div className="grid grid-cols-1 gap-px bg-white/10 md:grid-cols-2">
+                {proofPoints.map((p, i) => (
                     <motion.div
-                        key={index}
-                        className="border-t flex flex-col gap-5"
+                        key={i}
+                        className="flex flex-col gap-3 bg-[#070a14] p-8"
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, ease: "easeOut" }}
-                        viewport={{ once: true }} // 👈 only animate on first view
+                        transition={{ duration: 0.7, ease: "easeOut", delay: i * 0.08 }}
+                        viewport={{ once: true }}
                     >
-                        <div className="border-t border-white/70 w-fit">
-                            <h2 className="text-4xl max-sm:text-3xl font-semibold pt-5"><CountUp target={stat.number} duration={0.8} />%</h2>
-                        </div>
-                        <h2 className="font-semibold text-xl mt-3">{stat.title}</h2>
-                        <p className="text-white/70">{stat.subs}</p>
+                        <span className="font-mono text-[11px] uppercase tracking-widest text-white/40">{p.label}</span>
+                        <h3 className="text-xl font-semibold text-white">{p.heading}</h3>
+                        <p className="text-[15px] text-white/60 leading-relaxed">{p.body}</p>
                     </motion.div>
                 ))}
-
             </div>
-
-
         </div>
-
     )
 }
 

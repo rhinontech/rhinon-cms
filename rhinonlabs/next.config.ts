@@ -26,6 +26,11 @@ const nextConfig: NextConfig = {
         destination: "/build",
         permanent: true,
       },
+      {
+        source: "/about",
+        destination: "/_about",
+        permanent: true,
+      },
     ];
   },
   // Security headers for browser protection, clickjacking defense, and MIME-sniffing prevention

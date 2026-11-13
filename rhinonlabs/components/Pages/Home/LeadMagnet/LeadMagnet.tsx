@@ -26,7 +26,7 @@ export function LeadMagnet() {
                             </h2>
                             
                             <p className="text-lg text-white/60 leading-relaxed mb-8 max-w-xl">
-                                We'll analyze your current workflows, identify bottlenecks, and show you exactly where AI and automation can save you 20+ hours per week. No commitment required.
+                                We'll analyze your current workflows, identify bottlenecks, and show you exactly where AI and automation can eliminate the manual work your team does every day. No commitment required.
                             </p>
                             
                             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 mb-8 text-sm text-white/50">
