@@ -772,8 +772,8 @@ router.post("/docs-access/check", async (req: Request, res: Response) => {
 router.get("/track/open", async (req: Request, res: Response) => {
   try {
     const enrollmentId = req.query.e as string;
-    const leadId = req.query.l as string;
-    const campaignId = req.query.c as string;
+    const leadId = (req.query.l as string) || (req.query.leadId as string);
+    const campaignId = (req.query.c as string) || (req.query.campaignId as string);
 
     if (enrollmentId) {
       await runAsSystem("tracking:open", async () => {
@@ -832,14 +832,15 @@ router.get("/track/open", async (req: Request, res: Response) => {
           }
         }
       });
-    } else if (leadId && campaignId) {
+    } else if (leadId) {
       await runAsSystem("tracking:campaign-open", async () => {
-        const lead = await Lead.findOne({ where: { id: leadId, campaignId } });
+        const lead = await Lead.findByPk(leadId);
         if (lead && !lead.emailOpened) {
+          const effectiveCampaignId = campaignId || lead.campaignId;
           await lead.update({ emailOpened: true, openedAt: new Date() });
           await CampaignActivity.create({
             leadId: lead.id,
-            campaignId,
+            campaignId: effectiveCampaignId || null,
             type: "EmailOpened",
             content: "Recipient opened the email.",
             organizationId: (lead as any).organizationId ?? null,
