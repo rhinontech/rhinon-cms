@@ -1,11 +1,12 @@
 import { DEMO } from "@/lib/demo";
 import { submitClaim } from "@/lib/live";
 import { pickFile, type Picked } from "@/lib/pick";
-import { useRev } from "@/lib/store";
+import { useRev, usePerm } from "@/lib/store";
 import { View, Text, Span, Pressable, TextInput, Link } from "@/components/rn";
-import { ChevronRight, Download, Eye, EyeOff, Plus, Receipt } from "@/components/icons";
-import { useState } from "react";
+import { ChevronRight, Download, Eye, EyeOff, Plus, Receipt, Users } from "@/components/icons";
+import { useState, useEffect } from "react";
 import { Amount, Line, usePayGate } from "@/components/rhinon/pay";
+import { api } from "@/lib/api";
 import {
   Badge,
   Button,
@@ -36,6 +37,106 @@ const CLAIM_TONE = {
   Rejected: "coral",
 } as const;
 export default function PayPage() {
+  useRev();
+  const isAdmin = usePerm("payroll", "write");
+  if (isAdmin) return <AdminPayPage />;
+  return <EmployeePayPage />;
+}
+
+// ── Admin / HR view ──────────────────────────────────────────────────────────
+
+type AdminEmployee = { userId: string; fullName: string; department: string | null; designation: string | null; salary: number | null; status: string | null; month: string | null };
+
+function AdminPayPage() {
+  useRev();
+  const [employees, setEmployees] = useState<AdminEmployee[]>([]);
+  const [investment, setInvestment] = useState<{ total: number; months: number } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([
+      api<{ employees: AdminEmployee[] }>("/payroll/admin/employees").catch(() => ({ employees: [] })),
+      api<{ total: number; months: number }>("/payroll/admin/investment").catch(() => null),
+    ]).then(([empRes, invRes]) => {
+      setEmployees(empRes.employees);
+      setInvestment(invRes);
+      setLoading(false);
+    });
+  }, []);
+
+  return (
+    <Screen>
+      <View className="animate-rise">
+        <Eyebrow tone="sun">Pay · Admin</Eyebrow>
+        <Display size="hero" className="mt-3">
+          Payroll{"\n"}management.
+        </Display>
+      </View>
+
+      {investment ? (
+        <View className="mt-6 animate-rise overflow-hidden rounded-4xl bg-ink p-5 text-paper" style={stagger(1)}>
+          <Text className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-on-ink-accent">
+            Company investment · {investment.months} months
+          </Text>
+          <Text className="mt-4 font-display text-[length:calc(64px*var(--ds))] font-black leading-[0.82]">
+            ₹{(investment.total / 100000).toFixed(1)}L
+          </Text>
+          <Text className="mt-2 text-[14px] text-paper/60">Total payroll spend</Text>
+        </View>
+      ) : null}
+
+      <SectionLabel className="mt-8">
+        <View className="flex items-center gap-2">
+          <Users size={14} />
+          <Text>Employees</Text>
+        </View>
+      </SectionLabel>
+
+      {loading ? (
+        <Empty title="Loading payroll…" body="Fetching employee data." tone="sun" />
+      ) : employees.length === 0 ? (
+        <Empty title="No payroll data" body="Run payroll from the web panel to see data here." tone="sun" />
+      ) : (
+        <View className="mt-2">
+          {employees.map((e, i) => (
+            <View
+              key={e.userId}
+              className="animate-rise border-b border-line/70 last:border-0"
+              style={stagger(Math.min(i, 6))}
+            >
+              <View className="flex items-center gap-4 py-3.5">
+                <View className="grid size-14 shrink-0 place-items-center rounded-2xl bg-paper-deep font-display text-[length:calc(26px*var(--ds))] font-black uppercase leading-none">
+                  {e.fullName.split(" ").map((w: string) => w[0]).join("").slice(0, 2)}
+                </View>
+                <View className="min-w-0 flex-1">
+                  <Text className="text-[16px] font-semibold leading-tight">{e.fullName}</Text>
+                  <Text className="mt-1 text-[13px] text-ink/55">
+                    {e.designation ?? e.department ?? "—"}
+                  </Text>
+                </View>
+                <View className="text-right">
+                  {e.salary != null ? (
+                    <Text className="font-display text-[length:calc(22px*var(--ds))] font-black leading-none">
+                      ₹{(e.salary / 100000).toFixed(1)}L
+                    </Text>
+                  ) : null}
+                  <Badge tone={e.status === "paid" ? "leaf" : e.status === "pending" ? "sun" : "sky"} className="mt-1.5">
+                    {e.status ?? "No data"}
+                  </Badge>
+                </View>
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
+    </Screen>
+  );
+}
+
+// ── Employee view ─────────────────────────────────────────────────────────────
+
+function EmployeePayPage() {
   useRev();
   const [tab, setTab] = useState<Tab>("slips");
   const { hidden, toggle, overlay } = usePayGate();

@@ -51,7 +51,7 @@ export default function PerformancePage() {
   const goals = useApp((s) => s.goals);
   const self = useApp((s) => s.selfReview);
   const team = useApp((s) => s.teamReviews);
-  const canTeam = usePerm("approvals");
+  const canTeam = usePerm("performance", "write");
   const [tab, setTab] = useState<Tab>("goals");
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
