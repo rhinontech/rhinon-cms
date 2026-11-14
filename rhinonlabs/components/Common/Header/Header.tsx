@@ -113,9 +113,11 @@ export const HeroHeader = () => {
               </button>
 
               <div className="hidden lg:block">
-                <Button className="hover:bg-white bg-transparent rounded-none text-white hover:text-black p-5 backdrop-blur-xl bg-white/4 border-[1px] border-white/30" onClick={() => setIsSchedulerOpen(true)}>
-                  Book a Free Discovery Call
-                </Button>
+                <Link href="/schedule-call">
+                  <Button className="hover:bg-white bg-transparent rounded-none text-white hover:text-black p-5 backdrop-blur-xl bg-white/4 border-[1px] border-white/30">
+                    Book a Free Discovery Call
+                  </Button>
+                </Link>
               </div>
             </div>
 
@@ -140,9 +142,11 @@ export const HeroHeader = () => {
                 ))}
               </ul>
               <div className="flex flex-col gap-3 mt-4">
-                <Button onClick={() => setIsSchedulerOpen(true)} className="hover:bg-white bg-transparent rounded-none text-white hover:text-black p-5 backdrop-blur-xl bg-white/4 border-[1px] border-white/30">
-                  Book a Free Discovery Call
-                </Button>
+                <Link href="/schedule-call">
+                  <Button className="hover:bg-white bg-transparent rounded-none text-white hover:text-black p-5 backdrop-blur-xl bg-white/4 border-[1px] border-white/30">
+                    Book a Free Discovery Call
+                  </Button>
+                </Link>
               </div>
             </div>
 

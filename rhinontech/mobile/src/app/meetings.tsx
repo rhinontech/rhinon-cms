@@ -1,4 +1,4 @@
-import { useRev } from "@/lib/store";
+import { useRev, usePerm } from "@/lib/store";
 import { View, Text, Span, Pressable, TextInput } from "@/components/rn";
 import { MapPin, Plus, Video } from "@/components/icons";
 import { useState } from "react";
@@ -17,12 +17,13 @@ function minsUntil(hhmm: string): number {
 }
 export default function MeetingsPage() {
   useRev();
+  const canCreate = usePerm("meetings", "write");
   const [day, setDay] = useState<"Today" | "Tomorrow">("Today");
   const [adding, setAdding] = useState(false);
   const [joining, setJoining] = useState<Meeting | null>(null);
   // Read the live calendar directly so sync (live-people) shows through; useRev() re-renders on replace.
   const rows = MEETINGS.filter(m => m.day === day).sort((a, b) => a.start.localeCompare(b.start));
-  return <Screen fab>
+  return <Screen fab={canCreate}>
       <TopBar title="Meetings" fallback="/more" />
       <View className="animate-rise">
         <Eyebrow tone="cobalt">{rows.length} on the calendar</Eyebrow>
@@ -84,7 +85,7 @@ export default function MeetingsPage() {
       })}
       </View>
 
-      <Fab icon={Plus} label="New meeting" tone="cobalt" pushed onClick={() => setAdding(true)} />
+      {canCreate ? <Fab icon={Plus} label="New meeting" tone="cobalt" pushed onClick={() => setAdding(true)} /> : null}
       <NewMeetingSheet open={adding} onClose={() => setAdding(false)} day={day} onAdd={(title, slot) => {
       createMeetingRemote({ title, day, slot })
         .then(() => actions.toast("Meeting added · invite sent", "cobalt"))
