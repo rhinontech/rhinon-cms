@@ -23,6 +23,7 @@ import "./live-platform";
 import "./live-outreach";
 import "./live-analytics";
 import "./live-chatbot";
+import "./live-notifications";
 import "./live-content";
 
 export { loadChatMessages } from "./live-chat";

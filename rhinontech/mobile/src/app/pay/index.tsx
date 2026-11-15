@@ -3,7 +3,7 @@ import { submitClaim } from "@/lib/live";
 import { pickFile, type Picked } from "@/lib/pick";
 import { useRev, usePerm } from "@/lib/store";
 import { View, Text, Span, Pressable, TextInput, Link } from "@/components/rn";
-import { ChevronRight, Download, Eye, EyeOff, Plus, Receipt, Users } from "@/components/icons";
+import { ChevronRight, Download, Eye, EyeOff, Plus, Receipt } from "@/components/icons";
 import { useState, useEffect } from "react";
 import { Amount, Line, usePayGate } from "@/components/rhinon/pay";
 import { api } from "@/lib/api";
@@ -45,21 +45,21 @@ export default function PayPage() {
 
 // ── Admin / HR view ──────────────────────────────────────────────────────────
 
-type AdminEmployee = { userId: string; fullName: string; department: string | null; designation: string | null; salary: number | null; status: string | null; month: string | null };
+type AdminEmployee = { id: string; fullName: string; department: string | null; roleTitle: string | null; annualCompensation: number | null; basicSalary: number | null };
 
 function AdminPayPage() {
   useRev();
   const [employees, setEmployees] = useState<AdminEmployee[]>([]);
-  const [investment, setInvestment] = useState<{ total: number; months: number } | null>(null);
+  const [investment, setInvestment] = useState<{ totalCompanyCostPaid: number; monthlyCommittedGross: number } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      api<{ employees: AdminEmployee[] }>("/payroll/admin/employees").catch(() => ({ employees: [] })),
-      api<{ total: number; months: number }>("/payroll/admin/investment").catch(() => null),
+      api<AdminEmployee[]>("/payroll/admin/employees").catch(() => []),
+      api<{ totalCompanyCostPaid: number; monthlyCommittedGross: number }>("/payroll/admin/investment").catch(() => null),
     ]).then(([empRes, invRes]) => {
-      setEmployees(empRes.employees);
+      setEmployees(empRes);
       setInvestment(invRes);
       setLoading(false);
     });
@@ -67,6 +67,7 @@ function AdminPayPage() {
 
   return (
     <Screen>
+      <TopBar title="Pay" fallback="/more" />
       <View className="animate-rise">
         <Eyebrow tone="sun">Pay · Admin</Eyebrow>
         <Display size="hero" className="mt-3">
@@ -77,21 +78,18 @@ function AdminPayPage() {
       {investment ? (
         <View className="mt-6 animate-rise overflow-hidden rounded-4xl bg-ink p-5 text-paper" style={stagger(1)}>
           <Text className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-on-ink-accent">
-            Company investment · {investment.months} months
+            Total company spend
           </Text>
           <Text className="mt-4 font-display text-[length:calc(64px*var(--ds))] font-black leading-[0.82]">
-            ₹{(investment.total / 100000).toFixed(1)}L
+            ₹{(investment.totalCompanyCostPaid / 100000).toFixed(1)}L
           </Text>
-          <Text className="mt-2 text-[14px] text-paper/60">Total payroll spend</Text>
+          <Text className="mt-2 text-[14px] text-paper/60">
+            ₹{(investment.monthlyCommittedGross / 100000).toFixed(1)}L monthly committed
+          </Text>
         </View>
       ) : null}
 
-      <SectionLabel className="mt-8">
-        <View className="flex items-center gap-2">
-          <Users size={14} />
-          <Text>Employees</Text>
-        </View>
-      </SectionLabel>
+      <SectionLabel className="mt-8">Employees</SectionLabel>
 
       {loading ? (
         <Empty title="Loading payroll…" body="Fetching employee data." tone="sun" />
@@ -101,7 +99,7 @@ function AdminPayPage() {
         <View className="mt-2">
           {employees.map((e, i) => (
             <View
-              key={e.userId}
+              key={e.id}
               className="animate-rise border-b border-line/70 last:border-0"
               style={stagger(Math.min(i, 6))}
             >
@@ -112,18 +110,15 @@ function AdminPayPage() {
                 <View className="min-w-0 flex-1">
                   <Text className="text-[16px] font-semibold leading-tight">{e.fullName}</Text>
                   <Text className="mt-1 text-[13px] text-ink/55">
-                    {e.designation ?? e.department ?? "—"}
+                    {e.roleTitle ?? e.department ?? "—"}
                   </Text>
                 </View>
                 <View className="text-right">
-                  {e.salary != null ? (
+                  {(e.annualCompensation ?? e.basicSalary) != null ? (
                     <Text className="font-display text-[length:calc(22px*var(--ds))] font-black leading-none">
-                      ₹{(e.salary / 100000).toFixed(1)}L
+                      ₹{((e.annualCompensation ?? (e.basicSalary ?? 0) * 12) / 100000).toFixed(1)}L
                     </Text>
                   ) : null}
-                  <Badge tone={e.status === "paid" ? "leaf" : e.status === "pending" ? "sun" : "sky"} className="mt-1.5">
-                    {e.status ?? "No data"}
-                  </Badge>
                 </View>
               </View>
             </View>

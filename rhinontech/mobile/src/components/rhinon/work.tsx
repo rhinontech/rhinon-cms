@@ -54,7 +54,7 @@ export function TaskRow({ task, index = 0 }: { task: Task; index?: number }) {
         </Pressable>
         <View className="min-w-0 flex-1">
           <Text className="text-[16px] font-semibold leading-snug">
-            <Span className="strike">{task.title}</Span>
+            <Span className="line-through">{task.title}</Span>
           </Text>
           <View className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-ink/60">
             <View className="inline-flex items-center gap-1.5">

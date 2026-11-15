@@ -842,6 +842,7 @@ export type BotChat = {
   device: string;
   status: "bot" | "waiting" | "agent" | "closed";
   time: string;
+  preview?: string;
   messages: BotMsg[];
 };
 export const BOT_CHATS: BotChat[] = [

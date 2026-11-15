@@ -1,7 +1,7 @@
-import { useRev, usePerm } from "@/lib/store";
+import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable, TextInput } from "@/components/rn";
 import { useRouter } from "@/lib/router";
-import { Mail, MessageCircle, Phone, Plus, Search, type LucideIcon } from "@/components/icons";
+import { Mail, MessageCircle, Phone, Search, type LucideIcon } from "@/components/icons";
 import { useState } from "react";
 import {
   Avatar,
@@ -9,7 +9,6 @@ import {
   Display,
   Empty,
   Eyebrow,
-  Fab,
   Screen,
   Sheet,
   TopBar,
@@ -23,7 +22,6 @@ import { cn } from "@/lib/utils";
 const DEPTS = ["All", ...Array.from(new Set(PEOPLE.map((p) => p.dept)))];
 export default function PeoplePage() {
   useRev();
-  const canManage = usePerm("employees", "write");
   const [q, setQ] = useState("");
   const [dept, setDept] = useState("All");
   const [sel, setSel] = useState<Person | null>(null);
@@ -33,10 +31,10 @@ export default function PeoplePage() {
     (p) => !query || p.name.toLowerCase().includes(query) || p.role.toLowerCase().includes(query),
   );
   return (
-    <Screen fab={canManage}>
+    <Screen>
       <TopBar title="People" fallback="/more" />
       <View className="animate-rise">
-        <Eyebrow tone="coral">{PEOPLE.length} teammates{canManage ? " · Admin" : ""}</Eyebrow>
+        <Eyebrow tone="coral">{PEOPLE.length} teammates</Eyebrow>
         <Display size="hero" className="mt-3">
           Who's
           {"\n"}
@@ -99,10 +97,6 @@ export default function PeoplePage() {
         </View>
       )}
 
-      {canManage ? (
-        <Fab icon={Plus} label="New employee" tone="coral" onClick={() => actions.toast("Add employee via web panel", "coral")} />
-      ) : null}
-
       <Sheet open={sel !== null} onClose={() => setSel(null)}>
         {sel ? (
           <View>
@@ -121,7 +115,7 @@ export default function PeoplePage() {
               </Text>
             </View>
 
-            <View className={cn("mt-3 grid gap-2.5", canManage ? "grid-cols-4" : "grid-cols-3")}>
+            <View className="mt-3 grid grid-cols-3 gap-2.5">
               <Action
                 icon={MessageCircle}
                 label="Message"
@@ -146,13 +140,6 @@ export default function PeoplePage() {
                 label="Email"
                 onClick={() => actions.toast(`Draft to ${sel.email}`, "coral")}
               />
-              {canManage ? (
-                <Action
-                  icon={Plus}
-                  label="Edit"
-                  onClick={() => actions.toast("Edit employee via web panel", "coral")}
-                />
-              ) : null}
             </View>
 
             <View className="mt-4 divide-y divide-line/70 rounded-3xl border border-line/70 bg-card px-4">

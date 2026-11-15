@@ -30,9 +30,9 @@ function Shell() {
     if (!signedIn) { clearLive(); blankLive(); return; }
     installLive();
     blankLive();
-    void syncAll();
-    const timer = setInterval(() => void syncAll(), 45_000);
-    const sub = AppState.addEventListener("change", (s) => { if (s === "active") void syncAll(); });
+    void syncAll().catch(() => {});
+    const timer = setInterval(() => void syncAll().catch(() => {}), 45_000);
+    const sub = AppState.addEventListener("change", (s) => { if (s === "active") void syncAll().catch(() => {}); });
     return () => { clearInterval(timer); sub.remove(); };
   }, [signedIn]);
   const onLogin = segments[0] === "login";

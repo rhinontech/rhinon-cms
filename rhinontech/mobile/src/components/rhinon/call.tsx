@@ -115,7 +115,7 @@ export function CallOverlay({
           </RoundButton>
           <Pressable
             accessibilityLabel="End call"
-            onPress={hangUp}
+            onPress={() => { hangUp(); _onClose?.(); }}
             className="press grid h-16 flex-1 place-items-center rounded-full bg-coral text-coral-foreground"
           >
             <PhoneOff size={26} />

@@ -1,6 +1,6 @@
 import { useRev, usePerm } from "@/lib/store";
 import { View, Text, Span, TextInput } from "@/components/rn";
-import { Coffee, Play, RotateCcw, Square, Users } from "@/components/icons";
+import { Coffee, Play, RotateCcw, Square } from "@/components/icons";
 import { useState, useEffect } from "react";
 import { MarkLegend, MonthGrid, TimeSwitch } from "@/components/rhinon/time";
 import { Badge, Button, Chip, Display, Empty, Eyebrow, Field, Meta, ProgressBar, Screen, SectionLabel, Sheet, TopBar, inputClass, stagger } from "@/components/rhinon/ui";
@@ -22,24 +22,25 @@ const STATUS_LABEL = {
   break: "On break",
   done: "Day logged"
 } as const;
-type TeamMemberAttendance = { userId: string; fullName: string; date: string; clockIn: string | null; clockOut: string | null; workedMinutes: number; status: string };
+type TeamRow = { userId: string; fullName: string; attendance: { clockIn: string | null; clockOut: string | null; status: string; onBreak: boolean } };
+type TeamTodayResponse = { summary: { total: number; present: number; absent: number }; employees: TeamRow[] };
 
 function AdminAttendancePage() {
   useRev();
-  const [team, setTeam] = useState<TeamMemberAttendance[]>([]);
+  const [data, setData] = useState<TeamTodayResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
-    const today = new Date().toISOString().split("T")[0];
-    api<{ records: TeamMemberAttendance[] }>(`/attendance/team?date=${today}`)
-      .then((r) => setTeam(r.records))
-      .catch(() => setTeam([]))
+    api<TeamTodayResponse>("/attendance/team/today")
+      .then((r) => setData(r))
+      .catch(() => setData(null))
       .finally(() => setLoading(false));
   }, []);
 
-  const present = team.filter((m) => m.clockIn).length;
-  const absent = team.filter((m) => !m.clockIn).length;
+  const team = data?.employees ?? [];
+  const present = data?.summary.present ?? 0;
+  const absent = data?.summary.absent ?? 0;
 
   return (
     <Screen>
@@ -67,12 +68,7 @@ function AdminAttendancePage() {
         </View>
       </View>
 
-      <SectionLabel className="mt-8">
-        <View className="flex items-center gap-2">
-          <Users size={14} />
-          <Text>Team</Text>
-        </View>
-      </SectionLabel>
+      <SectionLabel className="mt-8">Team</SectionLabel>
 
       {loading ? (
         <Empty title="Loading…" body="Fetching today's attendance." tone="leaf" />
@@ -80,22 +76,28 @@ function AdminAttendancePage() {
         <Empty title="No data yet" body="Attendance records appear here once your team clocks in." tone="leaf" />
       ) : (
         <View className="mt-2">
-          {team.map((m, i) => (
-            <View key={m.userId} className="animate-rise flex items-center gap-3 border-b border-line/70 py-3.5 last:border-0" style={stagger(Math.min(i, 6))}>
-              <View className="grid size-11 shrink-0 place-items-center rounded-2xl bg-paper-deep font-display text-[length:calc(20px*var(--ds))] font-black uppercase leading-none">
-                {m.fullName.split(" ").map((w: string) => w[0]).join("").slice(0, 2)}
+          {team.map((m, i) => {
+            const inTime = m.attendance.clockIn ? clockTime(new Date(m.attendance.clockIn).getTime()) : null;
+            const outTime = m.attendance.clockOut ? clockTime(new Date(m.attendance.clockOut).getTime()) : null;
+            return (
+              <View key={m.userId} className="animate-rise flex items-center gap-3 border-b border-line/70 py-3.5 last:border-0" style={stagger(Math.min(i, 6))}>
+                <View className="grid size-11 shrink-0 place-items-center rounded-2xl bg-paper-deep font-display text-[length:calc(20px*var(--ds))] font-black uppercase leading-none">
+                  {m.fullName.split(" ").map((w: string) => w[0]).join("").slice(0, 2)}
+                </View>
+                <View className="min-w-0 flex-1">
+                  <Text className="text-[15px] font-semibold leading-tight">{m.fullName}</Text>
+                  <Text className="mt-0.5 text-[12.5px] text-ink/55">
+                    {inTime
+                      ? `In ${inTime}${outTime ? ` · Out ${outTime}` : m.attendance.onBreak ? " · On break" : " · Working"}`
+                      : "Not clocked in"}
+                  </Text>
+                </View>
+                <Badge tone={m.attendance.status === "present" ? (m.attendance.clockOut ? "sky" : "leaf") : "coral"}>
+                  {m.attendance.status === "present" ? (m.attendance.clockOut ? "Done" : "In") : "Absent"}
+                </Badge>
               </View>
-              <View className="min-w-0 flex-1">
-                <Text className="text-[15px] font-semibold leading-tight">{m.fullName}</Text>
-                <Text className="mt-0.5 text-[12.5px] text-ink/55">
-                  {m.clockIn ? `In ${m.clockIn}${m.clockOut ? ` · Out ${m.clockOut}` : " · Working"}` : "Not clocked in"}
-                </Text>
-              </View>
-              <Badge tone={m.clockIn ? (m.clockOut ? "sky" : "leaf") : "coral"}>
-                {m.clockIn ? (m.clockOut ? "Done" : "In") : "Absent"}
-              </Badge>
-            </View>
-          ))}
+            );
+          })}
         </View>
       )}
     </Screen>

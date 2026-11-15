@@ -12,7 +12,7 @@ import { api } from "@/lib/api";
 import { TONES } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 
-type AdminLeaveRequest = { id: string; userId: string; fullName: string; leaveType: string; startDate: string; endDate: string; days: number; reason: string; status: "Pending" | "Approved" | "Rejected" };
+type AdminLeaveRequest = { id: string; userId: string; userName: string; leaveTypeName: string; startDate: string; endDate: string; days: number; reason: string; status: "Pending" | "Approved" | "Rejected" };
 
 function AdminLeavePage() {
   useRev();
@@ -22,8 +22,8 @@ function AdminLeavePage() {
 
   const fetchRequests = () => {
     setLoading(true);
-    api<{ requests: AdminLeaveRequest[] }>("/leave/admin/requests")
-      .then((r) => setRequests(r.requests))
+    api<AdminLeaveRequest[]>("/leave/requests")
+      .then((r) => setRequests(Array.isArray(r) ? r : []))
       .catch(() => setRequests([]))
       .finally(() => setLoading(false));
   };
@@ -33,7 +33,7 @@ function AdminLeavePage() {
   const act = async (id: string, action: "approve" | "reject") => {
     setActing(id);
     try {
-      await api(`/leave/admin/requests/${id}/${action}`, { method: "PUT" });
+      await api(`/leave/requests/${id}/action`, { method: "PUT", body: { status: action === "approve" ? "Approved" : "Rejected" } });
       setRequests((prev) => prev.map((r) => r.id === id ? { ...r, status: action === "approve" ? "Approved" : "Rejected" } : r));
     } catch (e) {
       actions.toast(e instanceof Error ? e.message : "Failed", "coral");
@@ -78,8 +78,8 @@ function AdminLeavePage() {
                   <View key={r.id} className="animate-rise rounded-2xl border border-line/70 bg-card p-4" style={stagger(Math.min(i, 5))}>
                     <View className="flex items-start justify-between gap-3">
                       <View className="min-w-0">
-                        <Text className="text-[16px] font-semibold">{r.fullName}</Text>
-                        <Text className="mt-0.5 font-mono text-[11px] uppercase tracking-[0.1em] text-ink/55">{r.leaveType} · {rangeLabel(r.startDate, r.endDate)} · {plural(r.days, "day")}</Text>
+                        <Text className="text-[16px] font-semibold">{r.userName}</Text>
+                        <Text className="mt-0.5 font-mono text-[11px] uppercase tracking-[0.1em] text-ink/55">{r.leaveTypeName} · {rangeLabel(r.startDate, r.endDate)} · {plural(r.days, "day")}</Text>
                       </View>
                       <Badge tone="sun">Pending</Badge>
                     </View>
@@ -112,8 +112,8 @@ function AdminLeavePage() {
                 {past.slice(0, 10).map((r, i) => (
                   <View key={r.id} className="animate-rise flex items-center gap-3 border-b border-line/70 py-3.5 last:border-0" style={stagger(Math.min(i, 5))}>
                     <View className="min-w-0 flex-1">
-                      <Text className="text-[15px] font-semibold">{r.fullName}</Text>
-                      <Text className="mt-0.5 text-[13px] text-ink/55">{r.leaveType} · {rangeLabel(r.startDate, r.endDate)}</Text>
+                      <Text className="text-[15px] font-semibold">{r.userName}</Text>
+                      <Text className="mt-0.5 text-[13px] text-ink/55">{r.leaveTypeName} · {rangeLabel(r.startDate, r.endDate)}</Text>
                     </View>
                     <Badge tone={r.status === "Approved" ? "leaf" : "coral"}>{r.status}</Badge>
                   </View>

@@ -1,22 +1,151 @@
-import { useRev } from "@/lib/store";
+import { useRev, usePerm } from "@/lib/store";
 import { View, Text, Pressable, Link } from "@/components/rn";
 import { Camera, FileSignature, FolderOpen, ImageIcon, Plus } from "@/components/icons";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AttachSheet, AttachThumb, PreviewSheet } from "@/components/rhinon/attach";
 import { Avatar, Badge, Button, Chip, Display, Empty, Eyebrow, Fab, Field, Screen, SectionLabel, Segmented, Sheet, TopBar, stagger } from "@/components/rhinon/ui";
 import { nameOf } from "@/lib/mock-data";
 import { DOC_KIND, PICKS, type Attachment, type DocItem, type DocKind } from "@/lib/mock-more";
 import { actions, useApp } from "@/lib/store";
+import { api } from "@/lib/api";
 import { TONES } from "@/lib/tone";
 import { cn } from "@/lib/utils";
+
 type Tab = "vault" | "requests" | "sign";
+
+// ── Admin types ──────────────────────────────────────────────────────────────
+type AdminDoc = {
+  id: string; title: string; category: string; signedAt: string | null; isRequest: boolean;
+  createdAt: string; fileName: string | null;
+  employee: { id: string; fullName: string; department: string | null } | null;
+};
+
+const CATEGORY_LABEL: Record<string, string> = {
+  offer_letter: "Offer letter", contract: "Contract", id_proof: "ID proof",
+  appraisal: "Appraisal", nda: "NDA", other: "Other",
+};
+
+function AdminDocumentsPage() {
+  const [docs, setDocs] = useState<AdminDoc[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [empFilter, setEmpFilter] = useState<string>("all");
+
+  useEffect(() => {
+    api<AdminDoc[]>("/documents")
+      .then(r => setDocs(Array.isArray(r) ? r : []))
+      .catch(() => setDocs([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Build employee list for filter chips
+  const employees = Array.from(
+    new Map(docs.filter(d => d.employee).map(d => [d.employee!.id, d.employee!])).values()
+  ).sort((a, b) => a.fullName.localeCompare(b.fullName));
+
+  const filtered = empFilter === "all" ? docs : docs.filter(d => d.employee?.id === empFilter);
+  const signed = filtered.filter(d => d.signedAt);
+  const unsigned = filtered.filter(d => !d.signedAt && !d.isRequest);
+
+  return (
+    <Screen>
+      <TopBar title="Documents" fallback="/more" />
+      <View className="animate-rise">
+        <Eyebrow tone="sun">Team docs · Admin</Eyebrow>
+        <Display size="hero" className="mt-3">
+          All{"\n"}papers.
+        </Display>
+      </View>
+
+      {/* Employee filter */}
+      {employees.length > 1 ? (
+        <View className="no-scrollbar -mx-5 mt-5 flex gap-2 overflow-x-auto px-5 pb-1">
+          <Pressable
+            onPress={() => setEmpFilter("all")}
+            className={cn("press shrink-0 rounded-full border px-4 py-2 text-[13px] font-semibold", empFilter === "all" ? "border-ink bg-ink text-paper" : "border-ink/20 bg-card")}
+          >
+            All ({docs.length})
+          </Pressable>
+          {employees.map(e => (
+            <Pressable
+              key={e.id}
+              onPress={() => setEmpFilter(e.id)}
+              className={cn("press shrink-0 rounded-full border px-4 py-2 text-[13px] font-semibold", empFilter === e.id ? "border-ink bg-ink text-paper" : "border-ink/20 bg-card")}
+            >
+              {e.fullName.split(" ")[0]}
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
+
+      {loading ? (
+        <Empty title="Loading…" body="Fetching all team documents." tone="sun" />
+      ) : docs.length === 0 ? (
+        <Empty title="No documents yet" body="Offer letters, NDAs and contracts appear here once generated." tone="sun" />
+      ) : (
+        <>
+          {signed.length > 0 ? (
+            <>
+              <SectionLabel className="mt-8">Signed</SectionLabel>
+              <View className="mt-2 space-y-2.5">
+                {signed.map((d, i) => (
+                  <View key={d.id} className="animate-rise flex items-center gap-3.5 rounded-2xl border border-line/70 bg-card p-3.5" style={stagger(Math.min(i, 6))}>
+                    <AttachThumb kind="pdf" size={48} />
+                    <View className="min-w-0 flex-1">
+                      <Text className="truncate text-[15px] font-semibold leading-tight">{d.title}</Text>
+                      <Text className="mt-0.5 truncate font-mono text-[10.5px] uppercase tracking-[0.1em] text-ink/55">
+                        {d.employee?.fullName ?? "—"} · {CATEGORY_LABEL[d.category] ?? d.category}
+                      </Text>
+                    </View>
+                    <Badge tone="leaf">Signed</Badge>
+                  </View>
+                ))}
+              </View>
+            </>
+          ) : null}
+
+          {unsigned.length > 0 ? (
+            <>
+              <SectionLabel className="mt-8">Unsigned</SectionLabel>
+              <View className="mt-2 space-y-2.5">
+                {unsigned.map((d, i) => (
+                  <View key={d.id} className="animate-rise flex items-center gap-3.5 rounded-2xl border border-line/70 bg-card p-3.5" style={stagger(Math.min(i, 6))}>
+                    <AttachThumb kind="pdf" size={48} />
+                    <View className="min-w-0 flex-1">
+                      <Text className="truncate text-[15px] font-semibold leading-tight">{d.title}</Text>
+                      <Text className="mt-0.5 truncate font-mono text-[10.5px] uppercase tracking-[0.1em] text-ink/55">
+                        {d.employee?.fullName ?? "—"} · {CATEGORY_LABEL[d.category] ?? d.category}
+                      </Text>
+                    </View>
+                    <Badge tone="sun">Pending</Badge>
+                  </View>
+                ))}
+              </View>
+            </>
+          ) : null}
+        </>
+      )}
+    </Screen>
+  );
+}
+
+// ── Entry point ───────────────────────────────────────────────────────────────
+
+export default function DocumentsPage() {
+  useRev();
+  const isAdmin = usePerm("documents", "write");
+  if (isAdmin) return <AdminDocumentsPage />;
+  return <EmployeeDocumentsPage />;
+}
+
+// ── Employee view ─────────────────────────────────────────────────────────────
+
 const asFile = (d: DocItem): Attachment => ({
   id: d.id,
   name: d.name,
   kind: d.kind === "id" ? "image" : "pdf",
   size: d.size
 });
-export default function DocumentsPage() {
+function EmployeeDocumentsPage() {
   useRev();
   const docs = useApp(s => s.docs);
   const requests = useApp(s => s.docRequests);

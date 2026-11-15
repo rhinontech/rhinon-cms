@@ -30,7 +30,11 @@ export default function MorePage() {
   const deals = useApp((s) => s.deals);
   const notifs = useApp((s) => s.notifs);
   const clock = useApp((s) => s.clock);
+  const balances = useApp((s) => s.balances);
   const docs = useApp((s) => s.docs);
+  const isPayAdmin = !!perms?.payroll?.write;
+  const isAttAdmin = !!perms?.attendance?.write;
+  const isLeaveAdmin = !!perms?.leave?.write;
   const pages = useApp((s) => s.pages);
   const interviews = useApp((s) => s.interviews);
   const drafts = useApp((s) => s.drafts);
@@ -38,7 +42,6 @@ export default function MorePage() {
   const ideas = useApp((s) => s.ideas);
   const posts = useApp((s) => s.posts);
   const brand = useApp((s) => s.brand);
-  const balances = useApp((s) => s.balances);
   const pipeline = deals.filter((d) => d.stage !== "won").reduce((s, d) => s + d.value, 0);
   const fresh = notifs.filter((n) => n.unread).length;
   const toSign = docs.filter((d) => d.state === "to-sign").length;
@@ -64,10 +67,11 @@ export default function MorePage() {
         {
           id: "attendance",
           to: "/attendance",
-          label: ["Clock"],
+          label: isAttAdmin ? ["Team", "time"] : ["Clock"],
           tone: "leaf",
-          stat:
-            clock.status === "out"
+          stat: isAttAdmin
+            ? "Who's in today"
+            : clock.status === "out"
               ? "Not in yet"
               : clock.status === "done"
                 ? "Day logged"
@@ -76,16 +80,19 @@ export default function MorePage() {
         {
           id: "leave",
           to: "/leave",
-          label: ["Leave"],
+          label: isLeaveAdmin ? ["Team", "leave"] : ["Leave"],
           tone: "sky",
-          stat: `${Math.max(0, balances.reduce((n, b) => n + b.total - b.used, 0))} days left`,
+          stat: isLeaveAdmin
+            ? (approvals.length ? `${approvals.length} to approve` : "All clear")
+            : `${Math.max(0, balances.reduce((n, b) => n + b.total - b.used, 0))} days left`,
+          badge: isLeaveAdmin ? (approvals.length || undefined) : undefined,
         },
         {
           id: "pay",
           to: "/pay",
-          label: ["Pay"],
+          label: isPayAdmin ? ["Team", "payroll"] : ["Pay"],
           tone: "sun",
-          stat: PAYSLIPS[0] ? `${PAYSLIPS[0].short} paid` : "No payslips yet",
+          stat: isPayAdmin ? "Manage payroll" : (PAYSLIPS[0] ? `${PAYSLIPS[0].short} paid` : "No payslips yet"),
         },
         {
           id: "documents",
