@@ -173,5 +173,15 @@ InboxEmail.init(
     sequelize,
     tableName: "inbox_emails",
     timestamps: true,
+    indexes: [
+      // Every mailbox list (Inbox, Sent, Archive) asks for "the newest 60 in this folder".
+      // With only the organizationId index each one read the whole table (~100 MB) and
+      // sorted it: 45 ms, three times per page load. This answers it from the first 60
+      // index entries: 0.17 ms in the same query on a copy of the production table.
+      {
+        name: "inbox_emails_folder_recent",
+        fields: ["organizationId", "folder", { name: "sentAt", order: "DESC" }, { name: "id", order: "DESC" }],
+      },
+    ],
   }
 );

@@ -43,5 +43,15 @@ CampaignActivity.init(
     generatedContent: { type: DataTypes.TEXT, allowNull: true },
     timestamp: { type: DataTypes.DATE, defaultValue: DataTypes.NOW, allowNull: false },
   },
-  { sequelize, tableName: "campaign_activities", timestamps: true }
+  {
+    sequelize,
+    tableName: "campaign_activities",
+    timestamps: true,
+    indexes: [
+      // GET /outreach/activities is "the latest N by createdAt". Without this the planner
+      // scanned every activity, then joined all of `leads` to pick the 40 names: 93 ms,
+      // against 17 ms with it, on a copy of the production tables.
+      { name: "campaign_activities_recent", fields: ["organizationId", { name: "createdAt", order: "DESC" }] },
+    ],
+  }
 );
