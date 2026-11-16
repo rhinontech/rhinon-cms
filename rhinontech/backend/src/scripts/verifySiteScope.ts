@@ -6,7 +6,7 @@
  *   npm run verify:sites
  */
 import { Op } from "sequelize";
-import { Lead, InboxEmail, PageView, Workflow, PipelineStage } from "../models";
+import { Lead, Campaign, InboxEmail, PageView, Workflow, PipelineStage } from "../models";
 import { runForOrg } from "../services/tenantContext";
 import { runForSite, runAcrossSites } from "../services/siteContext";
 
@@ -14,7 +14,7 @@ const ORG_A = "11111111-1111-1111-1111-111111111111";
 const SITE_A = { id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", slug: "rhinonlabs" };
 
 let captured: any = null;
-for (const model of [Lead, InboxEmail, PageView, Workflow, PipelineStage]) {
+for (const model of [Lead, Campaign, InboxEmail, PageView, Workflow, PipelineStage]) {
   (model as any).addHook("beforeFindAfterOptions", (options: any) => {
     captured = options;
     throw new Error("__STOP__");
@@ -60,17 +60,17 @@ const inOrg = <T>(fn: () => T) => runForOrg(ORG_A, fn);
 async function main() {
   // 1. An explicitly chosen site filters reads.
   let opts = await capture(() =>
-    inOrg(() => runForSite(SITE_A, true, () => Lead.findAll()))
+    inOrg(() => runForSite(SITE_A, true, () => Campaign.findAll()))
   );
   check("explicit site filters reads", valueAt(opts?.where, "siteId") === SITE_A.id, show(opts?.where));
 
   // 2. The caller's own where survives alongside the site filter.
   opts = await capture(() =>
-    inOrg(() => runForSite(SITE_A, true, () => Lead.findAll({ where: { status: "New" } })))
+    inOrg(() => runForSite(SITE_A, true, () => Campaign.findAll({ where: { stage: "Active" } })))
   );
   check(
     "caller where is preserved",
-    valueAt(opts?.where, "siteId") === SITE_A.id && valueAt(opts?.where, "status") === "New",
+    valueAt(opts?.where, "siteId") === SITE_A.id && valueAt(opts?.where, "stage") === "Active",
     show(opts?.where)
   );
 
@@ -101,10 +101,10 @@ async function main() {
   check("shared config not site-filtered", valueAt(opts?.where, "siteId") === undefined, show(opts?.where));
 
   // 8. Writes are stamped even when the caller did not choose a site.
-  const draft = Lead.build({ name: "n", company: "c", email: "e@x.com" } as any);
+  const draft = Campaign.build({ name: "n" } as any);
   inOrg(() =>
     runForSite(SITE_A, false, () => {
-      for (const hook of (Lead as any).options.hooks.beforeCreate ?? []) hook(draft, {});
+      for (const hook of (Campaign as any).options.hooks.beforeCreate ?? []) hook(draft, {});
     })
   );
   check("create stamps siteId", draft.siteId === SITE_A.id, String(draft.siteId));
@@ -118,6 +118,14 @@ async function main() {
     })
   );
   check("explicit siteId is not overwritten", inherited.siteId === "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", String(inherited.siteId));
+
+  // 10. The CRM is one book of people for the whole workspace: choosing a brand does not filter it,
+  //     and a new lead is not stamped with a brand it would then be hidden by.
+  opts = await capture(() => inOrg(() => runForSite(SITE_A, true, () => Lead.findAll())));
+  check("CRM (leads) is workspace-wide even with a brand chosen", valueAt(opts?.where, "siteId") === undefined, show(opts?.where));
+  const person = Lead.build({ name: "n", company: "c", email: "e@x.com" } as any);
+  inOrg(() => runForSite(SITE_A, true, () => { for (const hook of (Lead as any).options.hooks.beforeCreate ?? []) hook(person, {}); }));
+  check("a new lead is not stamped with the viewing brand", !person.siteId, String(person.siteId));
 
   let failed = 0;
   for (const r of results) {

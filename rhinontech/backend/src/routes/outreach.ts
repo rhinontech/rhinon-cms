@@ -1,4 +1,5 @@
 import { Router, Response } from "express";
+import { Op, literal } from "sequelize";
 import { Lead, Campaign, CampaignActivity, InboxEmail, Unsubscribe } from "../models";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 import { resolveSiteContext } from "../middleware/siteContext";
@@ -14,6 +15,19 @@ const router = Router();
 router.use(authenticate);
 // Brand-split module: the [domain] the admin is showing scopes every read below.
 router.use(resolveSiteContext);
+
+/**
+ * Which brand an activity belongs to: its campaign's brand, or, for the manual one-off sends that have
+ * no campaign, its lead's brand. campaign_activities has no brand column of its own, so every count
+ * over it has to say this out loud; the model hooks only cover models that carry a siteId.
+ *
+ * `alias` is the activities table's alias in the query; `siteIdSql` is the brand to match (already
+ * escaped or a bound parameter). Used by the stat cards, the 14-day chart and the recent-activity feed so
+ * they can never disagree about what a brand's numbers are.
+ */
+const activityInBrandSql = (alias: string, siteIdSql: string) =>
+  `COALESCE((SELECT c."siteId" FROM campaigns c WHERE c.id = ${alias}."campaignId"), ` +
+  `(SELECT l."siteId" FROM leads l WHERE l.id = ${alias}."leadId")) = ${siteIdSql}`;
 
 // POST /outreach/send - manual 1-to-1 outreach
 router.post("/send", authorize("outreach:write"), async (req: AuthRequest, res: Response) => {
@@ -92,14 +106,42 @@ router.post("/send", authorize("outreach:write"), async (req: AuthRequest, res: 
 // GET /outreach/stats - aggregate outreach metrics
 router.get("/stats", authorize("outreach:read"), async (_req: AuthRequest, res: Response) => {
   try {
-    const [totalLeads, totalCampaigns, activeCampaigns, emailsSent, repliesReceived] = await Promise.all([
-      Lead.count(),
+    // Leads and campaigns are brand-scoped by the model hooks. Activities are not (no siteId column),
+    // so sends and replies are counted by hand, per brand, or workspace-wide when no brand is chosen.
+    // The CRM is workspace-wide, so "Total Leads" here is this brand's audience: the people in its
+    // lists or enrolled in its campaigns. With no brand chosen it is the whole book.
+    const brand = currentSiteFilter();
+    const [totalLeads, totalCampaigns, activeCampaigns, [counts]] = await Promise.all([
+      brand
+        ? (sequelize
+            .query(
+              `SELECT COUNT(*) AS n FROM leads l
+                WHERE l."organizationId" = :orgId
+                  AND (l."campaignId" IN (SELECT c.id FROM campaigns c WHERE c."siteId" = :siteId::uuid)
+                       OR EXISTS (SELECT 1 FROM contact_group_members m JOIN contact_groups g ON g.id = m."contactGroupId"
+                                   WHERE m."leadId" = l.id AND g."siteId" = :siteId::uuid))`,
+              { replacements: { orgId: _req.user!.organizationId, siteId: brand }, type: (sequelize as any).QueryTypes?.SELECT ?? "SELECT" }
+            )
+            .then((r: any[]) => parseInt(r[0]?.n, 10) || 0))
+        : Lead.count(),
       Campaign.count(),
       Campaign.count({ where: { stage: "Active" } }),
-      CampaignActivity.count({ where: { type: "OutreachSent" } }),
-      CampaignActivity.count({ where: { type: "ReplyReceived" } }),
+      sequelize.query(
+        `SELECT COUNT(*) FILTER (WHERE a.type = 'OutreachSent')   AS sent,
+                COUNT(*) FILTER (WHERE a.type = 'ReplyReceived')  AS replied
+           FROM campaign_activities a
+          WHERE a."organizationId" = :orgId
+            AND (:siteId::uuid IS NULL OR ${activityInBrandSql("a", ":siteId::uuid")})`,
+        { replacements: { orgId: _req.user!.organizationId, siteId: currentSiteFilter() }, type: (sequelize as any).QueryTypes?.SELECT ?? "SELECT" }
+      ) as Promise<any[]>,
     ]);
-    res.json({ totalLeads, totalCampaigns, activeCampaigns, emailsSent, repliesReceived });
+    res.json({
+      totalLeads,
+      totalCampaigns,
+      activeCampaigns,
+      emailsSent: parseInt(counts?.sent, 10) || 0,
+      repliesReceived: parseInt(counts?.replied, 10) || 0,
+    });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
@@ -143,9 +185,7 @@ router.get("/timeseries", authorize("outreach:read"), async (req: AuthRequest, r
         ON a."timestamp" >= (d.date::text || ' 00:00:00')::timestamp AT TIME ZONE 'Asia/Kolkata'
        AND a."timestamp" <  ((d.date + 1)::text || ' 00:00:00')::timestamp AT TIME ZONE 'Asia/Kolkata'
        AND a."organizationId" = :orgId
-       AND (:siteId::uuid IS NULL OR a."campaignId" IN (
-             SELECT c.id FROM campaigns c WHERE c."siteId" = :siteId::uuid
-           ))
+       AND (:siteId::uuid IS NULL OR ${activityInBrandSql("a", ":siteId::uuid")})
       GROUP BY d.date
       ORDER BY d.date
       `,
@@ -174,8 +214,13 @@ router.get("/activities", authorize("outreach:read"), async (req: AuthRequest, r
   const limit = parseInt(req.query.limit as string) || 20;
   const campaignId = (req.query.campaignId as string) || null;
   try {
+    const siteId = currentSiteFilter();
+    const conditions: any[] = [];
+    if (campaignId) conditions.push({ campaignId });
+    // The include below is not scoped by the site hooks, so the brand is applied here.
+    if (siteId) conditions.push(literal(activityInBrandSql('"CampaignActivity"', sequelize.escape(siteId))));
     const activities = await CampaignActivity.findAll({
-      ...(campaignId ? { where: { campaignId } } : {}),
+      ...(conditions.length ? { where: { [Op.and]: conditions } } : {}),
       limit,
       order: [["createdAt", "DESC"]],
       include: [

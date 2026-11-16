@@ -173,6 +173,14 @@ Do not write the article. Notes only.`;
 
 const styleGuide = (brand: string, studio: boolean) => `WRITING RULES (follow strictly):
 
+HARD RULE — WRITE LIKE A HUMAN, NOT A MODEL (non-negotiable):
+- The post must read as if a real practitioner typed it between meetings: use contractions (it's, you'll, don't), occasional one-line paragraphs, a question to the reader now and then, and small asides in brackets (like this one).
+- Vary rhythm hard. Some sentences three words long. Others that run on a bit because the writer is thinking through the point as they make it. Never three same-shaped sentences in a row.
+- No formulaic scaffolding: never "Firstly/Secondly/Finally", never a paragraph that starts by restating the heading, never a closing sentence that summarises the paragraph it ends. Headings never follow a repeating template ("The X of Y" five times).
+- Have opinions. Say "honestly", "the short answer is no", "most teams get this wrong" where it's true. Admit trade-offs and cases where the advice doesn't apply.
+- Do not over-use em dashes, semicolons, or the word "simply". Never use the rhetorical "But here's the thing:" or "Let's dive in".
+- Read-back test: if any sentence could appear unchanged in a thousand other AI articles, rewrite it with a specific detail (a number, a tool name, a situation) until it couldn't.
+
 VOICE & TONE:
 - Write like an experienced founder/engineer explaining this to a peer: direct, specific, opinionated where justified.
 - Open with the reader's actual problem or a concrete situation in 2-3 sentences. Never open with "In today's fast-paced world", "In the ever-evolving", "Are you looking to", or a definition.
@@ -216,7 +224,7 @@ ${links.map((l) => `- ${l.title} -> ${l.path}`).join("\n") || "- (none)"}
 
 ${styleGuide(topic.brand?.name ?? "Rhinon Labs", !topic.brand)}
 
-IMAGES: ${topic.withImages ? `Place 2-3 image markers where a visual genuinely helps (a process diagram-like illustration, a comparison, a concept). A marker is its own paragraph exactly like <p>[[IMAGE 1]]</p>, numbered from 1. For each, provide a detailed visual prompt describing an editorial illustration (no text in the image) and descriptive alt text.` : "Do not include image markers."}
+IMAGES: ${topic.withImages ? `Place 2-3 image markers where a visual genuinely helps (a process diagram-like illustration, a comparison, a concept). A marker is its own paragraph exactly like <p>[[IMAGE 1]]</p>, numbered from 1. For each, provide a detailed visual prompt describing a realistic, hand-crafted editorial scene — real-world settings and objects (a founder's desk, a whiteboard session, a phone in hand), never futuristic/sci-fi tech imagery, no text in the image — and descriptive alt text.` : "Do not include image markers."}
 
 Return ONLY a JSON object with this shape:
 {

@@ -36,7 +36,7 @@ const PUBLIC_BLOG_LIST_FIELDS = [
 
 const PUBLIC_BLOG_DETAIL_FIELDS = [
   ...PUBLIC_BLOG_LIST_FIELDS,
-  "content", "contentBlocks", "faqs", "metaTitle", "metaDescription",
+  "content", "contentBlocks", "faqs", "metaTitle", "metaDescription", "focusKeyword",
 ] as const;
 
 // Events mirror the blog field shape (no `domain` column — the Events table is uppercurve-only).

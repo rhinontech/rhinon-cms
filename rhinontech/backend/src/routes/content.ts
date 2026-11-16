@@ -214,6 +214,7 @@ async function runTopicGeneration(topicId: string, userId: string): Promise<void
       category: draft.category || null,
       metaTitle: draft.metaTitle || null,
       metaDescription: draft.metaDescription || null,
+      focusKeyword: topic.keyword || null,
       coverImage: draft.coverImage,
       tags: draft.tags,
       readTime: readTimeFor(draft.html),

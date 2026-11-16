@@ -81,6 +81,7 @@ export function BlogEditorPage({ id, resource = "blogs" }: { id?: string; resour
   const [publishedAt, setPublishedAt] = useState(() => new Date().toISOString().slice(0, 10));
   const [metaTitle, setMetaTitle] = useState("");
   const [metaDescription, setMetaDescription] = useState("");
+  const [focusKeyword, setFocusKeyword] = useState("");
   const [authorName, setAuthorName] = useState(defaultAuthor.name);
   const [authorRole, setAuthorRole] = useState(defaultAuthor.role);
   const [authorAvatar, setAuthorAvatar] = useState("");
@@ -125,6 +126,7 @@ export function BlogEditorPage({ id, resource = "blogs" }: { id?: string; resour
         setPublishedAt(new Date(blog.publishedAt).toISOString().slice(0, 10));
         setMetaTitle(blog.metaTitle || "");
         setMetaDescription(blog.metaDescription || "");
+        setFocusKeyword((blog as any).focusKeyword || "");
         setAuthorName(blog.authorName || defaultAuthor.name);
         setAuthorRole(blog.authorRole || defaultAuthor.role);
         setAuthorAvatar(blog.authorAvatar || "");
@@ -191,6 +193,7 @@ export function BlogEditorPage({ id, resource = "blogs" }: { id?: string; resour
         publishedAt: new Date(`${publishedAt}T00:00:00`).toISOString(),
         metaTitle: metaTitle.trim() || null,
         metaDescription: metaDescription.trim() || null,
+        focusKeyword: focusKeyword.trim() || null,
         authorName: authorName.trim() || defaultAuthor.name,
         authorRole: authorRole.trim() || defaultAuthor.role,
         authorAvatar: authorAvatar || null,
@@ -436,6 +439,17 @@ export function BlogEditorPage({ id, resource = "blogs" }: { id?: string; resour
             </SettingsCard>
 
             <SettingsCard title="SEO">
+              <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
+                Focus Keyword
+                <input
+                  type="text"
+                  value={focusKeyword}
+                  onChange={(e) => setFocusKeyword(e.target.value)}
+                  placeholder="e.g. mobile app development cost india"
+                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+                />
+                <span className="text-xs text-muted-foreground font-normal">Should appear in title, first paragraph, and one H2</span>
+              </label>
               <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">
                 <span className="flex items-center justify-between">
                   Meta Title
