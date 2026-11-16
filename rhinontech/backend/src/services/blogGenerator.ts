@@ -198,7 +198,7 @@ STRUCTURE (also for GEO/AI-search citations):
 - Where the topic suits it, include a step-by-step section: one <h3> per step with the number in the heading text ("Step 1: Define the core workflow"), followed by <p> paragraphs. NEVER put headings, paragraphs or images inside <li> — list items hold a single line of plain or bold text only.
 - Use 5-8 <h2> sections, <h3> sub-points where useful, bullet lists, and at most one table if it genuinely helps comparison.
 - 1,800-2,400 words. End with a short, practical next step (not "In conclusion").
-- Mention ${studio ? "the studio (Rhinon Labs)" : brand} at most twice, naturally, with one call to action linking to the target page.
+- Mention ${studio ? "the studio (Rhinon Labs)" : brand} at most twice, naturally. End with one call to action: any CTA worded as booking/scheduling a call or consultation MUST link to /schedule-call (the booking page), never to a service page. Link the target page separately, earlier in the body, with descriptive anchor text about the service itself.
 
 SEO:
 - Include the primary search phrase in the first 100 words, one <h2>, and the meta description — naturally, with normal capitalisation.
@@ -214,7 +214,7 @@ TOPIC: "${topic.title}"
 ${topic.keyword ? `PRIMARY SEARCH PHRASE: "${topic.keyword}" — use it in the title, the first 100 words, one <h2>, and the meta description, naturally, with normal capitalisation (write "MVP development cost in India", never the raw lowercase phrase).` : ""}
 ${topic.audience ? `READER: ${topic.audience}` : ""}
 ${topic.notes ? `AUTHOR'S FIRST-HAND NOTES (use these, they make the post credible):\n${topic.notes}` : ""}
-${topic.targetPage ? `TARGET PAGE for the call to action: ${topic.targetPage}` : ""}
+${topic.targetPage ? `TARGET PAGE to link naturally in the body (service context, not the booking CTA): ${topic.targetPage}` : ""}
 
 RESEARCH NOTES:
 ${notes || "(none — rely on well-established knowledge, avoid specific statistics)"}
@@ -277,15 +277,29 @@ function sanitizeHtml(html: string): string {
     .trim();
 }
 
+/**
+ * Gemini occasionally emits raw control characters (literal newlines/tabs)
+ * inside JSON string values, which strict JSON.parse rejects ("Bad control
+ * character in string literal"). Outside strings those characters are plain
+ * whitespace, so replacing every control character with a space yields valid
+ * JSON either way; the HTML body never depends on raw newlines.
+ */
 function parseJson(text: string): any {
   const cleaned = text.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/i, "").trim();
-  try {
-    return JSON.parse(cleaned);
-  } catch {
-    const m = cleaned.match(/\{[\s\S]*\}/);
-    if (!m) throw new Error("The model did not return valid JSON");
-    return JSON.parse(m[0]);
+  const attempts = [cleaned, cleaned.replace(/[\u0000-\u001F]+/g, " ")];
+  for (const attempt of attempts) {
+    try {
+      return JSON.parse(attempt);
+    } catch {
+      const m = attempt.match(/\{[\s\S]*\}/);
+      if (m) {
+        try {
+          return JSON.parse(m[0]);
+        } catch { /* try the next attempt */ }
+      }
+    }
   }
+  throw new Error("The model did not return valid JSON");
 }
 
 const escapeAttr = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
