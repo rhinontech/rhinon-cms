@@ -13,7 +13,7 @@ import { sendEmail } from "../services/mailer";
 import { env } from "../config/env";
 import { classifyChannel, parseHost, isBotUserAgent } from "../services/analytics";
 import { enrollRealtimeLead } from "../services/workflowEngine";
-import { extractClientIp, lookupIpLocation, lookupIpLocationCached } from "../services/geolocation";
+import { extractClientIp, lookupIpLocationCached } from "../services/geolocation";
 import { runAsSystem, runForOrg } from "../services/tenantContext";
 import { verifyVisitRef } from "../services/visitRef";
 import { legal } from "../config/legal";
@@ -413,7 +413,10 @@ router.post("/visitors", express.text({ type: ["text/plain"] }), async (req: Req
     }
 
     const ip = extractClientIp(req);
-    const geo = await lookupIpLocation(ip);
+    // Cached per IP (and a failed lookup is cached too). The uncached call here hit
+    // ip-api.com on every visit and, when it timed out, held the request open for the
+    // full 3.5 s abort window every single time.
+    const geo = (await lookupIpLocationCached(ip)) ?? { ip, city: null, region: null, country: null, location: null, latitude: null, longitude: null };
 
     const path = typeof b.path === "string" ? b.path.slice(0, 512) : null;
     const referrer = typeof b.referrer === "string" ? b.referrer.slice(0, 1024) : null;

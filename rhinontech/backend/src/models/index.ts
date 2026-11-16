@@ -1,3 +1,4 @@
+import { invalidateIdentityAfterWrite } from "../services/identityCache";
 import { Role } from "./Role";
 import { Permission } from "./Permission";
 import { User } from "./User";
@@ -475,6 +476,18 @@ for (const model of SITE_MODELS) {
 }
 
 assertSiteColumns();
+
+// authenticate() caches the identity it derives from these tables for a few seconds
+// (services/identityCache.ts). Any write to them drops the cache, so offboarding and
+// role or permission changes still take effect on the very next request.
+for (const model of [User, Role, Permission, RolePermission, Organization]) {
+  for (const hook of [
+    "afterCreate", "afterUpdate", "afterDestroy", "afterUpsert",
+    "afterBulkCreate", "afterBulkUpdate", "afterBulkDestroy",
+  ] as const) {
+    model.addHook(hook, invalidateIdentityAfterWrite);
+  }
+}
 
 export {
   Organization,

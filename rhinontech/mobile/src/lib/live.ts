@@ -45,12 +45,24 @@ export function blankLive() {
   liveModules().forEach((m) => m.blank?.());
 }
 
-export async function syncAll(): Promise<void> {
+async function runSync(): Promise<void> {
   if (!getSession()) return;
   const all = liveModules();
   // the brand (site) must be known before the brand-scoped modules ask for their data
   await all.find((m) => m.name === "brands")?.sync().catch(() => {});
   await Promise.allSettled(all.filter((m) => m.name !== "brands").map((m) => m.sync()));
+}
+
+let syncing: Promise<void> | null = null;
+
+/**
+ * Refreshes every module (~40 requests). One sync at a time: when the server is slow, a
+ * second burst landing on top of the first only makes it slower for everyone, so callers
+ * during a sync share it.
+ */
+export function syncAll(): Promise<void> {
+  if (!syncing) syncing = runSync().finally(() => { syncing = null; });
+  return syncing;
 }
 
 let installed = false;

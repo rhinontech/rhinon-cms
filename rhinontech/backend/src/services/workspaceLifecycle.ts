@@ -5,6 +5,7 @@ import { Organization } from "../models/Organization";
 import { TENANT_MODELS } from "../models/tenantScope";
 import { recordAudit } from "./audit";
 import { runAsSystem } from "./tenantContext";
+import { clearIdentityCache } from "./identityCache";
 import { deleteOrgObjects } from "./storage";
 import { sendEmail } from "./mailer";
 
@@ -205,6 +206,9 @@ export async function purgeWorkspace(organizationId: string): Promise<PurgeResul
     // role_permissions has no organizationId but cascades from roles, which are gone.
     await sequelize.query(`DELETE FROM "organizations" WHERE id = :id`, { replacements: { id: org.id }, transaction: t, type: QueryTypes.DELETE });
   });
+
+  // The purge deletes users and the org with raw SQL, which the model hooks never see.
+  clearIdentityCache();
 
   console.log(`[Workspace] Purged ${org.slug}: ${rowsDeleted} rows, ${objectsDeleted ?? "unknown"} files, ${passes} pass(es).`);
   return { organizationId: org.id, slug: org.slug, rowsDeleted, objectsDeleted, passes };
