@@ -32,13 +32,21 @@ function ScheduleForm({ candidate, rounds, onDone }: { candidate: Candidate; rou
   const [notify, setNotify] = useState(true);
   const [addMeet, setAddMeet] = useState(true);
   const [saving, setSaving] = useState(false);
+  /** null until the check returns (or if it fails): the server enforces the rule either way. */
+  const [calendarConnected, setCalendarConnected] = useState<boolean | null>(null);
 
   useEffect(() => {
     hiringApi("/interviewers").then((r) => r.json()).then((d) => setPeople(Array.isArray(d) ? d : [])).catch(() => {});
+    hiringApi("/calendar-status").then((r) => r.json()).then((d) => setCalendarConnected(Boolean(d?.connected))).catch(() => {});
   }, []);
+
+  // With no calendar connected nothing can create a Meet link, so the person scheduling has to bring one.
+  const needsLink = calendarConnected === false;
+  const missingLink = needsLink && !meetingLink.trim();
 
   const save = async () => {
     if (!interviewerId) { toast.error("Pick an interviewer"); return; }
+    if (missingLink) { toast.error("Add a meeting link first — no calendar is connected to create one"); return; }
     setSaving(true);
     const r = await hiringApi(`/candidates/${candidate.id}/interviews`, jsonInit("POST", {
       roundIndex, interviewerId, scheduledAt: new Date(when).toISOString(), durationMins, meetingLink, notify, addMeet,
@@ -46,7 +54,8 @@ function ScheduleForm({ candidate, rounds, onDone }: { candidate: Candidate; rou
     const data = await r.json().catch(() => ({}));
     setSaving(false);
     if (!r.ok) { toast.error(data.message || "Couldn't schedule"); return; }
-    toast.success(notify ? "Interview scheduled — invites sent" : "Interview scheduled");
+    if (data.warning) toast.warning(data.warning, { duration: 12000 });
+    else toast.success(notify ? "Interview scheduled — invites sent" : "Interview scheduled");
     onDone();
   };
 
@@ -76,10 +85,23 @@ function ScheduleForm({ candidate, rounds, onDone }: { candidate: Candidate; rou
         </label>
       </div>
       <label className={labelCls}>
-        Meeting link
-        <input value={meetingLink} onChange={(e) => setMeetingLink(e.target.value)} placeholder="Google Meet / Zoom link (optional)" className={inputCls} />
+        {needsLink ? "Meeting link (required)" : "Meeting link"}
+        <input
+          value={meetingLink}
+          onChange={(e) => setMeetingLink(e.target.value)}
+          placeholder={needsLink ? "Paste your Google Meet link" : "Google Meet / Zoom link (optional)"}
+          className={inputCls}
+          aria-required={needsLink}
+        />
       </label>
-      {!meetingLink.trim() && (
+      {needsLink && (
+        <p className="text-xs text-foreground/70 rounded-lg bg-muted px-3 py-2">
+          No Google Calendar is connected, so a Meet link can&apos;t be created for you. Create one at{" "}
+          <a href="https://meet.google.com/new" target="_blank" rel="noopener noreferrer" className="underline font-medium">meet.google.com/new</a>
+          {" "}and paste it here. It goes in the email to the candidate and the interviewer.
+        </p>
+      )}
+      {!needsLink && !meetingLink.trim() && (
         <label className="flex items-center gap-2 text-sm text-foreground/85">
           <input type="checkbox" checked={addMeet} onChange={(e) => setAddMeet(e.target.checked)} />
           Create a Google Meet link
@@ -90,7 +112,7 @@ function ScheduleForm({ candidate, rounds, onDone }: { candidate: Candidate; rou
         Email the candidate and interviewer
       </label>
       <div className="flex justify-end">
-        <button onClick={save} disabled={saving} className="px-4 py-1.5 text-xs font-medium rounded-lg bg-primary text-primary-foreground disabled:opacity-50">
+        <button onClick={save} disabled={saving || missingLink} className="px-4 py-1.5 text-xs font-medium rounded-lg bg-primary text-primary-foreground disabled:opacity-50">
           {saving ? "Scheduling…" : "Schedule"}
         </button>
       </div>
