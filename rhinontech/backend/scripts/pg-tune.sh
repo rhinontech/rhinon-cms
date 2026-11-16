@@ -5,6 +5,7 @@
 #
 #   sudo bash rhinontech/backend/scripts/pg-tune.sh
 #   DRY_RUN=1 bash rhinontech/backend/scripts/pg-tune.sh      # prints the plan, changes nothing
+#   sudo CHECK_ONLY=1 bash rhinontech/backend/scripts/pg-tune.sh   # validates the settings, applies nothing
 #
 # Every setting was still at its stock default except shared_buffers (128 MB, also the stock
 # value). What changes, and why:
@@ -85,17 +86,37 @@ if [ -f "$CONF_FILE" ]; then BACKUP="$CONF_FILE.bak.$(date +%s)"; cp "$CONF_FILE
 printf '%s\n' "$NEW_CONF" > "$CONF_FILE"
 chown postgres:postgres "$CONF_FILE"; chmod 644 "$CONF_FILE"
 
-# pg_file_settings re-reads the config files when queried, so a typo is caught here, before
-# anything restarts. Roll the file back rather than leave a config Postgres cannot start on.
+rollback_conf() { if [ -n "$BACKUP" ]; then mv "$BACKUP" "$CONF_FILE"; else rm -f "$CONF_FILE"; fi; }
+
+# Two checks, both before anything restarts. A bad value in a restart-only setting would stop
+# Postgres from starting at all, so this is the part that matters.
+#  1. pg_file_settings re-reads the config files when queried and reports typos. Settings that
+#     need a restart (shared_buffers, shared_preload_libraries) always say "setting could not be
+#     applied" while the server is running; that is not an error, so it is not counted here.
+#  2. Those restart-only values cannot be judged that way, so load the config exactly as the
+#     server would at startup (postgres -C reads the files, prints one value, starts nothing).
 say "Validating"
-BAD="$(psql_admin -c "select name || ' = ' || coalesce(setting,'?') || '  ->  ' || error from pg_file_settings where error is not null")"
+BAD="$(psql_admin -c "select name || ' = ' || coalesce(setting,'?') || '  ->  ' || error from pg_file_settings where error is not null and error <> 'setting could not be applied'")"
+if [ -z "$BAD" ]; then
+  DATADIR="$(psql_admin -c "show data_directory")"
+  if ! GOT="$(sudo -u postgres "/usr/lib/postgresql/$PGVER/bin/postgres" -D "$DATADIR" -c "config_file=/etc/postgresql/$PGVER/$CLUSTER/postgresql.conf" -C shared_buffers 2>&1)"; then
+    BAD="startup check failed: $GOT"
+  fi
+fi
 if [ -n "$BAD" ]; then
   echo "Postgres rejected the new settings:"; echo "$BAD" | sed 's/^/    /'
-  if [ -n "$BACKUP" ]; then mv "$BACKUP" "$CONF_FILE"; else rm -f "$CONF_FILE"; fi
+  rollback_conf
   echo "Rolled back. Nothing was restarted."
   exit 1
 fi
-echo "    all settings parsed"
+echo "    all settings parsed; at startup Postgres would use shared_buffers = $GOT (8 kB pages; 65536 = 512 MB)"
+
+# CHECK_ONLY=1 proves the settings are valid without applying them.
+if [ "${CHECK_ONLY:-0}" = "1" ]; then
+  rollback_conf
+  echo "CHECK_ONLY: valid. The new file was removed again; nothing was restarted."
+  exit 0
+fi
 
 say "Restarting $UNIT (a few seconds of no database)"
 systemctl restart "$UNIT"
