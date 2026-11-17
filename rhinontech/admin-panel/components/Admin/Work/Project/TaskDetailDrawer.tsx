@@ -415,18 +415,35 @@ export function TaskDetailDrawer({
             <input ref={fileRef} type="file" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); }} />
           </div>
           <div className="space-y-1">
-            {attachments.map((a) => (
-              <a
-                key={a.id}
-                href={a.url ?? "#"}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-2 rounded-lg bg-muted/40 px-2.5 py-1.5 text-sm hover:bg-muted"
-              >
-                <TbPaperclip size={13} className="shrink-0 text-muted-foreground" />
-                <span className="min-w-0 flex-1 truncate text-foreground/85">{a.name}</span>
-              </a>
-            ))}
+            {attachments.map((a) => {
+              const isImage = a.mimeType?.startsWith("image/");
+              const isCover = task.coverAttachmentId === a.id;
+              return (
+                <div key={a.id} className="flex items-center gap-2 rounded-lg bg-muted/40 px-2.5 py-1.5 text-sm hover:bg-muted">
+                  <a href={a.url ?? "#"} target="_blank" rel="noreferrer" className="flex min-w-0 flex-1 items-center gap-2">
+                    {isImage && a.url ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- signed storage URL
+                      <img src={a.url} alt="" className="h-8 w-8 shrink-0 rounded object-cover" />
+                    ) : (
+                      <TbPaperclip size={13} className="shrink-0 text-muted-foreground" />
+                    )}
+                    <span className="min-w-0 flex-1 truncate text-foreground/85">{a.name}</span>
+                  </a>
+                  {/* Cover is optional: only image files can be one, and only one at a time. */}
+                  {isImage && (
+                    <button
+                      onClick={() => onPatch(task.id, { coverAttachmentId: isCover ? null : a.id })}
+                      className={cn(
+                        "shrink-0 rounded px-1.5 py-0.5 text-[11px] font-medium",
+                        isCover ? "bg-primary/10 text-primary hover:bg-primary/15" : "text-muted-foreground hover:bg-background hover:text-foreground"
+                      )}
+                    >
+                      {isCover ? "Remove cover" : "Set as cover"}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
             {!attachments.length && <p className="text-xs text-muted-foreground">No files attached.</p>}
           </div>
         </div>
