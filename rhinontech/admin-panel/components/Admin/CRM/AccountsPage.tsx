@@ -139,7 +139,7 @@ export function AccountsPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search name, domain, industry…"
-              className="w-full rounded-md border border-border bg-card/70 py-1.5 pl-8 pr-3 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
+              className="w-full rounded-md border border-border bg-card/70 py-1.5 pl-8 pr-3 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
             />
           </div>
 
@@ -317,6 +317,15 @@ function Meta({ label, value, link }: { label: string; value: string | null | un
   );
 }
 
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
+      {children}
+    </label>
+  );
+}
+
 /**
  * Inline edit for an account. `domain` is the dedupe key and is uniquely
  * indexed, so the server answers 409 when another account already claims it —
@@ -348,7 +357,7 @@ function EditAccountForm({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const INPUT = "w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40";
+  const INPUT = "w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60";
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -377,13 +386,6 @@ function EditAccountForm({
       setSaving(false);
     }
   };
-
-  const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
-    <label className="block">
-      <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
-      {children}
-    </label>
-  );
 
   return (
     <form onSubmit={submit} className="space-y-2.5">
@@ -427,7 +429,7 @@ function EditAccountForm({
         <textarea
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
-          className="h-20 w-full resize-none rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
+          className="h-20 w-full resize-none rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
         />
       </Field>
 
@@ -469,7 +471,7 @@ function NewAccountDialog({ onClose }: { onClose: (created: boolean) => void }) 
     }
   };
 
-  const INPUT = "w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40";
+  const INPUT = "w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center glass-overlay p-4" onClick={() => onClose(false)}>
