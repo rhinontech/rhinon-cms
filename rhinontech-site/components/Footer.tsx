@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { links } from "@/components/site";
+import { SOCIAL_LINKS } from "@/components/schema";
 import { GROUPS, byGroup } from "@/content/products";
 import { Logo } from "@/components/ui";
 
@@ -52,9 +53,23 @@ export function Footer() {
             </div>
           </div>
         </div>
-        <div className="mt-16 flex flex-col justify-between gap-2 border-t border-line pt-6 text-[13px] text-muted sm:flex-row">
+        <div className="mt-16 flex flex-col justify-between gap-4 border-t border-line pt-6 text-[13px] text-muted sm:flex-row sm:items-center">
           <span>{`© ${year} Rhinon Labs. All rights reserved.`}</span>
-          <span>Made in India</span>
+          <div className="flex flex-wrap items-center gap-5">
+            {SOCIAL_LINKS.map((s) => (
+              <a
+                key={s.href}
+                href={s.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition-colors hover:text-ink"
+              >
+                {s.label}
+              </a>
+            ))}
+            <span aria-hidden className="text-line">|</span>
+            <span>Made in India</span>
+          </div>
         </div>
       </div>
     </footer>

@@ -3,6 +3,7 @@
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { CompanySignature } from "@/components/Admin/Settings/CompanySignature";
 import { CompanyProfile } from "@/components/Admin/Settings/CompanyProfile";
+import { MobileTheme } from "@/components/Admin/Settings/MobileTheme";
 
 export function SettingsGeneral() {
   return (
@@ -20,6 +21,7 @@ export function SettingsGeneral() {
         <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
           <div className="lg:col-span-2 2xl:col-span-3">
             <CompanyProfile />
+            <div className="mt-4"><MobileTheme /></div>
           </div>
           <CompanySignature />
         </div>

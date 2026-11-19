@@ -1,19 +1,19 @@
-import type { Metadata } from "next";
 import { Aurora, Button, Eyebrow, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand } from "@/components/blocks";
-import { links } from "@/components/site";
+import { links, pageMeta } from "@/components/site";
 import { bySlug } from "@/content/products";
 import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
 import { ComposerHero, FeedSection, FlowSection, LinkedInSection, MemorySection, ScheduleSection } from "@/components/product/outreach";
 
 const p = bySlug("outreach")!;
 
-export const metadata: Metadata = {
-  title: "Outreach: AI cold email that sounds like you wrote it",
-  description: "Write one email. AI researches each lead, tailors the message and queues it on your schedule. You approve before anything goes out.",
-  alternates: { canonical: "/product/outreach" },
-};
+export const metadata = pageMeta({
+  title: "AI Cold Email Outreach Software",
+  description: "Free AI cold email outreach for your whole team. AI researches each lead, drafts tailored emails and waits for your approval.",
+  path: "/product/outreach",
+  hasOgImage: true,
+});
 
 const FAQ = [
   { q: "Will it send emails without my approval?", a: "No. Drafts are saved for your review, and you decide what goes out." },
@@ -94,7 +94,7 @@ export default function OutreachPage() {
         { slug: "inbox", line: "Replies come back to your shared inbox." },
         { slug: "chatbot", line: "Warm up leads that visit your site." },
       ]} />
-      <ProductFaq dark title="Outreach questions, answered." items={FAQ} />
+      <ProductFaq slug="outreach" dark title="Outreach questions, answered." items={FAQ} />
       <CtaBand tone={p.tone} title={<>Write one email. <span className="text-aurora-soft">Reach everyone.</span></>} sub="Set up your first campaign in a few minutes. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
       <div className="h-24" />
     </div>

@@ -25,6 +25,7 @@ interface BlogAttributes {
   category?: string | null;
   metaTitle?: string | null;
   metaDescription?: string | null;
+  focusKeyword?: string | null;
   slug: string;
   authorName: string;
   authorRole: string;
@@ -46,7 +47,7 @@ interface BlogCreationAttributes
   extends Optional<
     BlogAttributes,
     | "siteId"
-    | "id" | "contentBlocks" | "faqs" | "category" | "metaTitle" | "metaDescription"
+    | "id" | "contentBlocks" | "faqs" | "category" | "metaTitle" | "metaDescription" | "focusKeyword"
     | "authorName" | "authorRole" | "authorAvatar" | "coverImage"
     | "tags" | "readTime" | "publishedAt" | "status" | "domain" | "createdById"
   > {}
@@ -61,6 +62,7 @@ export class Blog extends Model<BlogAttributes, BlogCreationAttributes> implemen
   declare category: string | null;
   declare metaTitle: string | null;
   declare metaDescription: string | null;
+  declare focusKeyword: string | null;
   declare slug: string;
   declare authorName: string;
   declare authorRole: string;
@@ -88,6 +90,7 @@ Blog.init(
     category: { type: DataTypes.STRING, allowNull: true },
     metaTitle: { type: DataTypes.STRING, allowNull: true },
     metaDescription: { type: DataTypes.TEXT, allowNull: true },
+    focusKeyword: { type: DataTypes.STRING(200), allowNull: true },
     slug: { type: DataTypes.STRING, allowNull: false },
     authorName: { type: DataTypes.STRING, allowNull: false, defaultValue: "Prabhat Patra" },
     authorRole: { type: DataTypes.STRING, allowNull: false, defaultValue: "Founder @ Rhinon Tech" },

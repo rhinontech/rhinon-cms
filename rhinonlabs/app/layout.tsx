@@ -63,7 +63,7 @@ export const metadata: Metadata = {
     template: "%s | Rhinon Labs",
   },
   description:
-    "We help founders and SMBs design, build and launch websites, apps and AI products and internal tools fast with affordable pricing. AI-powered development for startups.",
+    "We help founders and SMBs build custom AI agents, workflow automations and internal tools — fixed scope, no hourly billing. AI-powered development for startups.",
   // keywords: [
   //   "MVP Development",
   //   "AI SaaS Development",
@@ -84,7 +84,7 @@ export const metadata: Metadata = {
     url: "https://www.rhinonlabs.com/",
     title: "Rhinon Labs | Ship Your Product 3x Faster",
     description:
-      "We help founders and SMBs design, build and launch websites, apps and AI products fast. AI-powered development with affordable pricing.",
+      "We help founders and SMBs build custom AI agents, workflow automations and internal tools — fixed scope, no hourly billing.",
     siteName: "Rhinon Labs",
     images: [
       {
@@ -99,7 +99,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Rhinon Labs | Ship Your Product 3x Faster",
     description:
-      "We help founders and SMBs design, build and launch websites, apps and AI products fast. AI-powered development with affordable pricing.",
+      "We help founders and SMBs build custom AI agents, workflow automations and internal tools — fixed scope, no hourly billing.",
     images: ["/og-image.jpg"],
   },
   robots: {

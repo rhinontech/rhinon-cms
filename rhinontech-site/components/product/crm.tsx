@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Bot, Check, FileSpreadsheet, Globe, Mail, MessageSquare, Sparkles, Target, type LucideIcon } from "lucide-react";
-import { Avatar, Pill } from "@/components/ProductMocks";
+import { Avatar, Pill } from "@/components/mockPrimitives";
 import { Confetti, CountTo, Cursor, Live, ScrollStory, TypeText, useReducedMotion, useStepper } from "@/components/motion";
 
 const L = (n: number) => `₹${n.toFixed(1)}L`;

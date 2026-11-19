@@ -26,7 +26,7 @@ export function LeadMagnet() {
                             </h2>
                             
                             <p className="text-lg text-white/60 leading-relaxed mb-8 max-w-xl">
-                                We'll analyze your current workflows, identify bottlenecks, and show you exactly where AI and automation can save you 20+ hours per week. No commitment required.
+                                We'll analyze your current workflows, identify bottlenecks, and show you exactly where AI and automation can eliminate the manual work your team does every day. No commitment required.
                             </p>
                             
                             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 mb-8 text-sm text-white/50">
@@ -40,13 +40,22 @@ export function LeadMagnet() {
                                 </div>
                             </div>
 
-                            <a 
-                                href="#contact" 
-                                className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white text-black font-bold hover:bg-white/90 transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)] group"
-                            >
-                                Claim Your Free Audit
-                                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                            </a>
+                            <div className="flex flex-wrap items-center gap-3">
+                                <a
+                                    href="#contact"
+                                    className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white text-black font-bold hover:bg-white/90 transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)] group"
+                                >
+                                    Claim Your Free Audit
+                                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                </a>
+                                <a
+                                    href="/tools"
+                                    className="inline-flex items-center gap-2 px-6 py-4 rounded-full border border-white/20 text-white/80 font-medium hover:border-white/40 hover:text-white transition-all text-sm"
+                                >
+                                    Free Tools
+                                    <ArrowRight className="w-3.5 h-3.5" />
+                                </a>
+                            </div>
                         </div>
                         
                         <div className="lg:w-1/3 w-full">

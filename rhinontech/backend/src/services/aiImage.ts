@@ -5,14 +5,20 @@ import { uploadBuffer, publicUrl } from "./storage";
 const IMAGE_MODEL = process.env.GEMINI_IMAGE_MODEL || "gemini-3.1-flash-image";
 
 /**
- * House style appended to every blog image prompt. Editorial illustrations read
- * as deliberate; photoreal "stock people" read as AI filler, and text inside
- * generated images is usually garbled.
+ * House style appended to every blog image prompt. Hard rule from the owner:
+ * images must look creative and realistic — like a UX designer made them by
+ * hand — never generic "futuristic AI" art. Text inside generated images is
+ * usually garbled, so it stays banned.
  */
 const STYLE =
-  "Style: clean modern editorial illustration for a tech/startup blog, flat shapes with subtle depth, " +
-  "muted palette with one accent colour, generous negative space, 16:9 landscape. " +
-  "No text, no letters, no logos, no watermarks, no realistic human faces.";
+  "Style: an editorial illustration that looks hand-crafted by a senior UX designer — " +
+  "deliberate composition, visible craft (subtle grain, hand-drawn line quality, imperfect organic shapes), " +
+  "grounded in a realistic everyday work scene or real objects (desks, notebooks, phones, whiteboards, rupee notes, coffee cups) " +
+  "rather than abstract tech metaphors. Warm, natural, muted palette with one confident accent colour; soft realistic light; " +
+  "generous negative space; 16:9 landscape. " +
+  "HARD RULES: absolutely no futuristic or sci-fi styling — no neon glows, no circuit boards, no glowing brains, no holograms, " +
+  "no blue-purple gradient tech aesthetic, no robots unless the article is literally about robots. " +
+  "No text, no letters, no logos, no watermarks, no realistic identifiable human faces.";
 
 /**
  * Generates one image with Gemini and stores it under the public `content/`

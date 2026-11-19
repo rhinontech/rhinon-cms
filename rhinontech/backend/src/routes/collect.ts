@@ -1,8 +1,12 @@
 import express, { Router, Request, Response } from "express";
+import { gzipSync } from "zlib";
 import { runForOrg } from "../services/tenantContext";
 import { runForSite } from "../services/siteContext";
 import { rateLimit } from "../middleware/rateLimit";
 import { TRACKER_SCRIPT } from "../services/trackerScript";
+
+// Pre-compress once at startup; served with Content-Encoding: gzip on every request.
+const TRACKER_GZIPPED = gzipSync(Buffer.from(TRACKER_SCRIPT, "utf8"));
 import { parseBeaconBody, recordPageview, enrichGeoInBackground } from "../services/pageviewIngest";
 import { domainAllowed, noteRejectedHost, requestHost, resolveTrackerKey } from "../services/analyticsSetup";
 
@@ -14,11 +18,18 @@ import { domainAllowed, noteRejectedHost, requestHost, resolveTrackerKey } from 
 const router = Router();
 
 // GET /t.js — the tracker. Cached an hour; the file only changes when we ship.
-router.get("/t.js", (_req: Request, res: Response) => {
+router.get("/t.js", (req: Request, res: Response) => {
   res.type("application/javascript; charset=utf-8");
   res.set("Cache-Control", "public, max-age=3600");
   res.set("Cross-Origin-Resource-Policy", "cross-origin");
-  res.send(TRACKER_SCRIPT);
+  const acceptsGzip = (req.headers["accept-encoding"] || "").includes("gzip");
+  if (acceptsGzip) {
+    res.set("Content-Encoding", "gzip");
+    res.set("Vary", "Accept-Encoding");
+    res.end(TRACKER_GZIPPED);
+  } else {
+    res.send(TRACKER_SCRIPT);
+  }
 });
 
 // POST /collect — one pageview. Fire-and-forget: it answers 204 to everything, so

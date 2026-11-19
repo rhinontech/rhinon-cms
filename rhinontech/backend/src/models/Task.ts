@@ -29,6 +29,8 @@ interface TaskAttributes {
   descriptionHtml?: string | null;
   /** Custom status; `status` below is kept as the coarse rollup of its group. */
   statusId?: string | null;
+  /** The image attachment shown on the card; null = no cover. */
+  coverAttachmentId?: string | null;
   /** Real subitems — a child Task with its own assignee, dates and status. */
   parentTaskId?: string | null;
   /** Manual ordering within a list/board column. */
@@ -51,7 +53,7 @@ interface TaskAttributes {
 }
 
 interface TaskCreationAttributes
-  extends Optional<TaskAttributes, "id" | "description" | "assigneeId" | "projectId" | "team" | "guestVisible" | "startDate" | "descriptionHtml" | "statusId" | "parentTaskId" | "position" | "completedAt" | "customFields" | "dueDate" | "status" | "priority" | "estimatedHours" | "recurrence" | "blockedById" | "leadId" | "dealId" | "accountId"> {}
+  extends Optional<TaskAttributes, "id" | "description" | "assigneeId" | "projectId" | "team" | "guestVisible" | "startDate" | "descriptionHtml" | "statusId" | "coverAttachmentId" | "parentTaskId" | "position" | "completedAt" | "customFields" | "dueDate" | "status" | "priority" | "estimatedHours" | "recurrence" | "blockedById" | "leadId" | "dealId" | "accountId"> {}
 
 export class Task extends Model<TaskAttributes, TaskCreationAttributes> implements TaskAttributes {
   declare id: string;
@@ -65,6 +67,7 @@ export class Task extends Model<TaskAttributes, TaskCreationAttributes> implemen
   declare startDate: Date | null;
   declare descriptionHtml: string | null;
   declare statusId: string | null;
+  declare coverAttachmentId: string | null;
   declare parentTaskId: string | null;
   declare position: number;
   declare completedAt: Date | null;
@@ -95,6 +98,7 @@ Task.init(
     startDate: { type: DataTypes.DATEONLY, allowNull: true },
     descriptionHtml: { type: DataTypes.TEXT, allowNull: true },
     statusId: { type: DataTypes.UUID, allowNull: true },
+    coverAttachmentId: { type: DataTypes.UUID, allowNull: true },
     parentTaskId: { type: DataTypes.UUID, allowNull: true },
     position: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
     completedAt: { type: DataTypes.DATE, allowNull: true },

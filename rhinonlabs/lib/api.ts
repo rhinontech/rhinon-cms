@@ -73,21 +73,41 @@ async function getJSON<T>(path: string): Promise<T | null> {
   return (await res.json()) as T;
 }
 
+/**
+ * Some older blog rows have contentBlocks stored double-encoded (a JSON string
+ * inside the JSONB column). Unwrap it so the renderer always gets an array.
+ */
+function normalizeBlog<T extends { contentBlocks?: unknown }>(blog: T | null): T | null {
+  if (!blog) return blog;
+  if (typeof blog.contentBlocks === "string") {
+    try {
+      const parsed = JSON.parse(blog.contentBlocks);
+      blog.contentBlocks = Array.isArray(parsed) ? parsed : undefined;
+    } catch {
+      blog.contentBlocks = undefined;
+    }
+  } else if (blog.contentBlocks != null && !Array.isArray(blog.contentBlocks)) {
+    blog.contentBlocks = undefined;
+  }
+  return blog;
+}
+
 export async function getBlogs(): Promise<Blog[]> {
-  return (await getJSON<Blog[]>("/public/blogs?domain=rhinonlabs")) ?? [];
+  const blogs = (await getJSON<Blog[]>("/public/blogs?domain=rhinonlabs")) ?? [];
+  return blogs.map((b) => normalizeBlog(b) as Blog);
 }
 
 export async function getBlog(slug: string): Promise<Blog | null> {
-  return getJSON<Blog>(`/public/blogs/${encodeURIComponent(slug)}?domain=rhinonlabs`);
+  return normalizeBlog(await getJSON<Blog>(`/public/blogs/${encodeURIComponent(slug)}?domain=rhinonlabs`));
 }
 
 export async function getCaseStudies(): Promise<CaseStudy[]> {
-  const caseStudies = await getJSON<CaseStudy[]>("/public/case-studies");
-  return caseStudies ?? [];
+  const caseStudies = (await getJSON<CaseStudy[]>("/public/case-studies")) ?? [];
+  return caseStudies.map((cs) => normalizeBlog(cs) as CaseStudy);
 }
 
 export async function getCaseStudy(slug: string): Promise<CaseStudy | null> {
-  return getJSON<CaseStudy>(`/public/case-studies/${encodeURIComponent(slug)}`);
+  return normalizeBlog(await getJSON<CaseStudy>(`/public/case-studies/${encodeURIComponent(slug)}`));
 }
 
 export interface PlatformLeadPayload {

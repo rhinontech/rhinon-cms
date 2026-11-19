@@ -1,8 +1,7 @@
-import type { Metadata } from "next";
 import { Aurora, Button, Eyebrow, IconTile, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand } from "@/components/blocks";
-import { links } from "@/components/site";
+import { links, pageMeta } from "@/components/site";
 import { bySlug } from "@/content/products";
 import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
 import { PayslipFan, RunSection, StructureSection, WallSection } from "@/components/product/payroll";
@@ -10,11 +9,12 @@ import { PayslipFan, RunSection, StructureSection, WallSection } from "@/compone
 const p = bySlug("payroll")!;
 const G = "italic";
 
-export const metadata: Metadata = {
-  title: "Payroll: monthly runs and payslips, built for India",
-  description: "Salary structures live on each person's record. Start a monthly run, check the numbers and mark it paid. Payslips are generated for everyone.",
-  alternates: { canonical: "/product/payroll" },
-};
+export const metadata = pageMeta({
+  title: "Payroll Software for India",
+  description: "Free payroll software for your whole team in India. Manage salary structures, PF/PT/TDS runs and monthly payslips in one place.",
+  path: "/product/payroll",
+  hasOgImage: true,
+});
 
 const FAQ = [
   { q: "Does it handle Indian deductions?", a: "Yes. Payroll supports PF, PT and TDS configuration, and amounts are in ₹." },
@@ -74,7 +74,7 @@ export default function PayrollPage() {
         { slug: "attendance", line: "Attendance and leave inform the month." },
         { slug: "performance", line: "Bring appraisals into pay decisions." },
       ]} />
-      <ProductFaq title="Payroll questions, answered." items={FAQ} />
+      <ProductFaq slug="payroll" title="Payroll questions, answered." items={FAQ} />
       <CtaBand tone={p.tone} title={<>Close the month <span className="text-aurora-soft">with confidence.</span></>} sub="Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
     </div>
   );

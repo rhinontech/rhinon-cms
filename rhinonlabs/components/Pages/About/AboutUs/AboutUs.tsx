@@ -1,72 +1,90 @@
 'use client'
-import { Button } from "@/components/ui/button";
-import { Star } from "lucide-react";
 import { motion } from 'framer-motion'
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { ArrowRight, Box, Layers, Smartphone } from 'lucide-react';
+
+const projects = [
+    {
+        name: 'FurrCircle',
+        type: 'Consumer product',
+        description: 'A pet-parent app — in-house product, live on web, iOS and Android.',
+        icon: Smartphone,
+        tags: ['iOS', 'Android', 'Web'],
+    },
+    {
+        name: 'SR Fitout',
+        type: 'Client portal + admin dashboard',
+        description: 'A Bengaluru interiors studio. We built their marketing site, a project-intake portal and an admin dashboard that replaced a folder of email threads.',
+        icon: Layers,
+        tags: ['Dashboard', 'Portal', 'Web'],
+    },
+    {
+        name: 'Apexis Pro',
+        type: 'Construction SaaS',
+        description: 'A full SaaS product for construction teams — managing drawings, snags, RFIs and handover across sites, on web and native mobile.',
+        icon: Box,
+        tags: ['SaaS', 'Mobile', 'Web'],
+    },
+]
 
 const AboutUs = () => {
-    const router = useRouter()
     return (
-        <div className="flex items-center flex-col py-20 px-5 gap-20">
-            {/* Header */}
-            <div className="flex flex-col gap-10">
-                <div className="flex flex-col gap-5 items-center">
-                    <p className="text-center">ABOUT</p>
-
-                    <div className="flex w-fit text-center">
-                        <h2 className="lg:text-7xl md:text-5xl text-3xl">Our Philosophy</h2>
-                    </div>
-                    <p className="text-center max-w-2xl text-lg text-white/80">We're a founder-led team specializing in internal systems for scaling enterprises. We work directly with product, ops, and engineering leaders to fix systems that slow teams down.</p>
-                </div>
-                <div className="flex items-center max-md:gap-5 max-md:flex-col justify-center gap-10">
-                    <div className="">
-                        <Button className="bg-white text-black hover:bg-gray-200 px-6 py-6  text-base font-semibold rounded-none border-3 border-black/30" onClick={() => router.push("/contact-us")}>
-                            Book a 20-min Discovery Call
-                        </Button>
-                    </div>
-
-                    {/* Social Proof */}
-                    <div className="flex items-center gap-4">
-                        {/* Avatar Stack */}
-                        <div className="flex -space-x-4">
-                            <div className="w-12 h-12 rounded-full bg-gray-600 border-2 border-black flex items-center justify-center">
-                                <img src="https://randomuser.me/api/portraits/women/1.jpg" alt="User 1" className="w-full h-full rounded-full object-cover" />
-                            </div>
-                            <div className="w-12 h-12 rounded-full bg-gray-600 border-2 border-black flex items-center justify-center">
-                                <img src="https://randomuser.me/api/portraits/men/2.jpg" alt="User 2" className="w-full h-full rounded-full object-cover" />
-                            </div>
-                            <div className="w-12 h-12 rounded-full bg-gray-600 border-2 border-black flex items-center justify-center">
-                                <img src="https://randomuser.me/api/portraits/women/3.jpg" alt="User 3" className="w-full h-full rounded-full object-cover" />
-                            </div>
-                        </div>
-
-                        {/* Rating & Trust Text */}
-                        <div className="flex flex-col gap-2">
-                            <div className="flex gap-1">
-                                {[...Array(5)].map((_, i) => (
-                                    <Star key={i} className="w-3 h-3 fill-white text-white" />
-                                ))}
-                            </div>
-                            <span className="text-white/70 text-sm">Trusted by modern organizations worldwide.</span>
-                        </div>
-                    </div>
-                </div>
+        <div className="flex flex-col py-20 px-5 gap-16 max-w-[1200px] mx-auto">
+            <div className="flex flex-col gap-5">
+                <p className="text-xs font-semibold tracking-widest text-white/50 uppercase">What We Have Built</p>
+                <h2 className="lg:text-5xl md:text-4xl text-3xl font-medium tracking-tight">
+                    Our credentials are<br />
+                    <span className="text-white/50">the products we ship.</span>
+                </h2>
+                <p className="max-w-2xl text-lg text-white/70 leading-relaxed">
+                    We don&apos;t sell strategy decks. Every claim we make about our capability is backed by something that is live and running. These are three of the products our team has built from scratch.
+                </p>
             </div>
-            <motion.div
-                className=" relative flex h-[75vh] w-[80vw] max-md:h-[70vh]  items-center justify-center"
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease: "easeOut", }}
-                viewport={{ once: true, amount: 0.4 }} // 👈 only animate on first view
-            >
-                <div className="absolute inset-0 -z-10">
-                    <img src="/assets/about/architecture_wide.png" className="w-full h-full opacity-50 object-cover" alt="Rhinon Labs Architecture" />
-                </div>
 
-            </motion.div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {projects.map((p, i) => (
+                    <motion.div
+                        key={p.name}
+                        className="flex flex-col gap-5 p-6 rounded-2xl border border-white/10 bg-white/3 hover:bg-white/5 transition-colors"
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, ease: 'easeOut', delay: i * 0.1 }}
+                        viewport={{ once: true }}
+                    >
+                        <div className="flex items-center gap-3">
+                            <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/60">
+                                <p.icon className="h-4 w-4" />
+                            </span>
+                            <div>
+                                <h3 className="font-semibold text-white">{p.name}</h3>
+                                <p className="text-xs text-white/40">{p.type}</p>
+                            </div>
+                        </div>
+                        <p className="text-[15px] text-white/70 leading-relaxed flex-1">{p.description}</p>
+                        <div className="flex flex-wrap gap-2">
+                            {p.tags.map(t => (
+                                <span key={t} className="text-[11px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full border border-white/10 text-white/50">{t}</span>
+                            ))}
+                        </div>
+                    </motion.div>
+                ))}
+            </div>
 
-
+            <div className="flex items-center gap-3 pt-2">
+                <Link
+                    href="/case-studies"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-white/70 hover:text-white transition-colors"
+                >
+                    See case studies <ArrowRight className="h-4 w-4" />
+                </Link>
+                <span className="text-white/20">·</span>
+                <Link
+                    href="/schedule-call"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-white/70 hover:text-white transition-colors"
+                >
+                    Book a free discovery call <ArrowRight className="h-4 w-4" />
+                </Link>
+            </div>
         </div>
     )
 }
