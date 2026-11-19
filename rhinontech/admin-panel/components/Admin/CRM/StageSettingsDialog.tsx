@@ -173,6 +173,7 @@ export function StageSettingsDialog({ onClose }: { onClose: (changed: boolean) =
                         saveStage({ ...stage, type });
                       }}
                       className={INPUT}
+                      contentClassName="z-[70]"
                     >
                       <option value="Open">Open</option>
                       <option value="Won">Won</option>

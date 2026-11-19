@@ -575,9 +575,42 @@ async function executeEnrollmentSteps(
     }
 
     if (nodeType === "if_then") {
+      const trackingState = enrollment.trackingState || {};
+      const lastEmailNodeId = trackingState.lastEmailNodeId;
+      const lastSend = lastEmailNodeId ? trackingState.nodes?.[lastEmailNodeId] : null;
+
+      const isConditionMet =
+        config.conditionType === "link_clicked"
+          ? Boolean(lastSend?.clickedAt) || Boolean(trackingState.linkClicked)
+          : Boolean(lastSend?.openedAt) || Boolean(trackingState.emailOpened);
+
       const isAlreadyWaiting = Boolean(enrollment.nextStepAt) && enrollment.currentNodeId === currNodeId;
 
-      if (!isAlreadyWaiting) {
+      // If condition is already met (e.g. lead opened the email early or during a prior wait),
+      // OR wait duration has expired: evaluate immediately!
+      if (isConditionMet || isAlreadyWaiting) {
+        const conditionResult = isConditionMet;
+
+        logs.push({
+          timestamp: new Date().toISOString(),
+          step: `If / Then condition(${config.conditionType || "email_opened"}) evaluated to: ${conditionResult ? "YES (True)" : "NO (False)"}`,
+        });
+
+        // Find matching edge for 'yes' / 'true' or 'no' / 'false' branch
+        const targetBranch = conditionResult ? ["yes", "true"] : ["no", "false"];
+        const matchingEdge =
+          edges.find(
+            (e) => e.source === currNodeId && targetBranch.includes(String(e.sourceHandle || "").toLowerCase())
+          ) || edges.find((e) => e.source === currNodeId);
+
+        if (matchingEdge) {
+          currNodeId = matchingEdge.target;
+          continue;
+        } else {
+          await enrollment.update({ status: "completed", completedAt: new Date(), nextStepAt: null, executionLogs: logs });
+          break;
+        }
+      } else {
         // Schedule wait delay before evaluating condition
         let delayMs = 24 * 60 * 60 * 1000; // default 24 hours
         if (config.checkDelayUnit === "minutes" || config.checkDelayMinutes) {
@@ -603,48 +636,6 @@ async function executeEnrollmentSteps(
 
         // Pause processing for this lead until evaluation delay expires
         break;
-      } else {
-        // Wait duration expired; evaluate condition against trackingState
-        const trackingState = enrollment.trackingState || {};
-        let conditionResult = false;
-
-        // Scope the check to the email this branch actually follows. The old
-        // sequence-wide flags meant "opened step 1" satisfied a check placed
-        // after step 3. Enrollments that predate per-node tracking have no
-        // `nodes` entry, so they fall back to the old flags rather than
-        // silently evaluating false.
-        const lastEmailNodeId = trackingState.lastEmailNodeId;
-        const lastSend = lastEmailNodeId ? trackingState.nodes?.[lastEmailNodeId] : null;
-
-        if (config.conditionType === "link_clicked") {
-          conditionResult = lastSend
-            ? Boolean(lastSend.clickedAt)
-            : Boolean(trackingState.linkClicked);
-        } else {
-          conditionResult = lastSend
-            ? Boolean(lastSend.openedAt)
-            : Boolean(trackingState.emailOpened);
-        }
-
-        logs.push({
-          timestamp: new Date().toISOString(),
-          step: `If / Then condition(${config.conditionType || "email_opened"}) evaluated to: ${conditionResult ? "YES (True)" : "NO (False)"} `,
-        });
-
-        // Find matching edge for 'yes' / 'true' or 'no' / 'false' branch
-        const targetBranch = conditionResult ? ["yes", "true"] : ["no", "false"];
-        const matchingEdge =
-          edges.find(
-            (e) => e.source === currNodeId && targetBranch.includes(String(e.sourceHandle || "").toLowerCase())
-          ) || edges.find((e) => e.source === currNodeId);
-
-        if (matchingEdge) {
-          currNodeId = matchingEdge.target;
-          continue;
-        } else {
-          await enrollment.update({ status: "completed", completedAt: new Date(), nextStepAt: null, executionLogs: logs });
-          break;
-        }
       }
     }
 

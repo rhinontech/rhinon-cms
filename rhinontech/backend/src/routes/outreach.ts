@@ -9,6 +9,7 @@ import { sequelize } from "../config/database";
 import { defaultSenderName, fallbackFromAddress } from "../services/companyProfile";
 import { outboundBlockedReason } from "../services/emailVerification";
 import { reserveUsage } from "../services/usage";
+import { BACKEND_URL } from "../services/emailTemplate";
 
 const router = Router();
 
@@ -62,12 +63,17 @@ router.post("/send", authorize("outreach:write"), async (req: AuthRequest, res: 
 
     const fromEmail = req.user!.companyEmail || (await fallbackFromAddress());
 
+    const trackingPixelUrl = `${BACKEND_URL}/public/track/open?l=${lead.id}${lead.campaignId ? `&c=${lead.campaignId}` : ""}`;
+    const htmlWithPixel = body.includes("</body>")
+      ? body.replace("</body>", `<img src="${trackingPixelUrl}" width="1" height="1" alt="" style="display:none!important;" /></body>`)
+      : `${body}<img src="${trackingPixelUrl}" width="1" height="1" alt="" style="display:none!important;" />`;
+
     // Send the email
     await sendEmail({
       to: lead.email,
       from: fromEmail,
       subject,
-      html: body,
+      html: htmlWithPixel,
       text: body,
     });
 
@@ -128,6 +134,7 @@ router.get("/stats", authorize("outreach:read"), async (_req: AuthRequest, res: 
       Campaign.count({ where: { stage: "Active" } }),
       sequelize.query(
         `SELECT COUNT(*) FILTER (WHERE a.type = 'OutreachSent')   AS sent,
+                COUNT(*) FILTER (WHERE a.type = 'EmailOpened')    AS opened,
                 COUNT(*) FILTER (WHERE a.type = 'ReplyReceived')  AS replied
            FROM campaign_activities a
           WHERE a."organizationId" = :orgId
@@ -140,6 +147,7 @@ router.get("/stats", authorize("outreach:read"), async (_req: AuthRequest, res: 
       totalCampaigns,
       activeCampaigns,
       emailsSent: parseInt(counts?.sent, 10) || 0,
+      emailsOpened: parseInt(counts?.opened, 10) || 0,
       repliesReceived: parseInt(counts?.replied, 10) || 0,
     });
   } catch (error: any) {
@@ -179,6 +187,7 @@ router.get("/timeseries", authorize("outreach:read"), async (req: AuthRequest, r
         d.date::text AS date,
         COUNT(a.id) FILTER (WHERE a.type = 'DraftGenerated') AS drafted,
         COUNT(a.id) FILTER (WHERE a.type = 'OutreachSent')   AS sent,
+        COUNT(a.id) FILTER (WHERE a.type = 'EmailOpened')    AS opened,
         COUNT(a.id) FILTER (WHERE a.type = 'ReplyReceived')  AS replied
       FROM day_range d
       LEFT JOIN campaign_activities a
@@ -201,6 +210,7 @@ router.get("/timeseries", authorize("outreach:read"), async (req: AuthRequest, r
         date: r.date,
         drafted: parseInt(r.drafted, 10) || 0,
         sent: parseInt(r.sent, 10) || 0,
+        opened: parseInt(r.opened, 10) || 0,
         replied: parseInt(r.replied, 10) || 0,
       }))
     );
