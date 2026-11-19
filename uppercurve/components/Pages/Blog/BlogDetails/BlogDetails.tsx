@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { BlogPost, ContentBlock, BlogApiBlock } from "../blogData";
+import type { EventDetailModel } from "@/components/Pages/Events/shared/model";
+import type { Course } from "@/components/Pages/Courses/courseData";
 import BlogPoster from "../BlogPoster";
 
 const fallbackGradients = [
@@ -204,9 +206,13 @@ function ApiBlockRenderer({ blocks }: { blocks: BlogApiBlock[] }) {
 export function BlogDetails({
   post,
   relatedPosts,
+  recommendedEvents,
+  recommendedCourse,
 }: {
   post: BlogPost;
   relatedPosts?: BlogPost[];
+  recommendedEvents?: EventDetailModel[];
+  recommendedCourse?: Course;
 }) {
   const [copied, setCopied] = useState(false);
   const [activeHeading, setActiveHeading] = useState<string>("");
@@ -516,6 +522,100 @@ export function BlogDetails({
                   ))}
                 </div>
               </section>
+            )}
+
+            {/* Dynamic Contextual Recommendations (Audit Item 9) */}
+            {(() => {
+              const links: { title: string; desc: string; href: string; badge: string }[] = [];
+
+              if (recommendedCourse) {
+                links.push({
+                  title: `${recommendedCourse.title} ${recommendedCourse.titleAccent} (${recommendedCourse.eyebrow.trim() || "Live Cohort"})`,
+                  desc: recommendedCourse.tagline || recommendedCourse.heroCard?.body || recommendedCourse.metaDescription,
+                  href: `/courses/${recommendedCourse.slug}`,
+                  badge: "Course",
+                });
+              }
+
+              if (recommendedEvents && recommendedEvents.length > 0) {
+                for (const ev of recommendedEvents) {
+                  links.push({
+                    title: ev.title,
+                    desc: ev.subtitle || `Interactive live session · ${ev.dateLabel}`,
+                    href: `/events/${ev.slug}`,
+                    badge: ev.category === "Community" ? "Community" : "Live Workshop",
+                  });
+                }
+              }
+
+              if (!links.length) return null;
+
+              return (
+                <section className="mt-14 p-6 sm:p-7 rounded-2xl bg-gradient-to-br from-[#F8FAFC] to-[#F1F5F9] border border-[#E2E8F0]">
+                  <p className="text-xs font-bold tracking-[0.16em] uppercase text-[#0052FF] mb-3">
+                    Recommended Programs & Live Workshops
+                  </p>
+                  <div className="space-y-3">
+                    {links.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className="group block p-4 rounded-xl bg-white border border-[#E2E8F0] hover:border-[#0052FF]/40 hover:shadow-md transition-all"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10.5px] font-bold px-2 py-0.5 rounded-full bg-[#EBF3FF] text-[#0052FF] uppercase tracking-wider shrink-0">
+                                {item.badge}
+                              </span>
+                              <p className="text-base font-bold text-[#0B1B3D] group-hover:text-[#0052FF] transition-colors truncate">
+                                {item.title}
+                              </p>
+                            </div>
+                            <p className="mt-1 text-xs sm:text-sm text-[#475569] line-clamp-2">
+                              {item.desc}
+                            </p>
+                          </div>
+                          <span className="text-xs font-bold text-[#0052FF] shrink-0 group-hover:translate-x-1 transition-transform">
+                            Explore →
+                          </span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </section>
+              );
+            })()}
+
+            {/* Dynamic End-of-post Course CTA Banner */}
+            {recommendedCourse && (
+              <div className="mt-12 rounded-[24px] bg-[#06102B] p-8 sm:p-10 text-white relative overflow-hidden shadow-2xl border border-white/10">
+                <div className="relative z-10 max-w-2xl">
+                  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono tracking-wider uppercase bg-[#00C2FF]/15 text-[#7DD3FC] border border-[#00C2FF]/30 mb-4">
+                    ⚡ {recommendedCourse.eyebrow.trim() || "6-Weeks Live Cohort"}
+                  </span>
+                  <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                    {recommendedCourse.title} {recommendedCourse.titleAccent}: Ready to build real AI Agents?
+                  </h3>
+                  <p className="mt-3 text-sm sm:text-base text-white/75 leading-relaxed">
+                    {recommendedCourse.tagline || recommendedCourse.heroCard?.body || recommendedCourse.metaDescription}
+                  </p>
+                  <div className="mt-6 flex flex-wrap items-center gap-4">
+                    <Link
+                      href={`/courses/${recommendedCourse.slug}`}
+                      className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#0052FF] hover:bg-[#0040D0] text-white text-sm font-bold tracking-wide transition-colors"
+                    >
+                      Explore the Course →
+                    </Link>
+                    <Link
+                      href="/events"
+                      className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white/90 text-sm font-semibold transition-colors"
+                    >
+                      View Live Workshops
+                    </Link>
+                  </div>
+                </div>
+              </div>
             )}
           </article>
         </div>

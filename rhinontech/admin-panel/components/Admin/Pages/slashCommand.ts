@@ -143,8 +143,12 @@ function openPageLinkPicker(editor: Editor, roleSlug: string) {
       row.className = "flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm text-stone-700 hover:bg-stone-100";
       const glyph = p.icon && !/^https?:/.test(p.icon) ? p.icon : "📄";
       row.textContent = `${glyph} ${p.title || "Untitled"}`;
-      row.onmousedown = (e) => {
+      let picked = false;
+      const doPick = (e: Event) => {
         e.preventDefault();
+        e.stopPropagation();
+        if (picked) return;
+        picked = true;
         // Each pick becomes its own paragraph — icon + underlined title — so
         // stacking several reads as a page list, then leaves a fresh line
         // for the next one (matching Notion's inline sub-page block).
@@ -169,6 +173,8 @@ function openPageLinkPicker(editor: Editor, roleSlug: string) {
         reposition();
         input.focus();
       };
+      row.onmousedown = doPick;
+      row.onclick = doPick;
       list.appendChild(row);
     });
   };
@@ -200,37 +206,67 @@ function buildMenu(items: SlashItem[], onSelect: (item: SlashItem) => void) {
   const el = document.createElement("div");
   el.className =
     "fixed z-[100] w-56 max-h-72 overflow-y-auto rounded-xl border border-stone-200 bg-white p-1.5 shadow-lg";
-  let selected = 0;
+  // Prevent clicking inside the menu from blurring the editor
+  el.onmousedown = (e) => {
+    e.preventDefault();
+  };
 
-  const render = () => {
-    el.innerHTML = "";
-    if (items.length === 0) {
-      const empty = document.createElement("div");
-      empty.className = "px-3 py-2 text-xs text-stone-400";
-      empty.textContent = "No matches";
-      el.appendChild(empty);
-      return;
-    }
+  let selected = 0;
+  const buttons: HTMLButtonElement[] = [];
+
+  const updateSelection = (index: number) => {
+    selected = index;
+    buttons.forEach((btn, i) => {
+      if (i === selected) {
+        btn.className = "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-left bg-stone-100 text-stone-900";
+      } else {
+        btn.className = "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-left text-stone-600 hover:bg-stone-50";
+      }
+    });
+  };
+
+  if (items.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "px-3 py-2 text-xs text-stone-400";
+    empty.textContent = "No matches";
+    el.appendChild(empty);
+  } else {
     items.forEach((item, i) => {
       const row = document.createElement("button");
       row.type = "button";
       row.className = `flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-left ${
-        i === selected ? "bg-stone-100 text-stone-900" : "text-stone-600"
+        i === selected ? "bg-stone-100 text-stone-900" : "text-stone-600 hover:bg-stone-50"
       }`;
       row.textContent = item.title;
-      row.onmouseenter = () => { selected = i; render(); };
-      row.onmousedown = (e) => { e.preventDefault(); onSelect(item); };
+
+      row.onmouseenter = () => {
+        updateSelection(i);
+      };
+
+      let selectedDone = false;
+      const doSelect = (e: Event) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (selectedDone) return;
+        selectedDone = true;
+        onSelect(item);
+      };
+
+      row.onmousedown = doSelect;
+      row.onclick = doSelect;
+
+      buttons.push(row);
       el.appendChild(row);
     });
-  };
-  render();
+  }
 
   return {
     el,
     moveSelection: (dir: 1 | -1) => {
       if (items.length === 0) return;
-      selected = (selected + dir + items.length) % items.length;
-      render();
+      const next = (selected + dir + items.length) % items.length;
+      updateSelection(next);
+      buttons[next]?.scrollIntoView({ block: "nearest" });
     },
     confirmSelection: () => {
       if (items[selected]) onSelect(items[selected]);
@@ -286,7 +322,11 @@ export function createSlashCommandExtension(
               onStart: (props: any) => {
                 currentRange = props.range;
                 menu = buildMenu(props.items, (item) => {
-                  item.command({ editor: props.editor, range: currentRange! });
+                  item.command({ editor: props.editor, range: currentRange || props.range });
+                  if (menu) {
+                    if (menu.el.parentNode) menu.el.parentNode.removeChild(menu.el);
+                    menu = null;
+                  }
                 });
                 document.body.appendChild(menu.el);
                 position(props.clientRect);
@@ -294,9 +334,13 @@ export function createSlashCommandExtension(
               onUpdate: (props: any) => {
                 if (!menu) return;
                 currentRange = props.range;
-                document.body.removeChild(menu.el);
+                if (menu.el.parentNode) menu.el.parentNode.removeChild(menu.el);
                 menu = buildMenu(props.items, (item) => {
-                  item.command({ editor: props.editor, range: currentRange! });
+                  item.command({ editor: props.editor, range: currentRange || props.range });
+                  if (menu) {
+                    if (menu.el.parentNode) menu.el.parentNode.removeChild(menu.el);
+                    menu = null;
+                  }
                 });
                 document.body.appendChild(menu.el);
                 position(props.clientRect);
@@ -304,7 +348,7 @@ export function createSlashCommandExtension(
               onKeyDown: (props: any) => {
                 if (!menu) return false;
                 if (props.event.key === "Escape") {
-                  document.body.removeChild(menu.el);
+                  if (menu.el.parentNode) menu.el.parentNode.removeChild(menu.el);
                   menu = null;
                   return true;
                 }
@@ -324,7 +368,7 @@ export function createSlashCommandExtension(
               },
               onExit: () => {
                 if (menu) {
-                  document.body.removeChild(menu.el);
+                  if (menu.el.parentNode) menu.el.parentNode.removeChild(menu.el);
                   menu = null;
                 }
               },

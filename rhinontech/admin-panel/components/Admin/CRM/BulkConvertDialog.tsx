@@ -113,7 +113,7 @@ export function BulkConvertDialog({
             <div className="space-y-2.5">
               <label className="block">
                 <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Starting stage</span>
-                <NativeSelect value={form.stageId} onChange={(e) => setForm({ ...form, stageId: e.target.value })} className={INPUT}>
+                <NativeSelect value={form.stageId} onChange={(e) => setForm({ ...form, stageId: e.target.value })} className={INPUT} contentClassName="z-[70]">
                   {stages.filter((s) => s.type === "Open").map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </NativeSelect>
               </label>
@@ -130,7 +130,7 @@ export function BulkConvertDialog({
                 </label>
                 <label className="block">
                   <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Currency</span>
-                  <NativeSelect value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className={INPUT}>
+                  <NativeSelect value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className={INPUT} contentClassName="z-[70]">
                     {["INR", "USD", "EUR", "GBP"].map((c) => <option key={c} value={c}>{c}</option>)}
                   </NativeSelect>
                 </label>
@@ -143,7 +143,7 @@ export function BulkConvertDialog({
                 </label>
                 <label className="block">
                   <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Owner</span>
-                  <NativeSelect value={form.ownerId} onChange={(e) => setForm({ ...form, ownerId: e.target.value })} className={INPUT}>
+                  <NativeSelect value={form.ownerId} onChange={(e) => setForm({ ...form, ownerId: e.target.value })} className={INPUT} contentClassName="z-[70]">
                     <option value="">Keep lead owner</option>
                     {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}
                   </NativeSelect>

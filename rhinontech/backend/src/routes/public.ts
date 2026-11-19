@@ -1,6 +1,6 @@
 import express, { Router, Response, Request } from "express";
 import { Op } from "sequelize";
-import { ClientRequest, FieldDefinition, Task, TaskDependency, TaskTag, WorkflowStatus, Project, User, Lead, Blog, CaseStudy, Event, EventGuest, PageView, DocsAccess, WorkflowEnrollment, CampaignActivity, Visitor, Unsubscribe, StartupIdea } from "../models";
+import { ClientRequest, FieldDefinition, Task, TaskDependency, TaskTag, WorkflowStatus, Project, User, Lead, Blog, CaseStudy, Event, EventGuest, PageView, DocsAccess, Workflow, WorkflowEnrollment, CampaignActivity, Visitor, Unsubscribe, StartupIdea } from "../models";
 import { registerEventHandler } from "./events";
 import { workflowFor } from "../services/taskStatus";
 import { verifyGuestToken } from "../services/eventEmail";
@@ -12,7 +12,7 @@ import { clientIpFrom, isIpCompanyLookupEnabled, lookupCompanyByIp } from "../se
 import { sendEmail } from "../services/mailer";
 import { env } from "../config/env";
 import { classifyChannel, parseHost, isBotUserAgent } from "../services/analytics";
-import { enrollRealtimeLead } from "../services/workflowEngine";
+import { enrollRealtimeLead, runWorkflowEngineCycle } from "../services/workflowEngine";
 import { extractClientIp, lookupIpLocationCached } from "../services/geolocation";
 import { runAsSystem, runForOrg } from "../services/tenantContext";
 import { verifyVisitRef } from "../services/visitRef";
@@ -31,7 +31,7 @@ function parseDomain(value: unknown): BlogDomain {
 const PUBLIC_BLOG_LIST_FIELDS = [
   "id", "title", "excerpt", "slug",
   "authorName", "authorRole", "authorAvatar",
-  "coverImage", "tags", "category", "readTime", "publishedAt",
+  "coverImage", "tags", "category", "readTime", "publishedAt", "updatedAt",
 ] as const;
 
 const PUBLIC_BLOG_DETAIL_FIELDS = [
@@ -775,57 +775,81 @@ router.post("/docs-access/check", async (req: Request, res: Response) => {
 router.get("/track/open", async (req: Request, res: Response) => {
   try {
     const enrollmentId = req.query.e as string;
-    const leadId = req.query.l as string;
-    const campaignId = req.query.c as string;
+    const leadId = (req.query.l as string) || (req.query.leadId as string);
+    const campaignId = (req.query.c as string) || (req.query.campaignId as string);
 
     if (enrollmentId) {
-      const enrollment = await WorkflowEnrollment.findByPk(enrollmentId);
-      if (enrollment) {
-        const state = enrollment.trackingState || {};
-        const logs = Array.isArray(enrollment.executionLogs) ? [...enrollment.executionLogs] : [];
+      await runAsSystem("tracking:open", async () => {
+        const enrollment = await WorkflowEnrollment.findByPk(enrollmentId);
+        if (enrollment) {
+          const state = enrollment.trackingState || {};
+          const logs = Array.isArray(enrollment.executionLogs) ? [...enrollment.executionLogs] : [];
 
-        if (!state.emailOpened) {
-          logs.push({
-            timestamp: new Date().toISOString(),
-            step: `Email opened by recipient (${enrollment.leadEmail})`,
+          if (!state.emailOpened) {
+            logs.push({
+              timestamp: new Date().toISOString(),
+              step: `Email opened by recipient (${enrollment.leadEmail})`,
+            });
+          }
+
+          // `n` names the email step that produced this pixel, so opens attribute
+          // to the right node instead of collapsing into one sequence-wide flag.
+          const requestedNodeId = req.query.n as string | undefined;
+          const nodes = { ...(state.nodes || {}) };
+          const targetNodeId = requestedNodeId || state.lastEmailNodeId || Object.keys(nodes)[0];
+          if (targetNodeId) {
+            nodes[targetNodeId] = {
+              ...(nodes[targetNodeId] || {}),
+              openedAt: nodes[targetNodeId]?.openedAt || new Date().toISOString(),
+            };
+          }
+
+          enrollment.changed("trackingState", true);
+          enrollment.changed("executionLogs", true);
+          await enrollment.update({
+            trackingState: {
+              ...state,
+              nodes,
+              // Kept for enrollments and reports that predate per-node tracking.
+              emailOpened: true,
+              openedAt: state.openedAt || new Date().toISOString(),
+            },
+            executionLogs: logs,
+          });
+
+          // If the lead is waiting at an if_then condition node that checks for email_opened,
+          // expedite nextStepAt so the positive (YES) branch executes immediately!
+          const workflow = await Workflow.findByPk(enrollment.workflowId);
+          if (workflow) {
+            const currentNode = workflow.nodes?.find((n: any) => n.id === enrollment.currentNodeId);
+            const nodeType = currentNode?.type || currentNode?.data?.nodeType;
+            if (
+              nodeType === "if_then" &&
+              (currentNode?.data?.config?.conditionType || "email_opened") === "email_opened"
+            ) {
+              await enrollment.update({ nextStepAt: new Date() });
+              setTimeout(() => {
+                runWorkflowEngineCycle().catch(() => {});
+              }, 200);
+            }
+          }
+        }
+      });
+    } else if (leadId) {
+      await runAsSystem("tracking:campaign-open", async () => {
+        const lead = await Lead.findByPk(leadId);
+        if (lead && !lead.emailOpened) {
+          const effectiveCampaignId = campaignId || lead.campaignId;
+          await lead.update({ emailOpened: true, openedAt: new Date() });
+          await CampaignActivity.create({
+            leadId: lead.id,
+            campaignId: effectiveCampaignId || null,
+            type: "EmailOpened",
+            content: "Recipient opened the email.",
+            organizationId: (lead as any).organizationId ?? null,
           });
         }
-
-        // `n` names the email step that produced this pixel, so opens attribute
-        // to the right node instead of collapsing into one sequence-wide flag.
-        const nodeId = req.query.n as string | undefined;
-        const nodes = { ...(state.nodes || {}) };
-        if (nodeId) {
-          nodes[nodeId] = {
-            ...(nodes[nodeId] || {}),
-            openedAt: nodes[nodeId]?.openedAt || new Date().toISOString(),
-          };
-        }
-
-        enrollment.changed("trackingState", true);
-        enrollment.changed("executionLogs", true);
-        await enrollment.update({
-          trackingState: {
-            ...state,
-            nodes,
-            // Kept for enrollments and reports that predate per-node tracking.
-            emailOpened: true,
-            openedAt: state.openedAt || new Date().toISOString(),
-          },
-          executionLogs: logs,
-        });
-      }
-    } else if (leadId && campaignId) {
-      const lead = await Lead.findOne({ where: { id: leadId, campaignId } });
-      if (lead && !lead.emailOpened) {
-        await lead.update({ emailOpened: true, openedAt: new Date() });
-        await CampaignActivity.create({
-          leadId: lead.id,
-          campaignId,
-          type: "EmailOpened",
-          content: "Recipient opened the email.",
-        });
-      }
+      });
     }
   } catch (err: any) {
     console.error("[Tracking] Email open tracking failed:", err.message);
@@ -849,48 +873,68 @@ router.get("/track/click", async (req: Request, res: Response) => {
   try {
     const enrollmentId = req.query.e as string;
     if (enrollmentId) {
-      const enrollment = await WorkflowEnrollment.findByPk(enrollmentId);
-      if (enrollment) {
-        const state = enrollment.trackingState || {};
-        const logs = Array.isArray(enrollment.executionLogs) ? [...enrollment.executionLogs] : [];
-        const clickedUrls = Array.isArray(state.clickedUrls) ? [...state.clickedUrls] : [];
+      await runAsSystem("tracking:click", async () => {
+        const enrollment = await WorkflowEnrollment.findByPk(enrollmentId);
+        if (enrollment) {
+          const state = enrollment.trackingState || {};
+          const logs = Array.isArray(enrollment.executionLogs) ? [...enrollment.executionLogs] : [];
+          const clickedUrls = Array.isArray(state.clickedUrls) ? [...state.clickedUrls] : [];
 
-        if (!clickedUrls.includes(targetUrl)) {
-          clickedUrls.push(targetUrl);
-        }
+          if (!clickedUrls.includes(targetUrl)) {
+            clickedUrls.push(targetUrl);
+          }
 
-        if (!state.linkClicked) {
-          logs.push({
-            timestamp: new Date().toISOString(),
-            step: `Link inside email clicked by recipient: ${targetUrl}`,
+          if (!state.linkClicked) {
+            logs.push({
+              timestamp: new Date().toISOString(),
+              step: `Link inside email clicked by recipient: ${targetUrl}`,
+            });
+          }
+
+          const requestedNodeId = req.query.n as string | undefined;
+          const nodes = { ...(state.nodes || {}) };
+          const targetNodeId = requestedNodeId || state.lastEmailNodeId || Object.keys(nodes)[0];
+          if (targetNodeId) {
+            const prev = nodes[targetNodeId] || {};
+            const prevUrls = Array.isArray(prev.clickedUrls) ? prev.clickedUrls : [];
+            nodes[targetNodeId] = {
+              ...prev,
+              clickedAt: prev.clickedAt || new Date().toISOString(),
+              clickedUrls: prevUrls.includes(targetUrl) ? prevUrls : [...prevUrls, targetUrl],
+            };
+          }
+
+          enrollment.changed("trackingState", true);
+          enrollment.changed("executionLogs", true);
+          await enrollment.update({
+            trackingState: {
+              ...state,
+              nodes,
+              linkClicked: true,
+              clickedAt: state.clickedAt || new Date().toISOString(),
+              clickedUrls,
+            },
+            executionLogs: logs,
           });
-        }
 
-        const nodeId = req.query.n as string | undefined;
-        const nodes = { ...(state.nodes || {}) };
-        if (nodeId) {
-          const prev = nodes[nodeId] || {};
-          const prevUrls = Array.isArray(prev.clickedUrls) ? prev.clickedUrls : [];
-          nodes[nodeId] = {
-            ...prev,
-            clickedAt: prev.clickedAt || new Date().toISOString(),
-            clickedUrls: prevUrls.includes(targetUrl) ? prevUrls : [...prevUrls, targetUrl],
-          };
+          // If the lead is waiting at an if_then condition node that checks for link_clicked,
+          // expedite nextStepAt so the positive (YES) branch executes immediately!
+          const workflow = await Workflow.findByPk(enrollment.workflowId);
+          if (workflow) {
+            const currentNode = workflow.nodes?.find((n: any) => n.id === enrollment.currentNodeId);
+            const nodeType = currentNode?.type || currentNode?.data?.nodeType;
+            if (
+              nodeType === "if_then" &&
+              currentNode?.data?.config?.conditionType === "link_clicked"
+            ) {
+              await enrollment.update({ nextStepAt: new Date() });
+              setTimeout(() => {
+                runWorkflowEngineCycle().catch(() => {});
+              }, 200);
+            }
+          }
         }
-
-        enrollment.changed("trackingState", true);
-        enrollment.changed("executionLogs", true);
-        await enrollment.update({
-          trackingState: {
-            ...state,
-            nodes,
-            linkClicked: true,
-            clickedAt: state.clickedAt || new Date().toISOString(),
-            clickedUrls,
-          },
-          executionLogs: logs,
-        });
-      }
+      });
     }
   } catch (err: any) {
     console.error("[Tracking] Link click tracking failed:", err.message);

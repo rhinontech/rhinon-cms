@@ -194,7 +194,7 @@ export function MeetingsPage() {
 
               {/* 6 equal rows stretch to whatever height is left, so the month always
                   fills the card instead of leaving dead space underneath. */}
-              <div className="grid min-h-0 flex-1 auto-rows-fr grid-cols-7 gap-1">
+              <div className="grid min-h-0 flex-1 grid-cols-7 grid-rows-6 gap-1">
                 {gridDays.map((day) => {
                   const dayEvents = eventsByDay.get(dayKey(day)) || [];
                   const inMonth = day.getMonth() === month.getMonth();
@@ -206,7 +206,7 @@ export function MeetingsPage() {
                       key={day.toISOString()}
                       onClick={() => setSelectedDay(day)}
                       className={cn(
-                        "flex min-h-[64px] flex-col items-start gap-1 overflow-hidden rounded-lg border p-1.5 text-left transition-colors",
+                        "flex h-full min-h-0 w-full flex-col items-start gap-1 overflow-hidden rounded-lg border p-1.5 text-left transition-colors",
                         selected ? "border-blue-400 bg-blue-50 dark:bg-blue-400/10" : "border-border hover:bg-muted/40",
                         !inMonth && "opacity-40"
                       )}

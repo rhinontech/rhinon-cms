@@ -4,6 +4,8 @@ import "./globals.css";
 import Navbar from "@/components/Navbar/Navbar";
 import Footer from "@/components/Footer/Footer";
 import SmoothScroll from "@/components/SmoothScroll/SmoothScroll";
+import JsonLd from "@/components/SEO/JsonLd";
+import { buildOrganizationSchema } from "@/components/SEO/schema";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,9 +36,28 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.uppercurve.in"),
   title: "UpperCurve — Move Beyond Your Learning Curve",
   description:
     "UpperCurve is a career growth platform where ambitious people learn practical skills, build real experience, connect with the right people, and move their careers forward.",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "UpperCurve — Move Beyond Your Learning Curve",
+    description:
+      "UpperCurve is a career growth platform where ambitious people learn practical skills, build real experience, connect with the right people, and move their careers forward.",
+    url: "https://www.uppercurve.in",
+    siteName: "UpperCurve",
+    locale: "en_IN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "UpperCurve — Move Beyond Your Learning Curve",
+    description:
+      "UpperCurve is a career growth platform where ambitious people learn practical skills, build real experience, connect with the right people, and move their careers forward.",
+  },
 };
 
 export default function RootLayout({
@@ -50,6 +71,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} ${plusJakarta.variable} ${poppins.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-white font-sans">
+        <JsonLd schema={buildOrganizationSchema()} />
         <SmoothScroll />
         <Navbar />
         {children}

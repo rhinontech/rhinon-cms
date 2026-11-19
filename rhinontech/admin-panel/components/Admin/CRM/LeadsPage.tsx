@@ -150,6 +150,11 @@ export function LeadsPage() {
       const data = await apiFetch<{ rows: Lead[]; count: number }>(`/leads?${q}`);
       setLeads(data.rows);
       setCount(data.count);
+      setSelected((cur) => {
+        if (!cur) return cur;
+        const matching = data.rows.find((r) => r.id === cur.id);
+        return matching ? { ...cur, ...matching } : cur;
+      });
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load leads");
@@ -202,6 +207,7 @@ export function LeadsPage() {
     try {
       const updated = await apiFetch<Lead>(`/leads/${id}`, { method: "PUT", body: JSON.stringify(patch) });
       setLeads((cur) => cur.map((l) => (l.id === id ? { ...l, ...updated } : l)));
+      if (selected?.id === id) setSelected((s) => (s ? { ...s, ...updated } : s));
     } catch (err) {
       setLeads(snapshot);
       setError(err instanceof Error ? err.message : "Update failed");
@@ -226,12 +232,18 @@ export function LeadsPage() {
     setSaving(true);
     try {
       if (panelMode === "create") {
-        await apiFetch("/leads", { method: "POST", body: JSON.stringify(form) });
+        const created = await apiFetch<Lead>("/leads", { method: "POST", body: JSON.stringify(form) });
+        setSelected(created);
       } else if (selected) {
-        await apiFetch(`/leads/${selected.id}`, { method: "PUT", body: JSON.stringify(form) });
+        const updated = await apiFetch<Lead>(`/leads/${selected.id}`, { method: "PUT", body: JSON.stringify(form) });
+        setSelected((cur) => (cur ? { ...cur, ...updated, ...form } : updated));
+        try {
+          const fresh = await apiFetch<Lead>(`/leads/${selected.id}`);
+          setSelected(fresh);
+        } catch { /* keep updated state */ }
       }
       setPanelMode("view");
-      load();
+      await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed");
     } finally {
@@ -616,7 +628,7 @@ export function LeadsPage() {
                         <NativeSelect
                           value={selected.lifecycleStage}
                           onChange={(e) => patchLead(selected.id, { lifecycleStage: e.target.value as LifecycleStage })}
-                          className="w-full cursor-pointer rounded border border-border bg-card px-2 py-1 text-[12px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
+                          className="w-full cursor-pointer rounded border border-border bg-card px-2 py-1 text-[12px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                         >
                           {LIFECYCLE_STAGES.map((st) => <option key={st} value={st}>{st}</option>)}
                         </NativeSelect>
@@ -626,7 +638,7 @@ export function LeadsPage() {
                         <NativeSelect
                           value={selected.ownerId || ""}
                           onChange={(e) => patchLead(selected.id, { ownerId: e.target.value || null })}
-                          className="w-full cursor-pointer rounded border border-border bg-card px-2 py-1 text-[12px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
+                          className="w-full cursor-pointer rounded border border-border bg-card px-2 py-1 text-[12px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                         >
                           <option value="">Unassigned</option>
                           {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}
@@ -879,7 +891,7 @@ function FormField({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
+        className="w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
       />
     </label>
   );

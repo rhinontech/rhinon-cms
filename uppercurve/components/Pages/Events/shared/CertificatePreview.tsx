@@ -48,7 +48,7 @@ export default function CertificatePreview({ event, config }: { event: EventDeta
             <div className="flex items-center gap-[1cqw]">
               <Image
                 src="/uppercurve_logo_nav.png"
-                alt=""
+                alt="UpperCurve"
                 width={160}
                 height={87}
                 className="w-[6cqw] h-auto"

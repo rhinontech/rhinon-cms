@@ -108,7 +108,7 @@ export function Sidebar() {
       )}
     <aside
       className={cn(
-        "flex h-full flex-col transition-all duration-300 ease-in-out",
+        "flex h-full flex-col transition-[width] duration-200 ease-in-out",
         // Mobile: fixed overlay drawer slid in from the left; desktop: static column.
         "fixed inset-y-0 left-0 z-50 w-64 max-lg:bg-card! shadow-xl lg:static lg:z-auto lg:shadow-none",
         mobileNavOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
@@ -152,16 +152,15 @@ export function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
-                title={expanded ? undefined : item.title}
+                prefetch={false}
                 className={cn(
-                  "group relative flex h-10 items-center gap-3 rounded-lg px-2 text-[13px] font-medium transition-[background-color,color,box-shadow] duration-150",
-                  expanded ? "justify-start" : "justify-center",
+                  "group relative flex h-10 select-none items-center gap-3 rounded-lg px-1.5 text-[13px] font-medium transition-[background-color,color,box-shadow] duration-150 cursor-pointer active:scale-[0.98]",
                   active
                     ? "bg-card text-foreground shadow-xs ring-1 ring-foreground/[0.06] dark:bg-white/[0.08] dark:shadow-none dark:ring-white/[0.06]"
                     : "text-foreground/65 hover:bg-card/60 hover:text-foreground dark:hover:bg-white/[0.05]"
                 )}
               >
-                <span className="relative shrink-0">
+                <span className="relative shrink-0 pointer-events-none">
                   {/* Each module keeps its own colour: a soft tile at rest, solid when it is the one you are in. */}
                   <span
                     className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors duration-150"
@@ -174,9 +173,9 @@ export function Sidebar() {
                     <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-brand ring-2 ring-background" />
                   )}
                 </span>
-                {expanded && <span className="flex-1 truncate">{item.title}</span>}
+                {expanded && <span className="flex-1 truncate pointer-events-none">{item.title}</span>}
                 {expanded && !!item.badge && (
-                  <span className="ml-auto rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold leading-none tabular-nums text-brand-foreground">
+                  <span className="ml-auto rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold leading-none tabular-nums text-brand-foreground pointer-events-none">
                     {item.badge > 99 ? "99+" : item.badge}
                   </span>
                 )}

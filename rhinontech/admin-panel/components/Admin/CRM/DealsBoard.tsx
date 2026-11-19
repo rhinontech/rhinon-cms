@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   DndContext, DragOverlay, PointerSensor, useSensor, useSensors,
-  useDroppable, useDraggable, type DragEndEvent, type DragStartEvent,
+  useDroppable, useDraggable, pointerWithin, rectIntersection,
+  type DragEndEvent, type DragStartEvent,
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { TbPlus, TbBuilding, TbCalendar, TbX, TbSettings, TbUsers, TbArrowRight } from "react-icons/tb";
@@ -201,6 +202,10 @@ export function DealsBoard() {
           ) : (
           <DndContext
             sensors={sensors}
+            collisionDetection={(args) => {
+              const pointerCollisions = pointerWithin(args);
+              return pointerCollisions.length > 0 ? pointerCollisions : rectIntersection(args);
+            }}
             onDragStart={(e: DragStartEvent) => setActiveId(e.active.id as string)}
             onDragEnd={handleDragEnd}
           >
@@ -368,7 +373,10 @@ function DraggableDealCard({ deal, onOpen }: { deal: Deal; onOpen?: (id: string)
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      onPointerDown={(e) => { downAt.current = { x: e.clientX, y: e.clientY }; }}
+      onPointerDown={(e) => {
+        listeners?.onPointerDown?.(e);
+        downAt.current = { x: e.clientX, y: e.clientY };
+      }}
       onClick={(e) => {
         const start = downAt.current;
         downAt.current = null;
@@ -376,7 +384,7 @@ function DraggableDealCard({ deal, onOpen }: { deal: Deal; onOpen?: (id: string)
         const travelled = Math.hypot(e.clientX - start.x, e.clientY - start.y);
         if (travelled < 5) onOpen?.(deal.id);
       }}
-      style={{ transform: CSS.Translate.toString(transform) }}
+      style={isDragging ? undefined : { transform: CSS.Translate.toString(transform) }}
       className={cn(
         "cursor-grab touch-none rounded-md border border-border bg-card/90 p-2 shadow-sm transition-shadow hover:shadow active:cursor-grabbing",
         isDragging && "opacity-30"

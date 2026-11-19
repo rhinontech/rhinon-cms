@@ -242,13 +242,38 @@ router.get("/:id/stats", async (req, res) => {
     for (const node of emailNodes) perNode.set(node.id, { sent: 0, opened: 0, clicked: 0 });
 
     for (const enrollment of enrollments) {
-      const nodes = (enrollment.trackingState || {}).nodes || {};
+      const tracking = enrollment.trackingState || {};
+      const nodes = tracking.nodes || {};
+      const accountedOpenNodes = new Set<string>();
+      const accountedClickNodes = new Set<string>();
+
       for (const [nodeId, state] of Object.entries<any>(nodes)) {
         if (!perNode.has(nodeId)) perNode.set(nodeId, { sent: 0, opened: 0, clicked: 0 });
         const bucket = perNode.get(nodeId)!;
         if (state?.sentAt) bucket.sent++;
-        if (state?.openedAt) bucket.opened++;
-        if (state?.clickedAt) bucket.clicked++;
+        if (state?.openedAt) {
+          bucket.opened++;
+          accountedOpenNodes.add(nodeId);
+        }
+        if (state?.clickedAt) {
+          bucket.clicked++;
+          accountedClickNodes.add(nodeId);
+        }
+      }
+
+      // Fallback for enrollments where email was opened/clicked at sequence level
+      // but not mapped into specific node
+      if (tracking.emailOpened && accountedOpenNodes.size === 0) {
+        const targetNodeId = tracking.lastEmailNodeId || (emailNodes.length === 1 ? emailNodes[0].id : null);
+        if (targetNodeId && perNode.has(targetNodeId)) {
+          perNode.get(targetNodeId)!.opened++;
+        }
+      }
+      if (tracking.linkClicked && accountedClickNodes.size === 0) {
+        const targetNodeId = tracking.lastEmailNodeId || (emailNodes.length === 1 ? emailNodes[0].id : null);
+        if (targetNodeId && perNode.has(targetNodeId)) {
+          perNode.get(targetNodeId)!.clicked++;
+        }
       }
     }
 

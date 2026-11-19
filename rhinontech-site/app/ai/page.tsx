@@ -1,16 +1,16 @@
-import type { Metadata } from "next";
 import { Check } from "lucide-react";
-import { links } from "@/components/site";
+import { links, pageMeta } from "@/components/site";
 import { Button } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { ProductFaq } from "@/components/product/shared";
 import { Orbit, SkillRows, TaskFeed, UseCases, type UseCase } from "@/components/ai/sections";
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "Rhinon AI",
   description: "AI built into your CRM, outreach, chatbot and HR. It researches, drafts, answers and rewrites, and you approve before anything goes out.",
-  alternates: { canonical: "/ai" },
-};
+  path: "/ai",
+  hasOgImage: true,
+});
 
 const MONO = "font-mono text-[11px] uppercase tracking-[0.2em]";
 
