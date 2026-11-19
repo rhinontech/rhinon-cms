@@ -1,8 +1,10 @@
+import { useLoad } from "@/lib/live";
+import { loadConversation } from "@/lib/live-chatbot";
 import { useRev } from "@/lib/store";
 import { View, Text, Pressable, TextInput } from "@/components/rn";
 import { useLocalSearchParams } from "expo-router";
 import { Bot, Info, Phone, Send } from "@/components/icons";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { CallOverlay } from "@/components/rhinon/call";
 import {
   Avatar,
@@ -28,16 +30,11 @@ export default function BotChatPage() {
     chatId: string;
   }>();
   const chat = useApp((s) => s.botChats.find((c) => c.id === chatId));
+  useLoad(loadConversation, chatId);
   const [text, setText] = useState("");
   const [info, setInfo] = useState(false);
   const [calling, setCalling] = useState(false);
-  const bottom = useRef<HTMLDivElement>(null);
   const count = chat?.messages.length ?? 0;
-  useEffect(() => {
-    bottom.current?.scrollIntoView({
-      block: "end",
-    });
-  }, [count, chat?.status]);
   if (!chat) {
     return (
       <Screen>
@@ -54,7 +51,7 @@ export default function BotChatPage() {
     setText("");
   };
   return (
-    <Screen>
+    <Screen endKey={`${count}|${chat?.status}`}>
       <TopBar
         fallback="/chatbot"
         center={
@@ -133,7 +130,7 @@ export default function BotChatPage() {
           );
         })}
       </View>
-      <View ref={bottom} className="scroll-mb-[150px]" />
+
 
       {mine ? (
         <View className="sticky bottom-0 z-20 -mx-5 mt-auto bg-gradient-to-t from-paper from-70% to-transparent px-5 pb-1 pt-8">

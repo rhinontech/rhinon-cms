@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Check, ChevronRight, FileText, FolderKanban, Inbox, MessagesSquare, Plus, Target } from "lucide-react";
-import { Avatar } from "@/components/ProductMocks";
+import { Avatar } from "@/components/mockPrimitives";
 import { Cursor, Live, TypeText, useStepper } from "@/components/motion";
 
 const PAPER = "rounded-2xl border border-[#e9e1d1] bg-white shadow-[0_40px_90px_-40px_rgb(60_50_20_/_0.35)]";

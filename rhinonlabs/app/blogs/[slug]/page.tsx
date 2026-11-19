@@ -16,7 +16,11 @@ import StickyCallButton from "@/components/Common/CTA/StickyCallButton";
 import { getServiceByBlogSlug } from "@/lib/services";
 
 import { SCHEMA_IDS } from "@/lib/site";
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
+export async function generateStaticParams() {
+  const blogs = await getBlogs().catch(() => []);
+  return blogs.map((b) => ({ slug: b.slug }));
+}
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinonlabs.com";
 

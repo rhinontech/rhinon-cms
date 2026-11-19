@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AlertTriangle, Check, Flag, MessageSquare, Repeat, Tag, Timer } from "lucide-react";
-import { Avatar, Pill } from "@/components/ProductMocks";
+import { Avatar, Pill } from "@/components/mockPrimitives";
 import { AutoTabs, Cursor, Live, TypeText, useStepper } from "@/components/motion";
 
 const EASE = "cubic-bezier(.4,.1,.2,1)";

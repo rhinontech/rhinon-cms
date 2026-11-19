@@ -18,7 +18,9 @@ export default function Home() {
   const brand = useApp(s => s.brand);
   const clock = useApp(s => s.clock);
   const notifs = useApp(s => s.notifs);
-  const canApprove = usePerm("approvals");
+  const isPayAdmin = usePerm("payroll", "write");
+  const isAttAdmin = usePerm("attendance", "write");
+  const isLeaveAdmin = usePerm("leave", "write");
   const [focus, setFocus] = useState<Focus>("work");
   const now = useNow(clock.status === "in" || clock.status === "break");
   const open = tasks.filter(t => t.status !== "Done" && (t.group === "overdue" || t.group === "today"));
@@ -45,13 +47,13 @@ export default function Home() {
   }, {
     id: "time",
     tone: "leaf",
-    label: ["Log", "my time"],
-    stat: clockStat
+    label: isAttAdmin ? ["Team", "time"] : ["Log", "my time"],
+    stat: isAttAdmin ? "Team attendance" : clockStat
   }, {
     id: "pay",
     tone: "sun",
-    label: ["Check", "pay"],
-    stat: latest ? `${latest.month.split(" ")[0]} paid` : "No payslips yet"
+    label: isPayAdmin ? ["Team", "payroll"] : ["Check", "pay"],
+    stat: isPayAdmin ? "Manage payroll" : (latest ? `${latest.month.split(" ")[0]} paid` : "No payslips yet")
   }];
   const lastFrom = topThread?.messages.at(-1)?.from ?? "";
   const cards: Record<Focus, {
@@ -72,13 +74,23 @@ export default function Home() {
       cta: topThread ? "Open thread" : "Open inbox",
       to: topThread ? `/inbox/${topThread.id}` : "/inbox"
     },
-    time: {
+    time: isAttAdmin ? {
+      title: "Team attendance",
+      caption: "See who's in today, approve corrections, review the week.",
+      cta: "Open attendance",
+      to: "/attendance"
+    } : {
       title: clock.status === "out" ? "Clock in for the day" : clock.status === "done" ? "Day logged. Nice work." : clock.status === "break" ? "Enjoy the break" : "You're on the clock",
       caption: clock.status === "out" ? "Your usual start is 9:30 AM · 8-hour day" : clock.status === "done" ? `${hm(workedMs(clock, now))} worked today` : `${hm(workedMs(clock, now))} so far · day ends around 6:30 PM`,
       cta: "Open attendance",
       to: "/attendance"
     },
-    pay: {
+    pay: isPayAdmin ? {
+      title: "Team payroll",
+      caption: "Review salaries, run payroll and manage investment declarations.",
+      cta: "Open payroll",
+      to: "/pay"
+    } : {
       title: latest ? `${latest.month.split(" ")[0]} payslip is ready` : "No payslip yet",
       caption: latest ? `${rupee(net(latest))} net · paid ${latest.paidOn.slice(0, 6)}` : "Payslips appear here once payroll has run.",
       cta: latest ? "View payslip" : "Open pay",
@@ -149,8 +161,8 @@ export default function Home() {
 
       <SectionLabel className="mt-10">Today</SectionLabel>
       <View className="mt-4 grid grid-cols-2 gap-3">
-        <ClockCard />
-        {canApprove ? <ApprovalsCard /> : <LeaveCard />}
+        {isAttAdmin ? <TeamAttendanceCard /> : <ClockCard />}
+        {isLeaveAdmin ? <ApprovalsCard /> : <LeaveCard />}
       </View>
 
       <View className="mt-3 rounded-3xl border border-line/80 bg-card p-4">
@@ -233,16 +245,34 @@ function ClockCard() {
     </View>;
 }
 
-/** What an employee sees where a manager sees Approvals. */
+/** What an employee sees: their leave balance. */
 function LeaveCard() {
+  const balances = useApp(s => s.balances);
+  const casualBal = balances.find(b => b.name === "Casual") ?? balances[0];
+  const left = casualBal ? casualBal.total - casualBal.used - casualBal.pending : 0;
   return <Link to="/leave" className="press relative flex h-[188px] flex-col justify-between overflow-hidden rounded-3xl bg-sky p-4 text-sky-foreground">
       <Eyebrow className="text-sky-foreground/85">Leave</Eyebrow>
       <View>
         <Span className="font-display text-[length:calc(92px*var(--ds))] font-black leading-[0.76]">
-          5
+          {left}
         </Span>
         <Text className="mt-2.5 font-mono text-[11px] uppercase tracking-[0.14em] opacity-90">
-          casual days left
+          {casualBal?.name.toLowerCase() ?? "leave"} days left
+        </Text>
+      </View>
+    </Link>;
+}
+
+/** What an attendance admin sees: team summary link. */
+function TeamAttendanceCard() {
+  return <Link to="/attendance" className="press relative flex h-[188px] flex-col justify-between overflow-hidden rounded-3xl bg-leaf p-4 text-leaf-foreground">
+      <Eyebrow className="text-leaf-foreground/85">Attendance</Eyebrow>
+      <View>
+        <Text className="font-display text-[length:calc(56px*var(--ds))] font-black leading-[0.8]">
+          Team
+        </Text>
+        <Text className="mt-2.5 font-mono text-[11px] uppercase tracking-[0.14em] opacity-90">
+          {"See who's in today"}
         </Text>
       </View>
     </Link>;

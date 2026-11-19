@@ -3,7 +3,7 @@ import SearchableBlogs from "@/components/Pages/Blogs/SearchableBlogs";
 import { Metadata } from "next";
 import { SCHEMA_IDS } from "@/lib/site";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinonlabs.com";
 

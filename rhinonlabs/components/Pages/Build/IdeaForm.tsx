@@ -290,7 +290,7 @@ export function IdeaForm() {
           <a
             href="https://wa.me/918249291789"
             target="_blank"
-            rel="noopener noreferrer"
+            rel="nofollow noopener noreferrer"
             className="font-semibold text-white hover:underline"
           >
             WhatsApp us

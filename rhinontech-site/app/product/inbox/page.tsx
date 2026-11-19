@@ -1,20 +1,20 @@
-import type { Metadata } from "next";
 import { Check, X } from "lucide-react";
 import { Aurora, Button, Eyebrow, IconTile, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand } from "@/components/blocks";
-import { links } from "@/components/site";
+import { links, pageMeta } from "@/components/site";
 import { bySlug } from "@/content/products";
 import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
 import { AddressSection, InboxZeroHero, PrioritySection, RiverSection, ThreadSection } from "@/components/product/inbox";
 
 const p = bySlug("inbox")!;
 
-export const metadata: Metadata = {
-  title: "Inbox: one shared inbox for your whole team",
-  description: "Replies to your campaigns and mail to your support address land in one shared inbox, threaded, assigned and tracked until it is done.",
-  alternates: { canonical: "/product/inbox" },
-};
+export const metadata = pageMeta({
+  title: "Shared Team Inbox Software",
+  description: "Free shared team inbox software for your whole team. Keep campaign replies and support emails threaded, assigned and tracked.",
+  path: "/product/inbox",
+  hasOgImage: true,
+});
 
 const BEFORE = [
   "Replies buried in one person's mailbox",
@@ -127,7 +127,7 @@ export default function InboxPage() {
         { slug: "crm", line: "Link a conversation to its lead." },
         { slug: "chatbot", line: "Chat tickets and email in one view of support." },
       ]} />
-      <ProductFaq title="Inbox questions, answered." items={FAQ} />
+      <ProductFaq slug="inbox" title="Inbox questions, answered." items={FAQ} />
       <CtaBand tone={p.tone} title={<>Get to <span className="text-aurora-soft">inbox zero.</span></>} sub="Set up your shared inbox in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
     </div>
   );

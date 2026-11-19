@@ -17,7 +17,7 @@ import {
 } from "@/components/rhinon/ui";
 import { AddTaskSheet, TaskRow } from "@/components/rhinon/work";
 import { PROJECTS, TEAMS, nameOf, type DueGroup } from "@/lib/mock-data";
-import { useApp } from "@/lib/store";
+import { useApp, usePerm } from "@/lib/store";
 import { TONES } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 type Tab = "mine" | "projects" | "teams";
@@ -51,7 +51,9 @@ const GROUPS: {
 export default function WorkPage() {
   useRev();
   const all = useApp((s) => s.tasks);
-  const tasks = all.filter((t) => t.assignee === "me");
+  const isAdmin = usePerm("work", "write");
+  // Admins see every task; employees see only their own assigned tasks.
+  const tasks = isAdmin ? all : all.filter((t) => t.assignee === "me");
   const [tab, setTab] = useState<Tab>("mine");
   const [filter, setFilter] = useState<Filter>("all");
   const [adding, setAdding] = useState(false);
@@ -67,11 +69,9 @@ export default function WorkPage() {
   return (
     <Screen fab={tab === "mine"}>
       <View className="animate-rise">
-        <Eyebrow tone="cobalt">Work · {dueOpen} due today</Eyebrow>
+        <Eyebrow tone="cobalt">{isAdmin ? "All work" : "Work"} · {dueOpen} due today</Eyebrow>
         <Display size="hero" className="mt-3">
-          Get it
-          {"\n"}
-          done.
+          {isAdmin ? "Team\nwork." : "Get it\ndone."}
         </Display>
       </View>
 
@@ -110,7 +110,7 @@ export default function WorkPage() {
         options={[
           {
             value: "mine",
-            label: "Mine",
+            label: isAdmin ? "All tasks" : "Mine",
           },
           {
             value: "projects",

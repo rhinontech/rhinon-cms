@@ -1,5 +1,5 @@
 import { api, getSession } from "./api";
-import { MONTHS, MONTHS_LONG, WEEKDAYS, assign, defineLive, hhmm, parseDay, replace, startOfDay, toneAt, write } from "./live-core";
+import { MONTHS, MONTHS_LONG, WEEKDAYS, assign, defineLive, hhmm, parseDay, replace, resync, startOfDay, toneAt, write } from "./live-core";
 import { CELEBRATIONS, ME, MEETINGS, PEOPLE, SALARY_STRUCTURE, TODAY, type Meeting, type Person } from "./mock-data";
 import { actions, hydrate, ROLE_LABEL, type Role } from "./store";
 import { defaultPerms, type Perm } from "./mock-more";
@@ -120,6 +120,16 @@ async function syncMeetings() {
   const next = list.findIndex((m) => m.day === "Today" && new Date(`${TODAY.iso}T${m.end}:00`).getTime() > now);
   if (next >= 0) list[next] = { ...list[next]!, state: "next" };
   replace(MEETINGS, list);
+}
+
+/** Put a meeting on the user's calendar. Builds the start/end from the picked day and slot, asks for a Meet link, then re-reads the calendar. */
+export async function createMeetingRemote(input: { title: string; day: "Today" | "Tomorrow"; slot: string }): Promise<void> {
+  const base = new Date(startOfDay(new Date()) + (input.day === "Tomorrow" ? 86_400_000 : 0));
+  const [h, m] = input.slot.split(":").map(Number);
+  const start = new Date(base.getTime() + ((h ?? 10) * 60 + (m ?? 0)) * 60_000);
+  const end = new Date(start.getTime() + 30 * 60_000);
+  await api("/meetings", { method: "POST", body: { summary: input.title, startTime: start.toISOString(), endTime: end.toISOString(), addMeet: true } });
+  await resync("people");
 }
 
 defineLive({

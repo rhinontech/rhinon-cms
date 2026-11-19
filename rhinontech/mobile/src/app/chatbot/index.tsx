@@ -1,7 +1,7 @@
 import { useRev } from "@/lib/store";
 import { View, Text, Span, Link } from "@/components/rn";
 import { ChevronRight } from "@/components/icons";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { VisitorMap } from "@/components/rhinon/charts";
 import {
   Avatar,
@@ -16,12 +16,15 @@ import {
   TopBar,
   stagger,
 } from "@/components/rhinon/ui";
-import { VISITORS, type BotChat, type Ticket } from "@/lib/mock-more";
+import { type BotChat, type Ticket } from "@/lib/mock-more";
 import { nameOf } from "@/lib/mock-data";
 import { useApp, usePerm } from "@/lib/store";
+import { loadVisitors } from "@/lib/live-chatbot";
 import { TONES, type Tone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
+
 type Tab = "live" | "tickets" | "visitors";
+type ApiVisitor = Awaited<ReturnType<typeof loadVisitors>>[number];
 const STATUS: Record<
   BotChat["status"],
   {
@@ -64,6 +67,13 @@ export default function ChatbotPage() {
   const allowed = usePerm("chatbot");
   const [tab, setTab] = useState<Tab>("live");
   const [filter, setFilter] = useState<"All" | Ticket["status"]>("All");
+  const [visitors, setVisitors] = useState<ApiVisitor[]>([]);
+
+  useEffect(() => {
+    if (tab === "visitors" && allowed) {
+      loadVisitors().then(setVisitors).catch(() => setVisitors([]));
+    }
+  }, [tab, allowed]);
   if (!allowed) {
     return (
       <Screen>
@@ -218,47 +228,42 @@ export default function ChatbotPage() {
         <View className="mt-5">
           <View className="mb-4 flex items-end justify-between">
             <Text className="font-display text-[length:calc(72px*var(--ds))] leading-[0.8]">
-              {VISITORS.length}
+              {visitors.length}
             </Text>
             <Text className="pb-1 text-right font-mono text-[11px] uppercase leading-relaxed tracking-[0.16em] text-ink/60">
-              on the site
-              {"\n"}
-              right now
+              on the site{"\n"}right now
             </Text>
           </View>
-          <VisitorMap
-            points={VISITORS.map((v) => ({
-              id: v.id,
-              x: v.x,
-              y: v.y,
-              label: v.place,
-            }))}
-          />
-          <View className="mt-3">
-            {VISITORS.map((v) => (
-              <View
-                key={v.id}
-                className="flex items-center gap-3 border-b border-line/70 py-3 last:border-0"
-              >
-                <Avatar name={v.name} size={40} />
-                <View className="min-w-0 flex-1">
-                  <Text className="truncate font-semibold leading-tight">{v.name}</Text>
-                  <Text className="truncate text-[13px] text-ink/55">
-                    {v.place} · {v.page}
-                  </Text>
-                </View>
-                <View className="text-right">
-                  <Text className="font-mono text-[10.5px] uppercase tracking-[0.1em] text-ink/55">
-                    {v.source}
-                  </Text>
-                  <Text className="font-mono text-[10px] text-ink/40">{v.since}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
-          <Text className="mt-3 text-center text-[13px] text-ink/50">
-            Read-only. Visitor tracking is set up on the web.
-          </Text>
+          {visitors.length === 0 ? (
+            <Empty title="No one on site" body="Visitors appear here when they open the widget." tone="sky" />
+          ) : (
+            <View className="mt-3">
+              {visitors.map((v) => {
+                const displayName = v.name || v.email || "Anonymous";
+                const chatting = !!v.conversation;
+                return (
+                  <View
+                    key={v.visitorId}
+                    className="flex items-center gap-3 border-b border-line/70 py-3 last:border-0"
+                  >
+                    <Avatar name={displayName} size={40} />
+                    <View className="min-w-0 flex-1">
+                      <Text className="truncate font-semibold leading-tight">{displayName}</Text>
+                      <Text className="truncate text-[13px] text-ink/55">
+                        {[v.city || v.country, v.pageTitle || v.pageUrl].filter(Boolean).join(" · ")}
+                      </Text>
+                    </View>
+                    <View className="text-right">
+                      {v.referrer ? <Text className="font-mono text-[10.5px] uppercase tracking-[0.1em] text-ink/55">{v.referrer}</Text> : null}
+                      <Badge tone={chatting ? (v.conversation!.unreadCount > 0 ? "coral" : "leaf") : "sky"}>
+                        {chatting ? (v.conversation!.unreadCount > 0 ? "Waiting" : "Chatting") : "Browsing"}
+                      </Badge>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          )}
         </View>
       ) : null}
     </Screen>

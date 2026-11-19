@@ -8,10 +8,6 @@ import { currentSiteFilter, currentSiteId } from "../services/siteContext";
 import { InboxConversation } from "./InboxConversation";
 import { InboxMessage } from "./InboxMessage";
 import { InboxEmail } from "./InboxEmail";
-import { Lead } from "./Lead";
-import { Account } from "./Account";
-import { Deal } from "./Deal";
-import { Activity } from "./Activity";
 import { Campaign } from "./Campaign";
 import { CampaignTemplate } from "./CampaignTemplate";
 import { ContactGroup } from "./ContactGroup";
@@ -21,19 +17,23 @@ import { PageView } from "./PageView";
 import { Visitor } from "./Visitor";
 import { Chatbot } from "./Chatbot";
 import { ChatConversation } from "./ChatConversation";
-import { LeadFinderTarget } from "./LeadFinderTarget";
 
 /**
  * Site-owned models, by module:
  *
  *   Inbox       InboxConversation, InboxMessage, InboxEmail
- *   CRM         Lead, Account, Deal, Activity, LeadFinderTarget
  *   Outreach    Campaign, CampaignTemplate, ContactGroup
  *   Automation  Workflow, WorkflowEnrollment
  *   Analytics   PageView, Visitor
  *   Chatbot     Chatbot, ChatConversation
  *
  * Deliberately NOT here:
+ *   - Lead, Account, Deal, Activity, LeadFinderTarget — the CRM is ONE book of people for the
+ *     whole workspace. A person is one record however many brands have written to them, which
+ *     is also what the workspace-wide unique (organizationId, email) index already assumed.
+ *     What differs by brand is the outreach: campaigns, templates, lists, the inbox and the
+ *     sending domain. `siteId` stays on these rows as "the brand this came from", informational
+ *     only; it no longer filters anything.
  *   - Blog / CaseStudy / Event — already carry siteId and are filtered
  *     explicitly by the Content routes; auto-scoping them would double up.
  *   - PipelineStage, WorkflowStatus, FieldDefinition, SavedView — workspace
@@ -45,7 +45,6 @@ import { LeadFinderTarget } from "./LeadFinderTarget";
  */
 export const SITE_MODELS: ModelStatic<any>[] = [
   InboxConversation, InboxMessage, InboxEmail,
-  Lead, Account, Deal, Activity, LeadFinderTarget,
   Campaign, CampaignTemplate, ContactGroup,
   Workflow, WorkflowEnrollment,
   PageView, Visitor,

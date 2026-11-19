@@ -1,16 +1,14 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { Reveal } from "@/components/Reveal";
 import { Aurora } from "@/components/ui";
 import { H2, Kicker, LightSection } from "@/components/light";
-import { SITE_URL } from "@/components/site";
+import { pageMeta } from "@/components/site";
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "Privacy Policy & Terms of Service",
   description: "How Rhinon Tech handles your data, what we collect, how the AI is used, and the terms for using the workspace.",
-  alternates: { canonical: "/privacy-terms" },
-  openGraph: { title: "Privacy Policy & Terms of Service | Rhinon Tech", url: `${SITE_URL}/privacy-terms`, type: "website" },
-};
+  path: "/privacy-terms",
+});
 
 const UPDATED = "7 November 2026";
 

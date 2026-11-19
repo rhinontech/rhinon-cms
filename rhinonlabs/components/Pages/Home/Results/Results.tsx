@@ -77,13 +77,13 @@ export function Results() {
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:auto-rows-[220px]">
-                    {/* 100s — hero tile with a rising chart */}
+                    {/* 2–4 wks — hero tile with a rising chart */}
                     <Tile className="md:col-span-2 md:row-span-2 min-h-96">
                         <div className="flex h-full flex-col justify-between p-8 pb-36 md:pb-40">
-                            <Label>Hours saved / month</Label>
+                            <Label>Delivery timeline</Label>
                             <div className="relative z-10">
-                                <p className="rx-num text-7xl md:text-8xl lg:text-9xl font-semibold tracking-tighter leading-none">100s</p>
-                                <p className="mt-3 text-sm text-white/60 max-w-xs">Repetitive work your team never touches again — every single month.</p>
+                                <p className="rx-num text-7xl md:text-8xl lg:text-9xl font-semibold tracking-tighter leading-none">2–4 wks</p>
+                                <p className="mt-3 text-sm text-white/60 max-w-xs">From scoped brief to a working product on a live staging link.</p>
                             </div>
                             <svg viewBox="0 0 400 120" className="absolute inset-x-0 bottom-0 h-32 md:h-36 w-full" preserveAspectRatio="none" aria-hidden="true">
                                 <defs>
@@ -96,13 +96,13 @@ export function Results() {
                         </div>
                     </Tile>
 
-                    {/* 85% — progress ring */}
+                    {/* 100% ownership — progress ring */}
                     <Tile>
                         <div className="flex h-full items-center justify-between gap-4 p-6">
                             <div>
-                                <Label>Manual work</Label>
-                                <p className="rx-num mt-3 text-6xl font-semibold tracking-tighter leading-none">85%</p>
-                                <p className="mt-2 text-xs text-white/55">less, on average</p>
+                                <Label>Code ownership</Label>
+                                <p className="rx-num mt-3 text-6xl font-semibold tracking-tighter leading-none">100%</p>
+                                <p className="mt-2 text-xs text-white/55">yours — code, designs & accounts</p>
                             </div>
                             <svg viewBox="0 0 100 100" className="h-24 w-24 -rotate-90 shrink-0" aria-hidden="true">
                                 <defs><linearGradient id="rx-ring" x1="0" x2="1"><stop offset="0" stopColor="#a26bff" /><stop offset="1" stopColor="#5b7bff" /></linearGradient></defs>
@@ -112,13 +112,13 @@ export function Results() {
                         </div>
                     </Tile>
 
-                    {/* 98% — gauge */}
+                    {/* Weekly — gauge */}
                     <Tile>
                         <div className="flex h-full items-center justify-between gap-4 p-6">
                             <div>
-                                <Label>Workflow accuracy</Label>
-                                <p className="rx-num mt-3 text-6xl font-semibold tracking-tighter leading-none">98%</p>
-                                <p className="mt-2 text-xs text-white/55">runs without a human fix</p>
+                                <Label>Release cadence</Label>
+                                <p className="rx-num mt-3 text-6xl font-semibold tracking-tighter leading-none">Weekly</p>
+                                <p className="mt-2 text-xs text-white/55">releases to a live staging link</p>
                             </div>
                             <svg viewBox="0 0 120 70" className="h-20 w-28 shrink-0" aria-hidden="true">
                                 <defs><linearGradient id="rx-gauge" x1="0" x2="1"><stop offset="0" stopColor="#f59e0b" /><stop offset=".5" stopColor="#a26bff" /><stop offset="1" stopColor="#2dd4bf" /></linearGradient></defs>
@@ -148,11 +148,11 @@ export function Results() {
                         </div>
                     </Tile>
 
-                    {/* 50+ — logo cluster */}
+                    {/* 30+ — logo cluster */}
                     <Tile>
                         <div className="flex h-full flex-col justify-between p-6">
                             <Label>Tools connected</Label>
-                            <p className="rx-num text-6xl font-semibold tracking-tighter leading-none">50+</p>
+                            <p className="rx-num text-6xl font-semibold tracking-tighter leading-none">30+</p>
                             <div className="flex -space-x-2" aria-hidden="true">
                                 {LOGOS.map((l) => (
                                     <span key={l.slug} className="flex h-8 w-8 items-center justify-center rounded-full bg-white ring-2 ring-[#070a14]">

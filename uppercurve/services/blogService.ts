@@ -10,15 +10,10 @@ import {
  * Hits backend API: http://localhost:5003/public/blogs?domain=uppercurve
  */
 export async function getBlogs(): Promise<BlogPost[]> {
-  try {
-    const apiBlogs = await fetchApiBlogs();
-    if (apiBlogs && apiBlogs.length > 0) {
-      return apiBlogs.map((b, idx) => adaptApiBlogToBlogPost(b, idx));
-    }
-  } catch (err) {
-    console.error("getBlogs failed to fetch from API:", err);
+  const apiBlogs = await fetchApiBlogs();
+  if (apiBlogs && apiBlogs.length > 0) {
+    return apiBlogs.map((b, idx) => adaptApiBlogToBlogPost(b, idx));
   }
-
   return [];
 }
 
@@ -27,15 +22,10 @@ export async function getBlogs(): Promise<BlogPost[]> {
  * Hits backend API: http://localhost:5003/public/blogs/:slug?domain=uppercurve
  */
 export async function getBlogBySlug(slug: string): Promise<BlogPost | null> {
-  try {
-    const apiBlog = await fetchApiBlogBySlug(slug);
-    if (apiBlog) {
-      return adaptApiBlogToBlogPost(apiBlog);
-    }
-  } catch (err) {
-    console.error(`getBlogBySlug failed for "${slug}":`, err);
+  const apiBlog = await fetchApiBlogBySlug(slug);
+  if (apiBlog) {
+    return adaptApiBlogToBlogPost(apiBlog);
   }
-
   return null;
 }
 

@@ -1,20 +1,23 @@
-import type { Metadata } from "next";
+import { Dancing_Script } from "next/font/google";
 import { Aurora, Button, Eyebrow, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand } from "@/components/blocks";
-import { links } from "@/components/site";
+import { links, pageMeta } from "@/components/site";
 import { bySlug } from "@/content/products";
 import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
 import { JourneyHero, OffboardSection, PhoneSection, RecordSection, RewriteSection, SignatureSection } from "@/components/product/hr";
 
 const p = bySlug("hr")!;
 const G = "italic";
+/** Loaded only on /product/hr where the e-signature demo renders. */
+const dancing = Dancing_Script({ variable: "--font-dancing", subsets: ["latin"], weight: ["600"] });
 
-export const metadata: Metadata = {
-  title: "HR & People: onboarding, records, offer letters and e-signing",
-  description: "A directory, a full record for every person, an onboarding flow for new hires and offer letters signed inside the app.",
-  alternates: { canonical: "/product/hr" },
-};
+export const metadata = pageMeta({
+  title: "HR Software: Onboarding, Offers & E-Sign",
+  description: "Free HR software for your whole team: employee directory, records, new-hire onboarding and e-signed offer letters in one place.",
+  path: "/product/hr",
+  hasOgImage: true,
+});
 
 const FAQ = [
   { q: "Do candidates need an account to sign?", a: "No. They open a link and sign with a typed or drawn signature." },
@@ -26,7 +29,7 @@ const FAQ = [
 
 export default function HrPage() {
   return (
-    <div className="bg-white">
+    <div className={`bg-white ${dancing.variable}`}>
       {/* Hero: centred, with a hire travelling from offer to day one */}
       <section className="relative pb-20 pt-12 sm:pt-16">
         <Aurora tones={["#ff5fb0", "#7c5cff", "#2f5bff"]} />
@@ -92,7 +95,7 @@ export default function HrPage() {
         { slug: "attendance", line: "Attendance and leave follow the same record." },
         { slug: "performance", line: "Reviews attach to each person." },
       ]} />
-      <ProductFaq title="HR questions, answered." items={FAQ} />
+      <ProductFaq slug="hr" title="HR questions, answered." items={FAQ} />
       <CtaBand tone={p.tone} title={<>Welcome people <span className="text-aurora-soft">properly.</span></>} sub="Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
     </div>
   );

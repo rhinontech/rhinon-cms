@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, Star } from "lucide-react";
-import { Avatar, Pill } from "@/components/ProductMocks";
+import { Avatar, Pill } from "@/components/mockPrimitives";
 import { AutoTabs, CountTo, Live, Ring, TypeText, useStepper } from "@/components/motion";
 
 const GLASS = "rounded-3xl border border-white/10 bg-white/[0.045] backdrop-blur-md";

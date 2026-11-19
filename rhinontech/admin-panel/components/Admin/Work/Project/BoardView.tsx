@@ -14,7 +14,9 @@ import {
 import {
   TbCalendar, TbDots, TbPaperclip, TbPlus, TbSubtask, TbX,
 } from "react-icons/tb";
-import { COLUMN_TINT, STATUS_CHIP, STATUS_DOT } from "./constants";
+import { STATUS_CHIP, STATUS_DOT } from "./constants";
+import { CardCover } from "../CardCover";
+import { COLUMN_PILL, COLUMN_TOP } from "../boardStyle";
 import type { PersonOption, ProjectTask, TaskRow, WorkflowStatus } from "./types";
 
 function initials(name: string) {
@@ -48,8 +50,7 @@ function BoardCard({
   dragging?: boolean;
 }) {
   const range = rangeLabel(task);
-  // A single image attachment becomes the card cover, as Wrike does for proofs.
-  const cover = task.attachments?.find((a) => a.mimeType?.startsWith("image/"));
+  const files = task.attachments?.length ?? 0;
 
   return (
     <div
@@ -58,48 +59,46 @@ function BoardCard({
         dragging ? "rotate-1 shadow-lg" : "hover:border-border"
       )}
     >
-      {cover && (
-        <div className="flex h-24 items-center justify-center border-b bg-muted/40 text-[10px] text-muted-foreground">
-          <TbPaperclip size={13} className="mr-1" /> {cover.name}
-        </div>
-      )}
-      <button data-task-opener onClick={() => onOpen?.(task)} className="block w-full px-3 py-2.5 text-left">
-        <p className="text-sm font-medium leading-snug text-foreground">{task.title}</p>
+      {/* Optional: only tasks with a cover picture get one. */}
+      <CardCover url={task.coverUrl} />
+      <button data-task-opener onClick={() => onOpen?.(task)} className="block w-full px-3.5 py-3 text-left">
+        <p className="text-[15px] font-medium leading-snug text-foreground">
+          {task.title}
+          {files > 0 && <TbPaperclip size={13} className="ml-1.5 inline align-[-1px] text-muted-foreground" aria-label={`${files} files`} />}
+        </p>
         {!!task.tags?.length && (
-          <div className="mt-1.5 flex flex-wrap gap-1">
+          <div className="mt-2 flex flex-wrap gap-1">
             {task.tags.map((t) => (
               <span key={t.id} className={cn("rounded px-1.5 py-0.5 text-[10px] font-medium", STATUS_CHIP[t.color] ?? STATUS_CHIP.stone)}>{t.label}</span>
             ))}
           </div>
         )}
-        <div className="mt-2 flex items-center justify-between gap-2">
+        {/* Boolean(), not `||` on a number: `false || 0` is `0`, and React RENDERS
+            a bare 0 — which is what put a stray "0" on every empty card. */}
+        {Boolean(childCount > 0 || range) && (
+          <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+            {childCount > 0 && (
+              <span className="flex items-center gap-1 rounded-md border px-1.5 py-0.5"><TbSubtask size={12} /> {childCount}</span>
+            )}
+            {range && (
+              <span className={cn(isOverdue(task) && "font-medium text-red-600 dark:text-red-300")}>{range}</span>
+            )}
+          </div>
+        )}
+        <div className="mt-2.5 flex items-center gap-2 text-xs text-muted-foreground">
+          <span className="shrink-0">Who&apos;s in charge</span>
           {task.assignee ? (
-            <span
-              title={task.assignee.fullName}
-              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-100 dark:bg-cyan-400/15 text-[10px] font-semibold text-cyan-800 dark:text-cyan-200"
-            >
-              {initials(task.assignee.fullName)}
+            <span className="flex min-w-0 items-center gap-1.5 rounded-full bg-cyan-100 py-0.5 pl-0.5 pr-2 font-medium text-cyan-800 dark:bg-cyan-400/15 dark:text-cyan-200">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-cyan-200 text-[9px] font-semibold dark:bg-cyan-400/25">
+                {initials(task.assignee.fullName)}
+              </span>
+              <span className="truncate">{task.assignee.fullName.split(" ")[0]}</span>
             </span>
           ) : (
-            <span className="h-6 w-6 shrink-0 rounded-full border border-dashed border-border" />
-          )}
-          {range && (
-            <span className={cn("truncate text-[11px]", isOverdue(task) ? "text-red-600 dark:text-red-300" : "text-muted-foreground")}>
-              {range}
-            </span>
+            <span className="rounded-full border border-dashed px-2 py-0.5">Unassigned</span>
           )}
         </div>
       </button>
-      {/* Boolean(), not `||` on a number: `false || 0` is `0`, and React RENDERS
-          a bare 0 — which is what put a stray "0" on every empty card. */}
-      {Boolean(childCount > 0 || task.attachments?.length) && (
-        <div className="flex items-center gap-3 border-t px-3 py-1.5 text-[11px] text-muted-foreground">
-          {childCount > 0 && <span className="flex items-center gap-1"><TbSubtask size={12} /> {childCount}</span>}
-          {Boolean(task.attachments?.length) && (
-            <span className="flex items-center gap-1"><TbPaperclip size={12} /> {task.attachments!.length}</span>
-          )}
-        </div>
-      )}
     </div>
   );
 }
@@ -140,11 +139,10 @@ function Column({
   const [title, setTitle] = useState("");
 
   return (
-    <div className="flex w-[300px] shrink-0 flex-col">
-      <div className={cn("flex items-center gap-2 rounded-t-xl px-3 py-2", STATUS_CHIP[status.color] ?? STATUS_CHIP.stone)}>
-        <span className={cn("h-2 w-2 shrink-0 rounded-full", STATUS_DOT[status.color] ?? STATUS_DOT.stone)} />
-        <span className="truncate text-sm font-semibold">{status.name}</span>
-        <span className="text-xs opacity-70">{tasks.length}</span>
+    <div className="flex w-[300px] shrink-0 flex-col gap-3">
+      <div className={cn("flex items-center gap-2 rounded-xl border-t-[3px] px-3 py-2.5 shadow-sm glass-card", COLUMN_TOP[status.color] ?? COLUMN_TOP.stone)}>
+        <span className={cn("max-w-[170px] truncate rounded-md px-2.5 py-1 text-sm font-semibold", COLUMN_PILL[status.color] ?? COLUMN_PILL.stone)}>{status.name}</span>
+        <span className="flex h-6 min-w-6 items-center justify-center rounded-full border px-1.5 text-xs text-muted-foreground">{tasks.length}</span>
         {!readOnly && (
           <>
             <button
@@ -202,8 +200,8 @@ function Column({
       <div
         ref={setNodeRef}
         className={cn(
-          "min-h-[120px] flex-1 space-y-2 rounded-b-xl border border-t-0 p-2 transition-colors",
-          isOver ? "border-blue-300 dark:border-blue-400/30 bg-blue-50/60 dark:bg-blue-400/10" : COLUMN_TINT[status.color] ?? COLUMN_TINT.stone
+          "min-h-[120px] flex-1 space-y-3 rounded-xl p-1 transition-colors",
+          isOver && "bg-blue-50/60 ring-2 ring-blue-300/60 dark:bg-blue-400/10 dark:ring-blue-400/30"
         )}
       >
         {adding && (
@@ -346,7 +344,7 @@ export function BoardView({
         </div>
       </div>
       <DragOverlay dropAnimation={null}>
-        {active && <div className="w-[284px]"><BoardCard task={active} childCount={childCounts.get(active.id) ?? 0} dragging /></div>}
+        {active && <div className="w-[292px]"><BoardCard task={active} childCount={childCounts.get(active.id) ?? 0} dragging /></div>}
       </DragOverlay>
     </DndContext>
   );

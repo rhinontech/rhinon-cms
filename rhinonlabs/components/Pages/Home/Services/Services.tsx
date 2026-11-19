@@ -172,7 +172,7 @@ export function Services() {
                             accent={TEAL} Icon={Workflow}
                             title="Workflow Automation" subtitle="End-to-end connectivity"
                             body="We connect your tools and processes so data flows automatically — less manual entry, fewer missed follow-ups, no repetitive admin."
-                            outcome="~10 hrs / week saved per person" href="/services/workflow-automation"
+                            outcome="Eliminate repetitive manual work" href="/services/workflow-automation"
                         />
                     </Tile>
                     <Tile accent={VIOLET} className="lg:col-span-7">

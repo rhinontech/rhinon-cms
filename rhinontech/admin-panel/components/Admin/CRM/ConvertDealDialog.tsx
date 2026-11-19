@@ -92,7 +92,7 @@ export function ConvertDealDialog({ lead, onClose }: { lead: Lead; onClose: (cre
             </label>
             <label className="block">
               <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Currency</span>
-              <NativeSelect value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className={INPUT}>
+              <NativeSelect value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className={INPUT} contentClassName="z-[70]">
                 <option value="INR">INR</option>
                 <option value="USD">USD</option>
                 <option value="EUR">EUR</option>
@@ -104,7 +104,7 @@ export function ConvertDealDialog({ lead, onClose }: { lead: Lead; onClose: (cre
           <div className="grid grid-cols-2 gap-2.5">
             <label className="block">
               <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Stage</span>
-              <NativeSelect value={form.stageId} onChange={(e) => setForm({ ...form, stageId: e.target.value })} className={INPUT}>
+              <NativeSelect value={form.stageId} onChange={(e) => setForm({ ...form, stageId: e.target.value })} className={INPUT} contentClassName="z-[70]">
                 {stages.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
               </NativeSelect>
             </label>
@@ -116,7 +116,7 @@ export function ConvertDealDialog({ lead, onClose }: { lead: Lead; onClose: (cre
 
           <label className="block">
             <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Owner</span>
-            <NativeSelect value={form.ownerId} onChange={(e) => setForm({ ...form, ownerId: e.target.value })} className={INPUT}>
+            <NativeSelect value={form.ownerId} onChange={(e) => setForm({ ...form, ownerId: e.target.value })} className={INPUT} contentClassName="z-[70]">
               <option value="">Me</option>
               {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}
             </NativeSelect>

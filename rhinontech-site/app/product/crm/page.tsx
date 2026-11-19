@@ -1,20 +1,20 @@
-import type { Metadata } from "next";
 import { Aurora, Button, IconTile } from "@/components/ui";
 import { Glow, H2, Kicker, LightSection } from "@/components/light";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand } from "@/components/blocks";
-import { links } from "@/components/site";
+import { links, pageMeta } from "@/components/site";
 import { bySlug } from "@/content/products";
 import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
 import { BarsSection, ConvergeSection, LifecycleStory, PipelineHero, ScanSection } from "@/components/product/crm";
 
 const p = bySlug("crm")!;
 
-export const metadata: Metadata = {
-  title: "CRM: every lead and deal in one list",
-  description: "Import leads, capture them from your website, and follow each one from first hello to won deal. Free for your whole team.",
-  alternates: { canonical: "/product/crm" },
-};
+export const metadata = pageMeta({
+  title: "Free CRM Software for Teams",
+  description: "Free CRM software for your whole team: import leads, capture them from your site and follow every deal from first hello to won.",
+  path: "/product/crm",
+  hasOgImage: true,
+});
 
 const FAQ = [
   { q: "Can I import my existing contacts?", a: "Yes. Upload a CSV and your leads appear in the pipeline with their details." },
@@ -99,7 +99,7 @@ export default function CrmPage() {
         { slug: "inbox", line: "Replies land on the lead's timeline." },
         { slug: "chatbot", line: "Chat visitors become leads automatically." },
       ]} />
-      <ProductFaq title="CRM questions, answered." items={FAQ} />
+      <ProductFaq slug="crm" title="CRM questions, answered." items={FAQ} />
       <CtaBand tone={p.tone} title={<>Start with the CRM, <span className="text-aurora-soft">free.</span></>} sub="Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
     </>
   );

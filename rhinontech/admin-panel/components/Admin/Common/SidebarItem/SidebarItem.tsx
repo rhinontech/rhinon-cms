@@ -77,8 +77,8 @@ export const SidebarItem = ({
 
   const content = (
     <>
-      <span className="flex shrink-0 items-center">{icon}</span>
-      <span className="min-w-0 flex-1 truncate">{label}</span>
+      <span className="flex shrink-0 items-center pointer-events-none">{icon}</span>
+      <span className="min-w-0 flex-1 truncate pointer-events-none">{label}</span>
     </>
   );
 
@@ -88,15 +88,15 @@ export const SidebarItem = ({
 
   if (externalLink) {
     return (
-      <a href={href} target="_blank" rel="noopener noreferrer" className={itemClass(isActive)} style={tone}>
+      <a href={href} target="_blank" rel="noopener noreferrer" className={cn(itemClass(isActive), "cursor-pointer active:scale-[0.98]")} style={tone}>
         {content}
-        <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+        <ExternalLink className="h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
       </a>
     );
   }
 
   return (
-    <Link href={href} className={itemClass(isActive)} style={tone}>
+    <Link href={href} className={cn(itemClass(isActive), "cursor-pointer active:scale-[0.98]")} style={tone}>
       {content}
     </Link>
   );

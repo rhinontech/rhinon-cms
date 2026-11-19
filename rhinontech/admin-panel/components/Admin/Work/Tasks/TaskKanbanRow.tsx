@@ -5,12 +5,13 @@ import { useDroppable } from "@dnd-kit/core";
 import { cn } from "@/lib/utils";
 import { STATUSES } from "./constants";
 import { TaskCard } from "./TaskCard";
+import { COLUMN_PILL, COLUMN_TOP } from "../boardStyle";
 import type { ApiTask, GroupMode, PersonOption, ProjectOption, TaskPatch, TaskStatus } from "./types";
 
-const COLUMN_ACCENT: Record<TaskStatus, string> = {
-  Pending: "text-muted-foreground",
-  "In progress": "text-blue-600 dark:text-blue-300",
-  Done: "text-emerald-600 dark:text-emerald-300",
+const COLUMN_COLOR: Record<TaskStatus, string> = {
+  Pending: "amber",
+  "In progress": "blue",
+  Done: "green",
 };
 
 function Column({
@@ -47,17 +48,17 @@ function Column({
     <div
       ref={setNodeRef}
       className={cn(
-        "flex min-w-0 flex-col gap-2 rounded-xl bg-muted/70 p-2 transition-colors",
+        "flex min-w-0 flex-col gap-3 rounded-xl p-1 transition-colors",
         isOver && "bg-blue-50 dark:bg-blue-400/10 ring-2 ring-blue-200"
       )}
     >
-      <div className="flex items-center justify-between px-1">
-        <span className={cn("text-[10px] font-bold uppercase tracking-widest", COLUMN_ACCENT[status])}>{status}</span>
-        <span className="rounded-full bg-card px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">{tasks.length}</span>
+      <div className={cn("flex items-center gap-2 rounded-xl border-t-[3px] bg-card px-3 py-2 shadow-sm", COLUMN_TOP[COLUMN_COLOR[status]])}>
+        <span className={cn("rounded-md px-2.5 py-1 text-xs font-semibold", COLUMN_PILL[COLUMN_COLOR[status]])}>{status}</span>
+        <span className="flex h-5 min-w-5 items-center justify-center rounded-full border px-1.5 text-[11px] text-muted-foreground">{tasks.length}</span>
       </div>
 
       {showCards ? (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
           {tasks.map((t) => (
             <TaskCard
               key={t.id}
