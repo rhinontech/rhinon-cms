@@ -18,7 +18,7 @@ export default function EventCard({ event, priority = false }: { event: EventDet
         {event.bannerUrl ? (
           <Image
             src={event.bannerUrl}
-            alt=""
+            alt={event.title}
             fill
             priority={priority}
             sizes="(min-width: 1024px) 380px, (min-width: 640px) 50vw, 100vw"
@@ -66,7 +66,7 @@ export default function EventCard({ event, priority = false }: { event: EventDet
                 <div className="flex -space-x-2 shrink-0">
                   {hosts.map((h) => (
                     <span key={h.name} className="relative w-7 h-7 rounded-full ring-2 ring-white overflow-hidden bg-[#E2E8F0]">
-                      {h.photoUrl ? <Image src={h.photoUrl} alt="" fill sizes="28px" className="object-cover" /> : null}
+                      {h.photoUrl ? <Image src={h.photoUrl} alt={h.name} fill sizes="28px" className="object-cover" /> : null}
                     </span>
                   ))}
                 </div>
