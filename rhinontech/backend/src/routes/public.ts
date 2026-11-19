@@ -31,7 +31,7 @@ function parseDomain(value: unknown): BlogDomain {
 const PUBLIC_BLOG_LIST_FIELDS = [
   "id", "title", "excerpt", "slug",
   "authorName", "authorRole", "authorAvatar",
-  "coverImage", "tags", "category", "readTime", "publishedAt",
+  "coverImage", "tags", "category", "readTime", "publishedAt", "updatedAt",
 ] as const;
 
 const PUBLIC_BLOG_DETAIL_FIELDS = [

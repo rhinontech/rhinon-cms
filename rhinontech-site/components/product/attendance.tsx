@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Check, Moon } from "lucide-react";
-import { Avatar, Pill } from "@/components/ProductMocks";
+import { Avatar, Pill } from "@/components/mockPrimitives";
 import { CountTo, Cursor, Live, Ring, TypeText, useStepper } from "@/components/motion";
 
 const SHEET = "rounded-3xl border border-teal-100 bg-white shadow-[0_40px_90px_-40px_rgb(10_120_110_/_0.45)]";

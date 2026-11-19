@@ -1,17 +1,17 @@
-import type { Metadata } from "next";
 import { ArrowUpRight } from "lucide-react";
 import { GROUPS, byGroup } from "@/content/products";
-import { links } from "@/components/site";
+import { links, pageMeta } from "@/components/site";
 import { Aurora, Button, IconTile, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { Spot } from "@/components/Spot";
 import { CtaBand } from "@/components/blocks";
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: "Products",
   description: "CRM, outreach, inbox, AI chatbot, projects, team chat, HR, payroll, attendance and performance in one workspace.",
-  alternates: { canonical: "/product" },
-};
+  path: "/product",
+  hasOgImage: true,
+});
 
 export default function ProductsPage() {
   return (
@@ -20,7 +20,7 @@ export default function ProductsPage() {
         <Aurora />
         <div className="relative mx-auto max-w-[1240px] px-5">
           <Reveal>
-            <SectionHead eyebrow="Products" title={<>Everything your company runs on, <span className="text-aurora">in one place.</span></>} sub="Use one product or all eleven. They share one workspace, one login and one memory." />
+            <SectionHead as="h1" eyebrow="Products" title={<>CRM, HR, payroll and projects, <span className="text-aurora">in one workspace.</span></>} sub="Use one product or all eleven. They share one workspace, one login and one memory." />
             <div className="mt-9 flex flex-wrap gap-3">
               <Button href={links.signup} arrow>Get started free</Button>
               <Button href={links.call} variant="ghost">Book a demo</Button>

@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Check, ChevronDown } from "lucide-react";
-import { links, SITE_URL } from "@/components/site";
+import { DEFAULT_OG_IMAGE, links, SITE_URL } from "@/components/site";
 import { CtaBand } from "@/components/blocks";
+import { JsonLd, blogPostingGraph } from "@/components/schema";
 import { getBlog, getBlogs, formatDate, toneFor, withHeadingIds, youtubeId, type BlogBlock } from "@/lib/blog";
 import { Avatar, CategoryKicker, Cover, PostMeta } from "@/components/blog/parts";
 
@@ -19,14 +20,31 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const blog = await getBlog((await params).slug);
   if (!blog) return { title: "Article not found" };
-  const title = blog.metaTitle || blog.title;
+  const rawTitle = (blog.metaTitle || blog.title).trim();
+  const title = rawTitle.replace(/(?:\s*\|\s*Rhinon Tech)+$/i, "").trim();
   const description = blog.metaDescription || blog.excerpt;
+  const fullTitle = `${title} | Rhinon Tech`;
   return {
     title,
     description,
     alternates: { canonical: `/blog/${blog.slug}` },
-    openGraph: { title, description, type: "article", url: `${SITE_URL}/blog/${blog.slug}`, publishedTime: blog.publishedAt, authors: [blog.authorName], ...(blog.coverImage ? { images: [{ url: blog.coverImage }] } : {}) },
-    twitter: { card: "summary_large_image", title, description, ...(blog.coverImage ? { images: [blog.coverImage] } : {}) },
+    openGraph: {
+      title: fullTitle,
+      description,
+      type: "article",
+      url: `${SITE_URL}/blog/${blog.slug}`,
+      siteName: "Rhinon Tech",
+      locale: "en_IN",
+      publishedTime: blog.publishedAt,
+      authors: [blog.authorName],
+      images: [blog.coverImage ? { url: blog.coverImage } : DEFAULT_OG_IMAGE],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: fullTitle,
+      description,
+      images: [blog.coverImage || DEFAULT_OG_IMAGE.url],
+    },
   };
 }
 
@@ -77,20 +95,7 @@ export default async function BlogPostPage({ params }: { params: Params }) {
   const related = all.filter((p) => p.slug !== blog.slug && (blog.category ? p.category === blog.category : true)).slice(0, 3);
   const tone = toneFor(blog.category);
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    headline: blog.title,
-    description: blog.excerpt,
-    datePublished: blog.publishedAt,
-    author: { "@type": "Person", name: blog.authorName },
-    publisher: { "@type": "Organization", name: "Rhinon Tech", url: SITE_URL },
-    mainEntityOfPage: `${SITE_URL}/blog/${blog.slug}`,
-    ...(blog.coverImage ? { image: blog.coverImage } : {}),
-  };
-  const faqLd = blog.faqs?.length
-    ? { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: blog.faqs.map((f) => ({ "@type": "Question", name: f.question, acceptedAnswer: { "@type": "Answer", text: f.answer } })) }
-    : null;
+  const structuredData = blogPostingGraph(blog);
 
   return (
     <>
@@ -195,8 +200,7 @@ export default async function BlogPostPage({ params }: { params: Params }) {
 
       <CtaBand title={<>Run your whole company from <span className="text-aurora-soft">one tab.</span></>} sub="Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
 
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      {faqLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />}
+      <JsonLd data={structuredData} />
     </>
   );
 }
