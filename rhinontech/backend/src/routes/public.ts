@@ -841,7 +841,7 @@ router.get("/track/open", async (req: Request, res: Response) => {
         if (lead && !lead.emailOpened) {
           const effectiveCampaignId = campaignId || lead.campaignId;
           await lead.update({ emailOpened: true, openedAt: new Date() });
-          await CampaignActivity.create({
+          await (CampaignActivity as any).create({
             leadId: lead.id,
             campaignId: effectiveCampaignId || null,
             type: "EmailOpened",
