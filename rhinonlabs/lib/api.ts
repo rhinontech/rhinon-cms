@@ -63,7 +63,7 @@ export interface CaseStudy {
 }
 
 async function getJSON<T>(path: string): Promise<T | null> {
-  const res = await fetch(`${API_BASE}${path}`, { cache: "no-store" });
+  const res = await fetch(`${API_BASE}${path}`, { next: { revalidate: 300, tags: ["content"] },});
   if (res.status === 404) {
     return null;
   }

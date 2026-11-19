@@ -96,14 +96,14 @@ const Hero1 = () => {
           <div className="flex items-center gap-4">
             {/* Avatar Stack */}
             <div className="flex -space-x-4">
-              <div className="w-12 h-12 rounded-full bg-gray-600 border-2 border-black flex items-center justify-center">
-                <img src="/assets/avatars/1.webp" alt="Client avatar 1" width={48} height={48} className="w-full h-full rounded-full object-cover" />
+              <div className="w-12 h-12 rounded-full bg-gray-600 border-2 border-black flex items-center justify-center overflow-hidden">
+                <Image src="/assets/avatars/1.webp" alt="Startup founder - Rhinon Labs client" width={48} height={48} className="w-full h-full object-cover" />
               </div>
-              <div className="w-12 h-12 rounded-full bg-gray-600 border-2 border-black flex items-center justify-center">
-                <img src="/assets/avatars/2.webp" alt="Client avatar 2" width={48} height={48} className="w-full h-full rounded-full object-cover" />
+              <div className="w-12 h-12 rounded-full bg-gray-600 border-2 border-black flex items-center justify-center overflow-hidden">
+                <Image src="/assets/avatars/2.webp" alt="Product lead - Rhinon Labs client" width={48} height={48} className="w-full h-full object-cover" />
               </div>
-              <div className="w-12 h-12 rounded-full bg-gray-600 border-2 border-black flex items-center justify-center">
-                <img src="/assets/avatars/3.webp" alt="Client avatar 3" width={48} height={48} className="w-full h-full rounded-full object-cover" />
+              <div className="w-12 h-12 rounded-full bg-gray-600 border-2 border-black flex items-center justify-center overflow-hidden">
+                <Image src="/assets/avatars/3.webp" alt="Business owner - Rhinon Labs client" width={48} height={48} className="w-full h-full object-cover" />
               </div>
             </div>
 

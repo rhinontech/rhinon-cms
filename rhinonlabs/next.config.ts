@@ -16,6 +16,17 @@ const nextConfig: NextConfig = {
   // Permanent redirects for renamed URLs, so links and Google's index carry over.
   async redirects() {
     return [
+      // {
+      //   source: "/:path*",
+      //   has: [
+      //     {
+      //       type: "host",
+      //       value: "rhinonlabs.com",
+      //     },
+      //   ],
+      //   destination: "https://www.rhinonlabs.com/:path*",
+      //   permanent: true,
+      // },
       {
         source: "/blogs/ai-agents-vs-traditional-automatio",
         destination: "/blogs/ai-agents-vs-traditional-automation",
