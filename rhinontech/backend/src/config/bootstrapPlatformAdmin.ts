@@ -41,6 +41,7 @@ function generatePassword(): string {
 
 async function bootstrap() {
   await sequelize.authenticate();
+  await sequelize.sync({ alter: { drop: false } as any });
 
   const org = await runAsSystem("bootstrap:find-platform-org", () =>
     Organization.findOne({ where: { isPlatform: true } })
