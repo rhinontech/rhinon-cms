@@ -21,7 +21,19 @@ interface WorkRequest {
   } | null;
 }
 
+interface InProgressTask {
+  id: string;
+  title: string;
+  priority: "Low" | "Medium" | "High";
+  dueDate: string | null;
+  updatedAt: string;
+  assignee: { id: string; fullName: string } | null;
+  project: { id: string; name: string } | null;
+}
+
 interface WorkOverviewResponse {
+  inProgressCount: number;
+  inProgressTasks: InProgressTask[];
   totalTasks: number;
   totalProjects: number;
   activeProjects: number;
@@ -41,7 +53,7 @@ export function WorkOverview() {
   const cards = [
     { label: "Total tasks", value: data?.totalTasks ?? "—", icon: <TbChecklist size={18} /> },
     { label: "Projects / clients", value: data?.totalProjects ?? "—", icon: <TbBriefcase size={18} /> },
-    { label: "Open client items", value: data?.openRequests ?? "—", icon: <TbAlertCircle size={18} /> },
+    { label: "In progress", value: data?.inProgressCount ?? "—", icon: <TbAlertCircle size={18} /> },
     { label: "Active projects", value: data?.activeProjects ?? "—", icon: <TbBriefcase size={18} /> },
   ];
 
@@ -74,32 +86,46 @@ export function WorkOverview() {
           <section className="rounded-xl glass-card p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-foreground">Recent client bugs and change requests</p>
-                <p className="mt-1 text-xs text-muted-foreground">Latest items coming in from clients across projects.</p>
+                <p className="text-sm font-semibold text-foreground">Tasks in progress</p>
+                <p className="mt-1 text-xs text-muted-foreground">What is being worked on right now, across all projects. Most recently updated first.</p>
               </div>
               <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground/70">
-                {data?.recentRequests.length ?? 0} items
+                {data && data.inProgressCount > data.inProgressTasks.length
+                  ? `${data.inProgressTasks.length} of ${data.inProgressCount}`
+                  : `${data?.inProgressCount ?? 0} ${data?.inProgressCount === 1 ? "task" : "tasks"}`}
               </span>
             </div>
 
             <div className="mt-5 space-y-3">
-              {(data?.recentRequests ?? []).map((item) => (
-                <div key={item.id} className="rounded-xl border border-border p-4">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-medium text-foreground">{item.title}</p>
-                    <Badge value={item.type} tone={item.type === "Bug" ? "red" : "blue"} />
-                    <Badge value={item.status} tone="stone" />
-                    <Badge value={item.priority} tone={item.priority === "High" ? "amber" : "stone"} />
+              {(data?.inProgressTasks ?? []).map((task) => {
+                const overdue = task.dueDate && new Date(task.dueDate) < new Date(new Date().toDateString());
+                return (
+                  <div key={task.id} className="rounded-xl border border-border p-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-medium text-foreground">{task.title}</p>
+                      <Badge value={task.priority} tone={task.priority === "High" ? "amber" : "stone"} />
+                      {task.dueDate && (
+                        <Badge
+                          value={`Due ${new Date(task.dueDate).toLocaleDateString(undefined, { day: "numeric", month: "short" })}`}
+                          tone={overdue ? "red" : "stone"}
+                        />
+                      )}
+                    </div>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {task.project ? task.project.name : "No project"}
+                      {" · "}
+                      {task.assignee ? task.assignee.fullName : "Unassigned"}
+                    </p>
                   </div>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {item.project ? item.project.name : "Not linked to a project yet"}
-                  </p>
-                </div>
-              ))}
-              {!data?.recentRequests.length && (
+                );
+              })}
+              {data && !data.inProgressTasks.length && (
                 <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-                  No client issues or change requests logged yet.
+                  Nothing is in progress right now.
                 </div>
+              )}
+              {!data && (
+                <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">Loading…</div>
               )}
             </div>
           </section>
@@ -110,7 +136,7 @@ export function WorkOverview() {
               <StatRow label="Active projects" value={String(data?.activeProjects ?? 0)} />
               <StatRow label="Total projects / clients" value={String(data?.totalProjects ?? 0)} />
               <StatRow label="Tasks in system" value={String(data?.totalTasks ?? 0)} />
-              <StatRow label="Open change items" value={String(data?.openRequests ?? 0)} />
+              <StatRow label="Tasks in progress" value={String(data?.inProgressCount ?? 0)} />
             </div>
           </section>
         </div>

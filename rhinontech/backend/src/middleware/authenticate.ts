@@ -5,6 +5,18 @@ import { User, Role, Permission, Organization } from "../models";
 import { enterTenantContext, runAsSystem } from "../services/tenantContext";
 import { permissionsForOrg } from "../config/permissions";
 import { planState } from "../services/usage";
+import { getCachedIdentity, setCachedIdentity } from "../services/identityCache";
+
+/** What authenticate() needs from the DB for one user; see services/identityCache.ts. */
+interface CachedIdentity {
+  userId: string;
+  fullName: string;
+  companyEmail: string;
+  userType: "internal" | "guest";
+  roleSlug: string;
+  permissions: string[];
+  org: Organization;
+}
 
 export interface AuthRequest extends Request {
   user?: {
@@ -60,37 +72,61 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
     return;
   }
 
-  // JWTs live for days — re-derive identity from the DB on every request so
-  // offboarding, role changes, and permission grants/revocations take effect
-  // immediately instead of waiting for the token to expire or a re-login.
+  // JWTs live for days — re-derive identity from the DB so offboarding, role
+  // changes, and permission grants/revocations take effect immediately instead of
+  // waiting for the token to expire or a re-login.
+  //
+  // The derived identity is held for a few seconds (services/identityCache.ts) and
+  // dropped the moment any User/Role/Permission/Organization row is written, so
+  // "immediately" still holds while a page's burst of calls pays for one lookup.
   try {
-    // This lookup is what RESOLVES the tenant, so it cannot already be inside
-    // one — runAsSystem says that out loud rather than leaving it looking like
-    // a query someone forgot to scope.
-    //
-    // unscoped: the default scope hides guests, who must still authenticate.
-    const account = await runAsSystem("auth:resolve-identity", () =>
-      User.unscoped().findByPk(payload.userId, {
-        attributes: ["id", "status", "fullName", "companyEmail", "userType", "organizationId"],
-        include: [
-          { model: Role, as: "role", include: [{ model: Permission }] },
-          { model: Organization, as: "tenant" },
-        ],
-      })
-    );
-    if (!account || account.status !== "active") {
-      res.status(401).json({ message: "This account is no longer active." });
-      return;
+    let ident = getCachedIdentity<CachedIdentity>(payload.userId);
+
+    if (!ident) {
+      // This lookup is what RESOLVES the tenant, so it cannot already be inside
+      // one — runAsSystem says that out loud rather than leaving it looking like
+      // a query someone forgot to scope.
+      //
+      // unscoped: the default scope hides guests, who must still authenticate.
+      const account = await runAsSystem("auth:resolve-identity", () =>
+        User.unscoped().findByPk(payload.userId, {
+          attributes: ["id", "status", "fullName", "companyEmail", "userType", "organizationId"],
+          include: [
+            { model: Role, as: "role", include: [{ model: Permission }] },
+            { model: Organization, as: "tenant" },
+          ],
+        })
+      );
+      if (!account || account.status !== "active") {
+        res.status(401).json({ message: "This account is no longer active." });
+        return;
+      }
+
+      const tenant = (account as any).tenant as Organization | null;
+      if (!tenant) {
+        // Pre-migration row, or an insert that escaped the stamping hook. Refuse
+        // rather than fall through into an unscoped session.
+        console.error(`[Tenancy] User ${account.id} has no organization; refusing request.`);
+        res.status(403).json({ message: "This account is not attached to a workspace." });
+        return;
+      }
+
+      const accountRole = (account as any).role as (Role & { Permissions: Permission[] }) | null;
+      ident = {
+        userId: account.id,
+        fullName: account.fullName,
+        companyEmail: account.companyEmail,
+        userType: (account as any).userType === "guest" ? "guest" : "internal",
+        roleSlug: accountRole?.slug ?? "",
+        permissions: (accountRole?.Permissions || []).map((p: any) => `${p.resource}:${p.action}`),
+        org: tenant,
+      };
+      // Only active accounts with a workspace are ever cached, so a cache hit never
+      // has to repeat the two refusals above.
+      setCachedIdentity(payload.userId, ident);
     }
 
-    const org = (account as any).tenant as Organization | null;
-    if (!org) {
-      // Pre-migration row, or an insert that escaped the stamping hook. Refuse
-      // rather than fall through into an unscoped session.
-      console.error(`[Tenancy] User ${account.id} has no organization; refusing request.`);
-      res.status(403).json({ message: "This account is not attached to a workspace." });
-      return;
-    }
+    const org = ident.org;
     if (org.status === "suspended") {
       res.status(403).json({ message: "This workspace has been suspended." });
       return;
@@ -111,20 +147,19 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
       return;
     }
 
-    const role = (account as any).role as Role & { Permissions: Permission[] };
-    const permissions = (role?.Permissions || []).map((p: any) => `${p.resource}:${p.action}`);
-
     req.user = {
-      userId: account.id,
+      userId: ident.userId,
       organizationId: org.id,
       orgSlug: org.slug,
       emailDomain: org.emailDomain,
       isPlatformOrg: org.isPlatform,
-      userType: (account as any).userType === "guest" ? "guest" : "internal",
-      roleSlug: role?.slug ?? "",
-      permissions,
-      fullName: account.fullName,
-      companyEmail: account.companyEmail,
+      userType: ident.userType,
+      roleSlug: ident.roleSlug,
+      // A copy per request, so a handler that edits its list cannot change what the
+      // next request for this user is granted.
+      permissions: [...ident.permissions],
+      fullName: ident.fullName,
+      companyEmail: ident.companyEmail,
     };
 
     // req.baseUrl is the router's mount path ("/tasks", "/payroll", …).
@@ -135,7 +170,7 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
 
     // Everything downstream of next() runs inside this org's context, so the
     // Sequelize hooks filter it without the route having to remember.
-    enterTenantContext(org.id, account.id, next);
+    enterTenantContext(org.id, ident.userId, next);
     return;
   } catch (err: any) {
     console.error("Auth lookup failed:", err.message);

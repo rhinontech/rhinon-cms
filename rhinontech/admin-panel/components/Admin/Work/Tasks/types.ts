@@ -52,6 +52,10 @@ export interface ApiTask {
   blocker: { id: string; title: string; status: TaskStatus } | null;
   subtasks: Subtask[];
   tags: TaskTagItem[];
+  attachments?: { id: string; name: string; mimeType: string }[];
+  /** Optional card picture: a short-lived signed link, present only when a cover is set. */
+  coverUrl?: string | null;
+  coverAttachmentId?: string | null;
 }
 
 export interface ProjectOption {

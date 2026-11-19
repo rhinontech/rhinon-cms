@@ -10,23 +10,27 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "uppercurve-assets.s3.ap-south-1.amazonaws.com" },
     ],
   },
-  async rewrites() {
+  async redirects() {
     return [
       {
         source: "/blogs",
         destination: "/blog",
+        permanent: true,
       },
       {
-        source: "/blogs/:slug",
-        destination: "/blog/:slug",
+        source: "/blogs/:slug*",
+        destination: "/blog/:slug*",
+        permanent: true,
       },
       {
         source: "/job",
         destination: "/jobs",
+        permanent: true,
       },
       {
         source: "/job/:slug*",
         destination: "/jobs/:slug*",
+        permanent: true,
       },
     ];
   },

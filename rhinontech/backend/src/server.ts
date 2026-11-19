@@ -26,6 +26,7 @@ import { refreshSendingDomains } from "./services/siteSender";
 import { dispatchDueEventEmails } from "./services/eventReminderJob";
 import { purgeDueWorkspaces } from "./services/workspaceLifecycle";
 import { beat } from "./services/heartbeat";
+import { startPerfMonitor } from "./services/perfMonitor";
 import { applyDueRevisions } from "./services/compensationRevisions";
 import { attachChatSocket, socketServer } from "./services/chatbot/realtime";
 import { attachTeamChatSocket } from "./services/teamChat/realtime";
@@ -181,6 +182,7 @@ async function bootstrap() {
 function listen() {
   const server = app.listen(env.port, () => {
     console.log(`Server running on http://localhost:${env.port}`);
+    startPerfMonitor();
     // Live chat for the website widget rides on the same port, so nginx only
     // needs to allow the WebSocket upgrade on the API host.
     attachChatSocket(server);

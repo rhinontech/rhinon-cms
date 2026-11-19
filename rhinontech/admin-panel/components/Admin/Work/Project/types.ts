@@ -57,6 +57,9 @@ export interface ProjectTask {
   assignee?: { id: string; fullName: string } | null;
   workflowStatus?: WorkflowStatus | null;
   attachments?: { id: string; name: string; mimeType: string }[];
+  /** Optional card picture: a short-lived signed link, present only when a cover is set. */
+  coverUrl?: string | null;
+  coverAttachmentId?: string | null;
   /** Edges where THIS task is the successor — i.e. what it waits on. */
   dependsOn?: TaskDependency[];
   tags?: { id: string; label: string; color: string }[];

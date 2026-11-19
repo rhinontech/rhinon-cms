@@ -1,3 +1,4 @@
+import { invalidateIdentityAfterWrite } from "../services/identityCache";
 import { Role } from "./Role";
 import { Permission } from "./Permission";
 import { User } from "./User";
@@ -86,6 +87,7 @@ import { ChatbotTicketMessage } from "./ChatbotTicketMessage";
 import { HelpFolder } from "./HelpFolder";
 import { HelpArticle } from "./HelpArticle";
 import { ConnectedAccount } from "./ConnectedAccount";
+import { DeviceToken } from "./DeviceToken";
 import { Organization } from "./Organization";
 import { DataTypes, Op } from "sequelize";
 import { sequelize } from "../config/database";
@@ -475,6 +477,18 @@ for (const model of SITE_MODELS) {
 
 assertSiteColumns();
 
+// authenticate() caches the identity it derives from these tables for a few seconds
+// (services/identityCache.ts). Any write to them drops the cache, so offboarding and
+// role or permission changes still take effect on the very next request.
+for (const model of [User, Role, Permission, RolePermission, Organization]) {
+  for (const hook of [
+    "afterCreate", "afterUpdate", "afterDestroy", "afterUpsert",
+    "afterBulkCreate", "afterBulkUpdate", "afterBulkDestroy",
+  ] as const) {
+    model.addHook(hook, invalidateIdentityAfterWrite);
+  }
+}
+
 export {
   Organization,
   Role, Permission, RolePermission,
@@ -558,6 +572,7 @@ export {
   HelpFolder,
   HelpArticle,
   ConnectedAccount,
+  DeviceToken,
 };
 
 export async function syncDatabase(force = false) {

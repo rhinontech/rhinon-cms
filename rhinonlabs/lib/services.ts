@@ -39,7 +39,7 @@ export const services: Service[] = [
     slug: "mvp-development",
     lastModified: "2026-10-20",
     name: "MVP Development",
-    metaTitle: "MVP Development for Startups — Launch in Weeks",
+    metaTitle: "MVP Development Services for Startups — Launch in Weeks",
     metaDescription:
       "Turn your startup idea into a working MVP in weeks, not months. Rhinon Labs designs, builds and launches web and mobile MVPs for founders — no in-house tech team needed.",
     eyebrow: "MVP Development",
@@ -83,7 +83,7 @@ export const services: Service[] = [
     slug: "ai-agents",
     lastModified: "2026-10-18",
     name: "AI Agents & Automation",
-    metaTitle: "AI Agent Development for Businesses",
+    metaTitle: "AI Agent Development Company for Businesses",
     metaDescription:
       "Custom AI agents that draft replies, qualify leads, summarise documents and run multi-step tasks inside your existing tools. Built and deployed by Rhinon Labs.",
     eyebrow: "AI Agents",
@@ -265,7 +265,7 @@ export const services: Service[] = [
     slug: "mobile-app-development",
     lastModified: "2026-10-08",
     name: "Mobile App Development",
-    metaTitle: "Mobile App Development — iOS & Android",
+    metaTitle: "Mobile App Development Company in India — iOS & Android",
     metaDescription:
       "Cross-platform iOS and Android app development for startups and businesses. Rhinon Labs designs, builds and launches mobile apps on both stores from one codebase.",
     eyebrow: "Mobile Apps",

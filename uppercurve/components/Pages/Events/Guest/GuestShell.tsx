@@ -35,7 +35,7 @@ export function GuestShell({ event, eyebrow, children }: { event?: GuestPage["ev
             <div className="mt-4 flex items-center gap-4">
               {event.bannerUrl ? (
                 <span className="relative size-16 shrink-0 overflow-hidden rounded-2xl bg-[#E2E8F0]">
-                  <Image src={event.bannerUrl} alt="" fill sizes="64px" className="object-cover" />
+                  <Image src={event.bannerUrl} alt={event.title} fill sizes="64px" className="object-cover" />
                 </span>
               ) : null}
               <div className="min-w-0">

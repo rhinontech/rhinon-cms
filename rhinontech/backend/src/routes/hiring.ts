@@ -10,7 +10,7 @@ import { sendEmail } from "../services/mailer";
 import { env } from "../config/env";
 import { interviewScheduledEmail, interviewerAssignedEmail } from "../services/emailTemplates";
 import { buildMeetingIcs, organizerFor } from "../services/meetingInvite";
-import { createEvent, updateEvent, deleteEvent, CalendarNotConnectedError } from "../services/googleCalendar";
+import { createEvent, updateEvent, deleteEvent, isCalendarConnected, CalendarNotConnectedError } from "../services/googleCalendar";
 
 // Hiring pipeline: openings → candidates → interview rounds → offer → hired.
 // Managing it needs employees:write; anyone can see and give feedback on the
@@ -249,6 +249,12 @@ router.post("/candidates/:id/hired", authorize(ADMIN), async (req: AuthRequest, 
 
 // ── Interviews ────────────────────────────────────────────────────────────────
 
+// Whether this workspace has a Google Calendar connected. The schedule form uses it to decide
+// between "we'll create the Meet link" and "paste a link" before anyone submits.
+router.get("/calendar-status", authorize(ADMIN), async (_req: AuthRequest, res: Response) => {
+  res.json({ connected: await isCalendarConnected() });
+});
+
 router.get("/interviewers", authorize(ADMIN), async (_req: AuthRequest, res: Response) => {
   const users = await User.findAll({
     where: { userType: "internal", status: "active" },
@@ -394,6 +400,18 @@ router.post("/candidates/:id/interviews", authorize(ADMIN), async (req: AuthRequ
   const scheduledAt = new Date(req.body.scheduledAt);
   if (Number.isNaN(scheduledAt.getTime())) { res.status(400).json({ message: "Pick a date and time" }); return; }
 
+  const meetingLink = str(req.body.meetingLink, 1000);
+  // With no calendar connected nothing can create a Meet link, and an invite with no way to
+  // join is worse than no invite (the candidate gets an email they can't act on). So ask for
+  // the link here rather than quietly scheduling without one.
+  if (!meetingLink && !(await isCalendarConnected())) {
+    res.status(400).json({
+      code: "MEETING_LINK_REQUIRED",
+      message: "No Google Calendar is connected, so a Meet link can't be created for you. Paste a meeting link (create one at meet.google.com/new).",
+    });
+    return;
+  }
+
   const interview = await Interview.create({
     candidateId: candidate.id,
     roundIndex,
@@ -401,7 +419,7 @@ router.post("/candidates/:id/interviews", authorize(ADMIN), async (req: AuthRequ
     interviewerId: interviewer.id,
     scheduledAt,
     durationMins: Math.min(480, Math.max(10, Math.floor(Number(req.body.durationMins) || 45))),
-    meetingLink: str(req.body.meetingLink, 1000),
+    meetingLink,
   });
 
   // Scheduling a round puts the candidate in it (never moves them backwards)
@@ -410,8 +428,19 @@ router.post("/candidates/:id/interviews", authorize(ADMIN), async (req: AuthRequ
   }
 
   await syncInterviewCalendar(interview, candidate, opening, interviewer, { addMeet: req.body.addMeet !== false });
-  if (req.body.notify !== false) notifyInterview(interview, candidate, opening, interviewer).catch(() => {});
-  res.status(201).json(interview);
+
+  // The calendar was connected but could not make a link (a revoked or expired connection, say).
+  // Don't email an invite with no way to join; say so, and let Reschedule (add a link) send it.
+  const linkMissing = !interview.meetingLink && req.body.addMeet !== false;
+  if (req.body.notify !== false && !linkMissing) notifyInterview(interview, candidate, opening, interviewer).catch(() => {});
+  res.status(201).json(
+    linkMissing
+      ? {
+          ...interview.toJSON(),
+          warning: "Scheduled, but the calendar couldn't create a Meet link, so no invite was sent. Choose Reschedule, add a meeting link, and the invites go out.",
+        }
+      : interview
+  );
 });
 
 // Reschedule (time / duration / interviewer / link) or change status.

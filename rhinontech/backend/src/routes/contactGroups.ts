@@ -42,6 +42,78 @@ router.post("/", writeAccess, async (req: AuthRequest, res: Response) => {
   }
 });
 
+// The columns a book of people can be split by. A whitelist: the field name goes into the query.
+const SPLIT_FIELDS = ["industry", "location", "source", "title", "emailStatus"] as const;
+const MAX_LISTS_PER_SPLIT = 60;
+const MEMBER_CHUNK = 5000;
+
+/**
+ * POST /contact-groups/split — one list per value of a column, filled with the leads that have it.
+ *
+ *   { field: "industry", values?: ["Real Estate", ...], minCount?: 20, prefix?: "OKC" }
+ *
+ * This is how one big import becomes several audiences: upload everything once, then split by industry
+ * (or location, source, title) and run a campaign per list. Lists are created under the brand being
+ * viewed, because lists are outreach and outreach is per brand, while the leads stay one workspace-wide
+ * record. Re-running is safe: an existing list of the same name is topped up, and nobody is added twice.
+ */
+router.post("/split", writeAccess, async (req: AuthRequest, res: Response) => {
+  try {
+    const field = SPLIT_FIELDS.find((f) => f === req.body?.field);
+    if (!field) {
+      res.status(400).json({ message: `Pick what to split by: ${SPLIT_FIELDS.join(", ")}` });
+      return;
+    }
+    const prefix = typeof req.body?.prefix === "string" ? req.body.prefix.trim().slice(0, 60) : "";
+    const minCount = Math.max(1, Math.floor(Number(req.body?.minCount)) || 1);
+    const wanted: string[] | null = Array.isArray(req.body?.values)
+      ? req.body.values.filter((v: unknown): v is string => typeof v === "string" && v !== "")
+      : null;
+
+    const found = (await Lead.findAll({
+      attributes: [[sequelize.col(field), "value"], [sequelize.fn("COUNT", sequelize.col("id")), "count"]],
+      where: { [field]: { [Op.and]: [{ [Op.ne]: null }, { [Op.ne]: "" }] } },
+      group: [field],
+      raw: true,
+    })) as unknown as { value: string; count: string }[];
+    const groups = found
+      .map((r) => ({ value: String(r.value), count: Number(r.count) }))
+      .filter((g) => g.count >= minCount && (!wanted || wanted.includes(g.value)))
+      .sort((a, b) => b.count - a.count);
+
+    if (groups.length === 0) {
+      res.status(400).json({ message: "No leads match, so there is nothing to split." });
+      return;
+    }
+    if (groups.length > MAX_LISTS_PER_SPLIT) {
+      res.status(400).json({
+        message: `That would create ${groups.length} lists (the limit is ${MAX_LISTS_PER_SPLIT} at a time). Pick fewer values, or raise the minimum number of leads per list.`,
+      });
+      return;
+    }
+
+    const lists: { id: string; name: string; isNew: boolean; leads: number; members: number }[] = [];
+    for (const g of groups) {
+      const name = (prefix ? `${prefix} · ${g.value}` : g.value).slice(0, 200);
+      const [list, isNew] = await ContactGroup.findOrCreate({
+        where: { name },
+        defaults: { name, description: `Leads whose ${field} is "${g.value}"`, createdById: req.user!.userId } as any,
+      });
+      const ids = ((await Lead.findAll({ attributes: ["id"], where: { [field]: g.value }, raw: true })) as unknown as { id: string }[]).map((r) => r.id);
+      for (let i = 0; i < ids.length; i += MEMBER_CHUNK) {
+        await ContactGroupMember.bulkCreate(
+          ids.slice(i, i + MEMBER_CHUNK).map((leadId) => ({ contactGroupId: list.id, leadId, addedById: req.user!.userId })),
+          { ignoreDuplicates: true }
+        );
+      }
+      lists.push({ id: list.id, name, isNew, leads: ids.length, members: await ContactGroupMember.count({ where: { contactGroupId: list.id } }) });
+    }
+    res.status(201).json({ lists, created: lists.filter((l) => l.isNew).length, updated: lists.filter((l) => !l.isNew).length });
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
 // GET /contact-groups/:id - group detail
 router.get("/:id", readAccess, async (req: AuthRequest, res: Response) => {
   const group = await ContactGroup.findByPk(req.params.id);

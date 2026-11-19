@@ -2,6 +2,7 @@ import { Op } from "sequelize";
 import { Notification, Task, User } from "../models";
 import { runAsSystem, runForOrg } from "./tenantContext";
 import { emitToUsers } from "./teamChat/realtime";
+import { pushToUsers } from "./pushNotifications";
 
 /** What a person can switch off. Keyed by the part of the type before the dot. */
 export const NOTIFICATION_CATEGORIES: { key: string; label: string; platformOnly?: boolean; prefixes: string[] }[] = [
@@ -63,6 +64,7 @@ export async function notify(input: NotifyInput): Promise<void> {
             actorId: input.actorId ?? null,
           });
           emitToUsers([userId], "notification", existing);
+          void pushToUsers([userId], input.title.slice(0, 100), input.body?.slice(0, 200) ?? null, input.link ? { link: input.link } : undefined);
           continue;
         }
       }
@@ -76,6 +78,7 @@ export async function notify(input: NotifyInput): Promise<void> {
         groupKey: key,
       });
       emitToUsers([userId], "notification", row);
+      void pushToUsers([userId], input.title.slice(0, 100), input.body?.slice(0, 200) ?? null, input.link ? { link: input.link } : undefined);
     } catch (err: any) {
       console.error(`[Notify] ${input.type} failed:`, err.message);
     }

@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Star } from "lucide-react";
-import Photos from "./PhotosCrauser";
+import HeroShowcase from "./HeroShowcase";
 import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
 import { motion, Variants } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -23,7 +23,7 @@ const Hero1 = () => {
   const router = useRouter();
   const [isSchedulerOpen, setIsSchedulerOpen] = useState(false);
   return (
-    <div id="hero" className="overflow-hidden relative min-h-screen flex flex-col justify-center">
+    <div id="hero" className="overflow-hidden relative flex flex-col">
       <motion.div
         className="absolute inset-0 top-64 max-sm:top-52 -z-10"
         // Starts partly visible with no delay: an opacity-0 image isn't counted as
@@ -44,7 +44,7 @@ const Hero1 = () => {
           />
         </div>
       </motion.div>
-      <div className="pt-32 max-sm:pt-24 px-5 pb-14 flex flex-col gap-10 max-w-5xl mx-auto w-full">
+      <div className="pt-32 max-sm:pt-24 px-5 pb-10 flex flex-col gap-8 max-w-5xl mx-auto w-full">
         <div className="flex flex-col gap-5 items-center">
           {/* Badge */}
           <motion.div variants={fadeUpVariant} className="mb-8 text-center inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm">
@@ -114,7 +114,7 @@ const Hero1 = () => {
                   <Star key={i} className="w-3 h-3 fill-white text-white" />
                 ))}
               </div>
-              <span className="text-white/70 text-sm">Trusted by 20+ startups and SMBs worldwide.</span>
+              <span className="text-white/70 text-sm">Trusted by startups and SMBs across India.</span>
             </div>
           </div>
         </motion.div>
@@ -138,7 +138,7 @@ const Hero1 = () => {
             <a
               href="https://wa.me/918249291789"
               target="_blank"
-              rel="noopener noreferrer"
+              rel="nofollow noopener noreferrer"
               className="font-semibold text-white hover:underline transition-all"
             >
               WhatsApp
@@ -147,27 +147,18 @@ const Hero1 = () => {
         </motion.div>
       </div>
 
-      <div className="flex flex-col gap-5 mt-10">
+      <div className="flex flex-col gap-12 pb-10">
         <motion.div
-          className="flex flex-col md:flex-row justify-center px-5 gap-5 md:gap-10 max-w-4xl mx-auto text-sm md:text-base text-center text-white/70"
+          className="flex flex-col md:flex-row justify-center px-5 gap-5 md:gap-10 max-w-4xl mx-auto text-xs md:text-sm uppercase tracking-[0.18em] text-center text-white/55"
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
           viewport={{ once: true }}
         >
-          <span>Fast Delivery • Affordable Pricing • AI-Powered Development</span>
+          <span>Fast Delivery • Fixed Scope, No Hourly Billing • AI-Powered</span>
         </motion.div>
 
-        {/* Photo carousel - visible on desktop (md+), hidden on mobile */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut", delay: 0.6 }}
-          viewport={{ once: true }}
-          className="pb-3 hidden md:block mask-[linear-gradient(to_bottom,black_50%,transparent_100%)] webkit-mask-[linear-gradient(to_bottom,black_50%,transparent_100%)]"
-        >
-          <Photos />
-        </motion.div>
+        <HeroShowcase />
       </div>
       <SchedulerModal isOpen={isSchedulerOpen} onClose={() => setIsSchedulerOpen(false)} />
     </div>
