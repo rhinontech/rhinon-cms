@@ -1045,12 +1045,16 @@ export function PeopleDirectory() {
     <div ref={panesRef} className="flex min-h-0 gap-2 w-full h-full overflow-hidden">
       <main
         className={cn(
-          "flex min-h-0 flex-col glass-panel w-full h-full overflow-hidden",
+          // @container: the header below reacts to THIS pane's width, not the window's. The
+          // details pane takes up to 70% of the page, so a wide window can still leave the list narrow.
+          "@container flex min-h-0 flex-col glass-panel w-full h-full overflow-hidden",
           isSubNavExpanded ? "rounded-r-xl max-sm:rounded-xl" : "rounded-xl",
           (mode === "create" || mode === "edit") && "hidden"
         )}
       >
-        <div className="sticky top-0 glass-header z-10 flex min-h-16 flex-wrap items-center justify-between gap-2.5 px-3 sm:px-5 py-2.5 sm:py-0 border-b border-border">
+        {/* One 64px row, the same height as the Member Details header beside it, so the two bottom
+            borders line up. Only a pane too narrow for the row (< 32rem) wraps, with padding. */}
+        <div className="sticky top-0 glass-header z-10 flex h-16 flex-nowrap items-center justify-between gap-2.5 px-3 sm:px-5 border-b border-border @max-lg:h-auto @max-lg:min-h-16 @max-lg:flex-wrap @max-lg:py-2.5">
           <div className="flex items-center gap-2.5 min-w-0">
             <SubNavToggle />
             <div className="min-w-0">
@@ -1060,7 +1064,7 @@ export function PeopleDirectory() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3 flex-wrap @lg:flex-nowrap">
             <div className="flex items-center rounded-lg border border-border bg-card p-0.5 shrink-0">
               <button
                 onClick={() => switchTab("active")}
@@ -1081,13 +1085,15 @@ export function PeopleDirectory() {
                 Alumni{alumniCount > 0 ? ` (${alumniCount})` : ""}
               </button>
             </div>
-            <div className="relative min-w-[120px] flex-1 sm:flex-initial">
+            {/* The width lives on this wrapper (not the input) so the search can shrink to make room
+                for the buttons instead of overflowing them. */}
+            <div className="relative min-w-[96px] flex-1 @lg:flex-initial @lg:w-40 @2xl:w-56">
               <TbSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search..."
-                className="w-full pl-8 sm:pl-9 pr-3 py-1.5 sm:py-2 text-xs border border-border rounded-lg focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60 sm:w-56 md:w-64 bg-card"
+                className="w-full pl-8 sm:pl-9 pr-3 py-1.5 sm:py-2 text-xs border border-border rounded-lg focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60 bg-card"
               />
             </div>
             {canManage && (
@@ -1096,8 +1102,8 @@ export function PeopleDirectory() {
                 className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-2.5 sm:px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 whitespace-nowrap shrink-0"
               >
                 <TbPlus size={14} />
-                <span className="hidden sm:inline">Add member</span>
-                <span className="sm:hidden">Add</span>
+                <span className="hidden @2xl:inline">Add member</span>
+                <span className="@2xl:hidden">Add</span>
               </button>
             )}
             {!isPreviewExpanded && (
@@ -1187,7 +1193,7 @@ export function PeopleDirectory() {
             : undefined
         }
         className={cn(
-          "min-h-0 flex-col bg-card overflow-hidden",
+          "@container min-h-0 flex-col bg-card overflow-hidden",
           isResizingDetail ? "transition-none" : "transition-all duration-200 ease-in-out",
           mobileDetail ? "fixed inset-0 z-50 flex w-full max-w-full" : "hidden",
           "lg:static lg:z-auto lg:flex lg:h-full lg:rounded-xl",
@@ -1212,8 +1218,8 @@ export function PeopleDirectory() {
                       title="Email a password reset link (doesn't change their current password)"
                     >
                       <TbKey size={15} />
-                      <span className="hidden sm:inline">{resending ? "Sending..." : "Send password reset"}</span>
-                      <span className="sm:hidden">{resending ? "..." : "Reset pwd"}</span>
+                      <span className="hidden @sm:inline">{resending ? "Sending..." : "Send password reset"}</span>
+                      <span className="@sm:hidden">{resending ? "..." : "Reset pwd"}</span>
                     </button>
                   ) : (
                     <button
@@ -1223,8 +1229,8 @@ export function PeopleDirectory() {
                       title="Email a fresh temporary password + setup link"
                     >
                       <TbMailForward size={15} />
-                      <span className="hidden sm:inline">{resending ? "Sending..." : "Resend invite"}</span>
-                      <span className="sm:hidden">{resending ? "..." : "Invite"}</span>
+                      <span className="hidden @sm:inline">{resending ? "Sending..." : "Resend invite"}</span>
+                      <span className="@sm:hidden">{resending ? "..." : "Invite"}</span>
                     </button>
                   )
                 )}

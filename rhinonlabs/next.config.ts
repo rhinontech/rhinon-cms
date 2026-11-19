@@ -26,6 +26,16 @@ const nextConfig: NextConfig = {
         destination: "/build",
         permanent: true,
       },
+      {
+        source: "/about",
+        destination: "/_about",
+        permanent: true,
+      },
+      {
+        source: "/blogs/mvp-development-cost-india-2026-guide",
+        destination: "/blogs/mvp-development-cost-india-2027-guide",
+        permanent: true,
+      },
     ];
   },
   // Security headers for browser protection, clickjacking defense, and MIME-sniffing prevention

@@ -1,4 +1,4 @@
-import { DataTypes, Model, Optional } from "sequelize";
+import { DataTypes, Model, Op, Optional } from "sequelize";
 import { sequelize } from "../config/database";
 
 export type LeadStatus = "New" | "Enriched" | "Enrolled" | "Emailed" | "Replied" | "Bounced" | "Unsubscribed" | "Interested";
@@ -166,6 +166,13 @@ Lead.init(
   { sequelize, tableName: "leads", timestamps: true,
     // Scoped per tenant. A globally unique lead email would mean the second org to
     // prospect cto@target.com could never add them at all.
-    indexes: [{ unique: true, fields: ["organizationId", "email"] }],
+    indexes: [
+      { unique: true, fields: ["organizationId", "email"] },
+      // GET /accounts counts contacts per account (`accountId IN (...)`), and there was no
+      // index to find them by, so each call scanned all ~35k leads: 28 ms, against 7.5 ms
+      // with this, on a copy of the production table. Only ~6% of leads belong to an account,
+      // so the index covers just those.
+      { name: "leads_account", fields: ["accountId"], where: { accountId: { [Op.ne]: null } } },
+    ],
   }
 );

@@ -46,6 +46,21 @@ const taskIncludes: any[] = [
   { model: Task, as: "children", attributes: ["id", "title", "status", "statusId", "assigneeId", "startDate", "dueDate"], separate: true },
 ];
 
+
+/**
+ * Adds `coverUrl` (a short-lived signed link) to tasks that have a cover image.
+ * Storage keys stay private; only tasks that actually carry a cover cost anything.
+ */
+async function withCovers<T>(input: T[]): Promise<any[]> {
+  const list = input.map((t: any) => (typeof t.toJSON === "function" ? t.toJSON() : t));
+  const ids = [...new Set(list.map((t) => t.coverAttachmentId).filter(Boolean))] as string[];
+  if (!ids.length) return list;
+  const files = await TaskAttachment.findAll({ where: { id: ids }, attributes: ["id", "key"] });
+  const urls = new Map<string, string | null>();
+  await Promise.all(files.map(async (f) => urls.set(f.id, await getPresignedReadUrl(f.key).catch(() => null))));
+  return list.map((t) => (t.coverAttachmentId ? { ...t, coverUrl: urls.get(t.coverAttachmentId) ?? null } : t));
+}
+
 /**
  * A visible task can point at a blocker inside a private project, and the
  * `blocker` include would hand over its title. Replace it with a placeholder so
@@ -169,7 +184,7 @@ router.get("/", async (req: AuthRequest, res: Response) => {
       tasks = tasks.filter((t: any) => t.tags?.some((tg: any) => tg.label === tag));
     }
 
-    res.json(tasks);
+    res.json(await withCovers(tasks));
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch tasks" });
   }
@@ -271,7 +286,7 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
       res.status(403).json({ message: "You can only edit tasks assigned to or created by you" }); return;
     }
 
-    const { title, description, descriptionHtml, assigneeId, projectId, team, guestVisible, startDate, dueDate, status, statusId, parentTaskId, position, customFields, priority, estimatedHours, recurrence, blockedById, leadId, dealId, accountId } = req.body;
+    const { title, description, descriptionHtml, assigneeId, projectId, team, guestVisible, startDate, dueDate, status, statusId, parentTaskId, position, customFields, priority, estimatedHours, recurrence, blockedById, leadId, dealId, accountId, coverAttachmentId } = req.body;
     const prevStatus = task.status;
     // Snapshot before the update so the audit diff has something to compare to.
     const before = task.toJSON() as Record<string, any>;
@@ -295,6 +310,14 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
     }
     if (blockedById !== undefined && blockedById && !(await canAccessTaskId(blockedById, req))) {
       res.status(404).json({ message: "Blocking task not found" }); return;
+    }
+
+    // A cover must be an image that is attached to this very task.
+    if (coverAttachmentId) {
+      const file = await TaskAttachment.findOne({ where: { id: coverAttachmentId, taskId: task.id }, attributes: ["id", "mimeType"] });
+      if (!file || !file.mimeType?.startsWith("image/")) {
+        res.status(400).json({ message: "The cover must be an image attached to this task." }); return;
+      }
     }
 
     if (parentTaskId !== undefined && parentTaskId) {
@@ -338,6 +361,7 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
       ...(descriptionHtml !== undefined && { descriptionHtml: descriptionHtml || null }),
       ...(parentTaskId !== undefined && { parentTaskId: parentTaskId || null }),
       ...(position !== undefined && { position }),
+      ...(coverAttachmentId !== undefined && { coverAttachmentId: coverAttachmentId || null }),
       ...(customFields !== undefined && typeof customFields === "object" && {
         // Merge, so a table cell edit never wipes the other columns.
         customFields: { ...(task.customFields || {}), ...customFields },
@@ -394,7 +418,7 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
     notifyTaskChanged(before, task, req.user!);
 
     const full = await Task.findByPk(task.id, { include: taskIncludes });
-    res.json(full);
+    res.json(full ? (await withCovers([full]))[0] : full);
   } catch (err) {
     res.status(500).json({ message: "Failed to update task" });
   }
@@ -663,6 +687,8 @@ router.delete("/:id/attachments/:attachmentId", async (req: AuthRequest, res: Re
     const row = await TaskAttachment.findOne({ where: { id: req.params.attachmentId, taskId: req.params.id } });
     if (!row) { res.status(404).json({ message: "Attachment not found" }); return; }
     await deleteObject(row.key).catch(() => {});
+    // Don't leave a card pointing at a file that no longer exists.
+    await Task.update({ coverAttachmentId: null }, { where: { id: req.params.id, coverAttachmentId: row.id } });
     const removedName = row.name;
     await row.destroy();
     await logActivity(req.params.id, req.user!.userId, "file_removed", `removed ${removedName}`);

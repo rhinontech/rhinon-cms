@@ -3,6 +3,7 @@
 import "./middleware/asyncErrors";
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
+import compression from "compression";
 import { env } from "./config/env";
 import { requestLogger } from "./middleware/requestLogger";
 import { runAsSystem } from "./services/tenantContext";
@@ -96,13 +97,29 @@ const isLanDevOrigin = (origin: string) => /^http:\/\/(192\.168|10\.|172\.(1[6-9
 // /public/* is an open, credential-less API (lead capture, pageview tracking, published
 // content) that external platforms post to from any origin; everything else stays
 // restricted to the known frontends.
-const openCors = cors({ origin: true });
+//
+// maxAge: the admin panel (rhinontech.in) calls this API (api.rhinontech.in) cross-origin
+// with an Authorization header, so the browser sends an OPTIONS preflight first. With no
+// Access-Control-Max-Age Chrome caches that answer for only 5 seconds, which made roughly
+// a third of all browser requests preflights. Chrome caps this at 2 hours.
+const PREFLIGHT_MAX_AGE_S = 7200;
+const openCors = cors({ origin: true, maxAge: PREFLIGHT_MAX_AGE_S });
 const restrictedCors = cors({
   origin: (origin, cb) => cb(null, !origin || allowedOrigins.includes(origin) || isLanDevOrigin(origin)),
   credentials: true,
+  maxAge: PREFLIGHT_MAX_AGE_S,
 });
 app.use((req, res, next) =>
   req.path.startsWith("/public") || req.path.startsWith("/widget") || req.path === "/collect" || req.path === "/t.js" ? openCors(req, res, next) : restrictedCors(req, res, next)
+);
+// nginx only gzips text/html, so JSON (a task list can be ~600 KB) left the box raw.
+// zlib runs on libuv's thread pool, not the event loop. A text/event-stream response
+// (the widget's chat stream) must never be compressed or it would buffer: the stream
+// sets its Content-Type before flushHeaders(), which is when this filter looks.
+app.use(
+  compression({
+    filter: (req, res) => !String(res.getHeader("Content-Type") ?? "").includes("text/event-stream") && compression.filter(req, res),
+  })
 );
 // GitHub signs the raw bytes, so this must see the body before express.json does.
 app.post("/webhooks/github", express.raw({ type: "*/*", limit: "5mb" }), githubWebhook);

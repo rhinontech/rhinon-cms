@@ -110,6 +110,7 @@ router.get("/", readAccess, async (req: AuthRequest, res: Response) => {
   if (ownerId) where.ownerId = ownerId === "unassigned" ? (null as any) : ownerId;
   if (lifecycleStage) where.lifecycleStage = lifecycleStage;
   if (accountId) where.accountId = accountId;
+  applySegmentFilters(where, req.query);
   if (search) {
     where[Op.or] = [
       { name: { [Op.iLike]: `%${search}%` } },
@@ -154,6 +155,44 @@ router.get("/sources", readAccess, async (_req: AuthRequest, res: Response) => {
     raw: true,
   });
   res.json((rows as any[]).map((r) => r.source).filter(Boolean));
+});
+
+/** The text columns a person can be segmented by, and nothing else: the field name goes into SQL. */
+export const FACET_FIELDS = ["industry", "location", "source", "emailStatus", "title"] as const;
+const asList = (v: unknown): string[] =>
+  (Array.isArray(v) ? v : v === undefined ? [] : [v]).filter((x): x is string => typeof x === "string" && x !== "");
+
+/**
+ * Segment filters, shared by the list and the CSV export so they can never disagree. `industry` and
+ * `emailStatus` take one value or several (repeat the parameter); `title` and `location` match a
+ * fragment. They are what make one big import splittable into audiences.
+ */
+function applySegmentFilters(where: any, q: Record<string, unknown>) {
+  const industries = asList(q.industry);
+  if (industries.length) where.industry = { [Op.in]: industries };
+  const statuses = asList(q.emailStatus);
+  if (statuses.length) where.emailStatus = { [Op.in]: statuses };
+  if (typeof q.title === "string" && q.title.trim()) where.title = { [Op.iLike]: `%${q.title.trim()}%` };
+  if (typeof q.location === "string" && q.location.trim()) where.location = { [Op.iLike]: `%${q.location.trim()}%` };
+}
+
+// GET /leads/facets?field=industry — the values in use for one column, with how many leads have each.
+// Feeds the segment filters and "split into lists", and counts the whole workspace's book.
+router.get("/facets", readAccess, async (req: AuthRequest, res: Response) => {
+  const field = String(req.query.field ?? "industry");
+  if (!(FACET_FIELDS as readonly string[]).includes(field)) {
+    res.status(400).json({ message: `field must be one of: ${FACET_FIELDS.join(", ")}` });
+    return;
+  }
+  const rows = (await Lead.findAll({
+    attributes: [[sequelize.col(field), "value"], [sequelize.fn("COUNT", sequelize.col("id")), "count"]],
+    where: { [field]: { [Op.and]: [{ [Op.ne]: null }, { [Op.ne]: "" }] } },
+    group: [field],
+    order: [[sequelize.fn("COUNT", sequelize.col("id")), "DESC"]],
+    limit: 500,
+    raw: true,
+  })) as unknown as { value: string; count: string }[];
+  res.json(rows.map((r) => ({ value: r.value, count: Number(r.count) })));
 });
 
 // POST /leads - create lead manually
@@ -615,6 +654,7 @@ router.get("/export.csv", readAccess, async (req: AuthRequest, res: Response) =>
   if (ownerId) where.ownerId = ownerId === "unassigned" ? (null as any) : ownerId;
   if (lifecycleStage) where.lifecycleStage = lifecycleStage;
   if (accountId) where.accountId = accountId;
+  applySegmentFilters(where, req.query);
   if (search) {
     where[Op.or] = [
       { name: { [Op.iLike]: `%${search}%` } },

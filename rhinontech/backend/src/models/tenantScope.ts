@@ -94,6 +94,7 @@ import { BlogTopic } from "./BlogTopic";
 import { Deployment } from "./Deployment";
 import { PageView } from "./PageView";
 import { Visitor } from "./Visitor";
+import { DeviceToken } from "./DeviceToken";
 
 /**
  * Every model whose rows belong to exactly one organization.
@@ -129,6 +130,7 @@ export const TENANT_MODELS: ModelStatic<any>[] = [
   ChatbotTicket, ChatbotTicketMessage, HelpFolder, HelpArticle, ConnectedAccount,
   TeamChatConversation, TeamChatMember, TeamChatMessage, TeamChatReaction, TeamCallLink,
   ProjectRepo, RepoCommit, ProjectSecret, RepoAccess, ProjectDaySummary, Notification,
+  DeviceToken,
 ];
 
 const TENANT_MODEL_NAMES = new Set(TENANT_MODELS.map((m) => m.name));
