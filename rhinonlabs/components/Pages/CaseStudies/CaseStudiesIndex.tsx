@@ -85,9 +85,16 @@ export default function CaseStudiesIndex({ caseStudies }: { caseStudies: CaseStu
               Works
             </span>
           </motion.h1>
-          <motion.p variants={fadeUpVariant} className="text-white/70 sm:text-lg max-w-2xl mx-auto mb-8 px-4">
+          <motion.p variants={fadeUpVariant} className="text-white/70 sm:text-lg max-w-2xl mx-auto mb-6 px-4">
             Mission-critical digital platforms for forward-thinking enterprises — scalable, high-performance tools
             that drive business growth.
+          </motion.p>
+          <motion.p variants={fadeUpVariant} className="text-white/50 text-sm max-w-xl mx-auto mb-8 px-4 leading-relaxed">
+            Every project below was built from scratch by our team — no templates, no off-the-shelf platforms. We work
+            directly with founders and ops leads to scope, design and ship internal tools, SaaS products and client
+            portals. These are real products used by real teams every day: FurrCircle (a pet-parent app on iOS and
+            Android), SR Fitout (a Bengaluru interiors studio&apos;s client portal and admin dashboard), and Apexis Pro
+            (a construction SaaS managing drawings, snag tracking and handover across sites).
           </motion.p>
           <motion.div variants={fadeUpVariant}>
             <Button

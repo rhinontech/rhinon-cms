@@ -1,12 +1,13 @@
-import { useRev } from "@/lib/store";
+import { useRev, usePerm } from "@/lib/store";
 import { View, Text, Span, TextInput } from "@/components/rn";
 import { Coffee, Play, RotateCcw, Square } from "@/components/icons";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MarkLegend, MonthGrid, TimeSwitch } from "@/components/rhinon/time";
-import { Badge, Button, Chip, Display, Eyebrow, Field, Meta, ProgressBar, Screen, SectionLabel, Sheet, TopBar, inputClass } from "@/components/rhinon/ui";
+import { Badge, Button, Chip, Display, Empty, Eyebrow, Field, Meta, ProgressBar, Screen, SectionLabel, Sheet, TopBar, inputClass, stagger } from "@/components/rhinon/ui";
 import { clockTime, hm, hms } from "@/lib/format";
 import { ATTENDANCE_NOV, TODAY } from "@/lib/mock-data";
 import { actions, breakMsNow, useApp, useNow, workedMs } from "@/lib/store";
+import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 const SHIFT_MS = 8 * 3600_000;
 const HEADLINE = {
@@ -21,7 +22,96 @@ const STATUS_LABEL = {
   break: "On break",
   done: "Day logged"
 } as const;
+type TeamRow = { userId: string; fullName: string; attendance: { clockIn: string | null; clockOut: string | null; status: string; onBreak: boolean } };
+type TeamTodayResponse = { summary: { total: number; present: number; absent: number }; employees: TeamRow[] };
+
+function AdminAttendancePage() {
+  useRev();
+  const [data, setData] = useState<TeamTodayResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    api<TeamTodayResponse>("/attendance/team/today")
+      .then((r) => setData(r))
+      .catch(() => setData(null))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const team = data?.employees ?? [];
+  const present = data?.summary.present ?? 0;
+  const absent = data?.summary.absent ?? 0;
+
+  return (
+    <Screen>
+      <TopBar title="Time" fallback="/more" />
+      <TimeSwitch current="attendance" />
+      <View className="mt-7 animate-rise">
+        <Eyebrow tone="leaf">Team attendance · Today</Eyebrow>
+        <Display size="hero" className="mt-3">
+          Who's{"\n"}in.
+        </Display>
+      </View>
+
+      <View className="mt-6 grid grid-cols-3 gap-2.5 animate-rise" style={stagger(1)}>
+        <View className="rounded-2xl bg-leaf/15 p-4">
+          <Text className="font-display text-[length:calc(36px*var(--ds))] font-black leading-none">{present}</Text>
+          <Text className="mt-2 font-mono text-[10px] uppercase tracking-[0.14em] text-ink/60">Present</Text>
+        </View>
+        <View className="rounded-2xl bg-coral/15 p-4">
+          <Text className="font-display text-[length:calc(36px*var(--ds))] font-black leading-none">{absent}</Text>
+          <Text className="mt-2 font-mono text-[10px] uppercase tracking-[0.14em] text-ink/60">Absent</Text>
+        </View>
+        <View className="rounded-2xl bg-paper-deep p-4">
+          <Text className="font-display text-[length:calc(36px*var(--ds))] font-black leading-none">{team.length}</Text>
+          <Text className="mt-2 font-mono text-[10px] uppercase tracking-[0.14em] text-ink/60">Total</Text>
+        </View>
+      </View>
+
+      <SectionLabel className="mt-8">Team</SectionLabel>
+
+      {loading ? (
+        <Empty title="Loading…" body="Fetching today's attendance." tone="leaf" />
+      ) : team.length === 0 ? (
+        <Empty title="No data yet" body="Attendance records appear here once your team clocks in." tone="leaf" />
+      ) : (
+        <View className="mt-2">
+          {team.map((m, i) => {
+            const inTime = m.attendance.clockIn ? clockTime(new Date(m.attendance.clockIn).getTime()) : null;
+            const outTime = m.attendance.clockOut ? clockTime(new Date(m.attendance.clockOut).getTime()) : null;
+            return (
+              <View key={m.userId} className="animate-rise flex items-center gap-3 border-b border-line/70 py-3.5 last:border-0" style={stagger(Math.min(i, 6))}>
+                <View className="grid size-11 shrink-0 place-items-center rounded-2xl bg-paper-deep font-display text-[length:calc(20px*var(--ds))] font-black uppercase leading-none">
+                  {m.fullName.split(" ").map((w: string) => w[0]).join("").slice(0, 2)}
+                </View>
+                <View className="min-w-0 flex-1">
+                  <Text className="text-[15px] font-semibold leading-tight">{m.fullName}</Text>
+                  <Text className="mt-0.5 text-[12.5px] text-ink/55">
+                    {inTime
+                      ? `In ${inTime}${outTime ? ` · Out ${outTime}` : m.attendance.onBreak ? " · On break" : " · Working"}`
+                      : "Not clocked in"}
+                  </Text>
+                </View>
+                <Badge tone={m.attendance.status === "present" ? (m.attendance.clockOut ? "sky" : "leaf") : "coral"}>
+                  {m.attendance.status === "present" ? (m.attendance.clockOut ? "Done" : "In") : "Absent"}
+                </Badge>
+              </View>
+            );
+          })}
+        </View>
+      )}
+    </Screen>
+  );
+}
+
 export default function AttendancePage() {
+  useRev();
+  const isAdmin = usePerm("attendance", "write");
+  if (isAdmin) return <AdminAttendancePage />;
+  return <EmployeeAttendancePage />;
+}
+
+function EmployeeAttendancePage() {
   useRev();
   const clock = useApp(s => s.clock);
   const regs = useApp(s => s.regularizations);

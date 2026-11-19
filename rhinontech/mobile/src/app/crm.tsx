@@ -1,3 +1,4 @@
+import { api } from "@/lib/api";
 import { DEMO } from "@/lib/demo";
 import { loadActivities } from "@/lib/live";
 import { brandOf } from "@/lib/mock-data";
@@ -11,7 +12,9 @@ import {
   Button,
   Chip,
   Display,
+  Empty,
   Eyebrow,
+  Fab,
   Field,
   NoAccess,
   ProgressBar,
@@ -60,6 +63,8 @@ export default function CrmPage() {
     if (open && !DEMO) void loadActivities(open.id, open.kind).catch(() => {});
   }, [open?.id, open?.kind]);
   const [logging, setLogging] = useState<string | null>(null);
+  const [addingLead, setAddingLead] = useState(false);
+  const canWrite = usePerm("crm", "write");
   if (!allowed) {
     return (
       <Screen>
@@ -190,6 +195,9 @@ export default function CrmPage() {
 
       {tab === "leads" ? (
         <View className="mt-4">
+          {leads.length === 0 ? (
+            <Empty tone="rose" title="No leads yet" body={canWrite ? "Tap + to add your first lead." : "Leads will appear here once added."} />
+          ) : null}
           {leads.map((l, i) => (
             <View
               key={l.id}
@@ -267,6 +275,8 @@ export default function CrmPage() {
 
       {tab === "reports" ? <Reports /> : null}
 
+      {tab === "leads" && canWrite ? <Fab icon={Plus} label="Add lead" tone="rose" onClick={() => setAddingLead(true)} /> : null}
+
       <Sheet open={deal !== undefined} onClose={() => setOpen(null)}>
         {deal ? <DealDetail deal={deal} onLog={() => setLogging(deal.id)} /> : null}
       </Sheet>
@@ -277,6 +287,7 @@ export default function CrmPage() {
         {account ? <AccountDetail account={account} /> : null}
       </Sheet>
       <LogSheet target={logging} onClose={() => setLogging(null)} />
+      <AddLeadSheet open={addingLead} onClose={() => setAddingLead(false)} />
     </Screen>
   );
 }
@@ -561,6 +572,59 @@ function AccountDetail({ account }: { account: Account }) {
     </View>
   );
 }
+function AddLeadSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [title, setTitle] = useState("");
+  const [company, setCompany] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState("");
+
+  const reset = () => { setName(""); setEmail(""); setPhone(""); setTitle(""); setCompany(""); setErr(""); };
+
+  const save = async () => {
+    if (!email.trim()) { setErr("Email is required."); return; }
+    setSaving(true);
+    setErr("");
+    try {
+      await api("/leads", { method: "POST", body: { name: name.trim() || undefined, email: email.trim(), phone: phone.trim() || undefined, title: title.trim() || undefined, company: company.trim() || undefined } });
+      reset();
+      onClose();
+    } catch (e: any) {
+      setErr(e?.message ?? "Failed to add lead.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Sheet open={open} onClose={() => { reset(); onClose(); }} eyebrow="CRM" title="Add a lead">
+      <View className="space-y-4">
+        <Field label="Full name">
+          <TextInput className={inputClass} value={name} onChangeText={setName} placeholder="Priya Sharma" />
+        </Field>
+        <Field label="Email *">
+          <TextInput className={inputClass} value={email} onChangeText={(v) => { setEmail(v); setErr(""); }} placeholder="priya@company.com" keyboardType="email-address" autoCapitalize="none" />
+        </Field>
+        <Field label="Phone">
+          <TextInput className={inputClass} value={phone} onChangeText={setPhone} placeholder="+91 98765 43210" keyboardType="phone-pad" />
+        </Field>
+        <Field label="Title">
+          <TextInput className={inputClass} value={title} onChangeText={setTitle} placeholder="Head of Marketing" />
+        </Field>
+        <Field label="Company">
+          <TextInput className={inputClass} value={company} onChangeText={setCompany} placeholder="Acme Inc." />
+        </Field>
+        {err ? <Text className="text-[13px] text-coral">{err}</Text> : null}
+        <Button tone="rose" disabled={saving || !email.trim()} onClick={() => { void save(); }}>
+          {saving ? "Saving…" : "Add lead"}
+        </Button>
+      </View>
+    </Sheet>
+  );
+}
+
 function LogSheet({ target, onClose }: { target: string | null; onClose: () => void }) {
   const [kind, setKind] = useState<ActivityKind>("call");
   const [text, setText] = useState("");

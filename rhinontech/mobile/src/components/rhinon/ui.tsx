@@ -1,8 +1,8 @@
-import { useEffect, useState, type ReactNode } from "react";
-import { ScrollView as RNScrollView, View as RNView } from "react-native";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Keyboard, ScrollView as RNScrollView, View as RNView } from "react-native";
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
-import { ChevronLeft, type LucideIcon } from "@/components/icons";
+import { ChevronLeft, X, type LucideIcon } from "@/components/icons";
 import { Portal, Pressable, Span, Text, View, useFocused, useEnv, type PressProps } from "@/components/rn";
 import { go, back as goBack, isRootPath } from "@/lib/nav";
 import { TONES, toneFor, type Tone } from "@/lib/tone";
@@ -80,14 +80,22 @@ export const stagger = (i: number) => ({ animationDelay: `${i * 55}ms` });
 
 /* ── Screen chrome ───────────────────────────────────────────────────────── */
 
-/** Scrolls under the tab bar (or the pushed-screen inset). The page background lives once, behind the navigator. */
-export function Screen({ children, className, fab = false }: { children: ReactNode; className?: string | undefined; fab?: boolean }) {
+/** Scrolls under the tab bar (or the pushed-screen inset). The page background lives once, behind the navigator.
+ * Pass `endKey` to auto-scroll to the bottom whenever that value changes (e.g. a message count or status). */
+export function Screen({ children, className, fab = false, endKey }: { children: ReactNode; className?: string | undefined; fab?: boolean; endKey?: unknown }) {
   const tabs = isRootPath(useRouteName());
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const scrollRef = useRef<any>(null);
   useApp((s) => s.rev); // live data replaced in place somewhere: render again
+  useEffect(() => {
+    if (endKey === undefined) return;
+    const t = setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 60);
+    return () => clearTimeout(t);
+  }, [endKey]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <RNView style={{ flex: 1 }}>
       <PhoneBackground />
-      <RNScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentInsetAdjustmentBehavior="never">
+      <RNScrollView ref={scrollRef} style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentInsetAdjustmentBehavior="never">
         <View
           className={cn(
             "relative z-10 grow px-5 pt-[var(--inset-top)]",
@@ -366,7 +374,7 @@ export function Sheet({ open, onClose, eyebrow, title, children }: { open: boole
     <Portal>
       <View pointerEvents="box-none" className="absolute inset-0 z-50 justify-end">
         <Animated.View style={[{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }, scrim]}>
-          <Pressable accessibilityLabel="Close" onPress={onClose} className="absolute inset-0 bg-ink/60" />
+          <Pressable accessibilityLabel="Close" onPress={() => { Keyboard.dismiss(); onClose(); }} className="absolute inset-0 bg-ink/60" />
         </Animated.View>
         <Animated.View style={[{ maxHeight: "90%" }, panel]}>
           <RNView
@@ -380,7 +388,14 @@ export function Sheet({ open, onClose, eyebrow, title, children }: { open: boole
             }}
           >
             <RNScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: Math.max(32, env.bottom) }}>
-              <View className="mx-auto mb-5 h-1.5 w-12 rounded-full bg-ink/15" />
+              <View className="mb-5 flex-row items-center">
+                <View className="flex-1 items-center">
+                  <View className="h-1.5 w-12 rounded-full bg-ink/15" />
+                </View>
+                <Pressable accessibilityLabel="Close" onPress={() => { Keyboard.dismiss(); onClose(); }} className="press -mr-1 rounded-full p-2">
+                  <X size={18} strokeWidth={2} className="text-ink/40" />
+                </Pressable>
+              </View>
               {eyebrow ? <Eyebrow tone="muted">{eyebrow}</Eyebrow> : null}
               {title ? <Display size="lg" className="mb-5 mt-1.5">{title}</Display> : null}
               {children}

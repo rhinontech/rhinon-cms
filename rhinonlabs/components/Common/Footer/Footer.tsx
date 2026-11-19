@@ -47,6 +47,7 @@ const navLinks = [
     { name: 'Services', href: '/services' },
     { name: 'Case Studies', href: '/case-studies' },
     { name: 'Blog', href: '/blogs' },
+    { name: 'Free Tools', href: '/tools' },
     { name: 'Contact', href: '/contact-us' },
     { name: 'Privacy & Terms', href: '/privacy-terms' },
 ];

@@ -3,7 +3,7 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import {
   TbSearch, TbPlus, TbUpload, TbTrash, TbX, TbBulb, TbRefresh, TbLoader,
-  TbExternalLink, TbTargetArrow, TbChevronDown, TbBuilding, TbDownload, TbCopyCheck,
+  TbExternalLink, TbTargetArrow, TbChevronDown, TbBuilding, TbDownload, TbCopyCheck, TbArrowsSplit,
 } from "react-icons/tb";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -12,6 +12,7 @@ import { apiFetch, apiDownload } from "@/lib/api";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { useSideNav } from "@/context/SideNavContext";
 import { LeadImportModal } from "./LeadImportModal";
+import { SplitLeadsModal } from "./SplitLeadsModal";
 import { AddToGroupMenu } from "@/components/Admin/Outreach/contacts/AddToGroupMenu";
 import { ConvertDealDialog } from "./ConvertDealDialog";
 import { BulkConvertDialog } from "./BulkConvertDialog";
@@ -59,8 +60,11 @@ export function LeadsPage() {
   const [debounced, setDebounced] = useState("");
   const [lifecycleFilter, setLifecycleFilter] = useState("All");
   const [sourceFilter, setSourceFilter] = useState("All");
+  const [industryFilter, setIndustryFilter] = useState("All");
   const [ownerFilter, setOwnerFilter] = useState("All");
   const [sources, setSources] = useState<string[]>([]);
+  const [industries, setIndustries] = useState<{ value: string; count: number }[]>([]);
+  const [showSplit, setShowSplit] = useState(false);
   // Deep-linkable from Outreach: /crm?listId=… or ?campaignId=…
   const [listFilter, setListFilter] = useState(searchParams.get("listId") || "All");
   const [campaignFilter, setCampaignFilter] = useState(searchParams.get("campaignId") || "All");
@@ -90,6 +94,7 @@ export function LeadsPage() {
     search: debounced,
     lifecycleStage: lifecycleFilter === "All" ? "" : lifecycleFilter,
     source: sourceFilter === "All" ? "" : sourceFilter,
+    industry: industryFilter === "All" ? "" : industryFilter,
     ownerId: ownerFilter === "All" ? "" : ownerFilter,
   };
 
@@ -99,6 +104,7 @@ export function LeadsPage() {
     setDebounced(f.search || "");
     setLifecycleFilter(f.lifecycleStage || "All");
     setSourceFilter(f.source || "All");
+    setIndustryFilter(f.industry || "All");
     setOwnerFilter(f.ownerId || "All");
     setActiveViewId(view?.id ?? null);
     setOffset(0);
@@ -136,6 +142,7 @@ export function LeadsPage() {
       if (debounced) q.set("search", debounced);
       if (lifecycleFilter !== "All") q.set("lifecycleStage", lifecycleFilter);
       if (sourceFilter !== "All") q.set("source", sourceFilter);
+      if (industryFilter !== "All") q.set("industry", industryFilter);
       if (ownerFilter !== "All") q.set("ownerId", ownerFilter);
       if (accountFilter) q.set("accountId", accountFilter);
       if (listFilter !== "All") q.set("listId", listFilter);
@@ -143,18 +150,29 @@ export function LeadsPage() {
       const data = await apiFetch<{ rows: Lead[]; count: number }>(`/leads?${q}`);
       setLeads(data.rows);
       setCount(data.count);
+      setSelected((cur) => {
+        if (!cur) return cur;
+        const matching = data.rows.find((r) => r.id === cur.id);
+        return matching ? { ...cur, ...matching } : cur;
+      });
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load leads");
     } finally {
       setLoading(false);
     }
-  }, [debounced, lifecycleFilter, sourceFilter, ownerFilter, accountFilter, listFilter, campaignFilter, offset]);
+  }, [debounced, lifecycleFilter, sourceFilter, industryFilter, ownerFilter, accountFilter, listFilter, campaignFilter, offset]);
 
   useEffect(() => { load(); }, [load]);
 
+  /** The industries in use, with how many people each has; refreshed after an import or a split. */
+  const loadIndustries = useCallback(() => {
+    apiFetch<{ value: string; count: number }[]>("/leads/facets?field=industry").then(setIndustries).catch(() => {});
+  }, []);
+
   useEffect(() => {
     apiFetch<string[]>("/leads/sources").then(setSources).catch(() => {});
+    loadIndustries();
     apiFetch<UserRef[]>("/crm/users").then(setOwners).catch(() => {});
     apiFetch<{ id: string; name: string }[]>("/contact-groups").then(setLists).catch(() => {});
     apiFetch<{ id: string; name: string }[]>("/campaigns").then(setCampaigns).catch(() => {});
@@ -189,6 +207,7 @@ export function LeadsPage() {
     try {
       const updated = await apiFetch<Lead>(`/leads/${id}`, { method: "PUT", body: JSON.stringify(patch) });
       setLeads((cur) => cur.map((l) => (l.id === id ? { ...l, ...updated } : l)));
+      if (selected?.id === id) setSelected((s) => (s ? { ...s, ...updated } : s));
     } catch (err) {
       setLeads(snapshot);
       setError(err instanceof Error ? err.message : "Update failed");
@@ -213,12 +232,18 @@ export function LeadsPage() {
     setSaving(true);
     try {
       if (panelMode === "create") {
-        await apiFetch("/leads", { method: "POST", body: JSON.stringify(form) });
+        const created = await apiFetch<Lead>("/leads", { method: "POST", body: JSON.stringify(form) });
+        setSelected(created);
       } else if (selected) {
-        await apiFetch(`/leads/${selected.id}`, { method: "PUT", body: JSON.stringify(form) });
+        const updated = await apiFetch<Lead>(`/leads/${selected.id}`, { method: "PUT", body: JSON.stringify(form) });
+        setSelected((cur) => (cur ? { ...cur, ...updated, ...form } : updated));
+        try {
+          const fresh = await apiFetch<Lead>(`/leads/${selected.id}`);
+          setSelected(fresh);
+        } catch { /* keep updated state */ }
       }
       setPanelMode("view");
-      load();
+      await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed");
     } finally {
@@ -280,6 +305,7 @@ export function LeadsPage() {
       if (debounced) q.set("search", debounced);
       if (lifecycleFilter !== "All") q.set("lifecycleStage", lifecycleFilter);
       if (sourceFilter !== "All") q.set("source", sourceFilter);
+      if (industryFilter !== "All") q.set("industry", industryFilter);
       if (ownerFilter !== "All") q.set("ownerId", ownerFilter);
       if (accountFilter) q.set("accountId", accountFilter);
       if (listFilter !== "All") q.set("listId", listFilter);
@@ -325,6 +351,9 @@ export function LeadsPage() {
             <TBtn onClick={exportCsv} disabled={exporting} title="Export the current filter as CSV">
               <TbDownload size={14} /> <span className="hidden sm:inline">{exporting ? "Exporting…" : "Export"}</span>
             </TBtn>
+            <TBtn onClick={() => setShowSplit(true)} title="Make one outreach list per industry (or location, source, title)">
+              <TbArrowsSplit size={14} /> <span className="hidden sm:inline">Split into lists</span>
+            </TBtn>
             <TBtn onClick={() => setShowImport(true)}><TbUpload size={14} /> Import</TBtn>
             <TBtn variant="solid" onClick={startCreate}><TbPlus size={14} /> New</TBtn>
           </div>
@@ -354,6 +383,10 @@ export function LeadsPage() {
             <Select value={sourceFilter} onChange={(v) => { setSourceFilter(v); setOffset(0); }}>
               <option value="All">All sources</option>
               {sources.map((s) => <option key={s} value={s}>{s}</option>)}
+            </Select>
+            <Select value={industryFilter} onChange={(v) => { setIndustryFilter(v); setOffset(0); }}>
+              <option value="All">All industries</option>
+              {industries.map((i) => <option key={i.value} value={i.value}>{i.value} ({i.count.toLocaleString("en-IN")})</option>)}
             </Select>
             <Select value={campaignFilter} onChange={(v) => { setCampaignFilter(v); setOffset(0); }}>
               <option value="All">All campaigns</option>
@@ -595,7 +628,7 @@ export function LeadsPage() {
                         <NativeSelect
                           value={selected.lifecycleStage}
                           onChange={(e) => patchLead(selected.id, { lifecycleStage: e.target.value as LifecycleStage })}
-                          className="w-full cursor-pointer rounded border border-border bg-card px-2 py-1 text-[12px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
+                          className="w-full cursor-pointer rounded border border-border bg-card px-2 py-1 text-[12px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                         >
                           {LIFECYCLE_STAGES.map((st) => <option key={st} value={st}>{st}</option>)}
                         </NativeSelect>
@@ -605,7 +638,7 @@ export function LeadsPage() {
                         <NativeSelect
                           value={selected.ownerId || ""}
                           onChange={(e) => patchLead(selected.id, { ownerId: e.target.value || null })}
-                          className="w-full cursor-pointer rounded border border-border bg-card px-2 py-1 text-[12px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
+                          className="w-full cursor-pointer rounded border border-border bg-card px-2 py-1 text-[12px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                         >
                           <option value="">Unassigned</option>
                           {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}
@@ -757,7 +790,15 @@ export function LeadsPage() {
         </>
       )}
 
-      {showImport && <LeadImportModal onClose={(did) => { setShowImport(false); if (did) load(); }} />}
+      {showImport && <LeadImportModal onClose={(did) => { setShowImport(false); if (did) { load(); loadIndustries(); } }} />}
+      {showSplit && (
+        <SplitLeadsModal
+          onClose={(changed) => {
+            setShowSplit(false);
+            if (changed) apiFetch<{ id: string; name: string }[]>("/contact-groups").then(setLists).catch(() => {});
+          }}
+        />
+      )}
       {showDuplicates && (
         <DuplicatesDialog onClose={(merged) => { setShowDuplicates(false); if (merged) load(); }} />
       )}
@@ -850,7 +891,7 @@ function FormField({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
+        className="w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
       />
     </label>
   );

@@ -1,16 +1,140 @@
 import { fyLabel } from "@/lib/format";
-import { useRev } from "@/lib/store";
+import { useRev, usePerm } from "@/lib/store";
 import { View, Text, Span, Pressable, TextInput } from "@/components/rn";
-import { ChevronLeft, ChevronRight, Plus } from "@/components/icons";
-import { useState } from "react";
+import { ChevronLeft, ChevronRight, Check, Plus, X } from "@/components/icons";
+import { useState, useEffect } from "react";
 import { MonthGrid, TimeSwitch } from "@/components/rhinon/time";
-import { Avatar, Badge, Button, Chip, Display, Eyebrow, Field, Screen, SectionLabel, Sheet, TopBar, inputClass, stagger } from "@/components/rhinon/ui";
+import { Avatar, Badge, Button, Chip, Display, Empty, Eyebrow, Field, Screen, SectionLabel, Sheet, TopBar, inputClass, stagger } from "@/components/rhinon/ui";
 import { MONTH_LONG, plural, rangeLabel, workingDays } from "@/lib/format";
 import { TODAY, WHOS_OFF, nameOf } from "@/lib/mock-data";
 import { actions, useApp } from "@/lib/store";
+import { api } from "@/lib/api";
 import { TONES } from "@/lib/tone";
 import { cn } from "@/lib/utils";
+
+type AdminLeaveRequest = { id: string; userId: string; userName: string; leaveTypeName: string; startDate: string; endDate: string; days: number; reason: string; status: "Pending" | "Approved" | "Rejected" };
+
+function AdminLeavePage() {
+  useRev();
+  const [requests, setRequests] = useState<AdminLeaveRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [acting, setActing] = useState<string | null>(null);
+
+  const fetchRequests = () => {
+    setLoading(true);
+    api<AdminLeaveRequest[]>("/leave/requests")
+      .then((r) => setRequests(Array.isArray(r) ? r : []))
+      .catch(() => setRequests([]))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { fetchRequests(); }, []);
+
+  const act = async (id: string, action: "approve" | "reject") => {
+    setActing(id);
+    try {
+      await api(`/leave/requests/${id}/action`, { method: "PUT", body: { status: action === "approve" ? "Approved" : "Rejected" } });
+      setRequests((prev) => prev.map((r) => r.id === id ? { ...r, status: action === "approve" ? "Approved" : "Rejected" } : r));
+    } catch (e) {
+      actions.toast(e instanceof Error ? e.message : "Failed", "coral");
+    }
+    setActing(null);
+  };
+
+  const pending = requests.filter((r) => r.status === "Pending");
+  const past = requests.filter((r) => r.status !== "Pending");
+
+  return (
+    <Screen>
+      <TopBar title="Time" fallback="/more" />
+      <TimeSwitch current="leave" />
+      <View className="mt-7 animate-rise">
+        <Eyebrow tone="sky">Leave · {fyLabel()}</Eyebrow>
+        <Display size="hero" className="mt-3">Team{"\n"}leave.</Display>
+      </View>
+
+      <View className="mt-6 grid grid-cols-2 gap-2.5 animate-rise" style={stagger(1)}>
+        <View className="rounded-2xl bg-sun/35 p-4">
+          <Text className="font-display text-[length:calc(36px*var(--ds))] font-black leading-none">{pending.length}</Text>
+          <Text className="mt-2 font-mono text-[10px] uppercase tracking-[0.14em] text-ink/60">Pending approval</Text>
+        </View>
+        <View className="rounded-2xl bg-leaf/15 p-4">
+          <Text className="font-display text-[length:calc(36px*var(--ds))] font-black leading-none">{requests.filter((r) => r.status === "Approved").length}</Text>
+          <Text className="mt-2 font-mono text-[10px] uppercase tracking-[0.14em] text-ink/60">Approved</Text>
+        </View>
+      </View>
+
+      {loading ? (
+        <Empty title="Loading…" body="Fetching leave requests." tone="sky" />
+      ) : requests.length === 0 ? (
+        <Empty title="No requests" body="Leave requests will appear here." tone="sky" />
+      ) : (
+        <>
+          {pending.length > 0 ? (
+            <>
+              <SectionLabel className="mt-8">Needs your approval</SectionLabel>
+              <View className="mt-2 space-y-2.5">
+                {pending.map((r, i) => (
+                  <View key={r.id} className="animate-rise rounded-2xl border border-line/70 bg-card p-4" style={stagger(Math.min(i, 5))}>
+                    <View className="flex items-start justify-between gap-3">
+                      <View className="min-w-0">
+                        <Text className="text-[16px] font-semibold">{r.userName}</Text>
+                        <Text className="mt-0.5 font-mono text-[11px] uppercase tracking-[0.1em] text-ink/55">{r.leaveTypeName} · {rangeLabel(r.startDate, r.endDate)} · {plural(r.days, "day")}</Text>
+                      </View>
+                      <Badge tone="sun">Pending</Badge>
+                    </View>
+                    {r.reason ? <Text className="mt-2 text-[14px] text-ink/70">"{r.reason}"</Text> : null}
+                    <View className="mt-3 flex gap-2">
+                      <Pressable
+                        onPress={() => act(r.id, "reject")}
+                        disabled={acting === r.id}
+                        className="press flex h-10 flex-1 items-center justify-center gap-1.5 rounded-full border border-line bg-card text-[14px] font-semibold text-coral-deep disabled:opacity-50"
+                      >
+                        <X size={16} /><Text>Decline</Text>
+                      </Pressable>
+                      <Pressable
+                        onPress={() => act(r.id, "approve")}
+                        disabled={acting === r.id}
+                        className="press flex h-10 flex-1 items-center justify-center gap-1.5 rounded-full bg-leaf text-[14px] font-semibold text-leaf-foreground disabled:opacity-50"
+                      >
+                        <Check size={16} /><Text>Approve</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </>
+          ) : null}
+          {past.length > 0 ? (
+            <>
+              <SectionLabel className="mt-8">Recent</SectionLabel>
+              <View className="mt-2 space-y-2.5">
+                {past.slice(0, 10).map((r, i) => (
+                  <View key={r.id} className="animate-rise flex items-center gap-3 border-b border-line/70 py-3.5 last:border-0" style={stagger(Math.min(i, 5))}>
+                    <View className="min-w-0 flex-1">
+                      <Text className="text-[15px] font-semibold">{r.userName}</Text>
+                      <Text className="mt-0.5 text-[13px] text-ink/55">{r.leaveTypeName} · {rangeLabel(r.startDate, r.endDate)}</Text>
+                    </View>
+                    <Badge tone={r.status === "Approved" ? "leaf" : "coral"}>{r.status}</Badge>
+                  </View>
+                ))}
+              </View>
+            </>
+          ) : null}
+        </>
+      )}
+    </Screen>
+  );
+}
+
 export default function LeavePage() {
+  useRev();
+  const isAdmin = usePerm("leave", "write");
+  if (isAdmin) return <AdminLeavePage />;
+  return <EmployeeLeavePage />;
+}
+
+function EmployeeLeavePage() {
   useRev();
   const balances = useApp(s => s.balances);
   const leave = useApp(s => s.leave);

@@ -47,7 +47,7 @@ router.get("/overview", async (req: AuthRequest, res: Response) => {
       projectScopedWhere(req),
     ]);
 
-    const [totalTasks, totalProjects, openRequests, activeProjects, recentRequests] = await Promise.all([
+    const [totalTasks, totalProjects, openRequests, activeProjects, recentRequests, inProgressCount, inProgressTasks] = await Promise.all([
       Task.count({ where: scopedWhere }),
       Project.count({ where: projectWhere }),
       ClientRequest.count({
@@ -60,9 +60,23 @@ router.get("/overview", async (req: AuthRequest, res: Response) => {
         order: [["createdAt", "DESC"]],
         limit: 5,
       }),
+      // Work in flight right now, whichever project it belongs to (or none).
+      Task.count({ where: mergeWhere({ status: "In progress" }, scopedWhere) }),
+      Task.findAll({
+        where: mergeWhere({ status: "In progress" }, scopedWhere),
+        attributes: ["id", "title", "priority", "dueDate", "updatedAt"],
+        include: [
+          { model: User.unscoped(), as: "assignee", attributes: ["id", "fullName"] },
+          { model: Project, as: "project", attributes: ["id", "name"] },
+        ],
+        order: [["updatedAt", "DESC"]],
+        limit: 10,
+      }),
     ]);
 
     res.json({
+      inProgressCount,
+      inProgressTasks,
       totalTasks,
       totalProjects,
       activeProjects,

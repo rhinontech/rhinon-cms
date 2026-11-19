@@ -12,6 +12,9 @@ const STATIC_PAGE_LASTMOD: Record<string, string> = {
     '/schedule-call': '2026-09-01',
     '/privacy-terms': '2026-08-01',
     '/services': '2026-10-20',
+    '/tools': '2026-11-17',
+    '/tools/employee-onboarding-checklist': '2026-11-17',
+    '/tools/crm-roi-calculator': '2026-11-17',
 };
 
 // Real completion dates for case studies (replaces placeholder 2025-01-01 / 2026-01-01)
@@ -61,6 +64,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             url: `${baseUrl}/services/${s.slug}`,
             lastModified: new Date(s.lastModified),
         })),
+        {
+            url: `${baseUrl}/tools`,
+            lastModified: new Date(STATIC_PAGE_LASTMOD['/tools']),
+            priority: 0.8,
+        },
+        {
+            url: `${baseUrl}/tools/employee-onboarding-checklist`,
+            lastModified: new Date(STATIC_PAGE_LASTMOD['/tools/employee-onboarding-checklist']),
+            priority: 0.8,
+        },
+        {
+            url: `${baseUrl}/tools/crm-roi-calculator`,
+            lastModified: new Date(STATIC_PAGE_LASTMOD['/tools/crm-roi-calculator']),
+            priority: 0.8,
+        },
     ];
 
     const [blogs, caseStudies] = await Promise.all([

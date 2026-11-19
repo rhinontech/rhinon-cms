@@ -20,7 +20,7 @@ export function Avatar({ name, src, size = 32 }: { name: string; src?: string | 
 export function Cover({ post, className = "" }: { post: Pick<BlogSummary, "coverImage" | "category" | "title">; className?: string }) {
   if (post.coverImage) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={post.coverImage} alt="" loading="lazy" className={`h-full w-full object-cover ${className}`} />;
+    return <img src={post.coverImage} alt={post.title} loading="lazy" className={`h-full w-full object-cover ${className}`} />;
   }
   const t = toneFor(post.category);
   return (

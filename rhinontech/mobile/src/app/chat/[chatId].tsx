@@ -3,8 +3,9 @@ import { useRev } from "@/lib/store";
 import { View, Text, Span, Pressable, TextInput } from "@/components/rn";
 import { useLocalSearchParams } from "expo-router";
 import { Phone, Plus, Send, Video } from "@/components/icons";
-import { Fragment, useEffect, useRef, useState } from "react";
-import { CallOverlay } from "@/components/rhinon/call";
+import { Fragment, useEffect, useState } from "react";
+import { CallOverlay, IncomingCallSheet, CallEventBinder } from "@/components/rhinon/call";
+import { startCall, useCall } from "@/lib/live-calls";
 import { AttachmentRow, AttachSheet, PreviewSheet } from "@/components/rhinon/attach";
 import { ChatAvatar } from "@/components/rhinon/chat";
 import type { Attachment } from "@/lib/mock-more";
@@ -36,19 +37,13 @@ export default function ChatThread() {
   const chat = useApp((s) => s.chats.find((c) => c.id === chatId));
   const [text, setText] = useState("");
   const [typing, setTyping] = useState(false);
-  const [call, setCall] = useState<"voice" | "video" | null>(null);
+  const { phase } = useCall();
   const [picking, setPicking] = useState(false);
   const [preview, setPreview] = useState<Attachment | null>(null);
-  const bottom = useRef<HTMLDivElement>(null);
   const count = chat?.messages.length ?? 0;
   useEffect(() => {
     actions.markChatRead(chatId);
   }, [chatId]);
-  useEffect(() => {
-    bottom.current?.scrollIntoView({
-      block: "end",
-    });
-  }, [count, typing, chatId]);
   if (!chat) {
     return (
       <Screen>
@@ -78,7 +73,7 @@ export default function ChatThread() {
     }
   };
   return (
-    <Screen>
+    <Screen endKey={`${count}|${typing}|${chatId}`}>
       <TopBar
         fallback="/chat"
         center={
@@ -96,8 +91,8 @@ export default function ChatThread() {
         }
         right={
           <>
-            <IconButton icon={Phone} label="Voice call" onClick={() => setCall("voice")} />
-            <IconButton icon={Video} label="Video call" onClick={() => setCall("video")} />
+            <IconButton icon={Phone} label="Voice call" onClick={() => startCall(chatId, false, chat.name)} />
+            <IconButton icon={Video} label="Video call" onClick={() => startCall(chatId, true, chat.name)} />
           </>
         }
       />
@@ -204,7 +199,7 @@ export default function ChatThread() {
         </View>
       )}
 
-      <View ref={bottom} className="scroll-mb-[120px]" />
+
 
       <View className="sticky bottom-0 z-20 -mx-5 mt-auto flex items-center gap-2 bg-gradient-to-t from-paper from-70% to-transparent px-5 pb-1 pt-8">
         <Pressable
@@ -241,12 +236,12 @@ export default function ChatThread() {
       />
       <PreviewSheet file={preview} onClose={() => setPreview(null)} />
       <CallOverlay
-        open={call !== null}
-        onClose={() => setCall(null)}
+        open={phase === "active" || phase === "joining"}
         title={chat.kind === "channel" ? `# ${chat.name}` : chat.name}
         names={callNames.length ? callNames : [chat.name]}
-        video={call === "video"}
       />
+      <IncomingCallSheet />
+      <CallEventBinder />
     </Screen>
   );
 }

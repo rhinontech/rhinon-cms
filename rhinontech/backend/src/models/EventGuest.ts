@@ -27,6 +27,8 @@ export interface EventGuestAttributes {
   certificateName?: string | null;
   certificateApproved?: boolean;
   additionalData?: Record<string, any> | null;
+  /** When the guest was marked present at the door; null = not yet checked in. */
+  checkedInAt?: Date | null;
 
   siteId?: string | null;
   organizationId?: string | null;
@@ -59,6 +61,7 @@ export interface EventGuestCreationAttributes
     | "certificateName"
     | "certificateApproved"
     | "additionalData"
+    | "checkedInAt"
     | "siteId"
     | "organizationId"
   > {}
@@ -91,6 +94,7 @@ export class EventGuest
   declare certificateName: string | null;
   declare certificateApproved: boolean;
   declare additionalData: Record<string, any> | null;
+  declare checkedInAt: Date | null;
 
   declare siteId: string | null;
   declare organizationId: string | null;
@@ -201,6 +205,10 @@ EventGuest.init(
       type: DataTypes.JSONB,
       allowNull: true,
       defaultValue: {},
+    },
+    checkedInAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
     },
     siteId: {
       type: DataTypes.UUID,

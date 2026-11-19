@@ -158,7 +158,7 @@ export default function TaskDetail() {
                   {s.done ? <Check size={14} strokeWidth={3.2} className="animate-pop" /> : null}
                 </View>
                 <Span className="text-[15.5px]">
-                  <Span className="strike">{s.title}</Span>
+                  <Span className="line-through">{s.title}</Span>
                 </Span>
               </Pressable>
             </View>

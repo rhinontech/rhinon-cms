@@ -1,9 +1,13 @@
 import CaseStudyDetail from "@/components/Pages/CaseStudies/CaseStudyDetail";
-import { getCaseStudy } from "@/lib/api";
+import { getCaseStudy, getCaseStudies } from "@/lib/api";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
+export async function generateStaticParams() {
+  const caseStudies = await getCaseStudies().catch(() => []);
+  return caseStudies.map((cs) => ({ slug: cs.slug }));
+}
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinonlabs.com";
 

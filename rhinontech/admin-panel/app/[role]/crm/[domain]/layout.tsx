@@ -4,18 +4,16 @@ import { CollapsibleSubNav } from "@/components/Admin/Common/CollapsibleSubNav/C
 import { TbUsers, TbLayoutKanban, TbBuilding, TbChartBar, TbCurrencyRupee, TbUserSearch } from "react-icons/tb";
 import { usePermissions } from "@/context/PermissionsContext";
 import { SiteScopeGuard } from "@/components/Admin/Common/Sites/SiteGate";
-import { useCurrentSite, useModuleBase } from "@/lib/sites";
+import { useModuleBase } from "@/lib/sites";
 
 function CrmDomainNav({ children }: { children: React.ReactNode }) {
   const base = useModuleBase();
-  const { site, sites } = useCurrentSite();
   // Lead sourcing is platform-only (the backend refuses other workspaces too).
   const { account } = usePermissions();
   const isPlatform = Boolean(account?.organization?.isPlatform);
 
-  // The brand's name replaces the module's when there is more than one to be
-  // in — otherwise a single-site workspace would read "Main" instead of "CRM".
-  const title = sites.length > 1 ? site?.name ?? "CRM" : "CRM";
+  // One CRM for every brand, so it is always just "CRM" (it used to take the brand's name).
+  const title = "CRM";
 
   const items = [
     { label: "Leads", href: base, icon: <TbUsers size={18} />, exact: true },

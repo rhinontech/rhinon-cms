@@ -3,7 +3,7 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { AppState } from "react-native";
+import { AppState, LogBox } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { OfflineBar, TabBarGate, ToastLayer } from "@/components/rhinon/shell";
@@ -16,6 +16,30 @@ import { ThemeProvider, useTheme } from "@/theme/ThemeProvider";
 import { useWorkspaceTheme } from "@/theme/useWorkspaceTheme";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
+
+// Suppress non-fatal warnings that clutter the log
+LogBox.ignoreLogs(["expo-notifications", "RCTBridge"]);
+
+// Prevent Hermes from killing the app on unhandled JS errors in release mode.
+// iOS/JSC is lenient; Android/Hermes is not — every uncaught throw is fatal.
+const _global = global as any;
+if (_global.ErrorUtils) {
+  const prev = _global.ErrorUtils.getGlobalHandler?.();
+  _global.ErrorUtils.setGlobalHandler((err: Error, isFatal?: boolean) => {
+    if (!isFatal) prev?.(err, isFatal);
+    // For fatal errors just log — don't let Hermes terminate the process
+    console.error("[GlobalError]", err?.message ?? err);
+  });
+}
+
+// Catch any unhandled promise rejections (Hermes surfaces these as fatal)
+if (typeof _global.HermesInternal !== "undefined") {
+  const origHandler = _global.onunhandledrejection;
+  _global.onunhandledrejection = (event: any) => {
+    console.error("[UnhandledRejection]", event?.reason);
+    origHandler?.(event);
+  };
+}
 
 function Shell() {
   const t = useTheme();
@@ -30,9 +54,14 @@ function Shell() {
     if (!signedIn) { clearLive(); blankLive(); return; }
     installLive();
     blankLive();
-    void syncAll();
-    const timer = setInterval(() => void syncAll(), 45_000);
-    const sub = AppState.addEventListener("change", (s) => { if (s === "active") void syncAll(); });
+    void syncAll().catch(() => {});
+    // Every sync is ~40 requests against a single-threaded API, so the background refresh is
+    // every two minutes and only while the app is in the foreground. Opening the app and
+    // pulling to refresh still sync straight away.
+    const timer = setInterval(() => {
+      if (AppState.currentState === "active") void syncAll().catch(() => {});
+    }, 120_000);
+    const sub = AppState.addEventListener("change", (s) => { if (s === "active") void syncAll().catch(() => {}); });
     return () => { clearInterval(timer); sub.remove(); };
   }, [signedIn]);
   const onLogin = segments[0] === "login";

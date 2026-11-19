@@ -32,6 +32,7 @@ export default function SettingsPage() {
   useRev();
   const allowed = usePerm("settings");
   const perms = useApp((s) => s.perms);
+  const brand = useApp((s) => s.brand);
   const [role, setRole] = useState<RoleId | null>(null);
   const [calendar, setCalendar] = useState(true);
   if (!allowed) {
@@ -90,18 +91,26 @@ export default function SettingsPage() {
         Changes apply live. Anyone with that role sees the difference without signing in again.
       </Text>
 
-      <SectionLabel className="mb-3 mt-9">Brands</SectionLabel>
+      <SectionLabel className="mb-3 mt-9">Active brand</SectionLabel>
       <View className="divide-y divide-line/70 rounded-3xl border border-line/70 bg-card px-4">
-        {BRANDS.map((b) => (
-          <View key={b.id} className="flex items-center gap-3.5 py-3.5">
-            <View className={cn("size-3 rounded-full", TONES[b.tone].dot)} />
-            <View className="min-w-0 flex-1">
-              <View className="block font-semibold leading-tight">{b.name}</View>
-              <View className="block font-mono text-[11px] text-ink/50">{b.domain}</View>
-            </View>
-            <Badge tone="leaf">Live</Badge>
-          </View>
-        ))}
+        {BRANDS.map((b) => {
+          const active = brand === b.id;
+          return (
+            <Pressable
+              key={b.id}
+              onPress={() => actions.setBrand(b.id)}
+              className="press flex items-center gap-3.5 py-3.5"
+              accessibilityLabel={`Switch to ${b.name}`}
+            >
+              <View className={cn("size-3 rounded-full", TONES[b.tone].dot)} />
+              <View className="min-w-0 flex-1">
+                <Text className="font-semibold leading-tight">{b.name}</Text>
+                <Text className="font-mono text-[11px] text-ink/50">{b.domain}</Text>
+              </View>
+              {active ? <Badge tone="leaf">Active</Badge> : <Badge tone="sky">Switch</Badge>}
+            </Pressable>
+          );
+        })}
       </View>
 
       <SectionLabel className="mb-3 mt-9">Connected accounts</SectionLabel>

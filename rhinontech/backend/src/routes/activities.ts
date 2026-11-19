@@ -2,6 +2,7 @@ import { Router, Response } from "express";
 import { Activity, CampaignActivity, InboxEmail, Lead, User } from "../models";
 import { authenticate, authorizeAny, AuthRequest } from "../middleware/authenticate";
 import { resolveSiteContext } from "../middleware/siteContext";
+import { readableDraft } from "../services/timelineText";
 
 const router = Router();
 router.use(authenticate);
@@ -80,7 +81,8 @@ router.get("/timeline", readAccess, async (req: AuthRequest, res: Response) => {
         kind: "campaign",
         type: c.type,
         subject: c.content,
-        body: c.generatedContent || null,
+        // Stored as HTML, JSON or plain text depending on what produced it; the feed wants readable text.
+        body: readableDraft(c.generatedContent),
         occurredAt: new Date(c.timestamp).toISOString(),
         user: null,
       });

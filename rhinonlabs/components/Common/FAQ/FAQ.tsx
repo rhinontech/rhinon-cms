@@ -58,7 +58,7 @@ export function FAQ({ items = faqs }: { items?: { question: string; answer: stri
                             <p className="opacity-70 mb-8">
                                 Still have questions? Feel free to get in touch with us today!
                             </p>
-                            <Link href="https://wa.me/918249291789" target='_blank'>
+                            <Link href="https://wa.me/918249291789" target='_blank' rel="nofollow noopener noreferrer">
                                 <Button variant="default" className="w-fit bg-primary hover:bg-blue-700 border-0 text-white gap-2">
                                     <ArrowUpRight className="w-4 h-4" /> Ask a Question
                                 </Button>
