@@ -846,7 +846,6 @@ router.get("/track/open", async (req: Request, res: Response) => {
             campaignId: effectiveCampaignId || null,
             type: "EmailOpened",
             content: "Recipient opened the email.",
-            organizationId: (lead as any).organizationId ?? null,
           });
         }
       });
