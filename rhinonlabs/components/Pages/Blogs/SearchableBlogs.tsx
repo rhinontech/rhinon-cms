@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { format } from "date-fns";
 import { ArrowRight, Search, Sparkles } from "lucide-react";
 import { type Blog } from "@/lib/api";
@@ -15,11 +14,11 @@ interface SearchableBlogsProps {
 }
 
 const fadeUpVariant: Variants = {
-  hidden: { opacity: 0.9, y: 8 },
+  hidden: { opacity: 0, y: 30 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] }
+    transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
   }
 };
 
@@ -122,17 +121,15 @@ export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) 
                   className="group flex flex-col rounded-[20px] border border-border/7 bg-background/50 backdrop-blur-md overflow-hidden shadow-[inset_0_2px_1px_rgba(207,231,255,0.15)] hover:border-white/20 transition-all duration-300"
                 >
                   <div className="aspect-[21/9] overflow-hidden relative bg-white/5">
-                    <Image
+                    <img
                       src={blog.coverImage || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000&auto=format&fit=crop"}
                       alt={blog.title}
-                      fill
-                      priority={true}
-                      sizes="(max-width: 768px) 100vw, 600px"
-                      className="object-cover transition-transform duration-700 group-hover:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      loading="lazy"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-80" />
                     {blog.category && (
-                      <div className="absolute top-4 left-4 z-10">
+                      <div className="absolute top-4 left-4">
                         <span className="px-2.5 py-1 rounded-lg bg-white/10 backdrop-blur-md border border-white/10 text-[9px] font-black uppercase tracking-widest text-white/90">
                           {blog.category}
                         </span>
@@ -156,11 +153,9 @@ export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) 
 
                     <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <Image
+                        <img loading="lazy" decoding="async"
                           src={blog.authorAvatar || "https://github.com/prabhatpk.png"}
                           alt={blog.authorName}
-                          width={32}
-                          height={32}
                           className="w-8 h-8 rounded-full border border-white/10 object-cover"
                         />
                         <div>
@@ -208,13 +203,11 @@ export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) 
                   className="group flex flex-col rounded-[16px] border border-border/7 bg-background/30 overflow-hidden shadow-[inset_0_2px_1px_rgba(207,231,255,0.1)] hover:border-white/20 transition-all duration-300"
                 >
                   <div className="aspect-[16/10] overflow-hidden relative bg-white/5">
-                    <Image
+                    <img
                       src={blog.coverImage || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000&auto=format&fit=crop"}
                       alt={blog.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 400px"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                       loading="lazy"
-                      className="object-cover transition-transform duration-700 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-80" />
                   </div>
@@ -231,11 +224,9 @@ export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) 
 
                     <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
-                        <Image
+                        <img loading="lazy" decoding="async"
                           src={blog.authorAvatar || "https://github.com/prabhatpk.png"}
                           alt={blog.authorName}
-                          width={24}
-                          height={24}
                           className="w-6 h-6 rounded-full border border-white/10 object-cover"
                         />
                         <span className="text-[10px] font-bold text-white/70 uppercase tracking-wider">{blog.authorName}</span>

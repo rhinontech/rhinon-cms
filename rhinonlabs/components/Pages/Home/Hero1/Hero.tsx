@@ -11,11 +11,11 @@ import SchedulerModal from "@/components/Common/CTA/SchedulerModal";
 
 
 const fadeUpVariant: Variants = {
-  hidden: { opacity: 0.9, y: 8 },
+  hidden: { opacity: 0, y: 30 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] }
+    transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
   }
 };
 
@@ -24,7 +24,14 @@ const Hero1 = () => {
   const [isSchedulerOpen, setIsSchedulerOpen] = useState(false);
   return (
     <div id="hero" className="overflow-hidden relative flex flex-col">
-      <div className="absolute inset-0 top-64 max-sm:top-52 -z-10">
+      <motion.div
+        className="absolute inset-0 top-64 max-sm:top-52 -z-10"
+        // Starts partly visible with no delay: an opacity-0 image isn't counted as
+        // painted, so a full fade-from-zero pushed mobile LCP out by ~2.5s
+        initial={{ opacity: 0.35 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1.2, ease: "easeOut" }}
+      >
         <div
           className="mask-[linear-gradient(to_bottom,transparent,white_30%,white_60%,transparent)]
                 mask-mode:luminance relative w-full h-full"
@@ -36,7 +43,7 @@ const Hero1 = () => {
             className="site-bg absolute inset-0 bg-cover bg-center"
           />
         </div>
-      </div>
+      </motion.div>
       <div className="pt-32 max-sm:pt-24 px-5 pb-10 flex flex-col gap-8 max-w-5xl mx-auto w-full">
         <div className="flex flex-col gap-5 items-center">
           {/* Badge */}

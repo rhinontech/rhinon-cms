@@ -4,38 +4,27 @@ import { useEffect } from "react";
 
 export default function RhinonChatLoader() {
   useEffect(() => {
-    let loaded = false;
+    // Delay chat widget loading until the browser is idle so it never blocks main thread / hydration
     const loadChat = () => {
-      if (loaded) return;
-      loaded = true;
-      import("@rhinon/chat")
-        .then(({ default: RhinonChat }) => {
-          RhinonChat({ app_id: "3TGBGW", api_url: "https://api.rhinontech.in/widget" });
-        })
-        .catch(() => {});
+      import("@rhinon/chat").then(({ default: RhinonChat }) => {
+        RhinonChat({ app_id: "3TGBGW", api_url: "https://api.rhinontech.in/widget" });
+      });
     };
 
-    // Defer chat until explicit user interaction (click/touch/keypress)
-    const onUserInteract = () => {
-      loadChat();
-      window.removeEventListener("pointerdown", onUserInteract);
-      window.removeEventListener("touchstart", onUserInteract);
-      window.removeEventListener("keydown", onUserInteract);
-    };
-
-    window.addEventListener("pointerdown", onUserInteract, { passive: true });
-    window.addEventListener("touchstart", onUserInteract, { passive: true });
-    window.addEventListener("keydown", onUserInteract, { passive: true });
-
-    // Fallback: load only after 7s of user presence
-    const timer = setTimeout(loadChat, 7000);
-
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener("pointerdown", onUserInteract);
-      window.removeEventListener("touchstart", onUserInteract);
-      window.removeEventListener("keydown", onUserInteract);
-    };
+    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      const handle = (window as unknown as { requestIdleCallback: (cb: () => void, opts?: { timeout: number }) => number }).requestIdleCallback(
+        loadChat,
+        { timeout: 3500 }
+      );
+      return () => {
+        if ("cancelIdleCallback" in window) {
+          (window as unknown as { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(handle);
+        }
+      };
+    } else {
+      const timer = setTimeout(loadChat, 2500);
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   return null;

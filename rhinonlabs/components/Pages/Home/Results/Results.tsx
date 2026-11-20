@@ -30,9 +30,6 @@ const CSS = `
 @keyframes rx-bar { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
 .rx-num { background: linear-gradient(180deg, #fff 10%, #dfe6ff 45%, #7f95ff 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
   filter: drop-shadow(0 0 24px rgba(91,123,255,.35)); }
-@media (max-width: 768px) {
-  .rx-tile { animation: none !important; }
-}
 @media (prefers-reduced-motion: reduce) {
   .rx-tile, .rx-draw, .rx-ring, .rx-needle, .rx-pulse, .rx-bar { animation: none !important; }
   .rx-draw { stroke-dashoffset: 0; } .rx-ring { stroke-dashoffset: 39.6; } .rx-needle { transform: rotate(86deg); }

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { ArrowRight, Search } from "lucide-react";
 import { motion, Variants } from "framer-motion";
 import type { CaseStudy } from "@/lib/api";
@@ -12,19 +11,19 @@ import SchedulerModal from "@/components/Common/CTA/SchedulerModal";
 const FALLBACK_COVER = "/images/background/q3lzdr4u88731.jpg";
 
 const fadeUpVariant: Variants = {
-  hidden: { opacity: 0.9, y: 8 },
+  hidden: { opacity: 0, y: 30 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] },
+    transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
   },
 };
 
 const staggerContainer: Variants = {
-  hidden: { opacity: 0.9 },
+  hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.1 },
+    transition: { staggerChildren: 0.15 },
   },
 };
 
@@ -122,18 +121,15 @@ export default function CaseStudiesIndex({ caseStudies }: { caseStudies: CaseStu
                     className="group flex flex-col rounded-[20px] border border-border/7 bg-background/50 backdrop-blur-md overflow-hidden shadow-[inset_0_2px_1px_rgba(207,231,255,0.15)] hover:border-white/20 transition-all duration-300"
                   >
                     <div className="aspect-[21/9] overflow-hidden relative bg-white/5">
-                      <Image
+                      <img
                         src={cover}
                         alt={cs.title}
-                        fill
-                        sizes="(min-width: 1024px) 580px, 100vw"
-                        quality={85}
-                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         loading="lazy"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-80 pointer-events-none" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-80" />
                       {(cs.category || cs.industry) && (
-                        <div className="absolute top-4 left-4 z-10">
+                        <div className="absolute top-4 left-4">
                           <span className="px-2.5 py-1 rounded-lg bg-white/10 backdrop-blur-md border border-white/10 text-[9px] font-black uppercase tracking-widest text-white/90">
                             {cs.category || cs.industry}
                           </span>
@@ -193,16 +189,13 @@ export default function CaseStudiesIndex({ caseStudies }: { caseStudies: CaseStu
                     className="group flex flex-col rounded-[16px] border border-border/7 bg-background/30 overflow-hidden shadow-[inset_0_2px_1px_rgba(207,231,255,0.1)] hover:border-white/20 transition-all duration-300"
                   >
                     <div className="aspect-[16/10] overflow-hidden relative bg-white/5">
-                      <Image
+                      <img
                         src={cover}
                         alt={cs.title}
-                        fill
-                        sizes="(min-width: 1024px) 380px, (min-width: 768px) 50vw, 100vw"
-                        quality={85}
-                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         loading="lazy"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-80 pointer-events-none" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-80" />
                     </div>
                     <div className="p-6 flex flex-col flex-1">
                       {(cs.category || cs.industry) && (

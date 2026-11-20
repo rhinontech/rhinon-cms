@@ -65,10 +65,9 @@ export function Navbar() {
                     <Image
                         src="/Logo_Rhinon_Labs_Light.png"
                         alt="Rhinon Labs"
-                        width={152}
-                        height={40}
-                        priority={true}
-                        className="w-38 h-auto object-contain opacity-75 transition-opacity group-hover:opacity-100"
+                        width={70}
+                        height={70}
+                        className="w-38 object-contain opacity-75 transition-opacity group-hover:opacity-100"
                     />
                     {/* <span className="text-2xl font-serif italic tracking-wide">Rhinon Labs</span> */}
                 </Link>
@@ -90,7 +89,7 @@ export function Navbar() {
                 </nav>
 
                 {/* Action Button & Mobile Toggle */}
-                <div className="flex items-center gap-4 min-h-[44px]">
+                <div className="flex items-center gap-4">
                     <Link
                         href="/build"
                         className={cn(buttonVariants({ variant: 'default', size: 'default' }), 'hidden sm:inline-flex gap-1.5')}
@@ -100,7 +99,7 @@ export function Navbar() {
                     </Link>
 
                     <button
-                        className="md:hidden text-white/70 hover:text-white transition-colors flex items-center justify-center p-2 min-w-[44px] min-h-[44px]"
+                        className="md:hidden text-white/70 hover:text-white transition-colors flex items-center justify-center p-2"
                         onClick={() => setIsOpen(!isOpen)}
                         aria-label="Toggle Menu"
                     >

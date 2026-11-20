@@ -1,22 +1,19 @@
 "use client";
 
 import React from "react";
-import dynamic from "next/dynamic";
 import { BuildHero } from "./Hero";
-
-// Dynamic import for below-the-fold sections to cut initial JS bundle & DOM size
-const WhoIsThisFor = dynamic(() => import("./WhoIsThisFor").then((m) => m.WhoIsThisFor));
-const WhatWeBuild = dynamic(() => import("./WhatWeBuild").then((m) => m.WhatWeBuild));
-const BuildProcess = dynamic(() => import("./BuildProcess").then((m) => m.BuildProcess));
-const Differentiator = dynamic(() => import("./Differentiator").then((m) => m.Differentiator));
-const ProductTypes = dynamic(() => import("./ProductTypes").then((m) => m.ProductTypes));
-const StartupStage = dynamic(() => import("./StartupStage").then((m) => m.StartupStage));
-const Engagement = dynamic(() => import("./Engagement").then((m) => m.Engagement));
-const MvpExamples = dynamic(() => import("./MvpExamples").then((m) => m.MvpExamples));
-const FounderMessage = dynamic(() => import("./FounderMessage").then((m) => m.FounderMessage));
-const BuildFAQ = dynamic(() => import("./BuildFAQ").then((m) => m.BuildFAQ));
-const IdeaForm = dynamic(() => import("./IdeaForm").then((m) => m.IdeaForm));
-const CaseStudies = dynamic(() => import("@/components/Pages/Home/CaseStudy/CaseStudies").then((m) => m.CaseStudies));
+import { WhoIsThisFor } from "./WhoIsThisFor";
+import { WhatWeBuild } from "./WhatWeBuild";
+import { BuildProcess } from "./BuildProcess";
+import { Differentiator } from "./Differentiator";
+import { ProductTypes } from "./ProductTypes";
+import { StartupStage } from "./StartupStage";
+import { Engagement } from "./Engagement";
+import { MvpExamples } from "./MvpExamples";
+import { FounderMessage } from "./FounderMessage";
+import { BuildFAQ } from "./BuildFAQ";
+import { IdeaForm } from "./IdeaForm";
+import { CaseStudies } from "@/components/Pages/Home/CaseStudy/CaseStudies";
 
 const BuildPage = () => {
   return (

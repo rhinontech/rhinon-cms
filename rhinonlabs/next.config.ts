@@ -11,8 +11,6 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
       { protocol: "https", hostname: "rhinontech-assets.s3.ap-south-1.amazonaws.com", pathname: "/content/**" },
-      { protocol: "https", hostname: "images.unsplash.com" },
-      { protocol: "https", hostname: "github.com" },
     ],
   },
   // Permanent redirects for renamed URLs, so links and Google's index carry over.
@@ -72,10 +70,6 @@ const nextConfig: NextConfig = {
           {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=()",
-          },
-          {
-            key: "Cross-Origin-Opener-Policy",
-            value: "same-origin-allow-popups",
           },
         ],
       },
