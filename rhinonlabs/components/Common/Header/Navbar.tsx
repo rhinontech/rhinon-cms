@@ -89,7 +89,7 @@ export function Navbar() {
                 </nav>
 
                 {/* Action Button & Mobile Toggle */}
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 min-h-[44px]">
                     <Link
                         href="/build"
                         className={cn(buttonVariants({ variant: 'default', size: 'default' }), 'hidden sm:inline-flex gap-1.5')}
@@ -99,7 +99,7 @@ export function Navbar() {
                     </Link>
 
                     <button
-                        className="md:hidden text-white/70 hover:text-white transition-colors flex items-center justify-center p-2"
+                        className="md:hidden text-white/70 hover:text-white transition-colors flex items-center justify-center p-2 min-w-[44px] min-h-[44px]"
                         onClick={() => setIsOpen(!isOpen)}
                         aria-label="Toggle Menu"
                     >

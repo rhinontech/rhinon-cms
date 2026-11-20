@@ -67,7 +67,7 @@ function Copy({ accent, Icon, title, subtitle, body, outcome, href }: {
             <p className="mt-2 text-[15px] leading-relaxed text-white/60">{body}</p>
             <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
                 <span className={`rounded-full border px-3 py-1 font-mono text-[11px] uppercase tracking-wider ${accent.chip}`}>{outcome}</span>
-                <Link href={href} className="group inline-flex items-center gap-1.5 text-sm font-medium text-white/80 transition-colors hover:text-white">
+                <Link href={href} aria-label={`Explore ${title}`} className="group inline-flex items-center gap-1.5 text-sm font-medium text-white/80 transition-colors hover:text-white">
                     Explore <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
             </div>
