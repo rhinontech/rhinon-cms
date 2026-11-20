@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { motion, useReducedMotion, useScroll, useSpring, useTransform } from "framer-motion";
 
 const PROJECTS = [
@@ -74,14 +75,17 @@ export default function HeroShowcase() {
                 type="button"
                 onClick={() => setActive(i)}
                 aria-label={`Show ${proj.name}`}
-                className="absolute top-0 w-[62%] text-left transition-[left] duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] focus:outline-none md:w-[58%]"
+                className="absolute top-0 left-1/2 w-[62%] text-left focus:outline-none md:w-[58%]"
                 style={{
                   zIndex: 10 - abs,
-                  left: `calc(50% + ${dir * slot.x}% * var(--spread))`,
-                  x: "-50%",
                   transformStyle: "preserve-3d",
                 }}
-                animate={{ z: slot.z, rotateY: dir * slot.ry, scale: slot.s, opacity: Math.abs(d) > 2 ? 0 : slot.o }}
+                animate={{ x: `calc(-50% + ${dir * slot.x}% * var(--spread))`,
+                  z: slot.z,
+                  rotateY: dir * slot.ry,
+                  scale: slot.s,
+                  opacity: Math.abs(d) > 2 ? 0 : slot.o,
+                }}
                 transition={{ type: "spring", stiffness: 90, damping: 18 }}
               >
                 <div
@@ -98,14 +102,14 @@ export default function HeroShowcase() {
                     <span className="h-2 w-2 rounded-full bg-white/20" />
                   </div>
                   <div className="relative aspect-[16/10] overflow-hidden rounded-lg">
-                    <img
+                    <Image
                       src={proj.src}
                       alt={`${proj.name} — ${proj.kind} built by Rhinon Labs`}
                       width={1400}
                       height={875}
-                      loading={i < 2 ? "eager" : "lazy"}
-                      fetchPriority={i === 0 ? "high" : "auto"}
-                      decoding="async"
+                      quality={90}
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 1200px"
+                      loading="lazy"
                       className="h-full w-full object-cover object-top"
                     />
                     {!isFront && <div className="absolute inset-0 bg-black/30" />}
@@ -137,8 +141,16 @@ export default function HeroShowcase() {
             type="button"
             onClick={() => setActive(i)}
             aria-label={`Show ${proj.name}`}
-            className={`h-1 rounded-full transition-all duration-500 ${i === active ? "w-8 bg-white" : "w-3 bg-white/25 hover:bg-white/50"}`}
-          />
+            className="flex min-w-[44px] min-h-[44px] items-center justify-center p-2"
+          >
+            <span
+              className={`h-1.5 rounded-full transition-transform transition-opacity duration-300 ${
+                i === active
+                  ? "w-8 bg-white opacity-100"
+                  : "w-4 bg-white/30 opacity-60 hover:opacity-100"
+              }`}
+            />
+          </button>
         ))}
       </div>
     </div>

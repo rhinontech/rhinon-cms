@@ -123,6 +123,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
+        {/* Preconnect & dns-prefetch to eliminate third-party connection latency */}
+        <link rel="preconnect" href="https://api.rhinontech.in" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://api.rhinontech.in" />
         {/* The hero background (.site-bg in globals.css) is the largest element on
             most pages; fetch the right size first instead of discovering it late. */}
         <link rel="preload" as="image" type="image/avif" href="/images/background/background-960.avif" media="(max-width: 767px)" fetchPriority="high" />
