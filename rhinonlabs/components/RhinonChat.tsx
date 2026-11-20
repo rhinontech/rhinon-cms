@@ -15,25 +15,26 @@ export default function RhinonChatLoader() {
         .catch(() => {});
     };
 
-    // Defer until first user interaction or fallback timeout (4s)
+    // Defer chat until explicit user interaction (click/touch/keypress)
     const onUserInteract = () => {
       loadChat();
-      window.removeEventListener("scroll", onUserInteract);
       window.removeEventListener("pointerdown", onUserInteract);
       window.removeEventListener("touchstart", onUserInteract);
+      window.removeEventListener("keydown", onUserInteract);
     };
 
-    window.addEventListener("scroll", onUserInteract, { passive: true });
     window.addEventListener("pointerdown", onUserInteract, { passive: true });
     window.addEventListener("touchstart", onUserInteract, { passive: true });
+    window.addEventListener("keydown", onUserInteract, { passive: true });
 
-    const timer = setTimeout(loadChat, 4000);
+    // Fallback: load only after 7s of user presence
+    const timer = setTimeout(loadChat, 7000);
 
     return () => {
       clearTimeout(timer);
-      window.removeEventListener("scroll", onUserInteract);
       window.removeEventListener("pointerdown", onUserInteract);
       window.removeEventListener("touchstart", onUserInteract);
+      window.removeEventListener("keydown", onUserInteract);
     };
   }, []);
 

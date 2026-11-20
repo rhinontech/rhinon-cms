@@ -6,10 +6,13 @@ import { motion, Variants } from "framer-motion";
 import { ArrowRight, Bot, Globe, LayoutDashboard, Rocket, Smartphone, Workflow } from "lucide-react";
 import { Spotlight } from "@/components/ui/spotlight";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
-import { ElevateCTA } from "@/components/Common/CTA/ElevateCTA";
-import { CaseStudies } from "@/components/Pages/Home/CaseStudy/CaseStudies";
-import { FAQ } from "@/components/Common/FAQ/FAQ";
+import dynamic from "next/dynamic";
 import { services, serviceBanner } from "@/lib/services";
+
+// Code-split below-the-fold heavy components to dramatically reduce main-thread CPU time
+const CaseStudies = dynamic(() => import("@/components/Pages/Home/CaseStudy/CaseStudies").then((m) => m.CaseStudies));
+const ElevateCTA = dynamic(() => import("@/components/Common/CTA/ElevateCTA").then((m) => m.ElevateCTA));
+const FAQ = dynamic(() => import("@/components/Common/FAQ/FAQ").then((m) => m.FAQ));
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   "mvp-development": Rocket,
@@ -21,8 +24,8 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } },
+  hidden: { opacity: 0.9, y: 8 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
 };
 
 export default function ServicesIndex() {
@@ -37,11 +40,11 @@ export default function ServicesIndex() {
         >
           <div className="mask-[linear-gradient(to_bottom,transparent,white_30%,white_60%,transparent)] relative w-full h-full">
             <div
-            aria-hidden="true"
-            // Decorative only: a CSS background, not an <img>, so search engines
-            // never pick it as the page's thumbnail (they did, in Google results).
-            className="site-bg absolute inset-0 bg-cover bg-center"
-          />
+              aria-hidden="true"
+              // Decorative only: a CSS background, not an <img>, so search engines
+              // never pick it as the page's thumbnail (they did, in Google results).
+              className="site-bg absolute inset-0 bg-cover bg-center"
+            />
           </div>
         </motion.div>
         <Spotlight className="-top-40 left-0 md:-top-20 md:left-60" fill="#A3B8CC" />
@@ -83,6 +86,8 @@ export default function ServicesIndex() {
                           alt={`${s.name} illustration`}
                           fill
                           sizes="(min-width: 1024px) 380px, (min-width: 768px) 50vw, 100vw"
+                          quality={85}
+                          priority={i === 0}
                           className="object-cover group-hover:scale-105 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
                         />
                         <div className="absolute left-3 top-3 z-10 rounded-xl border-t-2 border-white/10 bg-[#10131c]/80 backdrop-blur-sm p-2.5">
