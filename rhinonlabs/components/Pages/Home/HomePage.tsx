@@ -1,9 +1,9 @@
 import dynamic from "next/dynamic";
 import Hero1 from "./Hero1/Hero";
-import { Problem } from "./Problem/Problem";
-import { Services } from "./Services/Services";
 
-// Code-split heavy below-the-fold components to reduce initial main-thread blocking time
+// Dynamic import for below-the-fold sections to optimize initial mobile load & reduce DOM/TBT
+const Problem = dynamic(() => import("./Problem/Problem").then((m) => m.Problem));
+const Services = dynamic(() => import("./Services/Services").then((m) => m.Services));
 const Results = dynamic(() => import("./Results/Results").then((m) => m.Results));
 const Process = dynamic(() => import("./Process/Process").then((m) => m.Process));
 const Integrations = dynamic(() => import("./Integrations/Integrations").then((m) => m.Integrations));
