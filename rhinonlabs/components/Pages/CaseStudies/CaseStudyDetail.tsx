@@ -167,11 +167,14 @@ export default function CaseStudyDetail({ caseStudy }: { caseStudy: CaseStudy })
             {gallery.length > 0 && (
               <div className="mt-14 space-y-8">
                 {gallery.map((img, i) => (
-                  <div key={i} className="overflow-hidden rounded-3xl border border-white/10">
-                    <img
+                  <div key={i} className="relative aspect-video w-full overflow-hidden rounded-3xl border border-white/10">
+                    <Image
                       src={img}
                       alt={`${caseStudy.title} screenshot ${i + 1}`}
-                      className="w-full object-cover"
+                      fill
+                      sizes="(min-width: 1280px) 760px, (min-width: 1024px) 60vw, 100vw"
+                      quality={85}
+                      className="object-cover"
                       loading="lazy"
                     />
                   </div>

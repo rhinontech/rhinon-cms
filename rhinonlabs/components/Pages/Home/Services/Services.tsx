@@ -30,6 +30,9 @@ const CSS = `
 @keyframes sv-pop { 0%,10% { opacity: 0; transform: translateY(6px); } 20%,92% { opacity: 1; transform: none; } 100% { opacity: 0; } }
 .sv-bar { animation: sv-bar 3.6s ease-in-out infinite; transform-origin: bottom; }
 @keyframes sv-bar { 0%,100% { transform: scaleY(.75); } 50% { transform: scaleY(1); } }
+@media (max-width: 768px) {
+  .sv-tile { animation: none !important; }
+}
 @media (prefers-reduced-motion: reduce) {
   .sv-tile, .sv-cycle, .sv-type, .sv-pop, .sv-bar { animation: none !important; }
   .sv-type { width: 100%; } .sv-pop { opacity: 1; }
@@ -67,7 +70,7 @@ function Copy({ accent, Icon, title, subtitle, body, outcome, href }: {
             <p className="mt-2 text-[15px] leading-relaxed text-white/60">{body}</p>
             <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
                 <span className={`rounded-full border px-3 py-1 font-mono text-[11px] uppercase tracking-wider ${accent.chip}`}>{outcome}</span>
-                <Link href={href} className="group inline-flex items-center gap-1.5 text-sm font-medium text-white/80 transition-colors hover:text-white">
+                <Link href={href} aria-label={`Explore ${title}`} className="group inline-flex items-center gap-1.5 text-sm font-medium text-white/80 transition-colors hover:text-white">
                     Explore <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
             </div>

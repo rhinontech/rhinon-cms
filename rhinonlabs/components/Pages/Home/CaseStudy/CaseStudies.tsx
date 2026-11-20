@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
 import { getCaseStudies, type CaseStudy } from '@/lib/api';
 
@@ -58,12 +59,16 @@ export function CaseStudies({ slugs }: { slugs?: string[] } = {}) {
                                 className="w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] group flex flex-col rounded-[16px] border border-border/7 bg-background overflow-hidden shadow-[inset_0_2px_1px_rgba(207,231,255,0.2)] hover:border-white/20 transition-all"
                             >
                                 <div className="aspect-[16/10] overflow-hidden relative">
-                                    <img loading="lazy" decoding="async"
+                                    <Image
                                         src={cover}
                                         alt={cs.title}
-                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                        fill
+                                        sizes="(min-width: 1024px) 380px, (min-width: 768px) 50vw, 100vw"
+                                        quality={90}
+                                        loading="lazy"
+                                        className="object-cover transition-transform duration-700 group-hover:scale-105"
                                     />
-                                    <div className="absolute inset-0 bg-linear-to-t from-background/80 via-transparent to-transparent opacity-60" />
+                                    <div className="absolute inset-0 bg-linear-to-t from-background/80 via-transparent to-transparent opacity-60 pointer-events-none" />
                                 </div>
                                 <div className="p-6 flex flex-col flex-1">
                                     {(cs.category || cs.industry) && (

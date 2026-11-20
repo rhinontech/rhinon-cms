@@ -40,6 +40,9 @@ const CSS = `
 .px-blink { animation: px-blink 1s steps(2) infinite; }
 @keyframes px-blink { 50% { opacity: 0; } }
 .px-num { background: linear-gradient(180deg, #fff, #8fa6ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+@media (max-width: 768px) {
+  .px-frame { animation: none !important; }
+}
 @media (prefers-reduced-motion: reduce) {
   .px-frame, .px-ring, .px-wave, .px-dash, .px-blink { animation: none !important; }
   .px-progress { animation: none !important; transform: scaleY(1); }
