@@ -1,13 +1,16 @@
 "use client";
+import { useState } from "react";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Star } from "lucide-react";
 import HeroShowcase from "./HeroShowcase";
-import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
+// import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
 import { motion, Variants } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { useState } from "react";
-import SchedulerModal from "@/components/Common/CTA/SchedulerModal";
+
+// Code-split SchedulerModal so dialog JS doesn't block initial page load
+const SchedulerModal = dynamic(() => import("@/components/Common/CTA/SchedulerModal"));
 
 
 const fadeUpVariant: Variants = {
