@@ -87,7 +87,9 @@ export default function ServicesIndex() {
                           fill
                           sizes="(min-width: 1024px) 380px, (min-width: 768px) 50vw, 100vw"
                           quality={85}
-                          priority={i === 0}
+                          priority={i < 2}
+                          fetchPriority={i === 0 ? "high" : "auto"}
+                          loading={i < 2 ? "eager" : "lazy"}
                           className="object-cover group-hover:scale-105 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
                         />
                         <div className="absolute left-3 top-3 z-10 rounded-xl border-t-2 border-white/10 bg-[#10131c]/80 backdrop-blur-sm p-2.5">
