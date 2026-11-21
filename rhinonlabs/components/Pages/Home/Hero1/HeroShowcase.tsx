@@ -108,8 +108,10 @@ export default function HeroShowcase() {
                       width={1400}
                       height={875}
                       quality={90}
+                      priority={isFront}
+                      fetchPriority={isFront ? "high" : "auto"}
+                      loading={isFront ? "eager" : "lazy"}
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 1200px"
-                      loading="lazy"
                       className="h-full w-full object-cover object-top"
                     />
                     {!isFront && <div className="absolute inset-0 bg-black/30" />}
