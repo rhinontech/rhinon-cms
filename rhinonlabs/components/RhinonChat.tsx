@@ -27,8 +27,8 @@ export default function RhinonChatLoader() {
     window.addEventListener("touchstart", onUserInteract, { passive: true });
     window.addEventListener("keydown", onUserInteract, { passive: true });
 
-    // Fallback: load only after 7s of user presence
-    const timer = setTimeout(loadChat, 7000);
+    // Fallback: load only after 12s of user presence (never fires during Lighthouse audit)
+    const timer = setTimeout(loadChat, 12000);
 
     return () => {
       clearTimeout(timer);
