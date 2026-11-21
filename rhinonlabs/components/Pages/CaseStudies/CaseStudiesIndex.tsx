@@ -113,7 +113,7 @@ export default function CaseStudiesIndex({ caseStudies }: { caseStudies: CaseStu
           <div className="w-full max-w-[1200px] mx-auto px-6 mb-20 relative z-10">
             <h2 className="text-2xl font-medium text-white mb-8 border-b border-white/5 pb-4">Recent Work</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {recentCaseStudies.map((cs) => {
+              {recentCaseStudies.map((cs, idx) => {
                 const cover = cs.image || cs.images?.[0] || FALLBACK_COVER;
                 return (
                   <Link
@@ -126,10 +126,12 @@ export default function CaseStudiesIndex({ caseStudies }: { caseStudies: CaseStu
                         src={cover}
                         alt={cs.title}
                         fill
+                        priority={idx === 0}
+                        fetchPriority={idx === 0 ? "high" : "auto"}
+                        loading={idx === 0 ? "eager" : "lazy"}
                         sizes="(min-width: 1024px) 580px, 100vw"
                         quality={85}
                         className="object-cover transition-transform duration-700 group-hover:scale-105"
-                        loading="lazy"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-80 pointer-events-none" />
                       {(cs.category || cs.industry) && (
