@@ -3,19 +3,22 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { format } from "date-fns";
 import { motion, Variants } from "framer-motion";
 import { ArrowRight, BookOpen, CheckCircle2, Rocket, ShieldCheck, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Spotlight } from "@/components/ui/spotlight";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
-import SchedulerModal from "@/components/Common/CTA/SchedulerModal";
-import { ElevateCTA } from "@/components/Common/CTA/ElevateCTA";
-import { FAQ } from "@/components/Common/FAQ/FAQ";
-import { CaseStudies } from "@/components/Pages/Home/CaseStudy/CaseStudies";
 import type { Service } from "@/lib/services";
 import { services } from "@/lib/services";
 import type { Blog } from "@/lib/api";
+
+// Dynamically load below-the-fold components to reduce initial JavaScript CPU execution
+const SchedulerModal = dynamic(() => import("@/components/Common/CTA/SchedulerModal"));
+const ElevateCTA = dynamic(() => import("@/components/Common/CTA/ElevateCTA").then((m) => m.ElevateCTA));
+const FAQ = dynamic(() => import("@/components/Common/FAQ/FAQ").then((m) => m.FAQ));
+const CaseStudies = dynamic(() => import("@/components/Pages/Home/CaseStudy/CaseStudies").then((m) => m.CaseStudies));
 
 /** Colour + icon per outcome card, by position (every service has three). */
 const OUTCOME_TONES = [
@@ -25,8 +28,8 @@ const OUTCOME_TONES = [
 ];
 
 const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } },
+  hidden: { opacity: 0.9, y: 8 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
 };
 const inView = { initial: "hidden", whileInView: "visible", viewport: { once: true, margin: "-100px" }, variants: fadeUp } as const;
 

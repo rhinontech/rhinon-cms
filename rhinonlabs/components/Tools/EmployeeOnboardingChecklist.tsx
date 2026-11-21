@@ -65,9 +65,9 @@ export default function EmployeeOnboardingChecklist() {
       {/* Hero */}
       <section className="relative overflow-hidden print:hidden">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0.9, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           className="pt-40 max-sm:pt-28 pb-10 px-5 max-w-4xl mx-auto w-full flex flex-col items-center"
         >
           <div className="mb-8 inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm">
