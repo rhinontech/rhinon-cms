@@ -9,6 +9,7 @@ import { Navbar } from "@/components/Common/Header/Navbar";
 import StructuredData from "@/components/Common/SEO/StructuredData";
 import { PageviewTracker } from "@/components/Common/Analytics/PageviewTracker";
 import { GoogleAnalytics } from "@/components/Common/Analytics/GoogleAnalytics";
+import Script from "next/script";
 import RhinonChatLoader from "@/components/RhinonChat";
 
 // const geistSans = Geist({
@@ -130,10 +131,10 @@ export default function RootLayout({
             most pages; fetch the right size first instead of discovering it late. */}
         {/* <link rel="preload" as="image" type="image/avif" href="/images/background/background-960.avif" media="(max-width: 767px)" fetchPriority="high" />
         <link rel="preload" as="image" type="image/avif" href="/images/background/background-1920.avif" media="(min-width: 768px)" fetchPriority="high" /> */}
-        {/* Rhinon Analytics Tracking */}
-        <script
-          async
-          defer
+        {/* Rhinon Analytics Tracking - afterInteractive ensures immediate visit capture without blocking DOM paint */}
+        <Script
+          id="rhinon-analytics"
+          strategy="afterInteractive"
           src="https://api.rhinontech.in/t.js"
           data-key="rt_50d801ebcd1cae883a7c45e8"
         />
