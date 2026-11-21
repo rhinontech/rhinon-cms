@@ -115,7 +115,7 @@ export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) 
               Recent Articles
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {recentBlogs.map((blog) => (
+              {recentBlogs.map((blog, idx) => (
                 <Link
                   key={blog.id}
                   href={`/blogs/${blog.slug}`}
@@ -126,7 +126,9 @@ export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) 
                       src={blog.coverImage || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000&auto=format&fit=crop"}
                       alt={blog.title}
                       fill
-                      priority={true}
+                      priority={idx === 0}
+                      fetchPriority={idx === 0 ? "high" : "auto"}
+                      loading={idx === 0 ? "eager" : "lazy"}
                       sizes="(max-width: 768px) 100vw, 600px"
                       className="object-cover transition-transform duration-700 group-hover:scale-105"
                     />
