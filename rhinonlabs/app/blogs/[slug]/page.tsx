@@ -269,11 +269,14 @@ export default async function BlogDetailsPage({ params }: PageProps) {
             <div className="mb-10 flex flex-wrap justify-between items-center gap-x-12 gap-y-5">
               
               <div className="flex items-center gap-3.5">
-                <div className="h-12 w-12 overflow-hidden rounded-full border border-white/15">
-                  <img
+                <div className="relative h-12 w-12 overflow-hidden rounded-full border border-white/15">
+                  <Image
                     src={blog.authorAvatar || "https://github.com/prabhatpk.png"}
                     alt={blog.authorName}
-                    className="h-full w-full object-cover"
+                    fill
+                    sizes="96px"
+                    quality={95}
+                    className="object-cover"
                   />
                 </div>
                 <div>
@@ -337,6 +340,9 @@ export default async function BlogDetailsPage({ params }: PageProps) {
                   alt={displayTitle}
                   fill
                   priority
+                  fetchPriority="high"
+                  loading="eager"
+                  quality={90}
                   sizes="(min-width: 1280px) 760px, (min-width: 1024px) 60vw, 100vw"
                   className="object-cover"
                 />
