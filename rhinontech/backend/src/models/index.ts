@@ -88,6 +88,7 @@ import { HelpFolder } from "./HelpFolder";
 import { HelpArticle } from "./HelpArticle";
 import { ConnectedAccount } from "./ConnectedAccount";
 import { DeviceToken } from "./DeviceToken";
+import { Sprint } from "./Sprint";
 import { Organization } from "./Organization";
 import { DataTypes, Op } from "sequelize";
 import { sequelize } from "../config/database";
@@ -202,6 +203,15 @@ Project.hasMany(WorkflowStatus, { foreignKey: "projectId", as: "workflowStatuses
 // Real subitems: a child Task, not a checklist row.
 Task.belongsTo(Task, { foreignKey: "parentTaskId", as: "parent" });
 Task.hasMany(Task, { foreignKey: "parentTaskId", as: "children" });
+
+// Sprint planning — opt-in iteration a task can be pulled into from the backlog.
+Sprint.belongsTo(Project, { foreignKey: "projectId", as: "project" });
+Project.hasMany(Sprint, { foreignKey: "projectId", as: "sprints" });
+Sprint.belongsTo(Team, { foreignKey: "teamId", as: "team" });
+Team.hasMany(Sprint, { foreignKey: "teamId", as: "sprints" });
+Sprint.belongsTo(User, { foreignKey: "createdById", as: "creator" });
+Task.belongsTo(Sprint, { foreignKey: "sprintId", as: "sprint" });
+Sprint.hasMany(Task, { foreignKey: "sprintId", as: "tasks" });
 
 // Gantt dependency graph (supersedes the single blockedById edge).
 Task.hasMany(TaskDependency, { foreignKey: "successorId", as: "dependsOn", onDelete: "CASCADE" });
@@ -573,6 +583,7 @@ export {
   HelpArticle,
   ConnectedAccount,
   DeviceToken,
+  Sprint,
 };
 
 export async function syncDatabase(force = false) {

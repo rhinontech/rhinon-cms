@@ -95,6 +95,7 @@ import { Deployment } from "./Deployment";
 import { PageView } from "./PageView";
 import { Visitor } from "./Visitor";
 import { DeviceToken } from "./DeviceToken";
+import { Sprint } from "./Sprint";
 
 /**
  * Every model whose rows belong to exactly one organization.
@@ -111,7 +112,7 @@ export const TENANT_MODELS: ModelStatic<any>[] = [
   JobOpening, Candidate, Interview, CompensationRevision,
   Task, Subtask, TaskComment, TaskTag, TaskDependency, TaskAttachment, TaskActivity, TimeEntry,
   Attendance, AttendanceRequest, AttendancePolicy,
-  Project, ProjectMember, ClientRequest, Team, TeamMember, WorkflowStatus, FieldDefinition,
+  Project, ProjectMember, ClientRequest, Team, TeamMember, WorkflowStatus, FieldDefinition, Sprint,
   Lead, Campaign, CampaignTemplate, CampaignActivity, ContactGroup, ContactGroupMember,
   LeaveType, LeaveBalance, LeaveRequest,
   ReviewCycle, ReviewGoal, ReviewSubmission,
