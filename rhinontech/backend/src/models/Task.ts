@@ -33,6 +33,8 @@ interface TaskAttributes {
   coverAttachmentId?: string | null;
   /** Real subitems — a child Task with its own assignee, dates and status. */
   parentTaskId?: string | null;
+  /** Which sprint this task is planned into; null = backlog. */
+  sprintId?: string | null;
   /** Manual ordering within a list/board column. */
   position?: number;
   completedAt?: Date | null;
@@ -53,7 +55,7 @@ interface TaskAttributes {
 }
 
 interface TaskCreationAttributes
-  extends Optional<TaskAttributes, "id" | "description" | "assigneeId" | "projectId" | "team" | "guestVisible" | "startDate" | "descriptionHtml" | "statusId" | "coverAttachmentId" | "parentTaskId" | "position" | "completedAt" | "customFields" | "dueDate" | "status" | "priority" | "estimatedHours" | "recurrence" | "blockedById" | "leadId" | "dealId" | "accountId"> {}
+  extends Optional<TaskAttributes, "id" | "description" | "assigneeId" | "projectId" | "team" | "guestVisible" | "startDate" | "descriptionHtml" | "statusId" | "coverAttachmentId" | "parentTaskId" | "sprintId" | "position" | "completedAt" | "customFields" | "dueDate" | "status" | "priority" | "estimatedHours" | "recurrence" | "blockedById" | "leadId" | "dealId" | "accountId"> {}
 
 export class Task extends Model<TaskAttributes, TaskCreationAttributes> implements TaskAttributes {
   declare id: string;
@@ -69,6 +71,7 @@ export class Task extends Model<TaskAttributes, TaskCreationAttributes> implemen
   declare statusId: string | null;
   declare coverAttachmentId: string | null;
   declare parentTaskId: string | null;
+  declare sprintId: string | null;
   declare position: number;
   declare completedAt: Date | null;
   declare customFields: Record<string, unknown>;
@@ -100,6 +103,7 @@ Task.init(
     statusId: { type: DataTypes.UUID, allowNull: true },
     coverAttachmentId: { type: DataTypes.UUID, allowNull: true },
     parentTaskId: { type: DataTypes.UUID, allowNull: true },
+    sprintId: { type: DataTypes.UUID, allowNull: true },
     position: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
     completedAt: { type: DataTypes.DATE, allowNull: true },
     customFields: { type: DataTypes.JSONB, allowNull: false, defaultValue: {} },
