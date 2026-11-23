@@ -42,13 +42,12 @@ export function Problem() {
         controls.set({ y: -current * itemHeight });
 
         const runAnimation = async () => {
-            // First delay is shorter so the page feels alive immediately after refresh.
-            let isFirst = true;
+            // Wait 2.5s initially so page load and LCP paint without JS main-thread competition
+            await new Promise(resolve => setTimeout(resolve, 2500));
 
             while (isMounted) {
                 // Wait for the holding period (text stays still)
-                await new Promise(resolve => setTimeout(resolve, isFirst ? 400 : 1600));
-                isFirst = false;
+                await new Promise(resolve => setTimeout(resolve, 1800));
 
                 if (!isMounted) break;
 
