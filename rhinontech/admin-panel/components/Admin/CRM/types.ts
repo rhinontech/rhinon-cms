@@ -35,6 +35,8 @@ export interface Lead {
   lifecycleStage: LifecycleStage;
   ownerId: string | null;
   owner?: UserRef | null;
+  createdById?: string | null;
+  createdBy?: UserRef | null;
   accountId: string | null;
   account?: AccountRef | null;
   lastActivityAt?: string | null;

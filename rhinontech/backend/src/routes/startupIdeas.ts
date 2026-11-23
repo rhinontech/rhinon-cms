@@ -167,6 +167,7 @@ router.post("/:id/convert", authorize("startupIdeas:write"), async (req: AuthReq
         notes,
         source: "Startup Ideas",
         status: "New",
+        createdById: req.user!.userId,
         raw: {
           startupIdeaId: idea.id,
           stage: idea.stage,

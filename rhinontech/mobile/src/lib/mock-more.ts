@@ -316,6 +316,8 @@ export type CrmLead = {
   source: string;
   last: string;
   owner: string;
+  /** Who added this lead — a person id (resolve with nameOf), or unset if nobody did. */
+  createdBy?: string;
 };
 export const CRM_LEADS: CrmLead[] = [
   {

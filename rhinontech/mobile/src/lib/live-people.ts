@@ -56,7 +56,7 @@ async function syncMe() {
   ROLE_LABEL[level] = me.role?.name ?? ROLE_LABEL[level];
   const perms = defaultPerms();
   perms[level] = permsFor(slug === "superadmin", new Set(me.permissions ?? []), !!me.organization?.isPlatform);
-  hydrate({ role: level, perms });
+  hydrate({ role: level, perms, isPlatformOrg: !!me.organization?.isPlatform });
   // pay details, masked: the phone never holds a full bank or PAN number
   const last = (v?: string | null, n = 4) => (v ? v.slice(-n) : "");
   assign(SALARY_STRUCTURE as Record<string, unknown>, {

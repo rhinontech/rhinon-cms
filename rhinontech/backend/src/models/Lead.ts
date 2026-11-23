@@ -52,6 +52,8 @@ interface LeadAttributes {
   notes?: string | null;
   // CRM ownership / linkage (Phase 1)
   ownerId?: string | null;
+  /** Who actually added this lead — a person, or null for an unauthenticated public form. */
+  createdById?: string | null;
   accountId?: string | null;
   lifecycleStage: LeadLifecycleStage;
   lastActivityAt?: Date | null;
@@ -68,7 +70,7 @@ interface LeadCreationAttributes
     | "website" | "companyLinkedinUrl" | "emailStatus" | "emailConfidence" | "keywords" | "apolloContactId"
     | "technologies" | "annualRevenue" | "raw" | "enrichment" | "draftSubject" | "draftApproved"
     | "emailOpened" | "openedAt"
-    | "ownerId" | "accountId" | "lifecycleStage" | "lastActivityAt"
+    | "ownerId" | "createdById" | "accountId" | "lifecycleStage" | "lastActivityAt"
   > {}
 
 export class Lead extends Model<LeadAttributes, LeadCreationAttributes> implements LeadAttributes {
@@ -106,6 +108,7 @@ export class Lead extends Model<LeadAttributes, LeadCreationAttributes> implemen
   declare source: string;
   declare notes: string | null;
   declare ownerId: string | null;
+  declare createdById: string | null;
   declare accountId: string | null;
   declare lifecycleStage: LeadLifecycleStage;
   declare lastActivityAt: Date | null;
@@ -154,6 +157,7 @@ Lead.init(
     source: { type: DataTypes.STRING, defaultValue: "Manual", allowNull: false },
     notes: { type: DataTypes.TEXT, allowNull: true },
     ownerId: { type: DataTypes.UUID, allowNull: true },
+    createdById: { type: DataTypes.UUID, allowNull: true },
     accountId: { type: DataTypes.UUID, allowNull: true },
     lifecycleStage: {
       type: DataTypes.ENUM("New", "Contacted", "Engaged", "Qualified", "Unqualified", "Customer"),

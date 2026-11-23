@@ -409,6 +409,8 @@ Account.hasMany(Lead, { foreignKey: "accountId", as: "contacts" });
 
 Lead.belongsTo(User, { foreignKey: "ownerId", as: "owner" });
 User.hasMany(Lead, { foreignKey: "ownerId", as: "ownedLeads" });
+Lead.belongsTo(User, { foreignKey: "createdById", as: "createdBy" });
+User.hasMany(Lead, { foreignKey: "createdById", as: "createdLeads" });
 
 Deal.belongsTo(Account, { foreignKey: "accountId", as: "account" });
 Account.hasMany(Deal, { foreignKey: "accountId", as: "deals" });
