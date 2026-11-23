@@ -364,6 +364,7 @@ export function ProjectWorkspace({
           onCreateChild={(title, parentId) => ws.createTask(title, parentId)}
           onRemoveDependency={removeDependency}
           onChanged={ws.refetch}
+          onOpenTask={setOpenTask}
         />
       )}
     </div>

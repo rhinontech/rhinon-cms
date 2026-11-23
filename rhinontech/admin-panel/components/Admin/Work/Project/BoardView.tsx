@@ -12,7 +12,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  TbCalendar, TbDots, TbPaperclip, TbPlus, TbSubtask, TbX,
+  TbCalendar, TbChevronDown, TbDots, TbPaperclip, TbPlus, TbSubtask, TbX,
 } from "react-icons/tb";
 import { STATUS_CHIP, STATUS_DOT } from "./constants";
 import { CardCover } from "../CardCover";
@@ -42,15 +42,18 @@ function isOverdue(task: ProjectTask) {
 }
 
 function BoardCard({
-  task, childCount, onOpen, dragging,
+  task, subitems, onOpen, dragging,
 }: {
   task: ProjectTask;
-  childCount: number;
+  subitems: ProjectTask[];
   onOpen?: (t: ProjectTask) => void;
   dragging?: boolean;
 }) {
   const range = rangeLabel(task);
   const files = task.attachments?.length ?? 0;
+  const [expanded, setExpanded] = useState(false);
+  const childCount = subitems.length;
+  const doneCount = subitems.filter((c) => c.status === "Done").length;
 
   return (
     <div
@@ -61,7 +64,7 @@ function BoardCard({
     >
       {/* Optional: only tasks with a cover picture get one. */}
       <CardCover url={task.coverUrl} />
-      <button data-task-opener onClick={() => onOpen?.(task)} className="block w-full px-3.5 py-3 text-left">
+      <button data-task-opener onClick={() => onOpen?.(task)} className="block w-full px-3.5 pt-3 text-left">
         <p className="text-[15px] font-medium leading-snug text-foreground">
           {task.title}
           {files > 0 && <TbPaperclip size={13} className="ml-1.5 inline align-[-1px] text-muted-foreground" aria-label={`${files} files`} />}
@@ -73,18 +76,47 @@ function BoardCard({
             ))}
           </div>
         )}
-        {/* Boolean(), not `||` on a number: `false || 0` is `0`, and React RENDERS
-            a bare 0 — which is what put a stray "0" on every empty card. */}
-        {Boolean(childCount > 0 || range) && (
-          <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-            {childCount > 0 && (
-              <span className="flex items-center gap-1 rounded-md border px-1.5 py-0.5"><TbSubtask size={12} /> {childCount}</span>
-            )}
-            {range && (
-              <span className={cn(isOverdue(task) && "font-medium text-red-600 dark:text-red-300")}>{range}</span>
-            )}
-          </div>
-        )}
+      </button>
+      {/* Outside the opener button: a toggle can't nest inside a <button>.
+          Boolean(), not `||` on a number: `false || 0` is `0`, and React RENDERS
+          a bare 0 — which is what put a stray "0" on every empty card. */}
+      {Boolean(childCount > 0 || range) && (
+        <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 px-3.5 text-xs text-muted-foreground">
+          {childCount > 0 && (
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              aria-expanded={expanded}
+              title={expanded ? "Hide subitems" : "Show subitems"}
+              className={cn("flex items-center gap-1 rounded-md border px-1.5 py-0.5 hover:bg-muted hover:text-foreground", expanded && "bg-muted text-foreground")}
+            >
+              <TbSubtask size={12} /> {doneCount}/{childCount}
+              <TbChevronDown size={12} className={cn("transition-transform", expanded && "rotate-180")} />
+            </button>
+          )}
+          {range && (
+            <span className={cn(isOverdue(task) && "font-medium text-red-600 dark:text-red-300")}>{range}</span>
+          )}
+        </div>
+      )}
+      {expanded && childCount > 0 && (
+        <ul className="mx-2.5 mt-2 space-y-0.5 border-l pl-2">
+          {subitems.map((c) => (
+            <li key={c.id}>
+              <button
+                type="button"
+                onClick={() => onOpen?.(c)}
+                title={c.title}
+                className="flex w-full items-center gap-1.5 rounded-md px-1.5 py-1 text-left text-xs hover:bg-muted"
+              >
+                <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", STATUS_DOT[c.workflowStatus?.color ?? "stone"] ?? STATUS_DOT.stone)} />
+                <span className={cn("min-w-0 flex-1 truncate text-foreground/85", c.status === "Done" && "text-muted-foreground line-through")}>{c.title}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <button data-task-opener onClick={() => onOpen?.(task)} className="block w-full px-3.5 pb-3 text-left" tabIndex={-1}>
         <div className="mt-2.5 flex items-center gap-2 text-xs text-muted-foreground">
           <span className="shrink-0">Who&apos;s in charge</span>
           {task.assignee ? (
@@ -103,7 +135,7 @@ function BoardCard({
   );
 }
 
-function DraggableCard(props: { task: ProjectTask; childCount: number; onOpen: (t: ProjectTask) => void }) {
+function DraggableCard(props: { task: ProjectTask; subitems: ProjectTask[]; onOpen: (t: ProjectTask) => void }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: props.task.id,
     data: { task: props.task },
@@ -115,6 +147,8 @@ function DraggableCard(props: { task: ProjectTask; childCount: number; onOpen: (
   );
 }
 
+const NO_SUBITEMS: ProjectTask[] = [];
+
 const COLUMN_COLORS = ["blue", "indigo", "cyan", "amber", "green", "stone", "red", "purple"];
 
 export interface ColumnActions {
@@ -124,13 +158,13 @@ export interface ColumnActions {
 }
 
 function Column({
-  status, tasks, childCountOf, onOpen, onCreate, readOnly, columns,
+  status, tasks, subitemsOf, onOpen, onCreate, readOnly, columns,
 }: {
   columns?: ColumnActions;
   readOnly: boolean;
   status: WorkflowStatus;
   tasks: ProjectTask[];
-  childCountOf: (id: string) => number;
+  subitemsOf: (id: string) => ProjectTask[];
   onOpen: (t: ProjectTask) => void;
   onCreate: (title: string, statusId: string) => void;
 }) {
@@ -225,9 +259,9 @@ function Column({
         )}
 
         {tasks.map((t) => readOnly ? (
-          <BoardCard key={t.id} task={t} childCount={childCountOf(t.id)} onOpen={onOpen} />
+          <BoardCard key={t.id} task={t} subitems={subitemsOf(t.id)} onOpen={onOpen} />
         ) : (
-          <DraggableCard key={t.id} task={t} childCount={childCountOf(t.id)} onOpen={onOpen} />
+          <DraggableCard key={t.id} task={t} subitems={subitemsOf(t.id)} onOpen={onOpen} />
         ))}
 
         {!tasks.length && !adding && !readOnly && (
@@ -265,13 +299,15 @@ export function BoardView({
     useSensor(KeyboardSensor)
   );
 
-  const childCounts = useMemo(() => {
-    const counts = new Map<string, number>();
+  const childrenOf = useMemo(() => {
+    const map = new Map<string, ProjectTask[]>();
     for (const { task } of rows) {
       if (!task.parentTaskId) continue;
-      counts.set(task.parentTaskId, (counts.get(task.parentTaskId) ?? 0) + 1);
+      const list = map.get(task.parentTaskId) ?? [];
+      list.push(task);
+      map.set(task.parentTaskId, list);
     }
-    return counts;
+    return map;
   }, [rows]);
 
   // Only top-level tasks get cards; subitems show as a count on their parent,
@@ -323,7 +359,7 @@ export function BoardView({
               key={s.id}
               status={s}
               tasks={byStatus.get(s.id) ?? []}
-              childCountOf={(id) => childCounts.get(id) ?? 0}
+              subitemsOf={(id) => childrenOf.get(id) ?? NO_SUBITEMS}
               onOpen={onOpenTask}
               onCreate={onCreateInStatus}
               readOnly={readOnly}
@@ -344,7 +380,7 @@ export function BoardView({
         </div>
       </div>
       <DragOverlay dropAnimation={null}>
-        {active && <div className="w-[292px]"><BoardCard task={active} childCount={childCounts.get(active.id) ?? 0} dragging /></div>}
+        {active && <div className="w-[292px]"><BoardCard task={active} subitems={childrenOf.get(active.id) ?? NO_SUBITEMS} dragging /></div>}
       </DragOverlay>
     </DndContext>
   );

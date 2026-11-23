@@ -8,7 +8,7 @@ import { apiFetch, API_URL } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
-  TbClock, TbFolder, TbHistory, TbLoader, TbPaperclip, TbPlayerPlay, TbPlayerStop, TbSend,
+  TbArrowLeft, TbClock, TbFolder, TbHistory, TbLoader, TbPaperclip, TbPlayerPlay, TbPlayerStop, TbSend,
   TbSubtask, TbTrash, TbUnlink, TbUpload, TbX,
 } from "react-icons/tb";
 import { MentionInput, renderMentions } from "./MentionInput";
@@ -53,9 +53,11 @@ function hhmm(minutes: number) {
 }
 
 export function TaskDetailDrawer({
-  task, rows, statuses, people, projectName, canShareWithGuests = true, readOnly = false, onClose, onPatch, onDelete, onCreateChild, onRemoveDependency, onChanged,
+  task, rows, statuses, people, projectName, canShareWithGuests = true, readOnly = false, onClose, onPatch, onDelete, onCreateChild, onRemoveDependency, onChanged, onOpenTask,
 }: {
   task: ProjectTask;
+  /** Opens another task in this drawer — a subitem, or the parent of one. */
+  onOpenTask?: (task: ProjectTask) => void;
   projectName?: string;
   /** False for collaborators — they must not control their own visibility. */
   canShareWithGuests?: boolean;
@@ -111,6 +113,12 @@ export function TaskDetailDrawer({
       // unmount the drawer before that task's click lands, so it would flicker
       // and refetch on the way back in.
       if ((e.target as HTMLElement).closest?.("[data-task-opener]")) return;
+      // Selects, date pickers, menus and confirm dialogs opened FROM this panel
+      // render in a portal on <body>, so they're "outside" by DOM position.
+      // Treating a pick in one of them as an outside click closed the drawer.
+      if ((e.target as HTMLElement).closest?.(
+        "[data-radix-popper-content-wrapper], [role='listbox'], [role='menu'], [role='dialog'], [role='alertdialog']"
+      )) return;
       closeRef.current();
     };
 
@@ -157,6 +165,7 @@ export function TaskDetailDrawer({
   useEffect(() => { load(); }, [load]);
 
   const children = rows.filter((r) => r.task.parentTaskId === task.id).map((r) => r.task);
+  const parent = task.parentTaskId ? rows.find((r) => r.task.id === task.parentTaskId)?.task ?? null : null;
 
   /** Comments and audit entries interleaved strictly by time. */
   const feed: FeedItem[] = [
@@ -242,7 +251,20 @@ export function TaskDetailDrawer({
       )}
     >
       <div className="flex h-14 shrink-0 items-center gap-2 border-b glass-header px-4">
-        <span className="truncate text-sm font-semibold text-foreground">Task</span>
+        {parent && onOpenTask ? (
+          <button
+            type="button"
+            onClick={() => onOpenTask(parent)}
+            className="-ml-2 flex min-w-0 items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-semibold text-foreground hover:bg-muted"
+            title={`Back to ${parent.title}`}
+          >
+            <TbArrowLeft size={16} className="shrink-0" />
+            <span className="shrink-0">Subitem</span>
+            <span className="truncate font-normal text-muted-foreground">of {parent.title}</span>
+          </button>
+        ) : (
+          <span className="truncate text-sm font-semibold text-foreground">Task</span>
+        )}
         {readOnly && (
           <span className="rounded bg-muted px-2 py-0.5 text-[11px] text-muted-foreground" title="Only the assignee, the creator or a manager can change this card">
             View only
@@ -270,6 +292,17 @@ export function TaskDetailDrawer({
         />
 
         <div className="flex flex-wrap items-center gap-1.5">
+          {parent && (
+            <button
+              type="button"
+              onClick={() => onOpenTask?.(parent)}
+              disabled={!onOpenTask}
+              className="inline-flex max-w-full items-center gap-1 rounded bg-muted px-2 py-0.5 text-xs text-foreground/75 enabled:hover:bg-muted/70"
+              title={`Subitem of: ${parent.title}`}
+            >
+              <TbSubtask size={12} className="shrink-0" /> <span className="truncate">{parent.title}</span>
+            </button>
+          )}
           {projectName && (
             <span className="inline-flex items-center gap-1 rounded bg-orange-50 dark:bg-orange-400/10 px-2 py-0.5 text-xs font-medium text-orange-800 dark:text-orange-200">
               <TbFolder size={12} /> {projectName}
@@ -360,6 +393,57 @@ export function TaskDetailDrawer({
           </span>
         </div>
 
+        {/* Above the description on purpose: a long description used to push
+            the subitems off-screen, so they looked like they didn't exist. */}
+        <div>
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            Subitems{children.length > 0 && <span className="ml-1 font-semibold normal-case tracking-normal">· {children.filter((c) => c.status === "Done").length}/{children.length} done</span>}
+          </p>
+          <div className="space-y-1">
+            {children.map((c) => (
+              <div key={c.id} className="flex items-center gap-2 rounded-lg bg-muted/40 py-1 pl-2.5 pr-1 text-[13px] hover:bg-muted">
+                <button
+                  type="button"
+                  onClick={() => onOpenTask?.(c)}
+                  disabled={!onOpenTask}
+                  className="min-w-0 flex-1 truncate py-0.5 text-left"
+                  title={c.title}
+                >
+                  <span className={cn("text-foreground/85", c.status === "Done" && "text-muted-foreground line-through")}>{c.title}</span>
+                </button>
+                {c.priority && c.priority !== "Medium" && (
+                  <span className={cn("shrink-0 text-[10px] font-medium", c.priority === "High" ? "text-red-600 dark:text-red-300" : "text-muted-foreground")}>{c.priority}</span>
+                )}
+                {/* Status straight from the list, without opening the subitem. */}
+                <NativeSelect
+                  value={c.statusId ?? ""}
+                  disabled={readOnly}
+                  aria-label={`Status of ${c.title}`}
+                  onChange={(e) => patchAndRefresh(c.id, { statusId: e.target.value || null })}
+                  className={cn(
+                    "h-6 w-auto shrink-0 gap-1 rounded-full border-0 px-2 py-0 text-[10px] font-medium shadow-none outline-none",
+                    STATUS_CHIP[c.workflowStatus?.color ?? "stone"] ?? STATUS_CHIP.stone
+                  )}
+                >
+                  <option value="">—</option>
+                  {statuses.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </NativeSelect>
+              </div>
+            ))}
+          </div>
+          {!readOnly && <form
+            onSubmit={(e) => { e.preventDefault(); if (childTitle.trim()) { onCreateChild(childTitle, task.id); setChildTitle(""); } }}
+            className="mt-1"
+          >
+            <input
+              value={childTitle}
+              onChange={(e) => setChildTitle(e.target.value)}
+              placeholder="+ Add a subitem"
+              className="w-full rounded-lg border border-border px-2.5 py-1.5 text-sm outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
+            />
+          </form>}
+        </div>
+
         <div>
           <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Description</p>
           <RichDescription
@@ -387,32 +471,6 @@ export function TaskDetailDrawer({
           </div>
         )}
 
-        <div>
-          <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Subitems</p>
-          <div className="space-y-1">
-            {children.map((c) => (
-              <div key={c.id} className="flex items-center gap-2 rounded-lg bg-muted/40 px-2.5 py-1.5 text-sm">
-                <span className="min-w-0 flex-1 truncate text-foreground/85">{c.title}</span>
-                {c.workflowStatus && (
-                  <span className={cn("rounded-full px-1.5 py-0.5 text-[10px]", STATUS_CHIP[c.workflowStatus.color] ?? STATUS_CHIP.stone)}>
-                    {c.workflowStatus.name}
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-          {!readOnly && <form
-            onSubmit={(e) => { e.preventDefault(); if (childTitle.trim()) { onCreateChild(childTitle, task.id); setChildTitle(""); } }}
-            className="mt-1"
-          >
-            <input
-              value={childTitle}
-              onChange={(e) => setChildTitle(e.target.value)}
-              placeholder="+ Add a subitem"
-              className="w-full rounded-lg border border-border px-2.5 py-1.5 text-sm outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
-            />
-          </form>}
-        </div>
 
         <div>
           <div className="mb-1 flex items-center justify-between">
