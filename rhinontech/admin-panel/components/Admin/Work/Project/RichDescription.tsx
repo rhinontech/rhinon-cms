@@ -43,7 +43,9 @@ export function RichDescription({
     content: html || "",
     editorProps: {
       attributes: {
-        class: "prose prose-sm max-w-none focus:outline-none min-h-[100px] px-3 py-2",
+        // `task-desc` (globals.css), not `prose`: the typography plugin isn't
+        // installed, so `prose` was a no-op and descriptions rendered unstyled.
+        class: "task-desc focus:outline-none min-h-[100px] px-3 py-2",
       },
     },
     onBlur: ({ editor: e }) => {

@@ -64,7 +64,7 @@ The full register of 38 issues is in section 4.
 | Business | Product and automation studio in Hyderabad. Six services: MVP development, AI agents, workflow automation, internal dashboards, websites/web apps, mobile apps |
 | Age in search | First backlink seen 6 Aug 2026; first blog post 17 Jul 2026 |
 | Pages | 46 URLs in the sitemap: 11 core pages, 6 service pages, 26 blog posts, 3 case studies. All return 200 |
-| Publishing cadence | 10 posts in Jul–Aug, 0 in Sep, 16 between 20 Oct and 16 Nov (9 of them between 11 and 16 Nov) |
+| Publishing cadence | 10 posts in Jul–Aug, 0 in Sep, 16 between 20 Oct and 16 Nov (10 of them between 11 and 16 Nov) |
 | Organic rankings | 0 keywords in the top 100 (DataForSEO, Google India and US) |
 | Brand search | Site not in the top 10 for "rhinon labs" or "rhinonlabs" |
 | Backlinks | 33 links from 31 domains; backlink spam score 63/100; 0 editorial |
@@ -447,7 +447,7 @@ The homepage leads with terms that almost nobody searches. The largest commercia
 
 **Severity:** High · **Effort:** 2–3 days · **Owner:** Content
 
-**Evidence:** 15 of 26 posts contain exactly 1 internal link in the article body (all 10 July–August posts among them); the rest contain 2–6. No post links to a case study. The homepage links to no individual post or case study, only to the hub pages. There is no hub page per topic.
+**Evidence:** 16 of 26 posts contain exactly 1 internal link in the article body (all 10 July–August posts among them; for the 4 blank posts in C-02, that link is the appended block); the rest contain 2–6. No post links to a case study. The homepage links to no individual post or case study, only to the hub pages. There is no hub page per topic.
 
 **Fix**
 - Create a hub per cluster (MVP, AI agents, automation, dashboards). These can be "Guides" sections on the service pages.
@@ -490,7 +490,7 @@ The homepage leads with terms that almost nobody searches. The largest commercia
 **Severity:** High · **Effort:** ongoing · **Owner:** Content
 
 **Evidence**
-- **Cadence:** 16 posts between 20 Oct and 16 Nov, 9 of them in 11–16 Nov, produced with the admin AI Writer.
+- **Cadence:** 16 posts between 20 Oct and 16 Nov, 10 of them in 11–16 Nov, produced with the admin AI Writer.
 - **Unsourced facts:** the AI-agent security post says "On October 15, 2026, the Indian Computer Emergency Response Team (CERT-In) published an advisory…" and describes specific findings, with **0 external links**. All 16 posts published since 20 Oct have 0 external citations, except the GEO post (12). The July–August posts have 1–3 each.
 - **Future-dated data:** titles and descriptions promise "2027 cost data (₹)" in November 2026.
 - **Little first-hand evidence:** no post has images or diagrams in the body (cover images only), and few use screenshots or real project numbers.
@@ -627,7 +627,7 @@ Verify the CERT-In advisory and link to it, or remove that section. Publish 1–
 **Severity:** High · **Effort:** 3–5 days · **Owner:** Founder + Content
 
 **Evidence**
-- 13 of 26 post URLs contain "india", all cost content is in ₹, and the About metadata targets "Indian startups and SMBs". No page targets US buyers.
+- 12 of 26 post URLs contain "india", all cost content is in ₹, and the About metadata targets "Indian startups and SMBs". No page targets US buyers.
 - US demand is meaningful:
 
 | Keyword (US) | Monthly searches | Notes |

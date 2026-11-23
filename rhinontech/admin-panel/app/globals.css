@@ -581,3 +581,38 @@
 .email-tiptap ul { list-style: disc; }
 .email-tiptap ol { list-style: decimal; }
 .email-tiptap li { margin: 0.2rem 0; }
+
+/* ---------- Work task description (TipTap) ----------
+   Sized to sit under the card title (15px) rather than compete with it. */
+.task-desc { font-size: 13px; line-height: 1.6; color: var(--foreground); overflow-wrap: anywhere; }
+.task-desc p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--muted-foreground);
+}
+.task-desc > * + * { margin-top: 0.5rem; }
+.task-desc p { margin: 0; }
+.task-desc h2 { font-size: 14px; font-weight: 600; margin-top: 0.9rem; }
+.task-desc h3, .task-desc h4 { font-size: 13px; font-weight: 600; margin-top: 0.75rem; }
+.task-desc strong { font-weight: 600; }
+.task-desc ul, .task-desc ol { padding-left: 1.2rem; }
+.task-desc ul { list-style: disc; }
+.task-desc ol { list-style: decimal; }
+.task-desc li { margin: 0.25rem 0; }
+.task-desc li > p { margin: 0; }
+.task-desc li::marker { color: var(--muted-foreground); }
+.task-desc code {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.85em;
+  background: var(--muted);
+  border-radius: 4px;
+  padding: 0.05rem 0.3rem;
+}
+.task-desc a { color: var(--editor-link, var(--primary)); text-decoration: underline; text-underline-offset: 2px; }
+.task-desc blockquote { border-left: 2px solid var(--border); padding-left: 0.75rem; color: var(--muted-foreground); }
+.task-desc ul[data-type="taskList"] { list-style: none; padding-left: 0.1rem; }
+.task-desc ul[data-type="taskList"] li { display: flex; align-items: flex-start; gap: 0.5rem; }
+.task-desc ul[data-type="taskList"] li > label { margin-top: 0.2rem; }
+.task-desc ul[data-type="taskList"] li[data-checked="true"] > div { color: var(--muted-foreground); text-decoration: line-through; }
