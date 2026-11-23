@@ -26,6 +26,8 @@ import { useProjectWorkspace } from "./useProjectWorkspace";
 import type { ProjectTask } from "./types";
 import { promptDialog } from "@/components/ui/dialogs";
 import { rememberProject } from "./lastProject";
+import { toast } from "sonner";
+import { useOptionalPermissions } from "@/context/PermissionsContext";
 
 type Tab = "table" | "board" | "gantt" | "files" | "analytics" | "calendar" | "github" | "requests";
 
@@ -97,6 +99,24 @@ export function ProjectWorkspace({
   const [openTask, setOpenTask] = useState<ProjectTask | null>(null);
   const [openDay, setOpenDay] = useState<Date | null>(null);
   const ws = useProjectWorkspace(projectId, isPublic ? "public" : "internal");
+
+  // Mirrors the backend rule: assignee, creator or work:write. Only the internal
+  // shell has a signed-in user to compare against; the backend still enforces
+  // it for collaborators.
+  const perms = useOptionalPermissions();
+  const canEditTask = (t: ProjectTask | undefined) =>
+    mode !== "internal" || !t || !perms?.ready ||
+    perms.has("work:write") ||
+    (!!perms.userId && (t.assigneeId === perms.userId || t.createdById === perms.userId));
+  const findTask = (id: string) => ws.tasks.find((t) => t.id === id);
+  const denied = () => toast.error("Only the assignee, the creator or a manager can change this card");
+  const patchTask = (id: string, patch: Parameters<typeof ws.patchTask>[1]) =>
+    canEditTask(findTask(id)) ? ws.patchTask(id, patch) : denied();
+  const deleteTask = (id: string) => (canEditTask(findTask(id)) ? ws.deleteTask(id) : denied());
+  const addDependency = (successorId: string, predecessorId: string) =>
+    canEditTask(findTask(successorId)) ? ws.addDependency(successorId, predecessorId) : denied();
+  const removeDependency = (taskId: string, depId: string) =>
+    canEditTask(findTask(taskId)) ? ws.removeDependency(taskId, depId) : denied();
   const loadedName = ws.project?.name;
   // A notification links here with ?task=<id>: open that task once tasks load.
   const hasTasks = ws.tasks.length > 0;
@@ -256,9 +276,9 @@ export function ProjectWorkspace({
             readOnlyColumns={isCollab}
             readOnly={isPublic}
             onToggleCollapsed={ws.toggleCollapsed}
-            onPatch={ws.patchTask}
+            onPatch={patchTask}
             onCreate={ws.createTask}
-            onDelete={ws.deleteTask}
+            onDelete={deleteTask}
             onAddField={ws.addField}
             onRemoveField={ws.removeField}
             onOpenTask={setOpenTask}
@@ -270,7 +290,7 @@ export function ProjectWorkspace({
             rows={ws.rows}
             statuses={ws.statuses}
             people={ws.people}
-            onPatch={ws.patchTask}
+            onPatch={patchTask}
             onCreateInStatus={ws.createInStatus}
             onOpenTask={setOpenTask}
             readOnly={isPublic}
@@ -284,10 +304,10 @@ export function ProjectWorkspace({
             statuses={ws.statuses}
             collapsed={ws.collapsed}
             onToggleCollapsed={ws.toggleCollapsed}
-            onPatch={ws.patchTask}
+            onPatch={patchTask}
             onOpenTask={setOpenTask}
-            onAddDependency={ws.addDependency}
-            onRemoveDependency={ws.removeDependency}
+            onAddDependency={addDependency}
+            onRemoveDependency={removeDependency}
             readOnly={isPublic}
           />
         )}
@@ -337,11 +357,12 @@ export function ProjectWorkspace({
           people={ws.people}
           projectName={p.name}
           canShareWithGuests={!isCollab}
+          readOnly={!canEditTask(live)}
           onClose={() => setOpenTask(null)}
-          onPatch={ws.patchTask}
-          onDelete={ws.deleteTask}
+          onPatch={patchTask}
+          onDelete={deleteTask}
           onCreateChild={(title, parentId) => ws.createTask(title, parentId)}
-          onRemoveDependency={ws.removeDependency}
+          onRemoveDependency={removeDependency}
           onChanged={ws.refetch}
         />
       )}

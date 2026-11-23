@@ -53,12 +53,14 @@ function hhmm(minutes: number) {
 }
 
 export function TaskDetailDrawer({
-  task, rows, statuses, people, projectName, canShareWithGuests = true, onClose, onPatch, onDelete, onCreateChild, onRemoveDependency, onChanged,
+  task, rows, statuses, people, projectName, canShareWithGuests = true, readOnly = false, onClose, onPatch, onDelete, onCreateChild, onRemoveDependency, onChanged,
 }: {
   task: ProjectTask;
   projectName?: string;
   /** False for collaborators — they must not control their own visibility. */
   canShareWithGuests?: boolean;
+  /** View-only for anyone who is not the assignee, the creator or a manager. */
+  readOnly?: boolean;
   rows: TaskRow[];
   statuses: WorkflowStatus[];
   people: PersonOption[];
@@ -241,14 +243,19 @@ export function TaskDetailDrawer({
     >
       <div className="flex h-14 shrink-0 items-center gap-2 border-b glass-header px-4">
         <span className="truncate text-sm font-semibold text-foreground">Task</span>
-        <button
+        {readOnly && (
+          <span className="rounded bg-muted px-2 py-0.5 text-[11px] text-muted-foreground" title="Only the assignee, the creator or a manager can change this card">
+            View only
+          </span>
+        )}
+        {!readOnly && <button
           onClick={async () => { if ((await confirmDialog(`Delete "${task.title}"?`))) { onDelete(task.id); onClose(); } }}
           className="ml-auto rounded-lg p-2 text-muted-foreground hover:bg-red-50 dark:hover:bg-red-400/10 hover:text-red-600 dark:hover:text-red-300"
           title="Delete task"
         >
           <TbTrash size={16} />
-        </button>
-        <button onClick={onClose} className="rounded-lg p-2 text-muted-foreground hover:bg-muted">
+        </button>}
+        <button onClick={onClose} className={cn(readOnly && "ml-auto", "rounded-lg p-2 text-muted-foreground hover:bg-muted")}>
           <TbX size={17} />
         </button>
       </div>
@@ -257,6 +264,7 @@ export function TaskDetailDrawer({
         <input
           defaultValue={task.title}
           key={task.id}
+          readOnly={readOnly}
           onBlur={(e) => e.target.value.trim() && e.target.value !== task.title && onPatch(task.id, { title: e.target.value.trim() })}
           className="w-full rounded border border-transparent px-1 py-0.5 text-lg font-semibold text-foreground outline-none hover:border-border focus:border-blue-500"
         />
@@ -285,6 +293,7 @@ export function TaskDetailDrawer({
             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Status</span>
             <NativeSelect
               value={task.statusId ?? ""}
+              disabled={readOnly}
               onChange={(e) => patchAndRefresh(task.id, { statusId: e.target.value || null })}
               className={cn(
                 "mt-1 w-full rounded-lg border-0 px-2 py-1.5 text-xs font-medium outline-none",
@@ -299,6 +308,7 @@ export function TaskDetailDrawer({
             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Assignee</span>
             <NativeSelect
               value={task.assigneeId ?? ""}
+              disabled={readOnly}
               onChange={(e) => patchAndRefresh(task.id, { assigneeId: e.target.value || null })}
               className="mt-1 w-full rounded-lg border border-border px-2 py-1.5 text-sm outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
             >
@@ -311,6 +321,7 @@ export function TaskDetailDrawer({
             <div className="mt-1">
               <DatePicker
                 ariaLabel="Start date"
+                disabled={readOnly}
                 value={task.startDate}
                 onChange={(v) => patchAndRefresh(task.id, { startDate: v })}
               />
@@ -321,6 +332,7 @@ export function TaskDetailDrawer({
             <div className="mt-1">
               <DatePicker
                 ariaLabel="Due date"
+                disabled={readOnly}
                 value={task.dueDate}
                 onChange={(v) => patchAndRefresh(task.id, { dueDate: v })}
               />
@@ -338,13 +350,13 @@ export function TaskDetailDrawer({
             <span className="font-mono">
               {runningSince ? `${Math.floor(elapsedSec / 60)}:${String(elapsedSec % 60).padStart(2, "0")}` : hhmm(time.totalMinutes)}
             </span>
-            <button
+            {!readOnly && <button
               onClick={() => (runningSince ? stopTimer() : setRunningSince(Date.now()))}
               title={runningSince ? "Stop and log" : "Start timer"}
               className={cn("rounded p-1", runningSince ? "bg-red-100 dark:bg-red-400/15 text-red-700 dark:text-red-300" : "hover:bg-muted")}
             >
               {runningSince ? <TbPlayerStop size={13} /> : <TbPlayerPlay size={13} />}
-            </button>
+            </button>}
           </span>
         </div>
 
@@ -353,7 +365,7 @@ export function TaskDetailDrawer({
           <RichDescription
             key={task.id}
             html={task.descriptionHtml}
-            editable
+            editable={!readOnly}
             onSave={(descriptionHtml) => patchAndRefresh(task.id, { descriptionHtml })}
           />
         </div>
@@ -366,9 +378,9 @@ export function TaskDetailDrawer({
                 <div key={d.id} className="flex items-center gap-2 rounded-lg bg-muted/40 px-2.5 py-1.5 text-sm">
                   <span className="min-w-0 flex-1 truncate text-foreground/85">{titleOf(d.predecessorId)}</span>
                   <span className="text-[10px] text-muted-foreground">{d.type}</span>
-                  <button onClick={() => onRemoveDependency(task.id, d.id)} className="rounded p-0.5 text-muted-foreground hover:text-red-600 dark:hover:text-red-300" title="Unlink">
+                  {!readOnly && <button onClick={() => onRemoveDependency(task.id, d.id)} className="rounded p-0.5 text-muted-foreground hover:text-red-600 dark:hover:text-red-300" title="Unlink">
                     <TbUnlink size={13} />
-                  </button>
+                  </button>}
                 </div>
               ))}
             </div>
@@ -389,7 +401,7 @@ export function TaskDetailDrawer({
               </div>
             ))}
           </div>
-          <form
+          {!readOnly && <form
             onSubmit={(e) => { e.preventDefault(); if (childTitle.trim()) { onCreateChild(childTitle, task.id); setChildTitle(""); } }}
             className="mt-1"
           >
@@ -399,19 +411,19 @@ export function TaskDetailDrawer({
               placeholder="+ Add a subitem"
               className="w-full rounded-lg border border-border px-2.5 py-1.5 text-sm outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
             />
-          </form>
+          </form>}
         </div>
 
         <div>
           <div className="mb-1 flex items-center justify-between">
             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Files</p>
-            <button
+            {!readOnly && <button
               onClick={() => fileRef.current?.click()}
               disabled={uploading}
               className="flex items-center gap-1 rounded px-1.5 py-0.5 text-xs text-foreground/70 hover:bg-muted disabled:opacity-50"
             >
               {uploading ? <TbLoader size={12} className="animate-spin" /> : <TbUpload size={12} />} Upload
-            </button>
+            </button>}
             <input ref={fileRef} type="file" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); }} />
           </div>
           <div className="space-y-1">
@@ -430,7 +442,7 @@ export function TaskDetailDrawer({
                     <span className="min-w-0 flex-1 truncate text-foreground/85">{a.name}</span>
                   </a>
                   {/* Cover is optional: only image files can be one, and only one at a time. */}
-                  {isImage && (
+                  {isImage && !readOnly && (
                     <button
                       onClick={() => onPatch(task.id, { coverAttachmentId: isCover ? null : a.id })}
                       className={cn(

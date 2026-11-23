@@ -221,6 +221,11 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
   );
 }
 
+/** For components that also render outside the admin shell (public portal). */
+export function useOptionalPermissions() {
+  return useContext(PermissionsContext);
+}
+
 export function usePermissions() {
   const context = useContext(PermissionsContext);
   if (!context) {
