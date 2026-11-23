@@ -3,8 +3,8 @@ import { DEMO } from "@/lib/demo";
 import { loadActivities } from "@/lib/live";
 import { brandOf } from "@/lib/mock-data";
 import { useRev } from "@/lib/store";
-import { View, Text, Span, Pressable, TextInput } from "@/components/rn";
-import { Mail, MessageCircle, NotebookPen, Phone, Plus } from "@/components/icons";
+import { View, Text, Span, Pressable, TextInput, Link } from "@/components/rn";
+import { Mail, MessageCircle, NotebookPen, Phone, Plus, Search } from "@/components/icons";
 import { useEffect, useState } from "react";
 import {
   Avatar,
@@ -57,6 +57,7 @@ export default function CrmPage() {
   const leads = useApp((s) => s.leads);
   const accounts = useApp((s) => s.accounts);
   const allowed = usePerm("crm");
+  const isPlatformOrg = useApp((s) => s.isPlatformOrg);
   const [tab, setTab] = useState<Tab>("pipeline");
   const [open, setOpen] = useState<Target>(null);
   useEffect(() => {
@@ -195,6 +196,20 @@ export default function CrmPage() {
 
       {tab === "leads" ? (
         <View className="mt-4">
+          {isPlatformOrg && canWrite && (
+            <Link
+              to="/crm-finder"
+              className="press mb-3 flex items-center gap-3 rounded-2xl border border-dashed border-rose/40 bg-rose/10 p-3.5"
+            >
+              <View className="grid size-10 shrink-0 place-items-center rounded-full bg-rose text-rose-foreground">
+                <Search size={17} />
+              </View>
+              <View className="min-w-0 flex-1">
+                <Text className="text-[14.5px] font-semibold">Find new leads</Text>
+                <Text className="truncate text-[12.5px] text-ink/55">A company name in, the people who run it out.</Text>
+              </View>
+            </Link>
+          )}
           {leads.length === 0 ? (
             <Empty tone="rose" title="No leads yet" body={canWrite ? "Tap + to add your first lead." : "Leads will appear here once added."} />
           ) : null}
@@ -483,6 +498,7 @@ function LeadDetail({ lead, onLog }: { lead: CrmLead; onLog: () => void }) {
           ["Email", lead.email],
           ["Phone", lead.phone],
           ["Owner", nameOf(lead.owner)],
+          ...(lead.createdBy ? [["Created by", nameOf(lead.createdBy)]] : []),
         ].map(([k, v]) => (
           <View key={k} className="flex items-center justify-between gap-4 py-3">
             <View className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-ink/50">

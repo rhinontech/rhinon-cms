@@ -650,6 +650,7 @@ export function LeadsPage() {
                       <OutreachStatus status={selected.status} />
                       <span>· {selected.source}</span>
                       <span>· added {relativeTime(selected.addedAt)}</span>
+                      {selected.createdBy && <span>· by {selected.createdBy.fullName}</span>}
                     </div>
                   </div>
 

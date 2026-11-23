@@ -95,6 +95,9 @@ async function saveLeads(target: LeadFinderTarget, result: FinderResult, added: 
       emailStatus: a.emailStatus,
       source: "Lead Finder",
       status: "New",
+      // Attributed to whoever queued the company — there's no human in the loop
+      // for the daily run itself.
+      createdById: target.createdById,
       raw: { leadFinder: { sources: a.sources, targetId: target.id } },
     })) as any[]
   );

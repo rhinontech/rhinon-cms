@@ -7,7 +7,7 @@ import type { Tone } from "./tone";
 
 type ApiStage = { id: string; name: string; type: "Open" | "Won" | "Lost"; deals?: ApiDeal[] };
 type ApiDeal = { id: string; title: string; value: string | number; stageId: string | null; ownerId: string | null; expectedCloseDate: string | null; notes: string | null; account?: { name: string } | null; primaryLead?: { name: string } | null };
-type ApiLead = { id: string; name: string; company: string | null; title: string | null; email: string | null; phone: string | null; status: string; lifecycleStage: string; source: string | null; lastActivityAt: string | null; ownerId: string | null };
+type ApiLead = { id: string; name: string; company: string | null; title: string | null; email: string | null; phone: string | null; status: string; lifecycleStage: string; source: string | null; lastActivityAt: string | null; ownerId: string | null; createdById: string | null };
 type ApiAccount = { id: string; name: string; industry: string | null; location: string | null; employeeCount: number | null; description: string | null; createdAt: string };
 
 const STAGE_TONES: Tone[] = ["sky", "sun", "cobalt", "violet", "rose"];
@@ -46,6 +46,7 @@ async function syncCrm() {
     status: (LEAD_STATUS as readonly string[]).includes(l.status) ? (l.status as CrmLead["status"]) : "New",
     lifecycle: (LIFECYCLE.includes(l.lifecycleStage as Lifecycle) ? l.lifecycleStage : "New") as Lifecycle,
     source: l.source ?? "", last: l.lastActivityAt ? `Active ${ago(l.lastActivityAt)} ago` : "No activity yet", owner: owner(l.ownerId),
+    createdBy: l.createdById ? owner(l.createdById) : undefined,
   }));
 
   const accts: Account[] = accounts.rows.map((a) => ({

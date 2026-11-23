@@ -27,6 +27,7 @@ const OWNER_ATTRS = ["id", "fullName", "companyEmail"];
 const LIST_INCLUDES = [
   { model: Campaign, as: "campaign", attributes: ["name"] },
   { model: User, as: "owner", attributes: OWNER_ATTRS },
+  { model: User, as: "createdBy", attributes: OWNER_ATTRS },
   { model: Account, as: "account", attributes: ["id", "name", "domain"] },
 ];
 
@@ -209,6 +210,7 @@ router.post("/", writeAccess, async (req: AuthRequest, res: Response) => {
       instagramUrl: normalizeInstagram(req.body?.instagramUrl),
       email,
       ownerId: req.body?.ownerId ?? req.user!.userId,
+      createdById: req.user!.userId,
     });
 
     // Group the new contact under its company automatically.
@@ -421,6 +423,7 @@ router.post("/import", writeAccess, async (req: AuthRequest, res: Response) => {
         // A list import is labelled by its list, so the CRM can tell campaigns apart.
         source: str(raw.source) ?? (targetGroup ? `List · ${targetGroup.name}` : "CSV Import"),
         status: "New",
+        createdById: req.user!.userId,
       });
     });
 
@@ -817,6 +820,7 @@ router.get("/:id", readAccess, async (req: AuthRequest, res: Response) => {
       { model: Campaign, as: "campaign" },
       { model: CampaignActivity, as: "activities", order: [["timestamp", "DESC"]] },
       { model: User, as: "owner", attributes: OWNER_ATTRS },
+      { model: User, as: "createdBy", attributes: OWNER_ATTRS },
       { model: Account, as: "account" },
       { model: Deal, as: "deals", include: [{ model: PipelineStage, as: "stage" }] },
       { model: Task, as: "tasks" },

@@ -122,6 +122,8 @@ export type AppState = {
   prefs: Record<string, boolean>;
   toasts: ToastItem[];
   perms: Perms;
+  /** Rhinon Tech itself, not a customer tenant — gates platform-only tools like Lead Finder. */
+  isPlatformOrg: boolean;
   pushPermission: "unasked" | "granted" | "denied";
   queued: number;
   payLocked: boolean;
@@ -175,6 +177,8 @@ const INITIAL: AppState = {
   },
   toasts: [],
   perms: defaultPerms(),
+  // True in the design prototype so the demo shows every tool; a real session corrects it on sync.
+  isPlatformOrg: true,
   pushPermission: "unasked",
   queued: 0,
   payLocked: false,
