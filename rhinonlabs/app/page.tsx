@@ -28,6 +28,9 @@ export const metadata: Metadata = {
 const page = () => {
   return (
     <>
+      {/* Preload matching hero background image so mobile LCP is discovered immediately */}
+      <link rel="preload" as="image" type="image/avif" href="/images/background/background-960.avif" media="(max-width: 767px)" fetchPriority="high" />
+      <link rel="preload" as="image" type="image/avif" href="/images/background/background-1920.avif" media="(min-width: 768px)" fetchPriority="high" />
       <ServiceSchema />
       <FaqSchema />
       <HomePage />

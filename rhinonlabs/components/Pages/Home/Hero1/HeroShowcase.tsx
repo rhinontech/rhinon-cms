@@ -36,8 +36,16 @@ export default function HeroShowcase() {
 
   useEffect(() => {
     if (reduce || paused) return;
-    const t = setInterval(() => setActive((a) => (a + 1) % PROJECTS.length), AUTO_MS);
-    return () => clearInterval(t);
+    // Initial delay so hero carousel doesn't trigger layout shifts or JS during first 3 seconds
+    let t: NodeJS.Timeout;
+    const initialDelay = setTimeout(() => {
+      t = setInterval(() => setActive((a) => (a + 1) % PROJECTS.length), AUTO_MS);
+    }, 2000);
+
+    return () => {
+      clearTimeout(initialDelay);
+      if (t) clearInterval(t);
+    };
   }, [reduce, paused]);
 
   const n = PROJECTS.length;
@@ -75,7 +83,9 @@ export default function HeroShowcase() {
                 type="button"
                 onClick={() => setActive(i)}
                 aria-label={`Show ${proj.name}`}
-                className="absolute top-0 left-1/2 w-[62%] text-left focus:outline-none md:w-[58%]"
+                aria-hidden={!isFront}
+                tabIndex={isFront ? 0 : -1}
+                className={`absolute top-0 left-1/2 w-[62%] text-left focus:outline-none md:w-[58%] ${!isFront ? 'pointer-events-none' : ''}`}
                 style={{
                   zIndex: 10 - abs,
                   transformStyle: "preserve-3d",
