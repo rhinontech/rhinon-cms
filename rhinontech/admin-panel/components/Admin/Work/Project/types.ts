@@ -52,6 +52,7 @@ export interface ProjectTask {
   parentTaskId: string | null;
   position: number;
   assigneeId: string | null;
+  createdById?: string | null;
   guestVisible?: boolean;
   customFields: Record<string, unknown>;
   assignee?: { id: string; fullName: string } | null;

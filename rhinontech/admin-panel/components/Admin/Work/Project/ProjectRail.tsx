@@ -5,7 +5,7 @@ import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import {
-  TbChevronLeft, TbChevronRight, TbFolder, TbLock, TbPlus, TbSearch, TbUsers,
+  TbArchive, TbChevronDown, TbChevronLeft, TbChevronRight, TbFolder, TbLock, TbPlus, TbSearch, TbUsers,
 } from "react-icons/tb";
 import type { ProjectSummary } from "./types";
 
@@ -37,6 +37,7 @@ export function ProjectRail({
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [search, setSearch] = useState("");
   const [collapsed, setCollapsed] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
 
   useEffect(() => {
     apiFetch<ProjectSummary[]>("/work/projects")
@@ -44,9 +45,13 @@ export function ProjectRail({
       .catch(() => setProjects([]));
   }, []);
 
-  const visible = projects.filter((p) =>
+  const matches = projects.filter((p) =>
     p.name.toLowerCase().includes(search.trim().toLowerCase())
   );
+  // Archived projects stay reachable but out of the way, in a folded section.
+  const visible = matches.filter((p) => p.status !== "Archived");
+  const archived = matches.filter((p) => p.status === "Archived");
+  const archivedOpen = showArchived || archived.some((p) => p.id === activeId);
 
   if (collapsed) {
     return (
@@ -113,7 +118,30 @@ export function ProjectRail({
       </div>
 
       <nav className="min-h-0 flex-1 space-y-0.5 overflow-auto px-2 pb-3">
-        {visible.map((p) => {
+        {visible.map((p) => renderRow(p))}
+        {!visible.length && !archived.length && (
+          <p className="px-2 py-6 text-center text-xs text-muted-foreground">
+            {projects.length ? "No match." : "No projects yet."}
+          </p>
+        )}
+        {archived.length > 0 && (
+          <div className="pt-2">
+            <button
+              onClick={() => setShowArchived((v) => !v)}
+              className="flex w-full items-center gap-1.5 rounded-lg px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:bg-card"
+            >
+              <TbArchive size={12} />
+              <span className="flex-1 text-left">{`Archived (${archived.length})`}</span>
+              <TbChevronDown size={12} className={cn("transition", !archivedOpen && "-rotate-90")} />
+            </button>
+            {archivedOpen && <div className="mt-0.5 space-y-0.5 opacity-70">{archived.map((p) => renderRow(p))}</div>}
+          </div>
+        )}
+      </nav>
+    </aside>
+  );
+
+  function renderRow(p: ProjectSummary) {
           const active = p.id === activeId;
           return (
             <Link
@@ -130,13 +158,5 @@ export function ProjectRail({
               {p.visibility === "private" && <TbLock size={12} className={active ? "text-primary-foreground/70" : "text-amber-500 dark:text-amber-400"} />}
             </Link>
           );
-        })}
-        {!visible.length && (
-          <p className="px-2 py-6 text-center text-xs text-muted-foreground">
-            {projects.length ? "No match." : "No projects yet."}
-          </p>
-        )}
-      </nav>
-    </aside>
-  );
+  }
 }

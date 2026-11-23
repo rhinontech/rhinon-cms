@@ -96,6 +96,20 @@ async function canEdit(task: Task, req: AuthRequest): Promise<boolean> {
 }
 
 /**
+ * Same rule as PUT /tasks/:id (assignee, creator or work:write) for the card's
+ * sub-resources — checklists, tags, links, files and time were left open.
+ */
+async function requireCardEdit(req: AuthRequest, res: Response): Promise<boolean> {
+  const task = await Task.findByPk(req.params.id);
+  if (!task) { res.status(404).json({ message: "Task not found" }); return false; }
+  if (!(await canEdit(task, req))) {
+    res.status(403).json({ message: "Only the assignee, the creator or a manager can change this card" });
+    return false;
+  }
+  return true;
+}
+
+/**
  * Every /tasks/:id/* route used to trust the id in the URL — the subtask,
  * comment and tag sub-routes never checked anything at all. Once a task can be
  * private that is an open door straight past the list filter, so the whole
@@ -491,6 +505,7 @@ router.get("/:id/subtasks", async (req: AuthRequest, res: Response) => {
 // POST /tasks/:id/subtasks
 router.post("/:id/subtasks", async (req: AuthRequest, res: Response) => {
   try {
+    if (!(await requireCardEdit(req, res))) return;
     const { title } = req.body;
     if (!title?.trim()) { res.status(400).json({ message: "title is required" }); return; }
     const count = await Subtask.count({ where: { taskId: req.params.id } });
@@ -502,6 +517,7 @@ router.post("/:id/subtasks", async (req: AuthRequest, res: Response) => {
 // PUT /tasks/:id/subtasks/:subId
 router.put("/:id/subtasks/:subId", async (req: AuthRequest, res: Response) => {
   try {
+    if (!(await requireCardEdit(req, res))) return;
     const subtask = await Subtask.findOne({ where: { id: req.params.subId, taskId: req.params.id } });
     if (!subtask) { res.status(404).json({ message: "Subtask not found" }); return; }
     const { title, done, order } = req.body;
@@ -517,6 +533,7 @@ router.put("/:id/subtasks/:subId", async (req: AuthRequest, res: Response) => {
 // DELETE /tasks/:id/subtasks/:subId
 router.delete("/:id/subtasks/:subId", async (req: AuthRequest, res: Response) => {
   try {
+    if (!(await requireCardEdit(req, res))) return;
     const subtask = await Subtask.findOne({ where: { id: req.params.subId, taskId: req.params.id } });
     if (!subtask) { res.status(404).json({ message: "Subtask not found" }); return; }
     await subtask.destroy();
@@ -574,6 +591,7 @@ router.delete("/:id/comments/:commentId", async (req: AuthRequest, res: Response
 // POST /tasks/:id/tags
 router.post("/:id/tags", async (req: AuthRequest, res: Response) => {
   try {
+    if (!(await requireCardEdit(req, res))) return;
     const { label, color } = req.body;
     if (!label?.trim()) { res.status(400).json({ message: "label is required" }); return; }
     const tag = await TaskTag.create({ taskId: req.params.id, label: label.trim(), color: color || "blue" });
@@ -584,6 +602,7 @@ router.post("/:id/tags", async (req: AuthRequest, res: Response) => {
 // DELETE /tasks/:id/tags/:tagId
 router.delete("/:id/tags/:tagId", async (req: AuthRequest, res: Response) => {
   try {
+    if (!(await requireCardEdit(req, res))) return;
     const tag = await TaskTag.findOne({ where: { id: req.params.tagId, taskId: req.params.id } });
     if (!tag) { res.status(404).json({ message: "Tag not found" }); return; }
     await tag.destroy();
@@ -649,6 +668,7 @@ router.get("/:id/dependencies", async (req: AuthRequest, res: Response) => {
 
 router.post("/:id/dependencies", async (req: AuthRequest, res: Response) => {
   try {
+    if (!(await requireCardEdit(req, res))) return;
     const { predecessorId, type, lagDays } = req.body;
     if (!predecessorId) { res.status(400).json({ message: "predecessorId is required" }); return; }
     if (!(await canAccessTaskId(predecessorId, req))) {
@@ -669,6 +689,7 @@ router.post("/:id/dependencies", async (req: AuthRequest, res: Response) => {
 
 router.delete("/:id/dependencies/:depId", async (req: AuthRequest, res: Response) => {
   try {
+    if (!(await requireCardEdit(req, res))) return;
     const dep = await TaskDependency.findOne({ where: { id: req.params.depId } });
     if (!dep) { res.status(404).json({ message: "Dependency not found" }); return; }
     await dep.destroy();
@@ -698,6 +719,7 @@ router.get("/:id/attachments", async (req: AuthRequest, res: Response) => {
 
 router.post("/:id/attachments", keepTenantContext(upload.single("file")), async (req: AuthRequest, res: Response) => {
   try {
+    if (!(await requireCardEdit(req, res))) return;
     if (!req.file) { res.status(400).json({ message: "No file provided" }); return; }
     // uploadBuffer generates its own collision-free key and returns it.
     const key = await uploadBuffer(req.file.buffer, req.file.originalname, "tasks", req.file.mimetype);
@@ -719,6 +741,7 @@ router.post("/:id/attachments", keepTenantContext(upload.single("file")), async 
 
 router.delete("/:id/attachments/:attachmentId", async (req: AuthRequest, res: Response) => {
   try {
+    if (!(await requireCardEdit(req, res))) return;
     const row = await TaskAttachment.findOne({ where: { id: req.params.attachmentId, taskId: req.params.id } });
     if (!row) { res.status(404).json({ message: "Attachment not found" }); return; }
     await deleteObject(row.key).catch(() => {});
@@ -747,6 +770,7 @@ router.get("/:id/time", async (req: AuthRequest, res: Response) => {
 
 router.post("/:id/time", async (req: AuthRequest, res: Response) => {
   try {
+    if (!(await requireCardEdit(req, res))) return;
     const { minutes, note, spentOn } = req.body;
     const mins = Number(minutes);
     if (!Number.isFinite(mins) || mins <= 0) {
