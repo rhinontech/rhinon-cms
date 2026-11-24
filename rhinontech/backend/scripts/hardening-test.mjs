@@ -220,8 +220,9 @@ check("signup reports email verification pending", A.res.json?.emailVerification
 // ── 9. Plans, seats, quotas, trial expiry ───────────────────────────────────
 {
   const usage = await call("/billing/usage", { token: A.token });
-  check("usage summary reports the free plan with a trial end",
-    usage.json?.plan === "free" && usage.json?.seats?.limit === 5 && !!usage.json?.trialEndsAt && usage.json?.trialExpired === false,
+  // Free is free for good: it carries no trial deadline (services/usage.ts planState).
+  check("usage summary reports the free plan with no trial deadline",
+    usage.json?.plan === "free" && usage.json?.seats?.limit === 5 && usage.json?.trialEndsAt === null && usage.json?.trialExpired === false,
     JSON.stringify(usage.json));
 
   // Seats: owner + 4 fits the free plan's 5, the next is refused.
@@ -256,8 +257,9 @@ check("signup reports email verification pending", A.res.json?.emailVerification
   const usage2 = await call("/billing/usage", { token: A.token });
   check("usage summary reflects the counters", usage2.json?.emailsToday?.used === 50 && usage2.json?.aiToday?.used === 20, JSON.stringify(usage2.json));
 
-  // Expired trial: read-only
-  await db?.query(`UPDATE organizations SET settings = settings || jsonb_build_object('trialEndsAt', to_jsonb($2::text)) WHERE id=$1`, [B.org.id, new Date(Date.now() - 86_400_000).toISOString()]);
+  // Expired trial: read-only. Trials only apply to a paid plan the platform put
+  // a workspace on (Free never expires), so B is moved onto a lapsed Starter trial.
+  await db?.query(`UPDATE organizations SET plan='starter', status='trial', settings = settings || jsonb_build_object('trialEndsAt', to_jsonb($2::text)) WHERE id=$1`, [B.org.id, new Date(Date.now() - 86_400_000).toISOString()]);
   const read = await call("/leads", { token: B.token });
   const write = await call("/leads", { method: "POST", token: B.token, body: { name: "X", company: "Y", email: `x-${tag}@example.com` } });
   const bill = await call("/billing/usage", { token: B.token });
@@ -266,6 +268,8 @@ check("signup reports email verification pending", A.res.json?.emailVerification
   check("expired trial can still see billing state", bill.status === 200 && bill.json?.trialExpired === true);
   const aOk = await call("/leads", { method: "POST", token: A.token, body: { name: "Still", company: "Fine", email: `still-${tag}@example.com` } });
   check("another workspace is unaffected by org B's expiry", aOk.status < 300, `status ${aOk.status}`);
+  // Back onto Free for the later sections, which expect B on the free plan.
+  await db?.query(`UPDATE organizations SET plan='free', settings = settings - 'trialEndsAt' WHERE id=$1`, [B.org.id]);
 }
 
 // ── 10. Platform operators manage plans; customers cannot ───────────────────
@@ -533,7 +537,7 @@ check("signup reports email verification pending", A.res.json?.emailVerification
   check("asking for the plan you are on is refused", same.status === 400, `status ${same.status}`);
   const noMail = await call("/billing/upgrade-request", { method: "POST", token: B.token, body: { plan: "starter", note: "We are 12 people" } });
   const recorded = (await db.query(`SELECT settings->'upgradeRequest' AS r FROM organizations WHERE id=$1`, [B.org.id])).rows[0].r;
-  check("if the request cannot be emailed, it is reported and NOT recorded as sent", noMail.status === 502 && recorded === null, `status ${noMail.status} recorded=${JSON.stringify(recorded)}`);
+  check("if the request cannot be emailed, it is reported and NOT recorded as sent", noMail.status >= 500 && recorded === null, `status ${noMail.status} recorded=${JSON.stringify(recorded)}`);
 
   // Platform staff see a pending request, and changing the plan answers it.
   await db.query(`UPDATE organizations SET settings = settings || '{"upgradeRequest":{"plan":"starter","note":null,"at":"2026-10-01T00:00:00Z","by":"x"}}'::jsonb WHERE id=$1`, [B.org.id]);

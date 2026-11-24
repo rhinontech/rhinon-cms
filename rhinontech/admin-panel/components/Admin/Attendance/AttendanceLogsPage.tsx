@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import {
   TbCalendarStats,
   TbSearch,
-  TbFilter,
   TbClock,
   TbAlertCircle,
   TbPlus,
@@ -64,6 +63,23 @@ export function AttendanceLogsPage() {
     l.department.toLowerCase().includes(search.toLowerCase())
   );
 
+  // The rows on screen (search applied), as a CSV the browser downloads.
+  const exportCsv = () => {
+    const time = (iso: string | null) => (iso ? new Date(iso).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : "");
+    const cell = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
+    const rows = [
+      ["Name", "Department", "Date", "Status", "Clock in", "Clock out", "Worked (min)", "Overtime (min)", "Penalties"],
+      ...filteredLogs.map((l) => [l.userName, l.department, l.date, l.status, time(l.clockIn), time(l.clockOut), l.durationMinutes, l.overtimeMinutes, l.penalties.map((p) => `${p.reason} (${p.amount})`).join("; ")]),
+    ];
+    const blob = new Blob([rows.map((r) => r.map(cell).join(",")).join("\n")], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `attendance-logs-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="flex h-full min-h-0 overflow-hidden">
       <main className={cn("flex h-full min-h-0 w-full flex-col overflow-hidden shadow-sm border-r", isSubNavExpanded ? "rounded-r-xl max-sm:rounded-xl" : "rounded-xl")}>
@@ -73,7 +89,7 @@ export function AttendanceLogsPage() {
             <span className="text-base sm:text-lg font-semibold tracking-tight truncate">Attendance Logs</span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <button className="inline-flex items-center gap-1.5 sm:gap-2 rounded-lg border border-border px-2.5 sm:px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-foreground/70 hover:bg-muted transition-all">
+            <button onClick={exportCsv} disabled={filteredLogs.length === 0} className="inline-flex items-center gap-1.5 sm:gap-2 rounded-lg border disabled:opacity-50 border-border px-2.5 sm:px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-foreground/70 hover:bg-muted transition-all">
               <TbDownload size={15} /> <span className="hidden sm:inline">Export</span>
             </button>
             {!isPreviewExpanded && (
@@ -100,9 +116,6 @@ export function AttendanceLogsPage() {
                 className="w-full pl-9 pr-3 sm:pr-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-ring bg-muted/40"
               />
             </div>
-            <button className="p-2 sm:p-2.5 rounded-xl border border-border bg-muted/40 text-foreground/70 hover:bg-muted shrink-0">
-              <TbFilter size={17} />
-            </button>
           </div>
 
           <div className="overflow-x-auto rounded-xl border border-border shadow-xs">
@@ -237,11 +250,6 @@ export function AttendanceLogsPage() {
                 </div>
               </div>
 
-              <div className="pt-3 sm:pt-4 border-t">
-                <button className="w-full py-2.5 sm:py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-xs sm:text-sm hover:bg-primary/90 transition-colors shadow-lg active:scale-95">
-                  Regularize Record
-                </button>
-              </div>
             </div>
           </div>
         )}

@@ -5,8 +5,10 @@ company's day-to-day operations (people, attendance, leave, payroll, performance
 project work) **and** drives an **AI-powered outbound sales engine** (leads, campaigns,
 multi-channel outreach).
 
-This is **not** a public SaaS product. It is an internal tool used exclusively by Rhinon Tech
-staff, gated by role-based access control.
+It started as Rhinon Tech's internal tool and is now a **public, multi-tenant SaaS**:
+customers sign up at rhinontech.in (marketed on rhinontech.com), each in their own
+workspace, with Rhinon Tech as the platform workspace. Parts of this document still describe
+the single-company era; `AGENTS.md` and `docs/ADMIN_PANEL_LAUNCH_REVIEW.md` are current.
 
 This document describes the actual architecture as built (the `rhinontech/` workspace) and
 doubles as a **UI/UX blueprint** for the admin dashboard.

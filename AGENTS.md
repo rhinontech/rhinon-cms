@@ -8,9 +8,10 @@ people ops (HR, payroll, attendance, leave, performance), work delivery
 a website chatbot (RAG, live handoff, tickets, help center), inbox/email, events,
 content (blogs, pages), and analytics — all behind role-based access control.
 
-This is **not** a public SaaS product. It is multi-tenant by design, but
-currently used exclusively by Rhinon Tech and select tenants on the same
-infrastructure.
+It is a **public, multi-tenant SaaS**: rhinontech.com markets it and anyone can sign up
+at rhinontech.in. Rhinon Tech runs on it as the platform workspace; every other workspace is
+a customer. Treat every change as customer-facing — tenant isolation, plan limits, email
+reputation and legal promises all apply. See `docs/ADMIN_PANEL_LAUNCH_REVIEW.md`.
 
 ---
 

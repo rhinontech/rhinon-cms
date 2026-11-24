@@ -9,7 +9,14 @@ const nextConfig: NextConfig = {
   headers: async () => [
     {
       source: "/(.*)",
-      headers: [{ key: "Cache-Control", value: "no-store" }],
+      headers: [
+        { key: "Cache-Control", value: "no-store" },
+        // Nobody else may frame the admin (clickjacking); our own pages still can.
+        { key: "X-Frame-Options", value: "SAMEORIGIN" },
+        { key: "Content-Security-Policy", value: "frame-ancestors 'self'" },
+        { key: "X-Content-Type-Options", value: "nosniff" },
+        { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+      ],
     },
   ],
 };
