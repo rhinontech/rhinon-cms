@@ -3,6 +3,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { usePathname } from "next/navigation";
+import { moduleTone } from "@/components/Admin/Common/navConfig";
 import { cn } from "@/lib/utils";
 import { ChevronDown, ChevronRight, ExternalLink } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -40,8 +42,8 @@ export const SidebarItem = ({
   externalLink = false,
 }: SidebarItemProps) => {
   const [isOpen, setIsOpen] = useState(isExpanded);
-  // One accent for every module (D2): colour is reserved for status, not navigation.
-  const tone = { "--tone": "var(--primary)" } as React.CSSProperties;
+  // The module is the segment after the role: /admin/crm/... -> crm.
+  const tone = { "--tone": moduleTone(usePathname().split("/")[2] ?? "") } as React.CSSProperties;
 
   // Ensure collapsible items stay open if a child is active
   useEffect(() => {

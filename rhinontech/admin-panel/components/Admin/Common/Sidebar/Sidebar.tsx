@@ -8,7 +8,7 @@ import { TbFileText, TbHelpCircle, TbMail, TbPin, TbPinFilled, TbRocket, TbSearc
 import { cn } from "@/lib/utils";
 import {
   APPROVAL_PERMISSIONS, MODULES, NAV_SECTIONS, PLATFORM_ITEMS,
-  entryIsActive, entryRoute, isWithin, type NavEntry,
+  entryIsActive, entryRoute, isWithin, moduleTone, type NavEntry,
 } from "@/components/Admin/Common/navConfig";
 import { useDashboard } from "../../../Common/DashboardProvider/DashboardProvider";
 import { usePermissions } from "@/context/PermissionsContext";
@@ -37,12 +37,13 @@ interface NavLink {
 function ModulePages() {
   const items = useModuleNav((s) => s.items);
   const pathname = usePathname();
+  const tone = moduleTone(pathname.split("/")[2] ?? "");
   // Only when pinned open (or the phone drawer): hover-peeking shouldn't reflow the menu.
   const { sidebarExpanded, mobileNavOpen } = useDashboard();
   if (!items?.length || !(sidebarExpanded || mobileNavOpen)) return null;
   const rows = items.flatMap((i) => (i.isCollapsible && i.children?.length ? [i, ...i.children.map((c) => ({ ...c, nested: true }))] : [i]));
   return (
-    <ul className="mb-1 ml-[1.15rem] mt-0.5 space-y-px border-l border-foreground/[0.08] pl-2">
+    <ul className="mb-1 ml-[1.35rem] mt-0.5 space-y-px border-l border-foreground/[0.08] pl-2">
       {rows.map((row) => {
         const active = itemIsActive(row, pathname);
         return (
@@ -51,10 +52,11 @@ function ModulePages() {
               href={row.href}
               prefetch={false}
               aria-current={active ? "page" : undefined}
+              style={active ? { color: tone, background: `${tone}14` } : undefined}
               className={cn(
                 "flex h-7 items-center truncate rounded-md px-2 text-ui transition-colors",
                 "nested" in row && "pl-5",
-                active ? "bg-foreground/[0.06] font-medium text-foreground" : "text-foreground/60 hover:bg-foreground/[0.04] hover:text-foreground"
+                active ? "font-medium" : "text-foreground/60 hover:bg-foreground/[0.04] hover:text-foreground"
               )}
             >
               {row.label}
@@ -66,9 +68,10 @@ function ModulePages() {
   );
 }
 
-/** One row: a monochrome icon and label; the active row gets a neutral surface and an accent bar. */
+/** One row: each module keeps its colour — a soft tile at rest, solid when you're in it. */
 function NavRow({ item, expanded }: { item: NavLink; expanded: boolean }) {
   const Icon = item.icon;
+  const tone = moduleTone(item.key);
   return (
     <>
     <Link
@@ -77,18 +80,22 @@ function NavRow({ item, expanded }: { item: NavLink; expanded: boolean }) {
       title={expanded ? undefined : item.label}
       aria-current={item.active ? "page" : undefined}
       className={cn(
-        "group relative flex h-8 select-none items-center gap-2.5 rounded-md px-2 text-ui font-medium transition-colors duration-150 cursor-pointer",
+        "group relative flex h-9 select-none items-center gap-2.5 rounded-md px-1.5 text-ui font-medium transition-colors duration-150 cursor-pointer",
         item.active
           ? "bg-foreground/[0.06] text-foreground"
-          : "text-foreground/65 hover:bg-foreground/[0.04] hover:text-foreground"
+          : "text-foreground/70 hover:bg-foreground/[0.04] hover:text-foreground"
       )}
     >
-      {item.active && <span className="absolute inset-y-1.5 left-0 w-0.5 rounded-full bg-primary" aria-hidden />}
       <span className="relative shrink-0 pointer-events-none">
-        <Icon size={17} strokeWidth={1.9} className={item.active ? "text-foreground" : "text-foreground/55 group-hover:text-foreground/80"} />
+        <span
+          className="flex h-7 w-7 items-center justify-center rounded-md transition-colors duration-150"
+          style={{ background: item.active ? tone : `${tone}1f`, color: item.active ? "#fff" : tone }}
+        >
+          <Icon size={16} strokeWidth={1.9} />
+        </span>
         {/* The collapsed rail has no room for a count — a dot still says "something new". */}
         {!expanded && !!item.badge && (
-          <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-brand ring-2 ring-background" />
+          <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-brand ring-2 ring-background" />
         )}
       </span>
       {expanded && <span className="flex-1 truncate pointer-events-none">{item.label}</span>}
