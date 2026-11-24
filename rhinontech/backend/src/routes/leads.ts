@@ -1,4 +1,5 @@
 import { Router, Response } from "express";
+import { canSeeCrmRecord, scopeToOwner } from "../services/crmScope";
 import { Lead, Campaign, CampaignActivity, ContactGroup, ContactGroupMember, Account, Deal, PipelineStage, Activity, User, Task, InboxEmail, WorkflowEnrollment } from "../models";
 import { findOrCreateAccountForLead } from "./accounts";
 import { authenticate, authorizeAny, requirePlatformOrg, AuthRequest } from "../middleware/authenticate";
@@ -112,6 +113,7 @@ router.get("/", readAccess, async (req: AuthRequest, res: Response) => {
   if (lifecycleStage) where.lifecycleStage = lifecycleStage;
   if (accountId) where.accountId = accountId;
   applySegmentFilters(where, req.query);
+  scopeToOwner(req, where);
   if (search) {
     where[Op.or] = [
       { name: { [Op.iLike]: `%${search}%` } },
@@ -649,7 +651,7 @@ router.post("/merge", writeAccess, async (req: AuthRequest, res: Response) => {
 
 // GET /leads/export.csv - the same filters as the list, as a download.
 // Declared before /:id so "export.csv" is never read as a lead id.
-router.get("/export.csv", readAccess, async (req: AuthRequest, res: Response) => {
+router.get("/export.csv", readAccess, authorizeAny("crm:export"), async (req: AuthRequest, res: Response) => {
   const { status, source, search, ownerId, lifecycleStage, accountId } = req.query;
   const where: any = {};
   if (status) where.status = status;
@@ -658,6 +660,7 @@ router.get("/export.csv", readAccess, async (req: AuthRequest, res: Response) =>
   if (lifecycleStage) where.lifecycleStage = lifecycleStage;
   if (accountId) where.accountId = accountId;
   applySegmentFilters(where, req.query);
+  scopeToOwner(req, where);
   if (search) {
     where[Op.or] = [
       { name: { [Op.iLike]: `%${search}%` } },
@@ -827,7 +830,8 @@ router.get("/:id", readAccess, async (req: AuthRequest, res: Response) => {
     ],
   });
 
-  if (!lead) {
+  // Out of scope looks the same as missing, so ids can't be probed.
+  if (!lead || !canSeeCrmRecord(req, lead.ownerId)) {
     res.status(404).json({ message: "Lead not found" });
     return;
   }

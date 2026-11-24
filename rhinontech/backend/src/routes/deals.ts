@@ -1,4 +1,5 @@
 import { Router, Response } from "express";
+import { canSeeCrmRecord, scopeToOwner } from "../services/crmScope";
 import { Op, fn, col } from "sequelize";
 import { Deal, PipelineStage, Account, Lead, User, Activity, Task, Project } from "../models";
 import { authenticate, authorizeAny, AuthRequest } from "../middleware/authenticate";
@@ -128,6 +129,7 @@ router.get("/board", readAccess, async (req: AuthRequest, res: Response) => {
   const { ownerId, includeClosed } = req.query;
   const baseWhere: any = {};
   if (ownerId) baseWhere.ownerId = ownerId;
+  scopeToOwner(req, baseWhere);
   if (!includeClosed) baseWhere.status = "Open";
 
   const limit = Math.min(
@@ -198,6 +200,7 @@ router.get("/", readAccess, async (req: AuthRequest, res: Response) => {
   const where: any = {};
   if (status) where.status = status;
   if (ownerId) where.ownerId = ownerId;
+  scopeToOwner(req, where);
   if (accountId) where.accountId = accountId;
   if (leadId) where.primaryLeadId = leadId;
   if (stageId) where.stageId = stageId;
@@ -223,7 +226,7 @@ router.get("/:id", readAccess, async (req: AuthRequest, res: Response) => {
     ],
     order: [[{ model: Activity, as: "timeline" }, "occurredAt", "DESC"]],
   });
-  if (!deal) {
+  if (!deal || !canSeeCrmRecord(req, deal.ownerId)) {
     res.status(404).json({ message: "Deal not found" });
     return;
   }

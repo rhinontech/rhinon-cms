@@ -87,7 +87,7 @@ const EVERYONE = [
   "performance:read", "documents:read", "work:read", "meetings:read", "chat:read", "chat:write", "pages:read",
 ];
 const SALES_REP = [...EVERYONE, "crm:read", "crm:write", "outreach:read", "outreach:write", "inbox:read", "inbox:write", "chatbot:read"];
-const PROJECT_MANAGER = [...EVERYONE, "work:write", "meetings:write", "pages:write", "crm:read", "inbox:read", "inbox:write"];
+const PROJECT_MANAGER = [...EVERYONE, "work:write", "meetings:write", "pages:write", "crm:read", "crm:viewAll", "inbox:read", "inbox:write"];
 
 function roleDefinitions(permissionNames: string[]) {
   // A template never grants more than this workspace is entitled to (no platform modules for tenants).
@@ -118,7 +118,7 @@ function roleDefinitions(permissionNames: string[]) {
     // role is first created; after that the owner edits them in Settings → Roles.
     { slug: "admin", name: "Admin", grants: permissionNames },
     { slug: "sales-rep", name: "Sales rep", grants: only(SALES_REP) },
-    { slug: "sales-manager", name: "Sales manager", grants: only([...SALES_REP, "chatbot:write", "analytics:read", "meetings:write", "pages:write"]) },
+    { slug: "sales-manager", name: "Sales manager", grants: only([...SALES_REP, "crm:viewAll", "crm:export", "chatbot:write", "analytics:read", "meetings:write", "pages:write"]) },
     { slug: "project-manager", name: "Project manager", grants: only(PROJECT_MANAGER) },
   ];
 }

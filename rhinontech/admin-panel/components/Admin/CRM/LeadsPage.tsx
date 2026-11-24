@@ -1,5 +1,6 @@
 "use client";
 
+import { usePermissions } from "@/context/PermissionsContext";
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import {
   TbSearch, TbPlus, TbUpload, TbTrash, TbX, TbBulb, TbRefresh, TbLoader,
@@ -45,6 +46,7 @@ type PanelMode = "view" | "create" | "edit";
 export function LeadsPage() {
   const { isExpanded: isSubNavExpanded, toggleSideNav } = useSideNav();
   const searchParams = useSearchParams();
+  const canExport = usePermissions().has("crm:export");
   const crmBase = useModuleBase();
   // Scoped from an account row: /crm?accountId=… lists just that company.
   const accountFilter = searchParams.get("accountId");
@@ -358,9 +360,12 @@ export function LeadsPage() {
             <TBtn onClick={() => setShowDuplicates(true)} title="Find and merge duplicate people">
               <TbCopyCheck size={14} /> <span className="hidden sm:inline">Duplicates</span>
             </TBtn>
-            <TBtn onClick={exportCsv} disabled={exporting} title="Export the current filter as CSV">
-              <TbDownload size={14} /> <span className="hidden sm:inline">{exporting ? "Exporting…" : "Export"}</span>
-            </TBtn>
+            {/* Exporting the book is its own permission (crm:export), so a departing rep can't take it all. */}
+            {canExport && (
+              <TBtn onClick={exportCsv} disabled={exporting} title="Export the current filter as CSV">
+                <TbDownload size={14} /> <span className="hidden sm:inline">{exporting ? "Exporting…" : "Export"}</span>
+              </TBtn>
+            )}
             <TBtn onClick={() => setShowSplit(true)} title="Make one outreach list per industry (or location, source, title)">
               <TbArrowsSplit size={14} /> <span className="hidden sm:inline">Split into lists</span>
             </TBtn>

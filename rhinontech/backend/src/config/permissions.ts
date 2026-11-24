@@ -35,6 +35,9 @@ export const PERMISSION_CATALOG = [
   { name: "work:write",         resource: "work",         action: "write" },
   { name: "crm:read",           resource: "crm",          action: "read"  },
   { name: "crm:write",          resource: "crm",          action: "write" },
+  // Record scope: without viewAll, CRM lists show only the records you own.
+  { name: "crm:viewAll",        resource: "crm",          action: "viewAll" },
+  { name: "crm:export",         resource: "crm",          action: "export" },
   { name: "pages:read",         resource: "pages",        action: "read"  },
   { name: "pages:write",        resource: "pages",        action: "write" },
   { name: "startupIdeas:read",  resource: "startupIdeas", action: "read"  },
@@ -111,6 +114,12 @@ export const DEFAULT_ROLE_GRANTS: Record<string, string[]> = {
 // - each org's superadmin accumulates the catalog its org is entitled to:
 //   the full list for the platform org, minus PLATFORM_ONLY_PERMISSIONS for tenants
 // - DEFAULT_ROLE_GRANTS apply only to newly created permissions
+/** New permissions that every role already holding one of these receives on creation. */
+const INHERITED_FROM: Record<string, string[]> = {
+  "crm:viewAll": ["crm:read", "outreach:read"],
+  "crm:export": ["crm:read", "outreach:read"],
+};
+
 export async function syncPermissionCatalog() {
   const results = await Promise.all(
     PERMISSION_CATALOG.map((p) =>
@@ -149,6 +158,16 @@ export async function syncPermissionCatalog() {
       for (const role of roles) {
         await (role as any).addPermissions(toGrant);
       }
+    }
+    // A new scope permission must not take anything away. Everyone who could read
+    // the CRM when it shipped saw every record and could export, so every role
+    // holding a CRM read permission gets them now; only roles made later start
+    // without (the Sales rep template sees its own records).
+    for (const perm of createdPerms.filter((p) => INHERITED_FROM[p.name])) {
+      const holders = await Role.findAll({
+        include: [{ model: Permission, where: { name: INHERITED_FROM[perm.name] }, attributes: ["id"] }],
+      });
+      for (const role of holders) await (role as any).addPermissions([perm]);
     }
     console.log(`[Permissions] Catalog sync: created ${createdPerms.map((p) => p.name).join(", ")}`);
   }
