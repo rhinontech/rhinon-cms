@@ -350,9 +350,10 @@ function OffboardDialog({
 
 function Detail({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-border p-3">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <div className="mt-1 font-medium text-foreground">{value}</div>
+    // A label/value row, not a bordered tile: one surface per panel (D6).
+    <div className="grid grid-cols-[120px_minmax(0,1fr)] items-baseline gap-3 border-b border-border/60 py-2 last:border-b-0">
+      <span className="text-xs text-muted-foreground">{label}</span>
+      <div className="min-w-0 text-foreground">{value}</div>
     </div>
   );
 }
@@ -424,9 +425,9 @@ function LetterPreviewDialog({
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="space-y-3 rounded-lg border border-border p-3">
+    <section className="space-y-1 border-t border-border pt-4">
       <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-      <div className="grid grid-cols-2 gap-3 text-sm">{children}</div>
+      <div className="grid grid-cols-1 gap-x-8 text-sm sm:grid-cols-2">{children}</div>
     </section>
   );
 }
@@ -1334,7 +1335,7 @@ export function PeopleDirectory() {
                     </div>
 
                     {/* Public info — visible to all */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                    <div className="grid grid-cols-1 gap-x-8 text-sm sm:grid-cols-2">
                       <Detail label="Status" value={<StatusBadge status={selectedEmployee.status} exitDate={selectedEmployee.exitDate} exitReason={selectedEmployee.exitReason} />} />
                       <Detail label="Role title" value={selectedEmployee.roleTitle || selectedEmployee.role?.name || "-"} />
                       <Detail label="Department" value={selectedEmployee.department} />

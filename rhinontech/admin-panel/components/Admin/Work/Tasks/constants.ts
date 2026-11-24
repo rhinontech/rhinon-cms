@@ -7,16 +7,17 @@ export const PRIORITIES: TaskPriority[] = ["Low", "Medium", "High"];
 export const UNASSIGNED_KEY = "__unassigned";
 export const NO_PROJECT_KEY = "__internal";
 
+// Same tones as StatusBadge (components/ui/status-badge.tsx), so a status looks alike everywhere.
 export const PRIORITY_COLORS: Record<TaskPriority, string> = {
-  Low: "bg-stone-100 text-stone-600 border-stone-200",
-  Medium: "bg-amber-50 text-amber-700 border-amber-200",
-  High: "bg-red-50 text-red-700 border-red-200",
+  Low: "bg-muted text-foreground/70 border-transparent",
+  Medium: "bg-amber-500/12 text-amber-800 border-transparent dark:text-amber-300",
+  High: "bg-red-500/10 text-red-700 border-transparent dark:text-red-300",
 };
 
 export const STATUS_STYLES: Record<TaskStatus, string> = {
-  Pending: "bg-stone-100 text-stone-700 border-stone-200",
-  "In progress": "bg-blue-50 text-blue-700 border-blue-200",
-  Done: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  Pending: "bg-muted text-foreground/80 border-transparent",
+  "In progress": "bg-sky-500/10 text-sky-700 border-transparent dark:text-sky-300",
+  Done: "bg-emerald-500/10 text-emerald-700 border-transparent dark:text-emerald-300",
 };
 
 export const TAG_COLORS = ["gray", "red", "amber", "green", "blue", "indigo", "purple", "pink"] as const;

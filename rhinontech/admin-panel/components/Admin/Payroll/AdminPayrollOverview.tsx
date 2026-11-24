@@ -1,5 +1,6 @@
 "use client";
 
+import { StatusBadge, type StatusTone } from "@/components/ui/status-badge";
 import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { toast } from "sonner";
@@ -44,11 +45,7 @@ interface InvestmentSummary {
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-const STATUS_STYLE: Record<string, string> = {
-  draft:     "bg-amber-100 dark:bg-amber-400/15 text-amber-700 dark:text-amber-300",
-  processed: "bg-blue-100 dark:bg-blue-400/15 text-blue-700 dark:text-blue-300",
-  paid:      "bg-green-100 dark:bg-green-400/15 text-green-700 dark:text-green-300",
-};
+const STATUS_TONE: Record<string, StatusTone> = { draft: "warning", processed: "info", paid: "success" };
 
 const INR = (value: number) => `₹${Number(value || 0).toLocaleString("en-IN")}`;
 
@@ -216,9 +213,7 @@ export function AdminPayrollOverview() {
                     <td className="px-4 sm:px-5 py-2.5 sm:py-3 text-right">₹{Number(run.totalGross).toLocaleString("en-IN")}</td>
                     <td className="px-4 sm:px-5 py-2.5 sm:py-3 text-right font-semibold">₹{Number(run.totalNet).toLocaleString("en-IN")}</td>
                     <td className="px-4 sm:px-5 py-2.5 sm:py-3">
-                      <span className={`px-2 sm:px-2.5 py-0.5 rounded-full text-2xs sm:text-xs font-semibold uppercase ${STATUS_STYLE[run.status] ?? "bg-muted text-foreground/70"}`}>
-                        {run.status}
-                      </span>
+                      <StatusBadge tone={STATUS_TONE[run.status] ?? "neutral"} className="capitalize">{run.status}</StatusBadge>
                     </td>
                     <td className="px-4 sm:px-5 py-2.5 sm:py-3 text-muted-foreground">{run.processedBy?.fullName ?? "—"}</td>
                     <td className="px-4 sm:px-5 py-2.5 sm:py-3">
