@@ -461,7 +461,32 @@ export function LeadsPage() {
             </div>
           )}
 
-          <TableShell minWidth={compact ? undefined : 1040}>
+          {/* Phones get a card list: name, one secondary line, stage. Never a squeezed table. */}
+          <ul className="divide-y divide-border/70 overflow-hidden rounded-lg glass-card md:hidden">
+            {loading ? (
+              Array.from({ length: 6 }, (_, i) => <li key={i} className="h-16 animate-pulse bg-foreground/[0.02]" />)
+            ) : leads.length === 0 ? (
+              <li><EmptyState title="No leads match these filters" hint="Try clearing the filters, or import a CSV to get started." /></li>
+            ) : (
+              leads.map((lead) => (
+                <li key={lead.id}>
+                  <button onClick={() => openLead(lead)} className="flex w-full items-center gap-3 px-3 py-2.5 text-left active:bg-foreground/[0.03]">
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium text-foreground">{lead.name}</span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {[lead.account?.name || lead.company, lead.owner?.fullName ?? "Unassigned"].filter(Boolean).join(" · ")}
+                      </span>
+                    </span>
+                    <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-2xs font-medium ring-1 ring-inset", LIFECYCLE_TINT[lead.lifecycleStage] ?? LIFECYCLE_TINT.New)}>
+                      {lead.lifecycleStage}
+                    </span>
+                  </button>
+                </li>
+              ))
+            )}
+          </ul>
+
+          <TableShell minWidth={compact ? undefined : 1040} className="max-md:hidden">
             <HeaderRow cols={COLS}>
               <span className="flex justify-center">
                 <input type="checkbox" checked={allSelected} onChange={toggleAll} className="h-3.5 w-3.5 cursor-pointer accent-blue-600" title="Select all" />
@@ -542,7 +567,8 @@ export function LeadsPage() {
                       onChange={(e) => patchLead(lead.id, { lifecycleStage: e.target.value as LifecycleStage })}
                       // A coloured pill that is also the editor: reads as a status, opens as a menu.
                       className={cn(
-                        "!h-6 w-fit max-w-full cursor-pointer gap-1 rounded-full border-0 px-2.5 text-xs font-medium shadow-none ring-1 ring-inset [&_svg]:!size-3 [&_svg]:opacity-60",
+                        // The chevron only appears on hover or focus, so at rest the column reads as statuses.
+                        "!h-6 w-fit max-w-full cursor-pointer gap-1 rounded-full border-0 px-2.5 text-xs font-medium shadow-none ring-1 ring-inset [&_svg]:!size-3 [&_svg]:opacity-0 group-hover:[&_svg]:opacity-60 focus-visible:[&_svg]:opacity-60",
                         LIFECYCLE_TINT[lead.lifecycleStage] ?? LIFECYCLE_TINT.New
                       )}
                     >
@@ -559,7 +585,7 @@ export function LeadsPage() {
                         // Borderless until hovered, so a column of owners reads as names,
                         // not as a stack of form fields.
                         className={cn(
-                          "!h-7 min-w-0 flex-1 cursor-pointer truncate border-transparent bg-transparent px-1.5 text-xs shadow-none hover:border-input hover:bg-card dark:bg-transparent",
+                          "!h-7 min-w-0 flex-1 cursor-pointer truncate border-transparent bg-transparent px-1.5 text-xs shadow-none hover:border-input hover:bg-card dark:bg-transparent [&_svg]:opacity-0 group-hover:[&_svg]:opacity-50 focus-visible:[&_svg]:opacity-50",
                           lead.ownerId ? "text-foreground/80" : "text-muted-foreground/70"
                         )}
                       >
