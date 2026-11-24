@@ -14,7 +14,6 @@ import { HeroWorkspace } from "@/components/HeroWorkspace";
 import { GetStartedButton } from "@/components/forms/GetStartedButton";
 import { LazyCrmPreview, LazyOrbit } from "@/components/HomeLazyMocks";
 import { JsonLd, graphJsonLd, softwareAppNode } from "@/components/schema";
-import { GetStartedButton } from "@/components/forms/GetStartedButton";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
