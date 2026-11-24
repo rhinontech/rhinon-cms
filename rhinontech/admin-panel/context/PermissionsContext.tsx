@@ -21,6 +21,8 @@ export interface AccountStatus {
     status: "active" | "trial" | "suspended";
     plan: "free" | "starter" | "enterprise";
     isPlatform: boolean;
+    /** Modules the owner switched off for this workspace (hidden from menus, Home and search). */
+    disabledModules?: string[];
   } | null;
   /** The owner has not yet clicked the link we emailed at signup. */
   emailVerificationPending: boolean;

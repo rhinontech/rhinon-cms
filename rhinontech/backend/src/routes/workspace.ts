@@ -4,6 +4,8 @@ import { authenticate, AuthRequest } from "../middleware/authenticate";
 import { rateLimit } from "../middleware/rateLimit";
 import { Organization } from "../models/Organization";
 import { User } from "../models/User";
+import { Role } from "../models/Role";
+import { sequelize } from "../config/database";
 import { auditRequest, clientIp } from "../services/audit";
 import { generateApiKey } from "../services/orgProvisioning";
 import {
@@ -48,6 +50,59 @@ router.get("/deletion", requireOwner, async (req: AuthRequest, res: Response) =>
   const org = await Organization.findByPk(req.user!.organizationId);
   if (!org) { res.status(404).json({ message: "Workspace not found" }); return; }
   res.json(deletionState(org));
+});
+
+/** Modules an owner may switch off. Home, Settings and the platform's own modules always stay. */
+const SWITCHABLE_MODULES = ["crm", "outreach", "inbox", "chatbot", "analytics", "work", "chat", "meetings", "pages", "employees", "attendance", "payroll", "performance"];
+
+/**
+ * PUT /workspace/modules — hide modules this workspace doesn't use, so a sales
+ * team isn't looking at payroll. Declutters menus, Home and search; it is not a
+ * permission (roles still decide access), so the API routes stay as they are.
+ */
+router.put("/modules", requireOwner, async (req: AuthRequest, res: Response) => {
+  const list = req.body?.disabledModules;
+  if (!Array.isArray(list) || list.some((m) => typeof m !== "string" || !SWITCHABLE_MODULES.includes(m))) {
+    res.status(400).json({ message: `disabledModules must be a list drawn from: ${SWITCHABLE_MODULES.join(", ")}` });
+    return;
+  }
+  const org = await Organization.findByPk(req.user!.organizationId);
+  if (!org) { res.status(404).json({ message: "Workspace not found" }); return; }
+  const disabledModules = [...new Set(list as string[])];
+  await org.update({ settings: { ...org.settings, disabledModules } });
+  void auditRequest(req, "workspace.modules_changed", { entityType: "organization", entityId: org.id, metadata: { disabledModules } });
+  res.json({ disabledModules });
+});
+
+const transferLimiter = rateLimit({ name: "ownership-transfer", windowMs: 60 * 60_000, max: 5, message: "Too many attempts. Try again later." });
+
+/**
+ * POST /workspace/transfer-ownership — hand the workspace to another person.
+ * There is exactly one owner (superadmin) per workspace, so this swaps roles in
+ * one transaction: they become the owner, you become an Admin. Password-confirmed.
+ */
+router.post("/transfer-ownership", requireOwner, transferLimiter, async (req: AuthRequest, res: Response) => {
+  const targetId = String(req.body?.userId ?? "");
+  const me = await User.unscoped().findByPk(req.user!.userId, { attributes: ["id", "passwordHash", "fullName"] });
+  if (!me || !(await bcrypt.compare(String(req.body?.password ?? ""), me.passwordHash))) {
+    res.status(401).json({ message: "Password is incorrect." });
+    return;
+  }
+  if (!targetId || targetId === me.id) { res.status(400).json({ message: "Choose someone else to hand the workspace to." }); return; }
+  const target = await User.findByPk(targetId, { attributes: ["id", "fullName", "status", "userType", "roleId"] });
+  if (!target || target.status !== "active" || target.userType !== "internal") {
+    res.status(400).json({ message: "Ownership can only go to an active member of this workspace." });
+    return;
+  }
+  const [ownerRole, adminRole] = await Promise.all([Role.findOne({ where: { slug: "superadmin" } }), Role.findOne({ where: { slug: "admin" } })]);
+  if (!ownerRole || !adminRole) { res.status(500).json({ message: "This workspace is missing its owner or Admin role. Contact support." }); return; }
+
+  await sequelize.transaction(async (transaction) => {
+    await User.update({ roleId: adminRole.id }, { where: { id: me.id }, transaction });
+    await User.update({ roleId: ownerRole.id }, { where: { id: target.id }, transaction });
+  });
+  void auditRequest(req, "workspace.ownership_transferred", { entityType: "user", entityId: target.id, metadata: { from: me.id, to: target.id } });
+  res.json({ message: `${target.fullName} now owns this workspace. You are an Admin. Sign in again to see your new access.` });
 });
 
 router.post("/deletion", requireOwner, deletionLimiter, async (req: AuthRequest, res: Response) => {

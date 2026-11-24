@@ -51,6 +51,8 @@ export interface OrganizationSettings {
   onboarding?: { goal?: "sell" | "deliver" | "team"; answeredAt?: string; dismissedAt?: string };
   /** Set by platform staff to stop this workspace's outgoing mail (abuse response). */
   sendingPaused?: boolean;
+  /** Sidebar modules the owner switched off for this workspace. */
+  disabledModules?: string[];
   /** The workspace's own sending domains and their verification progress (services/customDomain.ts). */
   emailDomains?: {
     domain: string;

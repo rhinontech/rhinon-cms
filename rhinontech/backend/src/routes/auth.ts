@@ -568,7 +568,8 @@ router.get("/me", authenticate, async (req: AuthRequest, res: Response) => {
     ...user.toJSON(),
     permissions: req.user!.permissions,
     roleSlug: req.user!.roleSlug,
-    organization: organization ? orgFields : organization,
+    // Modules the owner switched off for this workspace (hidden from menus, Home and search).
+    organization: organization ? { ...orgFields, disabledModules: Array.isArray(settings?.disabledModules) ? settings.disabledModules : [] } : organization,
     emailVerificationPending: !!settings?.pendingEmailVerification,
     termsVersion: legal.termsVersion,
     termsAccepted: settings?.termsVersion === legal.termsVersion,

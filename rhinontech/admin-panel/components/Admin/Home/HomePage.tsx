@@ -44,7 +44,8 @@ const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
 function HomeContent() {
   const pathname = usePathname();
   const role = pathname.split("/")[1] || "";
-  const { has, isOwner, effectiveRoleSlug, fullName, ready } = usePermissions();
+  const { has, isOwner, effectiveRoleSlug, fullName, ready, account } = usePermissions();
+  const disabled = account.organization?.disabledModules ?? [];
   const { slug: brandSlug } = useActiveBrand();
   const unreadChat = useTeamChat(selectUnreadTotal);
 
@@ -154,7 +155,7 @@ function HomeContent() {
     key: section.key,
     label: section.label,
     tiles: section.items
-      .filter((entry) => has(...entry.permissions))
+      .filter((entry) => has(...entry.permissions) && !disabled.includes(entry.key))
       .map((entry): LauncherTile | null => {
         const route = entryRoute(entry, has);
         if (!route) return null;

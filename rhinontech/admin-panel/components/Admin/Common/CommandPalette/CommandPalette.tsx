@@ -60,7 +60,8 @@ export function CommandPalette() {
   const router = useRouter();
   const pathname = usePathname();
   const roleSlug = pathname.split("/")[1] || "";
-  const { has, isOwner, isPlatformOwner } = usePermissions();
+  const { has, isOwner, isPlatformOwner, account } = usePermissions();
+  const disabled = account.organization?.disabledModules ?? [];
   const { slug: brandSlug } = useActiveBrand();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -129,7 +130,7 @@ export function CommandPalette() {
     if (has(...APPROVAL_PERMISSIONS)) add("approvals", "Approvals", "Leave, attendance and reimbursements", hrefFor("approvals"), "approve requests pending");
     for (const section of NAV_SECTIONS) {
       for (const entry of section.items) {
-        if (!has(...entry.permissions)) continue;
+        if (!has(...entry.permissions) || disabled.includes(entry.key)) continue;
         const route = entryRoute(entry, has);
         if (route) add(entry.key, MODULES[entry.key].label, section.label, hrefFor(route), entry.description);
       }
@@ -139,6 +140,7 @@ export function CommandPalette() {
       if (allowed) add(entry.key, MODULES[entry.key].label, "Rhinon platform", hrefFor(entry.key), entry.description);
     }
     for (const page of JUMP_PAGES) {
+      if (disabled.includes(page.module) || disabled.includes(MODULES[page.module]?.parent ?? "")) continue;
       if (page.ownerOnly ? !isOwner : page.permissions.length > 0 && !has(...page.permissions)) continue;
       const label = PAGE_LABELS[`${page.module}/${page.segment}`] ?? MODULES[page.module]?.label ?? page.segment;
       const parent = MODULES[page.module]?.parent;
@@ -149,7 +151,7 @@ export function CommandPalette() {
     add("profile", "Your profile", "Account", `/${roleSlug}/profile/info`, "me account name photo");
     return list;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [has, isOwner, isPlatformOwner, roleSlug, brandSlug]);
+  }, [has, isOwner, isPlatformOwner, roleSlug, brandSlug, disabled]);
 
   const q = query.trim().toLowerCase();
   const words = q.split(/\s+/).filter(Boolean);
