@@ -54,5 +54,5 @@ export function SettingsSubNav() {
       : []),
   ];
 
-  return <CollapsibleSubNav title="Settings" items={items} />;
+  return <CollapsibleSubNav title="Settings" items={items} inline={false} />;
 }

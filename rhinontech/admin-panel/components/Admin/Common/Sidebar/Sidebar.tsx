@@ -8,7 +8,7 @@ import { TbFileText, TbHelpCircle, TbMail, TbPin, TbPinFilled, TbRocket, TbSearc
 import { cn } from "@/lib/utils";
 import {
   APPROVAL_PERMISSIONS, MODULES, NAV_SECTIONS, PLATFORM_ITEMS,
-  entryIsActive, entryRoute, isWithin, moduleTone, type NavEntry,
+  entryIsActive, entryRoute, isWithin, type NavEntry,
 } from "@/components/Admin/Common/navConfig";
 import { useDashboard } from "../../../Common/DashboardProvider/DashboardProvider";
 import { usePermissions } from "@/context/PermissionsContext";
@@ -20,6 +20,8 @@ import { useCommandPalette } from "@/components/Admin/Common/CommandPalette/stor
 import { useShortcutLabel } from "@/components/Admin/Common/CommandPalette/useShortcutLabel";
 import { useApprovalCount } from "@/lib/approvals";
 import { useLegal } from "@/lib/legal";
+import { useModuleNav } from "@/components/Admin/Common/CollapsibleSubNav/moduleNavStore";
+import { itemIsActive } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface NavLink {
@@ -31,33 +33,62 @@ interface NavLink {
   badge?: number;
 }
 
-/** One row: a coloured tile per module (soft at rest, solid when you are in it), then the label. */
+/** This module's own pages, nested under its row (published by the module's sub-nav). */
+function ModulePages() {
+  const items = useModuleNav((s) => s.items);
+  const pathname = usePathname();
+  // Only when pinned open (or the phone drawer): hover-peeking shouldn't reflow the menu.
+  const { sidebarExpanded, mobileNavOpen } = useDashboard();
+  if (!items?.length || !(sidebarExpanded || mobileNavOpen)) return null;
+  const rows = items.flatMap((i) => (i.isCollapsible && i.children?.length ? [i, ...i.children.map((c) => ({ ...c, nested: true }))] : [i]));
+  return (
+    <ul className="mb-1 ml-[1.15rem] mt-0.5 space-y-px border-l border-foreground/[0.08] pl-2">
+      {rows.map((row) => {
+        const active = itemIsActive(row, pathname);
+        return (
+          <li key={`${row.label}-${row.href}`}>
+            <Link
+              href={row.href}
+              prefetch={false}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "flex h-7 items-center truncate rounded-md px-2 text-ui transition-colors",
+                "nested" in row && "pl-5",
+                active ? "bg-foreground/[0.06] font-medium text-foreground" : "text-foreground/60 hover:bg-foreground/[0.04] hover:text-foreground"
+              )}
+            >
+              {row.label}
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+/** One row: a monochrome icon and label; the active row gets a neutral surface and an accent bar. */
 function NavRow({ item, expanded }: { item: NavLink; expanded: boolean }) {
   const Icon = item.icon;
-  const tone = moduleTone(item.key);
   return (
+    <>
     <Link
       href={item.href}
       prefetch={false}
       title={expanded ? undefined : item.label}
       aria-current={item.active ? "page" : undefined}
       className={cn(
-        "group relative flex h-9 select-none items-center gap-3 rounded-lg px-1.5 text-ui font-medium transition-[background-color,color,box-shadow] duration-150 cursor-pointer active:scale-[0.98]",
+        "group relative flex h-8 select-none items-center gap-2.5 rounded-md px-2 text-ui font-medium transition-colors duration-150 cursor-pointer",
         item.active
-          ? "bg-card text-foreground shadow-xs ring-1 ring-foreground/[0.06] dark:bg-white/[0.08] dark:shadow-none dark:ring-white/[0.06]"
-          : "text-foreground/65 hover:bg-card/60 hover:text-foreground dark:hover:bg-white/[0.05]"
+          ? "bg-foreground/[0.06] text-foreground"
+          : "text-foreground/65 hover:bg-foreground/[0.04] hover:text-foreground"
       )}
     >
+      {item.active && <span className="absolute inset-y-1.5 left-0 w-0.5 rounded-full bg-primary" aria-hidden />}
       <span className="relative shrink-0 pointer-events-none">
-        <span
-          className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors duration-150"
-          style={{ background: item.active ? tone : `${tone}1f`, color: item.active ? "#fff" : tone }}
-        >
-          <Icon size={17} strokeWidth={1.9} />
-        </span>
+        <Icon size={17} strokeWidth={1.9} className={item.active ? "text-foreground" : "text-foreground/55 group-hover:text-foreground/80"} />
         {/* The collapsed rail has no room for a count — a dot still says "something new". */}
         {!expanded && !!item.badge && (
-          <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-brand ring-2 ring-background" />
+          <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-brand ring-2 ring-background" />
         )}
       </span>
       {expanded && <span className="flex-1 truncate pointer-events-none">{item.label}</span>}
@@ -67,6 +98,8 @@ function NavRow({ item, expanded }: { item: NavLink; expanded: boolean }) {
         </span>
       )}
     </Link>
+    {item.active && expanded && <ModulePages />}
+    </>
   );
 }
 
