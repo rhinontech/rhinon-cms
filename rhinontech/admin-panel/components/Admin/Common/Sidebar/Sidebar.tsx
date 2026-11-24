@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type { IconType } from "react-icons";
 import { TbFileText, TbHelpCircle, TbMail, TbPin, TbPinFilled, TbRocket, TbSearch } from "react-icons/tb";
 import { cn } from "@/lib/utils";
@@ -38,6 +38,7 @@ function ModulePages() {
   const items = useModuleNav((s) => s.items);
   const pathname = usePathname();
   const tone = moduleTone(pathname.split("/")[2] ?? "");
+  const router = useRouter();
   // Only when pinned open (or the phone drawer): hover-peeking shouldn't reflow the menu.
   const { sidebarExpanded, mobileNavOpen } = useDashboard();
   if (!items?.length || !(sidebarExpanded || mobileNavOpen)) return null;
@@ -51,6 +52,8 @@ function ModulePages() {
             <Link
               href={row.href}
               prefetch={false}
+              // Not on page load (that flooded the server, 4f448ab), but on intent.
+              onMouseEnter={() => router.prefetch(row.href)}
               aria-current={active ? "page" : undefined}
               style={active ? { color: tone, background: `${tone}14` } : undefined}
               className={cn(
@@ -72,11 +75,13 @@ function ModulePages() {
 function NavRow({ item, expanded }: { item: NavLink; expanded: boolean }) {
   const Icon = item.icon;
   const tone = moduleTone(item.key);
+  const router = useRouter();
   return (
     <>
     <Link
       href={item.href}
       prefetch={false}
+      onMouseEnter={() => router.prefetch(item.href)}
       title={expanded ? undefined : item.label}
       aria-current={item.active ? "page" : undefined}
       className={cn(

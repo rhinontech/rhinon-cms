@@ -641,3 +641,7 @@
 .task-desc ul[data-type="taskList"] li { display: flex; align-items: flex-start; gap: 0.5rem; }
 .task-desc ul[data-type="taskList"] li > label { margin-top: 0.2rem; }
 .task-desc ul[data-type="taskList"] li[data-checked="true"] > div { color: var(--muted-foreground); text-decoration: line-through; }
+
+@keyframes navloader-in {
+  to { opacity: 1; }
+}

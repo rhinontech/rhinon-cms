@@ -3,6 +3,8 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { DashboardProvider } from "@/components/Common/DashboardProvider/DashboardProvider";
 import { decodeToken } from "@/lib/auth";
+import { Suspense } from "react";
+import { NavProgress } from "@/components/Admin/Common/NavProgress/NavProgress";
 
 export const metadata: Metadata = {
   title: "Rhinon Tech",
@@ -30,6 +32,7 @@ export default async function RoleLayout({ children }: { children: React.ReactNo
 
   return (
     <main className="flex min-h-screen w-full flex-col">
+      <Suspense><NavProgress /></Suspense>
       <DashboardProvider>{children}</DashboardProvider>
     </main>
   );
