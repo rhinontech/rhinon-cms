@@ -100,13 +100,13 @@ export function ProjectWorkspace({
   const [openDay, setOpenDay] = useState<Date | null>(null);
   const ws = useProjectWorkspace(projectId, isPublic ? "public" : "internal");
 
-  // Mirrors the backend rule: assignee, creator or work:write. Only the internal
+  // Mirrors the backend rule: assignee, creator, work:write, or an unassigned card. Only the internal
   // shell has a signed-in user to compare against; the backend still enforces
   // it for collaborators.
   const perms = useOptionalPermissions();
   const canEditTask = (t: ProjectTask | undefined) =>
     mode !== "internal" || !t || !perms?.ready ||
-    perms.has("work:write") ||
+    perms.has("work:write") || !t.assigneeId ||
     (!!perms.userId && (t.assigneeId === perms.userId || t.createdById === perms.userId));
   const findTask = (id: string) => ws.tasks.find((t) => t.id === id);
   const denied = () => toast.error("Only the assignee, the creator or a manager can change this card");

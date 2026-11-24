@@ -92,11 +92,14 @@ async function canEdit(task: Task, req: AuthRequest): Promise<boolean> {
   // work:write is a management grant, not a bypass — it never reaches into a
   // project the holder cannot see.
   if (!(await canAccessProject(task.projectId, req))) return false;
+  // An unassigned card is open work: any internal member who can see the
+  // project may claim it or move it along. Collaborators keep the strict rule.
+  if (!task.assigneeId && !isGuest(req)) return true;
   return task.assigneeId === req.user!.userId || task.createdById === req.user!.userId || hasPermission(req, "work:write");
 }
 
 /**
- * Same rule as PUT /tasks/:id (assignee, creator or work:write) for the card's
+ * Same rule as PUT /tasks/:id (assignee, creator, work:write, or anyone on an unassigned card) for the card's
  * sub-resources — checklists, tags, links, files and time were left open.
  */
 async function requireCardEdit(req: AuthRequest, res: Response): Promise<boolean> {
