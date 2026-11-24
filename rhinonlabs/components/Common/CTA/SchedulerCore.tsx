@@ -40,14 +40,15 @@ export default function SchedulerCore({ onClose, headingLevel = "h3" }: Schedule
   const [meetLink, setMeetLink] = useState<string | null>(null);
   const [booked, setBooked] = useState(true);
 
-  // Form State matching Cal.com image layout
+  // Form State matching product studio / MVP discovery call
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
     website: "",
-    institutionType: "",
-    annualLeadVolume: "",
+    buildTarget: "",
+    budgetRange: "",
+    idealStartDate: "",
     teamSize: "",
   });
 
@@ -154,13 +155,23 @@ export default function SchedulerCore({ onClose, headingLevel = "h3" }: Schedule
     setSubmitError(null);
 
     try {
+      const normalizedWebsite = formData.website
+        ? (formData.website.startsWith("http://") || formData.website.startsWith("https://")
+            ? formData.website
+            : `https://${formData.website}`)
+        : undefined;
+
       const result = await bookScheduleCall({
         name: formData.name,
         email: formData.email,
         phone: `${countryCode} ${formData.phone}`.trim(),
-        website: formData.website,
-        institutionType: formData.institutionType,
-        annualLeadVolume: formData.annualLeadVolume,
+        website: normalizedWebsite,
+        buildTarget: formData.buildTarget,
+        budgetRange: formData.budgetRange,
+        idealStartDate: formData.idealStartDate,
+        // Backward compatibility for existing backend handlers if they expect institutionType/annualLeadVolume
+        institutionType: formData.buildTarget,
+        annualLeadVolume: formData.budgetRange,
         teamSize: formData.teamSize,
         startTime: selectedSlot.startTime,
         timezone,
@@ -223,16 +234,6 @@ export default function SchedulerCore({ onClose, headingLevel = "h3" }: Schedule
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       className="bg-[#0B0F19] border border-white/10 rounded-2xl w-full max-w-6xl max-h-[92vh] overflow-y-auto md:overflow-hidden shadow-2xl relative flex flex-col md:flex-row text-white font-sans md:min-h-[620px]"
     >
-      {/* Close Button */}
-      {onClose && (
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:border-white/20 transition-all text-white/70 hover:text-white"
-        >
-          <X size={16} />
-        </button>
-      )}
-
       {/* Left Column: Event Metadata Info */}
       <div className="w-full md:w-[30%] bg-[#080B12] p-5 md:p-8 border-b md:border-b-0 md:border-r border-white/10 flex flex-col justify-between select-none">
         <div>
@@ -534,26 +535,28 @@ export default function SchedulerCore({ onClose, headingLevel = "h3" }: Schedule
                     </span>
                   </label>
                   <div className="flex rounded-[10px] border border-white/10 bg-[#090C15] focus-within:border-white/20 transition-all overflow-hidden">
-                    <div className="relative flex items-center px-3 border-r border-white/10 bg-[#090C15] select-none">
+                    <div className="relative flex items-center bg-[#0d121f] border-r border-white/10">
                       <select
                         value={countryCode}
                         onChange={(e) => setCountryCode(e.target.value)}
-                        className="bg-transparent text-sm text-white/80 pr-4 focus:outline-none cursor-pointer appearance-none"
+                        className="bg-transparent text-xs font-medium text-white/90 pl-3 pr-6 py-2.5 focus:outline-none cursor-pointer appearance-none tracking-wide"
                       >
-                        <option className="bg-[#0B0F19]" value="+44">🇬🇧 +44</option>
-                        <option className="bg-[#0B0F19]" value="+91">🇮🇳 +91</option>
-                        <option className="bg-[#0B0F19]" value="+1">🇺🇸 +1</option>
-                        <option className="bg-[#0B0F19]" value="+61">🇦🇺 +61</option>
-                        <option className="bg-[#0B0F19]" value="+49">🇩🇪 +49</option>
-                        <option className="bg-[#0B0F19]" value="+65">🇸🇬 +65</option>
+                        <option className="bg-[#0d121f] text-white py-1" value="+91">IN (+91)</option>
+                        <option className="bg-[#0d121f] text-white py-1" value="+1">US (+1)</option>
+                        <option className="bg-[#0d121f] text-white py-1" value="+44">UK (+44)</option>
+                        <option className="bg-[#0d121f] text-white py-1" value="+61">AU (+61)</option>
+                        <option className="bg-[#0d121f] text-white py-1" value="+49">DE (+49)</option>
+                        <option className="bg-[#0d121f] text-white py-1" value="+65">SG (+65)</option>
+                        <option className="bg-[#0d121f] text-white py-1" value="+971">AE (+971)</option>
                       </select>
-                      <span className="absolute right-2 pointer-events-none text-[8px] text-white/50">▼</span>
+                      <span className="absolute right-2 pointer-events-none text-[9px] text-white/40">▼</span>
                     </div>
                     <input
                       type="tel"
                       name="phone"
                       id="phone"
                       required
+                      placeholder="Phone number"
                       value={formData.phone}
                       onChange={handleInputChange}
                       className="flex-1 px-3 py-2 bg-transparent focus:outline-none text-sm text-white placeholder-white/30"
@@ -561,70 +564,94 @@ export default function SchedulerCore({ onClose, headingLevel = "h3" }: Schedule
                   </div>
                 </div>
 
-                {/* Organization Website * */}
+                {/* Website / LinkedIn */}
                 <div className="space-y-2">
                   <label htmlFor="website" className="text-[13px] font-medium text-white select-none">
-                    Organization Website *
+                    Website or LinkedIn
                   </label>
                   <input
-                    type="url"
+                    type="text"
                     name="website"
                     id="website"
-                    required
+                    placeholder="e.g. yourcompany.com or linkedin.com/in/..."
                     value={formData.website}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 bg-[#090C15] border border-white/10 focus:border-white/20 focus:outline-none rounded-[10px] text-sm text-white transition-all placeholder-white/30"
                   />
                 </div>
 
-                {/* Institution Type * */}
+                {/* What do you want to build? * */}
                 <div className="space-y-2">
-                  <label htmlFor="institutionType" className="text-[13px] font-medium text-white select-none">
-                    Institution Type *
+                  <label htmlFor="buildTarget" className="text-[13px] font-medium text-white select-none">
+                    What do you want to build? *
                   </label>
                   <div className="relative">
                     <select
-                      name="institutionType"
-                      id="institutionType"
+                      name="buildTarget"
+                      id="buildTarget"
                       required
-                      value={formData.institutionType}
+                      value={formData.buildTarget}
                       onChange={handleInputChange}
                       className="w-full px-3 py-2 bg-[#090C15] border border-white/10 focus:border-white/20 focus:outline-none rounded-[10px] text-sm text-white appearance-none cursor-pointer transition-all"
                     >
-                      <option className="bg-[#0B0F19]" value="">Select option</option>
-                      <option className="bg-[#0B0F19]" value="Higher Education">Higher Education</option>
-                      <option className="bg-[#0B0F19]" value="Coaching & Training Institute">Coaching & Training Institute</option>
-                      <option className="bg-[#0B0F19]" value="Consultants">Consultants</option>
-                      <option className="bg-[#0B0F19]" value="EdTech">EdTech</option>
-                      <option className="bg-[#0B0F19]" value="K-12 School">K-12 School</option>
-                      <option className="bg-[#0B0F19]" value="Preschool & Playschool">Preschool & Playschool</option>
-                      <option className="bg-[#0B0F19]" value="Online Degree">Online Degree</option>
+                      <option className="bg-[#0B0F19]" value="">Select an option</option>
+                      <option className="bg-[#0B0F19]" value="MVP">MVP</option>
+                      <option className="bg-[#0B0F19]" value="AI agent">AI agent</option>
+                      <option className="bg-[#0B0F19]" value="Workflow automation">Workflow automation</option>
+                      <option className="bg-[#0B0F19]" value="Internal dashboard">Internal dashboard</option>
+                      <option className="bg-[#0B0F19]" value="Website">Website</option>
+                      <option className="bg-[#0B0F19]" value="Mobile app">Mobile app</option>
+                      <option className="bg-[#0B0F19]" value="Not sure yet">Not sure yet</option>
                     </select>
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-xs text-white/50">▼</span>
                   </div>
                 </div>
 
-                {/* Annual Lead Volume * */}
-                <div className="space-y-2">
-                  <label htmlFor="annualLeadVolume" className="text-[13px] font-medium text-white select-none">
-                    Annual Lead Volume *
-                  </label>
-                  <div className="relative">
-                    <select
-                      name="annualLeadVolume"
-                      id="annualLeadVolume"
-                      required
-                      value={formData.annualLeadVolume}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 bg-[#090C15] border border-white/10 focus:border-white/20 focus:outline-none rounded-[10px] text-sm text-white appearance-none cursor-pointer transition-all"
-                    >
-                      <option className="bg-[#0B0F19]" value="">Select option</option>
-                      <option className="bg-[#0B0F19]" value="Under 10k">Under 10k</option>
-                      <option className="bg-[#0B0F19]" value="10k - 50k">10k - 50k</option>
-                      <option className="bg-[#0B0F19]" value="50k-100k">50k-100k</option>
-                      <option className="bg-[#0B0F19]" value="Above 100k">Above 100k</option>
-                    </select>
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-xs text-white/50">▼</span>
+                {/* Budget range & Ideal start date */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label htmlFor="budgetRange" className="text-[13px] font-medium text-white select-none">
+                      Budget Range
+                    </label>
+                    <div className="relative">
+                      <select
+                        name="budgetRange"
+                        id="budgetRange"
+                        value={formData.budgetRange}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 bg-[#090C15] border border-white/10 focus:border-white/20 focus:outline-none rounded-[10px] text-sm text-white appearance-none cursor-pointer transition-all"
+                      >
+                        <option className="bg-[#0B0F19]" value="">Select range</option>
+                        <option className="bg-[#0B0F19]" value="Under 10k">Under 10k</option>
+                        <option className="bg-[#0B0F19]" value="10k - 50k">10k - 50k</option>
+                        <option className="bg-[#0B0F19]" value="50k - 100k">50k - 100k</option>
+                        <option className="bg-[#0B0F19]" value="Above 100k">Above 100k</option>
+                        <option className="bg-[#0B0F19]" value="Not sure yet">Not sure yet</option>
+                      </select>
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-xs text-white/50">▼</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="idealStartDate" className="text-[13px] font-medium text-white select-none">
+                      Ideal Start Date
+                    </label>
+                    <div className="relative">
+                      <select
+                        name="idealStartDate"
+                        id="idealStartDate"
+                        value={formData.idealStartDate}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 bg-[#090C15] border border-white/10 focus:border-white/20 focus:outline-none rounded-[10px] text-sm text-white appearance-none cursor-pointer transition-all"
+                      >
+                        <option className="bg-[#0B0F19]" value="">Select timeframe</option>
+                        <option className="bg-[#0B0F19]" value="Immediately (within 1-2 weeks)">Immediately (within 1-2 weeks)</option>
+                        <option className="bg-[#0B0F19]" value="Within 1 month">Within 1 month</option>
+                        <option className="bg-[#0B0F19]" value="1 - 3 months">1 - 3 months</option>
+                        <option className="bg-[#0B0F19]" value="Just exploring options">Just exploring options</option>
+                      </select>
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-xs text-white/50">▼</span>
+                    </div>
                   </div>
                 </div>
 
@@ -655,7 +682,14 @@ export default function SchedulerCore({ onClose, headingLevel = "h3" }: Schedule
                 {/* Terms and Bottom Buttons */}
                 <div className="pt-6 flex flex-col gap-5 border-t border-white/5 mt-6">
                   <p className="text-[13px] text-white/60 leading-relaxed select-none">
-                    By proceeding, you agree to Rhinon Labs' <span className="font-semibold text-white">Terms</span> and <span className="font-semibold text-white">Privacy Policy</span>.
+                    By proceeding, you agree to Rhinon Labs'{" "}
+                    <Link href="/privacy-terms" className="font-semibold text-white underline hover:text-white/80 transition-colors">
+                      Terms
+                    </Link>{" "}
+                    and{" "}
+                    <Link href="/privacy-terms" className="font-semibold text-white underline hover:text-white/80 transition-colors">
+                      Privacy Policy
+                    </Link>.
                   </p>
 
                   <div className="flex items-center justify-end gap-6">

@@ -184,42 +184,45 @@ export function Process() {
             </div>
 
             <div className="max-w-[1200px] mx-auto px-6 relative z-10 grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-                {/* Step rail */}
-                <ol className="flex flex-col gap-3">
-                    {steps.map((s, i) => {
-                        const on = i === active;
-                        return (
-                            <li key={s.id}>
-                                <button
-                                    onClick={() => setActive(i)}
-                                    aria-current={on ? 'step' : undefined}
-                                    className={`group relative w-full overflow-hidden rounded-2xl border px-5 py-5 text-left transition-all duration-300 ${on ? 'border-[#5b7bff]/50 bg-[#5b7bff]/[0.07] shadow-[0_0_40px_-12px_rgba(91,123,255,0.7)]' : 'border-white/10 bg-white/2 hover:border-white/20'}`}
-                                >
-                                    {/* progress line for the active step */}
-                                    <span className="absolute left-0 top-0 h-full w-[3px] bg-white/5">
-                                        {on && <span key={active} className="px-progress block h-full w-full origin-top bg-linear-to-b from-[#5b7bff] to-[#2dd4bf]" style={{ animationDuration: `${STEP_MS}ms` }} />}
-                                    </span>
-                                    <div className="flex items-start gap-4">
-                                        <span className={`font-mono text-2xl font-semibold leading-none tabular-nums ${on ? 'px-num' : 'text-white/30'}`}>{s.id}</span>
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex items-center justify-between gap-3">
-                                                <h3 className={`text-lg font-semibold tracking-tight ${on ? 'text-white' : 'text-white/75'}`}>{s.title}</h3>
-                                                <span className="shrink-0 rounded-full border border-white/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-white/55">{s.meta}</span>
+                {/* Left column: Step rail + CTA button */}
+                <div className="flex flex-col gap-3">
+                    <ol className="flex flex-col gap-3">
+                        {steps.map((s, i) => {
+                            const on = i === active;
+                            return (
+                                <li key={s.id}>
+                                    <button
+                                        onClick={() => setActive(i)}
+                                        aria-current={on ? 'step' : undefined}
+                                        className={`group relative w-full overflow-hidden rounded-2xl border px-5 py-5 text-left transition-all duration-300 ${on ? 'border-[#5b7bff]/50 bg-[#5b7bff]/[0.07] shadow-[0_0_40px_-12px_rgba(91,123,255,0.7)]' : 'border-white/10 bg-white/2 hover:border-white/20'}`}
+                                    >
+                                        {/* progress line for the active step */}
+                                        <span className="absolute left-0 top-0 h-full w-[3px] bg-white/5">
+                                            {on && <span key={active} className="px-progress block h-full w-full origin-top bg-linear-to-b from-[#5b7bff] to-[#2dd4bf]" style={{ animationDuration: `${STEP_MS}ms` }} />}
+                                        </span>
+                                        <div className="flex items-start gap-4">
+                                            <span className={`font-mono text-2xl font-semibold leading-none tabular-nums ${on ? 'px-num' : 'text-white/60'}`}>{s.id}</span>
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-center justify-between gap-3">
+                                                    <h3 className={`text-lg font-semibold tracking-tight ${on ? 'text-white' : 'text-white/75'}`}>{s.title}</h3>
+                                                    <span className="shrink-0 rounded-full border border-white/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-white/55">{s.meta}</span>
+                                                </div>
+                                                <p className={`mt-1.5 text-[14px] leading-relaxed transition-colors ${on ? 'text-white/70' : 'text-white/50'}`}>{s.description}</p>
                                             </div>
-                                            <p className={`mt-1.5 text-[14px] leading-relaxed transition-colors ${on ? 'text-white/70' : 'text-white/50'}`}>{s.description}</p>
                                         </div>
-                                    </div>
-                                </button>
-                            </li>
-                        );
-                    })}
+                                    </button>
+                                </li>
+                            );
+                        })}
+                    </ol>
                     <button
+                        type="button"
                         onClick={() => setIsSchedulerOpen(true)}
-                        className="mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-[#1c2bff] px-6 py-3.5 text-sm font-semibold text-white shadow-[0_10px_40px_-10px_rgba(28,43,255,0.9)] transition-colors hover:bg-[#1c2bff]/90"
+                        className="mt-2 w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#1c2bff] px-6 py-3.5 text-sm font-semibold text-white shadow-[0_10px_40px_-10px_rgba(28,43,255,0.9)] transition-colors hover:bg-[#1c2bff]/90"
                     >
                         Book a free discovery call <ArrowRight className="h-4 w-4" />
                     </button>
-                </ol>
+                </div>
 
                 {/* Visual panel */}
                 <div className="px-frame order-first lg:order-none min-h-[380px] lg:min-h-0">

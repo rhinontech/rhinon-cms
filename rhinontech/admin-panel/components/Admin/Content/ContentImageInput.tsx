@@ -76,7 +76,7 @@ export function ContentImageInput({
         </div>
       )}
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 w-full">
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
@@ -103,7 +103,7 @@ export function ContentImageInput({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="flex-1 px-3 py-2 rounded-lg border border-border text-sm bg-card focus:outline-none focus:ring-2 focus:ring-ring"
+          className="flex-1 min-w-0 px-3 py-2 rounded-lg border border-border text-sm bg-card focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 

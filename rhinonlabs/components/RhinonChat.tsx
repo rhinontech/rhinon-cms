@@ -57,11 +57,12 @@ export default function RhinonChatLoader() {
         }}
       >
         <Image
-          src="https://api.rhinontech.in/widget/assets/bot.png"
+          src="/assets/bot.png"
           alt="Chat"
           width={32}
           height={32}
-          unoptimized
+          quality={90}
+          priority={false}
           className="w-8 h-8 object-contain pointer-events-none"
         />
       </button>

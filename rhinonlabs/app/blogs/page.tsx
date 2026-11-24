@@ -88,6 +88,12 @@ export default async function BlogsPage() {
 
   return (
     <>
+      {/* Preload matching hero background image so mobile/desktop LCP is discovered immediately */}
+      <link rel="preload" as="image" type="image/avif" href="/images/background/background-960.avif" media="(max-width: 767px)" fetchPriority="high" />
+      <link rel="preload" as="image" type="image/avif" href="/images/background/background-1920.avif" media="(min-width: 768px)" fetchPriority="high" />
+      {/* Preconnect specifically on blogs page for S3 cover images */}
+      <link rel="preconnect" href="https://rhinontech-assets.s3.ap-south-1.amazonaws.com" crossOrigin="anonymous" />
+      <link rel="dns-prefetch" href="https://rhinontech-assets.s3.ap-south-1.amazonaws.com" />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }}

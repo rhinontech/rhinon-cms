@@ -8,7 +8,9 @@ import { ArrowRight, Search, Sparkles } from "lucide-react";
 import { type Blog } from "@/lib/api";
 import { motion, Variants } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import SchedulerModal from "@/components/Common/CTA/SchedulerModal";
+import dynamic from "next/dynamic";
+
+const SchedulerModal = dynamic(() => import("@/components/Common/CTA/SchedulerModal"));
 
 interface SearchableBlogsProps {
   initialBlogs: Blog[];
