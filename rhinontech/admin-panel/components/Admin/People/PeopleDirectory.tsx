@@ -16,6 +16,7 @@ import type { LetterBlock } from "@/types/letterBlocks";
 import { useOrganization } from "@/lib/useOrganization";
 import { GitHubAccessPanel } from "./GitHubAccessPanel";
 import { InviteDialog } from "./InviteDialog";
+import { CsvImportDialog } from "@/components/Admin/Common/CsvImportDialog";
 
 import { NativeSelect } from "@/components/ui/native-select";
 import { confirmDialog, alertDialog } from "@/components/ui/dialogs";
@@ -533,6 +534,7 @@ export function PeopleDirectory() {
   const [showNewTemplateDialog, setShowNewTemplateDialog] = useState(false);
   const [roles, setRoles] = useState<Role[]>([]);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
@@ -1116,6 +1118,16 @@ export function PeopleDirectory() {
               >
                 <TbMailForward size={14} />
                 <span className="hidden @2xl:inline">Invite</span>
+              </button>
+            )}
+            {canManage && (
+              <button
+                onClick={() => setImportOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 sm:px-3 py-1.5 text-xs font-medium text-foreground/90 hover:bg-muted whitespace-nowrap shrink-0"
+                title="Invite many people from a CSV"
+              >
+                <span className="hidden @2xl:inline">Import CSV</span>
+                <span className="@2xl:hidden">CSV</span>
               </button>
             )}
             {canManage && (
@@ -1777,6 +1789,28 @@ export function PeopleDirectory() {
           onSend={sendLetter}
         />
       )}
+      <CsvImportDialog
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        title="Import people"
+        description="Each row is invited like the Invite button: they get a setup email and a company address. Role is a role name from Settings → Roles (Employee if blank)."
+        columns={[
+          { key: "fullName", label: "Name", required: true, aliases: ["full name"] },
+          { key: "personalEmail", label: "Email", required: true, aliases: ["personal email", "e-mail"] },
+          { key: "role", label: "Role" },
+          { key: "department", label: "Department" },
+          { key: "joiningDate", label: "Joining date", aliases: ["joining", "start date"] },
+        ]}
+        endpoint="/employees"
+        buildBody={(row) => {
+          const wanted = (row.role || "Employee").toLowerCase();
+          const role = roles.find((r) => r.name.toLowerCase() === wanted || r.slug === wanted);
+          if (!role || role.slug === "superadmin" || role.slug === "collaborator") return `Unknown role "${row.role}"`;
+          return { fullName: row.fullName, personalEmail: row.personalEmail, roleId: role.id, ...(row.department ? { department: row.department } : {}), ...(row.joiningDate ? { joiningDate: row.joiningDate } : {}) };
+        }}
+        onDone={() => { void fetchEmployees(); }}
+        template={"Name,Email,Role,Department,Joining date\nAman Gupta,aman@gmail.com,Sales rep,Sales,2026-12-01\n"}
+      />
       <InviteDialog open={inviteOpen} onClose={() => setInviteOpen(false)} roles={roles} onInvited={() => { void fetchEmployees(); }} />
     </div>
   );

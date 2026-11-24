@@ -255,6 +255,23 @@ Built and checked against the beta database with four roles (platform owner, HR,
 - **U6, partly done.** Breadcrumbs now use menu labels (correction to F9: they already showed the page, but used URL words), the Help menu is in, and Home has proper empty states. Still open: a CRM overview page, and an empty-state pass across the other modules.
 - **Also added:** a `DISABLE_SCHEDULER=true` switch, so a laptop pointed at a shared database runs no background jobs.
 
+#### Status (25 November 2026, later): code-only findings built on `beta`
+
+Committed one batch at a time; both apps build.
+- **Q1–Q9:** done.
+- **G0.5:** done. The 4 stale tests are fixed, and the isolation suites run even if hardening fails.
+- **G1.1:** done. Invite by name, email and role, plus role templates (Admin, Sales rep, Sales manager, Project manager).
+- **G1.5:** done. First-party product events.
+- **G1.6:** done. Email for actionable notifications.
+- **G2.1:** done for PAN/bank/UAN/ESIC encryption at rest and sandboxed lead replies. HttpOnly sessions and CSP are still open.
+- **G2.2:** done. `crm:viewAll` and `crm:export`, backfilled to every existing CRM role.
+- **G2.4:** done. Answer rate, hand-off rate and unanswered questions.
+- **G2.6:** done. CSV import for people and projects.
+- **G2.9:** done. Console activity and pause sending. Bounce and complaint figures wait on G0.3.
+- **G2.10:** done. Ownership transfer and module switches.
+
+Still open, needing a decision or production access: G0.1, G0.2, G0.3, G0.4, G1.3, G1.4 (help content), G2.3, G2.5, G2.7, G2.8, and Tier 3.
+
 #### The target experience
 
 Open the app, see what needs you, and get to it in one click. If you're looking for something else, it's under Sell, Deliver or People with the same name as on the website, or you can type it into search.
