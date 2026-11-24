@@ -1,4 +1,5 @@
 import { Router, Response } from "express";
+import { trackEvent } from "../services/productEvents";
 import { canSeeCrmRecord, scopeToOwner } from "../services/crmScope";
 import { Op, fn, col } from "sequelize";
 import { Deal, PipelineStage, Account, Lead, User, Activity, Task, Project } from "../models";
@@ -29,6 +30,7 @@ const DEAL_INCLUDES = [
 async function applyStageChange(deal: Deal, stage: PipelineStage, userId: string, lostReason?: string | null) {
   const fromStageId = deal.stageId;
   const isClosing = stage.type !== "Open";
+  if (stage.type === "Won" && deal.status !== "Won") trackEvent("deal_won", userId, { dealId: deal.id });
 
   await deal.update({
     stageId: stage.id,
@@ -251,6 +253,7 @@ router.post("/", writeAccess, async (req: AuthRequest, res: Response) => {
       ownerId: req.body?.ownerId ?? req.user!.userId,
       createdById: req.user!.userId,
     });
+    trackEvent("deal_created", req.user!.userId, { dealId: deal.id });
 
     await Activity.create({
       dealId: deal.id,

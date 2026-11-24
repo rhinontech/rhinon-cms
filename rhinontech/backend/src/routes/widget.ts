@@ -1,4 +1,5 @@
 import express, { Router, type Request, type Response, type NextFunction } from "express";
+import { trackEvent } from "../services/productEvents";
 import multer from "multer";
 import fs from "node:fs";
 import nodePath from "node:path";
@@ -135,6 +136,7 @@ router.post("/chatbot/set-installed", withResolvedBot, asyncRoute(async (req, re
   if (!bot.installedAt && !fromLocalPage(req)) {
     await bot.update({ installedAt: new Date() });
     emitToOrg(organizationId, "chatbot:installed", { chatbotId: bot.id });
+    trackEvent("chatbot_installed", null, { chatbotId: bot.id }, organizationId);
   }
   res.json({ success: true });
 }));

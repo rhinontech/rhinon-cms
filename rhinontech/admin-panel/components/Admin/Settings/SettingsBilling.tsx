@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@/lib/track";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { TbCheck, TbMinus, TbSend } from "react-icons/tb";
@@ -167,7 +168,7 @@ export function SettingsBilling() {
                           variant={asked ? "outline" : "default"}
                           size="sm"
                           disabled={!isOwner || asked}
-                          onClick={() => setRequesting(plan)}
+                          onClick={() => { track("upgrade_clicked", { plan: plan.id }); setRequesting(plan); }}
                         >
                           <TbSend /> {asked ? "Requested" : `Request ${plan.label}`}
                         </Button>

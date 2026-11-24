@@ -1,4 +1,5 @@
 import { Router, Request, Response } from "express";
+import { trackEvent } from "../services/productEvents";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -183,6 +184,7 @@ router.post("/signup", async (req: Request, res: Response) => {
       { expiresIn: env.jwtExpiresIn as jwt.SignOptions["expiresIn"] }
     );
 
+    trackEvent("signup", created.id, {}, organization.id);
     res.status(201).json({
       token,
       roleSlug: "superadmin",

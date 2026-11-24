@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@/lib/track";
 import Link from "next/link";
 import type { IconType } from "react-icons";
 import {
@@ -89,7 +90,7 @@ export function AttentionList({ rows, loading, error, onRetry }: { rows: Attenti
             const Icon = row.icon;
             return (
               <li key={row.key}>
-                <Link href={row.href} prefetch={false} className="group flex items-center gap-3 px-5 py-3 transition-colors hover:bg-foreground/[0.03]" data-testid={`attention-${row.key}`}>
+                <Link href={row.href} prefetch={false} onClick={() => track("home_attention_clicked", { row: row.key })} className="group flex items-center gap-3 px-5 py-3 transition-colors hover:bg-foreground/[0.03]" data-testid={`attention-${row.key}`}>
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg" style={{ background: `${row.tone}1f`, color: row.tone }}>
                     <Icon size={17} />
                   </span>

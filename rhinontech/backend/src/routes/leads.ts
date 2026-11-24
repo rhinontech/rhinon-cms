@@ -1,4 +1,5 @@
 import { Router, Response } from "express";
+import { trackEvent } from "../services/productEvents";
 import { canSeeCrmRecord, scopeToOwner } from "../services/crmScope";
 import { Lead, Campaign, CampaignActivity, ContactGroup, ContactGroupMember, Account, Deal, PipelineStage, Activity, User, Task, InboxEmail, WorkflowEnrollment } from "../models";
 import { findOrCreateAccountForLead } from "./accounts";
@@ -450,6 +451,7 @@ router.post("/import", writeAccess, async (req: AuthRequest, res: Response) => {
     );
 
     const created = await Lead.bulkCreate(toCreate, { validate: true });
+    if (created.length) trackEvent("contacts_imported", req.user!.userId, { count: created.length });
 
     const allImportedIds = [...created.map(l => l.id), ...existing.map(e => e.id)];
 

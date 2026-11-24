@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@/lib/track";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import type { IconType } from "react-icons";
@@ -167,7 +168,8 @@ export function CommandPalette() {
     }
   };
 
-  const go = (href: string) => {
+  const go = (href: string, kind = "page") => {
+    track("search_used", { kind, chars: query.trim().length });
     setOpen(false);
     router.push(href);
   };
@@ -232,7 +234,7 @@ export function CommandPalette() {
                 return (
                   <CommandGroup key={group.type} heading={group.heading}>
                     {rows.map((r) => (
-                      <CommandItem key={`${r.type}:${r.id}`} value={`${r.type}:${r.id}`} onSelect={() => go(recordHref(r))} className="gap-3">
+                      <CommandItem key={`${r.type}:${r.id}`} value={`${r.type}:${r.id}`} onSelect={() => go(recordHref(r), r.type)} className="gap-3">
                         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
                           <Icon size={16} />
                         </span>

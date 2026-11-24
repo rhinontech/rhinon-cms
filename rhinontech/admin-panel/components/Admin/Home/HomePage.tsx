@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@/lib/track";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -240,7 +241,7 @@ function HomeContent() {
               {quickActions.map((action) => {
                 const Icon = action.icon;
                 return (
-                  <Link key={action.label} href={action.href} prefetch={false} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card/70 px-3 py-1.5 text-xs font-medium text-foreground/90 shadow-xs transition-colors hover:bg-card">
+                  <Link key={action.label} href={action.href} prefetch={false} onClick={() => track("home_quick_action", { action: action.label })} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card/70 px-3 py-1.5 text-xs font-medium text-foreground/90 shadow-xs transition-colors hover:bg-card">
                     <Icon size={15} className="text-muted-foreground" /> {action.label}
                   </Link>
                 );

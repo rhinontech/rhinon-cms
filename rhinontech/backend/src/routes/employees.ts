@@ -1,4 +1,5 @@
 import { Router, Response } from "express";
+import { trackEvent } from "../services/productEvents";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import multer from "multer";
@@ -297,6 +298,7 @@ router.post("/", authorize("employees:write"), async (req: AuthRequest, res: Res
     console.error("Failed to send welcome email:", err);
   }
 
+  trackEvent("invite_sent", req.user!.userId, { quick: !req.body.department, roleId });
   res.status(201).json({
     ...employee.toJSON(),
     passwordHash: undefined,
