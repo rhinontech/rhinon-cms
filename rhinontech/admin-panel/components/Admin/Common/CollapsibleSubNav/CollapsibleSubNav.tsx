@@ -16,7 +16,14 @@ export interface SubNavItem {
   isCollapsible?: boolean;
   /** Only meaningful when isCollapsible — forces the group open (e.g. when a child route is active). */
   isExpanded?: boolean;
+  /** Other paths that count as this item — one "Deals" entry owns both the board and the list. */
+  match?: string[];
   children?: SubNavItem[];
+}
+
+function itemIsActive(item: SubNavItem, pathname: string): boolean {
+  if (item.exact ? pathname === item.href : isWithin(pathname, item.href)) return true;
+  return (item.match ?? []).some((path) => isWithin(pathname, path));
 }
 
 interface CollapsibleSubNavProps {
@@ -76,7 +83,7 @@ export function CollapsibleSubNav({ title, items }: CollapsibleSubNavProps) {
                 label={item.label}
                 isCollapsible={item.isCollapsible}
                 isExpanded={item.isExpanded}
-                isActive={item.exact ? pathname === item.href : isWithin(pathname, item.href)}
+                isActive={itemIsActive(item, pathname)}
                 href={item.isCollapsible ? undefined : item.href}
               >
                 {item.children?.map((child, childIndex) => (
@@ -85,7 +92,7 @@ export function CollapsibleSubNav({ title, items }: CollapsibleSubNavProps) {
                     icon={child.icon}
                     label={child.label}
                     href={child.href}
-                    isActive={pathname === child.href}
+                    isActive={child.exact === false ? isWithin(pathname, child.href) : pathname === child.href}
                   />
                 ))}
               </SidebarItem>

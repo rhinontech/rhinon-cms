@@ -89,7 +89,7 @@ export function ProjectRail({
         </span>
         {showAllProjectsLink && (
           <Link
-            href={`/${roleSlug}/work/clients`}
+            href={`/${roleSlug}/work/projects`}
             title="All projects"
             className="rounded p-1 text-muted-foreground hover:bg-card hover:text-foreground/85"
           >

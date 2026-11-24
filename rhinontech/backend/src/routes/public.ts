@@ -1093,6 +1093,7 @@ router.get("/legal", (_req: Request, res: Response) => {
     termsUrl: legal.termsUrl || null,
     privacyUrl: legal.privacyUrl || null,
     dpaUrl: legal.dpaUrl || null,
+    supportEmail: legal.supportEmail || null,
     acceptanceRequired: legal.requireAcceptance,
   });
 });

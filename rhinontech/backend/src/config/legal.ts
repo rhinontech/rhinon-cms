@@ -11,6 +11,8 @@ export const legal = {
   termsUrl: process.env.TERMS_URL || "",
   privacyUrl: process.env.PRIVACY_URL || "",
   dpaUrl: process.env.DPA_URL || "",
+  /** Where customers write for help — shown in the app's Help menu only when set. */
+  supportEmail: process.env.SUPPORT_EMAIL || "",
   /** Off by default so the existing signup form keeps working until it sends acceptTerms. */
   requireAcceptance: process.env.REQUIRE_TERMS_ACCEPTANCE === "true",
 };

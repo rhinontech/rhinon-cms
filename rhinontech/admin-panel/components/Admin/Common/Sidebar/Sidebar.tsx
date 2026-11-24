@@ -4,26 +4,148 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import type { IconType } from "react-icons";
-import { TbPin, TbPinFilled } from "react-icons/tb";
+import { TbFileText, TbHelpCircle, TbMail, TbPin, TbPinFilled, TbRocket, TbSearch } from "react-icons/tb";
 import { cn } from "@/lib/utils";
-import { MODULES, isWithin, moduleTone } from "@/components/Admin/Common/navConfig";
+import {
+  APPROVAL_PERMISSIONS, MODULES, NAV_SECTIONS, PLATFORM_ITEMS,
+  entryIsActive, entryRoute, isWithin, moduleTone, type NavEntry,
+} from "@/components/Admin/Common/navConfig";
 import { useDashboard } from "../../../Common/DashboardProvider/DashboardProvider";
 import { usePermissions } from "@/context/PermissionsContext";
 import { apiFetch } from "@/lib/api";
 import { SITE_SCOPED_MODULES, useActiveBrand, type SiteScopedModule } from "@/lib/sites";
-import { BrandSwitcher } from "@/components/Admin/Common/Sites/BrandSwitcher";
+import { WorkspaceIdentity } from "@/components/Admin/Common/Sites/BrandSwitcher";
 import { selectUnreadTotal, useTeamChat } from "@/components/Admin/Chat/store";
+import { useCommandPalette } from "@/components/Admin/Common/CommandPalette/store";
+import { useShortcutLabel } from "@/components/Admin/Common/CommandPalette/useShortcutLabel";
+import { useApprovalCount } from "@/lib/approvals";
+import { useLegal } from "@/lib/legal";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
-/** The module a sidebar href points at: /admin/outreach -> "outreach". */
-function moduleKeyOf(href: string): string {
-  return href.split("/")[2] ?? "";
+interface NavLink {
+  key: string;
+  label: string;
+  icon: IconType;
+  href: string;
+  active: boolean;
+  badge?: number;
+}
+
+/** One row: a coloured tile per module (soft at rest, solid when you are in it), then the label. */
+function NavRow({ item, expanded }: { item: NavLink; expanded: boolean }) {
+  const Icon = item.icon;
+  const tone = moduleTone(item.key);
+  return (
+    <Link
+      href={item.href}
+      prefetch={false}
+      title={expanded ? undefined : item.label}
+      aria-current={item.active ? "page" : undefined}
+      className={cn(
+        "group relative flex h-9 select-none items-center gap-3 rounded-lg px-1.5 text-[13px] font-medium transition-[background-color,color,box-shadow] duration-150 cursor-pointer active:scale-[0.98]",
+        item.active
+          ? "bg-card text-foreground shadow-xs ring-1 ring-foreground/[0.06] dark:bg-white/[0.08] dark:shadow-none dark:ring-white/[0.06]"
+          : "text-foreground/65 hover:bg-card/60 hover:text-foreground dark:hover:bg-white/[0.05]"
+      )}
+    >
+      <span className="relative shrink-0 pointer-events-none">
+        <span
+          className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors duration-150"
+          style={{ background: item.active ? tone : `${tone}1f`, color: item.active ? "#fff" : tone }}
+        >
+          <Icon size={17} strokeWidth={1.9} />
+        </span>
+        {/* The collapsed rail has no room for a count — a dot still says "something new". */}
+        {!expanded && !!item.badge && (
+          <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-brand ring-2 ring-background" />
+        )}
+      </span>
+      {expanded && <span className="flex-1 truncate pointer-events-none">{item.label}</span>}
+      {expanded && !!item.badge && (
+        <span className="ml-auto rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold leading-none tabular-nums text-brand-foreground pointer-events-none">
+          {item.badge > 99 ? "99+" : item.badge}
+        </span>
+      )}
+    </Link>
+  );
+}
+
+/** A group heading when the sidebar is open; a thin rule on the icon rail, so the grouping survives collapsing. */
+function SectionLabel({ label, expanded }: { label: string; expanded: boolean }) {
+  return expanded ? (
+    <p className="px-2 pb-1 pt-3.5 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/75">{label}</p>
+  ) : (
+    <div className="mx-2.5 my-2 h-px bg-foreground/[0.08]" aria-hidden />
+  );
+}
+
+/** Help, at the foot of the sidebar: search, setup, and how to reach a person. */
+function HelpMenu({ expanded, roleSlug, showSetup }: { expanded: boolean; roleSlug: string; showSetup: boolean }) {
+  const openPalette = useCommandPalette((s) => s.setOpen);
+  const shortcut = useShortcutLabel();
+  const legal = useLegal();
+  const [open, setOpen] = useState(false);
+  const row = "flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm text-foreground/85 hover:bg-muted";
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          title={expanded ? undefined : "Help"}
+          className="group flex h-9 w-full select-none items-center gap-3 rounded-lg px-1.5 text-[13px] font-medium text-foreground/65 transition-colors hover:bg-card/60 hover:text-foreground dark:hover:bg-white/[0.05]"
+        >
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-foreground/[0.05] text-foreground/60">
+            <TbHelpCircle size={17} strokeWidth={1.9} />
+          </span>
+          {expanded && <span className="flex-1 truncate text-left">Help</span>}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent side="right" align="end" className="w-64 p-1.5">
+        <button className={row} onClick={() => { setOpen(false); openPalette(true); }}>
+          <TbSearch size={16} className="shrink-0 text-muted-foreground" />
+          <span className="flex-1">Search and jump to anything</span>
+          <kbd className="rounded border border-border px-1.5 text-[10px] text-muted-foreground">{shortcut}</kbd>
+        </button>
+        {showSetup && (
+          <Link href={`/${roleSlug}/dashboard#setup`} prefetch={false} className={row} onClick={() => setOpen(false)}>
+            <TbRocket size={16} className="shrink-0 text-muted-foreground" />
+            <span className="flex-1">Getting started checklist</span>
+          </Link>
+        )}
+        {legal?.supportEmail && (
+          <a href={`mailto:${legal.supportEmail}`} className={row}>
+            <TbMail size={16} className="shrink-0 text-muted-foreground" />
+            <span className="min-w-0 flex-1 truncate">{`Email support (${legal.supportEmail})`}</span>
+          </a>
+        )}
+        {(legal?.termsUrl || legal?.privacyUrl) && (
+          <div className="mt-1 border-t border-border pt-1">
+            {legal?.termsUrl && (
+              <a href={legal.termsUrl} target="_blank" rel="noreferrer" className={row}>
+                <TbFileText size={16} className="shrink-0 text-muted-foreground" />
+                <span className="flex-1">Terms of service</span>
+              </a>
+            )}
+            {legal?.privacyUrl && (
+              <a href={legal.privacyUrl} target="_blank" rel="noreferrer" className={row}>
+                <TbFileText size={16} className="shrink-0 text-muted-foreground" />
+                <span className="flex-1">Privacy policy</span>
+              </a>
+            )}
+          </div>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
 }
 
 export function Sidebar() {
   const pathname = usePathname();
   const { sidebarExpanded, setSidebarExpanded, isHovering, setIsHovering, mobileNavOpen, setMobileNavOpen } = useDashboard();
-  const { has, isPlatformOwner } = usePermissions();
-  // Which brand the whole admin is viewed as. Every module is available under
+  const { has, isOwner, isPlatformOwner, account } = usePermissions();
+  const openPalette = useCommandPalette((s) => s.setOpen);
+  const shortcut = useShortcutLabel();
+  // Which brand the brand-split modules open on. Every module is available under
   // every brand; this only decides which brand's data the split ones show.
   const { slug: brandSlug } = useActiveBrand();
   // Built from the URL, not the async PermissionsContext state, so the very
@@ -31,6 +153,7 @@ export function Sidebar() {
   // effectiveRoleSlug starts empty until /auth/me resolves, which would
   // otherwise render every href as "//dashboard" on first paint.
   const roleSlug = pathname.split("/")[1] || "";
+  const isPlatform = !!account.organization?.isPlatform;
 
   // The mobile drawer always shows labels; desktop keeps pin/hover behavior.
   const expanded = sidebarExpanded || isHovering || mobileNavOpen;
@@ -40,6 +163,8 @@ export function Sidebar() {
   const canReadIdeas = has("startupIdeas:read");
   const [unreadIdeas, setUnreadIdeas] = useState(0);
   const unreadChat = useTeamChat(selectUnreadTotal);
+  const canApprove = has(...APPROVAL_PERMISSIONS);
+  const pendingApprovals = useApprovalCount(canApprove);
   useEffect(() => {
     if (!canReadIdeas) return;
     let active = true;
@@ -55,50 +180,50 @@ export function Sidebar() {
     };
   }, [canReadIdeas, pathname]);
 
-  const item = (key: string, permissions: string[], extra: { badge?: number; platformOnly?: boolean } = {}) => ({
-    title: MODULES[key].label,
-    icon: MODULES[key].icon,
-    href: `/${roleSlug}/${key}`,
-    permissions,
-    ...extra,
-  });
+  const badges: Record<string, number> = { chat: unreadChat, "startup-ideas": unreadIdeas, approvals: pendingApprovals };
 
-  const navItems = [
-    item("dashboard", ["dashboard:read"]),
-    item("inbox", ["inbox:read"]),
-    item("chat", ["chat:read"], { badge: unreadChat }),
-    item("pages", ["pages:read"]),
-    item("crm", ["crm:read"]),
-    item("outreach", ["outreach:read"]),
-    item("chatbot", ["chatbot:read"]),
-    item("automation", ["outreach:read", "crm:read", "dashboard:read"]),
-    item("work", ["work:read"]),
-    item("employees", ["people:read", "attendance:read", "leave:read", "performance:read", "documents:read"]),
-    item("payroll", ["payslips:read"]),
-    item("content", ["content:read"]),
-    item("startup-ideas", ["startupIdeas:read"], { badge: unreadIdeas }),
-    item("meetings", ["meetings:read"]),
-    item("analytics", ["analytics:read"]),
-    // The platform team's own module: every customer workspace. Not a permission —
-    // a tenant's owner is a superadmin too — so it keys on being the platform's owner.
-    item("platform", [], { platformOnly: true }),
-    item("settings", ["settings:read", "docsAccess:read", "provisioning:read"]),
-  ]
-    .filter((item) => ("platformOnly" in item && item.platformOnly ? isPlatformOwner : has(...item.permissions)))
-    // Link straight into the active brand for the modules that are split by
-    // one, so switching brand and clicking Inbox does not bounce through the
-    // brand picker every time.
-    .map((item) => {
-      const key = moduleKeyOf(item.href);
-      const scoped = SITE_SCOPED_MODULES.includes(key as SiteScopedModule);
-      return scoped && brandSlug ? { ...item, href: `${item.href}/${brandSlug}` } : item;
-    }) as Array<{
-    title: string;
-    icon: IconType;
-    href: string;
-    permissions: string[];
-    badge?: number;
-  }>;
+  /** A module's link — straight into the active brand for brand-split modules, so it never bounces through a picker. */
+  const hrefFor = (moduleKey: string) => {
+    const scoped = SITE_SCOPED_MODULES.includes(moduleKey as SiteScopedModule);
+    return scoped && brandSlug ? `/${roleSlug}/${moduleKey}/${brandSlug}` : `/${roleSlug}/${moduleKey}`;
+  };
+
+  const toLink = (entry: NavEntry): NavLink | null => {
+    const route = entryRoute(entry, has);
+    if (!route) return null;
+    return {
+      key: entry.key,
+      label: MODULES[entry.key].label,
+      icon: MODULES[entry.key].icon,
+      href: hrefFor(route),
+      active: entryIsActive(entry, pathname),
+      badge: badges[entry.key],
+    };
+  };
+
+  const single = (key: string, permissions: string[]): NavLink | null =>
+    has(...permissions)
+      ? { key, label: MODULES[key].label, icon: MODULES[key].icon, href: hrefFor(key), active: isWithin(pathname, `/${roleSlug}/${key}`), badge: badges[key] }
+      : null;
+
+  const top = [single("dashboard", ["dashboard:read"]), canApprove ? single("approvals", APPROVAL_PERMISSIONS) : null].filter(Boolean) as NavLink[];
+
+  const sections = NAV_SECTIONS.map((section) => ({
+    ...section,
+    links: section.items.filter((entry) => has(...entry.permissions)).map(toLink).filter(Boolean) as NavLink[],
+  })).filter((section) => section.links.length > 0);
+
+  // The platform's own modules: the workspace list keys on being the platform's
+  // owner (a tenant's owner is a superadmin too); the rest on their permissions.
+  const platformLinks = PLATFORM_ITEMS.filter((entry) => (entry.key === "platform" ? isPlatformOwner : entry.permissions.length > 0 && has(...entry.permissions)))
+    .map(toLink)
+    .filter(Boolean) as NavLink[];
+
+  const settings = single("settings", ["settings:read", "docsAccess:read", "provisioning:read"]);
+  if (settings) {
+    // Docs Access and Provisioning live under Settings' sub-nav.
+    settings.active = ["settings", "docs-access", "provisioning"].includes(pathname.split("/")[2] ?? "");
+  }
 
   return (
     <>
@@ -117,17 +242,18 @@ export function Sidebar() {
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >
-      {/* Brand switcher — takes the logo's place, because which brand you are in
-          decides what every brand-split module below is showing. */}
+      {/* Which workspace this is. The brand switcher used to sit here; it now
+          appears in the breadcrumb of brand-split modules, and only when there
+          is more than one brand to switch between. */}
       <div className="flex h-14 w-full shrink-0 items-center justify-center">
         {expanded ? (
           <div className="flex w-full items-center gap-1 px-2">
             <div className="min-w-0 flex-1">
-              <BrandSwitcher expanded />
+              <WorkspaceIdentity expanded name={account.organization?.name ?? null} isPlatform={isPlatform} href={`/${roleSlug}/dashboard`} />
             </div>
             <button
               onClick={() => setSidebarExpanded(!sidebarExpanded)}
-              title={sidebarExpanded ? "Unpin sidebar" : "Pin sidebar open"}
+              title={sidebarExpanded ? "Collapse to icons" : "Keep the menu open"}
               className={cn(
                 "hidden shrink-0 rounded-md p-1.5 transition-colors lg:block",
                 sidebarExpanded ? "text-foreground/80 hover:bg-foreground/[0.06]" : "text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground"
@@ -137,53 +263,51 @@ export function Sidebar() {
             </button>
           </div>
         ) : (
-          <BrandSwitcher expanded={false} />
+          <WorkspaceIdentity expanded={false} name={account.organization?.name ?? null} isPlatform={isPlatform} href={`/${roleSlug}/dashboard`} />
         )}
       </div>
 
-      {/* Nav */}
-      <nav className="flex min-h-0 flex-1 flex-col overflow-y-auto py-3">
+      <nav className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-2 pt-1" aria-label="Main">
         <div className="space-y-0.5 px-2">
-          {navItems.map((item) => {
-            const active = isWithin(pathname, item.href);
-            const Icon = item.icon;
-            const tone = moduleTone(moduleKeyOf(item.href));
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                prefetch={false}
-                className={cn(
-                  "group relative flex h-10 select-none items-center gap-3 rounded-lg px-1.5 text-[13px] font-medium transition-[background-color,color,box-shadow] duration-150 cursor-pointer active:scale-[0.98]",
-                  active
-                    ? "bg-card text-foreground shadow-xs ring-1 ring-foreground/[0.06] dark:bg-white/[0.08] dark:shadow-none dark:ring-white/[0.06]"
-                    : "text-foreground/65 hover:bg-card/60 hover:text-foreground dark:hover:bg-white/[0.05]"
-                )}
-              >
-                <span className="relative shrink-0 pointer-events-none">
-                  {/* Each module keeps its own colour: a soft tile at rest, solid when it is the one you are in. */}
-                  <span
-                    className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors duration-150"
-                    style={{ background: active ? tone : `${tone}1f`, color: active ? "#fff" : tone }}
-                  >
-                    <Icon size={17} strokeWidth={1.9} />
-                  </span>
-                  {/* Collapsed rail has no room for a count — a dot still signals "something new". */}
-                  {!expanded && !!item.badge && (
-                    <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-brand ring-2 ring-background" />
-                  )}
-                </span>
-                {expanded && <span className="flex-1 truncate pointer-events-none">{item.title}</span>}
-                {expanded && !!item.badge && (
-                  <span className="ml-auto rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold leading-none tabular-nums text-brand-foreground pointer-events-none">
-                    {item.badge > 99 ? "99+" : item.badge}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+          {/* Search sits first: when you don't know where something lives, type it. */}
+          <button
+            onClick={() => openPalette(true)}
+            title={expanded ? undefined : `Search (${shortcut})`}
+            className="group flex h-9 w-full select-none items-center gap-3 rounded-lg px-1.5 text-[13px] font-medium text-foreground/65 transition-colors hover:bg-card/60 hover:text-foreground dark:hover:bg-white/[0.05]"
+          >
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-foreground/[0.05] text-foreground/60">
+              <TbSearch size={16} strokeWidth={1.9} />
+            </span>
+            {expanded && (
+              <>
+                <span className="flex-1 truncate text-left">Search</span>
+                <kbd className="rounded border border-border bg-card/60 px-1.5 py-px text-[10px] font-medium text-muted-foreground">{shortcut}</kbd>
+              </>
+            )}
+          </button>
+
+          {top.map((item) => <NavRow key={item.key} item={item} expanded={expanded} />)}
+
+          {sections.map((section) => (
+            <div key={section.key} className="space-y-0.5">
+              <SectionLabel label={section.label} expanded={expanded} />
+              {section.links.map((item) => <NavRow key={item.key} item={item} expanded={expanded} />)}
+            </div>
+          ))}
+
+          {platformLinks.length > 0 && (
+            <div className="space-y-0.5">
+              <SectionLabel label="Rhinon platform" expanded={expanded} />
+              {platformLinks.map((item) => <NavRow key={item.key} item={item} expanded={expanded} />)}
+            </div>
+          )}
         </div>
       </nav>
+
+      <div className="shrink-0 space-y-0.5 border-t border-foreground/[0.06] px-2 py-2">
+        {settings && <NavRow item={settings} expanded={expanded} />}
+        <HelpMenu expanded={expanded} roleSlug={roleSlug} showSetup={isOwner && !isPlatform} />
+      </div>
     </aside>
     </>
   );

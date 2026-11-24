@@ -8,7 +8,7 @@ import { useCurrentSite, useModuleBase } from "@/lib/sites";
 function ChatbotDomainNav({ children }: { children: React.ReactNode }) {
   const base = useModuleBase();
   const { site, sites } = useCurrentSite();
-  const title = sites.length > 1 ? site?.name ?? "Chatbot" : "Chatbot";
+  const title = sites.length > 1 ? site?.name ?? "AI Chatbot" : "AI Chatbot";
 
   const items = [
     { label: "Overview", href: base, icon: <TbLayoutDashboard size={18} />, exact: true },
@@ -16,7 +16,7 @@ function ChatbotDomainNav({ children }: { children: React.ReactNode }) {
     { label: "Live chats", href: `${base}/chats`, icon: <TbMessages size={18} /> },
     { label: "Tickets", href: `${base}/tickets`, icon: <TbTicket size={18} /> },
     { label: "Help center", href: `${base}/help`, icon: <TbBook2 size={18} /> },
-    { label: "Campaigns", href: `${base}/campaigns`, icon: <TbSpeakerphone size={18} /> },
+    { label: "Pop-ups", href: `${base}/campaigns`, icon: <TbSpeakerphone size={18} /> },
     { label: "Training", href: `${base}/training`, icon: <TbSchool size={18} /> },
     { label: "Appearance", href: `${base}/appearance`, icon: <TbBrush size={18} /> },
     { label: "Forms", href: `${base}/forms`, icon: <TbForms size={18} /> },

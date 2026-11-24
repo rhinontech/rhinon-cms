@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { ProjectCollaborators } from "./ProjectCollaborators";
 import { portalPath } from "./Project/portalUrl";
+import { LAST_PROJECT_KEY } from "./Project/lastProject";
 import { TbLayoutSidebarFilled, TbLayoutSidebarRightFilled, TbPlus, TbSearch, TbExternalLink, TbLock, TbUsers, TbLayoutGrid, TbInfoCircle, TbArrowRight, TbTrash } from "react-icons/tb";
 import { promptDialog } from "@/components/ui/dialogs";
 
@@ -61,6 +62,16 @@ const emptyForm = {
 export function WorkProjectsPage() {
   const { isExpanded: isSubNavExpanded } = useSideNav();
   const roleSlug = usePathname().split("/")[1];
+  // The project opened last in this browser, offered as "Continue" — Projects
+  // used to jump straight into it, which hid the list behind a second menu item.
+  const [lastProjectId, setLastProjectId] = useState<string | null>(null);
+  useEffect(() => {
+    try {
+      setLastProjectId(window.localStorage.getItem(LAST_PROJECT_KEY));
+    } catch {
+      /* storage blocked: no shortcut, the list still works */
+    }
+  }, []);
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [employees, setEmployees] = useState<EmployeeOption[]>([]);
@@ -105,6 +116,8 @@ export function WorkProjectsPage() {
       .catch(() => setTeams([]));
   }, []);
 
+  const lastProject = lastProjectId ? projects.find((p) => p.id === lastProjectId && p.status !== "Archived") : undefined;
+
   const visibleProjects = useMemo(() => {
     const query = search.toLowerCase();
     return projects.filter((project) => {
@@ -124,6 +137,12 @@ export function WorkProjectsPage() {
     setMode("create");
     (setIsPreviewExpanded(true), setMobileDetail(true));
   };
+
+  // Home's "New project" lands here with ?new=1 and opens the form straight away.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("new") === "1") startCreate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const startEdit = () => {
     if (!selectedProject) return;
@@ -207,11 +226,22 @@ export function WorkProjectsPage() {
           <div className="flex items-center gap-3">
             <SubNavToggle />
             <div>
-              <h1 className="text-base font-semibold tracking-tight text-foreground">Clients / Projects</h1>
-              <p className="text-xs text-muted-foreground">Single master list for all running and historical projects.</p>
+              <h1 className="text-base font-semibold tracking-tight text-foreground">Projects</h1>
+              <p className="text-xs text-muted-foreground">Every running and past project, with its client.</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {lastProject && (
+              <Link
+                href={`/${roleSlug}/work/projects/${lastProject.id}`}
+                prefetch={false}
+                className="hidden max-w-[240px] items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted sm:inline-flex"
+                title={`Open ${lastProject.name}`}
+              >
+                <span className="truncate">{`Continue: ${lastProject.name}`}</span>
+                <TbArrowRight size={14} className="shrink-0" />
+              </Link>
+            )}
             <button onClick={startCreate} className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted">
               Add project
               <TbPlus size={14} />

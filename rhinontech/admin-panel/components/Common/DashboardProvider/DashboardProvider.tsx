@@ -18,11 +18,13 @@ type DashboardContextType = {
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
 const SIDEBAR_EXPANDED_STORAGE_KEY = "rhinon_sidebar_expanded";
 
-const isDashboardRoute = (path: string) => /^\/[^/]+\/dashboard$/.test(path);
-
 export function DashboardProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [sidebarExpanded, setSidebarExpandedState] = useState(isDashboardRoute(pathname));
+  // Open with labels by default, everywhere. It used to open only on the
+  // dashboard and shrink to unlabelled icons inside every module, which is
+  // exactly where people need the names to find their way. Collapsing is the
+  // person's choice, remembered below.
+  const [sidebarExpanded, setSidebarExpandedState] = useState(true);
   const [isHovering, setIsHovering] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 

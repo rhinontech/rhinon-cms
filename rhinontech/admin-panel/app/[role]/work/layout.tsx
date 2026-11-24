@@ -4,7 +4,7 @@ import { AdminDashboardShell } from "@/components/Admin/Common/AdminDashboardShe
 import { CollapsibleSubNav } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { SideNavProvider } from "@/context/SideNavContext";
 import { usePathname } from "next/navigation";
-import { TbCheckbox, TbFolders, TbGitCommit, TbLayoutDashboard, TbLayoutKanban, TbUsersGroup, TbList, TbRocket, TbCalendarWeek } from "react-icons/tb";
+import { TbCheckbox, TbFolders, TbGitCommit, TbLayoutDashboard, TbLayoutKanban, TbUsersGroup, TbRocket, TbCalendarWeek } from "react-icons/tb";
 import { useOrganization } from "@/lib/useOrganization";
 
 function WorkLayoutContent({ children }: { children: React.ReactNode }) {
@@ -15,9 +15,8 @@ function WorkLayoutContent({ children }: { children: React.ReactNode }) {
 
   const items = [
     { label: "Overview", href: base, icon: <TbLayoutDashboard size={18} />, exact: true },
-    // Projects opens straight into a workspace; the full list is its own entry.
+    // One entry for projects: the list, with "Continue" back into the last one opened.
     { label: "Projects", href: `${base}/projects`, icon: <TbFolders size={18} /> },
-    { label: "All projects", href: `${base}/clients`, icon: <TbList size={18} /> },
     { label: "Tasks", href: `${base}/tasks`, icon: <TbCheckbox size={18} /> },
     { label: "Sprints", href: `${base}/sprints`, icon: <TbRocket size={18} /> },
     { label: "Weekly Plan", href: `${base}/plan`, icon: <TbCalendarWeek size={18} /> },

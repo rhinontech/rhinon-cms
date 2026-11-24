@@ -152,7 +152,7 @@ export function ProjectWorkspace({
             : "It may have been deleted, or its visibility changed so it is no longer shared with you."}
         </p>
         {mode === "internal" && (
-          <Link href={`/${roleSlug}/work/clients`} className="mt-1 text-xs font-medium text-blue-600 dark:text-blue-300 underline">
+          <Link href={`/${roleSlug}/work/projects`} className="mt-1 text-xs font-medium text-blue-600 dark:text-blue-300 underline">
             Back to projects
           </Link>
         )}
@@ -202,7 +202,7 @@ export function ProjectWorkspace({
             </>
           ) : (
             <>
-              <Link href={`/${roleSlug}/work/clients`} className="flex items-center gap-1 hover:text-foreground">
+              <Link href={`/${roleSlug}/work/projects`} className="flex items-center gap-1 hover:text-foreground">
                 <TbArrowLeft size={13} /> Projects
               </Link>
               <TbChevronRight size={12} />

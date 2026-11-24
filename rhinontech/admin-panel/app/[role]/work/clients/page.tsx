@@ -1,5 +1,7 @@
-import { WorkProjectsPage } from "@/components/Admin/Work/WorkProjectsPage";
+import { redirect } from "next/navigation";
 
-export default function ClientsProjectsPage() {
-  return <WorkProjectsPage />;
+/** "All projects" and "Projects" are one list now; old links land on it. */
+export default async function ClientsProjectsMovedPage({ params }: { params: Promise<{ role: string }> }) {
+  const { role } = await params;
+  redirect(`/${role}/work/projects`);
 }

@@ -7,7 +7,7 @@ import Cookies from "js-cookie";
 import { clearPermissionsCache } from "@/context/PermissionsContext";
 import { useEffect, useState } from "react";
 import { LogOut } from "lucide-react";
-import { TbUser, TbChevronDown, TbChevronRight, TbEye, TbMenu2 } from "react-icons/tb";
+import { TbUser, TbChevronDown, TbChevronRight, TbEye, TbMenu2, TbSearch } from "react-icons/tb";
 import { useDashboard } from "@/components/Common/DashboardProvider/DashboardProvider";
 import {
   Popover,
@@ -15,9 +15,12 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import { apiFetch } from "@/lib/api";
-import { siteSlugFromPath, useSites } from "@/lib/sites";
+import { SITE_SCOPED_MODULES, siteSlugFromPath, useSites, type SiteScopedModule } from "@/lib/sites";
 import { ThemeToggle } from "@/components/Common/ThemeProvider/ThemeToggle";
-import { MODULES, moduleTone } from "@/components/Admin/Common/navConfig";
+import { MODULES, PAGE_LABELS, moduleTone } from "@/components/Admin/Common/navConfig";
+import { BrandCrumbSwitcher } from "@/components/Admin/Common/Sites/BrandSwitcher";
+import { useCommandPalette } from "@/components/Admin/Common/CommandPalette/store";
+import { useShortcutLabel } from "@/components/Admin/Common/CommandPalette/useShortcutLabel";
 
 /** Ids, slugs with digits and tokens are not page names, so they never become a crumb. */
 const looksLikeId = (segment: string) => /\d/.test(segment) && segment.length > 6;
@@ -27,7 +30,8 @@ const humanize = (segment: string) => {
 };
 
 /**
- * Where you are: the module, the brand for brand-split modules, then the page.
+ * Where you are: the section, the module, the brand (only when there is more
+ * than one), then the page — named the way the menus name them.
  * Built from the URL alone, so it is right on the first paint of every screen.
  */
 function Breadcrumbs({ pathname }: { pathname: string }) {
@@ -37,36 +41,71 @@ function Breadcrumbs({ pathname }: { pathname: string }) {
   if (!mod) return <div className="min-w-0 flex-1" />;
 
   const brandSlug = siteSlugFromPath(pathname);
-  const brand = brandSlug ? sites.find((s) => s.slug === brandSlug) : null;
   const pageSegments = brandSlug ? rest.slice(1) : rest;
-  const page = pageSegments[0] && !looksLikeId(pageSegments[0]) ? humanize(pageSegments[0]) : null;
-  const moduleHref = `/${role}/${moduleKey}${brandSlug ? `/${brandSlug}` : ""}`;
-  const Icon = mod.icon;
+  const segment = pageSegments[0] && !looksLikeId(pageSegments[0]) ? pageSegments[0] : "";
+  // The menu's word for the page, not the URL's ("All projects", not "Clients").
+  const page = PAGE_LABELS[`${moduleKey}/${segment}`] ?? (segment ? humanize(segment) : null);
+  const crumbHref = (key: string) =>
+    `/${role}/${key}${brandSlug && SITE_SCOPED_MODULES.includes(key as SiteScopedModule) ? `/${brandSlug}` : ""}`;
+  // A module that lives inside another (Sequences in Outreach) shows its home first.
+  const lead = mod.parent ? MODULES[mod.parent] : mod;
+  const leadKey = mod.parent ?? moduleKey;
+  const Icon = lead.icon;
   const tone = moduleTone(moduleKey);
+  const chevron = <TbChevronRight size={13} className="shrink-0 text-muted-foreground/60" />;
 
   return (
     <nav aria-label="Breadcrumb" className="flex min-w-0 flex-1 items-center gap-1.5 text-[13px]">
-      <Link href={moduleHref} className="flex min-w-0 items-center gap-2 rounded-md px-1.5 py-1 font-semibold text-foreground transition-colors hover:bg-foreground/[0.05]">
+      {/* Section and module names stay whole; only the page name gives way when space runs out. */}
+      <Link href={crumbHref(leadKey)} prefetch={false} className="flex shrink-0 items-center gap-2 rounded-md px-1.5 py-1 font-semibold text-foreground transition-colors hover:bg-foreground/[0.05]">
         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md" style={{ background: `${tone}1f`, color: tone }}>
           <Icon size={15} strokeWidth={1.9} />
         </span>
-        <span className="truncate">{mod.label}</span>
+        <span className="whitespace-nowrap">{lead.label}</span>
       </Link>
-      {brandSlug && (
+      {mod.parent && (
         <>
-          <TbChevronRight size={13} className="shrink-0 text-muted-foreground/60" />
-          <span className="hidden min-w-0 truncate rounded-full bg-foreground/[0.05] px-2 py-0.5 text-xs font-medium text-foreground/75 ring-1 ring-inset ring-foreground/[0.06] sm:inline">
-            {brand?.name ?? humanize(brandSlug)}
-          </span>
+          {chevron}
+          <Link href={crumbHref(moduleKey)} prefetch={false} className="shrink-0 whitespace-nowrap rounded-md px-1 py-1 font-medium text-foreground/85 transition-colors hover:bg-foreground/[0.05]">
+            {mod.label}
+          </Link>
         </>
       )}
-      {page && (
+      {/* One brand means there is nothing to choose — the chip only appears when there is. */}
+      {brandSlug && sites.length > 1 && (
         <>
-          <TbChevronRight size={13} className="hidden shrink-0 text-muted-foreground/60 sm:block" />
+          <span className="hidden sm:block">{chevron}</span>
+          <BrandCrumbSwitcher />
+        </>
+      )}
+      {page && page !== mod.label && (
+        <>
+          <span className="hidden sm:block">{chevron}</span>
           <span className="hidden min-w-0 truncate font-medium text-muted-foreground sm:inline">{page}</span>
         </>
       )}
     </nav>
+  );
+}
+
+/** The header's search box. The same palette opens from the sidebar and with ⌘K. */
+function HeaderSearch() {
+  const openPalette = useCommandPalette((s) => s.setOpen);
+  const shortcut = useShortcutLabel();
+  return (
+    <>
+      <button
+        onClick={() => openPalette(true)}
+        className="hidden h-8 w-44 shrink-0 items-center gap-2 rounded-full border border-foreground/[0.08] bg-card/60 px-3 text-xs text-muted-foreground shadow-xs backdrop-blur transition-colors hover:bg-card hover:text-foreground md:inline-flex xl:w-60"
+      >
+        <TbSearch size={14} />
+        <span className="flex-1 text-left">Search or jump to…</span>
+        <kbd className="rounded border border-border px-1.5 py-px text-[10px] font-medium">{shortcut}</kbd>
+      </button>
+      <button onClick={() => openPalette(true)} className="rounded-lg p-2 text-foreground/70 hover:bg-foreground/[0.06] md:hidden" aria-label="Search">
+        <TbSearch size={18} />
+      </button>
+    </>
   );
 }
 
@@ -142,6 +181,7 @@ export function SiteHeader() {
         <TbMenu2 size={20} />
       </button>
       <Breadcrumbs pathname={pathname} />
+      <HeaderSearch />
       {canPreviewRoles && (
         <Popover>
           <PopoverTrigger asChild>
