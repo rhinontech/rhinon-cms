@@ -179,6 +179,7 @@ export function PlatformWorkspaces() {
                     <th className="px-3 py-2.5 font-medium">Plan</th>
                     <th className="px-3 py-2.5 font-medium">Trial</th>
                     <th className="px-3 py-2.5 font-medium">People</th>
+                    <th className="px-3 py-2.5 font-medium">Activity (7 days)</th>
                     <th className="px-3 py-2.5 font-medium">Joined</th>
                     <th className="px-3 py-2.5 font-medium">Flags</th>
                   </tr>
@@ -209,10 +210,21 @@ export function PlatformWorkspaces() {
                         {!onTrial(o) ? "—" : o.trialEndsAt ? (o.trialExpired ? `Ended ${shortDate(o.trialEndsAt)}` : `Ends ${shortDate(o.trialEndsAt)}`) : "No deadline"}
                       </td>
                       <td className="px-3 py-3 tabular-nums">{o.seats ?? 0}</td>
+                      <td className="px-3 py-3 text-xs text-muted-foreground">
+                        {o.activity?.lastActiveAt ? (
+                          <>
+                            <span className="block text-foreground/85">{`${o.activity.activeUsers7d} active · last ${shortDate(o.activity.lastActiveAt)}`}</span>
+                            <span className="block">{`${o.activity.emails7d} emails · ${o.activity.ai7d} AI · ${o.activity.milestones.length}/5 milestones`}</span>
+                          </>
+                        ) : (
+                          "Never signed in"
+                        )}
+                      </td>
                       <td className="whitespace-nowrap px-3 py-3 text-muted-foreground">{shortDate(o.createdAt)}</td>
                       <td className="px-3 py-3">
                         <div className="flex flex-wrap gap-1.5">
                           {o.isPlatform && <Pill tone="blue">Platform</Pill>}
+                          {o.sendingPaused && <Pill tone="red">Sending paused</Pill>}
                           {o.upgradeRequest && <Pill tone="blue">{`Wants ${o.upgradeRequest.plan}`}</Pill>}
                           {o.trialExpired && <Pill tone="red">Trial ended</Pill>}
                           {o.emailVerificationPending && <Pill tone="amber">Email unconfirmed</Pill>}

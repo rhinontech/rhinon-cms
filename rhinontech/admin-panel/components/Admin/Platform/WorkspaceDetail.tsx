@@ -199,6 +199,19 @@ export function WorkspaceDetail({
                       </Select>
                     </div>
                   </div>
+                  {/* Abuse response short of suspension: their mail stops, everything else keeps working. */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border px-3 py-2">
+                    <span className="text-sm">{d.sendingPaused ? "Outgoing email is paused for this workspace." : "Outgoing email is on."}</span>
+                    <Button
+                      size="sm"
+                      variant={d.sendingPaused ? "default" : "outline"}
+                      disabled={!!busy}
+                      data-testid="toggle-sending"
+                      onClick={() => patch("sending", { sendingPaused: !d.sendingPaused }, d.sendingPaused ? "Sending resumed" : "Sending paused")}
+                    >
+                      {busy === "sending" ? <Spinner /> : null} {d.sendingPaused ? "Resume sending" : "Pause sending"}
+                    </Button>
+                  </div>
                   {status === "suspended" && status !== d.status && (
                     <Notice tone="warning">Suspending signs everyone in this workspace out and blocks new sign-ins until you reinstate it.</Notice>
                   )}

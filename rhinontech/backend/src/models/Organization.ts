@@ -49,6 +49,8 @@ export interface OrganizationSettings {
   upgradeRequest?: { plan: string; note: string | null; at: string; by: string };
   /** First-run Home: what the owner said they want to do first, and whether they hid the checklist. */
   onboarding?: { goal?: "sell" | "deliver" | "team"; answeredAt?: string; dismissedAt?: string };
+  /** Set by platform staff to stop this workspace's outgoing mail (abuse response). */
+  sendingPaused?: boolean;
   /** The workspace's own sending domains and their verification progress (services/customDomain.ts). */
   emailDomains?: {
     domain: string;
