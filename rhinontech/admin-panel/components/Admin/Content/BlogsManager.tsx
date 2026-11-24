@@ -106,11 +106,11 @@ export function BlogsManager({ resource = "blogs" }: { resource?: "blogs" | "eve
                     )}
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-bold text-foreground text-sm truncate">{blog.title}</h3>
+                    <h3 className="font-semibold text-foreground text-sm truncate">{blog.title}</h3>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span
                         className={cn(
-                          "text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded border",
+                          "text-2xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded border",
                           blog.status === "Published"
                             ? "bg-emerald-50 dark:bg-emerald-400/10 text-emerald-600 dark:text-emerald-300 border-emerald-100 dark:border-emerald-400/20"
                             : "bg-amber-50 dark:bg-amber-400/10 text-amber-600 dark:text-amber-300 border-amber-100 dark:border-amber-400/20"
@@ -119,7 +119,7 @@ export function BlogsManager({ resource = "blogs" }: { resource?: "blogs" | "eve
                         {blog.status}
                       </span>
                       {blog.category && (
-                        <span className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded border bg-muted/40 text-muted-foreground border-border truncate">
+                        <span className="text-2xs font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded border bg-muted/40 text-muted-foreground border-border truncate">
                           {blog.category}
                         </span>
                       )}

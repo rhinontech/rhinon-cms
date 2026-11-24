@@ -22,7 +22,7 @@ export function EmailBodyView({ body, className }: EmailBodyViewProps) {
         <button
           type="button"
           onClick={() => setShowQuoted((prev) => !prev)}
-          className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-border bg-background/60 px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground shadow-xs transition-colors hover:bg-muted hover:text-foreground"
+          className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-border bg-background/60 px-2.5 py-0.5 text-2xs font-medium text-muted-foreground shadow-xs transition-colors hover:bg-muted hover:text-foreground"
           title={showQuoted ? "Hide quoted text" : "Show quoted text"}
         >
           <TbDots className="h-3.5 w-3.5" />

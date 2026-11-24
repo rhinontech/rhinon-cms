@@ -110,7 +110,7 @@ function openPageLinkPicker(editor: Editor, roleSlug: string) {
   const list = document.createElement("div");
   list.className = "max-h-56 overflow-y-auto";
   const hint = document.createElement("div");
-  hint.className = "border-t border-stone-100 px-2.5 pt-1.5 text-[10px] text-stone-400";
+  hint.className = "border-t border-stone-100 px-2.5 pt-1.5 text-2xs text-stone-400";
   hint.textContent = "Pick as many as you like — Esc when done";
   wrap.appendChild(input);
   wrap.appendChild(list);

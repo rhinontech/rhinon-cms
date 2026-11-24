@@ -20,7 +20,7 @@ export function StatusBadge({ stage, className }: { stage: CampaignStage; classN
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold",
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-2xs font-semibold",
         STAGE_STYLES[stage] || STAGE_STYLES.Draft,
         className
       )}

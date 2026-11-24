@@ -321,7 +321,7 @@ export default function Inbox() {
               <BounceRow key={entry.address} entry={entry} selected={entry.address === selectedBounce} onSelect={() => setSelectedBounce(entry.address)} />
             ))}
             {!!bounces?.unmatched && (
-              <p className="px-3 py-3 text-center text-[11px] leading-4 text-muted-foreground">
+              <p className="px-3 py-3 text-center text-2xs leading-4 text-muted-foreground">
                 {`${bounces.unmatched} ${bounces.unmatched === 1 ? "notice didn't" : "notices didn't"} name an address.`}
               </p>
             )}
@@ -350,9 +350,9 @@ export default function Inbox() {
               />
             ))}
             <div ref={sentinelRef} className="h-px" />
-            {loadingMore && <p className="py-3 text-center text-[11px] text-muted-foreground">Loading more…</p>}
+            {loadingMore && <p className="py-3 text-center text-2xs text-muted-foreground">Loading more…</p>}
             {hasMore && !loadingMore && (
-              <button onClick={loadMore} className="mx-auto my-2 block rounded-full px-3 py-1 text-[11px] font-medium text-muted-foreground hover:bg-foreground/[0.05] hover:text-foreground">
+              <button onClick={loadMore} className="mx-auto my-2 block rounded-full px-3 py-1 text-2xs font-medium text-muted-foreground hover:bg-foreground/[0.05] hover:text-foreground">
                 Load more
               </button>
             )}
@@ -433,14 +433,14 @@ export default function Inbox() {
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Escape") { setSearch(""); e.currentTarget.blur(); } }}
               placeholder={folder === "bounced" ? "Search addresses or reasons" : "Search mail"}
-              className="h-9 w-full rounded-lg border border-input bg-background/70 pl-9 pr-9 text-[13px] text-foreground shadow-xs outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground/80 focus:border-ring/60 focus:ring-[3px] focus:ring-ring/15"
+              className="h-9 w-full rounded-lg border border-input bg-background/70 pl-9 pr-9 text-ui text-foreground shadow-xs outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground/80 focus:border-ring/60 focus:ring-[3px] focus:ring-ring/15"
             />
             {search ? (
               <button onClick={() => setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground" aria-label="Clear search">
                 <TbX size={14} />
               </button>
             ) : (
-              <kbd className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 rounded border bg-muted/70 px-1.5 font-sans text-[10px] font-medium leading-4 text-muted-foreground">/</kbd>
+              <kbd className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 rounded border bg-muted/70 px-1.5 font-sans text-2xs font-medium leading-4 text-muted-foreground">/</kbd>
             )}
           </div>
 
@@ -473,7 +473,7 @@ export default function Inbox() {
               >
                 {f.label}
                 {f.value === "inbox" && unread > 0 && (
-                  <span className="rounded-full bg-brand px-1.5 text-[10px] font-semibold leading-4 tabular-nums text-brand-foreground">
+                  <span className="rounded-full bg-brand px-1.5 text-2xs font-semibold leading-4 tabular-nums text-brand-foreground">
                     {unread > 99 ? "99+" : unread}
                   </span>
                 )}
@@ -553,12 +553,12 @@ function MailRow({ email: e, folder, selected, mailboxTag, onSelect }: {
       <Avatar name={outgoing ? who : e.fromName || e.fromEmail} seed={outgoing ? e.toEmails[0] ?? who : e.fromEmail} />
       <span className="min-w-0 flex-1">
         <span className="flex items-baseline gap-2">
-          <span className={cn("min-w-0 flex-1 truncate text-[13px]", unread ? "font-semibold text-foreground" : "font-medium text-foreground/85")}>
+          <span className={cn("min-w-0 flex-1 truncate text-ui", unread ? "font-semibold text-foreground" : "font-medium text-foreground/85")}>
             {outgoing ? `To: ${who}` : who}
           </span>
-          <time className={cn("shrink-0 text-[11px] tabular-nums", unread ? "font-semibold text-brand" : "text-muted-foreground")}>{listTime(e.sentAt)}</time>
+          <time className={cn("shrink-0 text-2xs tabular-nums", unread ? "font-semibold text-brand" : "text-muted-foreground")}>{listTime(e.sentAt)}</time>
         </span>
-        <span className={cn("block truncate text-[13px] leading-5", unread ? "font-medium text-foreground" : "text-foreground/75")}>
+        <span className={cn("block truncate text-ui leading-5", unread ? "font-medium text-foreground" : "text-foreground/75")}>
           {e.subject || "(No subject)"}
         </span>
         <span className="block truncate text-xs leading-5 text-muted-foreground">
@@ -568,12 +568,12 @@ function MailRow({ email: e, folder, selected, mailboxTag, onSelect }: {
         {(e.campaign || mailboxTag) && (
           <span className="mt-1.5 flex flex-wrap gap-1">
             {mailboxTag && (
-              <span className="rounded-full bg-sky-50 px-1.5 py-px text-[10.5px] font-medium text-sky-700 ring-1 ring-inset ring-sky-200 dark:bg-sky-400/10 dark:text-sky-300 dark:ring-sky-400/20">
+              <span className="rounded-full bg-sky-50 px-1.5 py-px text-2xs font-medium text-sky-700 ring-1 ring-inset ring-sky-200 dark:bg-sky-400/10 dark:text-sky-300 dark:ring-sky-400/20">
                 {mailboxTag}
               </span>
             )}
             {e.campaign && (
-              <span className="max-w-full truncate rounded-full bg-violet-50 px-1.5 py-px text-[10.5px] font-medium text-violet-700 ring-1 ring-inset ring-violet-200 dark:bg-violet-400/10 dark:text-violet-300 dark:ring-violet-400/20">
+              <span className="max-w-full truncate rounded-full bg-violet-50 px-1.5 py-px text-2xs font-medium text-violet-700 ring-1 ring-inset ring-violet-200 dark:bg-violet-400/10 dark:text-violet-300 dark:ring-violet-400/20">
                 {e.campaign.name}
               </span>
             )}

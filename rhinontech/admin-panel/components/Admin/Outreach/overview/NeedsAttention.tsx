@@ -53,7 +53,7 @@ export function NeedsAttention({ campaigns, loading }: { campaigns: Campaign[]; 
         >
           {item.icon}
           <span className="min-w-0 flex-1 truncate font-medium text-foreground">{item.title}</span>
-          <span className="shrink-0 text-[11px] text-muted-foreground">{item.hint}</span>
+          <span className="shrink-0 text-2xs text-muted-foreground">{item.hint}</span>
         </Link>
       ))}
     </div>

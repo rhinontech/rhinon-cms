@@ -201,33 +201,33 @@ export function TemplateSheet({
               )}
               {!isSocialChannel(template.channel) && template.subject && (
                 <div className="rounded-lg border border-border p-3">
-                  <p className="mb-1 text-[10px] font-semibold uppercase text-muted-foreground">Subject Line</p>
+                  <p className="mb-1 text-2xs font-semibold uppercase text-muted-foreground">Subject Line</p>
                   <p className="text-sm font-medium text-foreground">{template.subject}</p>
                 </div>
               )}
               {isSocialChannel(template.channel) && (
                 <div className="grid grid-cols-2 gap-2">
                   <div className="rounded-lg border border-border p-3">
-                    <p className="mb-1 text-[10px] font-semibold uppercase text-muted-foreground">Visibility</p>
+                    <p className="mb-1 text-2xs font-semibold uppercase text-muted-foreground">Visibility</p>
                     <p className="text-sm font-medium text-foreground">{template.visibility || "PUBLIC"}</p>
                   </div>
                   {template.articleUrl && (
                     <div className="rounded-lg border border-border p-3">
-                      <p className="mb-1 text-[10px] font-semibold uppercase text-muted-foreground">Article URL</p>
+                      <p className="mb-1 text-2xs font-semibold uppercase text-muted-foreground">Article URL</p>
                       <p className="truncate text-xs font-medium text-blue-600 dark:text-blue-300">{template.articleUrl}</p>
                     </div>
                   )}
                 </div>
               )}
               <div className="rounded-lg border border-border p-3">
-                <p className="mb-2 text-[10px] font-semibold uppercase text-muted-foreground">
+                <p className="mb-2 text-2xs font-semibold uppercase text-muted-foreground">
                   {isSocialChannel(template.channel) ? "Seed Content" : "Message Body"}
                 </p>
                 <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/85">{template.body}</p>
               </div>
               {template.aiInstructions && (
                 <div className="rounded-xl border border-violet-100 dark:border-violet-400/20 bg-violet-50/30 dark:bg-violet-400/10 p-4">
-                  <p className="mb-2 flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-violet-400">
+                  <p className="mb-2 flex items-center gap-1 text-2xs font-semibold uppercase tracking-widest text-violet-400">
                     <TbBulb size={13} /> AI Instructions
                   </p>
                   <p className="text-xs italic leading-relaxed text-foreground/70">{template.aiInstructions}</p>
@@ -287,7 +287,7 @@ export function TemplateSheet({
 
             {/* AI assist strip */}
             <div className="space-y-2 rounded-xl border border-violet-100 dark:border-violet-400/20 bg-violet-50/30 dark:bg-violet-400/10 p-3">
-              <Label className="flex items-center gap-1 text-xs font-bold text-violet-600 dark:text-violet-300">
+              <Label className="flex items-center gap-1 text-xs font-semibold text-violet-600 dark:text-violet-300">
                 <TbSparkles size={13} /> Draft with AI
               </Label>
               <div className="flex gap-2">
@@ -328,7 +328,7 @@ export function TemplateSheet({
 
             {isSocial && (
               <div className="space-y-3 rounded-xl border border-indigo-100 dark:border-indigo-400/20 bg-indigo-50/20 dark:bg-indigo-400/10 p-3">
-                <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-indigo-500 dark:text-indigo-400">
+                <p className="flex items-center gap-1 text-2xs font-semibold uppercase tracking-widest text-indigo-500 dark:text-indigo-400">
                   <TbBrandLinkedin size={12} /> LinkedIn Options
                 </p>
                 <div className="space-y-1.5">

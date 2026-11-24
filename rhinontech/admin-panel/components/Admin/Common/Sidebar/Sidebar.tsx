@@ -42,7 +42,7 @@ function NavRow({ item, expanded }: { item: NavLink; expanded: boolean }) {
       title={expanded ? undefined : item.label}
       aria-current={item.active ? "page" : undefined}
       className={cn(
-        "group relative flex h-9 select-none items-center gap-3 rounded-lg px-1.5 text-[13px] font-medium transition-[background-color,color,box-shadow] duration-150 cursor-pointer active:scale-[0.98]",
+        "group relative flex h-9 select-none items-center gap-3 rounded-lg px-1.5 text-ui font-medium transition-[background-color,color,box-shadow] duration-150 cursor-pointer active:scale-[0.98]",
         item.active
           ? "bg-card text-foreground shadow-xs ring-1 ring-foreground/[0.06] dark:bg-white/[0.08] dark:shadow-none dark:ring-white/[0.06]"
           : "text-foreground/65 hover:bg-card/60 hover:text-foreground dark:hover:bg-white/[0.05]"
@@ -62,7 +62,7 @@ function NavRow({ item, expanded }: { item: NavLink; expanded: boolean }) {
       </span>
       {expanded && <span className="flex-1 truncate pointer-events-none">{item.label}</span>}
       {expanded && !!item.badge && (
-        <span className="ml-auto rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold leading-none tabular-nums text-brand-foreground pointer-events-none">
+        <span className="ml-auto rounded-full bg-brand px-1.5 py-0.5 text-2xs font-semibold leading-none tabular-nums text-brand-foreground pointer-events-none">
           {item.badge > 99 ? "99+" : item.badge}
         </span>
       )}
@@ -73,7 +73,7 @@ function NavRow({ item, expanded }: { item: NavLink; expanded: boolean }) {
 /** A group heading when the sidebar is open; a thin rule on the icon rail, so the grouping survives collapsing. */
 function SectionLabel({ label, expanded }: { label: string; expanded: boolean }) {
   return expanded ? (
-    <p className="px-2 pb-1 pt-3.5 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/75">{label}</p>
+    <p className="px-2 pb-1 pt-3.5 text-2xs font-semibold uppercase tracking-[0.08em] text-muted-foreground/75">{label}</p>
   ) : (
     <div className="mx-2.5 my-2 h-px bg-foreground/[0.08]" aria-hidden />
   );
@@ -92,7 +92,7 @@ function HelpMenu({ expanded, roleSlug, showSetup }: { expanded: boolean; roleSl
       <PopoverTrigger asChild>
         <button
           title={expanded ? undefined : "Help"}
-          className="group flex h-9 w-full select-none items-center gap-3 rounded-lg px-1.5 text-[13px] font-medium text-foreground/65 transition-colors hover:bg-card/60 hover:text-foreground dark:hover:bg-white/[0.05]"
+          className="group flex h-9 w-full select-none items-center gap-3 rounded-lg px-1.5 text-ui font-medium text-foreground/65 transition-colors hover:bg-card/60 hover:text-foreground dark:hover:bg-white/[0.05]"
         >
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-foreground/[0.05] text-foreground/60">
             <TbHelpCircle size={17} strokeWidth={1.9} />
@@ -104,7 +104,7 @@ function HelpMenu({ expanded, roleSlug, showSetup }: { expanded: boolean; roleSl
         <button className={row} onClick={() => { setOpen(false); openPalette(true); }}>
           <TbSearch size={16} className="shrink-0 text-muted-foreground" />
           <span className="flex-1">Search and jump to anything</span>
-          <kbd className="rounded border border-border px-1.5 text-[10px] text-muted-foreground">{shortcut}</kbd>
+          <kbd className="rounded border border-border px-1.5 text-2xs text-muted-foreground">{shortcut}</kbd>
         </button>
         {showSetup && (
           <Link href={`/${roleSlug}/dashboard#setup`} prefetch={false} className={row} onClick={() => setOpen(false)}>
@@ -274,7 +274,7 @@ export function Sidebar() {
           <button
             onClick={() => openPalette(true)}
             title={expanded ? undefined : `Search (${shortcut})`}
-            className="group flex h-9 w-full select-none items-center gap-3 rounded-lg px-1.5 text-[13px] font-medium text-foreground/65 transition-colors hover:bg-card/60 hover:text-foreground dark:hover:bg-white/[0.05]"
+            className="group flex h-9 w-full select-none items-center gap-3 rounded-lg px-1.5 text-ui font-medium text-foreground/65 transition-colors hover:bg-card/60 hover:text-foreground dark:hover:bg-white/[0.05]"
           >
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-foreground/[0.05] text-foreground/60">
               <TbSearch size={16} strokeWidth={1.9} />
@@ -282,7 +282,7 @@ export function Sidebar() {
             {expanded && (
               <>
                 <span className="flex-1 truncate text-left">Search</span>
-                <kbd className="rounded border border-border bg-card/60 px-1.5 py-px text-[10px] font-medium text-muted-foreground">{shortcut}</kbd>
+                <kbd className="rounded border border-border bg-card/60 px-1.5 py-px text-2xs font-medium text-muted-foreground">{shortcut}</kbd>
               </>
             )}
           </button>

@@ -17,7 +17,7 @@ function Field({
 } & Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "type">) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{label}</span>
+      <span className="mb-1 block text-2xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
       <input
         type={type}
         value={value}
@@ -41,7 +41,7 @@ function SelectField({
 }) {
   return (
     <label className={className ? `block ${className}` : "block"}>
-      <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{label}</span>
+      <span className="mb-1 block text-2xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
       <NativeSelect
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -74,7 +74,7 @@ export function TaskFormPanel({
         <Field label="Task Title" value={form.title} onChange={(v) => set("title", v)} required placeholder="What needs doing?" />
 
         <label className="block">
-          <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Description</span>
+          <span className="mb-1 block text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Description</span>
           <textarea
             value={form.description}
             onChange={(e) => set("description", e.target.value)}
@@ -103,7 +103,7 @@ export function TaskFormPanel({
           </SelectField>
 
           <label className="block">
-            <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Due date</span>
+            <span className="mb-1 block text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Due date</span>
             <DatePicker
               ariaLabel="Due date"
               value={form.dueDate || null}

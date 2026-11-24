@@ -110,7 +110,7 @@ function EnrollmentEditor({
           </div>
           {info.invite ? (
             <div className="rounded-xl border border-border p-4 space-y-3">
-              <p className="flex items-center gap-2 text-[13px] font-medium"><CalendarPlus className="size-4" /> Calendar invite</p>
+              <p className="flex items-center gap-2 text-ui font-medium"><CalendarPlus className="size-4" /> Calendar invite</p>
               <div className="grid sm:grid-cols-3 gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="en-date">Date</Label>
@@ -125,7 +125,7 @@ function EnrollmentEditor({
                   <Input id="en-end" type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
                 </div>
               </div>
-              <p className="text-[12px] text-muted-foreground">Guests get an “Add to calendar” invite for this session. Leave the date empty to send without one.</p>
+              <p className="text-xs text-muted-foreground">Guests get an “Add to calendar” invite for this session. Leave the date empty to send without one.</p>
             </div>
           ) : null}
           <div className="space-y-1.5">
@@ -184,8 +184,8 @@ function EnrollmentSection({ event }: ManageContext) {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-[15px] font-semibold">Enrollment emails</h3>
-        <p className="text-[13px] text-muted-foreground">
+        <h3 className="text-base font-semibold">Enrollment emails</h3>
+        <p className="text-ui text-muted-foreground">
           Sent automatically as each guest&apos;s status changes. {team ? "Teardown and Hackathon sign-ups are approved on registration." : "Registrations join the waitlist until you approve them."}
         </p>
       </div>
@@ -195,17 +195,17 @@ function EnrollmentSection({ event }: ManageContext) {
           const t = templates?.find((x) => x.type === type);
           return (
             <button key={type} type="button" onClick={() => setEditing(type)}
-              className="group text-left glass-card rounded-2xl p-5 transition-all hover:-translate-y-0.5 hover:shadow-md">
+              className="group text-left glass-card rounded-xl p-5 transition-all hover:-translate-y-0.5 hover:shadow-md">
               <div className="flex items-center justify-between">
                 <span className="grid place-items-center size-9 rounded-xl bg-primary/10 text-primary"><Mail className="size-4" /></span>
-                <span className={`text-[11.5px] font-semibold ${t ? "text-emerald-700 dark:text-emerald-400" : "text-muted-foreground"}`}>
+                <span className={`text-xs font-semibold ${t ? "text-emerald-700 dark:text-emerald-400" : "text-muted-foreground"}`}>
                   {templates === null ? "…" : t ? "Active" : "Not set up"}
                 </span>
               </div>
-              <p className="mt-4 text-[14px] font-semibold">{info.title}</p>
-              <p className="mt-1 text-[12.5px] text-muted-foreground leading-relaxed">{info.when}</p>
-              <p className="mt-3 truncate text-[12.5px] italic text-muted-foreground">{t?.subject || "No subject yet"}</p>
-              <span className="mt-3 inline-flex items-center gap-1 text-[12.5px] font-medium text-primary">
+              <p className="mt-4 text-sm font-semibold">{info.title}</p>
+              <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{info.when}</p>
+              <p className="mt-3 truncate text-xs italic text-muted-foreground">{t?.subject || "No subject yet"}</p>
+              <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary">
                 <Pencil className="size-3.5" /> {t ? "Edit" : "Set up"}
               </span>
             </button>
@@ -310,7 +310,7 @@ function ReminderEditor({
               </Select>
             </div>
           </div>
-          <p className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2 text-[13px]">
+          <p className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2 text-ui">
             <Users className="size-4 text-muted-foreground" />
             Right now this reaches <span className="font-semibold">{recipients}</span> guest{recipients === 1 ? "" : "s"}.
             <span className="text-muted-foreground">It&apos;s worked out again at send time.</span>
@@ -349,7 +349,7 @@ function ScheduleDialog({ template, recipients, onClose, onDone }: { template: R
         <div className="space-y-1.5">
           <Label htmlFor="sched">Send at</Label>
           <Input id="sched" type="datetime-local" value={when} min={toLocalInput(new Date())} onChange={(e) => setWhen(e.target.value)} />
-          {!valid ? <p className="text-[12px] text-destructive">Pick a time in the future.</p> : null}
+          {!valid ? <p className="text-xs text-destructive">Pick a time in the future.</p> : null}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
@@ -404,8 +404,8 @@ function RemindersSection({ event }: ManageContext) {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h3 className="text-[15px] font-semibold">Reminders & announcements</h3>
-          <p className="text-[13px] text-muted-foreground">Write once, target by status and role, then schedule or send now. Nobody receives the same email twice.</p>
+          <h3 className="text-base font-semibold">Reminders & announcements</h3>
+          <p className="text-ui text-muted-foreground">Write once, target by status and role, then schedule or send now. Nobody receives the same email twice.</p>
         </div>
         <Button className="gap-1.5" onClick={() => setEditing({})}><Plus className="size-4" /> New email</Button>
       </div>
@@ -415,7 +415,7 @@ function RemindersSection({ event }: ManageContext) {
       ) : !sorted.length ? (
         <EmptyState icon={Mail} title="No emails yet" body="A reminder the day before and a follow-up with the recording are the usual two." action={<Button className="gap-1.5" onClick={() => setEditing({})}><Plus className="size-4" /> New email</Button>} />
       ) : (
-        <div className="glass-card rounded-2xl divide-y divide-border">
+        <div className="glass-card rounded-xl divide-y divide-border">
           {sorted.map((t) => {
             const locked = t.status === "sent" || t.status === "sending";
             return (
@@ -425,8 +425,8 @@ function RemindersSection({ event }: ManageContext) {
                     <p className="font-medium">{t.templateName}</p>
                     <ReminderStatusBadge status={t.status} />
                   </div>
-                  <p className="mt-0.5 truncate text-[13px] text-muted-foreground">{t.subject}</p>
-                  <p className="mt-1 text-[12px] text-muted-foreground">
+                  <p className="mt-0.5 truncate text-ui text-muted-foreground">{t.subject}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
                     {AUDIENCE_LABEL[t.targetGuestType]}{t.targetGuestRole !== "All" ? ` · ${t.targetGuestRole}s` : ""}
                     {" · "}
                     {t.status === "sent"
@@ -543,15 +543,15 @@ function SenderSection({ event }: ManageContext) {
   };
 
   return (
-    <div className="glass-card rounded-2xl p-5">
+    <div className="glass-card rounded-xl p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-[15px] font-semibold">Sender</h3>
-          <p className="text-[13px] text-muted-foreground">
+          <h3 className="text-base font-semibold">Sender</h3>
+          <p className="text-ui text-muted-foreground">
             Every email for this event comes from this address, and guests&apos; replies land in its Inbox.
           </p>
         </div>
-        <p className="rounded-lg bg-muted px-3 py-1.5 text-[12.5px]">
+        <p className="rounded-lg bg-muted px-3 py-1.5 text-xs">
           Guests see: <span className="font-medium">{data.current.name ? `${data.current.name} <${data.current.address}>` : data.current.address}</span>
         </p>
       </div>
@@ -581,7 +581,7 @@ function SenderSection({ event }: ManageContext) {
         </Button>
       </div>
       {data.options.length === 0 ? (
-        <p className="mt-3 text-[12px] text-muted-foreground">
+        <p className="mt-3 text-xs text-muted-foreground">
           No other addresses yet — the Super Admin can create hello@ or events@ in Team → Email addresses.
         </p>
       ) : null}

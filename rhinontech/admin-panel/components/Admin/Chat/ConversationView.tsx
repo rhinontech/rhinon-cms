@@ -341,7 +341,7 @@ export function ConversationView({ conversation, meId, threadId, jumpTo, onOpenT
                   onEdit={setEditing}
                   onRetry={retry}
                 />
-                {seenId === m.id && <p className="mt-0.5 text-right text-[10px] text-muted-foreground">Seen</p>}
+                {seenId === m.id && <p className="mt-0.5 text-right text-2xs text-muted-foreground">Seen</p>}
               </div>
             );
           })}

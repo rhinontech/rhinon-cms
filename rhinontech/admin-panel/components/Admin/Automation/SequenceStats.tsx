@@ -78,7 +78,7 @@ export function SequenceStats({ workflowId }: { workflowId: string }) {
               <span className="min-w-0 truncate text-xs font-medium text-foreground">
                 <span className="text-muted-foreground">{step.step}.</span> {step.subject || step.label}
               </span>
-              <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+              <span className="shrink-0 text-2xs tabular-nums text-muted-foreground">
                 {step.sent} sent
                 {step.openRate != null && <span className="ml-2">{step.openRate}% opened</span>}
                 {step.clickRate != null && <span className="ml-2">{step.clickRate}% clicked</span>}
@@ -107,7 +107,7 @@ export function SequenceStats({ workflowId }: { workflowId: string }) {
         ))}
       </ul>
 
-      <div className="mt-3 flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground">
+      <div className="mt-3 flex flex-wrap items-center gap-3 text-2xs text-muted-foreground">
         <Key color="#cfe0f6" label="Sent" />
         <Key color="#7fb0ea" label="Opened" />
         <Key color="#2a78d6" label="Clicked" />
@@ -121,7 +121,7 @@ function Total({ icon, label, value }: { icon?: React.ReactNode; label: string; 
     <div className="flex items-center gap-1.5">
       {icon && <span className="text-muted-foreground">{icon}</span>}
       <span className="text-sm font-semibold tabular-nums text-foreground">{value}</span>
-      <span className="text-[11px] text-muted-foreground">{label}</span>
+      <span className="text-2xs text-muted-foreground">{label}</span>
     </div>
   );
 }

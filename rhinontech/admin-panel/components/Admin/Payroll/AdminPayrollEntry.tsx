@@ -176,7 +176,7 @@ export function AdminPayrollEntry() {
                 <p className="text-sm text-muted-foreground mt-1">
                   {success.employeeName} · {MONTHS[success.month - 1]} {success.year}
                 </p>
-                <p className="text-2xl font-bold text-foreground mt-2">{INR(success.net)} <span className="text-sm font-normal text-muted-foreground">net pay</span></p>
+                <p className="text-2xl font-semibold text-foreground mt-2">{INR(success.net)} <span className="text-sm font-normal text-muted-foreground">net pay</span></p>
               </div>
               <button
                 onClick={resetForm}
@@ -372,7 +372,7 @@ export function AdminPayrollEntry() {
                   )}
                   <div className="flex justify-between border-t pt-3 mt-1">
                     <span className="font-semibold text-foreground">Net Pay</span>
-                    <span className="text-lg font-bold text-green-700 dark:text-green-300">{INR(amounts.net + reimbursementTotal)}</span>
+                    <span className="text-lg font-semibold text-green-700 dark:text-green-300">{INR(amounts.net + reimbursementTotal)}</span>
                   </div>
                 </div>
               </div>

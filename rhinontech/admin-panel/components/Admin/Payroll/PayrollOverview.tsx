@@ -64,7 +64,7 @@ export function PayrollOverview() {
               <div className="flex flex-col items-center justify-center py-12 sm:py-16 text-center text-muted-foreground">
                 <TbFileInvoice size={36} className="mb-3 text-muted-foreground/70" />
                 <p className="text-xs sm:text-sm font-medium text-muted-foreground">No payslips yet</p>
-                <p className="text-[11px] sm:text-xs mt-1">Your payslips will appear here once payroll is processed.</p>
+                <p className="text-2xs sm:text-xs mt-1">Your payslips will appear here once payroll is processed.</p>
               </div>
             ) : (
               <div className="divide-y divide-border">
@@ -82,14 +82,14 @@ export function PayrollOverview() {
                         <p className="font-medium text-foreground text-xs sm:text-sm truncate">
                           {MONTHS[slip.payroll.month - 1]} {slip.payroll.year}
                         </p>
-                        <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 truncate">
+                        <p className="text-2xs sm:text-xs text-muted-foreground mt-0.5 truncate">
                           Gross ₹{Number(slip.grossPay).toLocaleString("en-IN")}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 sm:gap-4 shrink-0">
                       <span
-                        className={`px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold uppercase tracking-wide ${
+                        className={`px-2 sm:px-2.5 py-0.5 rounded-full text-2xs sm:text-xs font-semibold uppercase tracking-wide ${
                           slip.payroll.status === "paid"
                             ? "bg-green-100 dark:bg-green-400/15 text-green-700 dark:text-green-300"
                             : slip.payroll.status === "processed"
@@ -103,7 +103,7 @@ export function PayrollOverview() {
                         <p className="font-semibold text-foreground text-xs sm:text-sm">
                           ₹{Number(slip.netPay).toLocaleString("en-IN")}
                         </p>
-                        <p className="text-[10px] sm:text-xs text-muted-foreground">Net Pay</p>
+                        <p className="text-2xs sm:text-xs text-muted-foreground">Net Pay</p>
                       </div>
                       <TbChevronRight size={16} className="text-muted-foreground/70 group-hover:text-muted-foreground transition-colors hidden sm:block" />
                     </div>

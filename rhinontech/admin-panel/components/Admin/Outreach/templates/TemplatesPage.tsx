@@ -114,17 +114,17 @@ export function TemplatesPage() {
         <Tabs value={channelFilter} onValueChange={(v) => setChannelFilter(v as ChannelFilter)}>
           <TabsList>
             <TabsTrigger value="All">
-              All <span className="text-[10px] text-muted-foreground tabular-nums">{templates.length}</span>
+              All <span className="text-2xs text-muted-foreground tabular-nums">{templates.length}</span>
             </TabsTrigger>
             <TabsTrigger value="Email">
               <TbMail size={13} /> Email
-              <span className="text-[10px] text-muted-foreground tabular-nums">
+              <span className="text-2xs text-muted-foreground tabular-nums">
                 {templates.filter((t) => EMAIL_CHANNELS.includes(t.channel)).length}
               </span>
             </TabsTrigger>
             <TabsTrigger value="LinkedIn">
               <TbBrandLinkedin size={13} /> LinkedIn
-              <span className="text-[10px] text-muted-foreground tabular-nums">
+              <span className="text-2xs text-muted-foreground tabular-nums">
                 {templates.filter((t) => SOCIAL_CHANNELS.includes(t.channel)).length}
               </span>
             </TabsTrigger>

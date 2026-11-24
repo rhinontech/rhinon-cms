@@ -387,7 +387,7 @@ export function CallOverlay({ selfId, selfName, guest }: { selfId: string | null
   if (call.phase === "lobby") {
     return (
       <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-6 bg-zinc-950 p-6 text-center text-white">
-        <div className="aspect-video w-full max-w-lg overflow-hidden rounded-2xl bg-zinc-800">
+        <div className="aspect-video w-full max-w-lg overflow-hidden rounded-xl bg-zinc-800">
           {call.outgoingVideo ? (
             <Video track={call.outgoingVideo} muted mirror className="h-full w-full object-cover" />
           ) : (
@@ -417,7 +417,7 @@ export function CallOverlay({ selfId, selfName, guest }: { selfId: string | null
   if (call.phase === "incoming" && call.incoming) {
     const inc = call.incoming;
     return (
-      <div className="fixed inset-x-4 top-4 z-[100] animate-in slide-in-from-top-4 rounded-2xl border bg-background p-4 shadow-2xl sm:left-auto sm:right-4 sm:w-80">
+      <div className="fixed inset-x-4 top-4 z-[100] animate-in slide-in-from-top-4 rounded-xl border bg-background p-4 shadow-2xl sm:left-auto sm:right-4 sm:w-80">
         <div className="flex items-center gap-3">
           <UserAvatar userId={inc.fromUserId} size="md" showPresence={false} />
           <div className="min-w-0">
@@ -482,7 +482,7 @@ export function CallOverlay({ selfId, selfName, guest }: { selfId: string | null
 
   if (minimized) {
     return (
-      <div className="fixed bottom-4 right-4 z-[100] flex items-center gap-3 rounded-2xl bg-zinc-900 p-3 pr-4 text-white shadow-2xl">
+      <div className="fixed bottom-4 right-4 z-[100] flex items-center gap-3 rounded-xl bg-zinc-900 p-3 pr-4 text-white shadow-2xl">
         <TbPhone className="size-5 text-emerald-400" />
         <div className="text-sm">
           <p className="max-w-40 truncate font-medium">{call.title}</p>

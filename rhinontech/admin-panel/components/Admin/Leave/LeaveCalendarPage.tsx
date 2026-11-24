@@ -99,7 +99,7 @@ export function LeaveCalendarPage() {
             {/* Day headers */}
             <div className="grid grid-cols-7 border-b">
               {DAYS_OF_WEEK.map(d => (
-                <div key={d} className="py-3 text-center text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                <div key={d} className="py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   {d}
                 </div>
               ))}
@@ -138,7 +138,7 @@ export function LeaveCalendarPage() {
                       {dayLeaves.slice(0, 3).map(leave => (
                         <div
                           key={leave.id}
-                          className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold text-white truncate"
+                          className="flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-semibold text-white truncate"
                           style={{ backgroundColor: leave.leaveTypeColor || "#6B7280" }}
                           title={`${leave.userName} - ${leave.leaveTypeName}`}
                         >
@@ -146,7 +146,7 @@ export function LeaveCalendarPage() {
                         </div>
                       ))}
                       {dayLeaves.length > 3 && (
-                        <p className="text-[10px] text-muted-foreground font-semibold pl-1">+{dayLeaves.length - 3} more</p>
+                        <p className="text-2xs text-muted-foreground font-semibold pl-1">+{dayLeaves.length - 3} more</p>
                       )}
                     </div>
                   </div>

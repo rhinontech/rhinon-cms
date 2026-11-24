@@ -188,7 +188,7 @@ export function ChatbotCampaignEditor({ id }: { id: string }) {
                         >
                           <LayoutGlyph layout={l.value} />
                           <p className="mt-2 text-xs font-semibold">{l.label}</p>
-                          <p className="text-[11px] leading-snug text-muted-foreground">{l.hint}</p>
+                          <p className="text-2xs leading-snug text-muted-foreground">{l.hint}</p>
                         </button>
                       ))}
                     </div>
@@ -346,7 +346,7 @@ export function ChatbotCampaignEditor({ id }: { id: string }) {
 
           <aside className="hidden w-[440px] shrink-0 flex-col border-l border-border/70 bg-muted/20 p-5 lg:flex" data-testid="campaign-preview">
             <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Preview</p>
-            <div className="flex flex-1 items-end justify-end rounded-2xl border border-border bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(127,127,127,0.05)_10px,rgba(127,127,127,0.05)_20px)] p-5">
+            <div className="flex flex-1 items-end justify-end rounded-xl border border-border bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(127,127,127,0.05)_10px,rgba(127,127,127,0.05)_20px)] p-5">
               <CampaignCardPreview content={content} accent={accent} />
             </div>
             <p className="mt-3 text-center text-xs text-muted-foreground">{layout?.label} · {describeTargeting(draft.targeting)}</p>
@@ -371,7 +371,7 @@ function pickDraft(c: Campaign): Draft {
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div className="grid gap-1.5">
-      <Label className="text-[13px]">{label}</Label>
+      <Label className="text-ui">{label}</Label>
       {children}
       {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
     </div>
@@ -382,7 +382,7 @@ function MiniStat({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-xl border border-border bg-background px-2 py-2">
       <p className="text-sm font-semibold tabular-nums">{value.toLocaleString()}</p>
-      <p className="text-[11px] text-muted-foreground">{label}</p>
+      <p className="text-2xs text-muted-foreground">{label}</p>
     </div>
   );
 }

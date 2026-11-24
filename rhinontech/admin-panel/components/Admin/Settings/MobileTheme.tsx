@@ -65,7 +65,7 @@ export function MobileTheme() {
             >
               <div className="mb-3 flex h-16 items-end gap-1.5 rounded-lg p-2" style={{ background: t.bg }}>
                 <span className="h-8 w-8 rounded-md" style={{ background: t.accent }} />
-                <span className="text-lg font-bold leading-none" style={{ color: t.fg }}>Aa</span>
+                <span className="text-lg font-semibold leading-none" style={{ color: t.fg }}>Aa</span>
               </div>
               <p className="text-sm font-medium">{t.name}{theme === t.id ? " · current" : ""}</p>
               <p className="text-xs text-muted-foreground">{t.vibe}</p>

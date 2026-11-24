@@ -185,13 +185,13 @@ export function CyclesPage() {
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-medium text-xs sm:text-sm text-foreground truncate">{cycle.name}</p>
-                        <span className={cn("text-[10px] sm:text-xs rounded-md px-1.5 sm:px-2 py-0.5 font-medium capitalize", TYPE_COLORS[cycle.type])}>
+                        <span className={cn("text-2xs sm:text-xs rounded-md px-1.5 sm:px-2 py-0.5 font-medium capitalize", TYPE_COLORS[cycle.type])}>
                           {cycle.type}
                         </span>
                       </div>
-                      <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">{cycle.startDate} — {cycle.endDate}</p>
+                      <p className="text-2xs sm:text-xs text-muted-foreground mt-0.5">{cycle.startDate} — {cycle.endDate}</p>
                     </div>
-                    <span className={cn("text-[10px] sm:text-xs rounded-md px-1.5 sm:px-2 py-0.5 font-medium capitalize shrink-0", STATUS_COLORS[cycle.status])}>
+                    <span className={cn("text-2xs sm:text-xs rounded-md px-1.5 sm:px-2 py-0.5 font-medium capitalize shrink-0", STATUS_COLORS[cycle.status])}>
                       {cycle.status}
                     </span>
                   </div>

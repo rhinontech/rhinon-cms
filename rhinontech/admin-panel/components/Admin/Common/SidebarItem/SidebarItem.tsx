@@ -25,7 +25,7 @@ interface SidebarItemProps {
 // icon in the current module's colour (--tone), which every item here picks up.
 const itemClass = (active: boolean) =>
   cn(
-    "flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-[13px] transition-[background-color,color,box-shadow] duration-150 [&_svg]:size-[17px] [&_svg]:shrink-0",
+    "flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-ui transition-[background-color,color,box-shadow] duration-150 [&_svg]:size-[17px] [&_svg]:shrink-0",
     active
       ? "bg-[color-mix(in_oklab,var(--tone)_12%,var(--card))] font-medium text-foreground shadow-xs ring-1 ring-[color-mix(in_oklab,var(--tone)_28%,transparent)] dark:bg-[color-mix(in_oklab,var(--tone)_16%,transparent)] dark:shadow-none [&_svg]:text-[var(--tone)]"
       : "text-foreground/70 hover:bg-card/60 hover:text-foreground dark:hover:bg-white/[0.05] [&_svg]:text-[color-mix(in_oklab,var(--tone)_85%,var(--foreground))]"

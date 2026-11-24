@@ -147,11 +147,11 @@ export function LeavePoliciesPage() {
               <table className="w-full min-w-[560px] text-sm">
                 <thead>
                   <tr className="border-b bg-muted/40 text-left">
-                    <th className="px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">Leave Type</th>
-                    <th className="px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">Days / Year</th>
-                    <th className="px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">Paid / Unpaid</th>
-                    <th className="px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">Color</th>
-                    <th className="px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">Description</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Leave Type</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Days / Year</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Paid / Unpaid</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Color</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Description</th>
                     <th className="px-4 py-3"></th>
                   </tr>
                 </thead>
@@ -312,7 +312,7 @@ export function LeavePoliciesPage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="w-full py-2.5 sm:py-3 bg-primary text-primary-foreground rounded-xl font-bold text-xs sm:text-sm hover:bg-primary/90 transition-all shadow-lg active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
+                className="w-full py-2.5 sm:py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-xs sm:text-sm hover:bg-primary/90 transition-all shadow-lg active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
               >
                 {saving && <TbLoader size={16} className="animate-spin" />}
                 {isNew ? "Create Leave Type" : "Save Changes"}

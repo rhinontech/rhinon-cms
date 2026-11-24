@@ -63,13 +63,13 @@ export function TaskSection({
 
             {isPerson ? (
               <span className={cn(
-                "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold",
+                "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-2xs font-semibold",
                 isFormer ? "bg-muted text-muted-foreground" : avatarTint(section.key)
               )}>
                 {isFormer ? <TbUserOff size={13} /> : initials(section.label)}
               </span>
             ) : (
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-2xs font-semibold text-muted-foreground">
                 {section.kind === "unassigned" ? "?" : initials(section.label)}
               </span>
             )}
@@ -80,27 +80,27 @@ export function TaskSection({
                   {section.label}
                 </span>
                 {section.isMe && (
-                  <span className="shrink-0 rounded bg-blue-100 dark:bg-blue-400/15 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-blue-700 dark:text-blue-300">You</span>
+                  <span className="shrink-0 rounded bg-blue-100 dark:bg-blue-400/15 px-1.5 py-px text-2xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-300">You</span>
                 )}
               </span>
-              {section.sublabel && <span className="block truncate text-[10px] text-muted-foreground">{section.sublabel}</span>}
+              {section.sublabel && <span className="block truncate text-2xs text-muted-foreground">{section.sublabel}</span>}
             </span>
           </CollapsibleTrigger>
 
           <div className="flex shrink-0 items-center gap-1.5">
             {counts.overdue > 0 && (
-              <span className="rounded-full bg-red-50 dark:bg-red-400/10 px-2 py-0.5 text-[10px] font-bold text-red-600 dark:text-red-300">{counts.overdue} overdue</span>
+              <span className="rounded-full bg-red-50 dark:bg-red-400/10 px-2 py-0.5 text-2xs font-semibold text-red-600 dark:text-red-300">{counts.overdue} overdue</span>
             )}
             {counts.pending + counts.inProgress > 0 ? (
-              <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold text-foreground/70">
+              <span className="rounded-full bg-muted px-2 py-0.5 text-2xs font-semibold text-foreground/70">
                 {counts.pending + counts.inProgress} open
               </span>
             ) : (
-              <span className="rounded-full bg-emerald-50 dark:bg-emerald-400/10 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-300">
+              <span className="rounded-full bg-emerald-50 dark:bg-emerald-400/10 px-2 py-0.5 text-2xs font-medium text-emerald-600 dark:text-emerald-300">
                 {counts.total === 0 ? "Free" : "All done"}
               </span>
             )}
-            <span className="hidden text-[10px] text-muted-foreground sm:inline">{counts.total}</span>
+            <span className="hidden text-2xs text-muted-foreground sm:inline">{counts.total}</span>
 
             {!isFormer && (
               <button

@@ -113,7 +113,7 @@ export function AdminPayrollRun() {
           <h1 className="text-base sm:text-lg font-semibold tracking-tight truncate">Run Payroll</h1>
         </div>
         <div className="flex-1 flex items-center justify-center p-4 sm:p-6 overflow-auto">
-          <div className="bg-card rounded-2xl border border-green-100 dark:border-green-400/20 p-6 sm:p-10 text-center max-w-md w-full">
+          <div className="bg-card rounded-xl border border-green-100 dark:border-green-400/20 p-6 sm:p-10 text-center max-w-md w-full">
             <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-green-100 dark:bg-green-400/15 flex items-center justify-center mx-auto mb-4 sm:mb-5">
               <TbCheck size={28} className="text-green-600 dark:text-green-300" />
             </div>
@@ -253,7 +253,7 @@ export function AdminPayrollRun() {
               <TbAlertCircle size={18} className="shrink-0 mt-0.5" />
               <div>
                 <p className="font-medium">{exiting.length} exiting member{exiting.length !== 1 ? "s" : ""} excluded from this run</p>
-                <p className="text-[11px] sm:text-xs mt-0.5 text-purple-700 dark:text-purple-300">
+                <p className="text-2xs sm:text-xs mt-0.5 text-purple-700 dark:text-purple-300">
                   Last working day falls within this period for: {exiting.map((e) => e.fullName).join(", ")}
                 </p>
                 <Link href={`/${roleSlug}/payroll/settlements`} className="text-xs text-purple-900 dark:text-purple-200 underline mt-1 block">
@@ -269,7 +269,7 @@ export function AdminPayrollRun() {
               <TbAlertCircle size={18} className="shrink-0 mt-0.5" />
               <div>
                 <p className="font-medium">{notConfigured.length} employee{notConfigured.length !== 1 ? "s" : ""} will be skipped</p>
-                <p className="text-[11px] sm:text-xs mt-0.5 text-amber-700 dark:text-amber-300">No salary structure set for: {notConfigured.map((e) => e.fullName).join(", ")}</p>
+                <p className="text-2xs sm:text-xs mt-0.5 text-amber-700 dark:text-amber-300">No salary structure set for: {notConfigured.map((e) => e.fullName).join(", ")}</p>
                 <Link href={`/${roleSlug}/payroll/employees`} className="text-xs text-amber-900 dark:text-amber-200 underline mt-1 block">Set up salaries →</Link>
               </div>
             </div>

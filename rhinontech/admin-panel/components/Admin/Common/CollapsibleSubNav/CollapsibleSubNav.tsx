@@ -70,7 +70,7 @@ export function CollapsibleSubNav({ title, items }: CollapsibleSubNavProps) {
       {showNav && (
         <div className="flex flex-col w-full flex-1">
           <div className="flex h-16 w-full shrink-0 items-center justify-between border-b border-border px-5">
-            <span className="truncate text-[15px] font-semibold tracking-tight">{title}</span>
+            <span className="truncate text-base font-semibold tracking-tight">{title}</span>
             <button onClick={toggleSideNav} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted lg:hidden" aria-label="Close menu">
               <TbX size={18} />
             </button>

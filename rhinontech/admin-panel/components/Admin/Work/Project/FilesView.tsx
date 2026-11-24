@@ -131,12 +131,12 @@ export function FilesView({
           hidden
           onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); }}
         />
-        <span className="ml-auto text-[11px] text-muted-foreground">Max 25 MB per file</span>
+        <span className="ml-auto text-2xs text-muted-foreground">Max 25 MB per file</span>
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto">
         <div className="min-w-[760px]">
-          <div className="sticky top-0 grid grid-cols-[2fr_1.2fr_90px_120px_1fr_44px] items-center border-b glass-thead px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <div className="sticky top-0 grid grid-cols-[2fr_1.2fr_90px_120px_1fr_44px] items-center border-b glass-thead px-4 py-2 text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
             <span>File name</span>
             <span>Location</span>
             <span>Size</span>

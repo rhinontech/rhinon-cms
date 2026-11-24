@@ -78,7 +78,7 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-border">
         <div>
-          <h3 className="text-lg font-bold text-foreground capitalize">{label || node.type.replace("_", " ")}</h3>
+          <h3 className="text-lg font-semibold text-foreground capitalize">{label || node.type.replace("_", " ")}</h3>
           <p className="text-xs text-muted-foreground">Edit the fields below, then click Save.</p>
         </div>
         <div className="flex items-center gap-2">
@@ -137,7 +137,7 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
                   </option>
                 ))}
               </NativeSelect>
-              <p className="text-[11px] text-muted-foreground mt-1">Your own address, or a shared one assigned to you in Team → Email addresses.</p>
+              <p className="text-2xs text-muted-foreground mt-1">Your own address, or a shared one assigned to you in Team → Email addresses.</p>
             </div>
 
             <div>
@@ -160,7 +160,7 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
                 className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                 placeholder="e.g. Welcome to Rhinon Tech!"
               />
-              <p className="text-[11px] text-muted-foreground mt-1">Personalize with {"{{name}}"}, {"{{email}}"}, {"{{phone}}"}</p>
+              <p className="text-2xs text-muted-foreground mt-1">Personalize with {"{{name}}"}, {"{{email}}"}, {"{{phone}}"}</p>
             </div>
 
             <div>
@@ -170,13 +170,13 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
                   <button
                     type="button"
                     onClick={() => navigator.clipboard.writeText(config.emailBody || "")}
-                    className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground border border-border px-2 py-0.5 rounded"
+                    className="flex items-center gap-1 text-2xs text-muted-foreground hover:text-foreground border border-border px-2 py-0.5 rounded"
                   >
                     <TbCopy size={12} /> Copy
                   </button>
                   <button
                     type="button"
-                    className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground border border-border px-2 py-0.5 rounded"
+                    className="flex items-center gap-1 text-2xs text-muted-foreground hover:text-foreground border border-border px-2 py-0.5 rounded"
                   >
                     <TbSend size={12} /> Send test
                   </button>
@@ -256,7 +256,7 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
                   <option value="days">Days</option>
                 </NativeSelect>
               </div>
-              <p className="text-[11px] text-muted-foreground mt-1.5">
+              <p className="text-2xs text-muted-foreground mt-1.5">
                 The workflow will pause for this duration before executing the next step.
               </p>
             </div>
@@ -274,7 +274,7 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
                 placeholder={node.type === "call_task" ? "Call {{name}} about pricing" : "Connect with {{name}} on LinkedIn"}
                 className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none bg-card font-medium text-foreground"
               />
-              <p className="text-[11px] text-muted-foreground mt-1.5">
+              <p className="text-2xs text-muted-foreground mt-1.5">
                 Merge tags like <code>{"{{name}}"}</code> and <code>{"{{company}}"}</code> work here.
               </p>
             </div>
@@ -314,7 +314,7 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
               </div>
             </div>
 
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-2xs text-muted-foreground">
               Assigned to the lead&apos;s owner, or to whoever created this workflow if the lead has none.
               The sequence moves to the next step straight away — it does not wait for the task to be done.
             </p>
@@ -337,12 +337,12 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
                 onChange={(e) => setConfig({ ...config, splitPercent: Number(e.target.value) })}
                 className="w-full accent-fuchsia-600"
               />
-              <div className="flex justify-between text-[11px] font-semibold text-muted-foreground mt-1">
+              <div className="flex justify-between text-2xs font-semibold text-muted-foreground mt-1">
                 <span className="text-fuchsia-600 dark:text-fuchsia-300">A · {config.splitPercent ?? 50}%</span>
                 <span className="text-indigo-600 dark:text-indigo-300">B · {100 - (config.splitPercent ?? 50)}%</span>
               </div>
             </div>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-2xs text-muted-foreground">
               The branch is picked once per lead and remembered, so a retry can never send the same
               lead down both paths. Connect the A and B handles to the two variants you want to compare.
             </p>
@@ -424,7 +424,7 @@ export function NodeConfigDrawer({ node, onClose, onSave, onDelete }: NodeConfig
                   <option value="days">Days</option>
                 </NativeSelect>
               </div>
-              <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
+              <p className="text-2xs text-muted-foreground mt-1.5 leading-relaxed">
                 The workflow will pause for this duration to give the recipient time to interact. If they open/click during this window, they take the <span className="font-semibold text-emerald-600 dark:text-emerald-300">YES</span> path; otherwise, they take the <span className="font-semibold text-rose-600 dark:text-rose-300">NO</span> path.
               </p>
             </div>

@@ -195,7 +195,7 @@ export function ManualOutreachPage() {
                     )}
                   >
                     <div className="min-w-0 flex-1 pr-2">
-                      <p className="truncate text-sm font-bold text-foreground">{lead.name}</p>
+                      <p className="truncate text-sm font-semibold text-foreground">{lead.name}</p>
                       <p className="truncate text-xs text-muted-foreground">{lead.company}</p>
                     </div>
                     <TbChevronRight
@@ -249,7 +249,7 @@ export function ManualOutreachPage() {
               {!selectedLead ? (
                 <div className="flex flex-1 flex-col items-center justify-center p-10 text-center text-muted-foreground">
                   <TbMail size={64} className="mb-4 opacity-10" />
-                  <h3 className="mb-2 text-lg font-bold text-foreground">Ready to reach out?</h3>
+                  <h3 className="mb-2 text-lg font-semibold text-foreground">Ready to reach out?</h3>
                   <p className="max-w-xs text-sm">
                     Select a lead from the list to start composing a personalized outreach message.
                   </p>
@@ -260,11 +260,11 @@ export function ManualOutreachPage() {
                   <div className="space-y-3 border-b border-border bg-muted/40 p-4 sm:p-5">
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-base sm:text-lg font-bold text-primary-foreground">
+                        <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-base sm:text-lg font-semibold text-primary-foreground">
                           {selectedLead.name.charAt(0)}
                         </div>
                         <div className="min-w-0">
-                          <h2 className="truncate text-sm sm:text-base font-bold leading-none text-foreground">{selectedLead.name}</h2>
+                          <h2 className="truncate text-sm sm:text-base font-semibold leading-none text-foreground">{selectedLead.name}</h2>
                           <p className="mt-1 truncate text-xs font-medium text-muted-foreground">{selectedLead.email}</p>
                         </div>
                       </div>
@@ -290,7 +290,7 @@ export function ManualOutreachPage() {
                   {/* Composer */}
                   <div className="flex flex-1 flex-col gap-4 sm:gap-5 overflow-auto p-4 sm:p-6">
                     <div className="space-y-1.5">
-                      <Label htmlFor="manual-subject" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                      <Label htmlFor="manual-subject" className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
                         Subject Line
                       </Label>
                       <Input
@@ -298,11 +298,11 @@ export function ManualOutreachPage() {
                         value={composer.subject}
                         onChange={(e) => setComposer({ ...composer, subject: e.target.value })}
                         placeholder="e.g. Scaling operations at {{company}}"
-                        className="font-bold"
+                        className="font-semibold"
                       />
                     </div>
                     <div className="flex min-h-0 flex-1 flex-col space-y-1.5">
-                      <Label htmlFor="manual-body" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                      <Label htmlFor="manual-body" className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
                         Email Body
                       </Label>
                       <Textarea
@@ -316,7 +316,7 @@ export function ManualOutreachPage() {
                   </div>
 
                   <div className="flex items-center justify-between border-t border-border bg-muted/40 p-4 sm:p-5">
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                    <div className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
                       {composer.body.length > 0 && `~${Math.ceil(composer.body.length / 5)} words`}
                     </div>
                     <Button

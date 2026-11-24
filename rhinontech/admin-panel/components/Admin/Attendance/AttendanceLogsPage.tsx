@@ -89,7 +89,7 @@ export function AttendanceLogsPage() {
             <span className="text-base sm:text-lg font-semibold tracking-tight truncate">Attendance Logs</span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <button onClick={exportCsv} disabled={filteredLogs.length === 0} className="inline-flex items-center gap-1.5 sm:gap-2 rounded-lg border disabled:opacity-50 border-border px-2.5 sm:px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-foreground/70 hover:bg-muted transition-all">
+            <button onClick={exportCsv} disabled={filteredLogs.length === 0} className="inline-flex items-center gap-1.5 sm:gap-2 rounded-lg border disabled:opacity-50 border-border px-2.5 sm:px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-foreground/70 hover:bg-muted transition-all">
               <TbDownload size={15} /> <span className="hidden sm:inline">Export</span>
             </button>
             {!isPreviewExpanded && (
@@ -120,7 +120,7 @@ export function AttendanceLogsPage() {
 
           <div className="overflow-x-auto rounded-xl border border-border shadow-xs">
             <div className="min-w-[560px]">
-              <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr_40px] bg-muted/40 px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground border-b">
+              <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr_40px] bg-muted/40 px-4 py-3 text-2xs font-semibold uppercase tracking-widest text-muted-foreground border-b">
                 <span>Employee</span>
                 <span>In/Out</span>
                 <span>Duration</span>
@@ -141,19 +141,19 @@ export function AttendanceLogsPage() {
                   )}
                 >
                   <div className="min-w-0 pr-2">
-                    <p className="font-bold text-foreground truncate">{log.userName}</p>
-                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest truncate">{log.department}</p>
+                    <p className="font-semibold text-foreground truncate">{log.userName}</p>
+                    <p className="text-2xs text-muted-foreground font-semibold uppercase tracking-widest truncate">{log.department}</p>
                   </div>
                   <div className="flex flex-col text-xs font-medium text-foreground/70">
                     <span>{log.clockIn ? new Date(log.clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "—"}</span>
                     <span>{log.clockOut ? new Date(log.clockOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "—"}</span>
                   </div>
                   <div>
-                    <span className="font-bold text-foreground">{Math.floor(log.durationMinutes / 60)}h {log.durationMinutes % 60}m</span>
+                    <span className="font-semibold text-foreground">{Math.floor(log.durationMinutes / 60)}h {log.durationMinutes % 60}m</span>
                   </div>
                   <div>
                     {log.overtimeMinutes > 0 ? (
-                      <span className="text-green-600 dark:text-green-300 font-bold">+{log.overtimeMinutes}m</span>
+                      <span className="text-green-600 dark:text-green-300 font-semibold">+{log.overtimeMinutes}m</span>
                     ) : (
                       <span className="text-muted-foreground/70">—</span>
                     )}
@@ -193,7 +193,7 @@ export function AttendanceLogsPage() {
 
             <div className="flex-1 overflow-auto p-4 sm:p-5 space-y-4 sm:space-y-6">
               <div className="flex items-center gap-3 sm:gap-4">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg sm:text-xl shrink-0">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-lg sm:text-xl shrink-0">
                   {selectedLog.userName.charAt(0)}
                 </div>
                 <div className="min-w-0">

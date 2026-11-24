@@ -118,7 +118,7 @@ export function RevisionForm({ employee, onDone, onCancel }: { employee: Revisab
         <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">₹</span>
         <input type="number" min={0} value={f[key]} onChange={(e) => setF((p) => ({ ...p, [key]: e.target.value }))} className={`${inputCls} pl-6`} />
       </div>
-      <span className="text-[11px] font-normal text-muted-foreground">was {INR(Number(employee[key] ?? 0))}</span>
+      <span className="text-2xs font-normal text-muted-foreground">was {INR(Number(employee[key] ?? 0))}</span>
     </label>
   );
 
@@ -143,12 +143,12 @@ export function RevisionForm({ employee, onDone, onCancel }: { employee: Revisab
           <label className={labelCls}>
             New role title *
             <input value={roleTitle} onChange={(e) => setRoleTitle(e.target.value)} className={inputCls} />
-            <span className="text-[11px] font-normal text-muted-foreground">was {employee.roleTitle || "—"}</span>
+            <span className="text-2xs font-normal text-muted-foreground">was {employee.roleTitle || "—"}</span>
           </label>
           <label className={labelCls}>
             Department
             <input value={department} onChange={(e) => setDepartment(e.target.value)} className={inputCls} />
-            <span className="text-[11px] font-normal text-muted-foreground">was {employee.department || "—"}</span>
+            <span className="text-2xs font-normal text-muted-foreground">was {employee.department || "—"}</span>
           </label>
         </div>
       )}
@@ -164,7 +164,7 @@ export function RevisionForm({ employee, onDone, onCancel }: { employee: Revisab
           <label className={labelCls}>
             Annual compensation
             <input type="number" min={0} value={annualOverride} onChange={(e) => setAnnualOverride(e.target.value)} placeholder={String(newMonthly * 12)} className={inputCls} />
-            <span className="text-[11px] font-normal text-muted-foreground">defaults to monthly × 12</span>
+            <span className="text-2xs font-normal text-muted-foreground">defaults to monthly × 12</span>
           </label>
         </div>
       </div>
@@ -183,7 +183,7 @@ export function RevisionForm({ employee, onDone, onCancel }: { employee: Revisab
         <label className={labelCls}>
           Effective from *
           <input type="date" value={effectiveDate} onChange={(e) => setEffectiveDate(e.target.value)} className={inputCls} />
-          <span className="text-[11px] font-normal text-muted-foreground">{scheduled ? "Applied automatically on this date" : "Applied right away"}</span>
+          <span className="text-2xs font-normal text-muted-foreground">{scheduled ? "Applied automatically on this date" : "Applied right away"}</span>
         </label>
         <label className={labelCls}>
           Reason (internal)
@@ -235,7 +235,7 @@ export function RevisionHistory({ userId, refreshKey }: { userId: string; refres
               <p className="font-medium text-foreground">
                 {r.kind === "promotion" ? `Promoted to ${r.after.roleTitle}` : "Salary revision"}
               </p>
-              <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${
+              <span className={`px-2 py-0.5 rounded-full text-2xs font-medium ${
                 r.status === "applied" ? "bg-green-100 dark:bg-green-400/15 text-green-700 dark:text-green-300"
                 : r.status === "scheduled" ? "bg-blue-100 dark:bg-blue-400/15 text-blue-700 dark:text-blue-300"
                 : "bg-muted text-muted-foreground"}`}>

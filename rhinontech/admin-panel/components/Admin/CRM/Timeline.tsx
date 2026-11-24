@@ -124,7 +124,7 @@ export function Timeline({
               key={t.value}
               onClick={() => setLogType(t.value)}
               className={cn(
-                "inline-flex items-center gap-1 rounded px-2 py-1 text-[11px] font-medium transition-colors",
+                "inline-flex items-center gap-1 rounded px-2 py-1 text-2xs font-medium transition-colors",
                 logType === t.value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
               )}
             >
@@ -145,7 +145,7 @@ export function Timeline({
             : logType === "Email" ? "Summary of the email…"
             : "Add a note…"
           }
-          className="h-16 w-full resize-none rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
+          className="h-16 w-full resize-none rounded border border-border bg-card px-2 py-1.5 text-ui outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
         />
         <div className="mt-1.5 flex items-center justify-between gap-2">
           {logType === "Call" ? (
@@ -155,16 +155,16 @@ export function Timeline({
               value={duration}
               onChange={(e) => setDuration(e.target.value)}
               placeholder="Duration (min)"
-              className="w-32 rounded border border-border bg-card px-2 py-1 text-[11px] tabular-nums outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
+              className="w-32 rounded border border-border bg-card px-2 py-1 text-2xs tabular-nums outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
             />
-          ) : <span className="text-[10px] text-muted-foreground">⌘↵ to save</span>}
+          ) : <span className="text-2xs text-muted-foreground">⌘↵ to save</span>}
           <TBtn variant="solid" onClick={submit} disabled={saving || !body.trim()}>
             {saving ? "Saving…" : `Log ${logType.toLowerCase()}`}
           </TBtn>
         </div>
       </div>
 
-      {error && <p className="rounded border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2 py-1.5 text-[11px] text-rose-700 dark:text-rose-300">{error}</p>}
+      {error && <p className="rounded border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2 py-1.5 text-2xs text-rose-700 dark:text-rose-300">{error}</p>}
 
       {/* Feed */}
       {loading ? (
@@ -188,23 +188,23 @@ export function Timeline({
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline justify-between gap-2">
-                  <p className={cn("truncate text-[13px]", entry.kind === "activity" ? "text-foreground" : "text-muted-foreground")}>
+                  <p className={cn("truncate text-ui", entry.kind === "activity" ? "text-foreground" : "text-muted-foreground")}>
                     {entry.subject || entry.type}
                     {entry.durationMinutes ? (
-                      <span className="ml-1.5 text-[11px] tabular-nums text-muted-foreground">{entry.durationMinutes}m</span>
+                      <span className="ml-1.5 text-2xs tabular-nums text-muted-foreground">{entry.durationMinutes}m</span>
                     ) : null}
                   </p>
-                  <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">{relativeTime(entry.occurredAt)}</span>
+                  <span className="shrink-0 text-2xs tabular-nums text-muted-foreground">{relativeTime(entry.occurredAt)}</span>
                 </div>
                 {entry.body && (
-                  <p className="mt-0.5 whitespace-pre-wrap break-words text-[12px] leading-relaxed text-muted-foreground line-clamp-4">
+                  <p className="mt-0.5 whitespace-pre-wrap break-words text-xs leading-relaxed text-muted-foreground line-clamp-4">
                     {entry.body}
                   </p>
                 )}
                 {entry.user && (
                   <div className="mt-1 flex items-center gap-1.5">
                     <Avatar name={entry.user.fullName} size={14} />
-                    <span className="text-[10px] text-muted-foreground">{entry.user.fullName}</span>
+                    <span className="text-2xs text-muted-foreground">{entry.user.fullName}</span>
                   </div>
                 )}
               </div>

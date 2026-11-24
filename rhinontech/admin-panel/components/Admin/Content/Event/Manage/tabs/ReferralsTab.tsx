@@ -58,8 +58,8 @@ function RefereesDrawer({ event, row, onClose, onChanged }: { event: ManageConte
               {data.referredMembers.map((m) => (
                 <li key={m.id} className="flex items-center justify-between gap-3 p-3">
                   <div className="min-w-0">
-                    <p className="truncate text-[14px] font-medium">{m.name}</p>
-                    <p className="truncate text-[12px] text-muted-foreground">{m.email} · {m.userType || "—"} · {formatDateTime(m.createdAt)}</p>
+                    <p className="truncate text-sm font-medium">{m.name}</p>
+                    <p className="truncate text-xs text-muted-foreground">{m.email} · {m.userType || "—"} · {formatDateTime(m.createdAt)}</p>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
                     <GuestStatusBadge status={m.guestType} />
@@ -109,10 +109,10 @@ export default function ReferralsTab({ event, reloadGuests }: ManageContext) {
 
   return (
     <div className="space-y-4">
-      <p className="text-[13px] text-muted-foreground">
+      <p className="text-ui text-muted-foreground">
         <span className="font-semibold text-foreground">{total}</span> registration{total === 1 ? "" : "s"} came through <span className="font-semibold text-foreground">{rows.length}</span> referral code{rows.length === 1 ? "" : "s"}.
       </p>
-      <div className="glass-card rounded-2xl">
+      <div className="glass-card rounded-xl">
         <Table>
           <TableHeader>
             <TableRow>
@@ -130,9 +130,9 @@ export default function ReferralsTab({ event, reloadGuests }: ManageContext) {
                 <TableCell className="text-muted-foreground tabular-nums">{i + 1}</TableCell>
                 <TableCell>
                   <p className="font-medium">{r.name}</p>
-                  <p className="text-[12.5px] text-muted-foreground">{r.email || "Code not issued by this event"}</p>
+                  <p className="text-xs text-muted-foreground">{r.email || "Code not issued by this event"}</p>
                 </TableCell>
-                <TableCell className="hidden md:table-cell font-mono text-[12.5px]">{r.referralCode}</TableCell>
+                <TableCell className="hidden md:table-cell font-mono text-xs">{r.referralCode}</TableCell>
                 <TableCell className="text-right font-semibold tabular-nums">{r.memberCount}</TableCell>
                 <TableCell className="text-right hidden sm:table-cell tabular-nums">{r.approvedCount}</TableCell>
                 <TableCell className="text-right hidden sm:table-cell tabular-nums">{r.waitlistCount}</TableCell>

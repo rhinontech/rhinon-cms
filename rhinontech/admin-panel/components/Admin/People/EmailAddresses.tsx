@@ -140,9 +140,9 @@ function AddressDialog({
                 <span className="shrink-0 pr-3 text-sm text-muted-foreground">@{domain}</span>
               </div>
               {invalid ? (
-                <p className="text-[12px] text-destructive">Letters, numbers, dots, hyphens or underscores only.</p>
+                <p className="text-xs text-destructive">Letters, numbers, dots, hyphens or underscores only.</p>
               ) : cleaned && brands.length > 1 ? (
-                <p className="text-[12px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Also works as {brands.filter((b) => b.domain !== domain).map((b) => `${cleaned}@${b.domain}`).join(", ")}.
                 </p>
               ) : null}
@@ -152,7 +152,7 @@ function AddressDialog({
           <div className="space-y-1.5">
             <Label htmlFor="addr-name">Sender name</Label>
             <Input id="addr-name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="e.g. Rhinon Support" maxLength={120} />
-            <p className="text-[12px] text-muted-foreground">What recipients see. Leave empty to use the assignee&apos;s own name.</p>
+            <p className="text-xs text-muted-foreground">What recipients see. Leave empty to use the assignee&apos;s own name.</p>
           </div>
 
           <div className="space-y-1.5">
@@ -171,7 +171,7 @@ function AddressDialog({
               </SelectContent>
             </Select>
             {editing?.assignedUserId && assignee !== editing.assignedUserId ? (
-              <p className="text-[12px] text-amber-600 dark:text-amber-400">
+              <p className="text-xs text-amber-600 dark:text-amber-400">
                 Its mail history moves with it — the new owner sees everything sent to this address.
               </p>
             ) : null}
@@ -256,7 +256,7 @@ export function EmailAddresses() {
       <div className="sticky top-0 z-10 glass-header flex min-h-16 flex-wrap items-center justify-between gap-2.5 border-b border-border px-3 py-2.5 sm:px-5 sm:py-0">
         <div className="min-w-0">
           <h1 className="text-sm font-semibold tracking-tight sm:text-base">Email addresses</h1>
-          <p className="text-[12px] text-muted-foreground">Shared addresses like hello@ or support@, each owned by one person.</p>
+          <p className="text-xs text-muted-foreground">Shared addresses like hello@ or support@, each owned by one person.</p>
         </div>
         <Button size="sm" className="gap-1.5" onClick={() => setDialog({ open: true, editing: null })} disabled={!domain}>
           <Plus className="size-4" /> New address
@@ -265,7 +265,7 @@ export function EmailAddresses() {
 
       <div className="mx-auto w-full max-w-5xl space-y-5 p-3 sm:p-5">
         {brands.length > 1 ? (
-          <div className="glass-card rounded-2xl p-4 text-[13px] text-muted-foreground">
+          <div className="glass-card rounded-xl p-4 text-ui text-muted-foreground">
             <p>
               One address works under every brand. <span className="font-medium text-foreground">hello</span> sends as{" "}
               {brands.map((b, i) => (
@@ -281,9 +281,9 @@ export function EmailAddresses() {
         ) : null}
 
         {error ? (
-          <div className="rounded-2xl border border-dashed px-6 py-12 text-center text-sm text-muted-foreground">{error}</div>
+          <div className="rounded-xl border border-dashed px-6 py-12 text-center text-sm text-muted-foreground">{error}</div>
         ) : (
-          <div className="glass-card overflow-hidden rounded-2xl">
+          <div className="glass-card overflow-hidden rounded-xl">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -308,8 +308,8 @@ export function EmailAddresses() {
                     <TableRow className="hover:bg-transparent">
                       <TableCell colSpan={4} className="py-14 text-center">
                         <span className="mx-auto grid size-11 place-items-center rounded-xl bg-muted text-muted-foreground"><AtSign className="size-5" /></span>
-                        <p className="mt-4 text-[15px] font-semibold">No shared addresses yet</p>
-                        <p className="mx-auto mt-1 max-w-sm text-[13px] text-muted-foreground">
+                        <p className="mt-4 text-base font-semibold">No shared addresses yet</p>
+                        <p className="mx-auto mt-1 max-w-sm text-ui text-muted-foreground">
                           Create hello@ or support@ and hand it to someone. They&apos;ll be able to send from it and receive its mail in their Inbox.
                         </p>
                         <Button size="sm" className="mt-5 gap-1.5" onClick={() => setDialog({ open: true, editing: null })} disabled={!domain}>
@@ -321,14 +321,14 @@ export function EmailAddresses() {
                     addresses.map((row) => (
                       <TableRow key={row.id}>
                         <TableCell className="pl-5">
-                          <p className="font-mono text-[13.5px] font-medium">{row.address}</p>
+                          <p className="font-mono text-ui font-medium">{row.address}</p>
                           {brands.length > 1 ? (
-                            <p className="mt-0.5 text-[11.5px] text-muted-foreground">
+                            <p className="mt-0.5 text-xs text-muted-foreground">
                               also {brands.filter((b) => b.domain !== domain).map((b) => `${row.localPart}@${b.domain}`).join(", ")}
                             </p>
                           ) : null}
                         </TableCell>
-                        <TableCell className="text-[13px]">
+                        <TableCell className="text-ui">
                           {row.displayName || <span className="text-muted-foreground">Assignee&apos;s name</span>}
                         </TableCell>
                         <TableCell>
@@ -349,7 +349,7 @@ export function EmailAddresses() {
                               </SelectContent>
                             </Select>
                             {busyId === row.id ? <Loader2 className="size-4 animate-spin text-muted-foreground" /> : null}
-                            {!row.assignedUserId ? <Badge variant="secondary" className="text-[11px]">Mail goes unread</Badge> : null}
+                            {!row.assignedUserId ? <Badge variant="secondary" className="text-2xs">Mail goes unread</Badge> : null}
                           </div>
                         </TableCell>
                         <TableCell className="pr-5 text-right">

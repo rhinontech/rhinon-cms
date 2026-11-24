@@ -100,7 +100,7 @@ export function DuplicatesDialog({ onClose }: { onClose: (merged: boolean) => vo
             <h2 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
               <TbCopyCheck size={16} className="text-muted-foreground" /> Possible duplicates
             </h2>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-2xs text-muted-foreground">
               Same name and company under different email addresses. Pick which record survives.
             </p>
           </div>
@@ -110,7 +110,7 @@ export function DuplicatesDialog({ onClose }: { onClose: (merged: boolean) => vo
         </div>
 
         <div className="flex-1 overflow-auto p-3">
-          {error && <p className="mb-2 rounded border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2 py-1.5 text-[11px] text-rose-700 dark:text-rose-300">{error}</p>}
+          {error && <p className="mb-2 rounded border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2 py-1.5 text-2xs text-rose-700 dark:text-rose-300">{error}</p>}
 
           {loading ? (
             <div className="space-y-2">
@@ -125,7 +125,7 @@ export function DuplicatesDialog({ onClose }: { onClose: (merged: boolean) => vo
                 return (
                   <div key={key} className="rounded-lg border border-border bg-card/70 p-2.5">
                     <div className="mb-2 flex items-center justify-between gap-2">
-                      <p className="min-w-0 truncate text-[13px] font-medium text-foreground">
+                      <p className="min-w-0 truncate text-ui font-medium text-foreground">
                         {group.name} <span className="font-normal text-muted-foreground">· {group.company}</span>
                       </p>
                       <TBtn
@@ -154,15 +154,15 @@ export function DuplicatesDialog({ onClose }: { onClose: (merged: boolean) => vo
                             className="h-3.5 w-3.5 shrink-0 cursor-pointer accent-emerald-600"
                           />
                           <span className="min-w-0 flex-1">
-                            <span className="block truncate text-[12px] text-foreground">{lead.email}</span>
-                            <span className="block truncate text-[10px] text-muted-foreground">
+                            <span className="block truncate text-xs text-foreground">{lead.email}</span>
+                            <span className="block truncate text-2xs text-muted-foreground">
                               {lead.title || "No title"} · added {formatDate(lead.addedAt)}
                               {lead.lastActivityAt ? ` · active ${formatDate(lead.lastActivityAt)}` : ""}
                             </span>
                           </span>
                           <LifecycleBadge stage={lead.lifecycleStage} />
                           {survivors[key] === lead.id && (
-                            <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Keep</span>
+                            <span className="shrink-0 text-2xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Keep</span>
                           )}
                         </li>
                       ))}
@@ -176,7 +176,7 @@ export function DuplicatesDialog({ onClose }: { onClose: (merged: boolean) => vo
 
         <div className="flex shrink-0 items-center gap-2 border-t border-border/70 px-4 py-2.5">
           <TbAlertTriangle size={14} className="shrink-0 text-amber-500 dark:text-amber-400" />
-          <p className="flex-1 text-[11px] text-muted-foreground">
+          <p className="flex-1 text-2xs text-muted-foreground">
             Merging moves timeline, tasks, deals, list membership and inbox mail onto the survivor,
             then deletes the rest. It cannot be undone.
           </p>

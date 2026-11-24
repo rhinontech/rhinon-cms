@@ -287,7 +287,7 @@ export function ChatbotChats() {
                     <div className="flex items-center gap-2">
                       <span className={cn("truncate text-sm", c.unreadCount ? "font-semibold text-foreground" : "font-medium text-foreground/90")}>{visitorLabel(c)}</span>
                       {c.isPinned && <TbPin size={12} className="shrink-0 text-muted-foreground" />}
-                      <span className="ml-auto shrink-0 text-[11px] tabular-nums text-muted-foreground">{timeAgo(c.lastMessageAt)}</span>
+                      <span className="ml-auto shrink-0 text-2xs tabular-nums text-muted-foreground">{timeAgo(c.lastMessageAt)}</span>
                     </div>
                     <p className={cn("mt-0.5 truncate text-xs", c.unreadCount ? "text-foreground/80" : "text-muted-foreground")}>{c.lastMessagePreview || c.title}</p>
                     <div className="mt-1.5 flex items-center gap-1.5">
@@ -295,7 +295,7 @@ export function ChatbotChats() {
                       {c.mode === "human" ? <Chip tone="blue">Team</Chip> : <Chip><TbRobot size={11} /> Bot</Chip>}
                       {c.status === "closed" && <Chip>Closed</Chip>}
                       {c.unreadCount > 0 && (
-                        <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-semibold text-white" style={{ background: accent }}>
+                        <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-2xs font-semibold text-white" style={{ background: accent }}>
                           {c.unreadCount}
                         </span>
                       )}
@@ -373,7 +373,7 @@ export function ChatbotChats() {
                     return (
                       <div key={m.id}>
                         {handover && (
-                          <div className="my-2 flex items-center gap-3 text-[11px] font-medium text-muted-foreground">
+                          <div className="my-2 flex items-center gap-3 text-2xs font-medium text-muted-foreground">
                             <span className="h-px flex-1 bg-border" /> Handed to your team <span className="h-px flex-1 bg-border" />
                           </div>
                         )}
@@ -382,7 +382,7 @@ export function ChatbotChats() {
                           <div className="max-w-[72%]">
                             <div
                               className={cn(
-                                "rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-[0_1px_1px_rgb(0_0_0/0.04)]",
+                                "rounded-xl px-4 py-2.5 text-sm leading-relaxed shadow-[0_1px_1px_rgb(0_0_0/0.04)]",
                                 fromVisitor && "rounded-bl-md border border-border/70 bg-background text-foreground",
                                 m.role === "bot" && "rounded-br-md border border-border/70 bg-background text-foreground",
                                 m.role === "support" && "rounded-br-md text-white"
@@ -391,7 +391,7 @@ export function ChatbotChats() {
                             >
                               <MessageText text={m.text} />
                             </div>
-                            <p className={cn("mt-1 flex items-center gap-1 px-1 text-[10px] text-muted-foreground", !fromVisitor && "justify-end")}>
+                            <p className={cn("mt-1 flex items-center gap-1 px-1 text-2xs text-muted-foreground", !fromVisitor && "justify-end")}>
                               {m.role === "bot" && <TbRobot size={11} />}
                               {m.role === "bot" ? "AI" : m.role === "support" ? m.agentName || "Team" : "Visitor"} · {clock(m.createdAt)}
                             </p>
@@ -412,7 +412,7 @@ export function ChatbotChats() {
                     void send();
                   }}
                 >
-                  <div className="mx-auto max-w-3xl rounded-2xl border border-border bg-background p-2 focus-within:border-foreground/30">
+                  <div className="mx-auto max-w-3xl rounded-xl border border-border bg-background p-2 focus-within:border-foreground/30">
                     <Textarea
                       value={draft}
                       onChange={(e) => setDraft(e.target.value)}
@@ -428,7 +428,7 @@ export function ChatbotChats() {
                       data-testid="reply-box"
                     />
                     <div className="flex items-center justify-between px-1 pt-1">
-                      <span className="text-[11px] text-muted-foreground">
+                      <span className="text-2xs text-muted-foreground">
                         {isOnline(selected.visitorId) ? "Enter to send · Shift+Enter for a new line" : "They're not on the site — they'll see it next time they open the chat."}
                       </span>
                       <Button type="submit" size="sm" disabled={sending || !draft.trim()} data-testid="send-reply" style={{ background: accent }} className="text-white hover:opacity-90">
@@ -550,7 +550,7 @@ export function ChatbotChats() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{title}</p>
+      <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</p>
       {children}
     </div>
   );

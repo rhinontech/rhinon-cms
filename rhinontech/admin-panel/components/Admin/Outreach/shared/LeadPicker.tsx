@@ -170,7 +170,7 @@ export function LeadPicker({
                     {lead.source ? ` · ${lead.source}` : ""}
                   </p>
                 </div>
-                <span className="ml-auto shrink-0 text-[10px] font-bold uppercase text-muted-foreground">{lead.status}</span>
+                <span className="ml-auto shrink-0 text-2xs font-semibold uppercase text-muted-foreground">{lead.status}</span>
               </label>
             ))}
             {leads.length < count && (

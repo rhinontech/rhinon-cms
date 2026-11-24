@@ -130,11 +130,11 @@ function Designer({ event, template, onSaved }: { event: ManageContext["event"];
   const field = fields.find((f) => f.id === selected)!;
 
   return (
-    <div className="glass-card rounded-2xl p-6 space-y-5">
+    <div className="glass-card rounded-xl p-6 space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h3 className="text-[15px] font-semibold">Design</h3>
-          <p className="text-[13px] text-muted-foreground">Upload blank artwork, then drag each field into place. The fonts match what the server prints.</p>
+          <h3 className="text-base font-semibold">Design</h3>
+          <p className="text-ui text-muted-foreground">Upload blank artwork, then drag each field into place. The fonts match what the server prints.</p>
         </div>
         <div className="flex gap-2">
           <input ref={fileInput} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => onFile(e.target.files?.[0])} />
@@ -193,9 +193,9 @@ function Designer({ event, template, onSaved }: { event: ManageContext["event"];
           ) : (
             <button type="button" onClick={() => fileInput.current?.click()}
               className="grid w-full place-items-center rounded-xl border border-dashed border-border bg-muted/30 py-24 text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors">
-              <span className="flex flex-col items-center gap-2 text-[13px] font-medium">
+              <span className="flex flex-col items-center gap-2 text-ui font-medium">
                 <ImagePlus className="size-7" /> Upload the blank certificate artwork
-                <span className="text-[12px] font-normal">PNG or JPG, landscape, around 2000 × 1414 px</span>
+                <span className="text-xs font-normal">PNG or JPG, landscape, around 2000 × 1414 px</span>
               </span>
             </button>
           )}
@@ -211,7 +211,7 @@ function Designer({ event, template, onSaved }: { event: ManageContext["event"];
             <div className="grid gap-1.5">
               {fields.map((f) => (
                 <button key={f.id} type="button" onClick={() => setSelected(f.id)}
-                  className={`rounded-lg border px-3 py-2 text-left text-[13px] transition-colors ${selected === f.id ? "border-primary bg-primary/5" : "border-border hover:bg-muted/40"}`}>
+                  className={`rounded-lg border px-3 py-2 text-left text-ui transition-colors ${selected === f.id ? "border-primary bg-primary/5" : "border-border hover:bg-muted/40"}`}>
                   {FIELD_LABEL[f.id]}
                 </button>
               ))}
@@ -245,10 +245,10 @@ function Designer({ event, template, onSaved }: { event: ManageContext["event"];
               </button>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1"><Label className="text-[12px]">X %</Label><Input type="number" step={0.5} value={field.x} onChange={(e) => patch(field.id, { x: Number(e.target.value) })} /></div>
-              <div className="space-y-1"><Label className="text-[12px]">Y %</Label><Input type="number" step={0.5} value={field.y} onChange={(e) => patch(field.id, { y: Number(e.target.value) })} /></div>
+              <div className="space-y-1"><Label className="text-xs">X %</Label><Input type="number" step={0.5} value={field.x} onChange={(e) => patch(field.id, { x: Number(e.target.value) })} /></div>
+              <div className="space-y-1"><Label className="text-xs">Y %</Label><Input type="number" step={0.5} value={field.y} onChange={(e) => patch(field.id, { y: Number(e.target.value) })} /></div>
             </div>
-            <p className="text-[11.5px] text-muted-foreground">Tip: select a field and use the arrow keys (Shift for bigger steps).</p>
+            <p className="text-xs text-muted-foreground">Tip: select a field and use the arrow keys (Shift for bigger steps).</p>
           </div>
         </div>
       </div>
@@ -286,10 +286,10 @@ function CertificateEmail({ event, template }: { event: ManageContext["event"]; 
     }
   };
   return (
-    <div className="glass-card rounded-2xl p-6 space-y-4">
+    <div className="glass-card rounded-xl p-6 space-y-4">
       <div>
-        <h3 className="text-[15px] font-semibold">Certificate email</h3>
-        <p className="text-[13px] text-muted-foreground">Sent with the certificate attached when it&apos;s issued. Leave the body empty to issue without emailing.</p>
+        <h3 className="text-base font-semibold">Certificate email</h3>
+        <p className="text-ui text-muted-foreground">Sent with the certificate attached when it&apos;s issued. Leave the body empty to issue without emailing.</p>
       </div>
       <div className="space-y-1.5"><Label htmlFor="ce-subject">Subject</Label><Input id="ce-subject" value={subject} onChange={(e) => setSubject(e.target.value)} /></div>
       <EmailBodyEditor value={body} onChange={setBody} placeholder={"Congratulations {{recipientName}}!\n\n…"} minHeight="200px" />
@@ -342,10 +342,10 @@ function Issuing({ event, guests, reloadGuests }: ManageContext) {
   };
 
   return (
-    <div className="glass-card rounded-2xl p-6 space-y-5">
+    <div className="glass-card rounded-xl p-6 space-y-5">
       <div>
-        <h3 className="text-[15px] font-semibold">Issue certificates</h3>
-        <p className="text-[13px] text-muted-foreground">
+        <h3 className="text-base font-semibold">Issue certificates</h3>
+        <p className="text-ui text-muted-foreground">
           Approve, then issue. {workshop ? "Workshop certificates are approved from submitted feedback." : "Team events approve the primary member and their teammate together."}
         </p>
       </div>
@@ -353,14 +353,14 @@ function Issuing({ event, guests, reloadGuests }: ManageContext) {
         {[["Approved guests", approvedGuests.length], ["Certificate approved", certApproved.length], ["Issued", issued.length]].map(([label, value]) => (
           <div key={label as string} className="rounded-xl border border-border p-3">
             <p className="text-[22px] font-semibold tabular-nums">{value}</p>
-            <p className="text-[12px] text-muted-foreground">{label}</p>
+            <p className="text-xs text-muted-foreground">{label}</p>
           </div>
         ))}
       </div>
       {progress ? (
         <div className="space-y-2">
           <Progress value={progress.total ? (progress.done / progress.total) * 100 : 0} />
-          <p className="text-[12.5px] text-muted-foreground">Issued {progress.done} of {progress.total}…</p>
+          <p className="text-xs text-muted-foreground">Issued {progress.done} of {progress.total}…</p>
         </div>
       ) : null}
       <div className="flex flex-wrap gap-2">
@@ -372,7 +372,7 @@ function Issuing({ event, guests, reloadGuests }: ManageContext) {
       {issued.length ? (
         <ul className="divide-y divide-border rounded-xl border border-border max-h-72 overflow-y-auto">
           {issued.map((g) => (
-            <li key={g.id} className="flex items-center justify-between gap-3 p-3 text-[13px]">
+            <li key={g.id} className="flex items-center justify-between gap-3 p-3 text-ui">
               <span className="min-w-0 truncate"><span className="font-medium">{g.name}</span> · <span className="font-mono text-muted-foreground">{g.certificateId}</span></span>
               <Button size="sm" variant="ghost" className="gap-1.5" onClick={async () => {
                 try { window.open(await eventsApi.certificateUrl(g.id), "_blank"); } catch (err) { toast.error(err instanceof Error ? err.message : "Could not open"); }

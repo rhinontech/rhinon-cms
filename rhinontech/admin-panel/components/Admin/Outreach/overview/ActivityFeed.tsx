@@ -46,11 +46,11 @@ export function ActivityFeed({ activities, loading }: { activities: Activity[]; 
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs text-foreground/85">
-                {a.lead && <span className="font-bold">{a.lead.name}</span>}
+                {a.lead && <span className="font-semibold">{a.lead.name}</span>}
                 {a.lead && " — "}
                 {a.content}
               </p>
-              <p className="text-[10px] text-muted-foreground">{new Date(a.timestamp).toLocaleString()}</p>
+              <p className="text-2xs text-muted-foreground">{new Date(a.timestamp).toLocaleString()}</p>
             </div>
           </div>
         );

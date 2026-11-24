@@ -156,7 +156,7 @@ export function PlatformWorkspaces() {
                 )}
               >
                 {f.label}
-                <span className="ml-1.5 text-[10px] text-muted-foreground/70">{rows.filter((r) => matches(r, f.key)).length}</span>
+                <span className="ml-1.5 text-2xs text-muted-foreground/70">{rows.filter((r) => matches(r, f.key)).length}</span>
               </button>
             ))}
           </div>

@@ -115,7 +115,7 @@ export function ProfileInfo() {
       <div className="sticky top-0 z-10 flex items-center justify-between h-16 px-5 border-b border-border glass-header">
         <div className="flex items-center gap-4">
           <SubNavToggle />
-          <h1 className="text-xl font-bold tracking-tight">Personal Information</h1>
+          <h1 className="text-xl font-semibold tracking-tight">Personal Information</h1>
         </div>
         {!loading && profile && (
           !editing ? (
@@ -145,13 +145,13 @@ export function ProfileInfo() {
             {/* Profile card */}
             <div className="bg-card rounded-xl border border-border p-6">
               <div className="flex items-start gap-5">
-                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${avatarGradient(profile.fullName)} flex items-center justify-center text-white font-bold text-xl shrink-0`}>
+                <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${avatarGradient(profile.fullName)} flex items-center justify-center text-white font-semibold text-xl shrink-0`}>
                   {initials(profile.fullName)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h2 className="text-lg font-bold text-foreground">{profile.fullName}</h2>
+                      <h2 className="text-lg font-semibold text-foreground">{profile.fullName}</h2>
                       <p className="text-sm text-muted-foreground">{profile.role?.name ?? "—"}</p>
                     </div>
                     <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase ${profile.status === "active" ? "bg-green-100 dark:bg-green-400/15 text-green-700 dark:text-green-300" : "bg-muted text-muted-foreground"}`}>

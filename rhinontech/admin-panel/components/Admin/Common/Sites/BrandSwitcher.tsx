@@ -91,10 +91,10 @@ function Glyph({ name, slug, size = "md" }: { name: string; slug: string; size?:
   return (
     <span
       className={cn(
-        "flex shrink-0 items-center justify-center rounded-lg font-bold text-white",
+        "flex shrink-0 items-center justify-center rounded-lg font-semibold text-white",
         glyphColor(slug),
         box,
-        size === "md" ? "text-xs" : size === "sm" ? "text-[11px]" : "text-[8px]"
+        size === "md" ? "text-xs" : size === "sm" ? "text-2xs" : "text-2xs"
       )}
     >
       {initials(name)}
@@ -130,7 +130,7 @@ export function WorkspaceIdentity({ name, isPlatform, expanded, href }: { name: 
       <Glyph name={name} slug={isPlatform ? "rhinontech" : `workspace-${name}`} />
       {expanded && (
         <span className="min-w-0 flex-1 text-left">
-          <span className="block truncate text-sm font-bold leading-tight text-foreground">{name}</span>
+          <span className="block truncate text-sm font-semibold leading-tight text-foreground">{name}</span>
           <span className="block truncate text-xs leading-tight text-muted-foreground">Workspace</span>
         </span>
       )}

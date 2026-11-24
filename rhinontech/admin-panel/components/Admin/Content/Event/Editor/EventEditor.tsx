@@ -66,34 +66,34 @@ function Preview({ form }: { form: EventFormState }) {
   const day = start ? String(Number(start[3])) : "—";
   const hosts = form.hosts.filter((h) => h.name);
   return (
-    <div className="rounded-2xl overflow-hidden border border-border bg-card shadow-sm">
+    <div className="rounded-xl overflow-hidden border border-border bg-card shadow-sm">
       <div className="relative aspect-[16/10] bg-gradient-to-tr from-[#021338] via-[#052b82] to-[#0d59eb]">
         {form.bannerUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={form.bannerUrl} alt="" className="absolute inset-0 size-full object-cover" />
         ) : null}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-        <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-slate-900">
+        <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-2xs font-semibold text-slate-900">
           <span className={`size-1.5 rounded-full ${meta.dot}`} />
           {meta.label}
         </span>
         <span className="absolute top-3 right-3 w-11 rounded-lg overflow-hidden bg-white text-center shadow">
-          <span className="block bg-blue-600 text-white text-[9px] font-bold tracking-widest py-0.5">{month}</span>
-          <span className="block text-base font-extrabold text-slate-900 leading-6">{day}</span>
+          <span className="block bg-blue-600 text-white text-2xs font-semibold tracking-widest py-0.5">{month}</span>
+          <span className="block text-base font-semibold text-slate-900 leading-6">{day}</span>
         </span>
-        <span className="absolute bottom-3 left-3 inline-flex items-center gap-1 text-[12px] font-semibold text-white">
+        <span className="absolute bottom-3 left-3 inline-flex items-center gap-1 text-xs font-semibold text-white">
           <MapPin className="size-3.5" />
           {form.locationType === "Online" ? "Online" : form.location.split("·")[0].trim() || "In person"}
         </span>
       </div>
       <div className="p-4">
-        <p className="text-[11.5px] font-semibold uppercase tracking-wide text-muted-foreground">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {formatDate(form.startDate)}
           {form.startTime ? ` · ${fromTimeInput(form.startTime)}` : ""}
         </p>
-        <p className="mt-1.5 text-[15px] font-bold leading-snug">{form.title || "Your event title"}</p>
-        <p className="mt-1 text-[12.5px] text-muted-foreground line-clamp-2">{form.summary || "The one-line summary appears here."}</p>
-        <div className="mt-3 pt-3 border-t border-border flex items-center justify-between text-[12px] text-muted-foreground">
+        <p className="mt-1.5 text-base font-semibold leading-snug">{form.title || "Your event title"}</p>
+        <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{form.summary || "The one-line summary appears here."}</p>
+        <div className="mt-3 pt-3 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
           <span>{hosts.length ? hosts.map((h) => h.name).join(", ") : "No host yet"}</span>
           <span className="inline-flex items-center gap-1">
             <Award className="size-3.5" />
@@ -257,13 +257,13 @@ export default function EventEditor({ eventId }: { eventId?: string }) {
             <ArrowLeft className="size-4" /> Events
           </Button>
           <div className="min-w-0 flex-1 flex items-center gap-2.5">
-            <h1 className="truncate text-[15px] font-semibold">{isNew ? "New event" : form.title || "Untitled event"}</h1>
+            <h1 className="truncate text-base font-semibold">{isNew ? "New event" : form.title || "Untitled event"}</h1>
             {isNew ? null : saved.isPublished ? (
               <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-0">Published</Badge>
             ) : (
               <Badge variant="secondary">Draft</Badge>
             )}
-            {dirty ? <span className="hidden sm:inline text-[12px] text-muted-foreground">Unsaved changes</span> : null}
+            {dirty ? <span className="hidden sm:inline text-xs text-muted-foreground">Unsaved changes</span> : null}
           </div>
           {!isNew && saved.isPublished && liveUrl ? (
             <Button variant="ghost" size="sm" className="hidden md:inline-flex gap-1.5" asChild>
@@ -306,11 +306,11 @@ export default function EventEditor({ eventId }: { eventId?: string }) {
         <nav aria-label="Editor sections" className="hidden xl:block">
           <div className="sticky top-24 space-y-4">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Completeness</p>
+              <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Completeness</p>
               <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
                 <div className="h-full bg-primary transition-all" style={{ width: `${(completion / NAV.length) * 100}%` }} />
               </div>
-              <p className="mt-1.5 text-[12px] text-muted-foreground">{completion} of {NAV.length} sections filled</p>
+              <p className="mt-1.5 text-xs text-muted-foreground">{completion} of {NAV.length} sections filled</p>
             </div>
             <ul className="space-y-0.5">
               {NAV.map((item) => {
@@ -318,11 +318,11 @@ export default function EventEditor({ eventId }: { eventId?: string }) {
                 return (
                   <li key={item.id}>
                     <button type="button" onClick={() => scrollTo(item.id)}
-                      className="w-full flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors">
+                      className="w-full flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-ui text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors">
                       <span className={`grid place-items-center size-4 rounded-full border ${
                         hasIssue ? "border-destructive bg-destructive text-white" : item.filled(form) ? "border-primary bg-primary text-primary-foreground" : "border-border"
                       }`}>
-                        {hasIssue ? <span className="text-[9px] font-bold">!</span> : item.filled(form) ? <Check className="size-2.5" /> : null}
+                        {hasIssue ? <span className="text-2xs font-semibold">!</span> : item.filled(form) ? <Check className="size-2.5" /> : null}
                       </span>
                       {item.label}
                     </button>
@@ -357,9 +357,9 @@ export default function EventEditor({ eventId }: { eventId?: string }) {
 
         <aside className="hidden lg:block">
           <div className="sticky top-24 space-y-4">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Listing preview</p>
+            <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Listing preview</p>
             <Preview form={form} />
-            <div className="rounded-xl border border-border p-4 text-[12.5px] text-muted-foreground space-y-2">
+            <div className="rounded-xl border border-border p-4 text-xs text-muted-foreground space-y-2">
               <p className="flex items-center gap-2 text-foreground font-medium">
                 <CalendarDays className="size-3.5" /> {formatDate(form.startDate)}
                 {form.endDate && form.endDate !== form.startDate ? ` – ${formatDate(form.endDate)}` : ""}

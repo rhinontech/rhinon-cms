@@ -86,7 +86,7 @@ export function HiringBoard({ id }: { id: string }) {
         className="w-full text-left rounded-lg bg-card border border-border p-3 hover:border-blue-400 transition-colors cursor-grab active:cursor-grabbing">
         <p className="text-sm font-medium text-foreground truncate">{c.fullName}</p>
         <p className="text-xs text-muted-foreground truncate">{c.source ?? c.email}</p>
-        <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px]">
+        <div className="mt-1.5 flex flex-wrap items-center gap-2 text-2xs">
           {rating != null && <span className="flex items-center gap-0.5 text-amber-600"><TbStarFilled size={11} /> {rating.toFixed(1)}</span>}
           {next && <span className="flex items-center gap-0.5 text-blue-600 dark:text-blue-300"><TbCalendarEvent size={11} /> {fmtDateTime(next.scheduledAt)}</span>}
         </div>

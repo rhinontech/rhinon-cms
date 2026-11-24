@@ -54,7 +54,7 @@ function Column({
     >
       <div className={cn("flex items-center gap-2 rounded-xl border-t-[3px] bg-card px-3 py-2 shadow-sm", COLUMN_TOP[COLUMN_COLOR[status]])}>
         <span className={cn("rounded-md px-2.5 py-1 text-xs font-semibold", COLUMN_PILL[COLUMN_COLOR[status]])}>{status}</span>
-        <span className="flex h-5 min-w-5 items-center justify-center rounded-full border px-1.5 text-[11px] text-muted-foreground">{tasks.length}</span>
+        <span className="flex h-5 min-w-5 items-center justify-center rounded-full border px-1.5 text-2xs text-muted-foreground">{tasks.length}</span>
       </div>
 
       {showCards ? (
@@ -74,12 +74,12 @@ function Column({
             />
           ))}
           {tasks.length === 0 && (
-            <div className="rounded-lg border border-dashed border-border py-5 text-center text-[10px] text-muted-foreground/70">
+            <div className="rounded-lg border border-dashed border-border py-5 text-center text-2xs text-muted-foreground/70">
               Drop here
             </div>
           )}
           {collapsed && revealed && (
-            <button onClick={() => setRevealed(false)} className="text-[10px] text-muted-foreground hover:text-foreground/70">
+            <button onClick={() => setRevealed(false)} className="text-2xs text-muted-foreground hover:text-foreground/70">
               Hide done
             </button>
           )}
@@ -88,7 +88,7 @@ function Column({
         <button
           onClick={() => setRevealed(true)}
           disabled={tasks.length === 0}
-          className="rounded-lg border border-dashed border-border py-5 text-center text-[10px] text-muted-foreground transition-colors hover:border-border hover:text-foreground/70 disabled:opacity-50"
+          className="rounded-lg border border-dashed border-border py-5 text-center text-2xs text-muted-foreground transition-colors hover:border-border hover:text-foreground/70 disabled:opacity-50"
         >
           {tasks.length === 0 ? "Drop here" : `Show ${tasks.length} done`}
         </button>

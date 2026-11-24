@@ -105,7 +105,7 @@ export function TableView({
   return (
     <div className="flex h-full min-h-0 flex-col">
       {!rosterAvailable && (
-        <p className="flex shrink-0 items-center gap-1.5 border-b bg-amber-50 dark:bg-amber-400/10 px-4 py-1.5 text-[11px] text-amber-800 dark:text-amber-200">
+        <p className="flex shrink-0 items-center gap-1.5 border-b bg-amber-50 dark:bg-amber-400/10 px-4 py-1.5 text-2xs text-amber-800 dark:text-amber-200">
           <TbAlertTriangle size={12} className="shrink-0" />
           Your role lacks <code className="font-mono">people:read</code>, so the assignee list only
           shows people already on this project. An admin can grant it in Settings → Roles.
@@ -115,7 +115,7 @@ export function TableView({
         <div className="min-w-max">
           {/* header */}
           <div
-            className="sticky top-0 z-10 grid items-center border-b glass-thead px-2 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
+            className="sticky top-0 z-10 grid items-center border-b glass-thead px-2 py-2 text-2xs font-semibold uppercase tracking-wide text-muted-foreground"
             style={{ gridTemplateColumns: gridTemplate }}
           >
             <span />
@@ -192,7 +192,7 @@ export function TableView({
               {group !== "none" && (
                 <div className="sticky top-[37px] z-[5] flex items-center gap-2 border-b glass-thead px-3 py-1.5">
                   <span className="text-xs font-semibold text-foreground/85">{section.label}</span>
-                  <span className="text-[11px] text-muted-foreground">{section.rows.length}</span>
+                  <span className="text-2xs text-muted-foreground">{section.rows.length}</span>
                 </div>
               )}
               {section.rows.map(({ task, depth, hasChildren }, index) => (
@@ -201,7 +201,7 @@ export function TableView({
                 className="group grid items-center border-b px-2 py-1 hover:bg-muted/40"
                 style={{ gridTemplateColumns: gridTemplate }}
               >
-                <span className="pl-1 text-[11px] text-muted-foreground">{index + 1}</span>
+                <span className="pl-1 text-2xs text-muted-foreground">{index + 1}</span>
 
                 <span className="flex min-w-0 items-center gap-1" style={{ paddingLeft: depth * 18 }}>
                   {hasChildren ? (
@@ -228,7 +228,7 @@ export function TableView({
                     />
                   )}
                   {task.tags?.map((t) => (
-                    <span key={t.id} className={cn("shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium", STATUS_CHIP[t.color] ?? STATUS_CHIP.stone)}>{t.label}</span>
+                    <span key={t.id} className={cn("shrink-0 rounded px-1.5 py-0.5 text-2xs font-medium", STATUS_CHIP[t.color] ?? STATUS_CHIP.stone)}>{t.label}</span>
                   ))}
                   {!readOnly && <span className="flex shrink-0 items-center gap-0.5 opacity-0 transition group-hover:opacity-100">
                     <button
@@ -260,7 +260,7 @@ export function TableView({
                 {readOnly ? (
                   <span className="px-0.5">
                     <span className={cn(
-                      "block truncate rounded-full px-2 py-1 text-[11px] font-medium",
+                      "block truncate rounded-full px-2 py-1 text-2xs font-medium",
                       STATUS_CHIP[task.workflowStatus?.color ?? "stone"] ?? STATUS_CHIP.stone
                     )}>
                       {task.workflowStatus?.name ?? "—"}
@@ -271,7 +271,7 @@ export function TableView({
                     value={task.statusId ?? ""}
                     onChange={(e) => onPatch(task.id, { statusId: e.target.value || null })}
                     className={cn(
-                      "w-full cursor-pointer truncate rounded-full border-0 px-2 py-1 text-[11px] font-medium outline-none",
+                      "w-full cursor-pointer truncate rounded-full border-0 px-2 py-1 text-2xs font-medium outline-none",
                       STATUS_CHIP[task.workflowStatus?.color ?? "stone"] ?? STATUS_CHIP.stone
                     )}
                   >

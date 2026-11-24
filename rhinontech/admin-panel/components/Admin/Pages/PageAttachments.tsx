@@ -76,7 +76,7 @@ export function PageAttachments({ pageId, canEdit }: { pageId: string; canEdit: 
   return (
     <div className="mt-10 border-t border-border pt-5">
       <div className="mb-2 flex items-center justify-between">
-        <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+        <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           <TbPaperclip size={13} /> Attachments{attachments.length > 0 ? ` (${attachments.length})` : ""}
         </p>
         {canEdit && (
@@ -129,7 +129,7 @@ export function PageAttachments({ pageId, canEdit }: { pageId: string; canEdit: 
                     {a.name}
                   </a>
                 )}
-                <span className="shrink-0 text-[10px] font-medium uppercase text-muted-foreground">
+                <span className="shrink-0 text-2xs font-medium uppercase text-muted-foreground">
                   {formatSize(a.size)}
                   {a.uploadedBy?.fullName ? ` · ${a.uploadedBy.fullName}` : ""}
                 </span>

@@ -166,7 +166,7 @@ export function TasksToolbar({
       </div>
 
       {!rosterAvailable && (
-        <p className="flex items-center gap-1.5 text-[11px] text-amber-700 dark:text-amber-300">
+        <p className="flex items-center gap-1.5 text-2xs text-amber-700 dark:text-amber-300">
           <TbAlertTriangle size={12} />
           Employee list unavailable — showing only people who have tasks.
         </p>

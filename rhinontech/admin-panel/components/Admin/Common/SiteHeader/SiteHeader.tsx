@@ -55,7 +55,7 @@ function Breadcrumbs({ pathname }: { pathname: string }) {
   const chevron = <TbChevronRight size={13} className="shrink-0 text-muted-foreground/60" />;
 
   return (
-    <nav aria-label="Breadcrumb" className="flex min-w-0 flex-1 items-center gap-1.5 text-[13px]">
+    <nav aria-label="Breadcrumb" className="flex min-w-0 flex-1 items-center gap-1.5 text-ui">
       {/* Section and module names stay whole; only the page name gives way when space runs out. */}
       <Link href={crumbHref(leadKey)} prefetch={false} className="flex shrink-0 items-center gap-2 rounded-md px-1.5 py-1 font-semibold text-foreground transition-colors hover:bg-foreground/[0.05]">
         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md" style={{ background: `${tone}1f`, color: tone }}>
@@ -100,7 +100,7 @@ function HeaderSearch() {
       >
         <TbSearch size={14} />
         <span className="flex-1 text-left">Search or jump to…</span>
-        <kbd className="rounded border border-border px-1.5 py-px text-[10px] font-medium">{shortcut}</kbd>
+        <kbd className="rounded border border-border px-1.5 py-px text-2xs font-medium">{shortcut}</kbd>
       </button>
       <button onClick={() => openPalette(true)} className="rounded-lg p-2 text-foreground/70 hover:bg-foreground/[0.06] md:hidden" aria-label="Search">
         <TbSearch size={18} />
@@ -225,17 +225,17 @@ export function SiteHeader() {
       <Popover>
         <PopoverTrigger asChild>
           <button className="group flex items-center gap-2 rounded-full py-1 pl-1 pr-2 transition-colors hover:bg-foreground/[0.06]">
-            <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${avatarGradient(name)} text-[11px] font-bold text-white shadow-xs ring-2 ring-background/70`}>
+            <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${avatarGradient(name)} text-2xs font-semibold text-white shadow-xs ring-2 ring-background/70`}>
               {initial}
             </div>
-            <span className="hidden max-w-[160px] truncate text-[13px] font-medium text-foreground/85 sm:inline">{firstName}</span>
+            <span className="hidden max-w-[160px] truncate text-ui font-medium text-foreground/85 sm:inline">{firstName}</span>
             <TbChevronDown size={13} className="text-muted-foreground transition-colors group-hover:text-foreground/70" />
           </button>
         </PopoverTrigger>
 
         <PopoverContent align="end" className="w-56 p-2">
           <div className="flex items-center gap-3 px-2 py-2 mb-1">
-            <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${avatarGradient(name)} flex items-center justify-center text-white font-bold text-sm shrink-0`}>
+            <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${avatarGradient(name)} flex items-center justify-center text-white font-semibold text-sm shrink-0`}>
               {initial}
             </div>
             <div className="min-w-0">

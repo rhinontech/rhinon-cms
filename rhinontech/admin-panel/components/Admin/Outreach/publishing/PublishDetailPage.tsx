@@ -296,16 +296,16 @@ export function PublishDetailPage({ id }: { id: string }) {
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="truncate text-base font-semibold tracking-tight text-foreground">{post.name}</h1>
               {typeMeta && (
-                <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold", typeMeta.chip)}>
+                <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-2xs font-semibold", typeMeta.chip)}>
                   <typeMeta.icon size={12} /> {typeMeta.label}
                 </span>
               )}
               {isLive ? (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 dark:border-emerald-400/25 bg-emerald-50 dark:bg-emerald-400/10 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 dark:border-emerald-400/25 bg-emerald-50 dark:bg-emerald-400/10 px-2.5 py-0.5 text-2xs font-semibold text-emerald-700 dark:text-emerald-300">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Live
                 </span>
               ) : (
-                <span className="inline-flex items-center rounded-full border border-amber-200 dark:border-amber-400/25 bg-amber-50 dark:bg-amber-400/10 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700 dark:text-amber-300">
+                <span className="inline-flex items-center rounded-full border border-amber-200 dark:border-amber-400/25 bg-amber-50 dark:bg-amber-400/10 px-2.5 py-0.5 text-2xs font-semibold text-amber-700 dark:text-amber-300">
                   Draft
                 </span>
               )}
@@ -334,7 +334,7 @@ export function PublishDetailPage({ id }: { id: string }) {
         {/* Unverified claims — the one thing that should block a publish. */}
         {!isLive && inputNeeded.length > 0 && (
           <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-400/25 dark:bg-red-400/10">
-            <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-red-700 dark:text-red-300">
+            <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-red-700 dark:text-red-300">
               <TbAlertTriangle size={14} /> Needs a real detail before publishing
             </p>
             <ul className="mt-2 space-y-1 text-xs text-red-800/90 dark:text-red-200/90">
@@ -345,7 +345,7 @@ export function PublishDetailPage({ id }: { id: string }) {
                 </li>
               ))}
             </ul>
-            <p className="mt-2 text-[11px] text-red-700/80 dark:text-red-300/80">
+            <p className="mt-2 text-2xs text-red-700/80 dark:text-red-300/80">
               Add these to Verified facts and regenerate — the AI won&apos;t invent them.
             </p>
           </div>
@@ -358,7 +358,7 @@ export function PublishDetailPage({ id }: { id: string }) {
             {!isLive && (
               <div className="space-y-3 rounded-xl glass-panel p-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Brief</p>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Brief</p>
                   {briefDirty && (
                     <Button size="sm" variant="outline" onClick={handleSaveBrief} disabled={savingBrief}>
                       {savingBrief ? <TbLoader className="animate-spin" size={13} /> : <TbCheck size={13} />}
@@ -427,7 +427,7 @@ export function PublishDetailPage({ id }: { id: string }) {
             {/* Content */}
             <div className="space-y-3 rounded-xl glass-panel p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Post Content</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Post Content</p>
                 {!isLive && draftDirty && (
                   <Button size="sm" onClick={handleSaveDraft} disabled={savingDraft}>
                     {savingDraft ? <TbLoader className="animate-spin" size={14} /> : <TbCheck size={14} />}
@@ -461,7 +461,7 @@ export function PublishDetailPage({ id }: { id: string }) {
                       {post.aiDraft ? "Regenerate" : "Generate with AI"}
                     </Button>
                   </div>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-2xs text-muted-foreground">
                     {draft.trim().length.toLocaleString()} characters
                     {draft.trim().length > 3000 && <span className="text-amber-600 dark:text-amber-400"> · over LinkedIn&apos;s 3,000 limit</span>}
                   </p>
@@ -483,9 +483,9 @@ export function PublishDetailPage({ id }: { id: string }) {
             {/* Image */}
             <div className="space-y-3 rounded-xl glass-panel p-4">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Post Image</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Post Image</p>
                 {!isLive && meta?.visualSuggestion && (
-                  <p className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
+                  <p className="flex items-start gap-1.5 text-2xs text-muted-foreground">
                     <TbBulb size={13} className="mt-px shrink-0" />
                     <span>{meta.visualSuggestion}</span>
                   </p>
@@ -547,7 +547,7 @@ export function PublishDetailPage({ id }: { id: string }) {
                     <div className="flex items-center justify-center rounded-lg border border-dashed border-border py-6">
                       <div className="text-center text-muted-foreground/70">
                         <TbPhoto size={28} className="mx-auto mb-1" />
-                        <p className="text-[10px]">Optional image for your post</p>
+                        <p className="text-2xs">Optional image for your post</p>
                       </div>
                     </div>
                   )}
@@ -559,7 +559,7 @@ export function PublishDetailPage({ id }: { id: string }) {
             {isLive && (
               <>
                 <PostStatsCard stats={stats ?? null} loading={loadingStats} onRefresh={handleFetchStats} />
-                <p className="font-mono text-[10px] text-muted-foreground">Post ID: {post.platformPostId}</p>
+                <p className="font-mono text-2xs text-muted-foreground">Post ID: {post.platformPostId}</p>
               </>
             )}
           </div>
@@ -568,21 +568,21 @@ export function PublishDetailPage({ id }: { id: string }) {
           <div className="space-y-4">
             {/* Feed preview */}
             <div className="space-y-3 rounded-xl glass-panel p-4">
-              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Feed Preview</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Feed Preview</p>
               <div className="rounded-xl border border-border bg-card p-3">
                 <div className="flex items-center gap-2">
                   <div className="h-9 w-9 shrink-0 rounded-full bg-muted" />
                   <div className="min-w-0">
-                    <p className="truncate text-xs font-bold text-foreground">
+                    <p className="truncate text-xs font-semibold text-foreground">
                       {post.linkedinOrganizationId ? "Rhinon Labs" : "Your profile"}
                     </p>
-                    <p className="text-[10px] text-muted-foreground">
+                    <p className="text-2xs text-muted-foreground">
                       Now · {post.visibility === "CONNECTIONS" ? "Connections" : "Public"}
                     </p>
                   </div>
                 </div>
                 {preview ? (
-                  <p className="mt-2.5 whitespace-pre-wrap text-[13px] leading-relaxed text-foreground/90">
+                  <p className="mt-2.5 whitespace-pre-wrap text-ui leading-relaxed text-foreground/90">
                     {preview}
                     {folded && (
                       <>
@@ -592,11 +592,11 @@ export function PublishDetailPage({ id }: { id: string }) {
                     )}
                   </p>
                 ) : (
-                  <p className="mt-2.5 text-[13px] italic text-muted-foreground/60">Nothing written yet.</p>
+                  <p className="mt-2.5 text-ui italic text-muted-foreground/60">Nothing written yet.</p>
                 )}
                 {post.mediaUrl && <img src={post.mediaUrl} alt="" className="mt-2.5 w-full rounded-lg object-cover" />}
               </div>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-2xs text-muted-foreground">
                 Everything after the fold is only read if the first {FOLD} characters earn it.
               </p>
             </div>
@@ -604,22 +604,22 @@ export function PublishDetailPage({ id }: { id: string }) {
             {/* Generated meta */}
             {meta && (meta.hook || meta.cta || (meta.hashtags?.length ?? 0) > 0) && (
               <div className="space-y-2.5 rounded-xl glass-panel p-4">
-                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Generated</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Generated</p>
                 {meta.hook && (
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">Hook</p>
+                    <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/70">Hook</p>
                     <p className="text-xs leading-relaxed text-foreground/85">{meta.hook}</p>
                   </div>
                 )}
                 {meta.cta && (
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">CTA</p>
+                    <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/70">CTA</p>
                     <p className="text-xs leading-relaxed text-foreground/85">{meta.cta}</p>
                   </div>
                 )}
                 {(meta.hashtags?.length ?? 0) > 0 && (
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">Hashtags</p>
+                    <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/70">Hashtags</p>
                     <p className="text-xs text-blue-600 dark:text-blue-300">{meta.hashtags!.join(" ")}</p>
                   </div>
                 )}
@@ -629,20 +629,20 @@ export function PublishDetailPage({ id }: { id: string }) {
             {/* Type structure */}
             {typeMeta && (
               <div className="space-y-2.5 rounded-xl glass-panel p-4">
-                <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                   <typeMeta.icon size={13} /> {typeMeta.label} structure
                 </p>
                 <ol className="space-y-1.5">
                   {typeMeta.structure.map((step, i) => (
-                    <li key={i} className="flex gap-2 text-[11px] leading-relaxed text-muted-foreground">
+                    <li key={i} className="flex gap-2 text-2xs leading-relaxed text-muted-foreground">
                       <span className={cn("mt-1 h-1.5 w-1.5 shrink-0 rounded-full", typeMeta.dot)} />
                       <span>{step}</span>
                     </li>
                   ))}
                 </ol>
                 {typeMeta.avoid && (
-                  <p className="rounded-lg border border-border bg-muted/40 p-2.5 text-[11px] leading-relaxed text-muted-foreground">
-                    <span className="font-bold uppercase tracking-wide">Avoid: </span>
+                  <p className="rounded-lg border border-border bg-muted/40 p-2.5 text-2xs leading-relaxed text-muted-foreground">
+                    <span className="font-semibold uppercase tracking-wide">Avoid: </span>
                     {typeMeta.avoid}
                   </p>
                 )}

@@ -164,7 +164,7 @@ export function TwoFactorCard() {
             <div className="flex flex-col items-center gap-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={setup.qr} alt="Scan this QR code with your authenticator app" width={224} height={224} className="rounded-lg border border-border bg-white p-1" data-testid="mfa-qr" />
-              <span className="text-[11px] text-muted-foreground">Scan with Google Authenticator, 1Password, Authy…</span>
+              <span className="text-2xs text-muted-foreground">Scan with Google Authenticator, 1Password, Authy…</span>
             </div>
             <div className="grid content-start gap-4">
               <ol className="list-decimal space-y-1 pl-5 text-sm text-foreground/85">

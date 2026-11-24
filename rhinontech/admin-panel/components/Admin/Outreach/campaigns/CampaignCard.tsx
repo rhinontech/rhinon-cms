@@ -23,7 +23,7 @@ export function CampaignTableHeader() {
   return (
     <div
       style={{ gridTemplateColumns: CAMPAIGN_COLS }}
-      className="sticky top-0 z-10 grid items-center gap-4 border-b glass-thead px-4 py-2.5 text-[11px] font-medium text-muted-foreground"
+      className="sticky top-0 z-10 grid items-center gap-4 border-b glass-thead px-4 py-2.5 text-2xs font-medium text-muted-foreground"
     >
       <span>Campaign</span>
       <span>Status</span>
@@ -69,7 +69,7 @@ export function CampaignCard({
       onClick={() => router.push(detailHref)}
       onKeyDown={(e) => { if (e.key === "Enter") router.push(detailHref); }}
       style={{ gridTemplateColumns: CAMPAIGN_COLS }}
-      className="group grid cursor-pointer items-center gap-4 border-b px-4 py-3 text-[13px] outline-none transition-colors last:border-b-0 hover:bg-foreground/[0.025] focus-visible:bg-foreground/[0.04]"
+      className="group grid cursor-pointer items-center gap-4 border-b px-4 py-3 text-ui outline-none transition-colors last:border-b-0 hover:bg-foreground/[0.025] focus-visible:bg-foreground/[0.04]"
     >
       <div className="min-w-0">
         <Link href={detailHref} onClick={(e) => e.stopPropagation()} className="block truncate font-medium text-foreground group-hover:text-brand">
@@ -100,11 +100,11 @@ export function CampaignCard({
       <span className="text-right tabular-nums text-foreground/85">{m.sent.toLocaleString()}</span>
       <span className="text-right tabular-nums">
         <span className="text-foreground/85">{m.opened.toLocaleString()}</span>
-        <span className="block text-[11px] text-muted-foreground">{rate(m.opened, m.sent)}</span>
+        <span className="block text-2xs text-muted-foreground">{rate(m.opened, m.sent)}</span>
       </span>
       <span className="text-right tabular-nums">
         <span className={cn(m.replied > 0 ? "font-medium text-emerald-600 dark:text-emerald-400" : "text-foreground/85")}>{m.replied.toLocaleString()}</span>
-        <span className="block text-[11px] text-muted-foreground">{rate(m.replied, m.sent)}</span>
+        <span className="block text-2xs text-muted-foreground">{rate(m.replied, m.sent)}</span>
       </span>
       <span className={cn("text-right tabular-nums", m.bounced > 0 ? "text-rose-600 dark:text-rose-400" : "text-muted-foreground")}>
         {m.bounced.toLocaleString()}

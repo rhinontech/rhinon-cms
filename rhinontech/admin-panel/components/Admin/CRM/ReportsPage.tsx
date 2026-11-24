@@ -100,7 +100,7 @@ export function ReportsPage() {
           <SubNavToggle />
           <div className="min-w-0">
             <h1 className="text-sm font-semibold tracking-tight text-foreground">Reports</h1>
-            <p className="text-[11px] text-muted-foreground">Pipeline is as of today; everything closed is within the selected range.</p>
+            <p className="text-2xs text-muted-foreground">Pipeline is as of today; everything closed is within the selected range.</p>
           </div>
         </div>
         <div className="flex items-center gap-1.5">
@@ -121,7 +121,7 @@ export function ReportsPage() {
       </div>
 
       <div className="flex-1 overflow-auto p-3">
-        {error && <p className="mb-2.5 rounded-md border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2.5 py-1.5 text-[11px] text-rose-700 dark:text-rose-300">{error}</p>}
+        {error && <p className="mb-2.5 rounded-md border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2.5 py-1.5 text-2xs text-rose-700 dark:text-rose-300">{error}</p>}
 
         {loading ? (
           <div className="space-y-3">
@@ -193,9 +193,9 @@ export function ReportsPage() {
                 {data.sources.length === 0 ? (
                   <p className="py-6 text-center text-xs text-muted-foreground">Nothing closed in this range.</p>
                 ) : (
-                  <table className="w-full text-[12px]">
+                  <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b border-border text-[10px] uppercase tracking-wider text-muted-foreground">
+                      <tr className="border-b border-border text-2xs uppercase tracking-wider text-muted-foreground">
                         <th className="py-1.5 text-left font-semibold">Source</th>
                         <th className="py-1.5 text-right font-semibold">Won</th>
                         <th className="py-1.5 text-right font-semibold">Value</th>
@@ -225,9 +225,9 @@ export function ReportsPage() {
                 {data.reps.length === 0 ? (
                   <p className="py-6 text-center text-xs text-muted-foreground">No deals assigned yet.</p>
                 ) : (
-                  <table className="w-full text-[12px]">
+                  <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b border-border text-[10px] uppercase tracking-wider text-muted-foreground">
+                      <tr className="border-b border-border text-2xs uppercase tracking-wider text-muted-foreground">
                         <th className="py-1.5 text-left font-semibold">Rep</th>
                         <th className="py-1.5 text-right font-semibold">Open</th>
                         <th className="py-1.5 text-right font-semibold">Won</th>
@@ -273,8 +273,8 @@ export function ReportsPage() {
                 <div className="flex items-start gap-2 rounded-md border border-dashed border-border px-3 py-3">
                   <TbWorld size={16} className="mt-0.5 shrink-0 text-muted-foreground" />
                   <div>
-                    <p className="text-[12px] font-medium text-foreground/85">Not switched on yet</p>
-                    <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">{intent.message}</p>
+                    <p className="text-xs font-medium text-foreground/85">Not switched on yet</p>
+                    <p className="mt-0.5 text-2xs leading-relaxed text-muted-foreground">{intent.message}</p>
                   </div>
                 </div>
               ) : intent.companies.length === 0 ? (
@@ -282,9 +282,9 @@ export function ReportsPage() {
                   No companies resolved yet — signal starts accumulating once the site sees traffic.
                 </p>
               ) : (
-                <table className="w-full text-[12px]">
+                <table className="w-full text-xs">
                   <thead>
-                    <tr className="border-b border-border text-[10px] uppercase tracking-wider text-muted-foreground">
+                    <tr className="border-b border-border text-2xs uppercase tracking-wider text-muted-foreground">
                       <th className="py-1.5 text-left font-semibold">Company</th>
                       <th className="py-1.5 text-left font-semibold">Reading</th>
                       <th className="py-1.5 text-right font-semibold">Visits</th>
@@ -296,21 +296,21 @@ export function ReportsPage() {
                       <tr key={`${c.name}-${c.domain ?? ""}`} className="border-b border-border last:border-0">
                         <td className="py-1.5 pr-2">
                           <span className="block truncate font-medium text-foreground">{c.name}</span>
-                          <span className="block truncate text-[10px] text-muted-foreground">
+                          <span className="block truncate text-2xs text-muted-foreground">
                             {c.domain || "—"}
                             {c.accountId && <span className="ml-1 text-emerald-600 dark:text-emerald-300">· known account</span>}
                           </span>
                         </td>
                         <td className="py-1.5 pr-2">
-                          <span className="block truncate text-[11px] text-foreground/70">
+                          <span className="block truncate text-2xs text-foreground/70">
                             {c.topPages.map((p) => p.path).join(", ") || "—"}
                           </span>
                         </td>
                         <td className="py-1.5 text-right tabular-nums text-foreground/70">
                           {c.views}
-                          <span className="ml-1 text-[10px] text-muted-foreground">/ {c.sessions}s</span>
+                          <span className="ml-1 text-2xs text-muted-foreground">/ {c.sessions}s</span>
                         </td>
-                        <td className="py-1.5 text-right text-[11px] tabular-nums text-muted-foreground">{relativeTime(c.lastSeen)}</td>
+                        <td className="py-1.5 text-right text-2xs tabular-nums text-muted-foreground">{relativeTime(c.lastSeen)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -340,11 +340,11 @@ function AttributionCard({ label, side }: { label: string; side: AttributionSide
   const decided = side.wonCount + side.lostCount;
   return (
     <div className="rounded-lg border border-border bg-card/60 px-3 py-2.5">
-      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="text-2xs uppercase tracking-wider text-muted-foreground">{label}</p>
       <p className="mt-0.5 text-lg font-semibold tabular-nums leading-tight text-foreground">
         {formatMoney(side.wonValue)}
       </p>
-      <p className="mt-0.5 text-[11px] tabular-nums text-muted-foreground">
+      <p className="mt-0.5 text-2xs tabular-nums text-muted-foreground">
         {side.wonCount} won · {side.lostCount} lost ·{" "}
         {side.winRate == null ? "no data" : `${side.winRate}% win rate`}
         {decided === 0 && " (nothing closed)"}
@@ -356,9 +356,9 @@ function AttributionCard({ label, side }: { label: string; side: AttributionSide
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div className="rounded-lg glass-card px-3 py-2.5">
-      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="text-2xs uppercase tracking-wider text-muted-foreground">{label}</p>
       <p className="mt-0.5 text-xl font-semibold tabular-nums leading-tight text-foreground">{value}</p>
-      {sub && <p className="mt-0.5 text-[11px] text-muted-foreground">{sub}</p>}
+      {sub && <p className="mt-0.5 text-2xs text-muted-foreground">{sub}</p>}
     </div>
   );
 }
@@ -372,7 +372,7 @@ function Outcome({
         {icon}
       </span>
       <div className="min-w-0">
-        <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: tone }}>{label}</p>
+        <p className="text-2xs font-semibold uppercase tracking-wider" style={{ color: tone }}>{label}</p>
         <p className="text-sm font-semibold tabular-nums text-foreground">
           {value} <span className="font-normal text-muted-foreground">· {count} deal{count === 1 ? "" : "s"}</span>
         </p>
@@ -384,8 +384,8 @@ function Outcome({
 function Panel({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
     <section className="rounded-lg glass-card p-3">
-      <h2 className="text-[12px] font-semibold text-foreground">{title}</h2>
-      {hint && <p className="mb-2.5 mt-0.5 text-[11px] text-muted-foreground">{hint}</p>}
+      <h2 className="text-xs font-semibold text-foreground">{title}</h2>
+      {hint && <p className="mb-2.5 mt-0.5 text-2xs text-muted-foreground">{hint}</p>}
       {children}
     </section>
   );
@@ -398,7 +398,7 @@ function HBars({ rows }: { rows: { key: string; label: string; value: number; me
     <ul className="space-y-1.5">
       {rows.map((r) => (
         <li key={r.key} className="grid grid-cols-[minmax(72px,26%)_minmax(0,1fr)_auto] items-center gap-2">
-          <span className="truncate text-[11px] text-foreground/70" title={r.label}>{r.label}</span>
+          <span className="truncate text-2xs text-foreground/70" title={r.label}>{r.label}</span>
           <span className="relative h-4 rounded bg-muted">
             <span
               className="viz-bar absolute inset-y-0 left-0 min-w-[3px]"
@@ -406,7 +406,7 @@ function HBars({ rows }: { rows: { key: string; label: string; value: number; me
               title={`${r.label}: ${r.display}${r.meta ? ` (${r.meta})` : ""}`}
             />
           </span>
-          <span className="whitespace-nowrap text-[11px] font-medium tabular-nums text-foreground">
+          <span className="whitespace-nowrap text-2xs font-medium tabular-nums text-foreground">
             {r.display}
             {r.meta && <span className="ml-1 font-normal text-muted-foreground">{r.meta}</span>}
           </span>
@@ -428,7 +428,7 @@ function MonthlyBars({ rows }: { rows: { month: string; count: number; value: nu
         {rows.map((r) => (
           <div key={r.month} className="group relative flex min-w-0 flex-1 flex-col items-center justify-end">
             {r.month === peak.month && (
-              <span className="mb-1 whitespace-nowrap text-[10px] font-medium tabular-nums text-foreground/85">
+              <span className="mb-1 whitespace-nowrap text-2xs font-medium tabular-nums text-foreground/85">
                 {formatMoney(r.value)}
               </span>
             )}
@@ -442,7 +442,7 @@ function MonthlyBars({ rows }: { rows: { month: string; count: number; value: nu
       </div>
       <div className="mt-1 flex gap-1">
         {rows.map((r) => (
-          <span key={r.month} className="min-w-0 flex-1 truncate text-center text-[9px] tabular-nums text-muted-foreground">
+          <span key={r.month} className="min-w-0 flex-1 truncate text-center text-2xs tabular-nums text-muted-foreground">
             {r.month.slice(2)}
           </span>
         ))}

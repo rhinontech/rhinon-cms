@@ -550,7 +550,7 @@ function VisibilityBadge({ visibility, teamName }: { visibility: ProjectVisibili
     <span
       title={isTeam ? `Visible to the ${teamName ?? "team"} team only` : "Visible only to you"}
       className={cn(
-        "inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium",
+        "inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-medium",
         isTeam ? "bg-indigo-50 dark:bg-indigo-400/10 text-indigo-700 dark:text-indigo-300" : "bg-amber-50 dark:bg-amber-400/10 text-amber-700 dark:text-amber-300"
       )}
     >

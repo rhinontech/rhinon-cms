@@ -124,7 +124,7 @@ export function SettingsTab({
 
       {/* Danger zone */}
       <div className="space-y-3 rounded-xl border border-red-100 dark:border-red-400/20 bg-red-50/40 dark:bg-red-400/10 p-5">
-        <p className="text-xs font-bold uppercase tracking-widest text-red-400">Danger Zone</p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-red-400">Danger Zone</p>
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="text-sm font-semibold text-foreground">Reset campaign</p>

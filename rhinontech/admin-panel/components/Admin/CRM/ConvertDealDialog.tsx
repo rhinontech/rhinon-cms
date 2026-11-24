@@ -9,7 +9,7 @@ import { TBtn } from "./ui";
 
 import { NativeSelect } from "@/components/ui/native-select";
 const INPUT =
-  "w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40";
+  "w-full rounded border border-border bg-card px-2 py-1.5 text-ui outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40";
 
 /**
  * Turns a qualified lead into a deal. Creating the deal also links (or creates)
@@ -75,23 +75,23 @@ export function ConvertDealDialog({ lead, onClose }: { lead: Lead; onClose: (cre
             <TbX size={16} />
           </button>
         </div>
-        <p className="mb-3 text-[11px] text-muted-foreground">
+        <p className="mb-3 text-2xs text-muted-foreground">
           Creates a deal for <span className="font-medium text-foreground/85">{lead.name}</span>, links the account, and marks the lead Qualified.
         </p>
 
         <div className="space-y-2.5">
           <label className="block">
-            <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Deal title</span>
+            <span className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Deal title</span>
             <input required autoFocus value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className={INPUT} />
           </label>
 
           <div className="grid grid-cols-2 gap-2.5">
             <label className="block">
-              <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Value</span>
+              <span className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Value</span>
               <input type="number" min={0} value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} placeholder="500000" className={cn(INPUT, "tabular-nums")} />
             </label>
             <label className="block">
-              <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Currency</span>
+              <span className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Currency</span>
               <NativeSelect value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className={INPUT} contentClassName="z-[70]">
                 <option value="INR">INR</option>
                 <option value="USD">USD</option>
@@ -103,19 +103,19 @@ export function ConvertDealDialog({ lead, onClose }: { lead: Lead; onClose: (cre
 
           <div className="grid grid-cols-2 gap-2.5">
             <label className="block">
-              <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Stage</span>
+              <span className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Stage</span>
               <NativeSelect value={form.stageId} onChange={(e) => setForm({ ...form, stageId: e.target.value })} className={INPUT} contentClassName="z-[70]">
                 {stages.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
               </NativeSelect>
             </label>
             <label className="block">
-              <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Expected close</span>
+              <span className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Expected close</span>
               <input type="date" value={form.expectedCloseDate} onChange={(e) => setForm({ ...form, expectedCloseDate: e.target.value })} className={INPUT} />
             </label>
           </div>
 
           <label className="block">
-            <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Owner</span>
+            <span className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Owner</span>
             <NativeSelect value={form.ownerId} onChange={(e) => setForm({ ...form, ownerId: e.target.value })} className={INPUT} contentClassName="z-[70]">
               <option value="">Me</option>
               {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}
@@ -123,7 +123,7 @@ export function ConvertDealDialog({ lead, onClose }: { lead: Lead; onClose: (cre
           </label>
         </div>
 
-        {error && <p className="mt-2.5 rounded border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2 py-1.5 text-[11px] text-rose-700 dark:text-rose-300">{error}</p>}
+        {error && <p className="mt-2.5 rounded border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2 py-1.5 text-2xs text-rose-700 dark:text-rose-300">{error}</p>}
 
         <div className="mt-4 flex justify-end gap-2">
           <TBtn onClick={() => onClose(false)}>Cancel</TBtn>

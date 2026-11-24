@@ -65,14 +65,14 @@ function BoardCard({
       {/* Optional: only tasks with a cover picture get one. */}
       <CardCover url={task.coverUrl} />
       <button data-task-opener onClick={() => onOpen?.(task)} className="block w-full px-3.5 pt-3 text-left">
-        <p className="text-[15px] font-medium leading-snug text-foreground">
+        <p className="text-base font-medium leading-snug text-foreground">
           {task.title}
           {files > 0 && <TbPaperclip size={13} className="ml-1.5 inline align-[-1px] text-muted-foreground" aria-label={`${files} files`} />}
         </p>
         {!!task.tags?.length && (
           <div className="mt-2 flex flex-wrap gap-1">
             {task.tags.map((t) => (
-              <span key={t.id} className={cn("rounded px-1.5 py-0.5 text-[10px] font-medium", STATUS_CHIP[t.color] ?? STATUS_CHIP.stone)}>{t.label}</span>
+              <span key={t.id} className={cn("rounded px-1.5 py-0.5 text-2xs font-medium", STATUS_CHIP[t.color] ?? STATUS_CHIP.stone)}>{t.label}</span>
             ))}
           </div>
         )}
@@ -121,7 +121,7 @@ function BoardCard({
           <span className="shrink-0">Who&apos;s in charge</span>
           {task.assignee ? (
             <span className="flex min-w-0 items-center gap-1.5 rounded-full bg-cyan-100 py-0.5 pl-0.5 pr-2 font-medium text-cyan-800 dark:bg-cyan-400/15 dark:text-cyan-200">
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-cyan-200 text-[9px] font-semibold dark:bg-cyan-400/25">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-cyan-200 text-2xs font-semibold dark:bg-cyan-400/25">
                 {initials(task.assignee.fullName)}
               </span>
               <span className="truncate">{task.assignee.fullName.split(" ")[0]}</span>

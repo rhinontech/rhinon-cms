@@ -10,7 +10,7 @@ import type { LetterBlock } from "@/types/letterBlocks";
 // specific block for the AI-rewrite call.
 export function LetterBlocksView({ blocks }: { blocks: LetterBlock[] }) {
   return (
-    <div className="px-6 py-5 text-[13px] leading-relaxed text-foreground">
+    <div className="px-6 py-5 text-ui leading-relaxed text-foreground">
       {blocks.map((block) => (
         <BlockRow key={block.id} block={block} />
       ))}
@@ -23,7 +23,7 @@ function BlockRow({ block }: { block: LetterBlock }) {
 
   if (block.kind === "heading") {
     return (
-      <div data-block-id={block.id} className="mt-4 mb-2 font-bold text-[14px] text-[#005085]">
+      <div data-block-id={block.id} className="mt-4 mb-2 font-semibold text-sm text-[#005085]">
         {block.num ? `${block.num}. ` : ""}
         {renderInline(block.text)}
       </div>
@@ -32,7 +32,7 @@ function BlockRow({ block }: { block: LetterBlock }) {
 
   if (block.kind === "subheading") {
     return (
-      <div data-block-id={block.id} className="mt-3 mb-1 font-bold text-foreground">
+      <div data-block-id={block.id} className="mt-3 mb-1 font-semibold text-foreground">
         {renderInline(block.text)}
       </div>
     );

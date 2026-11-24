@@ -288,7 +288,7 @@ export function WorkspaceLauncher({ sections, collapsed, onToggle }: { sections:
         <div className="space-y-4 p-5">
           {sections.map((section) => (
             <div key={section.key}>
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{section.label}</p>
+              <p className="mb-2 text-2xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">{section.label}</p>
               <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
                 {section.tiles.map((tile) => {
                   const Icon = tile.icon;
@@ -308,7 +308,7 @@ export function WorkspaceLauncher({ sections, collapsed, onToggle }: { sections:
                         <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">{tile.description}</span>
                         {/* Its own line, so a long count never squeezes the module's name. */}
                         {tile.metric && (
-                          <span className="mt-1.5 inline-block rounded-full px-2 py-0.5 text-[11px] font-medium tabular-nums" style={{ background: `${tile.tone}14`, color: tile.tone }}>
+                          <span className="mt-1.5 inline-block rounded-full px-2 py-0.5 text-2xs font-medium tabular-nums" style={{ background: `${tile.tone}14`, color: tile.tone }}>
                             {tile.metric}
                           </span>
                         )}
@@ -360,7 +360,7 @@ export function TeamPulse({ pulse, birthdays, anniversaries, attendanceHref }: {
         <ul className="divide-y divide-border">
           {celebrations.map((c) => (
             <li key={c.id} className="flex items-center gap-3 px-5 py-2.5 text-sm">
-              <span className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-xs font-bold", c.today ? "bg-blue-600 text-white" : "bg-muted text-foreground/80")}>{c.day}</span>
+              <span className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-xs font-semibold", c.today ? "bg-blue-600 text-white" : "bg-muted text-foreground/80")}>{c.day}</span>
               {c.icon}
               <span className="min-w-0 flex-1 truncate">{c.name}</span>
               <span className="shrink-0 text-xs text-muted-foreground">{c.today ? `${c.what} · today` : c.what}</span>

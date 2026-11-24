@@ -100,7 +100,7 @@ function NewClaimDialog({ isAdmin, onClose, onCreated }: { isAdmin: boolean; onC
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div className="w-full max-w-md bg-card rounded-2xl border border-border p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-md bg-card rounded-xl border border-border p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <p className="font-semibold text-foreground">New reimbursement claim</p>
           <button onClick={onClose} className="p-1 text-muted-foreground hover:text-foreground"><TbX size={18} /></button>
@@ -195,7 +195,7 @@ function ReviewDialog({ claim, onClose, onDone }: { claim: Claim; onClose: () =>
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div className="w-full max-w-md bg-card rounded-2xl border border-border p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-md bg-card rounded-xl border border-border p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between">
           <div>
             <p className="font-semibold text-foreground">{claim.employee?.fullName} · {INR(claim.amount)}</p>

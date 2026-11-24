@@ -109,7 +109,7 @@ function ReimbursementEditor({ slip, onSaved }: { slip: PayslipData; onSaved: (p
   };
 
   return (
-    <div className="max-w-3xl mx-auto mb-6 glass-card-solid rounded-2xl p-5 print:hidden">
+    <div className="max-w-3xl mx-auto mb-6 glass-card-solid rounded-xl p-5 print:hidden">
       <div className="flex items-center justify-between mb-1">
         <p className="text-sm font-semibold text-foreground">Reimbursements</p>
         <button
@@ -270,7 +270,7 @@ export function PayslipDetail({ id }: { id: string }) {
       )}
 
       {/* Payslip card */}
-      <div id="payslip-print" className="bg-card rounded-2xl border border-border max-w-3xl mx-auto overflow-hidden">
+      <div id="payslip-print" className="bg-card rounded-xl border border-border max-w-3xl mx-auto overflow-hidden">
 
         {/* Company header */}
         <div className="bg-stone-900 px-8 py-6 flex items-start justify-between">

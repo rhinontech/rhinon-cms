@@ -61,7 +61,7 @@ export function FaqEditor({
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-bold tracking-tight text-foreground">FAQs (optional)</h2>
+          <h2 className="text-sm font-semibold tracking-tight text-foreground">FAQs (optional)</h2>
           <p className="text-xs text-muted-foreground">
             Render as an accordion on the blog page and power the FAQ schema for Google.
           </p>
@@ -93,8 +93,8 @@ export function FaqEditor({
         <div className="space-y-2 rounded-xl border border-border bg-muted/40 p-3">
           <div className="flex items-start justify-between gap-2">
             <p className="text-xs text-muted-foreground">
-              Paste either a plain array — <code className="rounded bg-card px-1 py-0.5 text-[10px]">[{"{"}&quot;question&quot;: &quot;…&quot;, &quot;answer&quot;: &quot;…&quot;{"}"}]</code> —
-              or a full <code className="rounded bg-card px-1 py-0.5 text-[10px]">FAQPage</code> schema with <code className="rounded bg-card px-1 py-0.5 text-[10px]">mainEntity</code>.
+              Paste either a plain array — <code className="rounded bg-card px-1 py-0.5 text-2xs">[{"{"}&quot;question&quot;: &quot;…&quot;, &quot;answer&quot;: &quot;…&quot;{"}"}]</code> —
+              or a full <code className="rounded bg-card px-1 py-0.5 text-2xs">FAQPage</code> schema with <code className="rounded bg-card px-1 py-0.5 text-2xs">mainEntity</code>.
               The FAQ schema on the live page is generated automatically from these.
             </p>
             <button type="button" onClick={() => setJsonOpen(false)} className="p-1 text-muted-foreground hover:text-foreground/85" title="Close">

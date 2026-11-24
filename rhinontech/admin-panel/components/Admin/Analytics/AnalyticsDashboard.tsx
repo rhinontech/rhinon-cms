@@ -217,7 +217,7 @@ export function AnalyticsDashboard() {
         {/* Header + range selector */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Website Analytics</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Website Analytics</h1>
             <p className="text-sm text-muted-foreground">
               {isPlatform ? "Organic & tagged traffic to rhinonlabs.com" : "Visitors, sources and pages for your website"}
             </p>
@@ -292,7 +292,7 @@ export function AnalyticsDashboard() {
                     </CardHeader>
                     <CardContent className="pt-0">
                       <div className="flex items-end justify-between gap-2">
-                        <span className="text-3xl font-bold tracking-tight text-foreground tabular-nums">
+                        <span className="text-3xl font-semibold tracking-tight text-foreground tabular-nums">
                           {nfmt(c.value)}
                         </span>
                         {d !== null && (
@@ -776,10 +776,10 @@ function SourcesChart({ channels, loading }: { channels: ChannelRow[]; loading: 
                 if (viewBox && "cx" in viewBox && "cy" in viewBox) {
                   return (
                     <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
-                      <tspan x={viewBox.cx} y={(viewBox.cy ?? 0) - 6} className="fill-foreground text-2xl font-bold">
+                      <tspan x={viewBox.cx} y={(viewBox.cy ?? 0) - 6} className="fill-foreground text-2xl font-semibold">
                         {nfmt(total)}
                       </tspan>
-                      <tspan x={viewBox.cx} y={(viewBox.cy ?? 0) + 16} className="fill-muted-foreground text-[11px]">
+                      <tspan x={viewBox.cx} y={(viewBox.cy ?? 0) + 16} className="fill-muted-foreground text-2xs">
                         pageviews
                       </tspan>
                     </text>

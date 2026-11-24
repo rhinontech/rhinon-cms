@@ -46,7 +46,7 @@ export function WorkflowHeader({
             <TbArrowLeft size={20} />
           </Link>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-foreground tracking-tight">{workflow.name}</h1>
+            <h1 className="text-xl font-semibold text-foreground tracking-tight">{workflow.name}</h1>
             <span
               className={`px-2 py-0.5 text-xs font-semibold rounded-md uppercase tracking-wider ${
                 workflow.status === "active"
@@ -67,7 +67,7 @@ export function WorkflowHeader({
           {workflow.triggerType === "static_list" && onRunWorkflow && (
             <button
               onClick={onRunWorkflow}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 shadow-2xs transition-all"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 shadow-2xs transition-all"
             >
               <TbRocket size={15} />
               Run workflow
@@ -78,7 +78,7 @@ export function WorkflowHeader({
             onClick={onEnrollTest}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-foreground/85 bg-card border border-border rounded-lg hover:bg-muted/40 shadow-2xs transition-all"
           >
-            <TbExclamationMark size={14} className="text-amber-500 dark:text-amber-400 font-bold" />
+            <TbExclamationMark size={14} className="text-amber-500 dark:text-amber-400 font-semibold" />
             Enroll one (test)
           </button>
 
@@ -113,16 +113,16 @@ export function WorkflowHeader({
       {/* Metrics Row */}
       <div className="flex items-center gap-6 text-xs text-muted-foreground mb-4 pl-11">
         <div>
-          <span className="font-bold text-foreground mr-1">{workflow.stats?.active || 0}</span> active
+          <span className="font-semibold text-foreground mr-1">{workflow.stats?.active || 0}</span> active
         </div>
         <div>
-          <span className="font-bold text-emerald-600 dark:text-emerald-300 mr-1">{workflow.stats?.completed || 0}</span> completed
+          <span className="font-semibold text-emerald-600 dark:text-emerald-300 mr-1">{workflow.stats?.completed || 0}</span> completed
         </div>
         <div>
-          <span className="font-bold text-rose-600 dark:text-rose-300 mr-1">{workflow.stats?.failed || 0}</span> failed
+          <span className="font-semibold text-rose-600 dark:text-rose-300 mr-1">{workflow.stats?.failed || 0}</span> failed
         </div>
         <div>
-          <span className="font-bold text-muted-foreground mr-1">{workflow.stats?.cancelled || 0}</span> cancelled
+          <span className="font-semibold text-muted-foreground mr-1">{workflow.stats?.cancelled || 0}</span> cancelled
         </div>
       </div>
 
@@ -140,7 +140,7 @@ export function WorkflowHeader({
           >
             {tab.name}
             {tab.count !== null && tab.count > 0 && (
-              <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-muted text-foreground/70">
+              <span className="px-1.5 py-0.5 text-2xs font-semibold rounded-full bg-muted text-foreground/70">
                 {tab.count}
               </span>
             )}

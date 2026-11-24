@@ -17,15 +17,15 @@ export default function AutomationSettingsGlobalPage() {
   return (
     <div className="p-8 max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground tracking-tight flex items-center gap-2">
+        <h1 className="text-2xl font-semibold text-foreground tracking-tight flex items-center gap-2">
           <TbSettings className="text-foreground/85" /> Sequence settings
         </h1>
         <p className="text-sm text-muted-foreground mt-1">Configure system-wide limits and behavior for workflow execution.</p>
       </div>
 
-      <form onSubmit={handleSave} className="bg-card p-6 rounded-2xl border border-border shadow-2xs space-y-6">
+      <form onSubmit={handleSave} className="bg-card p-6 rounded-xl border border-border shadow-2xs space-y-6">
         <div>
-          <label className="block text-sm font-bold text-foreground mb-1">
+          <label className="block text-sm font-semibold text-foreground mb-1">
             Concurrent Workflow Limit per Lead
           </label>
           <p className="text-xs text-muted-foreground mb-3">
@@ -43,7 +43,7 @@ export default function AutomationSettingsGlobalPage() {
 
         <div className="pt-4 border-t border-border flex items-center justify-between">
           <div>
-            <h4 className="text-sm font-bold text-foreground">Auto-retry failed email steps</h4>
+            <h4 className="text-sm font-semibold text-foreground">Auto-retry failed email steps</h4>
             <p className="text-xs text-muted-foreground mt-0.5">
               Automatically retry email sending up to 3 times if temporary SMTP / provider rate limits occur.
             </p>

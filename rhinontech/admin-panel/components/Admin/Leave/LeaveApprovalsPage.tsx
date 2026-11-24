@@ -100,7 +100,7 @@ export function LeaveApprovalsPage() {
             <h1 className="text-base sm:text-lg font-semibold tracking-tight truncate">Leave Approvals</h1>
           </div>
           {requests.length > 0 && (
-            <span className="rounded-full bg-yellow-100 dark:bg-yellow-400/15 text-yellow-700 dark:text-yellow-300 text-xs font-bold px-2.5 py-0.5 shrink-0">
+            <span className="rounded-full bg-yellow-100 dark:bg-yellow-400/15 text-yellow-700 dark:text-yellow-300 text-xs font-semibold px-2.5 py-0.5 shrink-0">
               {requests.length} pending
             </span>
           )}
@@ -115,7 +115,7 @@ export function LeaveApprovalsPage() {
             <div className="flex flex-col items-center gap-4 py-20 text-center">
               <TbCircleCheck size={64} className="text-green-200" />
               <div>
-                <p className="text-lg font-bold text-foreground">All caught up!</p>
+                <p className="text-lg font-semibold text-foreground">All caught up!</p>
                 <p className="text-sm text-muted-foreground">No pending leave requests to approve.</p>
               </div>
             </div>
@@ -125,7 +125,7 @@ export function LeaveApprovalsPage() {
                 key={req.id}
                 onClick={() => handleSelect(req)}
                 className={cn(
-                  "p-3 sm:p-4 rounded-2xl border border-border transition-all cursor-pointer flex items-center justify-between group",
+                  "p-3 sm:p-4 rounded-xl border border-border transition-all cursor-pointer flex items-center justify-between group",
                   selected?.id === req.id ? "bg-muted/40 border-border ring-1 ring-border" : "bg-card hover:bg-muted/40"
                 )}
               >
@@ -134,8 +134,8 @@ export function LeaveApprovalsPage() {
                     <TbCalendarEvent size={18} />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-bold text-foreground text-xs sm:text-sm truncate">{req.userName}</h3>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest truncate">
+                    <h3 className="font-semibold text-foreground text-xs sm:text-sm truncate">{req.userName}</h3>
+                    <p className="text-2xs font-semibold text-muted-foreground uppercase tracking-widest truncate">
                       {req.leaveTypeName} · {req.days}d · {formatDate(req.startDate)}
                     </p>
                   </div>
@@ -177,7 +177,7 @@ export function LeaveApprovalsPage() {
 
             <div className="flex-1 overflow-auto p-4 sm:p-5 space-y-4 sm:space-y-5">
               <div className="flex items-center gap-3 sm:gap-4">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg sm:text-xl shrink-0">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-lg sm:text-xl shrink-0">
                   {selected.userName?.charAt(0) ?? "?"}
                 </div>
                 <div className="min-w-0">
@@ -228,7 +228,7 @@ export function LeaveApprovalsPage() {
                 <button
                   onClick={() => handleAction(selected.id, "Approved")}
                   disabled={!!processing}
-                  className="w-full py-2.5 sm:py-3 bg-green-600 text-white rounded-xl font-bold text-xs sm:text-sm hover:bg-green-700 transition-colors shadow-lg active:scale-95 flex items-center justify-center gap-2 disabled:opacity-60"
+                  className="w-full py-2.5 sm:py-3 bg-green-600 text-white rounded-xl font-semibold text-xs sm:text-sm hover:bg-green-700 transition-colors shadow-lg active:scale-95 flex items-center justify-center gap-2 disabled:opacity-60"
                 >
                   {processing === selected.id ? <TbLoader size={16} className="animate-spin" /> : <TbCheck size={16} />}
                   Approve Request
@@ -236,7 +236,7 @@ export function LeaveApprovalsPage() {
                 <button
                   onClick={() => handleAction(selected.id, "Rejected")}
                   disabled={!!processing}
-                  className="w-full py-2.5 sm:py-3 bg-card text-red-600 dark:text-red-300 border border-red-100 dark:border-red-400/20 rounded-xl font-bold text-xs sm:text-sm hover:bg-red-50 dark:hover:bg-red-400/10 transition-colors active:scale-95 flex items-center justify-center gap-2 disabled:opacity-60"
+                  className="w-full py-2.5 sm:py-3 bg-card text-red-600 dark:text-red-300 border border-red-100 dark:border-red-400/20 rounded-xl font-semibold text-xs sm:text-sm hover:bg-red-50 dark:hover:bg-red-400/10 transition-colors active:scale-95 flex items-center justify-center gap-2 disabled:opacity-60"
                 >
                   <TbX size={16} />
                   Decline

@@ -125,7 +125,7 @@ function AdminLeaveOverview({ isSubNavExpanded }: { isSubNavExpanded: boolean })
                 <div key={c.label} className="rounded-xl glass-card p-5 flex items-center gap-4">
                   <div className={cn("p-3 rounded-xl", c.color)}>{c.icon}</div>
                   <div>
-                    <p className="text-2xl font-bold text-foreground">{c.value}</p>
+                    <p className="text-2xl font-semibold text-foreground">{c.value}</p>
                     <p className="text-xs text-muted-foreground">{c.label}</p>
                   </div>
                 </div>
@@ -178,7 +178,7 @@ function AdminLeaveOverview({ isSubNavExpanded }: { isSubNavExpanded: boolean })
                 <div className="divide-y divide-border">
                   {recentRequests.map(req => (
                     <div key={req.id} className="flex items-center px-5 py-3 gap-4">
-                      <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold flex-shrink-0">
                         {(req.userName ?? req.leaveTypeName).charAt(0)}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -303,7 +303,7 @@ function EmployeeLeaveOverview({ isSubNavExpanded }: { isSubNavExpanded: boolean
                       <span className="h-3 w-3 rounded-full flex-shrink-0" style={{ backgroundColor: bal.color }} />
                       <p className="font-semibold text-foreground text-sm truncate">{bal.name}</p>
                       <span className={cn(
-                        "ml-auto text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full",
+                        "ml-auto text-2xs font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full",
                         bal.isPaid ? "bg-green-50 dark:bg-green-400/10 text-green-600 dark:text-green-300" : "bg-muted text-muted-foreground"
                       )}>
                         {bal.isPaid ? "Paid" : "Unpaid"}
@@ -323,7 +323,7 @@ function EmployeeLeaveOverview({ isSubNavExpanded }: { isSubNavExpanded: boolean
                         }}
                       />
                     </div>
-                    <p className="mt-1 text-right text-[10px] text-muted-foreground">
+                    <p className="mt-1 text-right text-2xs text-muted-foreground">
                       {bal.allocated > 0 ? Math.round((bal.used / bal.allocated) * 100) : 0}% used
                     </p>
                   </div>
@@ -366,8 +366,8 @@ function EmployeeLeaveOverview({ isSubNavExpanded }: { isSubNavExpanded: boolean
           <div className="glass-modal rounded-3xl w-full max-w-md overflow-hidden">
             <div className="p-6 border-b flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-bold text-foreground">Apply for Leave</h3>
-                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Leave Request</p>
+                <h3 className="text-lg font-semibold text-foreground">Apply for Leave</h3>
+                <p className="text-2xs text-muted-foreground font-semibold uppercase tracking-widest">Leave Request</p>
               </div>
               <button onClick={() => setShowModal(false)} className="p-2 rounded-xl hover:bg-muted/40 text-muted-foreground hover:text-foreground">
                 <TbX size={20} />
@@ -375,7 +375,7 @@ function EmployeeLeaveOverview({ isSubNavExpanded }: { isSubNavExpanded: boolean
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Leave Type</label>
+                <label className="text-2xs font-semibold text-muted-foreground uppercase tracking-widest">Leave Type</label>
                 <NativeSelect
                   value={form.leaveTypeId}
                   onChange={e => setForm(f => ({ ...f, leaveTypeId: e.target.value }))}
@@ -387,11 +387,11 @@ function EmployeeLeaveOverview({ isSubNavExpanded }: { isSubNavExpanded: boolean
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Start Date</label>
+                  <label className="text-2xs font-semibold text-muted-foreground uppercase tracking-widest">Start Date</label>
                   <input type="date" value={form.startDate} onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))} className="w-full px-4 py-2 text-sm rounded-xl border border-border bg-muted/40 focus:ring-2 focus:ring-ring outline-none" required />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">End Date</label>
+                  <label className="text-2xs font-semibold text-muted-foreground uppercase tracking-widest">End Date</label>
                   <input type="date" value={form.endDate} onChange={e => setForm(f => ({ ...f, endDate: e.target.value }))} min={form.startDate} className="w-full px-4 py-2 text-sm rounded-xl border border-border bg-muted/40 focus:ring-2 focus:ring-ring outline-none" required />
                 </div>
               </div>
@@ -401,15 +401,15 @@ function EmployeeLeaveOverview({ isSubNavExpanded }: { isSubNavExpanded: boolean
                 </p>
               )}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Reason</label>
+                <label className="text-2xs font-semibold text-muted-foreground uppercase tracking-widest">Reason</label>
                 <textarea value={form.reason} onChange={e => setForm(f => ({ ...f, reason: e.target.value }))} placeholder="Brief reason for your leave..." className="w-full px-4 py-2 text-sm rounded-xl border border-border bg-muted/40 focus:ring-2 focus:ring-ring outline-none h-24 resize-none" required />
               </div>
               <div className="pt-4 flex gap-3">
-                <button type="submit" disabled={submitting || calculatedDays === 0} className="flex-1 py-3 bg-primary text-primary-foreground rounded-xl font-bold text-sm hover:bg-primary/90 transition-all shadow-lg active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2">
+                <button type="submit" disabled={submitting || calculatedDays === 0} className="flex-1 py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:bg-primary/90 transition-all shadow-lg active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2">
                   {submitting && <TbLoader size={16} className="animate-spin" />}
                   Submit Request
                 </button>
-                <button type="button" onClick={() => setShowModal(false)} className="px-6 py-3 bg-muted/40 text-muted-foreground rounded-xl font-bold text-sm hover:bg-muted transition-all">
+                <button type="button" onClick={() => setShowModal(false)} className="px-6 py-3 bg-muted/40 text-muted-foreground rounded-xl font-semibold text-sm hover:bg-muted transition-all">
                   Cancel
                 </button>
               </div>

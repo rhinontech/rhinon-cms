@@ -419,7 +419,7 @@ export function WorkChangesPage() {
                   <span className="whitespace-normal break-words font-medium leading-6 text-foreground">{request.title}</span>
                   <span className="flex flex-wrap gap-1">
                     {request.convertedTaskId && (
-                      <span className="inline-flex w-fit items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-400/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
+                      <span className="inline-flex w-fit items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-400/15 px-2 py-0.5 text-2xs font-semibold text-emerald-700 dark:text-emerald-300">
                         <TbCheckbox size={10} />
                         Task created
                       </span>
@@ -428,7 +428,7 @@ export function WorkChangesPage() {
                       const days = daysOpen(request.createdAt);
                       const threshold = SLA_THRESHOLDS[request.priority];
                       if (days >= threshold) return (
-                        <span className="inline-flex w-fit items-center gap-1 rounded-full bg-red-100 dark:bg-red-400/15 px-2 py-0.5 text-[10px] font-semibold text-red-700 dark:text-red-300">
+                        <span className="inline-flex w-fit items-center gap-1 rounded-full bg-red-100 dark:bg-red-400/15 px-2 py-0.5 text-2xs font-semibold text-red-700 dark:text-red-300">
                           <TbAlertTriangle size={10} />
                           {days}d open
                         </span>

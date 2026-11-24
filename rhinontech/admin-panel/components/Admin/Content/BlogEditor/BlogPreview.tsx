@@ -45,7 +45,7 @@ export function BlogPreview({
         <DialogTitle className="sr-only">Blog preview</DialogTitle>
         <div className="p-8 sm:p-12">
           <div className="mb-6 flex items-center justify-between gap-4">
-            <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-400">
+            <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-2xs font-semibold uppercase tracking-[0.2em] text-cyan-400">
               {category || "Insight"} · {readTime}
             </span>
             {isPublished && slug && (
@@ -60,14 +60,14 @@ export function BlogPreview({
             )}
           </div>
 
-          <h1 className="text-3xl sm:text-4xl font-black tracking-tight">{title || "Untitled post"}</h1>
+          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">{title || "Untitled post"}</h1>
           {excerpt && <p className="mt-4 text-lg text-white/60">{excerpt}</p>}
           <p className="mt-4 text-sm text-white/40">
             {authorName} · {authorRole}
           </p>
 
           {coverImage && (
-            <img src={coverImage} alt="" className="mt-8 w-full rounded-2xl border border-white/10 object-cover" />
+            <img src={coverImage} alt="" className="mt-8 w-full rounded-xl border border-white/10 object-cover" />
           )}
 
           <div className="preview-article mt-10 space-y-8">
@@ -79,7 +79,7 @@ export function BlogPreview({
                 if (!block.url) return null;
                 return (
                   <figure key={block.id}>
-                    <img src={block.url} alt={block.alt || ""} className="w-full rounded-2xl border border-white/10" />
+                    <img src={block.url} alt={block.alt || ""} className="w-full rounded-xl border border-white/10" />
                     {block.credit && <figcaption className="mt-2 text-center text-xs text-white/40">{block.credit}</figcaption>}
                   </figure>
                 );
@@ -88,7 +88,7 @@ export function BlogPreview({
                 if (!block.url) return null;
                 return (
                   <figure key={block.id}>
-                    <video src={block.url} controls preload="metadata" className="w-full rounded-2xl border border-white/10 bg-black" />
+                    <video src={block.url} controls preload="metadata" className="w-full rounded-xl border border-white/10 bg-black" />
                     {block.caption && <figcaption className="mt-2 text-center text-xs text-white/40">{block.caption}</figcaption>}
                   </figure>
                 );
@@ -97,7 +97,7 @@ export function BlogPreview({
               if (!videoId) return null;
               return (
                 <figure key={block.id}>
-                  <div className="aspect-video overflow-hidden rounded-2xl border border-white/10 bg-black">
+                  <div className="aspect-video overflow-hidden rounded-xl border border-white/10 bg-black">
                     <iframe
                       src={`https://www.youtube-nocookie.com/embed/${videoId}`}
                       title="YouTube video"
@@ -114,7 +114,7 @@ export function BlogPreview({
 
           {faqs.filter((f) => f.question.trim() && f.answer.trim()).length > 0 && (
             <div className="mt-12 border-t border-white/10 pt-8">
-              <h2 className="mb-5 text-xl font-black tracking-tight">Frequently asked questions</h2>
+              <h2 className="mb-5 text-xl font-semibold tracking-tight">Frequently asked questions</h2>
               <div className="space-y-3">
                 {faqs
                   .filter((f) => f.question.trim() && f.answer.trim())

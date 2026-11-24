@@ -71,11 +71,11 @@ function ResponseDrawer({ guest, team, onClose, onApprove }: { guest: Guest; tea
         </SheetHeader>
         <div className="px-4 pb-8 space-y-5">
           {!team && typeof d.rating === "number" ? (
-            <div className="flex items-center gap-2"><Stars value={Number(d.rating)} /><span className="text-[13px] font-medium">{String(d.rating)} / 5</span></div>
+            <div className="flex items-center gap-2"><Stars value={Number(d.rating)} /><span className="text-ui font-medium">{String(d.rating)} / 5</span></div>
           ) : null}
           <dl className="divide-y divide-border rounded-xl border border-border">
             {[...rows, ...rest].filter(([, v]) => str(v)).map(([k, v]) => (
-              <div key={k} className="grid grid-cols-[130px_1fr] gap-3 p-3 text-[13px]">
+              <div key={k} className="grid grid-cols-[130px_1fr] gap-3 p-3 text-ui">
                 <dt className="text-muted-foreground">{k.replace(/([a-z])([A-Z])/g, "$1 $2")}</dt>
                 <dd className="min-w-0"><LinkValue value={v} /></dd>
               </div>
@@ -83,9 +83,9 @@ function ResponseDrawer({ guest, team, onClose, onApprove }: { guest: Guest; tea
           </dl>
           <div className="flex items-center gap-2">
             {guest.certificateGenerated ? (
-              <span className="inline-flex items-center gap-1.5 text-[13px] text-emerald-700 dark:text-emerald-400"><Check className="size-4" /> Certificate issued</span>
+              <span className="inline-flex items-center gap-1.5 text-ui text-emerald-700 dark:text-emerald-400"><Check className="size-4" /> Certificate issued</span>
             ) : guest.certificateApproved ? (
-              <span className="inline-flex items-center gap-1.5 text-[13px] text-emerald-700 dark:text-emerald-400"><Check className="size-4" /> Certificate approved</span>
+              <span className="inline-flex items-center gap-1.5 text-ui text-emerald-700 dark:text-emerald-400"><Check className="size-4" /> Certificate approved</span>
             ) : (
               <Button className="gap-1.5" disabled={busy} onClick={async () => { setBusy(true); try { await onApprove(); } finally { setBusy(false); } }}>
                 {busy ? <Loader2 className="size-4 animate-spin" /> : <Award className="size-4" />} Approve certificate{team ? " (and teammate)" : ""}
@@ -137,19 +137,19 @@ export default function ResponsesTab({ event, guests, reloadGuests, goTo }: Mana
     <div className="space-y-6">
       <div className="grid md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-6">
         {!team ? (
-          <div className="glass-card rounded-2xl p-6">
-            <p className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">Average rating</p>
+          <div className="glass-card rounded-xl p-6">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Average rating</p>
             <div className="mt-2 flex items-baseline gap-3">
               <span className="text-[32px] font-semibold leading-none">{average ? average.toFixed(1) : "—"}</span>
               <Stars value={Math.round(average)} />
-              <span className="text-[13px] text-muted-foreground">from {ratings.length} rating{ratings.length === 1 ? "" : "s"}</span>
+              <span className="text-ui text-muted-foreground">from {ratings.length} rating{ratings.length === 1 ? "" : "s"}</span>
             </div>
             <div className="mt-5 space-y-2">
               {[5, 4, 3, 2, 1].map((n) => {
                 const c = ratings.filter((r) => r === n).length;
                 const pct = ratings.length ? Math.round((c / ratings.length) * 100) : 0;
                 return (
-                  <div key={n} className="grid grid-cols-[42px_1fr_40px] items-center gap-3 text-[12.5px]">
+                  <div key={n} className="grid grid-cols-[42px_1fr_40px] items-center gap-3 text-xs">
                     <span className="text-muted-foreground">{n} star</span>
                     <div className="h-1.5 rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} /></div>
                     <span className="text-right tabular-nums">{c}</span>
@@ -159,16 +159,16 @@ export default function ResponsesTab({ event, guests, reloadGuests, goTo }: Mana
             </div>
           </div>
         ) : (
-          <div className="glass-card rounded-2xl p-6">
-            <p className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">Team submissions</p>
+          <div className="glass-card rounded-xl p-6">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Team submissions</p>
             <p className="mt-2 text-[32px] font-semibold leading-none">{responses.filter((g) => (g.feedbackData as Record<string, unknown>)?.isPrimaryMember).length}</p>
-            <p className="mt-2 text-[13px] text-muted-foreground">Approving a team&apos;s primary member also shares the submission with teammate 2 and approves them in bulk approval.</p>
+            <p className="mt-2 text-ui text-muted-foreground">Approving a team&apos;s primary member also shares the submission with teammate 2 and approves them in bulk approval.</p>
           </div>
         )}
-        <div className="glass-card rounded-2xl p-6 flex flex-col justify-between gap-4">
+        <div className="glass-card rounded-xl p-6 flex flex-col justify-between gap-4">
           <div>
-            <p className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">Certificates from responses</p>
-            <p className="mt-2 text-[14px]"><span className="font-semibold">{pendingApproval}</span> approved guest{pendingApproval === 1 ? " has" : "s have"} responded and await certificate approval.</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Certificates from responses</p>
+            <p className="mt-2 text-sm"><span className="font-semibold">{pendingApproval}</span> approved guest{pendingApproval === 1 ? " has" : "s have"} responded and await certificate approval.</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button className="gap-1.5" disabled={!pendingApproval} onClick={() => setBulkOpen(true)}><Award className="size-4" /> Approve all</Button>
@@ -182,7 +182,7 @@ export default function ResponsesTab({ event, guests, reloadGuests, goTo }: Mana
         </div>
       </div>
 
-      <div className="glass-card rounded-2xl">
+      <div className="glass-card rounded-xl">
         <Table>
           <TableHeader>
             <TableRow>
@@ -200,20 +200,20 @@ export default function ResponsesTab({ event, guests, reloadGuests, goTo }: Mana
                 <TableRow key={g.id} className="cursor-pointer" onClick={() => setOpenId(g.id)}>
                   <TableCell>
                     <p className="font-medium">{team ? str(d.teamName) || g.name : g.name}</p>
-                    <p className="text-[12.5px] text-muted-foreground">{g.email}</p>
+                    <p className="text-xs text-muted-foreground">{g.email}</p>
                   </TableCell>
                   <TableCell>
                     {team ? (
-                      <span className="text-[12.5px] text-muted-foreground truncate block max-w-[220px]">{str(d.submissionLink || d.agentLink || d.videoDemoLink) || "—"}</span>
+                      <span className="text-xs text-muted-foreground truncate block max-w-[220px]">{str(d.submissionLink || d.agentLink || d.videoDemoLink) || "—"}</span>
                     ) : typeof d.rating === "number" ? <Stars value={Number(d.rating)} /> : "—"}
                   </TableCell>
-                  <TableCell className="hidden lg:table-cell text-[13px] max-w-[320px]">
+                  <TableCell className="hidden lg:table-cell text-ui max-w-[320px]">
                     <span className="line-clamp-2">
                       {team ? [d.teamMember1Name, d.teamMember2Name].filter(Boolean).join(", ") || "—" : str(d.feedback) || "—"}
                     </span>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell text-[12.5px] text-muted-foreground">{formatDateTime(g.feedbackSubmittedAt)}</TableCell>
-                  <TableCell className="text-right text-[12.5px]" onClick={(e) => e.stopPropagation()}>
+                  <TableCell className="hidden md:table-cell text-xs text-muted-foreground">{formatDateTime(g.feedbackSubmittedAt)}</TableCell>
+                  <TableCell className="text-right text-xs" onClick={(e) => e.stopPropagation()}>
                     {g.certificateGenerated ? (
                       <span className="text-emerald-700 dark:text-emerald-400 font-medium">Issued</span>
                     ) : g.certificateApproved ? (

@@ -121,7 +121,7 @@ export function WorkspaceToolbar({
         {() => (
           <div className="space-y-2">
             <div>
-              <p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Assignee</p>
+              <p className="px-2 pb-1 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Assignee</p>
               <Row label="Anyone" selected={filters.assigneeId === "all"} onClick={() => setFilters({ ...filters, assigneeId: "all" })} />
               <Row label="Unassigned" selected={filters.assigneeId === "none"} onClick={() => setFilters({ ...filters, assigneeId: "none" })} />
               <div className="max-h-40 overflow-auto">
@@ -131,14 +131,14 @@ export function WorkspaceToolbar({
               </div>
             </div>
             <div className="border-t pt-1.5">
-              <p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Status</p>
+              <p className="px-2 pb-1 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Status</p>
               <Row label="Any status" selected={filters.statusId === "all"} onClick={() => setFilters({ ...filters, statusId: "all" })} />
               {statuses.map((s) => (
                 <Row key={s.id} label={s.name} selected={filters.statusId === s.id} onClick={() => setFilters({ ...filters, statusId: s.id })} />
               ))}
             </div>
             <div className="border-t pt-1.5">
-              <p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Priority</p>
+              <p className="px-2 pb-1 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Priority</p>
               {["all", "High", "Medium", "Low"].map((pr) => (
                 <Row key={pr} label={pr === "all" ? "Any priority" : pr} selected={filters.priority === pr} onClick={() => setFilters({ ...filters, priority: pr })} />
               ))}
@@ -179,7 +179,7 @@ export function WorkspaceToolbar({
         </button>
       )}
 
-      <span className="ml-auto text-[11px] text-muted-foreground">
+      <span className="ml-auto text-2xs text-muted-foreground">
         {resultCount === totalCount ? `${totalCount} tasks` : `${resultCount} of ${totalCount} tasks`}
       </span>
     </div>

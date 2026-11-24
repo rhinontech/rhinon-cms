@@ -225,8 +225,8 @@ function TeamAttendancePage() {
                 <div key={card.label} className="rounded-xl glass-card p-3 sm:p-5 flex items-center gap-2.5 sm:gap-4 min-w-0">
                   <div className={cn("p-2 sm:p-3 rounded-xl shrink-0", card.color)}>{card.icon}</div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-lg sm:text-2xl font-bold text-foreground truncate">{card.value}</p>
-                    <p className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest truncate">{card.label}</p>
+                    <p className="text-lg sm:text-2xl font-semibold text-foreground truncate">{card.value}</p>
+                    <p className="text-2xs sm:text-2xs font-semibold text-muted-foreground uppercase tracking-widest truncate">{card.label}</p>
                   </div>
                 </div>
               ))}
@@ -266,9 +266,9 @@ function TeamAttendancePage() {
                           : "bg-card hover:bg-muted/40 text-foreground/85 border-border"
                       )}
                     >
-                      <p className="text-sm font-bold whitespace-nowrap">{emp.fullName}</p>
+                      <p className="text-sm font-semibold whitespace-nowrap">{emp.fullName}</p>
                       <p className={cn(
-                        "text-[10px] font-bold uppercase tracking-widest",
+                        "text-2xs font-semibold uppercase tracking-widest",
                         selectedEmployee === emp.userId ? "text-muted-foreground/70" : "text-muted-foreground"
                       )}>
                         {emp.presentDays}d · {formatDuration(emp.totalMinutes)}
@@ -281,8 +281,8 @@ function TeamAttendancePage() {
                 {selected && (
                   <div>
                     <div className="mb-2 flex items-center gap-3">
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{selected.department}</span>
-                      <span className="ml-auto text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                      <span className="text-2xs font-semibold text-muted-foreground uppercase tracking-widest">{selected.department}</span>
+                      <span className="ml-auto text-2xs font-semibold text-muted-foreground uppercase tracking-widest">
                         {selected.presentDays} days present · {formatDuration(selected.totalMinutes)} total
                       </span>
                     </div>
@@ -291,12 +291,12 @@ function TeamAttendancePage() {
                         style={{ gridTemplateColumns: "150px repeat(24, minmax(38px, 1fr)) 64px 80px" }}>
                         <div className="bg-muted/40 p-3 text-sm text-muted-foreground">Date</div>
                         {hourColumns.map(h => (
-                          <div key={h} className="border-l bg-muted/40 p-2 text-center text-[10px] text-muted-foreground">
+                          <div key={h} className="border-l bg-muted/40 p-2 text-center text-2xs text-muted-foreground">
                             {h === 0 ? "12A" : h < 12 ? `${h}A` : h === 12 ? "12P" : `${h - 12}P`}
                           </div>
                         ))}
-                        <div className="border-l bg-muted/40 p-3 text-center text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Status</div>
-                        <div className="border-l bg-muted/40 p-3 text-center text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Time</div>
+                        <div className="border-l bg-muted/40 p-3 text-center text-2xs text-muted-foreground font-semibold uppercase tracking-wider">Status</div>
+                        <div className="border-l bg-muted/40 p-3 text-center text-2xs text-muted-foreground font-semibold uppercase tracking-wider">Time</div>
 
                         {[...selected.attendance].reverse().map(day => {
                           const isToday = day.date === todayKey;
@@ -471,7 +471,7 @@ function PersonalTimesheetPage() {
                   <>
                     <p className="mt-3 sm:mt-6 text-base sm:text-lg text-muted-foreground">You clocked in at {formatTime(today.clockIn)}</p>
                     <div className="mt-3 flex items-center gap-2.5 flex-wrap">
-                      <span className="rounded-md bg-blue-100 dark:bg-blue-400/15 px-2 py-0.5 text-xs font-bold text-blue-600 dark:text-blue-300">DEFAULT SHIFT</span>
+                      <span className="rounded-md bg-blue-100 dark:bg-blue-400/15 px-2 py-0.5 text-xs font-semibold text-blue-600 dark:text-blue-300">DEFAULT SHIFT</span>
                       <span className="text-sm text-foreground/70">11:00 AM – 8:00 PM</span>
                     </div>
                     <p className="mt-2 text-sm text-foreground/70">
@@ -609,8 +609,8 @@ function PersonalTimesheetPage() {
           <div className="glass-modal rounded-3xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
             <div className="p-6 border-b flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-bold text-foreground">Request Regularization</h3>
-                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Attendance Fix</p>
+                <h3 className="text-lg font-semibold text-foreground">Request Regularization</h3>
+                <p className="text-2xs text-muted-foreground font-semibold uppercase tracking-widest">Attendance Fix</p>
               </div>
               <button onClick={() => setShowRegModal(false)} className="p-2 rounded-xl hover:bg-muted/40 text-muted-foreground hover:text-foreground">
                 <TbX size={20} />
@@ -618,25 +618,25 @@ function PersonalTimesheetPage() {
             </div>
             <form onSubmit={handleRegularize} className="p-6 space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Date</label>
+                <label className="text-2xs font-semibold text-muted-foreground uppercase tracking-widest">Date</label>
                 <input type="date" value={regDate} onChange={e => setRegDate(e.target.value)}
                   className="w-full px-4 py-2 text-sm rounded-xl border border-border bg-muted/40 focus:ring-2 focus:ring-ring outline-none" required />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Corrected Time / Type</label>
+                <label className="text-2xs font-semibold text-muted-foreground uppercase tracking-widest">Corrected Time / Type</label>
                 <input type="text" placeholder="e.g. 09:30 AM or Full Day" value={regTime} onChange={e => setRegTime(e.target.value)}
                   className="w-full px-4 py-2 text-sm rounded-xl border border-border bg-muted/40 focus:ring-2 focus:ring-ring outline-none" required />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Reason</label>
+                <label className="text-2xs font-semibold text-muted-foreground uppercase tracking-widest">Reason</label>
                 <textarea placeholder="Why is this fix needed?" value={regReason} onChange={e => setRegReason(e.target.value)}
                   className="w-full px-4 py-2 text-sm rounded-xl border border-border bg-muted/40 focus:ring-2 focus:ring-ring outline-none h-24 resize-none" required />
               </div>
               <div className="pt-4 flex gap-3">
-                <button type="submit" className="flex-1 py-3 bg-primary text-primary-foreground rounded-xl font-bold text-sm hover:bg-primary/90 transition-all shadow-lg active:scale-95">
+                <button type="submit" className="flex-1 py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:bg-primary/90 transition-all shadow-lg active:scale-95">
                   Submit Request
                 </button>
-                <button type="button" onClick={() => setShowRegModal(false)} className="px-6 py-3 bg-muted/40 text-muted-foreground rounded-xl font-bold text-sm hover:bg-muted transition-all">
+                <button type="button" onClick={() => setShowRegModal(false)} className="px-6 py-3 bg-muted/40 text-muted-foreground rounded-xl font-semibold text-sm hover:bg-muted transition-all">
                   Cancel
                 </button>
               </div>

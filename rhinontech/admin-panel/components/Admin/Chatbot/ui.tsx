@@ -32,7 +32,7 @@ export function PageShell({
       <header className="flex min-h-16 shrink-0 items-center gap-3 border-b border-border/70 px-5 py-3 glass-header">
         <SubNavToggle />
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-[15px] font-semibold tracking-tight text-foreground">{title}</h1>
+          <h1 className="truncate text-base font-semibold tracking-tight text-foreground">{title}</h1>
           {subtitle && <p className="truncate text-xs text-muted-foreground">{subtitle}</p>}
         </div>
         {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
@@ -82,7 +82,7 @@ export function Panel({
     <section
       data-testid={testId}
       className={cn(
-        "overflow-hidden rounded-2xl border bg-[var(--glass-card-solid-bg)] shadow-[0_1px_2px_rgb(0_0_0/0.04)]",
+        "overflow-hidden rounded-xl border bg-[var(--glass-card-solid-bg)] shadow-[0_1px_2px_rgb(0_0_0/0.04)]",
         tone === "danger" ? "border-red-300/60 dark:border-red-400/25" : "border-[var(--glass-card-border)]",
         className
       )}
@@ -92,7 +92,7 @@ export function Panel({
           {icon && <IconChip>{icon}</IconChip>}
           <div className="min-w-0 flex-1">
             {title && <h2 className={cn("text-sm font-semibold text-foreground", tone === "danger" && "text-red-600 dark:text-red-400")}>{title}</h2>}
-            {description && <p className="mt-0.5 text-[13px] leading-relaxed text-muted-foreground">{description}</p>}
+            {description && <p className="mt-0.5 text-ui leading-relaxed text-muted-foreground">{description}</p>}
           </div>
           {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
         </div>
@@ -133,12 +133,12 @@ export function Stat({
   testId?: string;
 }) {
   return (
-    <div data-testid={testId} className="flex items-start gap-3 rounded-2xl border border-[var(--glass-card-border)] bg-[var(--glass-card-solid-bg)] p-4">
+    <div data-testid={testId} className="flex items-start gap-3 rounded-xl border border-[var(--glass-card-border)] bg-[var(--glass-card-solid-bg)] p-4">
       <IconChip tone={tone}>{icon}</IconChip>
       <div className="min-w-0">
         <p className="text-xs font-medium text-muted-foreground">{label}</p>
         <p className="mt-0.5 text-xl font-semibold tabular-nums tracking-tight text-foreground">{value}</p>
-        {hint && <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{hint}</p>}
+        {hint && <p className="mt-0.5 truncate text-2xs text-muted-foreground">{hint}</p>}
       </div>
     </div>
   );
@@ -159,9 +159,9 @@ export function EmptyState({
 }) {
   return (
     <div className={cn("flex flex-col items-center justify-center gap-2 px-6 py-12 text-center", className)}>
-      <span className="mb-1 flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">{icon}</span>
+      <span className="mb-1 flex size-12 items-center justify-center rounded-xl bg-muted text-muted-foreground">{icon}</span>
       <p className="text-sm font-semibold text-foreground">{title}</p>
-      {body && <p className="max-w-sm text-[13px] leading-relaxed text-muted-foreground">{body}</p>}
+      {body && <p className="max-w-sm text-ui leading-relaxed text-muted-foreground">{body}</p>}
       {action && <div className="mt-2">{action}</div>}
     </div>
   );
@@ -185,7 +185,7 @@ export function Avatar({ name, seed, size = "md", className }: { name: string; s
       aria-hidden
       className={cn(
         "flex shrink-0 select-none items-center justify-center rounded-full font-semibold text-white",
-        size === "sm" && "size-7 text-[10px]",
+        size === "sm" && "size-7 text-2xs",
         size === "md" && "size-9 text-xs",
         size === "lg" && "size-12 text-sm",
         className
@@ -207,7 +207,7 @@ export function StatusDot({ online, className }: { online: boolean; className?: 
 }
 
 export function Chip({ tone = "neutral", children, className }: { tone?: Tone; children: React.ReactNode; className?: string }) {
-  return <span className={cn("inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium", TONE_CHIP[tone], className)}>{children}</span>;
+  return <span className={cn("inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-2xs font-medium", TONE_CHIP[tone], className)}>{children}</span>;
 }
 
 /** Segmented control for 2–5 options. */
@@ -242,7 +242,7 @@ export function Segmented<T extends string>({
         >
           {o.label}
           {o.count !== undefined && (
-            <span className={cn("rounded-md px-1.5 text-[10px] tabular-nums", value === o.value ? "bg-muted" : "bg-background/60")}>{o.count}</span>
+            <span className={cn("rounded-md px-1.5 text-2xs tabular-nums", value === o.value ? "bg-muted" : "bg-background/60")}>{o.count}</span>
           )}
         </button>
       ))}

@@ -33,7 +33,7 @@ export function DomainPickerModal({
               className="group flex items-center justify-between rounded-xl border border-border bg-card p-4 text-left transition-colors hover:border-primary hover:bg-muted/40"
             >
               <div>
-                <div className="text-sm font-bold text-foreground">{d.label}</div>
+                <div className="text-sm font-semibold text-foreground">{d.label}</div>
                 <div className="text-xs text-muted-foreground">{d.description}</div>
               </div>
               <TbArrowRight size={18} className="shrink-0 text-muted-foreground/70 transition-colors group-hover:text-foreground" />

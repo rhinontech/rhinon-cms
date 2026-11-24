@@ -196,7 +196,7 @@ export function StartupIdeaDetail({ id, onClose, onChanged }: Props) {
 
               {/* The idea itself */}
               <div>
-                <h3 className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                <h3 className="mb-2 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
                   What they want to build
                 </h3>
                 <p className="whitespace-pre-wrap rounded-xl border border-border bg-card p-4 text-sm leading-relaxed text-foreground">
@@ -206,7 +206,7 @@ export function StartupIdeaDetail({ id, onClose, onChanged }: Props) {
 
               {/* Status */}
               <div>
-                <h3 className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                <h3 className="mb-2 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
                   Status
                 </h3>
                 <div className="flex flex-wrap gap-2">
@@ -229,7 +229,7 @@ export function StartupIdeaDetail({ id, onClose, onChanged }: Props) {
 
               {/* Internal notes */}
               <div>
-                <h3 className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                <h3 className="mb-2 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
                   Internal notes
                 </h3>
                 <textarea
@@ -251,7 +251,7 @@ export function StartupIdeaDetail({ id, onClose, onChanged }: Props) {
               {/* Attribution */}
               {(idea.utmSource || idea.utmCampaign || idea.referrer) && (
                 <div>
-                  <h3 className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  <h3 className="mb-2 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
                     Where they came from
                   </h3>
                   <div className="space-y-1 rounded-xl border border-border bg-card p-4 text-xs text-muted-foreground">

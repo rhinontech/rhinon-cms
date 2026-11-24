@@ -73,11 +73,11 @@ export function ComposeModal({ onClose, onSent, addresses, defaultFrom, initialT
         role="dialog"
         aria-modal="true"
         aria-label="New message"
-        className="flex max-h-[92vh] w-full max-w-xl flex-col overflow-hidden rounded-t-2xl border bg-popover shadow-2xl sm:rounded-2xl"
+        className="flex max-h-[92vh] w-full max-w-xl flex-col overflow-hidden rounded-t-2xl border bg-popover shadow-2xl sm:rounded-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex h-13 shrink-0 items-center justify-between border-b px-5 py-3">
-          <p className="text-[15px] font-semibold tracking-tight">New message</p>
+          <p className="text-base font-semibold tracking-tight">New message</p>
           <button onClick={onClose} className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground" aria-label="Close">
             <TbX size={18} />
           </button>

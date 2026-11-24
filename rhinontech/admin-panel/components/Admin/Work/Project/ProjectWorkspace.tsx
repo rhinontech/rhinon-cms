@@ -181,7 +181,7 @@ export function ProjectWorkspace({
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           {isPublic ? (
             <>
-              <span className="rounded-full bg-blue-100 dark:bg-blue-400/15 px-2 py-0.5 text-[10px] font-semibold text-blue-800 dark:text-blue-200">
+              <span className="rounded-full bg-blue-100 dark:bg-blue-400/15 px-2 py-0.5 text-2xs font-semibold text-blue-800 dark:text-blue-200">
                 Client portal
               </span>
               <span>Status: {p.status}</span>
@@ -189,7 +189,7 @@ export function ProjectWorkspace({
             </>
           ) : isCollab ? (
             <>
-              <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/70">
+              <span className="rounded bg-muted px-1.5 py-0.5 text-2xs font-medium text-foreground/70">
                 Collaborator
               </span>
               <TbChevronRight size={12} />
@@ -212,17 +212,17 @@ export function ProjectWorkspace({
         </div>
 
         <div className="mt-1 flex items-center gap-2">
-          <span className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[11px] font-bold text-white", accentFor(p.id))}>
+          <span className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-2xs font-semibold text-white", accentFor(p.id))}>
             {p.name.replace(/[^\p{L}\p{N} ]/gu, "").trim().slice(0, 2).toUpperCase()}
           </span>
-          <h1 className="truncate text-xl font-bold tracking-tight text-foreground">{p.name}</h1>
+          <h1 className="truncate text-xl font-semibold tracking-tight text-foreground">{p.name}</h1>
           {p.visibility === "team" && (
-            <span className="flex items-center gap-1 rounded-full bg-indigo-50 dark:bg-indigo-400/10 px-2 py-0.5 text-[10px] font-medium text-indigo-700 dark:text-indigo-300">
+            <span className="flex items-center gap-1 rounded-full bg-indigo-50 dark:bg-indigo-400/10 px-2 py-0.5 text-2xs font-medium text-indigo-700 dark:text-indigo-300">
               <TbUsers size={11} /> {p.team?.name ?? "Team"}
             </span>
           )}
           {p.visibility === "private" && (
-            <span className="flex items-center gap-1 rounded-full bg-amber-50 dark:bg-amber-400/10 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-300">
+            <span className="flex items-center gap-1 rounded-full bg-amber-50 dark:bg-amber-400/10 px-2 py-0.5 text-2xs font-medium text-amber-700 dark:text-amber-300">
               <TbLock size={11} /> Private
             </span>
           )}

@@ -30,7 +30,7 @@ const day = (v: string | null | undefined) => (v ? format(new Date(v), "d MMM yy
 function Fact({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
       <div className="mt-0.5 text-sm text-foreground/85">{children}</div>
     </div>
   );
@@ -71,7 +71,7 @@ export function PublicTaskPanel({ task, rows, onClose, onOpen }: {
         {!!task.tags?.length && (
           <div className="flex flex-wrap gap-1.5">
             {task.tags.map((t) => (
-              <span key={t.id} className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-foreground/75">{t.label}</span>
+              <span key={t.id} className="rounded-full bg-muted px-2 py-0.5 text-2xs text-foreground/75">{t.label}</span>
             ))}
           </div>
         )}
@@ -88,7 +88,7 @@ export function PublicTaskPanel({ task, rows, onClose, onOpen }: {
               {children.map((c) => (
                 <li key={c.id}>
                   <button onClick={() => onOpen(c)} className="flex w-full items-center gap-2 rounded px-1.5 py-1 text-left text-sm hover:bg-muted">
-                    <span className={cn("rounded-full px-1.5 text-[10px]", STATUS_CHIP[c.workflowStatus?.color ?? "stone"] ?? STATUS_CHIP.stone)}>
+                    <span className={cn("rounded-full px-1.5 text-2xs", STATUS_CHIP[c.workflowStatus?.color ?? "stone"] ?? STATUS_CHIP.stone)}>
                       {c.workflowStatus?.name ?? c.status}
                     </span>
                     <span className="truncate">{c.title}</span>

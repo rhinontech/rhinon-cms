@@ -138,7 +138,7 @@ export function MeetingFormDialog({ event, defaultDate, onClose, onSaved }: Prop
               onChange={(e) => setAttendees(e.target.value)}
               placeholder="someone@example.com, another@example.com"
             />
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-2xs text-muted-foreground">
               They&apos;ll get a calendar invite emailed from your address — works in Gmail, Outlook and Apple Mail.
             </p>
           </div>

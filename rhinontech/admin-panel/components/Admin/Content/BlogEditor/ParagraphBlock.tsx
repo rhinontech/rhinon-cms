@@ -243,7 +243,7 @@ function InsertImageButton({ editor }: { editor: Editor }) {
 
             <div className="relative flex items-center py-1">
               <span className="absolute inset-x-0 h-px bg-muted" />
-              <span className="relative mx-auto bg-card px-2 text-[10px] text-muted-foreground font-medium">OR</span>
+              <span className="relative mx-auto bg-card px-2 text-2xs text-muted-foreground font-medium">OR</span>
             </div>
 
             <form onSubmit={handleUrlSubmit} className="flex gap-1.5">
@@ -265,7 +265,7 @@ function InsertImageButton({ editor }: { editor: Editor }) {
 
             <div className="relative flex items-center py-1">
               <span className="absolute inset-x-0 h-px bg-muted" />
-              <span className="relative mx-auto bg-card px-2 text-[10px] text-muted-foreground font-medium">OR</span>
+              <span className="relative mx-auto bg-card px-2 text-2xs text-muted-foreground font-medium">OR</span>
             </div>
 
             <form onSubmit={handleGenerate} className="space-y-1.5">
@@ -360,12 +360,12 @@ function InsertVideoButton({ editor }: { editor: Editor }) {
               {uploading ? "Uploading..." : "Upload from Computer"}
             </button>
             <input ref={fileRef} type="file" accept="video/mp4,video/webm,video/quicktime" onChange={handleFile} className="hidden" />
-            <p className="text-[10px] text-muted-foreground">MP4, WebM or MOV — up to {MAX_VIDEO_MB} MB.</p>
-            {error && <p className="text-[10px] text-red-500 dark:text-red-400">{error}</p>}
+            <p className="text-2xs text-muted-foreground">MP4, WebM or MOV — up to {MAX_VIDEO_MB} MB.</p>
+            {error && <p className="text-2xs text-red-500 dark:text-red-400">{error}</p>}
 
             <div className="relative flex items-center py-1">
               <span className="absolute inset-x-0 h-px bg-muted" />
-              <span className="relative mx-auto bg-card px-2 text-[10px] text-muted-foreground font-medium">OR</span>
+              <span className="relative mx-auto bg-card px-2 text-2xs text-muted-foreground font-medium">OR</span>
             </div>
 
             <form onSubmit={handleUrlSubmit} className="flex gap-1.5">
@@ -384,7 +384,7 @@ function InsertVideoButton({ editor }: { editor: Editor }) {
                 Insert
               </button>
             </form>
-            <p className="flex items-center gap-1 text-[10px] text-muted-foreground">
+            <p className="flex items-center gap-1 text-2xs text-muted-foreground">
               <TbBrandYoutube size={13} /> YouTube links embed automatically.
             </p>
           </div>
@@ -424,7 +424,7 @@ export function ParagraphBlock({
     editorProps: {
       attributes: {
         class:
-          "blog-tiptap min-h-[65vh] px-4 py-3 text-[15px] leading-relaxed text-foreground outline-none",
+          "blog-tiptap min-h-[65vh] px-4 py-3 text-base leading-relaxed text-foreground outline-none",
       },
     },
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
@@ -670,7 +670,7 @@ export function ParagraphBlock({
       {/* Contextual table controls */}
       {inTable && (
         <div className="flex flex-wrap items-center gap-0.5 border-b border-border bg-muted/40 px-2 py-1">
-          <span className="mr-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Table</span>
+          <span className="mr-1 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Table</span>
           <ToolbarButton title="Add row below" onClick={() => editor.chain().focus().addRowAfter().run()}>
             <TbRowInsertBottom size={15} />
           </ToolbarButton>
@@ -692,7 +692,7 @@ export function ParagraphBlock({
       {/* Contextual image controls */}
       {editor.isActive("image") && (
         <div className="flex flex-wrap items-center gap-1.5 border-b border-border bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground">
-          <span className="mr-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Image</span>
+          <span className="mr-1 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Image</span>
           
           <Divider />
           
@@ -722,14 +722,14 @@ export function ParagraphBlock({
           <Divider />
           
           {/* Preset Sizes */}
-          <span className="text-[11px] font-medium text-muted-foreground font-sans">Size:</span>
+          <span className="text-2xs font-medium text-muted-foreground font-sans">Size:</span>
           {(["25%", "50%", "75%", "100%"] as const).map((size) => (
             <button
               key={size}
               type="button"
               onClick={() => editor.chain().focus().updateAttributes("image", { width: size }).run()}
               className={cn(
-                "px-2 py-0.5 rounded text-[11px] font-semibold border transition-all cursor-pointer",
+                "px-2 py-0.5 rounded text-2xs font-semibold border transition-all cursor-pointer",
                 editor.getAttributes("image").width === size
                   ? "bg-primary border-primary text-primary-foreground"
                   : "bg-card border-border hover:bg-muted text-foreground/70"
@@ -741,7 +741,7 @@ export function ParagraphBlock({
 
           {/* Slider for custom size */}
           <div className="flex items-center gap-2 ml-2">
-            <span className="text-[11px] font-medium text-muted-foreground font-sans">Custom:</span>
+            <span className="text-2xs font-medium text-muted-foreground font-sans">Custom:</span>
             <input
               type="range"
               min="10"
@@ -751,7 +751,7 @@ export function ParagraphBlock({
               onChange={(e) => editor.chain().focus().updateAttributes("image", { width: `${e.target.value}%` }).run()}
               className="w-20 accent-primary cursor-pointer h-1.5 rounded-lg appearance-none bg-muted"
             />
-            <span className="text-[11px] font-medium w-8 text-foreground/70 font-sans text-right">
+            <span className="text-2xs font-medium w-8 text-foreground/70 font-sans text-right">
               {parseInt(editor.getAttributes("image").width || "100")}%
             </span>
           </div>
@@ -760,13 +760,13 @@ export function ParagraphBlock({
 
           {/* Alt text */}
           <div className="flex items-center gap-1.5 flex-1 min-w-[200px]">
-            <span className="text-[11px] font-medium text-muted-foreground shrink-0 font-sans">Alt Text:</span>
+            <span className="text-2xs font-medium text-muted-foreground shrink-0 font-sans">Alt Text:</span>
             <input
               type="text"
               placeholder="Describe image..."
               value={editor.getAttributes("image").alt || ""}
               onChange={(e) => editor.chain().focus().updateAttributes("image", { alt: e.target.value }).run()}
-              className="flex-1 max-w-[300px] h-6 px-2 rounded border border-border text-[11px] outline-none focus:ring-1 focus:ring-ring bg-card text-foreground"
+              className="flex-1 max-w-[300px] h-6 px-2 rounded border border-border text-2xs outline-none focus:ring-1 focus:ring-ring bg-card text-foreground"
             />
           </div>
 
@@ -787,20 +787,20 @@ export function ParagraphBlock({
       {/* Contextual video controls */}
       {editor.isActive("videoEmbed") && (
         <div className="flex flex-wrap items-center gap-1.5 border-b border-border bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground">
-          <span className="mr-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          <span className="mr-1 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
             {editor.getAttributes("videoEmbed").kind === "youtube" ? "YouTube" : "Video"}
           </span>
 
           <Divider />
 
-          <span className="text-[11px] font-medium text-muted-foreground font-sans">Width:</span>
+          <span className="text-2xs font-medium text-muted-foreground font-sans">Width:</span>
           {(["50%", "75%", "100%"] as const).map((size) => (
             <button
               key={size}
               type="button"
               onClick={() => editor.chain().focus().updateAttributes("videoEmbed", { width: size }).run()}
               className={cn(
-                "px-2 py-0.5 rounded text-[11px] font-semibold border transition-all cursor-pointer",
+                "px-2 py-0.5 rounded text-2xs font-semibold border transition-all cursor-pointer",
                 editor.getAttributes("videoEmbed").width === size
                   ? "bg-primary border-primary text-primary-foreground"
                   : "bg-card border-border hover:bg-muted text-foreground/70"

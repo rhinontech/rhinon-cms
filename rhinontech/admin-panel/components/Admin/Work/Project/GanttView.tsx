@@ -174,7 +174,7 @@ export function GanttView({
   return (
     <div className="flex h-full min-h-0 flex-col">
       {linkFrom && (
-        <div className="flex shrink-0 items-center gap-2 border-b bg-blue-50 dark:bg-blue-400/10 px-4 py-1.5 text-[11px] text-blue-800 dark:text-blue-200">
+        <div className="flex shrink-0 items-center gap-2 border-b bg-blue-50 dark:bg-blue-400/10 px-4 py-1.5 text-2xs text-blue-800 dark:text-blue-200">
           <TbLink size={13} />
           Now click the task that should wait for this one.
           <button onClick={() => setLinkFrom(null)} className="ml-auto font-medium underline">Cancel</button>
@@ -186,7 +186,7 @@ export function GanttView({
           {/* header */}
           <div className="sticky top-0 z-30 flex bg-card">
             <div
-              className="sticky left-0 z-10 grid shrink-0 items-center border-b border-r bg-muted/40 px-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
+              className="sticky left-0 z-10 grid shrink-0 items-center border-b border-r bg-muted/40 px-2 text-2xs font-semibold uppercase tracking-wide text-muted-foreground"
               style={{ width: LEFT_W, height: 44, gridTemplateColumns: "1fr 110px 90px 90px" }}
             >
               <span className="px-1">Name</span>
@@ -200,7 +200,7 @@ export function GanttView({
                   d.getDay() === 0 ? (
                     <span
                       key={i}
-                      className="shrink-0 border-l px-1 text-[10px] font-semibold text-muted-foreground"
+                      className="shrink-0 border-l px-1 text-2xs font-semibold text-muted-foreground"
                       style={{ width: DAY_W * 7 }}
                     >
                       {format(d, "'W'w  d MMM")}
@@ -213,7 +213,7 @@ export function GanttView({
                   <span
                     key={i}
                     className={cn(
-                      "shrink-0 border-l text-center text-[10px] leading-6",
+                      "shrink-0 border-l text-center text-2xs leading-6",
                       [0, 6].includes(d.getDay()) ? "bg-muted text-muted-foreground" : "text-muted-foreground"
                     )}
                     style={{ width: DAY_W }}
@@ -246,15 +246,15 @@ export function GanttView({
                   </span>
                   <span>
                     {row.task.workflowStatus && (
-                      <span className={cn("rounded-full px-1.5 py-0.5 text-[10px] font-medium", STATUS_CHIP[row.task.workflowStatus.color] ?? STATUS_CHIP.stone)}>
+                      <span className={cn("rounded-full px-1.5 py-0.5 text-2xs font-medium", STATUS_CHIP[row.task.workflowStatus.color] ?? STATUS_CHIP.stone)}>
                         {row.task.workflowStatus.name}
                       </span>
                     )}
                   </span>
-                  <span className="text-[11px] text-muted-foreground">
+                  <span className="text-2xs text-muted-foreground">
                     {row.task.startDate ? format(new Date(row.task.startDate), "dd/MM/yy") : "—"}
                   </span>
-                  <span className="text-[11px] text-muted-foreground">
+                  <span className="text-2xs text-muted-foreground">
                     {row.task.dueDate ? format(new Date(row.task.dueDate), "dd/MM/yy") : "—"}
                   </span>
                 </div>
@@ -319,7 +319,7 @@ export function GanttView({
                       )}
                     >
                       <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", STATUS_DOT[color] ?? STATUS_DOT.stone)} />
-                      <span className="ml-1 truncate text-[10px] font-medium">{p.row.task.title}</span>
+                      <span className="ml-1 truncate text-2xs font-medium">{p.row.task.title}</span>
                       {!p.isSummary && !readOnly && (
                         <>
                           <button

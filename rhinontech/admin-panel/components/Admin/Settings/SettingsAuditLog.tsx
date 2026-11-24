@@ -235,7 +235,7 @@ export function SettingsAuditLog() {
                         <div className="flex flex-wrap items-center gap-2">
                           <Pill tone={d.tone}>{d.label}</Pill>
                         </div>
-                        <div className="mt-1 font-mono text-[11px] text-muted-foreground/80">{e.action}</div>
+                        <div className="mt-1 font-mono text-2xs text-muted-foreground/80">{e.action}</div>
                       </td>
                       <td className="whitespace-nowrap px-3 py-2.5 font-mono text-xs text-muted-foreground">{e.ip || "—"}</td>
                     </tr>

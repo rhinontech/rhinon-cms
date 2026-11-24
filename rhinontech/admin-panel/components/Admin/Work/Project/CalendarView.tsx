@@ -145,7 +145,7 @@ export function CalendarView({
         </button>
         <span className="ml-1 text-sm font-semibold text-foreground">{format(cursor, "MMMM yyyy")}</span>
         {undated > 0 && (
-          <span className="ml-auto text-[11px] text-muted-foreground">
+          <span className="ml-auto text-2xs text-muted-foreground">
             {undated} task{undated === 1 ? "" : "s"} with no dates aren&apos;t shown
           </span>
         )}
@@ -155,7 +155,7 @@ export function CalendarView({
         <div className="grid h-full min-w-[720px]" style={{ gridTemplateRows: rowTemplate }}>
           <div className="grid grid-cols-7 border-b glass-thead">
             {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((d) => (
-              <div key={d} className="px-2 py-1.5 text-[11px] font-semibold text-muted-foreground">{d}</div>
+              <div key={d} className="px-2 py-1.5 text-2xs font-semibold text-muted-foreground">{d}</div>
             ))}
           </div>
 
@@ -206,7 +206,7 @@ export function CalendarView({
                         gridRow: bar.lane + 1,
                       }}
                       className={cn(
-                        "pointer-events-auto mx-0.5 truncate px-2 py-0.5 text-left text-[11px] font-medium",
+                        "pointer-events-auto mx-0.5 truncate px-2 py-0.5 text-left text-2xs font-medium",
                         STATUS_CHIP[bar.task.workflowStatus?.color ?? "stone"] ?? STATUS_CHIP.stone,
                         bar.continuesLeft ? "rounded-l-none" : "rounded-l",
                         bar.continuesRight ? "rounded-r-none" : "rounded-r"

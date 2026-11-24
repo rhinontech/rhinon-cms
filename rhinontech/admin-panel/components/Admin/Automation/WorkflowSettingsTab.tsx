@@ -27,9 +27,9 @@ export function WorkflowSettingsTab({ workflow, onSave, roleSlug }: WorkflowSett
 
   return (
     <div className="p-6 max-w-5xl">
-      <form onSubmit={handleSubmit} className="bg-card p-6 rounded-2xl border border-border shadow-2xs space-y-6">
+      <form onSubmit={handleSubmit} className="bg-card p-6 rounded-xl border border-border shadow-2xs space-y-6">
         <div>
-          <label className="block text-xs font-bold text-foreground/85 mb-1">Name</label>
+          <label className="block text-xs font-semibold text-foreground/85 mb-1">Name</label>
           <input
             type="text"
             required
@@ -40,7 +40,7 @@ export function WorkflowSettingsTab({ workflow, onSave, roleSlug }: WorkflowSett
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-foreground/85 mb-1">Description</label>
+          <label className="block text-xs font-semibold text-foreground/85 mb-1">Description</label>
           <textarea
             rows={4}
             value={description}
@@ -54,7 +54,7 @@ export function WorkflowSettingsTab({ workflow, onSave, roleSlug }: WorkflowSett
         <div className="p-4 rounded-xl bg-muted/40 border border-border flex items-start gap-3">
           <TbSettings size={20} className="text-muted-foreground shrink-0 mt-0.5" />
           <div className="text-xs text-foreground/70">
-            <h5 className="font-bold text-foreground mb-0.5">Concurrent workflow limit</h5>
+            <h5 className="font-semibold text-foreground mb-0.5">Concurrent workflow limit</h5>
             <p className="leading-relaxed">
               The number of workflows a single lead can be active in at once is configured system-wide. By default a lead can only be in one workflow at a time — raise it in settings to let leads run through multiple workflows simultaneously.{" "}
               <Link href={`${base}/settings`} className="underline font-semibold text-indigo-600 dark:text-indigo-300">

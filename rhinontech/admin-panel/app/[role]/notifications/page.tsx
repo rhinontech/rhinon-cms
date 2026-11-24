@@ -51,7 +51,7 @@ export default function NotificationsPage() {
       <div className="h-full overflow-auto rounded-xl glass-panel">
         <div className="mx-auto max-w-3xl p-4">
           <div className="mb-4 flex items-center justify-between">
-            <h1 className="text-xl font-bold tracking-tight text-foreground">Notifications</h1>
+            <h1 className="text-xl font-semibold tracking-tight text-foreground">Notifications</h1>
             <div className="flex items-center gap-3">
               {unread > 0 && <button onClick={markAllRead} className="text-sm text-blue-600 hover:underline dark:text-blue-300">Mark all read</button>}
               <button onClick={() => setShowSettings((v) => !v)} className="text-sm text-foreground/70 hover:underline">Settings</button>

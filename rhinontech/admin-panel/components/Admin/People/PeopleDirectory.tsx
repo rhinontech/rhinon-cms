@@ -1652,7 +1652,7 @@ export function PeopleDirectory() {
                       type="button"
                       onClick={() => setPreviewTab("offer")}
                       className={cn(
-                        "px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 -mb-px transition-all",
+                        "px-4 py-2 text-xs font-semibold uppercase tracking-wider border-b-2 -mb-px transition-all",
                         previewTab === "offer" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground/70"
                       )}
                     >
@@ -1662,7 +1662,7 @@ export function PeopleDirectory() {
                       type="button"
                       onClick={() => setPreviewTab("nda")}
                       className={cn(
-                        "px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 -mb-px transition-all",
+                        "px-4 py-2 text-xs font-semibold uppercase tracking-wider border-b-2 -mb-px transition-all",
                         previewTab === "nda" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground/70"
                       )}
                     >

@@ -105,7 +105,7 @@ export function StartupIdeasManager() {
           >
             {f}
             {counts[f] !== undefined && (
-              <span className="ml-1.5 text-[10px] text-muted-foreground/70">{counts[f]}</span>
+              <span className="ml-1.5 text-2xs text-muted-foreground/70">{counts[f]}</span>
             )}
           </button>
         ))}
@@ -138,10 +138,10 @@ export function StartupIdeasManager() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       {!idea.isRead && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />}
-                      <h3 className="truncate text-sm font-bold text-foreground">{idea.name}</h3>
+                      <h3 className="truncate text-sm font-semibold text-foreground">{idea.name}</h3>
                       <span
                         className={cn(
-                          "rounded border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest",
+                          "rounded border px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-widest",
                           STATUS_STYLES[idea.status]
                         )}
                       >
@@ -149,7 +149,7 @@ export function StartupIdeasManager() {
                       </span>
                     </div>
                     <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{idea.idea}</p>
-                    <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground/80">
+                    <div className="mt-2 flex flex-wrap items-center gap-3 text-2xs text-muted-foreground/80">
                       <span className="truncate">{idea.email}</span>
                       {idea.organization && (
                         <span className="inline-flex items-center gap-1">
@@ -168,7 +168,7 @@ export function StartupIdeasManager() {
                       )}
                     </div>
                   </div>
-                  <span className="shrink-0 text-[11px] text-muted-foreground/70">{timeAgo(idea.createdAt)}</span>
+                  <span className="shrink-0 text-2xs text-muted-foreground/70">{timeAgo(idea.createdAt)}</span>
                 </div>
               </div>
             ))

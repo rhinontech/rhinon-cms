@@ -335,7 +335,7 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
               </div>
             </PopoverContent>
           </Popover>
-          <span className="ml-auto hidden text-[11px] text-muted-foreground sm:block">Enter to send · Shift+Enter for new line · @ to mention</span>
+          <span className="ml-auto hidden text-2xs text-muted-foreground sm:block">Enter to send · Shift+Enter for new line · @ to mention</span>
           <Button size="icon" onClick={() => void submit()} disabled={disabled || uploading || (!draft.trim() && !uploads.length)} title={editing ? "Save" : "Send"}>
             <TbSend className="size-4" />
           </Button>

@@ -263,8 +263,8 @@ export function ChatbotHelpCenter() {
                     </button>
                     <button type="button" onClick={() => void select({ kind: "folder", id: f.id })} className="flex min-w-0 flex-1 items-center gap-2 py-2 pr-2 text-left" data-testid={`collection-${f.id}`}>
                       <TbFolder size={15} className="shrink-0 text-muted-foreground" />
-                      <span className="truncate text-[13px] font-medium">{f.name}</span>
-                      <span className="ml-auto text-[11px] tabular-nums text-muted-foreground">{list.length}</span>
+                      <span className="truncate text-ui font-medium">{f.name}</span>
+                      <span className="ml-auto text-2xs tabular-nums text-muted-foreground">{list.length}</span>
                     </button>
                   </div>
                   {isOpen && (
@@ -280,12 +280,12 @@ export function ChatbotHelpCenter() {
                             data-testid={`article-${a.id}`}
                           >
                             <span className={cn("size-1.5 shrink-0 rounded-full", a.status === "published" ? "bg-emerald-500" : "bg-muted-foreground/40")} title={a.status === "published" ? "Published" : "Draft"} />
-                            <span className={cn("truncate text-[13px]", on ? "font-medium text-foreground" : "text-foreground/80")}>{a.title}</span>
+                            <span className={cn("truncate text-ui", on ? "font-medium text-foreground" : "text-foreground/80")}>{a.title}</span>
                           </button>
                         );
                       })}
                       {canEdit && (
-                        <button type="button" onClick={() => void createArticle(f.id)} className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-muted/60 hover:text-foreground">
+                        <button type="button" onClick={() => void createArticle(f.id)} className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-ui text-muted-foreground hover:bg-muted/60 hover:text-foreground">
                           <TbPlus size={13} /> New article
                         </button>
                       )}
@@ -436,7 +436,7 @@ function FolderPanel({
 
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Articles</p>
+            <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Articles</p>
             {canEdit && (
               <Button size="sm" variant="outline" onClick={onNewArticle} data-testid="new-article">
                 <TbPlus size={14} /> New article
@@ -444,18 +444,18 @@ function FolderPanel({
             )}
           </div>
           {articles.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border px-5 py-8 text-center text-[13px] text-muted-foreground">
+            <div className="rounded-xl border border-dashed border-border px-5 py-8 text-center text-ui text-muted-foreground">
               No articles yet. A collection only shows in the widget once it has a published article.
             </div>
           ) : (
-            <div className="divide-y divide-border/70 overflow-hidden rounded-2xl border border-border">
+            <div className="divide-y divide-border/70 overflow-hidden rounded-xl border border-border">
               {articles.map((a) => (
                 <button key={a.id} type="button" onClick={() => onOpen(a.id)} className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50">
                   <TbArticle size={16} className="shrink-0 text-muted-foreground" />
-                  <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{a.title}</span>
-                  <span className="hidden items-center gap-1 text-[11px] tabular-nums text-muted-foreground sm:inline-flex"><TbEye size={12} /> {a.views}</span>
+                  <span className="min-w-0 flex-1 truncate text-ui font-medium">{a.title}</span>
+                  <span className="hidden items-center gap-1 text-2xs tabular-nums text-muted-foreground sm:inline-flex"><TbEye size={12} /> {a.views}</span>
                   <Chip tone={a.status === "published" ? "green" : "neutral"}>{a.status === "published" ? "Published" : "Draft"}</Chip>
-                  <span className="w-16 text-right text-[11px] text-muted-foreground">{timeAgo(a.updatedAt)}</span>
+                  <span className="w-16 text-right text-2xs text-muted-foreground">{timeAgo(a.updatedAt)}</span>
                 </button>
               ))}
             </div>

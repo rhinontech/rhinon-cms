@@ -140,10 +140,10 @@ export function SaveSegmentToGroupDialog({
                   >
                     <span className="min-w-0">
                       <span className="block text-sm font-semibold text-foreground">{s.label}</span>
-                      <span className="block text-[11px] text-muted-foreground">{s.hint}</span>
+                      <span className="block text-2xs text-muted-foreground">{s.hint}</span>
                     </span>
                     <span className="flex shrink-0 items-center gap-2">
-                      <span className="text-sm font-bold tabular-nums text-foreground/85">{s.leadIds.length}</span>
+                      <span className="text-sm font-semibold tabular-nums text-foreground/85">{s.leadIds.length}</span>
                       {active && <TbCheck size={15} className="text-blue-600 dark:text-blue-300" />}
                     </span>
                   </button>
@@ -193,7 +193,7 @@ export function SaveSegmentToGroupDialog({
                 {/* Adding members runs the workflow engine, which auto-enrolls
                     into any active workflow watching that group — worth knowing
                     before it starts emailing people. */}
-                <p className="flex items-start gap-1.5 text-[11px] text-amber-700 dark:text-amber-300">
+                <p className="flex items-start gap-1.5 text-2xs text-amber-700 dark:text-amber-300">
                   <TbAlertTriangle size={13} className="mt-px shrink-0" />
                   Contacts added to an existing group are auto-enrolled in any active workflow watching it.
                 </p>
