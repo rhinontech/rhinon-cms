@@ -230,7 +230,7 @@ function formPayload(form: EmployeeForm, mode: PanelMode) {
   };
 }
 
-function StatusBadge({ status, exitDate }: { status: string; exitDate?: string | null }) {
+function StatusBadge({ status, exitDate, exitReason }: { status: string; exitDate?: string | null; exitReason?: string | null }) {
   if (status === "active" && exitDate) {
     return (
       <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-400/15 text-amber-700 dark:text-amber-300" title={`Last working day: ${formatDate(exitDate)}`}>
@@ -240,7 +240,7 @@ function StatusBadge({ status, exitDate }: { status: string; exitDate?: string |
   }
   return (
     <span className={cn("px-2 py-0.5 rounded-full text-xs font-medium", status === "active" ? "bg-green-100 dark:bg-green-400/15 text-green-700 dark:text-green-300" : "bg-muted text-muted-foreground")}>
-      {status === "active" ? "active" : "relieved"}
+      {status === "active" ? "active" : exitReason === "Absconded" ? "offboarded" : "relieved"}
     </span>
   );
 }
@@ -574,7 +574,9 @@ export function PeopleDirectory() {
           return nextEmployees.find((employee) => employee.id === current.id) ?? nextEmployees[0] ?? null;
         }
 
-        return nextEmployees[0] ?? null;
+        // Opened from search (⌘K) with ?person=<id>: show that person, not the first in the list.
+        const wanted = new URLSearchParams(window.location.search).get("person");
+        return (wanted ? nextEmployees.find((employee) => employee.id === wanted) : undefined) ?? nextEmployees[0] ?? null;
       });
 
       return nextEmployees;
@@ -667,6 +669,12 @@ export function PeopleDirectory() {
     setIsPreviewExpanded(true);
     setMobileDetail(true);
   };
+
+  // Home's "Invite teammate" lands here with ?new=1 and opens the form straight away.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("new") === "1") openCreate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // One combined action for both documents — mirrors the original create-time
   // flow (one shared signing session, one email covering both). Any already-
@@ -1160,7 +1168,7 @@ export function PeopleDirectory() {
                       </td>
                       <td className="px-5 py-3 text-sm text-foreground/70">{emp.role?.name}</td>
                       <td className="px-5 py-3 text-sm text-foreground/70">{emp.department}</td>
-                      <td className="px-5 py-3"><StatusBadge status={emp.status} exitDate={emp.exitDate} /></td>
+                      <td className="px-5 py-3"><StatusBadge status={emp.status} exitDate={emp.exitDate} exitReason={emp.exitReason} /></td>
                       <td className="px-5 py-3 text-sm text-muted-foreground">
                         {formatDate(tab === "alumni" && emp.exitDate ? emp.exitDate : emp.joiningDate)}
                       </td>
@@ -1301,7 +1309,7 @@ export function PeopleDirectory() {
 
                     {/* Public info — visible to all */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                      <Detail label="Status" value={<StatusBadge status={selectedEmployee.status} exitDate={selectedEmployee.exitDate} />} />
+                      <Detail label="Status" value={<StatusBadge status={selectedEmployee.status} exitDate={selectedEmployee.exitDate} exitReason={selectedEmployee.exitReason} />} />
                       <Detail label="Role title" value={selectedEmployee.roleTitle || selectedEmployee.role?.name || "-"} />
                       <Detail label="Department" value={selectedEmployee.department} />
                       <Detail label="Work location" value={selectedEmployee.workLocation || "-"} />
@@ -1370,7 +1378,7 @@ export function PeopleDirectory() {
                             <>
                               <h3 className="text-sm font-semibold text-foreground">Offboarding</h3>
                               <p className="text-xs text-muted-foreground">
-                                Relieve this member — records their last working day, revokes access,
+                                Offboard this member — records their last working day, revokes access,
                                 and removes them from future payroll runs.
                               </p>
                               {selectedEmployee.role?.slug === "superadmin" ? (
@@ -1404,7 +1412,9 @@ export function PeopleDirectory() {
                             </>
                           ) : (
                             <>
-                              <h3 className="text-sm font-semibold text-foreground">Relieved</h3>
+                              <h3 className="text-sm font-semibold text-foreground">
+                                {selectedEmployee.exitReason === "Absconded" ? "Offboarded" : "Relieved"}
+                              </h3>
                               <p className="text-xs text-muted-foreground">
                                 Last working day{" "}
                                 <span className="font-semibold">
@@ -1430,7 +1440,9 @@ export function PeopleDirectory() {
                               <div>
                                 <p className="mb-2 text-xs font-semibold text-foreground/85">Exit checklist</p>
                                 <div className="grid grid-cols-1 gap-1.5">
-                                  {EXIT_CHECKLIST_ITEMS.map((item) => (
+                                  {EXIT_CHECKLIST_ITEMS.filter((item) => (
+                                    selectedEmployee.exitReason !== "Absconded" || item.key !== "lettersIssued"
+                                  )).map((item) => (
                                     <label key={item.key} className="flex items-center gap-2 text-xs text-foreground/70">
                                       <input
                                         type="checkbox"
@@ -1443,7 +1455,7 @@ export function PeopleDirectory() {
                                   ))}
                                 </div>
                               </div>
-                              {canWrite && (
+                              {canWrite && selectedEmployee.exitReason !== "Absconded" && (
                                 <div className="flex flex-wrap gap-2">
                                   <button
                                     onClick={() => openLetterPreview("relieving")}

@@ -9,7 +9,7 @@ export default function AttendanceLayout({ children }: { children: React.ReactNo
     <AdminDashboardShell>
       <SideNavProvider>
         <div className="flex w-full h-full">
-          <TeamSubNav />
+          <TeamSubNav section="time" />
           <main className="w-full h-full overflow-hidden">{children}</main>
         </div>
       </SideNavProvider>

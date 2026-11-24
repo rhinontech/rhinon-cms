@@ -1,6 +1,7 @@
 "use client";
 
 import Image, { type StaticImageData } from "next/image";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { TbCheck, TbSelector } from "react-icons/tb";
 import {
@@ -62,8 +63,8 @@ function host(siteUrl: string | null): string | null {
   return siteUrl.replace(/^https?:\/\//, "").replace(/\/$/, "").replace(/^www\./, "");
 }
 
-function Glyph({ name, slug, size = "md" }: { name: string; slug: string; size?: "md" | "sm" }) {
-  const box = size === "md" ? "h-9 w-9" : "h-8 w-8";
+function Glyph({ name, slug, size = "md" }: { name: string; slug: string; size?: "md" | "sm" | "xs" }) {
+  const box = size === "md" ? "h-9 w-9" : size === "sm" ? "h-8 w-8" : "h-5 w-5 rounded-full! p-0.5!";
   const logo = BRAND_LOGOS[slug];
 
   if (logo?.bleed) {
@@ -93,7 +94,7 @@ function Glyph({ name, slug, size = "md" }: { name: string; slug: string; size?:
         "flex shrink-0 items-center justify-center rounded-lg font-bold text-white",
         glyphColor(slug),
         box,
-        size === "md" ? "text-xs" : "text-[11px]"
+        size === "md" ? "text-xs" : size === "sm" ? "text-[11px]" : "text-[8px]"
       )}
     >
       {initials(name)}
@@ -102,20 +103,15 @@ function Glyph({ name, slug, size = "md" }: { name: string; slug: string; size?:
 }
 
 /**
- * The brand the admin is being viewed as, in the sidebar header.
+ * Which workspace you are in, at the top of the sidebar.
  *
- * Switching brand does not add or remove menus — every module stays available
- * under every brand. What changes is the DATA those modules show: the six
- * brand-split ones (Inbox, CRM, Outreach, Automation, Content, Analytics)
- * follow the brand in the URL, and the rest are workspace-wide either way.
+ * This slot used to hold the brand switcher, which meant nothing to a customer
+ * with one brand (every customer today) and took the logo's place. The brand
+ * now lives where it matters: a switcher in the breadcrumb of the brand-split
+ * modules, shown only when the workspace has more than one brand.
  */
-export function BrandSwitcher({ expanded }: { expanded: boolean }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const roleSlug = pathname.split("/")[1] || "";
-  const { slug, brand, sites, loading, select } = useActiveBrand();
-
-  if (loading || !brand) {
+export function WorkspaceIdentity({ name, isPlatform, expanded, href }: { name: string | null; isPlatform: boolean; expanded: boolean; href: string }) {
+  if (!name) {
     return (
       <div className={cn("flex items-center", expanded ? "w-full gap-2.5 px-1" : "justify-center")}>
         <span className="h-9 w-9 shrink-0 animate-pulse rounded-lg bg-muted" />
@@ -123,63 +119,72 @@ export function BrandSwitcher({ expanded }: { expanded: boolean }) {
       </div>
     );
   }
+  return (
+    <Link
+      href={href}
+      prefetch={false}
+      className={cn("flex items-center rounded-xl transition-colors hover:bg-muted/70", expanded ? "w-full gap-2.5 p-1.5" : "h-9 w-9 justify-center")}
+      title={name}
+    >
+      {/* The platform workspace wears Rhinon Tech's own mark; a customer's wears its initials. */}
+      <Glyph name={name} slug={isPlatform ? "rhinontech" : `workspace-${name}`} />
+      {expanded && (
+        <span className="min-w-0 flex-1 text-left">
+          <span className="block truncate text-sm font-bold leading-tight text-foreground">{name}</span>
+          <span className="block truncate text-xs leading-tight text-muted-foreground">Workspace</span>
+        </span>
+      )}
+    </Link>
+  );
+}
+
+/**
+ * The brand a brand-split module is showing, as a switcher in its breadcrumb.
+ *
+ * Rendered only when the workspace has more than one brand. Switching keeps you
+ * on the same module and page — every brand has all of them — and only swaps
+ * the brand segment of the URL, which is what decides the data shown.
+ */
+export function BrandCrumbSwitcher() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { slug, brand, sites, loading, select } = useActiveBrand();
+  if (loading || !brand || sites.length < 2) return null;
 
   const switchTo = (next: string) => {
     select(next);
-    // Stay on the current module — every brand has all of them. Only the
-    // brand-split ones carry the slug in their path.
-    const currentModule = pathname.split("/")[2] || "dashboard";
-    const scoped = SITE_SCOPED_MODULES.includes(currentModule as SiteScopedModule);
-    router.push(scoped ? `/${roleSlug}/${currentModule}/${next}` : `/${roleSlug}/${currentModule}`);
+    const parts = pathname.split("/");
+    const currentModule = parts[2] || "dashboard";
+    if (SITE_SCOPED_MODULES.includes(currentModule as SiteScopedModule)) {
+      // /role/module/<brand>/rest… — keep the page, swap the brand. Record ids in
+      // the rest belong to the old brand, so stop at the tab.
+      router.push(`/${parts[1]}/${currentModule}/${next}${parts[4] ? `/${parts[4]}` : ""}`);
+    }
   };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
-          className={cn(
-            "flex items-center rounded-xl transition-colors hover:bg-muted/70",
-            expanded ? "w-full gap-2.5 p-1.5" : "h-9 w-9 justify-center"
-          )}
-          aria-label={`Current brand: ${brand.name}. Switch brand`}
+          className="hidden min-w-0 max-w-[160px] items-center gap-1.5 rounded-full bg-foreground/[0.05] py-0.5 pl-0.5 pr-2 text-xs font-medium text-foreground/80 ring-1 ring-inset ring-foreground/[0.06] transition-colors hover:bg-foreground/[0.09] sm:inline-flex"
+          aria-label={`Showing ${brand.name}. Switch brand`}
+          title="Which brand's data this screen shows"
         >
-          <Glyph name={brand.name} slug={brand.slug} />
-          {expanded && (
-            <>
-              <span className="min-w-0 flex-1 text-left">
-                <span className="block truncate text-sm font-bold leading-tight text-foreground">
-                  {brand.name}
-                </span>
-                <span className="block truncate text-xs leading-tight text-muted-foreground">
-                  {host(brand.siteUrl) ?? (brand.isDefault ? "Default brand" : "Brand")}
-                </span>
-              </span>
-              <TbSelector size={16} className="shrink-0 text-muted-foreground" />
-            </>
-          )}
+          <Glyph name={brand.name} slug={brand.slug} size="xs" />
+          <span className="truncate">{brand.name}</span>
+          <TbSelector size={13} className="shrink-0 text-muted-foreground" />
         </button>
       </DropdownMenuTrigger>
-
       <DropdownMenuContent align="start" className="w-64 p-1.5">
-        <DropdownMenuLabel className="px-2 py-1 text-xs font-medium text-muted-foreground">
-          Brands
-        </DropdownMenuLabel>
+        <DropdownMenuLabel className="px-2 py-1 text-xs font-medium text-muted-foreground">Show data for</DropdownMenuLabel>
         {sites.map((site) => (
-          <DropdownMenuItem
-            key={site.slug}
-            onSelect={() => switchTo(site.slug)}
-            className="flex items-center gap-2.5 rounded-lg px-2 py-2"
-          >
+          <DropdownMenuItem key={site.slug} onSelect={() => switchTo(site.slug)} className="flex items-center gap-2.5 rounded-lg px-2 py-2">
             <Glyph name={site.name} slug={site.slug} size="sm" />
-            <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
-              {site.name}
-            </span>
+            <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{site.name}</span>
             {site.slug === slug ? (
               <TbCheck size={16} className="shrink-0 text-primary" />
             ) : (
-              <span className="shrink-0 truncate text-xs text-muted-foreground">
-                {host(site.siteUrl) ?? ""}
-              </span>
+              <span className="shrink-0 truncate text-xs text-muted-foreground">{host(site.siteUrl) ?? ""}</span>
             )}
           </DropdownMenuItem>
         ))}

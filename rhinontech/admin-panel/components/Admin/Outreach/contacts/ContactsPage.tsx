@@ -38,7 +38,7 @@ export function ContactsPage() {
         <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
           <SubNavToggle />
           <div className="min-w-0">
-            <h1 className="text-base font-semibold tracking-tight text-foreground truncate">Contacts</h1>
+            <h1 className="text-base font-semibold tracking-tight text-foreground truncate">Lists</h1>
             <p className="hidden text-xs text-muted-foreground sm:block truncate">Organize leads into named groups to target with campaigns.</p>
           </div>
         </div>

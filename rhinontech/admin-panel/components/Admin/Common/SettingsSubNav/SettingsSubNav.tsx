@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { TbSettings, TbShieldLock, TbBooks, TbBook, TbFileText, TbCalendarEvent, TbRocket, TbCreditCard, TbAt, TbCode, TbHistory, TbDatabaseExport, TbPlugConnected } from "react-icons/tb";
+import { TbSettings, TbShieldLock, TbBooks, TbBook, TbFileText, TbCalendarEvent, TbRocket, TbCreditCard, TbAt, TbCode, TbHistory, TbDatabaseExport, TbPlugConnected, TbMailbox } from "react-icons/tb";
 import { MdOutlineCloud } from "react-icons/md";
 import { CollapsibleSubNav, type SubNavItem } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { usePermissions } from "@/context/PermissionsContext";
@@ -11,7 +11,7 @@ export function SettingsSubNav() {
   const pathname = usePathname();
   const roleSlug = pathname.split("/")[1];
   const base = `/${roleSlug}/settings`;
-  const { has, isOwner } = usePermissions();
+  const { has, isOwner, effectiveRoleSlug } = usePermissions();
 
   const items: SubNavItem[] = [
     { label: "General", href: base, icon: <TbSettings size={18} />, exact: true },
@@ -22,6 +22,11 @@ export function SettingsSubNav() {
           { label: "Plan & usage", href: `${base}/billing`, icon: <TbCreditCard size={18} /> },
           { label: "Email domain", href: `${base}/email-domain`, icon: <TbAt size={18} /> },
         ]
+      : []),
+    // Shared mailboxes (hello@, support@) sit beside the domain they send from.
+    // Handing them out is the Super Admin's call alone, as it was under Team.
+    ...(effectiveRoleSlug === "superadmin"
+      ? [{ label: "Email addresses", href: `${base}/email-addresses`, icon: <TbMailbox size={18} /> }]
       : []),
     ...(isOwner ? [{ label: "Developers", href: `${base}/developers`, icon: <TbCode size={18} /> }] : []),
     ...(has("settings:write") ? [{ label: "Activity log", href: `${base}/audit-log`, icon: <TbHistory size={18} /> }] : []),

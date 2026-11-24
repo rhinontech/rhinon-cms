@@ -6,6 +6,7 @@ import { Page, PageShare, PageAttachment, User } from "../models";
 import { authenticate, authorize, AuthRequest } from "../middleware/authenticate";
 import { sequelize } from "../config/database";
 import { uploadBuffer, getPresignedReadUrl, deleteObject } from "../services/storage";
+import { getVisiblePageIds, type PageNode } from "../services/pageAccess";
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
@@ -13,13 +14,6 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 
 router.use(authenticate, authorize("pages:read"));
 
 type AccessLevel = "view" | "edit";
-
-interface PageNode {
-  id: string;
-  parentId: string | null;
-  ownerId: string;
-  visibility: "private" | "workspace";
-}
 
 /**
  * Access is resolved by walking from the page up through its ancestors and
@@ -49,40 +43,6 @@ async function resolveAccess(pageId: string, userId: string): Promise<AccessLeve
     current = current.parentId ? byId.get(current.parentId) : undefined;
   }
   return null;
-}
-
-/** Every page id visible to userId — used by both /tree and /search so they never drift apart. */
-async function getVisiblePageIds(userId: string): Promise<Set<string>> {
-  const allPages = await Page.findAll({
-    where: { isArchived: false },
-    attributes: ["id", "parentId", "ownerId", "visibility"],
-    raw: true,
-  }) as unknown as PageNode[];
-
-  const childrenOf = new Map<string, string[]>();
-  for (const p of allPages) {
-    if (!p.parentId) continue;
-    if (!childrenOf.has(p.parentId)) childrenOf.set(p.parentId, []);
-    childrenOf.get(p.parentId)!.push(p.id);
-  }
-
-  const shareRows = await PageShare.findAll({ where: { userId }, attributes: ["pageId"], raw: true });
-  const sharedIds = new Set(shareRows.map((s) => s.pageId));
-
-  const visible = new Set<string>();
-  const markVisible = (id: string) => {
-    if (visible.has(id)) return;
-    visible.add(id);
-    (childrenOf.get(id) || []).forEach(markVisible);
-  };
-
-  for (const p of allPages) {
-    if (p.ownerId === userId || p.visibility === "workspace" || sharedIds.has(p.id)) {
-      markVisible(p.id);
-    }
-  }
-
-  return visible;
 }
 
 async function requireAccess(pageId: string, userId: string, level: AccessLevel): Promise<Page | null> {

@@ -57,7 +57,7 @@ export function ChatbotCampaigns() {
       setCampaigns((await apiFetch<{ campaigns: Campaign[] }>("/chatbots/campaigns")).campaigns);
       setError(null);
     } catch (err) {
-      const message = errorText(err, "Could not load campaigns");
+      const message = errorText(err, "Could not load pop-ups");
       if (/no chatbot/i.test(message)) setMissing(true);
       else setError(message);
     }
@@ -87,7 +87,7 @@ export function ChatbotCampaigns() {
       setCampaigns((prev) => prev?.map((x) => (x.id === c.id ? res.campaign : x)) ?? prev);
       toast.success(status === "active" ? `"${c.name}" is live` : `"${c.name}" paused`);
     } catch (err) {
-      toast.error(errorText(err, "Could not update the campaign"));
+      toast.error(errorText(err, "Could not update the pop-up"));
     }
   };
 
@@ -117,13 +117,13 @@ export function ChatbotCampaigns() {
       const res = await apiFetch<{ campaign: Campaign }>("/chatbots/campaigns", { method: "POST", body: JSON.stringify(fromTemplate(template)) });
       router.push(`${base}/campaigns/${res.campaign.id}`);
     } catch (err) {
-      toast.error(errorText(err, "Could not create the campaign"));
+      toast.error(errorText(err, "Could not create the pop-up"));
     }
   };
 
   if (missing) {
     return (
-      <PageShell title="Campaigns">
+      <PageShell title="Pop-ups">
         <Notice tone="info">
           Create the chatbot first. <Link href={base} className="font-medium underline underline-offset-2">Go to Overview →</Link>
         </Notice>
@@ -134,7 +134,7 @@ export function ChatbotCampaigns() {
   return (
     <PageShell
       width="wide"
-      title="Campaigns"
+      title="Pop-ups"
       subtitle="Targeted pop-ups above your chat button — greet, promote, and capture leads."
       actions={
         canEdit && (
@@ -147,7 +147,7 @@ export function ChatbotCampaigns() {
       {error && <Notice tone="danger">{error}</Notice>}
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" data-testid="campaign-stats">
-        <Stat icon={<TbSpeakerphone size={18} />} tone="green" label="Live campaigns" value={campaigns ? counts.active : "—"} hint={campaigns ? `${counts.all} in total` : undefined} />
+        <Stat icon={<TbSpeakerphone size={18} />} tone="green" label="Live pop-ups" value={campaigns ? counts.active : "—"} hint={campaigns ? `${counts.all} in total` : undefined} />
         <Stat icon={<TbEye size={18} />} tone="blue" label="Views" value={campaigns ? counts.views.toLocaleString() : "—"} hint="All time" />
         <Stat icon={<TbClick size={18} />} tone="violet" label="Clicks" value={campaigns ? counts.clicks.toLocaleString() : "—"} hint="All time" />
         <Stat icon={<TbPercentage size={18} />} label="Click rate" value={campaigns ? rate(counts.clicks, counts.views) : "—"} hint="Clicks ÷ views" />
@@ -155,7 +155,7 @@ export function ChatbotCampaigns() {
 
       <Panel
         padded={false}
-        title="Your campaigns"
+        title="Your pop-ups"
         actions={
           <Segmented
             size="sm"
@@ -174,9 +174,9 @@ export function ChatbotCampaigns() {
         {campaigns && shown.length === 0 && (
           <EmptyState
             icon={<TbSpeakerphone size={22} />}
-            title={filter === "all" ? "No campaigns yet" : "Nothing here"}
+            title={filter === "all" ? "No pop-ups yet" : "Nothing here"}
             body="Show a message to the right visitors at the right moment — a welcome, an offer before they leave, a free guide for their email."
-            action={canEdit && filter === "all" ? <Button onClick={() => setPicking(true)}><TbPlus size={16} /> Create your first campaign</Button> : undefined}
+            action={canEdit && filter === "all" ? <Button onClick={() => setPicking(true)}><TbPlus size={16} /> Create your first pop-up</Button> : undefined}
           />
         )}
         <ul className="divide-y divide-border/70" data-testid="campaign-list">
@@ -226,7 +226,7 @@ export function ChatbotCampaigns() {
           })}
         </ul>
         {campaigns && campaigns.length > 0 && (
-          <p className="border-t border-border/70 px-5 py-3 text-xs text-muted-foreground">Last changed {timeAgo(campaigns[0].updatedAt)}. Only live campaigns show on your site, one at a time — the first whose targeting matches.</p>
+          <p className="border-t border-border/70 px-5 py-3 text-xs text-muted-foreground">Last changed {timeAgo(campaigns[0].updatedAt)}. Only live pop-ups show on your site, one at a time — the first whose targeting matches.</p>
         )}
       </Panel>
 
@@ -263,7 +263,7 @@ function TemplatePicker({ open, onClose, onPick, accent }: { open: boolean; onCl
     <Dialog open={open} onOpenChange={(o) => !o && !busy && onClose()}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-5xl">
         <DialogHeader>
-          <DialogTitle>Start a campaign</DialogTitle>
+          <DialogTitle>Start a pop-up</DialogTitle>
           <DialogDescription>Pick a template — you can change everything — or start from scratch.</DialogDescription>
         </DialogHeader>
         <div className="flex flex-wrap items-center justify-between gap-3">

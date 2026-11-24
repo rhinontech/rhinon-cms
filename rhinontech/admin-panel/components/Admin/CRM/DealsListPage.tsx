@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { TbSearch, TbBuilding, TbLayoutKanban } from "react-icons/tb";
+import { TbSearch, TbBuilding } from "react-icons/tb";
+import { DealsViewToggle } from "./DealsViewToggle";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
@@ -91,12 +92,7 @@ export function DealsListPage() {
             </p>
           </div>
         </div>
-        <Link
-          href={`${crmBase}/pipeline`}
-          className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card/70 px-2.5 py-1.5 text-xs font-medium text-foreground/85 hover:bg-muted"
-        >
-          <TbLayoutKanban size={14} /> Board view
-        </Link>
+        <DealsViewToggle view="list" />
       </div>
 
       <div className="flex-1 overflow-auto p-3">

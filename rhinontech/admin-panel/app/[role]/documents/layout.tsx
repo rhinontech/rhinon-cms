@@ -9,7 +9,7 @@ export default function DocumentsLayout({ children }: { children: React.ReactNod
     <AdminDashboardShell>
       <SideNavProvider>
         <div className="flex w-full h-full">
-          <TeamSubNav />
+          <TeamSubNav section="people" />
           <main className="w-full h-full overflow-hidden">{children}</main>
         </div>
       </SideNavProvider>

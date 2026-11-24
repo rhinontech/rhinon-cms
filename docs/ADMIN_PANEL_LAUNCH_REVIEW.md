@@ -243,6 +243,18 @@ That sentence describes two problems:
 | F8 | A switcher in the logo spot | The brand switcher always renders top-left ([BrandSwitcher.tsx](../rhinontech/admin-panel/components/Admin/Common/Sites/BrandSwitcher.tsx)), even for a customer with one brand. In brand-scoped modules it silently changes the data. CRM has ignored it since 16 November but keeps the brand in its URL |
 | F9 | No way to search or jump | No global search or command palette. `cmdk` is installed but used only in a combo box. No help entry. Breadcrumbs show only the module name ([SiteHeader.tsx#L35-L53](../rhinontech/admin-panel/components/Admin/Common/SiteHeader/SiteHeader.tsx#L35-L53)) |
 
+#### Status (25 November 2026): U1–U6 built on `beta`, local and uncommitted
+
+Built and checked against the beta database with four roles (platform owner, HR, employee, customer owner): type-checks and builds pass, and screenshots were reviewed.
+
+- **U1, done.** New Home at `/[role]/dashboard`, served by `GET /home/summary`, plus `PUT /home/onboarding`. Quick actions open the create form directly (`?new=1`).
+- **U2, done.** Sidebar grouped Sell / Deliver / People using the website's names, labels visible by default, and Search, Approvals and Help added. Meetings sits next to Team Chat as its own item, not inside it.
+- **U3, done.** Single "Deals" item with a Board/List switch, "Lists", "Sequences" inside Outreach, a single "Projects" item with "Continue", "Pop-ups", "HR & People", Email addresses moved to Settings, and a new Approvals page (`GET /home/approvals`). Old URLs redirect. Not done: "outreach drafts waiting for approval" in Home, because drafts have no clean status field yet.
+- **U4, done.** ⌘K palette, backed by `GET /search`, which follows each module's own visibility rules. Tenant isolation and wildcard escaping were verified.
+- **U5, partly done.** The brand switcher is hidden for one-brand workspaces and moved into the breadcrumb for multi-brand ones. CRM URLs keep the brand: the code shows it still picks which brand's lists and campaigns appear next to leads.
+- **U6, partly done.** Breadcrumbs now use menu labels (correction to F9: they already showed the page, but used URL words), the Help menu is in, and Home has proper empty states. Still open: a CRM overview page, and an empty-state pass across the other modules.
+- **Also added:** a `DISABLE_SCHEDULER=true` switch, so a laptop pointed at a shared database runs no background jobs.
+
 #### The target experience
 
 Open the app, see what needs you, and get to it in one click. If you're looking for something else, it's under Sell, Deliver or People with the same name as on the website, or you can type it into search.

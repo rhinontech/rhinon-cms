@@ -19,6 +19,7 @@ import { DealDrawer } from "./DealDrawer";
 import { StageSettingsDialog } from "./StageSettingsDialog";
 import { Avatar, StageDot, TBtn, formatMoney, formatDate } from "./ui";
 import { useModuleBase } from "@/lib/sites";
+import { DealsViewToggle } from "./DealsViewToggle";
 
 import { NativeSelect } from "@/components/ui/native-select";
 interface BoardResponse {
@@ -137,7 +138,7 @@ export function DealsBoard() {
         <div className="flex min-w-0 items-center gap-2.5">
           <SubNavToggle />
           <div className="min-w-0">
-            <h1 className="text-sm font-semibold tracking-tight text-foreground">Pipeline</h1>
+            <h1 className="text-sm font-semibold tracking-tight text-foreground">Deals</h1>
             <p className="text-[11px] tabular-nums text-muted-foreground">
               {totals.count} open · {formatMoney(totals.open)} ·{" "}
               <span title="Value discounted by each stage's probability">
@@ -146,7 +147,8 @@ export function DealsBoard() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <DealsViewToggle view="board" />
           <NativeSelect
             value={ownerFilter}
             onChange={(e) => setOwnerFilter(e.target.value)}

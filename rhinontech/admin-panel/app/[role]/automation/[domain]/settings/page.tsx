@@ -18,7 +18,7 @@ export default function AutomationSettingsGlobalPage() {
     <div className="p-8 max-w-4xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground tracking-tight flex items-center gap-2">
-          <TbSettings className="text-foreground/85" /> Automation Global Settings
+          <TbSettings className="text-foreground/85" /> Sequence settings
         </h1>
         <p className="text-sm text-muted-foreground mt-1">Configure system-wide limits and behavior for workflow execution.</p>
       </div>

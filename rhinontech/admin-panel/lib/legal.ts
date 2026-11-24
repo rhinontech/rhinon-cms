@@ -8,6 +8,8 @@ export interface LegalInfo {
   termsUrl: string | null;
   privacyUrl: string | null;
   dpaUrl: string | null;
+  /** Where customers write for help; the Help menu offers it only when set. */
+  supportEmail?: string | null;
   acceptanceRequired: boolean;
 }
 

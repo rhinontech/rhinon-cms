@@ -79,7 +79,7 @@ const emailOf = (req: Request) => {
 
 /** Login: tight per (IP, account) to stop guessing one password, looser per IP overall. */
 export const loginLimiters = [
-  rateLimit({ name: "login-account", windowMs: 15 * minute, max: 8, key: emailOf, message: "Too many sign-in attempts. Try again in a few minutes." }),
+  rateLimit({ name: "login-account", windowMs: 15 * minute, max: Number(process.env.RATE_LIMIT_LOGIN_MAX) || 8, key: emailOf, message: "Too many sign-in attempts. Try again in a few minutes." }),
   rateLimit({ name: "login-ip", windowMs: 15 * minute, max: 60, message: "Too many sign-in attempts. Try again in a few minutes." }),
 ];
 

@@ -1,6 +1,7 @@
-import { AttendancePage } from "@/components/Admin/Attendance/AttendancePage";
+import { redirect } from "next/navigation";
 
-
-export default function WorkAttendancePage() {
-  return <AttendancePage />;
+/** Attendance has one home, under Attendance & Leave; this old duplicate path lands there. */
+export default async function WorkAttendanceMovedPage({ params }: { params: Promise<{ role: string }> }) {
+  const { role } = await params;
+  redirect(`/${role}/attendance`);
 }

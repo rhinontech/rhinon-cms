@@ -189,6 +189,14 @@ function listen() {
     // Internal team chat: its own namespace on the same Socket.IO server.
     attachTeamChatSocket(socketServer()!);
 
+    // A laptop pointed at a shared database (beta or prod) must not run the jobs
+    // as well, or campaigns, workflows and nightly AI runs fire twice against the
+    // same rows. Everything below this line is a background job.
+    if (process.env.DISABLE_SCHEDULER === "true") {
+      console.log("[Cron] Scheduler off (DISABLE_SCHEDULER=true): this process runs no background jobs.");
+      return;
+    }
+
     // Stale-intel refresh: nightly at 3:30 AM IST, well clear of the outreach
     // scheduler. No-ops unless LEAD_REENRICH_ENABLED=true.
     if (isReEnrichmentEnabled()) {

@@ -65,7 +65,7 @@ export function ChatbotCampaignEditor({ id }: { id: string }) {
         setCampaign(r.campaign);
         setDraft(pickDraft(r.campaign));
       })
-      .catch((err) => setError(errorText(err, "Could not load the campaign")));
+      .catch((err) => setError(errorText(err, "Could not load the pop-up")));
   }, [id]);
 
   const accent = (state?.chatbot?.config.primaryColor as string) || "#1c1917";
@@ -84,7 +84,7 @@ export function ChatbotCampaignEditor({ id }: { id: string }) {
       });
       setCampaign(res.campaign);
       setDraft(pickDraft(res.campaign));
-      toast.success(status === "active" ? "Campaign is live on your site" : status === "paused" ? "Campaign paused" : "Saved");
+      toast.success(status === "active" ? "Pop-up is live on your site" : status === "paused" ? "Pop-up paused" : "Saved");
     } catch (err) {
       toast.error(errorText(err, "Could not save"));
     } finally {
@@ -94,8 +94,8 @@ export function ChatbotCampaignEditor({ id }: { id: string }) {
 
   if (error) {
     return (
-      <PageShell title="Campaign">
-        <Notice tone="danger">{error} <Link href={`${base}/campaigns`} className="font-medium underline">Back to campaigns</Link></Notice>
+      <PageShell title="Pop-up">
+        <Notice tone="danger">{error} <Link href={`${base}/campaigns`} className="font-medium underline">Back to pop-ups</Link></Notice>
       </PageShell>
     );
   }
@@ -108,7 +108,7 @@ export function ChatbotCampaignEditor({ id }: { id: string }) {
   return (
     <PageShell
       flush
-      title={draft?.name || "Campaign"}
+      title={draft?.name || "Pop-up"}
       subtitle={
         <Link href={`${base}/campaigns`} className="inline-flex items-center gap-1 hover:text-foreground">
           <TbArrowLeft size={12} /> All campaigns
@@ -125,7 +125,7 @@ export function ChatbotCampaignEditor({ id }: { id: string }) {
                   {busy === "pause" ? <Spinner /> : <TbPlayerPause size={16} />} Pause
                 </Button>
                 <Button onClick={() => save()} disabled={!dirty || !!busy} data-testid="save-campaign">
-                  {busy === "save" ? <Spinner /> : <TbDeviceFloppy size={16} />} {dirty ? "Update live campaign" : "Saved"}
+                  {busy === "save" ? <Spinner /> : <TbDeviceFloppy size={16} />} {dirty ? "Update live pop-up" : "Saved"}
                 </Button>
               </>
             ) : (
@@ -149,7 +149,7 @@ export function ChatbotCampaignEditor({ id }: { id: string }) {
             <fieldset className="mx-auto flex max-w-3xl flex-col gap-5 p-5 sm:p-7" disabled={!canEdit}>
               <Panel title="Basics">
                 <div className="grid gap-4">
-                  <Field label="Campaign name" hint="Only your team sees this.">
+                  <Field label="Pop-up name" hint="Only your team sees this.">
                     <Input value={draft.name} maxLength={200} onChange={(e) => setDraft({ ...draft, name: e.target.value })} data-testid="campaign-name" />
                   </Field>
                   <Field label="How often" hint={draft.type === "one-time" ? "Each visitor sees it once, ever (remembered in their browser)." : "Shows every time a visitor matches the targeting."}>
@@ -331,7 +331,7 @@ export function ChatbotCampaignEditor({ id }: { id: string }) {
                 </div>
               </Panel>
 
-              <Panel title="Schedule" description="Optional. Outside these dates a live campaign doesn't show.">
+              <Panel title="Schedule" description="Optional. Outside these dates a live pop-up doesn't show.">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="Starts">
                     <Input type="datetime-local" value={toLocalInput(draft.startsAt)} onChange={(e) => setDraft({ ...draft, startsAt: e.target.value ? new Date(e.target.value).toISOString() : null })} />
@@ -559,7 +559,7 @@ function CampaignImage({ value, onChange }: { value?: string; onChange: (src: st
           </Button>
         )}
       </div>
-      <ImageCropDialog src={pending?.src ?? null} fileName={pending?.name ?? "image.png"} aspect={300 / 160} title="Crop campaign image" onCancel={() => setPending(null)} onCropped={upload} />
+      <ImageCropDialog src={pending?.src ?? null} fileName={pending?.name ?? "image.png"} aspect={300 / 160} title="Crop pop-up image" onCancel={() => setPending(null)} onCropped={upload} />
     </Field>
   );
 }

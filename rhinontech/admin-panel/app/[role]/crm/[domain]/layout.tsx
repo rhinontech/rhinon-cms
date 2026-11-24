@@ -1,7 +1,7 @@
 "use client";
 
 import { CollapsibleSubNav } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
-import { TbUsers, TbLayoutKanban, TbBuilding, TbChartBar, TbCurrencyRupee, TbUserSearch } from "react-icons/tb";
+import { TbUsers, TbLayoutKanban, TbBuilding, TbChartBar, TbUserSearch } from "react-icons/tb";
 import { usePermissions } from "@/context/PermissionsContext";
 import { SiteScopeGuard } from "@/components/Admin/Common/Sites/SiteGate";
 import { useModuleBase } from "@/lib/sites";
@@ -18,8 +18,9 @@ function CrmDomainNav({ children }: { children: React.ReactNode }) {
   const items = [
     { label: "Leads", href: base, icon: <TbUsers size={18} />, exact: true },
     { label: "Accounts", href: `${base}/accounts`, icon: <TbBuilding size={18} /> },
-    { label: "Pipeline", href: `${base}/pipeline`, icon: <TbLayoutKanban size={18} /> },
-    { label: "Deals", href: `${base}/deals`, icon: <TbCurrencyRupee size={18} /> },
+    // One "Deals" item: the board and the list are two views of the same deals,
+    // switched from the page header rather than shown as two different things.
+    { label: "Deals", href: `${base}/pipeline`, icon: <TbLayoutKanban size={18} />, match: [`${base}/deals`] },
     { label: "Reports", href: `${base}/reports`, icon: <TbChartBar size={18} /> },
     ...(isPlatform ? [{ label: "Lead Finder", href: `${base}/finder`, icon: <TbUserSearch size={18} /> }] : []),
   ];

@@ -324,6 +324,16 @@ export function LeadsPage() {
     setPanelOpen(true);
   };
 
+  // Home's "Add a lead" lands here with ?new=1 and opens the form straight away.
+  const wantsNew = searchParams.get("new") === "1";
+  const openedNew = useRef(false);
+  useEffect(() => {
+    if (!wantsNew || openedNew.current) return;
+    openedNew.current = true;
+    startCreate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wantsNew]);
+
   const startEdit = () => {
     if (!selected) return;
     setForm({

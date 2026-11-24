@@ -9,7 +9,7 @@ export default function LeaveLayout({ children }: { children: React.ReactNode })
     <AdminDashboardShell>
       <SideNavProvider>
         <div className="flex w-full h-full">
-          <TeamSubNav />
+          <TeamSubNav section="time" />
           <main className="w-full h-full overflow-hidden">{children}</main>
         </div>
       </SideNavProvider>

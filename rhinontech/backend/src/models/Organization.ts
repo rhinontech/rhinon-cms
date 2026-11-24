@@ -47,6 +47,8 @@ export interface OrganizationSettings {
   termsAcceptedBy?: string;
   /** Set when the owner asks for a different plan; cleared once platform staff change it. */
   upgradeRequest?: { plan: string; note: string | null; at: string; by: string };
+  /** First-run Home: what the owner said they want to do first, and whether they hid the checklist. */
+  onboarding?: { goal?: "sell" | "deliver" | "team"; answeredAt?: string; dismissedAt?: string };
   /** The workspace's own sending domains and their verification progress (services/customDomain.ts). */
   emailDomains?: {
     domain: string;
