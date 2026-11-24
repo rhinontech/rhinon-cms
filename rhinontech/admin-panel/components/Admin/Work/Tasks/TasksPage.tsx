@@ -60,10 +60,10 @@ export function TasksPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [activeTask, setActiveTask] = useState<ApiTask | null>(null);
 
-  // Mirrors the backend: assignee OR creator OR work:write. The work:write term
+  // Mirrors the backend: assignee OR creator OR work:write OR unassigned. The work:write term
   // is what keeps managers able to edit other people's tasks.
   const canEditTask = useCallback(
-    (t: ApiTask) => has("work:write") || (!!userId && (t.assigneeId === userId || t.createdById === userId)),
+    (t: ApiTask) => has("work:write") || !t.assigneeId || (!!userId && (t.assigneeId === userId || t.createdById === userId)),
     [has, userId]
   );
   const canDeleteComment = useCallback(
