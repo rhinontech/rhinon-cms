@@ -114,9 +114,12 @@ export interface PlatformLeadPayload {
   name: string;
   email: string;
   phone: string;
-  website: string;
-  institutionType: string;
-  annualLeadVolume: string;
+  website?: string;
+  buildTarget?: string;
+  budgetRange?: string;
+  idealStartDate?: string;
+  institutionType?: string;
+  annualLeadVolume?: string;
   teamSize?: string;
   message?: string;
   source?: string;
