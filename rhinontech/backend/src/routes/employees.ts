@@ -488,6 +488,11 @@ router.get("/:id/letters/preview", authorize("employees:write"), async (req: Aut
     res.status(400).json({ message: "This member has no exit on record. Offboard them first." });
     return;
   }
+  // Someone who absconded did not serve out an exit, so there is nothing to certify.
+  if (employee.exitReason === "Absconded") {
+    res.status(400).json({ message: "No relieving or experience letter is issued for an absconded member." });
+    return;
+  }
 
   const pdf = await generateLetterPdf(type, employee);
   res.setHeader("Content-Type", "application/pdf");
@@ -507,6 +512,11 @@ router.post("/:id/letters", authorize("employees:write"), async (req: AuthReques
   }
   if (!employee.exitDate) {
     res.status(400).json({ message: "This member has no exit on record. Offboard them first." });
+    return;
+  }
+  // Someone who absconded did not serve out an exit, so there is nothing to certify.
+  if (employee.exitReason === "Absconded") {
+    res.status(400).json({ message: "No relieving or experience letter is issued for an absconded member." });
     return;
   }
 
