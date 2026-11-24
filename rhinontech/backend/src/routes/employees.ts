@@ -114,11 +114,27 @@ function employeePayload(body: Record<string, any>) {
 }
 
 router.post("/", authorize("employees:write"), async (req: AuthRequest, res: Response) => {
-  const { fullName, personalEmail, roleId, department, joiningDate, emailPrefix } = req.body;
+  const { fullName, personalEmail, roleId } = req.body;
+  // A quick invite sends only name, email and role; the HR fields default and can
+  // be filled in later. The full Add-member form still sends all of them.
+  const department: string = (typeof req.body.department === "string" && req.body.department.trim()) || "General";
+  const joiningDate = req.body.joiningDate || new Date().toISOString().slice(0, 10);
+  let emailPrefix: string = typeof req.body.emailPrefix === "string" ? req.body.emailPrefix.trim() : "";
 
-  if (!fullName || !personalEmail || !roleId || !department || !joiningDate || !emailPrefix) {
-    res.status(400).json({ message: "All fields are required" });
+  if (!fullName || !personalEmail || !roleId) {
+    res.status(400).json({ message: "Name, email and role are required" });
     return;
+  }
+  if (!emailPrefix) {
+    // firstname, else firstname.lastname, else firstname2, 3… — the first free one.
+    const parts = String(fullName).toLowerCase().normalize("NFKD").replace(/[^a-z\s]/g, "").trim().split(/\s+/).filter(Boolean);
+    const first = parts[0] || String(personalEmail).split("@")[0].toLowerCase().replace(/[^a-z0-9._-]/g, "") || "member";
+    const candidates = [first, ...(parts[1] ? [`${first}.${parts[parts.length - 1]}`] : []), ...Array.from({ length: 20 }, (_, i) => `${first}${i + 2}`)];
+    for (const c of candidates) {
+      const taken = (await User.findOne({ where: { companyEmail: `${c}@${req.user!.emailDomain}` } })) || (await MailboxAddress.findOne({ where: { localPart: c } }));
+      if (!taken) { emailPrefix = c; break; }
+    }
+    if (!emailPrefix) { res.status(409).json({ message: "Could not pick a free email address. Choose one in the full form." }); return; }
   }
 
   // Validate emailPrefix format

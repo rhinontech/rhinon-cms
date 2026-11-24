@@ -15,6 +15,7 @@ import { NewTemplateDialog } from "@/components/Admin/People/NewTemplateDialog";
 import type { LetterBlock } from "@/types/letterBlocks";
 import { useOrganization } from "@/lib/useOrganization";
 import { GitHubAccessPanel } from "./GitHubAccessPanel";
+import { InviteDialog } from "./InviteDialog";
 
 import { NativeSelect } from "@/components/ui/native-select";
 import { confirmDialog, alertDialog } from "@/components/ui/dialogs";
@@ -531,6 +532,7 @@ export function PeopleDirectory() {
   const [offerTemplateManuallySet, setOfferTemplateManuallySet] = useState(false);
   const [showNewTemplateDialog, setShowNewTemplateDialog] = useState(false);
   const [roles, setRoles] = useState<Role[]>([]);
+  const [inviteOpen, setInviteOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
@@ -672,7 +674,9 @@ export function PeopleDirectory() {
 
   // Home's "Invite teammate" lands here with ?new=1 and opens the form straight away.
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("new") === "1") openCreate();
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("new") === "1") openCreate();
+    if (params.get("invite") === "1") setInviteOpen(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1104,6 +1108,16 @@ export function PeopleDirectory() {
                 className="w-full pl-8 sm:pl-9 pr-3 py-1.5 sm:py-2 text-xs border border-border rounded-lg focus:outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60 bg-card"
               />
             </div>
+            {canManage && (
+              <button
+                onClick={() => setInviteOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 sm:px-3 py-1.5 text-xs font-medium text-foreground/90 hover:bg-muted whitespace-nowrap shrink-0"
+                title="Invite with just a name, email and role"
+              >
+                <TbMailForward size={14} />
+                <span className="hidden @2xl:inline">Invite</span>
+              </button>
+            )}
             {canManage && (
               <button
                 onClick={openCreate}
@@ -1763,6 +1777,7 @@ export function PeopleDirectory() {
           onSend={sendLetter}
         />
       )}
+      <InviteDialog open={inviteOpen} onClose={() => setInviteOpen(false)} roles={roles} onInvited={() => { void fetchEmployees(); }} />
     </div>
   );
 }

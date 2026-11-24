@@ -177,7 +177,7 @@ function HomeContent() {
     lead: has("crm:write") ? { label: "Add a lead", href: `${hrefFor("crm")}?new=1`, icon: TbTargetArrow } : null,
     campaign: has("outreach:write") ? { label: "New campaign", href: hrefFor("outreach", "campaigns"), icon: TbSpeakerphone } : null,
     project: has("work:write") ? { label: "New project", href: `/${role}/work/projects?new=1`, icon: TbBriefcase } : null,
-    invite: has("employees:write") ? { label: "Invite a teammate", href: `/${role}/employees?new=1`, icon: TbUserPlus } : null,
+    invite: has("employees:write") ? { label: "Invite a teammate", href: `/${role}/employees?invite=1`, icon: TbUserPlus } : null,
     leave: has("leave:read") && effectiveRoleSlug !== "superadmin" ? { label: "Request leave", href: `/${role}/leave/requests`, icon: TbCalendarOff } : null,
     tasks: has("work:read") ? { label: "My tasks", href: myTasks, icon: TbCheckbox } : null,
   };
@@ -195,7 +195,7 @@ function HomeContent() {
   const stepHref = (step: SetupStep): string | null => {
     switch (step) {
       case "verifyEmail": return null;
-      case "inviteTeam": return `/${role}/employees?new=1`;
+      case "inviteTeam": return `/${role}/employees?invite=1`;
       case "importContacts": return hrefFor("crm");
       case "firstCampaign": return hrefFor("outreach", "campaigns");
       case "firstProject": return `/${role}/work/projects?new=1`;

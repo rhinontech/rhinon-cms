@@ -80,8 +80,18 @@ export function hashApiKey(key: string): string {
   return crypto.createHash("sha256").update(key).digest("hex");
 }
 
-/** The four roles every org starts with, and what each may reach. */
+/** The roles every org starts with (four core roles plus ready-made templates), and what each may reach. */
+/** What everyone on the team can do: see Home, their own HR records, chat, docs and work. */
+const EVERYONE = [
+  "dashboard:read", "people:read", "payslips:read", "leave:read", "attendance:read",
+  "performance:read", "documents:read", "work:read", "meetings:read", "chat:read", "chat:write", "pages:read",
+];
+const SALES_REP = [...EVERYONE, "crm:read", "crm:write", "outreach:read", "outreach:write", "inbox:read", "inbox:write", "chatbot:read"];
+const PROJECT_MANAGER = [...EVERYONE, "work:write", "meetings:write", "pages:write", "crm:read", "inbox:read", "inbox:write"];
+
 function roleDefinitions(permissionNames: string[]) {
+  // A template never grants more than this workspace is entitled to (no platform modules for tenants).
+  const only = (names: string[]) => names.filter((n) => permissionNames.includes(n));
   return [
     { slug: "superadmin", name: "Super Admin", grants: permissionNames },
     {
@@ -103,6 +113,13 @@ function roleDefinitions(permissionNames: string[]) {
     // limits are GUEST_ALLOWED_MOUNTS, the ProjectMember allowlist and
     // Task.guestVisible; hasPermission() hard-returns false for guests.
     { slug: "collaborator", name: "Collaborator", grants: ["work:read"] },
+    // Ready-made roles, so an owner can invite a salesperson or a project lead
+    // without building a role from 44 checkboxes. Grants apply only when the
+    // role is first created; after that the owner edits them in Settings → Roles.
+    { slug: "admin", name: "Admin", grants: permissionNames },
+    { slug: "sales-rep", name: "Sales rep", grants: only(SALES_REP) },
+    { slug: "sales-manager", name: "Sales manager", grants: only([...SALES_REP, "chatbot:write", "analytics:read", "meetings:write", "pages:write"]) },
+    { slug: "project-manager", name: "Project manager", grants: only(PROJECT_MANAGER) },
   ];
 }
 
