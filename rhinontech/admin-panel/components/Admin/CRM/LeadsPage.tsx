@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "sonner";
 import { usePermissions } from "@/context/PermissionsContext";
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -202,14 +203,22 @@ export function LeadsPage() {
   };
 
   /** Inline field edit from the row — patches locally, then persists. */
-  const patchLead = async (id: string, patch: Partial<Lead>) => {
+  const patchLead = async (id: string, patch: Partial<Lead>, isUndo = false) => {
     const snapshot = leads;
+    const before = leads.find((l) => l.id === id) ?? (selected?.id === id ? selected : undefined);
     setLeads((cur) => cur.map((l) => (l.id === id ? { ...l, ...patch } : l)));
     if (selected?.id === id) setSelected((s) => (s ? { ...s, ...patch } : s));
     try {
       const updated = await apiFetch<Lead>(`/leads/${id}`, { method: "PUT", body: JSON.stringify(patch) });
       setLeads((cur) => cur.map((l) => (l.id === id ? { ...l, ...updated } : l)));
       if (selected?.id === id) setSelected((s) => (s ? { ...s, ...updated } : s));
+      // Reversible change: say what happened and offer Undo instead of asking first (D10).
+      if (!isUndo && patch.lifecycleStage && before && before.lifecycleStage !== patch.lifecycleStage) {
+        const previous = before.lifecycleStage;
+        toast(`${before.name} moved to ${patch.lifecycleStage}`, {
+          action: { label: "Undo", onClick: () => void patchLead(id, { lifecycleStage: previous }, true) },
+        });
+      }
     } catch (err) {
       setLeads(snapshot);
       setError(err instanceof Error ? err.message : "Update failed");
