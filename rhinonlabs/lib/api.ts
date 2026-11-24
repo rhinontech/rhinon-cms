@@ -74,21 +74,52 @@ async function getJSON<T>(path: string): Promise<T | null> {
 }
 
 /**
+ * Hardened blog unwrap:
  * Some older blog rows have contentBlocks stored double-encoded (a JSON string
- * inside the JSONB column). Unwrap it so the renderer always gets an array.
+ * inside the JSONB column), or an array containing stringified block lists
+ * followed by appended link blocks.
+ * Recursively parse string items until reaching pure block objects, ensuring
+ * content is never dropped even if data has nested JSON encoding.
  */
 function normalizeBlog<T extends { contentBlocks?: unknown }>(blog: T | null): T | null {
   if (!blog) return blog;
-  if (typeof blog.contentBlocks === "string") {
-    try {
-      const parsed = JSON.parse(blog.contentBlocks);
-      blog.contentBlocks = Array.isArray(parsed) ? parsed : undefined;
-    } catch {
-      blog.contentBlocks = undefined;
+
+  const unwrapBlocks = (items: unknown): BlogBlock[] => {
+    const result: BlogBlock[] = [];
+
+    const processItem = (item: unknown) => {
+      let val = item;
+      while (typeof val === "string") {
+        const trimmed = val.trim();
+        try {
+          const parsed = JSON.parse(trimmed);
+          val = parsed;
+        } catch {
+          break;
+        }
+      }
+
+      if (Array.isArray(val)) {
+        val.forEach(processItem);
+      } else if (val && typeof val === "object") {
+        result.push(val as BlogBlock);
+      }
+    };
+
+    if (Array.isArray(items)) {
+      items.forEach(processItem);
+    } else {
+      processItem(items);
     }
-  } else if (blog.contentBlocks != null && !Array.isArray(blog.contentBlocks)) {
-    blog.contentBlocks = undefined;
+
+    return result;
+  };
+
+  if (blog.contentBlocks != null) {
+    const flattened = unwrapBlocks(blog.contentBlocks);
+    blog.contentBlocks = flattened.length > 0 ? (flattened as any) : undefined;
   }
+
   return blog;
 }
 

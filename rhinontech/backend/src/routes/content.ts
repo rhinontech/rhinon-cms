@@ -17,6 +17,29 @@ function parseDomain(value: unknown): BlogDomain {
 }
 
 /**
+ * Strict write validation (Audit C-02 Fix #3: "Reject non-object blocks in the content API"):
+ * Enforces that contentBlocks, if provided, must be an array of objects.
+ * Rejects non-array values and any non-object items (strings, numbers, nested arrays).
+ */
+function validateContentBlocks(input: unknown): any[] | null {
+  if (input === undefined || input === null) {
+    return null;
+  }
+
+  if (!Array.isArray(input)) {
+    throw new Error("contentBlocks must be an array");
+  }
+
+  for (const item of input) {
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      throw new Error("Every content block must be an object");
+    }
+  }
+
+  return input as any[];
+}
+
+/**
  * Resolves which of the workspace's sites a request is about.
  *
  * Accepts `?siteId=` (what the admin UI sends) or the legacy `?domain=` slug,
@@ -344,6 +367,9 @@ router.get("/blogs/:id", authorize("content:read"), async (req: AuthRequest, res
 router.post("/blogs", authorize("content:write"), async (req: AuthRequest, res: Response) => {
   try {
     const b = req.body || {};
+    if (b.contentBlocks !== undefined) {
+      b.contentBlocks = validateContentBlocks(b.contentBlocks);
+    }
     const hasBlocks = Array.isArray(b.contentBlocks) && b.contentBlocks.length > 0;
     if (!b.title || !b.excerpt || (!b.content && !hasBlocks)) {
       res.status(400).json({ message: "title, excerpt and content (or content blocks) are required" });
@@ -379,6 +405,9 @@ router.put("/blogs/:id", authorize("content:write"), async (req: AuthRequest, re
     // Site/domain are set at creation time and never re-assigned from the editor.
     delete b.domain;
     delete b.siteId;
+    if (b.contentBlocks !== undefined) {
+      b.contentBlocks = validateContentBlocks(b.contentBlocks);
+    }
     // Re-slug only when an explicit slug/title change requires it
     if (b.slug && b.slug !== blog.slug) {
       b.slug = await uniqueSlug(Blog, b.slug, blog.id);
@@ -430,6 +459,9 @@ router.post("/case-studies", authorize("content:write"), async (req: AuthRequest
       res.status(400).json({ message: "title and description are required" });
       return;
     }
+    if (b.contentBlocks !== undefined) {
+      b.contentBlocks = validateContentBlocks(b.contentBlocks);
+    }
     const slug = await uniqueSlug(CaseStudy, b.slug || b.title);
     const item = await CaseStudy.create({
       ...b,
@@ -448,6 +480,9 @@ router.put("/case-studies/:id", authorize("content:write"), async (req: AuthRequ
     if (!item) { res.status(404).json({ message: "Case study not found" }); return; }
     const b = { ...req.body };
     delete b.id;
+    if (b.contentBlocks !== undefined) {
+      b.contentBlocks = validateContentBlocks(b.contentBlocks);
+    }
     delete b.createdById;
     if (b.slug && b.slug !== item.slug) {
       b.slug = await uniqueSlug(CaseStudy, b.slug, item.id);
