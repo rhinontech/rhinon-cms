@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Date | 24 November 2026 |
+| Date | 24 November 2026. Updated 25 November 2026 with user feedback on the experience, now the top priority |
 | Scope | The admin panel (`rhinontech/admin-panel`) as sold to customer workspaces, plus the backend, email, legal and marketing surfaces it depends on |
 | Code reviewed | `main` at `4eb547e` |
 | Live checks | rhinontech.com, www.rhinontech.in, api.rhinontech.in, public DNS, AWS SES (read-only), GitHub Actions. All on 24 Nov 2026 |
@@ -14,11 +14,33 @@ Terms used: **workspace** = one customer organisation (tenant). **Platform works
 
 ## 1. Verdict
 
-**Not ready for open self-serve signups yet.** The gap is not features. In sales and delivery, the product is broader and deeper than most early-stage suites. The blockers are in the layer around the features: email that customer workspaces can neither receive nor send safely, public promises the product does not keep, legal links that point nowhere, and a CI pipeline that stopped checking tenant isolation a month ago.
+**Not ready for open self-serve signups yet.** The gap is not features. In sales and delivery, the product is broader and deeper than most early-stage suites. Two things hold it back:
+
+- **The experience of finding your way around it.** This is the top priority, from user feedback.
+- **The platform layer around the features:** email that customer workspaces can neither receive nor send safely, public promises the product does not keep, legal links that point nowhere, and a CI pipeline that stopped checking tenant isolation a month ago.
 
 Signup is already open at rhinontech.in, and rhinontech.com says "Get started free". These are live risks, not future ones.
 
-### Stop-ship issues (Tier 0)
+### Top priority: landing and navigation (user feedback)
+
+Feedback received on 25 November 2026: *"The product is nice, but the user experience is very bad. People should land on the dashboard and know exactly what to do, without being confused about what is where."*
+
+It is one person's feedback, but the code backs it up ([Priority 1](#priority-1-landing-and-navigation-user-feedback)):
+
+- **The landing page leads nowhere.** Everyone lands on a dashboard that shows HR figures. It has no pending items, no next steps and no links into modules.
+- **Labels disappear.** The sidebar shows labels only on the dashboard. Inside any module it shrinks to a rail of unlabelled coloured icons.
+- **The menu is a flat, confusing list.** It has 15–17 top-level items, and the names differ from the website's and clash with each other: Team vs Teams, two kinds of Campaigns, Leads vs Contacts, Pipeline vs Deals.
+- **Sub-menus run deep.** One has up to 28 items, and approvals are split across four places.
+- **No search, and a meaningless switcher.** A brand switcher sits in the logo spot, which means nothing to a customer with one brand.
+
+**The plan:**
+
+- a new Home that lists what needs each person's attention, with one click to act;
+- a sidebar grouped Sell / Deliver / People, using the website's names, with labels always visible;
+- one name per thing;
+- ⌘K search.
+
+### Stop-ship safety issues (Tier 0): fix alongside the experience work
 
 1. **The pricing page and the Terms promise "no seats to count" and "free for your whole team". The product caps Free at 5 people, 50 emails and 20 AI drafts a day.** ([G0.1](#g01-public-promises-contradict-the-product-and-the-terms))
 2. **Customer mailboxes can't receive email.** There is no MX record for `*.rhinontech.in`, and the SES receipt rule only accepts the apex domain. Replies to a customer's outreach, mail to their support@, and ticket replies all bounce. ([G0.2](#g02-customer-mailboxes-cant-receive-email))
@@ -38,6 +60,9 @@ HR, payroll, chat and pages stay in the product as tools for the customer's own 
 
 ### This week
 
+- [ ] Run a 5-person first-click test on the current app, to get a baseline before changing anything ([validation](#how-to-validate-it)).
+- [ ] Ship the navigation quick wins: a sidebar grouped Sell / Deliver / People, the website's names, labels always visible, and no brand switcher for one-brand workspaces (U2, U3, U5).
+- [ ] Agree the new Home layout and start the `/home/summary` endpoint behind it (U1).
 - [ ] Decide whether to gate signup (invite code or waitlist) until Tier 0 is closed. **Recommended:** gate it, or at minimum turn off cold outreach for workspaces created from now on.
 - [ ] Make the pricing page, homepage description and Terms §4 state the real Free limits (G0.1).
 - [ ] Add the `*.rhinontech.in` MX record and a `.rhinontech.in` receipt-rule recipient, then test inbound mail to a fresh workspace (G0.2).
@@ -92,7 +117,8 @@ Ratings are for an external customer, not for Rhinon's own use.
 | Performance | Usable | Cycles, goals, reviews, team view | Not deeply reviewed |
 | Payroll | Thin against the "built for India" claim | Salary structure, runs, payslips, reimbursements, settlements | No statutory compliance (G3.1) |
 | Inbox | Thin against the "shared inbox" claim | Per-person mailbox, shared addresses owned by one person, compose and reply, internal notes, bounce report | No assignment; customer inbound mail broken (G0.2, G2.3) |
-| Dashboard | Thin | Greeting, headcount, payroll total, attendance, birthdays, recent hires, pending tasks | HR-only; no onboarding (G1.2) |
+| Dashboard | Thin | Greeting, headcount, payroll total, attendance, birthdays, recent hires, pending tasks | HR-only; no next steps or links; no onboarding (U1) |
+| Navigation: sidebar, menus, search | Thin | 15–17 sidebar items, a sub-menu per module, breadcrumbs, notifications bell | Flat ungrouped list; labels only on the dashboard; names differ from the website and clash; no search (U2–U5) |
 | Settings | Usable | Roles matrix, plan and usage, email domain, activity log, data and privacy, 2FA, letter templates | No member invites, no ownership transfer; the Developers page does nothing for customers (Q5) |
 | Workspaces console (platform) | Thin | List, plan, trial, people, flags; change plan or status; purge | No activity, health or abuse data (G2.9) |
 
@@ -161,6 +187,7 @@ The last two rows are the product's honest strengths. The first six are where a 
 **What changes.**
 
 - Lead the site with Sell and Deliver. Move People under "Also included for your team".
+- Give the app the same Sell / Deliver / People structure and the same product names as the website, so what people read before signing up is what they find after (U2).
 - Stop calling payroll "built for India" until it handles statutory filings. Call it "salary runs, payslips and reimbursements".
 - No new modules until Tier 0 and Tier 1 are done.
 
@@ -185,12 +212,219 @@ The last two rows are the product's honest strengths. The first six are where a 
 
 | Tier | Meaning |
 |---|---|
-| 0 | Stop-ship. Fix before sending more people to signup |
+| P1 | Landing and navigation. User feedback, top priority; work starts in week 1 |
+| 0 | Stop-ship safety issues. Mostly configuration; fix alongside P1, before sending more people to signup |
 | 1 | Launch-critical. Activation and revenue, first 30 days |
 | 2 | Within 90 days. Trust, retention, depth |
 | 3 | Strategic bets. Build only with evidence |
 
 **Effort** (one engineer who knows the codebase): **S** ≤ 2 days · **M** 3–10 days · **L** 2–6 weeks.
+
+### Priority 1: landing and navigation (user feedback)
+
+> "The product is nice, but the user experience is very bad. People should land on the dashboard and know exactly what to do, without being confused about what is where." (Feedback received 25 November 2026.)
+
+That sentence describes two problems:
+
+- **No direct path.** The landing page doesn't tell people what to do next.
+- **No map.** The navigation doesn't tell people where things are.
+
+#### What the code shows
+
+| # | Finding | Evidence |
+|---|---|---|
+| F1 | Everyone lands on `/{role}/dashboard`, which is built for HR | [Login.tsx#L80](../rhinontech/admin-panel/components/Auth/Login/Login.tsx#L80), [app/page.tsx#L18](../rhinontech/admin-panel/app/page.tsx#L18). The dashboard shows headcount, "Total invested", clock-in, birthdays, anniversaries, recent hires and pending tasks. It has no pending approvals, replies or chats, and no links into modules. It also has a hardcoded shift and a dead button (Q1, Q2) |
+| F2 | Labels disappear inside modules | The sidebar starts expanded only on the dashboard route ([DashboardProvider.tsx#L25](../rhinontech/admin-panel/components/Common/DashboardProvider/DashboardProvider.tsx#L25)). Everywhere else it is a rail of icons unless pinned or hovered ([Sidebar.tsx#L36](../rhinontech/admin-panel/components/Admin/Common/Sidebar/Sidebar.tsx#L36)) |
+| F3 | One flat list that mixes jobs | 15 items for a customer owner and 17 for the platform, in this order: Dashboard, Inbox, Chat, Pages, CRM, Outreach, Chatbot, Automation, Work, Team, Payroll, (Content, Startup Ideas), Meetings, Analytics, (Workspaces), Settings ([Sidebar.tsx#L66-L86](../rhinontech/admin-panel/components/Admin/Common/Sidebar/Sidebar.tsx#L66-L86)). Meetings is 8 places away from Chat, and Pages sits between Chat and CRM |
+| F4 | The app's names aren't the website's | The site groups products as Sell / Deliver / People and names them "HR & People", "AI Chatbot", "Team Chat & Meetings" and "Attendance & Leave". The app calls these "Team", "Chatbot", and "Chat" plus a separate "Meetings", and hides Attendance, Leave and Performance inside "Team" ([navConfig.ts](../rhinontech/admin-panel/components/Admin/Common/navConfig.ts)) |
+| F5 | Names that clash or duplicate | "Team" (HR) vs Work → "Teams" vs Performance → "Team" vs team "Chat". "Campaigns" in both Outreach (email) and Chatbot (pop-ups). The same people are "Leads" in CRM and "Contacts" in Outreach, where "Contacts" are actually lists. The same deals appear as both "Pipeline" and "Deals" in the CRM menu. Work has "Projects" (opens the last project you viewed) and "All projects" (the list, at `/work/clients`). Conversations live in four places: Inbox, Chat, Chatbot → Live chats and Chatbot → Tickets. "Automation" is a separate module but holds outreach sequences |
+| F6 | Deep, uneven sub-menus | Team has up to 28 items in nested groups ([TeamSubNav.tsx](../rhinontech/admin-panel/components/Admin/Common/TeamSubNav/TeamSubNav.tsx)). Settings has 14, Work 9, Chatbot 9 and Payroll 7. "Email addresses" (shared mailboxes) sits under Team, not Inbox or Settings |
+| F7 | Approvals are on four screens | Attendance → Approvals, Leave → Approvals, Payroll → Reimbursements and Documents → Requests. A manager visits four screens to clear their queue, and nothing tells them the queue exists |
+| F8 | A switcher in the logo spot | The brand switcher always renders top-left ([BrandSwitcher.tsx](../rhinontech/admin-panel/components/Admin/Common/Sites/BrandSwitcher.tsx)), even for a customer with one brand. In brand-scoped modules it silently changes the data. CRM has ignored it since 16 November but keeps the brand in its URL |
+| F9 | No way to search or jump | No global search or command palette. `cmdk` is installed but used only in a combo box. No help entry. Breadcrumbs show only the module name ([SiteHeader.tsx#L35-L53](../rhinontech/admin-panel/components/Admin/Common/SiteHeader/SiteHeader.tsx#L35-L53)) |
+
+#### The target experience
+
+Open the app, see what needs you, and get to it in one click. If you're looking for something else, it's under Sell, Deliver or People with the same name as on the website, or you can type it into search.
+
+#### U1. A new Home with a direct path (replaces the dashboard)
+
+From top to bottom:
+
+1. **Greeting, search and quick actions.** A search box ("Search or jump to… ⌘K", see U4) and up to four actions that depend on the person's role: Add lead, New project, Invite teammate, Request leave or Clock in.
+2. **Setup checklist.** Shown to new workspaces until it's done, reusing the Chatbot checklist: verify email, invite team, import contacts or connect your website, send a first campaign or create a first project, install the chatbot. The first time the owner arrives, ask one question, "What do you want to do first? Win clients / Deliver projects / Run my team", and order the checklist and quick actions by the answer.
+3. **Needs your attention.** One prioritised list across modules for this person. Each row shows a count and opens the exact screen:
+   - approvals waiting: leave, attendance corrections, reimbursements, document requests;
+   - replies waiting in Inbox;
+   - website visitors waiting for a person, and tickets assigned to you;
+   - tasks due today or overdue;
+   - outreach drafts waiting for approval;
+   - deals past their close date or idle for 14 days;
+   - documents to sign.
+
+   Only rows the person is allowed to see and that aren't zero appear. When there are none: "You're all caught up."
+4. **Today.** Tasks due, meetings, clock-in (only if the workspace uses attendance, and using the person's real schedule) and leave balance.
+5. **Your workspace.** Every module the person can use, grouped Sell / Deliver / People. Each tile has the website's name, a one-line description and one live number, for example "CRM: 18 open deals". This answers "what is where" on one screen, and returning users can collapse it.
+6. **Team pulse** (owners and HR only). Who is in or out today. Birthdays and anniversaries move here from the top.
+
+Remove from Home:
+
+- "Total invested", which moves to Payroll → Overview;
+- the hardcoded shift;
+- the dead "Add regularisation" button.
+
+**Backend.** One endpoint, `GET /home/summary`, returns permission-filtered counts and the top few items for each attention row. It reads tables that already exist: leave and attendance requests, reimbursements, document requests, tasks, unread inbox mail, chatbot hand-offs and tickets, deals, and outreach drafts. One request instead of ten matters, because production runs a single Node process.
+
+Wireframe (owner, desktop):
+
+```text
+┌──────────────────────────────────────────────────────────────────────┐
+│ Good morning, Aman            [ Search or jump to…            ⌘K ]   │
+│ [+ Add lead] [+ New project] [Invite teammate] [Request leave]       │
+├──────────────────────────────────────────────────────────────────────┤
+│ Get set up · 2 of 5 done   ✓ Verify email   ✓ Invite team            │
+│                            ○ Import contacts ○ First campaign ○ Bot  │
+├──────────────────────────────────────────────────────────────────────┤
+│ Needs your attention                                                 │
+│  3  leave requests to approve                          Review →      │
+│  5  replies waiting in Inbox                           Open →        │
+│  1  website visitor waiting for a person               Answer →      │
+│  4  tasks due today, 2 overdue                         See tasks →   │
+│  2  deals past their close date                        Update →      │
+├───────────────────────────────┬──────────────────────────────────────┤
+│ Today                         │ Your workspace                       │
+│  10:30 Call with Acme         │  SELL     CRM · Outreach · Inbox ·   │
+│  Clocked in 9:12 · 3h 20m     │           AI Chatbot · Analytics     │
+│  Leave balance: 8 days        │  DELIVER  Work · Team Chat · Pages   │
+│                               │  PEOPLE   HR & People · Attendance & │
+│                               │           Leave · Payroll · Perf.    │
+├───────────────────────────────┴──────────────────────────────────────┤
+│ Team pulse: 12 in · 2 on leave · 1 birthday today                    │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+**Done when** a new owner, an HR manager and an employee each see a different Home whose first item is something they need to do, every row opens the exact screen, and the HR widgets live on HR pages.
+
+**Effort** M (1–1.5 weeks). This replaces G1.2.
+
+#### U2. Navigation grouped like the website, with labels always visible
+
+Proposed sidebar for a customer owner. Routes stay the same; only grouping, order and labels change.
+
+```text
+Home
+Search                ⌘K
+
+SELL
+  CRM
+  Outreach            Campaigns · Sequences · Lists · Templates · LinkedIn
+  Inbox
+  AI Chatbot
+  Analytics
+
+DELIVER
+  Work
+  Team Chat           includes Meetings
+  Pages
+
+PEOPLE
+  HR & People         Directory · Hiring · Documents
+  Attendance & Leave
+  Payroll
+  Performance
+
+Settings
+Help
+```
+
+The platform owner also gets a "Rhinon platform" section: Workspaces, Content and Startup Ideas.
+
+Rules:
+
+- **Names match the website exactly,** so the vocabulary is the same from ad to app.
+- **Section headers always show.** On desktop the sidebar opens with labels by default. Collapsing it is the person's choice, and local storage already remembers that choice.
+- **People see only the sections they have access to,** and empty sections are hidden. An employee sees roughly Home, Work, Team Chat, Pages, HR & People, Attendance & Leave, Payroll and Performance.
+
+**Done when** every top-level item sits in a section, every label matches the website, and labels are visible on every page by default.
+
+**Effort** S–M (2–4 days). Navigation config and permission mapping only.
+
+#### U3. One name per thing
+
+| Today | Change |
+|---|---|
+| CRM "Pipeline" and "Deals" | One "Deals" with a Board / List toggle |
+| Outreach "Contacts" (which are lists) | "Lists" |
+| "Automation" as a separate module | "Sequences" inside Outreach |
+| Work "Projects" and "All projects" | One "Projects" list with Mine / All that remembers the last project. Redirect the hidden duplicates `/work/clients` and `/work/attendance` |
+| Chatbot "Campaigns" | "Pop-ups" |
+| "Team" (the HR module) | "HR & People", which also ends the clash with Work → Teams |
+| "Email addresses" under Team | Move to Settings, next to Email domain |
+| Approvals on four screens | One "Approvals" view, also fed into Home. The module pages stay |
+
+**Done when** no two menu items open the same list, and no word means two different things.
+
+**Effort** S–M. Routes stay, and redirects keep old links working.
+
+#### U4. Search and jump (⌘K)
+
+A search box in the header, and ⌘K anywhere, to:
+
+- jump to any page ("payroll run", "leave policies");
+- find records: leads, deals, accounts, projects, tasks, people, pages, inbox threads;
+- run actions: "New lead", "Request leave", "Invite teammate".
+
+`cmdk` is already installed. The backend needs `GET /search?q=`, scoped to the workspace, filtered by permission, returning the top five results per type.
+
+**Effort** M.
+
+#### U5. Show the brand switcher only when it matters
+
+- Hide it for one-brand workspaces, which is every customer workspace today, and show the product logo and workspace name in that spot.
+- With two or more brands, move it into the header of brand-scoped modules, with a visible chip such as "Showing: Rhinon Labs".
+- Drop the brand from CRM URLs, since CRM is workspace-wide.
+
+**Effort** S.
+
+#### U6. Wayfinding polish
+
+- Breadcrumbs show module › page, not just the module.
+- Every module opens on an overview with next actions. Chatbot, Outreach and Work already do; CRM opens on a raw table.
+- Every empty state has one sentence and one primary button.
+- A "?" Help menu on every page (ties to G1.4).
+
+**Effort** S each.
+
+#### How to validate it
+
+- **Before building:** run a 5-person first-click test on the current app, with eight tasks:
+  1. add a lead;
+  2. approve a leave request;
+  3. find replies to a campaign;
+  4. answer a waiting website chat;
+  5. turn a won deal into a project;
+  6. download your payslip;
+  7. invite a teammate;
+  8. change your plan.
+
+  Record where each first click goes and how long each task takes.
+- **After U1–U3:** rerun the same test. Targets: at least 80% first-click success, and a median under 15 minutes from signup to first key action.
+- **In the product,** once the G1.5 events exist, track:
+  - Home attention-row click-through;
+  - ⌘K use;
+  - "hunting": three or more sidebar clicks in 20 seconds with no action taken.
+
+#### Sequencing
+
+| Order | Items | When |
+|---|---|---|
+| 1 | Baseline first-click test | Days 1–2 |
+| 2 | U2, U3, U5 (mostly configuration) | Week 1 |
+| 3 | U1: new Home and `/home/summary` | Weeks 1–2 |
+| 4 | U4: search | Week 3 |
+| 5 | U6, then re-test | Week 4 |
+
+Tier 0's safety fixes run alongside. G0.1, G0.2, G0.4 and G0.5 are each a day of work or less, and they still block opening signup.
 
 ### Tier 0: stop-ship
 
@@ -372,33 +606,9 @@ The Outreach → Inbox → CRM loop at the centre of the recommended direction i
 
 **Effort** M.
 
-#### G1.2 No first-run experience; the dashboard assumes you bought HR
+#### G1.2 First-run experience: moved to Priority 1
 
-**Evidence**
-
-- Signup drops the new owner on `/{role}/dashboard` ([Signup.tsx#L127](../rhinontech/admin-panel/components/Auth/Signup/Signup.tsx#L127)).
-- For an owner, the dashboard shows:
-  - total employees;
-  - "Total invested" (payroll);
-  - team attendance;
-  - birthdays and anniversaries;
-  - recent hires and pending tasks.
-
-  The CRM card appears only once there is data ([page.tsx](../rhinontech/admin-panel/app/[role]/dashboard/page.tsx)).
-- An owner sees 15 modules on day one.
-- The only setup checklist in the product is in Chatbot → Overview.
-
-**Why it matters.** A founder who came for CRM and outreach sees birthdays and "₹0 invested". Nothing points them to a first useful result: a reply in the Inbox, a deal in the pipeline, or a project shared with a client.
-
-**Fix**
-
-1. Ask one onboarding question: "What do you want to do first? Win clients / Deliver projects / Run my team."
-2. Use the answer to set the dashboard and a checklist built on the Chatbot component: verify email, invite team, import contacts or connect a site, send a first campaign or create a first project, install the chatbot.
-3. Show dashboard cards only for modules the role uses.
-
-**Done when** a new "Win clients" workspace sees a sales checklist and no HR cards, and the time from signup to the first key action is measured (G1.5).
-
-**Effort** M.
+Merged into [U1](#u1-a-new-home-with-a-direct-path-replaces-the-dashboard), which absorbs the onboarding question, the setup checklist and the module-aware dashboard. Signup still lands on `/{role}/dashboard` ([Signup.tsx#L127](../rhinontech/admin-panel/components/Auth/Signup/Signup.tsx#L127)); after U1 that route is the new Home.
 
 #### G1.3 Customers can't pay
 
@@ -698,21 +908,28 @@ Each is large, each has strong specialists, and none moves the core loop of the 
 
 | Phase | When | Items | Exit criteria |
 |---|---|---|---|
-| Stabilise | Week 1 | G0.1 (copy), G0.2, G0.4 (configuration), G0.5, Q1–Q9, signup-gating decision | CI green and protected; inbound mail works; legal links live; copy matches limits |
+| **Fix the experience (top priority)** | Weeks 1–4 | Baseline test; U2, U3, U5 (week 1); U1 (weeks 1–2); U4 (week 3); U6 and re-test (week 4) | Grouped sidebar using the website's names; a Home whose first item is the person's own pending work; ⌘K search; at least 80% first-click success on re-test |
+| Stabilise (in parallel) | Week 1 | G0.1 (copy), G0.2, G0.4 (configuration), G0.5, Q1–Q9, signup-gating decision | CI green and protected; inbound mail works; legal links live; copy matches limits |
 | Make sending safe | Weeks 2–3 | G0.3, G1.6 | Bounce and complaint events per workspace; auto-pause tested; system mail separated |
-| Activate | Weeks 2–5 | G1.1, G1.2, G1.4, G1.5 | Invite flow and onboarding live; activation funnel visible |
+| Activate | Weeks 3–5 | G1.1, G1.4, G1.5 (G1.2 is now part of U1) | Invite flow live; help in the app; activation funnel visible |
 | Monetise | Weeks 4–7 | G1.3, after pricing interviews | Self-serve upgrade with a GST invoice |
 | Earn trust | Weeks 6–12 | G2.1, G2.2, G2.8, G2.9, G2.10 | A security questionnaire can be answered; restore drill passed |
 | Deepen the core | Weeks 8–14 | G2.3–G2.7, G3.4 | Chatbot ROI view; imports; API and webhooks |
 
 The week ranges assume the current three engineers spend about half their time on this list. They are for sequencing, not commitments.
 
+One way to split the first month:
+
+- **One engineer** owns the experience track end to end, Home and navigation.
+- **One** takes the day-sized Tier 0 fixes, then G1.1.
+- **One** takes G0.3, then G1.5. Home's attention list and the activation funnel both need those events.
+
 ---
 
 ## 6. Launch plan
 
 1. **Now: invite-only.** Keep signup behind an invite code or a waitlist until Stabilise and Make sending safe are done. If signup must stay open, turn off cold outreach for new workspaces.
-2. **Design partners (weeks 2–6).** Bring in 5–10 companies from the target group, drawn from Rhinon Labs' clients and network. Onboard each on a call and collect feedback weekly. Watch activation events and the questions people ask.
+2. **Design partners (weeks 2–6).** Bring in 5–10 companies from the target group, drawn from Rhinon Labs' clients and network. Onboard each on a call and collect feedback weekly. Watch activation events and the questions people ask. Run the first-click test with them before and after the experience work, since that is the feedback this plan puts first.
 3. **Open signup** once Activate and Monetise are done, with self-serve upgrade live, the help center live, and Free limits stated everywhere.
 4. **Move each step on data.** Advance when at least 40% of design-partner workspaces reach activation (section 7) and there have been no Tier 0 or Tier 1 incidents in the previous two weeks. Both numbers are starting hypotheses; reset them once there's a baseline.
 
@@ -727,6 +944,10 @@ Define these before launch. Set firm targets after two weeks of baseline data.
 | North star | Weekly active workspaces | Workspaces with at least 2 active users and at least 1 core-loop action that week: reply handled, deal moved, project updated, or chatbot lead captured | Baseline first |
 | Activation | 7-day activation rate | Within 7 days: at least 2 users, plus one of: a campaign sent and a reply received; 5 deals created; a project shared in the portal; the chatbot installed and a lead captured | 40% |
 | Time to value | Signup → first key action | Median minutes | Under 15 minutes |
+| Experience | First-click success | Share of first clicks that go to the right place, across the 8 standard tasks in the 5-person test (Priority 1) | At least 80% |
+| Experience | Home attention click-through | Share of Home visits where an attention row is clicked | Baseline first |
+| Experience | Hunting | Sessions with three or more sidebar clicks in 20 seconds and no action taken | Falling week on week |
+| Experience | Search use | Share of weekly active users who use ⌘K | Baseline first |
 | Retention | Week-4 workspace retention | Share of activated workspaces still active weekly in week 4 | Baseline first |
 | Revenue | Free → paid conversion, chatbot attach rate, MRR | — | Baseline first |
 | Guardrail | SES bounce and complaint rates, account-wide | AWS reviews accounts at 5% and 0.1% | Under 2% and under 0.05% |
@@ -750,18 +971,21 @@ None of this can be measured until G1.5 is done.
 | Single-server outage | Medium | High | G2.8 |
 | Google OAuth verification delays mailbox and calendar connect | Medium | Medium | Start verification now (G2.7) |
 | Legal exposure from the mismatch between Terms and product | Medium | Medium | G0.1 and G0.4 this week |
+| Regrouping and renaming disorients people already using the app, starting with Rhinon's own team | Medium | Low | Routes stay the same, old links redirect, and a one-time "What moved" note |
+| The Home attention list adds load to a single-process server | Low | Medium | One aggregate `/home/summary` call with short caching, not one request per row |
 
 ---
 
 ## 9. Decisions needed from leadership
 
-1. Gate signup until Tier 0 is closed? **Recommended:** yes.
-2. Confirm the direction in section 3.4, or choose another option from section 3.3.
-3. Keep the 5-person Free cap? **Recommended:** keep it, and state it.
-4. Payroll: reposition now (**recommended**), or invest in compliance?
-5. Publish chatbot pricing, or keep "Talk to us"?
-6. Which payment gateway?
-7. Who owns help-center content and support replies?
+1. Use the website's Sell / Deliver / People grouping and product names inside the app, and replace the dashboard with the Home in U1? **Recommended:** yes. This also settles the renames in U3.
+2. Gate signup until Tier 0 is closed? **Recommended:** yes.
+3. Confirm the direction in section 3.4, or choose another option from section 3.3.
+4. Keep the 5-person Free cap? **Recommended:** keep it, and state it.
+5. Payroll: reposition now (**recommended**), or invest in compliance?
+6. Publish chatbot pricing, or keep "Talk to us"?
+7. Which payment gateway?
+8. Who owns help-center content and support replies?
 
 ---
 
@@ -769,6 +993,7 @@ None of this can be measured until G1.5 is done.
 
 | Item | Why it wasn't checked | How to check |
 |---|---|---|
+| Experience findings (Priority 1) | Read from code; no screenshots or recorded user sessions | The 5-person first-click test, plus screenshots of Home and navigation at 375 px and 1280 px |
 | Real adoption: workspaces, activity, module use | Read-only aggregate queries on the production database were blocked by this session's permission policy | Someone with access runs the queries below |
 | Server environment: Google/Microsoft OAuth credentials | Needs SSH | Check that the variable names are present in the server `.env`, without printing their values |
 | Region Vercel uses for signed-in pages | Needs a session | Read `x-vercel-id` on a signed-in page |
