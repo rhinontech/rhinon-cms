@@ -1,5 +1,34 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../config/database";
+import { decryptSecret, encryptSecret } from "../services/totp";
+
+/**
+ * Identity and bank numbers (PAN, account, UAN, ESIC) are encrypted at rest with
+ * the same AES-GCM helper as 2FA secrets. Reading still returns the plain value,
+ * so no caller changes. Rows written before this are plaintext and are returned
+ * as they are until the next save encrypts them. A value that can't be decrypted
+ * (copied from a database with another key) reads as null rather than crashing.
+ */
+function encryptedColumn(name: string, length = 255) {
+  return {
+    type: DataTypes.STRING(length),
+    allowNull: true,
+    get(this: Model) {
+      const stored = this.getDataValue(name as never) as string | null;
+      if (!stored || !stored.startsWith("v1:")) return stored;
+      try {
+        return decryptSecret(stored);
+      } catch {
+        console.warn(`[User] ${name} could not be decrypted; check MFA_ENCRYPTION_KEY / JWT_SECRET`);
+        return null;
+      }
+    },
+    set(this: Model, value: unknown) {
+      const plain = typeof value === "string" ? value.trim() : value;
+      this.setDataValue(name as never, (plain ? encryptSecret(String(plain)) : plain ?? null) as never);
+    },
+  };
+}
 
 /** Where a user's mail goes out from, per module: their platform address or a connected mailbox. */
 export type EmailIdentityChoice = "platform" | "GOOGLE" | "MICROSOFT";
@@ -257,7 +286,7 @@ User.init(
     exitReason: { type: DataTypes.STRING, allowNull: true, defaultValue: null },
     exitNotes: { type: DataTypes.TEXT, allowNull: true, defaultValue: null },
     exitChecklist: { type: DataTypes.JSONB, allowNull: true, defaultValue: null },
-    pan: { type: DataTypes.STRING(10), allowNull: true },
+    pan: encryptedColumn("pan"),
     employmentType: { type: DataTypes.STRING, allowNull: true, defaultValue: "Full-Time" },
     compensationType: { type: DataTypes.STRING, allowNull: true, defaultValue: "Salaried" },
     workSchedule: { type: DataTypes.STRING, allowNull: true, defaultValue: "11 AM – 8 PM (Mon–Sat)" },
@@ -284,11 +313,11 @@ User.init(
     pastPayrollFinancialYear: { type: DataTypes.STRING, allowNull: true },
     pastTaxableSalary: { type: DataTypes.DECIMAL(12, 2), allowNull: true, defaultValue: 0 },
     pastTdsDeducted: { type: DataTypes.DECIMAL(12, 2), allowNull: true, defaultValue: 0 },
-    bankAccountNumber: { type: DataTypes.STRING, allowNull: true },
+    bankAccountNumber: encryptedColumn("bankAccountNumber"),
     bankIfscCode: { type: DataTypes.STRING, allowNull: true },
     bankBeneficiaryName: { type: DataTypes.STRING, allowNull: true },
-    pfUanNumber: { type: DataTypes.STRING, allowNull: true },
-    esicIpNumber: { type: DataTypes.STRING, allowNull: true },
+    pfUanNumber: encryptedColumn("pfUanNumber"),
+    esicIpNumber: encryptedColumn("esicIpNumber"),
     labourWelfareFundEnabled: { type: DataTypes.BOOLEAN, allowNull: true, defaultValue: false },
     npsEnabled: { type: DataTypes.BOOLEAN, allowNull: true, defaultValue: false },
     professionalTaxEnabled: { type: DataTypes.BOOLEAN, allowNull: true, defaultValue: true },
