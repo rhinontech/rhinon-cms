@@ -5,6 +5,7 @@ import { TbActivity, TbMail, TbMessage, TbSparkles, TbX, TbChevronDown } from "r
 import { apiFetch } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "../shared/EmptyState";
+import { EmailFrame } from "../shared/EmailFrame";
 import { cn } from "@/lib/utils";
 
 interface Activity {
@@ -102,10 +103,10 @@ export function ActivityTab({
                   </div>
                 </div>
                 {isReply && expanded && (
-                  <div
-                    className="prose prose-sm mt-3 ml-10 max-w-none rounded-lg border border-emerald-100 dark:border-emerald-400/20 bg-emerald-50/30 dark:bg-emerald-400/10 p-3 text-sm text-foreground [&_*]:!my-1"
-                    dangerouslySetInnerHTML={{ __html: a.generatedContent! }}
-                  />
+                  // A reply is mail from outside: it renders in the same script-free sandbox as the Inbox.
+                  <div className="mt-3 ml-10 overflow-hidden rounded-lg border border-emerald-100 dark:border-emerald-400/20">
+                    <EmailFrame html={a.generatedContent ?? ""} title="Reply" />
+                  </div>
                 )}
               </div>
             );

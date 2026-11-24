@@ -13,18 +13,23 @@ import { needsAttention, type OrgRow } from "./types";
 const FILTERS = [
   { key: "all", label: "All" },
   { key: "attention", label: "Needs attention" },
+  { key: "free", label: "Free" },
   { key: "trial", label: "On trial" },
   { key: "active", label: "Paying" },
   { key: "suspended", label: "Suspended" },
 ] as const;
 type FilterKey = (typeof FILTERS)[number]["key"];
 
-const PLAN_LABEL = { free: "Free trial", starter: "Starter", enterprise: "Enterprise" } as const;
+const PLAN_LABEL = { free: "Free", starter: "Starter", enterprise: "Enterprise" } as const;
+
+/** Free never expires, so only a paid plan put on a trial counts as one (services/usage.ts planState). */
+const onTrial = (o: OrgRow) => o.status === "trial" && o.plan !== "free" && !o.isPlatform;
 
 function matches(o: OrgRow, f: FilterKey) {
   switch (f) {
     case "attention": return needsAttention(o);
-    case "trial": return o.status === "trial" && !o.isPlatform;
+    case "free": return o.plan === "free" && o.status !== "suspended" && !o.isPlatform;
+    case "trial": return onTrial(o);
     case "active": return o.status === "active" && !o.isPlatform;
     case "suspended": return o.status === "suspended";
     default: return true;
@@ -84,7 +89,8 @@ export function PlatformWorkspaces() {
   const stats = useMemo(
     () => ({
       total: customers.length,
-      trial: customers.filter((r) => r.status === "trial" && !r.trialExpired).length,
+      free: customers.filter((r) => r.plan === "free" && r.status !== "suspended").length,
+      trial: customers.filter((r) => onTrial(r) && !r.trialExpired).length,
       ended: customers.filter((r) => r.trialExpired).length,
       paying: customers.filter((r) => r.status === "active").length,
       requests: customers.filter((r) => r.upgradeRequest).length,
@@ -130,8 +136,9 @@ export function PlatformWorkspaces() {
 
       <div className="flex-1 overflow-auto p-4">
         <div className="mx-auto flex max-w-7xl flex-col gap-4">
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-6">
             <Stat testId="stat-total" label="Customer workspaces" value={stats.total} />
+            <Stat testId="stat-free" label="On Free" value={stats.free} />
             <Stat testId="stat-trial" label="On a live trial" value={stats.trial} />
             <Stat testId="stat-ended" label="Trials ended" value={stats.ended} tone="red" />
             <Stat testId="stat-paying" label="Paying" value={stats.paying} />
@@ -172,6 +179,7 @@ export function PlatformWorkspaces() {
                     <th className="px-3 py-2.5 font-medium">Plan</th>
                     <th className="px-3 py-2.5 font-medium">Trial</th>
                     <th className="px-3 py-2.5 font-medium">People</th>
+                    <th className="px-3 py-2.5 font-medium">Activity (7 days)</th>
                     <th className="px-3 py-2.5 font-medium">Joined</th>
                     <th className="px-3 py-2.5 font-medium">Flags</th>
                   </tr>
@@ -199,13 +207,24 @@ export function PlatformWorkspaces() {
                         </div>
                       </td>
                       <td className="px-3 py-3 text-muted-foreground">
-                        {o.isPlatform || o.status !== "trial" ? "—" : o.trialEndsAt ? (o.trialExpired ? `Ended ${shortDate(o.trialEndsAt)}` : `Ends ${shortDate(o.trialEndsAt)}`) : "No deadline"}
+                        {!onTrial(o) ? "—" : o.trialEndsAt ? (o.trialExpired ? `Ended ${shortDate(o.trialEndsAt)}` : `Ends ${shortDate(o.trialEndsAt)}`) : "No deadline"}
                       </td>
                       <td className="px-3 py-3 tabular-nums">{o.seats ?? 0}</td>
+                      <td className="px-3 py-3 text-xs text-muted-foreground">
+                        {o.activity?.lastActiveAt ? (
+                          <>
+                            <span className="block text-foreground/85">{`${o.activity.activeUsers7d} active · last ${shortDate(o.activity.lastActiveAt)}`}</span>
+                            <span className="block">{`${o.activity.emails7d} emails · ${o.activity.ai7d} AI · ${o.activity.milestones.length}/5 milestones`}</span>
+                          </>
+                        ) : (
+                          "Never signed in"
+                        )}
+                      </td>
                       <td className="whitespace-nowrap px-3 py-3 text-muted-foreground">{shortDate(o.createdAt)}</td>
                       <td className="px-3 py-3">
                         <div className="flex flex-wrap gap-1.5">
                           {o.isPlatform && <Pill tone="blue">Platform</Pill>}
+                          {o.sendingPaused && <Pill tone="red">Sending paused</Pill>}
                           {o.upgradeRequest && <Pill tone="blue">{`Wants ${o.upgradeRequest.plan}`}</Pill>}
                           {o.trialExpired && <Pill tone="red">Trial ended</Pill>}
                           {o.emailVerificationPending && <Pill tone="amber">Email unconfirmed</Pill>}

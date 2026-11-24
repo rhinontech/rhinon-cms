@@ -5,7 +5,6 @@ import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/Collap
 import {
   TbChevronLeft,
   TbChevronRight,
-  TbDownload,
   TbStopwatch,
   TbX,
   TbUsers,
@@ -246,9 +245,6 @@ function TeamAttendancePage() {
                   <TbChevronRight size={20} className="text-muted-foreground" />
                 </button>
               </div>
-              <button className="rounded-lg border border-border p-1.5 sm:p-2 text-foreground/70 hover:bg-muted/40">
-                <TbDownload size={18} />
-              </button>
             </div>
 
             {loading ? (
@@ -541,9 +537,6 @@ function PersonalTimesheetPage() {
                   <TbChevronRight size={20} className="text-muted-foreground" />
                 </button>
               </div>
-              <button className="rounded-lg border border-border p-1.5 sm:p-2 text-foreground/70 hover:bg-muted/40">
-                <TbDownload size={18} />
-              </button>
             </div>
 
             {loading ? (

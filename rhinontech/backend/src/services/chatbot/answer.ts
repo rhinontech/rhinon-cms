@@ -25,7 +25,7 @@ import { searchChunks } from "./vectorStore";
 
 const genAI = new GoogleGenerativeAI(env.geminiApiKey || "");
 const MODEL = "gemini-2.5-flash";
-const MIN_SIMILARITY = 0.45;
+export const MIN_SIMILARITY = 0.45;
 const HISTORY_TURNS = 12;
 
 export type AnswerEvent =
@@ -149,11 +149,15 @@ export async function* answer(
     order: [["createdAt", "DESC"]],
     limit: HISTORY_TURNS * 2,
   });
-  await appendMessage(resolved, conv, { role: "user", phase: "bot", text: prompt });
+  const question = await appendMessage(resolved, conv, { role: "user", phase: "bot", text: prompt });
 
   let context = "";
   try {
     const matches = await searchChunks(resolved.organizationId, resolved.bot.id, await embedQuery(prompt), 5);
+    // Remembered per question: below the floor means the bot had nothing trained to
+    // answer from, which is what the Overview's "couldn't answer" list is built on.
+    const best = matches.reduce((top, m) => Math.max(top, Number(m.similarity) || 0), 0);
+    void question.update({ topSimilarity: best }).catch(() => {});
     context = matches
       .filter((m) => Number(m.similarity) >= MIN_SIMILARITY)
       .map((m, i) => `[${i + 1}] ${m.content}`)

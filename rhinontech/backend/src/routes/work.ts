@@ -1,4 +1,5 @@
 import { Router, Response } from "express";
+import { trackEvent } from "../services/productEvents";
 import { Op, fn, col } from "sequelize";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
@@ -153,6 +154,7 @@ router.post("/projects", requireInternal, async (req: AuthRequest, res: Response
       visibility: nextVisibility,
       teamId: nextVisibility === "team" ? teamId : null,
     });
+    trackEvent("project_created", req.user!.userId, { projectId: project.id });
 
     const full = await Project.findByPk(project.id, { include: projectIncludes });
     res.status(201).json(full);

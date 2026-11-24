@@ -4,8 +4,12 @@ import { SubNavToggle } from "@/components/Admin/Common/CollapsibleSubNav/Collap
 import { CompanySignature } from "@/components/Admin/Settings/CompanySignature";
 import { CompanyProfile } from "@/components/Admin/Settings/CompanyProfile";
 import { MobileTheme } from "@/components/Admin/Settings/MobileTheme";
+import { ModuleSwitches, TransferOwnership } from "@/components/Admin/Settings/WorkspaceControls";
+import { usePermissions } from "@/context/PermissionsContext";
 
 export function SettingsGeneral() {
+  const { isOwner, account } = usePermissions();
+  const customerOwner = isOwner && !account.organization?.isPlatform;
   return (
     <div className="flex flex-col h-full glass-panel rounded-r-xl overflow-hidden">
       <div className="sticky top-0 z-10 flex items-center gap-4 h-16 px-5 border-b border-border glass-header">
@@ -24,6 +28,8 @@ export function SettingsGeneral() {
             <div className="mt-4"><MobileTheme /></div>
           </div>
           <CompanySignature />
+          {isOwner && <div className="lg:col-span-2 2xl:col-span-3"><ModuleSwitches /></div>}
+          {customerOwner && <div className="lg:col-span-2 2xl:col-span-3"><TransferOwnership /></div>}
         </div>
       </div>
     </div>

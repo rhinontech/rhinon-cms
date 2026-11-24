@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@/lib/track";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -43,7 +44,8 @@ const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
 function HomeContent() {
   const pathname = usePathname();
   const role = pathname.split("/")[1] || "";
-  const { has, isOwner, effectiveRoleSlug, fullName, ready } = usePermissions();
+  const { has, isOwner, effectiveRoleSlug, fullName, ready, account } = usePermissions();
+  const disabled = account.organization?.disabledModules ?? [];
   const { slug: brandSlug } = useActiveBrand();
   const unreadChat = useTeamChat(selectUnreadTotal);
 
@@ -153,7 +155,7 @@ function HomeContent() {
     key: section.key,
     label: section.label,
     tiles: section.items
-      .filter((entry) => has(...entry.permissions))
+      .filter((entry) => has(...entry.permissions) && !disabled.includes(entry.key))
       .map((entry): LauncherTile | null => {
         const route = entryRoute(entry, has);
         if (!route) return null;
@@ -177,7 +179,7 @@ function HomeContent() {
     lead: has("crm:write") ? { label: "Add a lead", href: `${hrefFor("crm")}?new=1`, icon: TbTargetArrow } : null,
     campaign: has("outreach:write") ? { label: "New campaign", href: hrefFor("outreach", "campaigns"), icon: TbSpeakerphone } : null,
     project: has("work:write") ? { label: "New project", href: `/${role}/work/projects?new=1`, icon: TbBriefcase } : null,
-    invite: has("employees:write") ? { label: "Invite a teammate", href: `/${role}/employees?new=1`, icon: TbUserPlus } : null,
+    invite: has("employees:write") ? { label: "Invite a teammate", href: `/${role}/employees?invite=1`, icon: TbUserPlus } : null,
     leave: has("leave:read") && effectiveRoleSlug !== "superadmin" ? { label: "Request leave", href: `/${role}/leave/requests`, icon: TbCalendarOff } : null,
     tasks: has("work:read") ? { label: "My tasks", href: myTasks, icon: TbCheckbox } : null,
   };
@@ -195,7 +197,7 @@ function HomeContent() {
   const stepHref = (step: SetupStep): string | null => {
     switch (step) {
       case "verifyEmail": return null;
-      case "inviteTeam": return `/${role}/employees?new=1`;
+      case "inviteTeam": return `/${role}/employees?invite=1`;
       case "importContacts": return hrefFor("crm");
       case "firstCampaign": return hrefFor("outreach", "campaigns");
       case "firstProject": return `/${role}/work/projects?new=1`;
@@ -240,7 +242,7 @@ function HomeContent() {
               {quickActions.map((action) => {
                 const Icon = action.icon;
                 return (
-                  <Link key={action.label} href={action.href} prefetch={false} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card/70 px-3 py-1.5 text-xs font-medium text-foreground/90 shadow-xs transition-colors hover:bg-card">
+                  <Link key={action.label} href={action.href} prefetch={false} onClick={() => track("home_quick_action", { action: action.label })} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card/70 px-3 py-1.5 text-xs font-medium text-foreground/90 shadow-xs transition-colors hover:bg-card">
                     <Icon size={15} className="text-muted-foreground" /> {action.label}
                   </Link>
                 );

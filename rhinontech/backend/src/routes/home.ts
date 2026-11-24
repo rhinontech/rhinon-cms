@@ -2,6 +2,8 @@ import { Router, Response } from "express";
 import { authenticate, requireInternal, AuthRequest } from "../middleware/authenticate";
 import { Organization } from "../models";
 import { approvalCounts, homeSummary, pendingApprovals } from "../services/homeSummary";
+import { CLIENT_EVENTS, trackEvent, type ClientEventName } from "../services/productEvents";
+import { rateLimit } from "../middleware/rateLimit";
 
 /**
  * The Home screen: what needs this person's attention, their day, and the
@@ -71,7 +73,23 @@ router.put("/onboarding", async (req: AuthRequest, res: Response) => {
   if (dismissed === false) delete onboarding.dismissedAt;
 
   await org.update({ settings: { ...org.settings, onboarding } });
+  if (goal !== undefined) trackEvent("onboarding_goal", req.user!.userId, { goal });
   res.json({ onboarding });
+});
+
+const eventLimiter = rateLimit({ name: "product-events", windowMs: 60_000, max: 60, message: "Too many events" });
+
+/** POST /home/events — the few things only the browser sees (a search, a click on Home). Allowlisted names only. */
+router.post("/events", eventLimiter, (req: AuthRequest, res: Response) => {
+  const event = req.body?.event;
+  if (!CLIENT_EVENTS.includes(event)) { res.status(400).json({ message: "Unknown event" }); return; }
+  const raw = req.body?.props;
+  // A handful of short string/number values, nothing free-form or large.
+  const props = raw && typeof raw === "object"
+    ? Object.fromEntries(Object.entries(raw).slice(0, 5).filter(([, v]) => typeof v === "number" || (typeof v === "string" && v.length <= 80)))
+    : undefined;
+  trackEvent(event as ClientEventName, req.user!.userId, props);
+  res.status(204).end();
 });
 
 export default router;

@@ -154,6 +154,7 @@ export function Sidebar() {
   // otherwise render every href as "//dashboard" on first paint.
   const roleSlug = pathname.split("/")[1] || "";
   const isPlatform = !!account.organization?.isPlatform;
+  const disabled = account.organization?.disabledModules ?? [];
 
   // The mobile drawer always shows labels; desktop keeps pin/hover behavior.
   const expanded = sidebarExpanded || isHovering || mobileNavOpen;
@@ -210,7 +211,7 @@ export function Sidebar() {
 
   const sections = NAV_SECTIONS.map((section) => ({
     ...section,
-    links: section.items.filter((entry) => has(...entry.permissions)).map(toLink).filter(Boolean) as NavLink[],
+    links: section.items.filter((entry) => has(...entry.permissions) && !disabled.includes(entry.key)).map(toLink).filter(Boolean) as NavLink[],
   })).filter((section) => section.links.length > 0);
 
   // The platform's own modules: the workspace list keys on being the platform's

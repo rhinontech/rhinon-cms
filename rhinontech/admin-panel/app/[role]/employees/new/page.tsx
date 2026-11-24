@@ -1,8 +1,7 @@
-export default function NewEmployeePage() {
-  return (
-    <div className="bg-card rounded-xl p-6 w-full h-full">
-      <h1 className="text-base font-semibold text-foreground">Onboard Employee</h1>
-      <p className="text-sm text-muted-foreground mt-1">Create a new employee record</p>
-    </div>
-  );
+import { redirect } from "next/navigation";
+
+/** This was an empty placeholder; people are added and opened from the HR & People directory. */
+export default async function EmployeesPlaceholderPage({ params }: { params: Promise<{ role: string }> }) {
+  const { role } = await params;
+  redirect(`/${role}/employees`);
 }

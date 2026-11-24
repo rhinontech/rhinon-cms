@@ -64,6 +64,9 @@ jobs:
         run: SERVER_LOG=/tmp/server.log node scripts/hardening-test.mjs
       # The signup rate limit is per process: restart for a fresh counter.
       - name: Restart API for the sweep and isolation suites
+        # Runs even when an earlier suite failed: a broken hardening check must never
+        # hide a tenant leak. The job still fails if any step fails.
+        if: success() || failure()
         run: |
           pkill -f dist/server.js || true; sleep 1
           cd /tmp/ci-run
@@ -71,10 +74,13 @@ jobs:
           for i in $(seq 1 60); do curl -sf localhost:5099/health && exit 0; sleep 1; done
           cat /tmp/server2.log; exit 1
       - name: Custom-domain flow (fake SES)
+        if: success() || failure()
         run: npm run verify:customdomain
       - name: Strict-tenancy sweep (every route, reads and writes)
+        if: success() || failure()
         run: SWEEP_WRITES=1 SERVER_LOG=/tmp/server2.log node scripts/strict-sweep.mjs
       - name: Tenant isolation suite
+        if: success() || failure()
         run: node scripts/isolation-test.mjs
       - if: failure()
         run: tail -100 /tmp/server.log /tmp/server2.log 2>/dev/null || true

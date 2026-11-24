@@ -38,6 +38,7 @@ export interface OrgPlanState {
   limits: PlanLimits;
   trialEndsAt: Date | null;
   trialExpired: boolean;
+  sendingPaused: boolean;
 }
 
 export function planState(org: Organization): OrgPlanState {
@@ -51,7 +52,7 @@ export function planState(org: Organization): OrgPlanState {
   const limits: PlanLimits = org.isPlatform
     ? { label: "Platform", seats: null, emailsPerDay: null, aiPerDay: null, customDomains: null, chatbots: null, botRepliesPerDay: null }
     : PLAN_LIMITS[org.plan] ?? PLAN_LIMITS.free;
-  return { organizationId: org.id, isPlatform: org.isPlatform, plan: org.plan, status: org.status, limits, trialEndsAt, trialExpired };
+  return { organizationId: org.id, isPlatform: org.isPlatform, plan: org.plan, status: org.status, limits, trialEndsAt, trialExpired, sendingPaused: !org.isPlatform && !!org.settings?.sendingPaused };
 }
 
 /** Why this workspace may not add another brand's chatbot, or null when it may. */
@@ -92,6 +93,7 @@ export async function reserveUsage(kind: UsageKind, organizationId: string | nul
   if (!state || state.isPlatform) return null;
 
   if (state.trialExpired) return "Your trial has ended. Upgrade your plan to continue.";
+  if (kind === "email" && state.sendingPaused) return "Sending from this workspace is paused. Contact Rhinon support.";
 
   const limit = state.limits[LIMIT_FOR[kind]];
   const rows = await sequelize.query<{ count: number }>(

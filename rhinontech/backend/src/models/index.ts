@@ -58,6 +58,7 @@ import { Visitor } from "./Visitor";
 import { GoogleCalendarToken } from "./GoogleCalendarToken";
 import { Unsubscribe } from "./Unsubscribe";
 import { UsageCounter } from "./UsageCounter";
+import { ProductEvent } from "./ProductEvent";
 import { AuditLog } from "./AuditLog";
 import { Account } from "./Account";
 import { PipelineStage } from "./PipelineStage";
@@ -555,6 +556,7 @@ export {
   GoogleCalendarToken,
   Unsubscribe,
   UsageCounter,
+  ProductEvent,
   AuditLog,
   Account,
   PipelineStage,

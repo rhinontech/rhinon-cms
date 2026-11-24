@@ -3,6 +3,14 @@ import { Account, Deal, Lead, Page, Project, Task, User } from "../models";
 import { hasPermission, type AuthRequest } from "../middleware/authenticate";
 import { mergeWhere, projectScopedWhere, projectVisibilityWhere } from "./workAccess";
 import { getVisiblePageIds } from "./pageAccess";
+import { scopeToOwner } from "./crmScope";
+
+/** A CRM search obeys the same record scope as the CRM lists (own + unassigned without crm:viewAll). */
+function crmScoped(req: AuthRequest, where: Record<string | symbol, unknown>) {
+  const scope: Record<string, unknown> = {};
+  scopeToOwner(req, scope);
+  return "ownerId" in scope ? { [Op.and]: [where, { ownerId: scope.ownerId }] } : where;
+}
 
 /**
  * Global search behind ⌘K: one box that finds records across modules.
@@ -48,7 +56,7 @@ export async function searchWorkspace(req: AuthRequest, query: string): Promise<
     can("crm:read", "outreach:read")
       ? safe("leads", async () =>
           (await Lead.findAll({
-            where: { [Op.or]: [{ name: { [Op.iLike]: like } }, { company: { [Op.iLike]: like } }, { email: { [Op.iLike]: like } }] },
+            where: crmScoped(req, { [Op.or]: [{ name: { [Op.iLike]: like } }, { company: { [Op.iLike]: like } }, { email: { [Op.iLike]: like } }] }),
             attributes: ["id", "name", "company", "email"],
             order: [["updatedAt", "DESC"]],
             limit: PER_TYPE,
@@ -63,7 +71,7 @@ export async function searchWorkspace(req: AuthRequest, query: string): Promise<
     can("crm:read")
       ? safe("deals", async () =>
           (await Deal.findAll({
-            where: { title: { [Op.iLike]: like } },
+            where: crmScoped(req, { title: { [Op.iLike]: like } }),
             attributes: ["id", "title", "status"],
             order: [["updatedAt", "DESC"]],
             limit: PER_TYPE,
@@ -73,7 +81,7 @@ export async function searchWorkspace(req: AuthRequest, query: string): Promise<
     can("crm:read")
       ? safe("accounts", async () =>
           (await Account.findAll({
-            where: { [Op.or]: [{ name: { [Op.iLike]: like } }, { domain: { [Op.iLike]: like } }] },
+            where: crmScoped(req, { [Op.or]: [{ name: { [Op.iLike]: like } }, { domain: { [Op.iLike]: like } }] }),
             attributes: ["id", "name", "domain"],
             order: [["updatedAt", "DESC"]],
             limit: PER_TYPE,

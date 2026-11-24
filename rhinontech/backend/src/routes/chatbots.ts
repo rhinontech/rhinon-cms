@@ -1,4 +1,5 @@
 import { Router, type Response } from "express";
+import { MIN_SIMILARITY } from "../services/chatbot/answer";
 import multer from "multer";
 import path from "node:path";
 import { Op, type WhereOptions } from "sequelize";
@@ -635,7 +636,57 @@ router.get("/stats", canRead, async (_req, res) => {
   const answersToday = convIdsToday.length
     ? await ChatMessage.count({ where: { conversationId: { [Op.in]: convIdsToday.map((c) => c.id) }, role: "bot", createdAt: { [Op.gte]: startOfToday } } })
     : 0;
-  res.json({ chatsToday, chatsWeek, leadsWeek, waiting, answersToday, onlineNow: onlineVisitors(bot.id).length });
+  // How well the bot is doing this week. A question is "answerable" when retrieval
+  // found trained content above the similarity floor (services/chatbot/answer.ts).
+  const weekConvIds = (await ChatConversation.findAll({ where: { ...base, createdAt: { [Op.gte]: weekAgo } }, attributes: ["id"] })).map((c) => c.id);
+  const measured = weekConvIds.length
+    ? await ChatMessage.findAll({
+        where: { conversationId: { [Op.in]: weekConvIds }, role: "user", phase: "bot", topSimilarity: { [Op.ne]: null } } as WhereOptions,
+        attributes: ["topSimilarity"],
+        raw: true,
+      })
+    : [];
+  const answered = measured.filter((m) => Number(m.topSimilarity) >= MIN_SIMILARITY).length;
+  const handoffsWeek = await ChatConversation.count({ where: { ...base, createdAt: { [Op.gte]: weekAgo }, "meta.handoffRequestedAt": { [Op.ne]: null } } as WhereOptions });
+  res.json({
+    chatsToday, chatsWeek, leadsWeek, waiting, answersToday, onlineNow: onlineVisitors(bot.id).length,
+    questionsWeek: measured.length,
+    unansweredWeek: measured.length - answered,
+    answerRate: measured.length ? Math.round((answered / measured.length) * 100) : null,
+    handoffRate: chatsWeek ? Math.round((handoffsWeek / chatsWeek) * 100) : null,
+  });
+});
+
+/**
+ * GET /chatbots/unanswered — what visitors asked that the bot had no trained
+ * answer for (last 30 days), most-asked first. The fix for each is a training
+ * article, so this is the bot's to-do list.
+ */
+router.get("/unanswered", canRead, async (_req, res) => {
+  const bot = await currentBot(res);
+  if (!bot) return;
+  const since = new Date(Date.now() - 30 * 24 * 3600_000);
+  const convIds = (await ChatConversation.findAll({
+    where: { chatbotId: bot.id, visitorId: { [Op.notLike]: "admin-test-%" }, createdAt: { [Op.gte]: since } },
+    attributes: ["id"],
+  })).map((c) => c.id);
+  if (!convIds.length) return void res.json({ questions: [] });
+  const rows = await ChatMessage.findAll({
+    where: { conversationId: { [Op.in]: convIds }, role: "user", phase: "bot", topSimilarity: { [Op.lt]: MIN_SIMILARITY } } as WhereOptions,
+    attributes: ["text", "createdAt"],
+    order: [["createdAt", "DESC"]],
+    limit: 500,
+    raw: true,
+  });
+  const byText = new Map<string, { question: string; count: number; lastAskedAt: Date }>();
+  for (const r of rows) {
+    const key = r.text.trim().toLowerCase().replace(/\s+/g, " ").slice(0, 300);
+    if (!key) continue;
+    const hit = byText.get(key);
+    if (hit) hit.count++;
+    else byText.set(key, { question: r.text.trim().slice(0, 300), count: 1, lastAskedAt: r.createdAt });
+  }
+  res.json({ questions: [...byText.values()].sort((x, y) => y.count - x.count).slice(0, 20) });
 });
 
 // ── Live chats ──────────────────────────────────────────────────────────

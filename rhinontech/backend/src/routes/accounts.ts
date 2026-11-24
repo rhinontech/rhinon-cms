@@ -1,4 +1,5 @@
 import { Router, Response } from "express";
+import { canSeeCrmRecord, scopeToOwner } from "../services/crmScope";
 import { Op, fn, col } from "sequelize";
 import { Account, Lead, Deal, User, Activity, Task } from "../models";
 import { normalizeDomain, domainFromEmail } from "../models/Account";
@@ -56,6 +57,7 @@ router.get("/", readAccess, async (req: AuthRequest, res: Response) => {
   const { search, ownerId, limit, offset } = req.query;
   const where: any = {};
   if (ownerId) where.ownerId = ownerId;
+  scopeToOwner(req, where);
   if (search) {
     where[Op.or] = [
       { name: { [Op.iLike]: `%${search}%` } },
@@ -116,7 +118,7 @@ router.get("/:id", readAccess, async (req: AuthRequest, res: Response) => {
       { model: Deal, as: "deals" },
     ],
   });
-  if (!account) {
+  if (!account || !canSeeCrmRecord(req, account.ownerId)) {
     res.status(404).json({ message: "Account not found" });
     return;
   }

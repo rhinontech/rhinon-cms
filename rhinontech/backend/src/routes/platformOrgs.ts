@@ -1,5 +1,6 @@
 import { Router, Response } from "express";
-import { Op } from "sequelize";
+import { Op, QueryTypes } from "sequelize";
+import { sequelize } from "../config/database";
 import { Organization } from "../models";
 import { User } from "../models/User";
 import { authenticate, requirePlatformSuperadmin, AuthRequest } from "../middleware/authenticate";
@@ -42,9 +43,44 @@ const view = (org: Organization, seats?: number) => {
     upgradeRequest: org.settings?.upgradeRequest ?? null,
     deletionScheduledFor: org.settings?.deletionScheduledFor ?? null,
     createdAt: org.createdAt,
+    sendingPaused: !!org.settings?.sendingPaused,
     ...(seats !== undefined ? { seats } : {}),
   };
 };
+
+const EMPTY_ACTIVITY = { lastActiveAt: null, activeUsers7d: 0, emails7d: 0, ai7d: 0, milestones: [] as string[] };
+
+/**
+ * Who is actually using each workspace: last sign-in, people active this week,
+ * email and AI used this week, and which activation milestones they have hit.
+ * Counts and event names only — never customer content. One grouped query per
+ * source rather than one per workspace.
+ */
+async function workspaceActivity(orgIds: string[]) {
+  const out = new Map<string, typeof EMPTY_ACTIVITY>();
+  if (!orgIds.length) return out;
+  const get = (id: string) => out.get(id) ?? (out.set(id, { ...EMPTY_ACTIVITY, milestones: [] }), out.get(id)!);
+  const q = <T extends object>(sql: string) => sequelize.query<T>(sql, { replacements: { ids: orgIds }, type: QueryTypes.SELECT }).catch((err: Error) => {
+    console.error("[Platform] activity query failed:", err.message);
+    return [] as T[];
+  });
+  const [logins, usage, events] = await Promise.all([
+    q<{ org: string; last: Date; users: string }>(`SELECT "organizationId" AS org, max("createdAt") AS last,
+        count(DISTINCT "actorId") FILTER (WHERE "createdAt" > now() - interval '7 days') AS users
+      FROM audit_logs WHERE action = 'auth.login' AND "organizationId" IN (:ids) GROUP BY 1`),
+    q<{ org: string; kind: string; total: string }>(`SELECT "organizationId" AS org, kind, sum(count) AS total
+      FROM usage_counters WHERE day > (now() AT TIME ZONE 'Asia/Kolkata')::date - 7 AND "organizationId" IN (:ids) GROUP BY 1, 2`),
+    q<{ org: string; event: string }>(`SELECT DISTINCT "organizationId" AS org, event FROM product_events
+      WHERE event IN ('invite_sent','contacts_imported','deal_won','project_created','chatbot_installed') AND "organizationId" IN (:ids)`),
+  ]);
+  for (const r of logins) Object.assign(get(r.org), { lastActiveAt: r.last, activeUsers7d: Number(r.users) });
+  for (const r of usage) {
+    if (r.kind === "email") get(r.org).emails7d = Number(r.total);
+    if (r.kind === "ai") get(r.org).ai7d = Number(r.total);
+  }
+  for (const r of events) get(r.org).milestones.push(r.event);
+  return out;
+}
 
 router.get("/", async (req: AuthRequest, res: Response) => {
   const q = typeof req.query.q === "string" ? req.query.q.trim() : "";
@@ -59,7 +95,8 @@ router.get("/", async (req: AuthRequest, res: Response) => {
     User.count({ where: { status: "active", userType: "internal" }, group: ["organizationId"] })
   );
   const seatsByOrg = new Map((counts as unknown as { organizationId: string; count: number }[]).map((c) => [c.organizationId, Number(c.count)]));
-  res.json(orgs.map((o) => view(o, seatsByOrg.get(o.id) ?? 0)));
+  const activity = await workspaceActivity(orgs.map((o) => o.id));
+  res.json(orgs.map((o) => ({ ...view(o, seatsByOrg.get(o.id) ?? 0), activity: activity.get(o.id) ?? EMPTY_ACTIVITY })));
 });
 
 /**
@@ -95,7 +132,8 @@ router.get("/:id", async (req: AuthRequest, res: Response) => {
 });
 
 router.patch("/:id", async (req: AuthRequest, res: Response) => {
-  const { plan, status, trialEndsAt, extendTrialDays } = req.body ?? {};
+  const { plan, status, trialEndsAt, extendTrialDays, sendingPaused } = req.body ?? {};
+  if (sendingPaused !== undefined && typeof sendingPaused !== "boolean") { res.status(400).json({ message: "sendingPaused must be true or false" }); return; }
 
   if (plan !== undefined && !PLANS.includes(plan)) { res.status(400).json({ message: `plan must be one of ${PLANS.join(", ")}` }); return; }
   if (status !== undefined && !STATUSES.includes(status)) { res.status(400).json({ message: `status must be one of ${STATUSES.join(", ")}` }); return; }
@@ -118,7 +156,14 @@ router.patch("/:id", async (req: AuthRequest, res: Response) => {
     trialEnd = new Date(Math.max(Date.now(), current) + Number(extendTrialDays) * 86_400_000);
   }
 
-  const updated = await applyPlan(target.id, { plan, status, trialEndsAt: trialEnd });
+  // Abuse response without suspending the whole workspace: stop its outgoing mail.
+  if (sendingPaused !== undefined) {
+    if (target.isPlatform) { res.status(400).json({ message: "The platform workspace's sending cannot be paused here." }); return; }
+    await runAsSystem("platform:pause-sending", () => target.update({ settings: { ...target.settings, sendingPaused } }));
+  }
+  const updated = plan !== undefined || status !== undefined || trialEnd !== undefined
+    ? await applyPlan(target.id, { plan, status, trialEndsAt: trialEnd })
+    : await runAsSystem("platform:get-org", () => Organization.findByPk(target.id));
   console.log(`[Billing] ${req.user!.fullName} set ${target.slug}: ${JSON.stringify({ plan, status, trialEnd })}`);
   // Filed under the CUSTOMER's workspace, so their administrators can see that
   // and when platform staff changed their plan.
@@ -129,7 +174,7 @@ router.patch("/:id", async (req: AuthRequest, res: Response) => {
     action: "billing.plan_changed",
     entityType: "organization",
     entityId: target.id,
-    metadata: { plan: plan ?? null, status: status ?? null, trialEndsAt: trialEnd === undefined ? null : trialEnd },
+    metadata: { plan: plan ?? null, status: status ?? null, trialEndsAt: trialEnd === undefined ? null : trialEnd, sendingPaused: sendingPaused ?? null },
     ip: clientIp(req),
   });
   res.json(view(updated!));

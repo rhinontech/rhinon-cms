@@ -17,6 +17,9 @@ export interface OrgRow {
   deletionScheduledFor: string | null;
   createdAt: string;
   seats?: number;
+  sendingPaused?: boolean;
+  /** Who is using it: last sign-in, people active this week, email/AI this week, milestones reached. */
+  activity?: { lastActiveAt: string | null; activeUsers7d: number; emails7d: number; ai7d: number; milestones: string[] };
 }
 
 export interface OrgUsage {

@@ -11,6 +11,7 @@ import { apiFetch } from "@/lib/api";
 import { ProjectCollaborators } from "./ProjectCollaborators";
 import { portalPath } from "./Project/portalUrl";
 import { LAST_PROJECT_KEY } from "./Project/lastProject";
+import { CsvImportDialog } from "@/components/Admin/Common/CsvImportDialog";
 import { TbLayoutSidebarFilled, TbLayoutSidebarRightFilled, TbPlus, TbSearch, TbExternalLink, TbLock, TbUsers, TbLayoutGrid, TbInfoCircle, TbArrowRight, TbTrash } from "react-icons/tb";
 import { promptDialog } from "@/components/ui/dialogs";
 
@@ -65,6 +66,7 @@ export function WorkProjectsPage() {
   // The project opened last in this browser, offered as "Continue" — Projects
   // used to jump straight into it, which hid the list behind a second menu item.
   const [lastProjectId, setLastProjectId] = useState<string | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
   useEffect(() => {
     try {
       setLastProjectId(window.localStorage.getItem(LAST_PROJECT_KEY));
@@ -221,6 +223,26 @@ export function WorkProjectsPage() {
 
   return (
     <div className="flex h-full min-h-0 overflow-hidden">
+      <CsvImportDialog
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        title="Import projects"
+        description="One project per row. Status is one of Active, Paused, Completed or Pipeline (Active if blank)."
+        columns={[
+          { key: "name", label: "Name", required: true, aliases: ["project", "project name"] },
+          { key: "status", label: "Status" },
+          { key: "pointOfContact", label: "Client contact", aliases: ["point of contact", "contact", "client"] },
+          { key: "notes", label: "Notes" },
+        ]}
+        endpoint="/work/projects"
+        buildBody={(row) => {
+          const status = row.status ? row.status[0].toUpperCase() + row.status.slice(1).toLowerCase() : "Active";
+          if (!["Active", "Paused", "Completed", "Pipeline"].includes(status)) return `Unknown status "${row.status}"`;
+          return { name: row.name, status, pointOfContact: row.pointOfContact || null, notes: row.notes || null };
+        }}
+        onDone={() => { void fetchProjects(); }}
+        template={"Name,Status,Client contact,Notes\nWebsite redesign,Active,Priya (Acme),Phase 1\n"}
+      />
       <main className={cn("flex h-full min-h-0 w-full flex-col overflow-hidden glass-panel", isSubNavExpanded ? "rounded-r-xl" : "rounded-xl")}>
         <div className="flex h-16 items-center justify-between border-b px-4">
           <div className="flex items-center gap-3">
@@ -242,6 +264,9 @@ export function WorkProjectsPage() {
                 <TbArrowRight size={14} className="shrink-0" />
               </Link>
             )}
+            <button onClick={() => setImportOpen(true)} className="hidden items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted sm:inline-flex">
+              Import CSV
+            </button>
             <button onClick={startCreate} className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted">
               Add project
               <TbPlus size={14} />

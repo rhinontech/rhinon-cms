@@ -11,7 +11,7 @@ export function SettingsSubNav() {
   const pathname = usePathname();
   const roleSlug = pathname.split("/")[1];
   const base = `/${roleSlug}/settings`;
-  const { has, isOwner, effectiveRoleSlug } = usePermissions();
+  const { has, isOwner, isPlatformOwner, effectiveRoleSlug } = usePermissions();
 
   const items: SubNavItem[] = [
     { label: "General", href: base, icon: <TbSettings size={18} />, exact: true },
@@ -28,7 +28,9 @@ export function SettingsSubNav() {
     ...(effectiveRoleSlug === "superadmin"
       ? [{ label: "Email addresses", href: `${base}/email-addresses`, icon: <TbMailbox size={18} /> }]
       : []),
-    ...(isOwner ? [{ label: "Developers", href: `${base}/developers`, icon: <TbCode size={18} /> }] : []),
+    // The workspace API key only reads published Content, which is a platform-only
+    // module, so it does nothing for a customer yet. Back for everyone with a real API.
+    ...(isPlatformOwner ? [{ label: "Developers", href: `${base}/developers`, icon: <TbCode size={18} /> }] : []),
     ...(has("settings:write") ? [{ label: "Activity log", href: `${base}/audit-log`, icon: <TbHistory size={18} /> }] : []),
     ...(has("settings:read") ? [{ label: "Data & privacy", href: `${base}/data`, icon: <TbDatabaseExport size={18} /> }] : []),
     ...(has("settings:write")

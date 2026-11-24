@@ -1,4 +1,5 @@
 import { Router, Request, Response } from "express";
+import { trackEvent } from "../services/productEvents";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -183,6 +184,7 @@ router.post("/signup", async (req: Request, res: Response) => {
       { expiresIn: env.jwtExpiresIn as jwt.SignOptions["expiresIn"] }
     );
 
+    trackEvent("signup", created.id, {}, organization.id);
     res.status(201).json({
       token,
       roleSlug: "superadmin",
@@ -566,7 +568,8 @@ router.get("/me", authenticate, async (req: AuthRequest, res: Response) => {
     ...user.toJSON(),
     permissions: req.user!.permissions,
     roleSlug: req.user!.roleSlug,
-    organization: organization ? orgFields : organization,
+    // Modules the owner switched off for this workspace (hidden from menus, Home and search).
+    organization: organization ? { ...orgFields, disabledModules: Array.isArray(settings?.disabledModules) ? settings.disabledModules : [] } : organization,
     emailVerificationPending: !!settings?.pendingEmailVerification,
     termsVersion: legal.termsVersion,
     termsAccepted: settings?.termsVersion === legal.termsVersion,
