@@ -3,7 +3,7 @@ import { Op } from "sequelize";
 import multer from "multer";
 import { keepTenantContext } from "../services/tenantContext";
 import { notifyTaskChanged, notifyTaskComment, notifyTaskCreated } from "../services/workNotifications";
-import { ClientRequest, Project, Subtask, Task, TaskActivity, TaskAttachment, TaskComment, TaskDependency, TaskTag, TimeEntry, User, WorkflowStatus } from "../models";
+import { ClientRequest, Project, Sprint, Subtask, Task, TaskActivity, TaskAttachment, TaskComment, TaskDependency, TaskTag, TimeEntry, User, WorkflowStatus } from "../models";
 import { uploadBuffer, getPresignedReadUrl, deleteObject } from "../services/storage";
 import { legacyStatusFor, defaultStatusFor } from "../services/taskStatus";
 import { logActivity, logTaskDiff } from "../services/taskActivity";
@@ -41,6 +41,7 @@ const taskIncludes: any[] = [
   { model: Subtask, as: "subtasks", attributes: ["id", "title", "done", "order"], separate: true, order: [["order", "ASC"]] },
   { model: TaskTag, as: "tags", attributes: ["id", "label", "color"] },
   { model: WorkflowStatus, as: "workflowStatus", attributes: ["id", "name", "color", "group", "order"] },
+  { model: Sprint, as: "sprint", attributes: ["id", "name", "status", "startDate", "endDate"] },
   { model: TaskAttachment, as: "attachments", attributes: ["id", "name", "mimeType", "size", "createdAt"], separate: true },
   { model: TaskDependency, as: "dependsOn", attributes: ["id", "predecessorId", "type", "lagDays"], separate: true },
   { model: Task, as: "children", attributes: ["id", "title", "status", "statusId", "assigneeId", "startDate", "dueDate"], separate: true },
@@ -95,6 +96,20 @@ async function canEdit(task: Task, req: AuthRequest): Promise<boolean> {
 }
 
 /**
+ * Same rule as PUT /tasks/:id (assignee, creator or work:write) for the card's
+ * sub-resources — checklists, tags, links, files and time were left open.
+ */
+async function requireCardEdit(req: AuthRequest, res: Response): Promise<boolean> {
+  const task = await Task.findByPk(req.params.id);
+  if (!task) { res.status(404).json({ message: "Task not found" }); return false; }
+  if (!(await canEdit(task, req))) {
+    res.status(403).json({ message: "Only the assignee, the creator or a manager can change this card" });
+    return false;
+  }
+  return true;
+}
+
+/**
  * Every /tasks/:id/* route used to trust the id in the URL — the subtask,
  * comment and tag sub-routes never checked anything at all. Once a task can be
  * private that is an open door straight past the list filter, so the whole
@@ -115,7 +130,7 @@ router.param("id", async (req: AuthRequest, res: Response, next, id: string) => 
 // GET /tasks
 router.get("/", async (req: AuthRequest, res: Response) => {
   try {
-    const { scope = "my", status, projectId, priority, tag, teamId, leadId, dealId, accountId } = req.query;
+    const { scope = "my", status, projectId, priority, tag, teamId, leadId, dealId, accountId, sprintId, weekStart, weekEnd } = req.query;
     const where: Record<string, unknown> = {};
     const include = [...taskIncludes];
 
@@ -153,6 +168,23 @@ router.get("/", async (req: AuthRequest, res: Response) => {
     if (status && typeof status === "string") where.status = status;
     if (projectId && typeof projectId === "string") where.projectId = projectId;
     if (priority && typeof priority === "string") where.priority = priority;
+    // "none" asks for the backlog — tasks not yet pulled into any sprint.
+    if (sprintId && typeof sprintId === "string") where.sprintId = sprintId === "none" ? null : sprintId;
+
+    // Weekly plan view: tasks whose scheduled range overlaps the given week,
+    // i.e. a dueDate/startDate that falls inside it, or a startDate..dueDate
+    // span that straddles it entirely.
+    if (weekStart && weekEnd && typeof weekStart === "string" && typeof weekEnd === "string") {
+      const rangeWhere = {
+        [Op.or]: [
+          { dueDate: { [Op.between]: [weekStart, weekEnd] } },
+          { startDate: { [Op.between]: [weekStart, weekEnd] } },
+          { [Op.and]: [{ startDate: { [Op.lte]: weekEnd } }, { dueDate: { [Op.gte]: weekStart } }] },
+        ],
+      };
+      const existingAnd = (where[Op.and as any] as unknown[]) ?? [];
+      where[Op.and as any] = [...existingAnd, rangeWhere];
+    }
 
     // ?teamId= narrows to work filed under one team's projects. An empty id list
     // is left in place deliberately: a team with no projects must return nothing,
@@ -193,7 +225,7 @@ router.get("/", async (req: AuthRequest, res: Response) => {
 // POST /tasks
 router.post("/", async (req: AuthRequest, res: Response) => {
   try {
-    const { title, description, descriptionHtml, assigneeId, projectId, team, guestVisible, startDate, dueDate, status, statusId, parentTaskId, position, customFields, priority, estimatedHours, recurrence, blockedById, leadId, dealId, accountId } = req.body;
+    const { title, description, descriptionHtml, assigneeId, projectId, team, guestVisible, startDate, dueDate, status, statusId, parentTaskId, sprintId, position, customFields, priority, estimatedHours, recurrence, blockedById, leadId, dealId, accountId } = req.body;
     if (!title?.trim()) { res.status(400).json({ message: "title is required" }); return; }
 
     if (projectId && !(await canAccessProject(projectId, req))) {
@@ -201,6 +233,13 @@ router.post("/", async (req: AuthRequest, res: Response) => {
     }
     if (blockedById && !(await canAccessTaskId(blockedById, req))) {
       res.status(404).json({ message: "Blocking task not found" }); return;
+    }
+    if (sprintId) {
+      const sprint = await Sprint.findByPk(sprintId, { attributes: ["id", "projectId"] });
+      if (!sprint) { res.status(404).json({ message: "Sprint not found" }); return; }
+      if (sprint.projectId && sprint.projectId !== (projectId || null)) {
+        res.status(400).json({ message: "This task's project doesn't match the sprint's project." }); return;
+      }
     }
 
     // A custom status wins; otherwise the project's default column is used. The
@@ -250,6 +289,7 @@ router.post("/", async (req: AuthRequest, res: Response) => {
       dueDate: dueDate ? new Date(dueDate) : undefined,
       descriptionHtml: descriptionHtml || null,
       parentTaskId: parentTaskId || null,
+      sprintId: sprintId || null,
       position: typeof position === "number" ? position : 0,
       customFields: customFields && typeof customFields === "object" ? customFields : {},
       statusId: resolvedStatusId,
@@ -286,7 +326,7 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
       res.status(403).json({ message: "You can only edit tasks assigned to or created by you" }); return;
     }
 
-    const { title, description, descriptionHtml, assigneeId, projectId, team, guestVisible, startDate, dueDate, status, statusId, parentTaskId, position, customFields, priority, estimatedHours, recurrence, blockedById, leadId, dealId, accountId, coverAttachmentId } = req.body;
+    const { title, description, descriptionHtml, assigneeId, projectId, team, guestVisible, startDate, dueDate, status, statusId, parentTaskId, sprintId, position, customFields, priority, estimatedHours, recurrence, blockedById, leadId, dealId, accountId, coverAttachmentId } = req.body;
     const prevStatus = task.status;
     // Snapshot before the update so the audit diff has something to compare to.
     const before = task.toJSON() as Record<string, any>;
@@ -310,6 +350,14 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
     }
     if (blockedById !== undefined && blockedById && !(await canAccessTaskId(blockedById, req))) {
       res.status(404).json({ message: "Blocking task not found" }); return;
+    }
+    if (sprintId !== undefined && sprintId) {
+      const sprint = await Sprint.findByPk(sprintId, { attributes: ["id", "projectId"] });
+      if (!sprint) { res.status(404).json({ message: "Sprint not found" }); return; }
+      const effectiveProjectId = projectId !== undefined ? (projectId || null) : (task.projectId ?? null);
+      if (sprint.projectId && sprint.projectId !== effectiveProjectId) {
+        res.status(400).json({ message: "This task's project doesn't match the sprint's project." }); return;
+      }
     }
 
     // A cover must be an image that is attached to this very task.
@@ -360,6 +408,7 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
       ...(startDate !== undefined && { startDate: startDate ? new Date(startDate) : null }),
       ...(descriptionHtml !== undefined && { descriptionHtml: descriptionHtml || null }),
       ...(parentTaskId !== undefined && { parentTaskId: parentTaskId || null }),
+      ...(sprintId !== undefined && { sprintId: sprintId || null }),
       ...(position !== undefined && { position }),
       ...(coverAttachmentId !== undefined && { coverAttachmentId: coverAttachmentId || null }),
       ...(customFields !== undefined && typeof customFields === "object" && {
@@ -456,6 +505,7 @@ router.get("/:id/subtasks", async (req: AuthRequest, res: Response) => {
 // POST /tasks/:id/subtasks
 router.post("/:id/subtasks", async (req: AuthRequest, res: Response) => {
   try {
+    if (!(await requireCardEdit(req, res))) return;
     const { title } = req.body;
     if (!title?.trim()) { res.status(400).json({ message: "title is required" }); return; }
     const count = await Subtask.count({ where: { taskId: req.params.id } });
@@ -467,6 +517,7 @@ router.post("/:id/subtasks", async (req: AuthRequest, res: Response) => {
 // PUT /tasks/:id/subtasks/:subId
 router.put("/:id/subtasks/:subId", async (req: AuthRequest, res: Response) => {
   try {
+    if (!(await requireCardEdit(req, res))) return;
     const subtask = await Subtask.findOne({ where: { id: req.params.subId, taskId: req.params.id } });
     if (!subtask) { res.status(404).json({ message: "Subtask not found" }); return; }
     const { title, done, order } = req.body;
@@ -482,6 +533,7 @@ router.put("/:id/subtasks/:subId", async (req: AuthRequest, res: Response) => {
 // DELETE /tasks/:id/subtasks/:subId
 router.delete("/:id/subtasks/:subId", async (req: AuthRequest, res: Response) => {
   try {
+    if (!(await requireCardEdit(req, res))) return;
     const subtask = await Subtask.findOne({ where: { id: req.params.subId, taskId: req.params.id } });
     if (!subtask) { res.status(404).json({ message: "Subtask not found" }); return; }
     await subtask.destroy();
@@ -539,6 +591,7 @@ router.delete("/:id/comments/:commentId", async (req: AuthRequest, res: Response
 // POST /tasks/:id/tags
 router.post("/:id/tags", async (req: AuthRequest, res: Response) => {
   try {
+    if (!(await requireCardEdit(req, res))) return;
     const { label, color } = req.body;
     if (!label?.trim()) { res.status(400).json({ message: "label is required" }); return; }
     const tag = await TaskTag.create({ taskId: req.params.id, label: label.trim(), color: color || "blue" });
@@ -549,6 +602,7 @@ router.post("/:id/tags", async (req: AuthRequest, res: Response) => {
 // DELETE /tasks/:id/tags/:tagId
 router.delete("/:id/tags/:tagId", async (req: AuthRequest, res: Response) => {
   try {
+    if (!(await requireCardEdit(req, res))) return;
     const tag = await TaskTag.findOne({ where: { id: req.params.tagId, taskId: req.params.id } });
     if (!tag) { res.status(404).json({ message: "Tag not found" }); return; }
     await tag.destroy();
@@ -614,6 +668,7 @@ router.get("/:id/dependencies", async (req: AuthRequest, res: Response) => {
 
 router.post("/:id/dependencies", async (req: AuthRequest, res: Response) => {
   try {
+    if (!(await requireCardEdit(req, res))) return;
     const { predecessorId, type, lagDays } = req.body;
     if (!predecessorId) { res.status(400).json({ message: "predecessorId is required" }); return; }
     if (!(await canAccessTaskId(predecessorId, req))) {
@@ -634,6 +689,7 @@ router.post("/:id/dependencies", async (req: AuthRequest, res: Response) => {
 
 router.delete("/:id/dependencies/:depId", async (req: AuthRequest, res: Response) => {
   try {
+    if (!(await requireCardEdit(req, res))) return;
     const dep = await TaskDependency.findOne({ where: { id: req.params.depId } });
     if (!dep) { res.status(404).json({ message: "Dependency not found" }); return; }
     await dep.destroy();
@@ -663,6 +719,7 @@ router.get("/:id/attachments", async (req: AuthRequest, res: Response) => {
 
 router.post("/:id/attachments", keepTenantContext(upload.single("file")), async (req: AuthRequest, res: Response) => {
   try {
+    if (!(await requireCardEdit(req, res))) return;
     if (!req.file) { res.status(400).json({ message: "No file provided" }); return; }
     // uploadBuffer generates its own collision-free key and returns it.
     const key = await uploadBuffer(req.file.buffer, req.file.originalname, "tasks", req.file.mimetype);
@@ -684,6 +741,7 @@ router.post("/:id/attachments", keepTenantContext(upload.single("file")), async 
 
 router.delete("/:id/attachments/:attachmentId", async (req: AuthRequest, res: Response) => {
   try {
+    if (!(await requireCardEdit(req, res))) return;
     const row = await TaskAttachment.findOne({ where: { id: req.params.attachmentId, taskId: req.params.id } });
     if (!row) { res.status(404).json({ message: "Attachment not found" }); return; }
     await deleteObject(row.key).catch(() => {});
@@ -712,6 +770,7 @@ router.get("/:id/time", async (req: AuthRequest, res: Response) => {
 
 router.post("/:id/time", async (req: AuthRequest, res: Response) => {
   try {
+    if (!(await requireCardEdit(req, res))) return;
     const { minutes, note, spentOn } = req.body;
     const mins = Number(minutes);
     if (!Number.isFinite(mins) || mins <= 0) {

@@ -4,7 +4,7 @@ import { AdminDashboardShell } from "@/components/Admin/Common/AdminDashboardShe
 import { CollapsibleSubNav } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { SideNavProvider } from "@/context/SideNavContext";
 import { usePathname } from "next/navigation";
-import { TbCheckbox, TbFolders, TbGitCommit, TbLayoutDashboard, TbLayoutKanban, TbUsersGroup, TbList } from "react-icons/tb";
+import { TbCheckbox, TbFolders, TbGitCommit, TbLayoutDashboard, TbLayoutKanban, TbUsersGroup, TbList, TbRocket, TbCalendarWeek } from "react-icons/tb";
 import { useOrganization } from "@/lib/useOrganization";
 
 function WorkLayoutContent({ children }: { children: React.ReactNode }) {
@@ -19,6 +19,8 @@ function WorkLayoutContent({ children }: { children: React.ReactNode }) {
     { label: "Projects", href: `${base}/projects`, icon: <TbFolders size={18} /> },
     { label: "All projects", href: `${base}/clients`, icon: <TbList size={18} /> },
     { label: "Tasks", href: `${base}/tasks`, icon: <TbCheckbox size={18} /> },
+    { label: "Sprints", href: `${base}/sprints`, icon: <TbRocket size={18} /> },
+    { label: "Weekly Plan", href: `${base}/plan`, icon: <TbCalendarWeek size={18} /> },
     { label: "Changes & Bugs", href: `${base}/changes`, icon: <TbLayoutKanban size={18} /> },
     { label: "Teams", href: `${base}/teams`, icon: <TbUsersGroup size={18} /> },
     // GitHub tracking is platform-only for now; the API enforces it too.

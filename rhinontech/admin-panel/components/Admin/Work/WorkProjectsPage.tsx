@@ -14,7 +14,7 @@ import { TbLayoutSidebarFilled, TbLayoutSidebarRightFilled, TbPlus, TbSearch, Tb
 import { promptDialog } from "@/components/ui/dialogs";
 
 import { NativeSelect } from "@/components/ui/native-select";
-type ProjectStatus = "Active" | "Paused" | "Completed" | "Pipeline";
+type ProjectStatus = "Active" | "Paused" | "Completed" | "Pipeline" | "Archived";
 type ProjectVisibility = "workspace" | "team" | "private";
 type PanelMode = "view" | "create" | "edit";
 
@@ -108,7 +108,9 @@ export function WorkProjectsPage() {
   const visibleProjects = useMemo(() => {
     const query = search.toLowerCase();
     return projects.filter((project) => {
-      const matchesStatus = statusFilter === "All" || project.status === statusFilter;
+      // "All" means all live projects — archived ones only show under their own filter.
+      const matchesStatus =
+        statusFilter === "All" ? project.status !== "Archived" : project.status === statusFilter;
       const matchesSearch =
         project.name.toLowerCase().includes(query) ||
         (project.pointOfContact ?? "").toLowerCase().includes(query) ||
@@ -243,6 +245,7 @@ export function WorkProjectsPage() {
               <option>Paused</option>
               <option>Completed</option>
               <option>Pipeline</option>
+              <option>Archived</option>
             </NativeSelect>
           </div>
 
@@ -389,6 +392,7 @@ export function WorkProjectsPage() {
                     <option>Paused</option>
                     <option>Completed</option>
                     <option>Pipeline</option>
+                    <option>Archived</option>
                   </NativeSelect>
                 </label>
                 <label className="flex flex-col gap-1 text-sm font-medium text-foreground/85">

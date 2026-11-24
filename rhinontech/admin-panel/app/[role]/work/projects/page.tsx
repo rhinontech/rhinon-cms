@@ -16,12 +16,12 @@ export default function WorkProjectsEntry() {
 
   useEffect(() => {
     let cancelled = false;
-    apiFetch<Array<{ id: string }>>("/work/projects")
+    apiFetch<Array<{ id: string; status?: string }>>("/work/projects")
       .then((projects) => {
         if (cancelled) return;
         let remembered: string | null = null;
         try { remembered = window.localStorage.getItem(LAST_PROJECT_KEY); } catch { /* storage blocked */ }
-        const target = projects.find((p) => p.id === remembered) ?? projects[0];
+        const target = projects.find((p) => p.id === remembered) ?? projects.find((p) => p.status !== "Archived") ?? projects[0];
         router.replace(target ? `/${role}/work/projects/${target.id}` : `/${role}/work/clients`);
       })
       .catch(() => !cancelled && router.replace(`/${role}/work/clients`));

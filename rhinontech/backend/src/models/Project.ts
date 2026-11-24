@@ -1,7 +1,7 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../config/database";
 
-export type ProjectStatus = "Active" | "Paused" | "Completed" | "Pipeline";
+export type ProjectStatus = "Active" | "Paused" | "Completed" | "Pipeline" | "Archived";
 
 /**
  * Who can see this project — and, by inheritance, every task and client request
@@ -58,7 +58,7 @@ Project.init(
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
     name: { type: DataTypes.STRING, allowNull: false },
     status: {
-      type: DataTypes.ENUM("Active", "Paused", "Completed", "Pipeline"),
+      type: DataTypes.ENUM("Active", "Paused", "Completed", "Pipeline", "Archived"),
       allowNull: false,
       defaultValue: "Active",
     },
