@@ -30,12 +30,13 @@ interface ChatMessageAttributes {
   attachments: ChatAttachment[];
   agentUserId?: string | null;
   agentName?: string | null;
+  topSimilarity?: number | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
 interface ChatMessageCreationAttributes
-  extends Optional<ChatMessageAttributes, "id" | "phase" | "attachments" | "agentUserId" | "agentName"> {}
+  extends Optional<ChatMessageAttributes, "id" | "phase" | "attachments" | "agentUserId" | "agentName" | "topSimilarity"> {}
 
 export class ChatMessage
   extends Model<ChatMessageAttributes, ChatMessageCreationAttributes>
@@ -49,6 +50,8 @@ export class ChatMessage
   declare attachments: ChatAttachment[];
   declare agentUserId: string | null;
   declare agentName: string | null;
+  /** On a visitor's question to the bot: how close the best training match was (0–1), null when not measured. */
+  declare topSimilarity: number | null;
   declare readonly createdAt: Date;
   declare readonly updatedAt: Date;
 }
@@ -63,6 +66,7 @@ ChatMessage.init(
     attachments: { type: DataTypes.JSONB, allowNull: false, defaultValue: [] },
     agentUserId: { type: DataTypes.UUID, allowNull: true },
     agentName: { type: DataTypes.STRING(200), allowNull: true },
+    topSimilarity: { type: DataTypes.FLOAT, allowNull: true },
   },
   {
     sequelize,

@@ -26,10 +26,17 @@ interface Stats {
   waiting: number;
   answersToday: number;
   onlineNow: number;
+  questionsWeek?: number;
+  unansweredWeek?: number;
+  answerRate?: number | null;
+  handoffRate?: number | null;
 }
+
+interface Unanswered { question: string; count: number; lastAskedAt: string }
 
 export function ChatbotOverview() {
   const base = useModuleBase();
+  const [unanswered, setUnanswered] = useState<Unanswered[] | null>(null);
   const confirm = useConfirm();
   const { site } = useCurrentSite();
   const { has, effectiveRoleSlug } = usePermissions();
@@ -44,6 +51,7 @@ export function ChatbotOverview() {
 
   const loadStats = useCallback(() => {
     apiFetch<Stats>("/chatbots/stats").then(setStats).catch(() => undefined);
+    apiFetch<{ questions: Unanswered[] }>("/chatbots/unanswered").then((d) => setUnanswered(d.questions)).catch(() => setUnanswered([]));
   }, []);
   useEffect(() => {
     if (bot) loadStats();
@@ -227,6 +235,31 @@ export function ChatbotOverview() {
               hint={stats?.waiting ? <Link href={`${base}/chats`} className="hover:underline">Open live chats →</Link> : "Answered by the bot"}
             />
           </div>
+
+          {/* Is it working? What it answered, and what it couldn't. */}
+          {stats && (stats.questionsWeek ?? 0) > 0 && (
+            <Panel title="How the bot is doing" description="Last 7 days. Every question it couldn't answer is something to add to its training." testId="chatbot-quality">
+              <div className="grid gap-3 sm:grid-cols-3">
+                <Stat icon={<TbMessageChatbot size={18} />} tone="green" label="Answered from training" value={stats.answerRate == null ? "—" : `${stats.answerRate}%`} hint={`${stats.questionsWeek} questions asked`} />
+                <Stat icon={<TbMessages size={18} />} tone={stats.unansweredWeek ? "amber" : "neutral"} label="Couldn't answer" value={stats.unansweredWeek ?? 0} hint="No trained content matched" />
+                <Stat icon={<TbUserCheck size={18} />} tone="blue" label="Handed to a person" value={stats.handoffRate == null ? "—" : `${stats.handoffRate}%`} hint="Of chats this week" />
+              </div>
+              {unanswered && unanswered.length > 0 && (
+                <div className="mt-4">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Most-asked questions it couldn't answer (30 days)</p>
+                  <ul className="divide-y divide-border rounded-lg border border-border">
+                    {unanswered.slice(0, 8).map((q) => (
+                      <li key={q.question} className="flex items-center gap-3 px-3 py-2 text-sm">
+                        <span className="min-w-0 flex-1 truncate">{q.question}</span>
+                        <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{q.count === 1 ? "once" : `${q.count} times`}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Link href={`${base}/training`} className="mt-2 inline-block text-xs font-medium text-primary hover:underline">Add answers in Training →</Link>
+                </div>
+              )}
+            </Panel>
+          )}
 
           {/* Install */}
           <div id="install" className="scroll-mt-4">
