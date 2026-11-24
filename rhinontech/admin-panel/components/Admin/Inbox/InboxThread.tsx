@@ -80,9 +80,9 @@ export function InboxThread({ detail, folder, addresses, infoOpen, onToggleInfo,
         </IconButton>
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-2">
-            <h2 className="truncate text-[15px] font-semibold tracking-tight text-foreground">{detail.subject || "(No subject)"}</h2>
+            <h2 className="truncate text-base font-semibold tracking-tight text-foreground">{detail.subject || "(No subject)"}</h2>
             {detail.campaign && (
-              <span className="hidden shrink-0 rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-medium text-violet-700 ring-1 ring-inset ring-violet-200 dark:bg-violet-400/10 dark:text-violet-300 dark:ring-violet-400/20 sm:inline">
+              <span className="hidden shrink-0 rounded-full bg-violet-50 px-2 py-0.5 text-2xs font-medium text-violet-700 ring-1 ring-inset ring-violet-200 dark:bg-violet-400/10 dark:text-violet-300 dark:ring-violet-400/20 sm:inline">
                 {detail.campaign.name}
               </span>
             )}
@@ -152,7 +152,7 @@ function Message({ msg, mine, expanded, onToggle }: { msg: Email; mine: boolean;
           <span className="text-amber-700/80 dark:text-amber-300/70">added an internal note</span>
           <time className="ml-auto shrink-0 text-amber-700/70 dark:text-amber-300/60" title={fullTime(msg.sentAt)}>{stampTime(msg.sentAt)}</time>
         </header>
-        {msg.body && <p className="mt-1.5 whitespace-pre-wrap text-[13.5px] leading-6 text-amber-950 dark:text-amber-100">{msg.body.replace(/<[^>]*>/g, "")}</p>}
+        {msg.body && <p className="mt-1.5 whitespace-pre-wrap text-ui leading-6 text-amber-950 dark:text-amber-100">{msg.body.replace(/<[^>]*>/g, "")}</p>}
         <Attachments atts={msg.attachments} />
       </article>
     );
@@ -165,8 +165,8 @@ function Message({ msg, mine, expanded, onToggle }: { msg: Email; mine: boolean;
         className="flex w-full items-center gap-3 rounded-xl border bg-card/70 px-4 py-2.5 text-left shadow-xs transition-colors hover:bg-card"
       >
         <Avatar name={msg.fromName} seed={msg.fromEmail} src={msg.senderAvatarUrl} size="sm" />
-        <span className="w-36 shrink-0 truncate text-[13px] font-medium text-foreground">{mine ? "You" : msg.fromName}</span>
-        <span className="min-w-0 flex-1 truncate text-[13px] text-muted-foreground">{bodyPreview(msg.body)}</span>
+        <span className="w-36 shrink-0 truncate text-ui font-medium text-foreground">{mine ? "You" : msg.fromName}</span>
+        <span className="min-w-0 flex-1 truncate text-ui text-muted-foreground">{bodyPreview(msg.body)}</span>
         <time className="shrink-0 text-xs text-muted-foreground" title={fullTime(msg.sentAt)}>{stampTime(msg.sentAt)}</time>
       </button>
     );
@@ -179,9 +179,9 @@ function Message({ msg, mine, expanded, onToggle }: { msg: Email; mine: boolean;
         <Avatar name={msg.fromName} seed={msg.fromEmail} src={msg.senderAvatarUrl} />
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-baseline gap-1.5">
-            <span className="truncate text-[13.5px] font-semibold text-foreground">{msg.fromName}</span>
+            <span className="truncate text-ui font-semibold text-foreground">{msg.fromName}</span>
             <span className="hidden truncate text-xs text-muted-foreground sm:inline">{`<${msg.fromEmail}>`}</span>
-            {mine && <span className="shrink-0 rounded-full bg-brand/10 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-brand">You</span>}
+            {mine && <span className="shrink-0 rounded-full bg-brand/10 px-1.5 py-px text-2xs font-semibold uppercase tracking-wide text-brand">You</span>}
           </div>
           {to && <p className="truncate text-xs text-muted-foreground">{`to ${to}`}</p>}
         </div>
@@ -303,7 +303,7 @@ function Composer({ detail, replyTargetId, replyTo, addresses, onSent }: {
           rows={2}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }}
           placeholder={uploading ? "Uploading attachment…" : note ? "Add an internal note…" : "Write a reply…"}
-          className="field-sizing-content block max-h-52 min-h-[64px] w-full resize-none bg-transparent px-3 py-2.5 text-[13.5px] leading-6 text-foreground outline-none placeholder:text-muted-foreground/80"
+          className="field-sizing-content block max-h-52 min-h-[64px] w-full resize-none bg-transparent px-3 py-2.5 text-ui leading-6 text-foreground outline-none placeholder:text-muted-foreground/80"
         />
         <div className="flex items-center justify-between gap-2 px-2 pb-2">
           <IconButton onClick={() => fileRef.current?.click()} disabled={uploading} title="Attach images, audio, video or files">
@@ -311,7 +311,7 @@ function Composer({ detail, replyTargetId, replyTo, addresses, onSent }: {
           </IconButton>
           <input ref={fileRef} type="file" multiple className="hidden" onChange={(e) => { attachFiles(e.target.files); e.target.value = ""; }} />
           <div className="flex items-center gap-3">
-            <span className="hidden text-[11px] text-muted-foreground md:inline">Enter to send · Shift+Enter for a new line</span>
+            <span className="hidden text-2xs text-muted-foreground md:inline">Enter to send · Shift+Enter for a new line</span>
             <Button
               size="sm"
               onClick={send}
@@ -353,7 +353,7 @@ export function InboxInfo({ detail, onClose, onCompose }: { detail: Email; onClo
       )}
       <div className="flex flex-col items-center text-center">
         <Avatar name={contactName} seed={contactEmail} size="lg" />
-        <p className="mt-3 max-w-full truncate text-[15px] font-semibold text-foreground">{contactName}</p>
+        <p className="mt-3 max-w-full truncate text-base font-semibold text-foreground">{contactName}</p>
         <p className="max-w-full break-all text-xs text-muted-foreground">{contactEmail}</p>
         <div className="mt-4 flex gap-2">
           <Button variant="outline" size="sm" onClick={copy}>{copied ? <TbCheck /> : <TbCopy />}{copied ? "Copied" : "Copy"}</Button>
@@ -369,7 +369,7 @@ export function InboxInfo({ detail, onClose, onCompose }: { detail: Email; onClo
       </dl>
 
       <div className="mt-5 border-t pt-5">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Conversation</p>
+        <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Conversation</p>
         <dl className="mt-3 space-y-3.5 text-sm">
           <InfoRow label="Started" value={thread[0] ? fullTime(thread[0].sentAt) : "—"} />
           <InfoRow label="Latest" value={thread.length ? fullTime(thread[thread.length - 1].sentAt) : "—"} />

@@ -189,7 +189,7 @@ export function CommandPalette() {
         </DialogHeader>
         <Command
           shouldFilter={false}
-          className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wide [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]]:px-2 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-2"
+          className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:text-2xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wide [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]]:px-2 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-2"
         >
           <CommandInput
             value={query}
@@ -250,7 +250,7 @@ export function CommandPalette() {
                 );
               })}
           </CommandList>
-          <div className="flex items-center justify-between border-t border-border px-3 py-2 text-[11px] text-muted-foreground">
+          <div className="flex items-center justify-between border-t border-border px-3 py-2 text-2xs text-muted-foreground">
             <span>Searches the records you can open — nothing more.</span>
             <span className="flex items-center gap-1">
               <TbCornerDownLeft size={12} /> to open · Esc to close

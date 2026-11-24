@@ -239,7 +239,7 @@ function Metric({ label, value }: { label: string; value: number | string }) {
   return (
     <div className="min-w-12">
       <p className="text-sm font-semibold tabular-nums text-foreground">{typeof value === "number" ? value.toLocaleString() : value}</p>
-      <p className="text-[11px] text-muted-foreground">{label}</p>
+      <p className="text-2xs text-muted-foreground">{label}</p>
     </div>
   );
 }
@@ -279,7 +279,7 @@ function TemplatePicker({ open, onClose, onPick, accent }: { open: boolean; onCl
               type="button"
               disabled={!!busy}
               onClick={() => pick(t)}
-              className="group flex flex-col overflow-hidden rounded-2xl border border-border text-left transition-all hover:-translate-y-0.5 hover:border-foreground/30 hover:shadow-lg"
+              className="group flex flex-col overflow-hidden rounded-xl border border-border text-left transition-all hover:-translate-y-0.5 hover:border-foreground/30 hover:shadow-lg"
               data-testid={`template-${t.id}`}
             >
               <div className="flex h-72 items-start justify-center overflow-hidden bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(127,127,127,0.05)_10px,rgba(127,127,127,0.05)_20px)] pt-4">

@@ -83,17 +83,17 @@ export function ActivityTab({
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm text-foreground">
-                      {a.lead && <span className="font-bold">{a.lead.name}</span>}
+                      {a.lead && <span className="font-semibold">{a.lead.name}</span>}
                       {a.lead?.company && <span className="text-muted-foreground"> ({a.lead.company})</span>}
                       {a.lead && " — "}
                       {a.content}
                     </p>
                     <div className="mt-0.5 flex items-center gap-2">
-                      <p className="text-[11px] text-muted-foreground">{new Date(a.timestamp).toLocaleString()}</p>
+                      <p className="text-2xs text-muted-foreground">{new Date(a.timestamp).toLocaleString()}</p>
                       {isReply && (
                         <button
                           onClick={() => setExpandedId(expanded ? null : a.id)}
-                          className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-300 hover:underline"
+                          className="inline-flex items-center gap-0.5 text-2xs font-semibold text-emerald-600 dark:text-emerald-300 hover:underline"
                         >
                           {expanded ? "Hide reply" : "View reply"}
                           <TbChevronDown size={12} className={cn("transition-transform", expanded && "rotate-180")} />

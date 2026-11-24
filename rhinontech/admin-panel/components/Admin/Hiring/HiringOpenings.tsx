@@ -91,8 +91,8 @@ export function HiringOpenings() {
                       ["Hired", `${c.hired ?? 0}/${o.positions}`],
                     ].map(([label, value]) => (
                       <div key={label as string} className="rounded-lg bg-muted/40 py-2">
-                        <p className="text-base font-bold text-foreground">{value}</p>
-                        <p className="text-[11px] text-muted-foreground">{label}</p>
+                        <p className="text-base font-semibold text-foreground">{value}</p>
+                        <p className="text-2xs text-muted-foreground">{label}</p>
                       </div>
                     ))}
                   </div>

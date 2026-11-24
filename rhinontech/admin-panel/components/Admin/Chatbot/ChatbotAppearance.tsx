@@ -321,7 +321,7 @@ export function ChatbotAppearance() {
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div className="grid gap-1.5">
-      <Label className="text-[13px]">{label}</Label>
+      <Label className="text-ui">{label}</Label>
       {children}
       {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
     </div>
@@ -414,7 +414,7 @@ function ImageField({
   const shown = value || defaultSrc;
   return (
     <div className="grid gap-1.5" data-testid={testId}>
-      <Label className="text-[13px]">{label}</Label>
+      <Label className="text-ui">{label}</Label>
       <div className={cn("flex items-center gap-3 rounded-xl border border-border p-3", wide && "flex-col items-stretch")}>
         <div
           className={cn(
@@ -429,7 +429,7 @@ function ImageField({
           ) : (
             <TbPhoto size={20} className="text-muted-foreground" />
           )}
-          {!value && <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">Default</span>}
+          {!value && <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 py-0.5 text-2xs font-medium text-white">Default</span>}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <input ref={input} type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml" className="hidden" onChange={(e) => pick(e.target.files?.[0])} />

@@ -7,6 +7,8 @@ import { TbX } from "react-icons/tb";
 import { isWithin } from "@/components/Admin/Common/navConfig";
 import { SidebarItem } from "@/components/Admin/Common/SidebarItem/SidebarItem";
 import { TbLayoutSidebarFilled, TbLayoutSidebarRightFilled } from "react-icons/tb";
+import { useDashboard } from "@/components/Common/DashboardProvider/DashboardProvider";
+import { useModuleNav } from "./moduleNavStore";
 
 export interface SubNavItem {
   label: string;
@@ -21,7 +23,7 @@ export interface SubNavItem {
   children?: SubNavItem[];
 }
 
-function itemIsActive(item: SubNavItem, pathname: string): boolean {
+export function itemIsActive(item: SubNavItem, pathname: string): boolean {
   if (item.exact ? pathname === item.href : isWithin(pathname, item.href)) return true;
   return (item.match ?? []).some((path) => isWithin(pathname, path));
 }
@@ -29,11 +31,28 @@ function itemIsActive(item: SubNavItem, pathname: string): boolean {
 interface CollapsibleSubNavProps {
   title: string;
   items: SubNavItem[];
+  /**
+   * Show these pages inside the main sidebar on desktop instead of as a second
+   * column. Settings opts out: a settings list beside its page is the standard pattern.
+   */
+  inline?: boolean;
 }
 
-export function CollapsibleSubNav({ title, items }: CollapsibleSubNavProps) {
+export function CollapsibleSubNav({ title, items, inline = true }: CollapsibleSubNavProps) {
   const { isExpanded, toggleSideNav } = useSideNav();
   const pathname = usePathname();
+  // With the main sidebar pinned open, this module's pages live inside it on
+  // desktop. Collapsed to icons, there's no room, so the column comes back.
+  const { sidebarExpanded } = useDashboard();
+  const inSidebar = inline && sidebarExpanded;
+  const publish = useModuleNav((s) => s.set);
+  const signature = items.map((i) => `${i.label}|${i.href}|${(i.children ?? []).map((c) => c.href).join(",")}`).join(";");
+  useEffect(() => {
+    if (!inline) return;
+    publish(items, signature);
+    return () => publish(null, "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inline, signature, publish]);
   // Full-screen detail pages take over the whole module area — the sub-nav hides itself there.
   const lastSegment = pathname.split("/").pop();
   // Every brand-split module carries a /[domain]/ segment between the module and
@@ -65,12 +84,13 @@ export function CollapsibleSubNav({ title, items }: CollapsibleSubNavProps) {
       className={`flex-col glass-sidenav transition-all duration-200 ease-in-out overflow-hidden
         ${showNav
           ? "fixed inset-y-0 left-0 z-50 flex w-64 max-lg:bg-card! shadow-xl lg:static lg:z-auto lg:h-full lg:w-[15%] lg:min-w-[212px] lg:rounded-l-xl lg:glass-sidenav lg:shadow-none lg:border-r lg:border-border"
-          : "hidden lg:flex lg:h-full lg:w-0"}`}
+          : "hidden lg:flex lg:h-full lg:w-0"}
+        ${inSidebar ? "lg:hidden!" : ""}`}
     >
       {showNav && (
         <div className="flex flex-col w-full flex-1">
           <div className="flex h-16 w-full shrink-0 items-center justify-between border-b border-border px-5">
-            <span className="truncate text-[15px] font-semibold tracking-tight">{title}</span>
+            <span className="truncate text-base font-semibold tracking-tight">{title}</span>
             <button onClick={toggleSideNav} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted lg:hidden" aria-label="Close menu">
               <TbX size={18} />
             </button>
@@ -108,10 +128,14 @@ export function CollapsibleSubNav({ title, items }: CollapsibleSubNavProps) {
 // Drop this button into any page header to toggle the aside
 export function SubNavToggle() {
   const { isExpanded, toggleSideNav } = useSideNav();
+  const { sidebarExpanded } = useDashboard();
+  const hasModuleNav = useModuleNav((s) => !!s.items);
   return (
     <button
       onClick={toggleSideNav}
-      className="p-1.5 rounded-md hover:bg-muted text-muted-foreground transition-colors"
+      aria-label="Show or hide this section's menu"
+      // On desktop the module's pages sit in the main sidebar, so the toggle is only for phones.
+      className={`p-1.5 rounded-md hover:bg-muted text-muted-foreground transition-colors ${sidebarExpanded && hasModuleNav ? "lg:hidden" : ""}`}
     >
       {isExpanded ? (
         <TbLayoutSidebarFilled size={20} />

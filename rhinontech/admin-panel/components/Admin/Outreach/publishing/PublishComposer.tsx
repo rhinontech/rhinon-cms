@@ -132,7 +132,7 @@ export function PublishComposer({
             <div className="flex items-baseline justify-between">
               <Label>Post type</Label>
               {suggestedType && (
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-2xs text-muted-foreground">
                   Cadence suggests <span className="font-semibold text-foreground">{POST_TYPE_LIST.find((t) => t.id === suggestedType)?.label}</span> next
                 </span>
               )}
@@ -153,17 +153,17 @@ export function PublishComposer({
                   >
                     <span
                       className={cn(
-                        "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white",
+                        "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-2xs font-semibold text-white",
                         t.dot
                       )}
                     >
                       {t.n}
                     </span>
                     <span className="min-w-0">
-                      <span className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+                      <span className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
                         <Icon size={13} /> {t.label}
                       </span>
-                      <span className="mt-0.5 block text-[11px] leading-snug text-muted-foreground">{t.does}</span>
+                      <span className="mt-0.5 block text-2xs leading-snug text-muted-foreground">{t.does}</span>
                     </span>
                   </button>
                 );
@@ -173,14 +173,14 @@ export function PublishComposer({
 
           {selected && (
             <>
-              <div className={cn("rounded-xl border p-3 text-[11px] leading-relaxed", selected.chip)}>
+              <div className={cn("rounded-xl border p-3 text-2xs leading-relaxed", selected.chip)}>
                 <p>
-                  <span className="font-bold uppercase tracking-wide">What it gets you: </span>
+                  <span className="font-semibold uppercase tracking-wide">What it gets you: </span>
                   {selected.gets}
                 </p>
                 {selected.avoid && (
                   <p className="mt-1.5 opacity-90">
-                    <span className="font-bold uppercase tracking-wide">Avoid: </span>
+                    <span className="font-semibold uppercase tracking-wide">Avoid: </span>
                     {selected.avoid}
                   </p>
                 )}
@@ -207,7 +207,7 @@ export function PublishComposer({
                   placeholder="What is this post about? e.g. Client had six SaaS tools and still rebuilt one spreadsheet by hand every morning."
                   className="min-h-20 text-sm"
                 />
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-2xs text-muted-foreground">
                   Leave blank and the AI picks a topic from the Rhinon Labs topic bank.
                 </p>
               </div>
@@ -223,7 +223,7 @@ export function PublishComposer({
                   placeholder="Real client names, real numbers, real outcomes, real timelines. Only what you can stand behind."
                   className={cn("min-h-24 text-sm", factsMissing && "border-red-400 dark:border-red-500/50")}
                 />
-                <p className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
+                <p className="flex items-start gap-1.5 text-2xs text-muted-foreground">
                   <TbAlertTriangle size={13} className="mt-px shrink-0" />
                   <span>
                     This is the only source the AI may draw metrics, clients and outcomes from. Anything it needs and
@@ -245,8 +245,8 @@ export function PublishComposer({
                         postAudience === a ? "border-blue-500 bg-blue-50/50 dark:bg-blue-400/10" : "border-border bg-card hover:border-muted-foreground/30"
                       )}
                     >
-                      <span className="block text-xs font-bold text-foreground">{AUDIENCE_META[a].label}</span>
-                      <span className="mt-0.5 block text-[10px] leading-snug text-muted-foreground">
+                      <span className="block text-xs font-semibold text-foreground">{AUDIENCE_META[a].label}</span>
+                      <span className="mt-0.5 block text-2xs leading-snug text-muted-foreground">
                         {AUDIENCE_META[a].description}
                       </span>
                     </button>
@@ -271,8 +271,8 @@ export function PublishComposer({
                       )}
                     >
                       {f.icon}
-                      <span className="text-xs font-bold text-foreground">{f.title}</span>
-                      <span className="text-[10px] leading-tight text-muted-foreground">{f.description}</span>
+                      <span className="text-xs font-semibold text-foreground">{f.title}</span>
+                      <span className="text-2xs leading-tight text-muted-foreground">{f.description}</span>
                     </button>
                   ))}
                 </div>
@@ -342,7 +342,7 @@ export function PublishComposer({
           )}
 
           <div className="mt-auto flex items-center justify-between gap-3 border-t pt-4">
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-2xs text-muted-foreground">
               {factsMissing ? "A case study needs verified facts before it can be written." : " "}
             </p>
             <Button type="submit" disabled={saving || !postType || factsMissing}>

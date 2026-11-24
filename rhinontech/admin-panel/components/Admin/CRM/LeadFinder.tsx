@@ -219,7 +219,7 @@ export function LeadFinder() {
         <div className="flex min-h-16 shrink-0 items-center gap-3 border-b border-border/70 px-3 py-2">
           <SubNavToggle />
           <div className="min-w-0 flex-1">
-            <h1 className="text-[15px] font-semibold tracking-tight">Lead Finder</h1>
+            <h1 className="text-base font-semibold tracking-tight">Lead Finder</h1>
             <p className="truncate text-xs text-muted-foreground">
               {tab === "search"
                 ? "Type a company name or website — get the people who run it and their likely emails."
@@ -274,7 +274,7 @@ export function LeadFinder() {
             </form>
 
             {searching && (
-              <div className="rounded-2xl border border-border bg-background/60 p-6 text-center text-sm text-muted-foreground">
+              <div className="rounded-xl border border-border bg-background/60 p-6 text-center text-sm text-muted-foreground">
                 Finding the website, reading its pages and searching the web for its leadership — usually 20–40 seconds.
               </div>
             )}
@@ -287,7 +287,7 @@ export function LeadFinder() {
                   ["2. Finds the people", "Founders and leaders named on the site and across the web, with titles and LinkedIn."],
                   ["3. Works out emails", "Uses addresses on their site or their public email format; marks every guess as a guess."],
                 ].map(([t, d]) => (
-                  <div key={t} className="rounded-2xl border border-border bg-background/60 p-4">
+                  <div key={t} className="rounded-xl border border-border bg-background/60 p-4">
                     <p className="text-sm font-semibold">{t}</p>
                     <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{d}</p>
                   </div>
@@ -298,7 +298,7 @@ export function LeadFinder() {
             {result && (
               <>
                 {/* Company */}
-                <div className="rounded-2xl border border-border bg-background/70 p-4" data-testid="finder-company">
+                <div className="rounded-xl border border-border bg-background/70 p-4" data-testid="finder-company">
                   <div className="flex flex-wrap items-center gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="text-base font-semibold">{result.company}</p>
@@ -307,20 +307,20 @@ export function LeadFinder() {
                       </a>
                     </div>
                     {result.acceptsMail ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-medium text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-2xs font-medium text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300">
                         <TbCircleCheck size={13} /> Domain receives email
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 text-[11px] font-medium text-red-700 dark:bg-red-400/15 dark:text-red-300">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 text-2xs font-medium text-red-700 dark:bg-red-400/15 dark:text-red-300">
                         <TbMailX size={13} /> Domain doesn&apos;t receive email
                       </span>
                     )}
                   </div>
                   {result.publishedEmails.length > 0 && (
                     <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                      <span className="text-[11px] text-muted-foreground">On their website:</span>
+                      <span className="text-2xs text-muted-foreground">On their website:</span>
                       {result.publishedEmails.map((e) => (
-                        <button key={e} type="button" onClick={() => copy(e)} className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 font-mono text-[11px] hover:bg-muted/70">
+                        <button key={e} type="button" onClick={() => copy(e)} className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 font-mono text-2xs hover:bg-muted/70">
                           {e} <TbCopy size={11} />
                         </button>
                       ))}
@@ -339,11 +339,11 @@ export function LeadFinder() {
 
                 {/* People */}
                 {result.people.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+                  <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
                     No one to contact here — this domain can&apos;t receive email. Check the website address and search again.
                   </div>
                 ) : (
-                  <div className="overflow-hidden rounded-2xl border border-border bg-background/70" data-testid="finder-people">
+                  <div className="overflow-hidden rounded-xl border border-border bg-background/70" data-testid="finder-people">
                     <div className="flex items-center justify-between gap-3 border-b border-border/70 px-4 py-2.5">
                       <label className="flex items-center gap-2 text-xs text-muted-foreground">
                         <input
@@ -422,7 +422,7 @@ export function LeadFinder() {
                             {checks[i] ? (
                               <span
                                 title={`${VERIFY[checks[i].status].hint}${checks[i].detail ? ` (${checks[i].detail})` : ""}`}
-                                className={cn("inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium", VERIFY[checks[i].status].className)}
+                                className={cn("inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-medium", VERIFY[checks[i].status].className)}
                                 data-testid={`verify-status-${i}`}
                               >
                                 {checks[i].status === "verified" && <TbCircleCheck size={12} />}
@@ -430,7 +430,7 @@ export function LeadFinder() {
                               </span>
                             ) : (
                               conf && (
-                                <span title={conf.hint} className={cn("inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-medium", conf.className)}>
+                                <span title={conf.hint} className={cn("inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-2xs font-medium", conf.className)}>
                                   {conf.label}
                                 </span>
                               )

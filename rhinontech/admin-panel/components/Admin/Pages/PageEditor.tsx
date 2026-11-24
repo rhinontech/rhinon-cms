@@ -186,7 +186,7 @@ export function PageEditor({ id }: { id: string }) {
     content: "",
     editorProps: {
       attributes: {
-        class: "page-tiptap min-h-[60vh] px-1 py-2 text-[16px] leading-relaxed text-foreground outline-none",
+        class: "page-tiptap min-h-[60vh] px-1 py-2 text-base leading-relaxed text-foreground outline-none",
       },
       // Links navigate on click, Notion-style: internal page links flush the
       // pending save and route in-app; external ones open a new tab.
@@ -400,7 +400,7 @@ export function PageEditor({ id }: { id: string }) {
               onChange={(e) => handleTitleChange(e.target.value)}
               disabled={!canEdit}
               placeholder="Untitled"
-              className="mt-2 w-full border-none bg-transparent text-4xl font-black tracking-tight text-foreground outline-none placeholder:text-muted-foreground/70 disabled:cursor-not-allowed"
+              className="mt-2 w-full border-none bg-transparent text-4xl font-semibold tracking-tight text-foreground outline-none placeholder:text-muted-foreground/70 disabled:cursor-not-allowed"
             />
 
             {!canEdit && (
@@ -418,7 +418,7 @@ export function PageEditor({ id }: { id: string }) {
 
             {children.length > 0 && (
               <div className="mt-10 border-t border-border pt-5">
-                <p className="mb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">Sub-pages</p>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Sub-pages</p>
                 <div className="space-y-1">
                   {children.map((c) => (
                     <button

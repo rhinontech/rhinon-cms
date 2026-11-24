@@ -107,7 +107,7 @@ export function GitHubAccessPanel({ userId, githubLogin }: { userId: string; git
                 <li key={a.id} className="flex items-center gap-2 px-3 py-2 text-xs">
                   <span className="min-w-0 flex-1 truncate font-medium text-foreground" title={a.error ?? a.repoFullName}>{a.repoFullName}</span>
                   <span className="text-muted-foreground">{PERMISSION_LABEL[a.permission]}</span>
-                  <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-medium capitalize", STATUS_STYLE[a.status])} title={a.error ?? undefined}>{a.status}</span>
+                  <span className={cn("rounded-full px-2 py-0.5 text-2xs font-medium capitalize", STATUS_STYLE[a.status])} title={a.error ?? undefined}>{a.status}</span>
                   <button type="button" onClick={() => revoke(a)} title="Remove access" className="rounded p-1 text-muted-foreground hover:text-red-600 dark:hover:text-red-300">
                     <TbTrash size={13} />
                   </button>
@@ -143,7 +143,7 @@ export function GitHubAccessPanel({ userId, githubLogin }: { userId: string; git
                       })}
                     />
                     <span className="truncate">{r.fullName}</span>
-                    {r.private && <span className="ml-auto text-[10px] text-muted-foreground">private</span>}
+                    {r.private && <span className="ml-auto text-2xs text-muted-foreground">private</span>}
                   </label>
                 ))}
                 {!options.length && <p className="px-3 py-3 text-center text-xs text-muted-foreground">No more repositories.</p>}

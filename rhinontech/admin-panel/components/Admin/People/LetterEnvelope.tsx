@@ -42,33 +42,33 @@ export function LetterEnvelope({
     );
 
   return (
-    <div className="mx-auto max-w-3xl bg-card text-[13px] text-foreground">
+    <div className="mx-auto max-w-3xl bg-card text-ui text-foreground">
       <div className="px-6 pt-8 pb-3">
         <Image src={adminImages.Logo_Rhinon_Tech_Dark} alt="Rhinon Tech" className="h-14 w-auto object-contain" />
       </div>
 
       {type === "offer" ? (
         <div className="px-6">
-          <p className="mb-3 text-center font-bold text-[#005085]">PRIVATE &amp; CONFIDENTIAL</p>
+          <p className="mb-3 text-center font-semibold text-[#005085]">PRIVATE &amp; CONFIDENTIAL</p>
           <p>{t("dates.todayLong", "[Today's date]")}</p>
-          <p className="font-bold">{t("employee.legalName", "[Employee name]")}</p>
+          <p className="font-semibold">{t("employee.legalName", "[Employee name]")}</p>
           <p className="mb-3">{t("employee.workLocationShort", "[Location]")}</p>
           <p className="mb-2">Dear {t("employee.firstName", "[First name]")},</p>
         </div>
       ) : (
         <div className="px-6">
-          <p className="mb-3 text-center font-bold text-[#005085]">NON-DISCLOSURE &amp; CONFIDENTIALITY AGREEMENT</p>
+          <p className="mb-3 text-center font-semibold text-[#005085]">NON-DISCLOSURE &amp; CONFIDENTIALITY AGREEMENT</p>
           <p className="mb-2">
             This Non-Disclosure and Confidentiality Agreement (the &quot;Agreement&quot;) is dated this {t("dates.todayLong", "[today]")}.
           </p>
           <p>BETWEEN:</p>
           <p>
-            <span className="font-bold">Rhinon Tech Private Limited</span> (the &quot;Employer&quot;)
+            <span className="font-semibold">Rhinon Tech Private Limited</span> (the &quot;Employer&quot;)
           </p>
           <p className="mb-1">OF THE FIRST PART</p>
           <p>- AND -</p>
           <p>
-            <span className="font-bold">{t("employee.legalName", "[Employee name]")}</span> of {t("employee.workLocationOrIndia", "[Location]")} (the &quot;Employee&quot;)
+            <span className="font-semibold">{t("employee.legalName", "[Employee name]")}</span> of {t("employee.workLocationOrIndia", "[Location]")} (the &quot;Employee&quot;)
           </p>
           <p className="mb-3">OF THE SECOND PART</p>
         </div>
@@ -83,8 +83,8 @@ export function LetterEnvelope({
             <div className="mt-2">
               <SignatureBlock />
             </div>
-            <p className="font-bold">Prabhat Patra (Founder)</p>
-            <p className="mt-6 text-[11px] text-muted-foreground">
+            <p className="font-semibold">Prabhat Patra (Founder)</p>
+            <p className="mt-6 text-2xs text-muted-foreground">
               (Followed by a signature/acknowledgment page — not shown in this preview.)
             </p>
           </>
@@ -99,11 +99,11 @@ export function LetterEnvelope({
                 <div className="mt-4">
                   <SignatureBlock />
                 </div>
-                <p className="mt-1 font-bold">Authorized Signatory</p>
+                <p className="mt-1 font-semibold">Authorized Signatory</p>
               </div>
               <div>
                 <p>Accepted &amp; Agreed By:</p>
-                <p className="mt-4 font-bold">{t("employee.legalName", "[Employee name]")}</p>
+                <p className="mt-4 font-semibold">{t("employee.legalName", "[Employee name]")}</p>
               </div>
             </div>
           </>

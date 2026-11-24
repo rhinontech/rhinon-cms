@@ -49,27 +49,27 @@ export function ReminderStatusBadge({ status }: { status: ReminderStatus }) {
 
 export function StatCard({ label, value, hint, icon: Icon }: { label: string; value: ReactNode; hint?: ReactNode; icon: typeof Check }) {
   return (
-    <div className="glass-card rounded-2xl p-5">
+    <div className="glass-card rounded-xl p-5">
       <div className="flex items-center justify-between">
-        <p className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
+        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
         <span className="grid place-items-center size-8 rounded-lg bg-primary/10 text-primary">
           <Icon className="size-4" aria-hidden />
         </span>
       </div>
       <p className="mt-3 text-[28px] font-semibold tracking-tight leading-none">{value}</p>
-      {hint ? <p className="mt-2 text-[12.5px] text-muted-foreground">{hint}</p> : null}
+      {hint ? <p className="mt-2 text-xs text-muted-foreground">{hint}</p> : null}
     </div>
   );
 }
 
 export function EmptyState({ icon: Icon, title, body, action }: { icon: typeof Check; title: string; body: ReactNode; action?: ReactNode }) {
   return (
-    <div className="rounded-2xl border border-dashed border-border px-6 py-14 text-center">
+    <div className="rounded-xl border border-dashed border-border px-6 py-14 text-center">
       <span className="mx-auto grid place-items-center size-11 rounded-xl bg-muted text-muted-foreground">
         <Icon className="size-5" aria-hidden />
       </span>
-      <p className="mt-4 text-[15px] font-semibold">{title}</p>
-      <p className="mt-1 text-[13px] text-muted-foreground max-w-md mx-auto">{body}</p>
+      <p className="mt-4 text-base font-semibold">{title}</p>
+      <p className="mt-1 text-ui text-muted-foreground max-w-md mx-auto">{body}</p>
       {action ? <div className="mt-5">{action}</div> : null}
     </div>
   );
@@ -200,7 +200,7 @@ export function PlaceholderHelp({ extra = [] }: { extra?: { token: string; meani
   const [copied, setCopied] = useState("");
   return (
     <div className="rounded-xl border border-border bg-muted/30 p-3">
-      <p className="text-[11.5px] font-semibold uppercase tracking-wider text-muted-foreground">Placeholders — click to copy</p>
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Placeholders — click to copy</p>
       <div className="mt-2 flex flex-wrap gap-1.5">
         {[...EMAIL_PLACEHOLDERS, ...extra].map((p) => (
           <button
@@ -212,7 +212,7 @@ export function PlaceholderHelp({ extra = [] }: { extra?: { token: string; meani
               setCopied(p.token);
               window.setTimeout(() => setCopied(""), 1200);
             }}
-            className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 py-1 font-mono text-[11.5px] hover:border-primary/60 hover:text-primary transition-colors"
+            className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 py-1 font-mono text-xs hover:border-primary/60 hover:text-primary transition-colors"
           >
             {copied === p.token ? <Check className="size-3" /> : <Copy className="size-3 opacity-50" />}
             {p.token}

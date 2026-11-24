@@ -7,7 +7,7 @@ import Cookies from "js-cookie";
 import { clearPermissionsCache } from "@/context/PermissionsContext";
 import { useEffect, useState } from "react";
 import { LogOut } from "lucide-react";
-import { TbUser, TbChevronDown, TbChevronRight, TbEye, TbMenu2, TbSearch } from "react-icons/tb";
+import { TbUser, TbCheck, TbChevronDown, TbChevronRight, TbEye, TbMenu2, TbSearch } from "react-icons/tb";
 import { useDashboard } from "@/components/Common/DashboardProvider/DashboardProvider";
 import {
   Popover,
@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/popover";
 import { apiFetch } from "@/lib/api";
 import { SITE_SCOPED_MODULES, siteSlugFromPath, useSites, type SiteScopedModule } from "@/lib/sites";
-import { ThemeToggle } from "@/components/Common/ThemeProvider/ThemeToggle";
+import { ThemeSegmented } from "@/components/Common/ThemeProvider/ThemeToggle";
 import { MODULES, PAGE_LABELS, moduleTone } from "@/components/Admin/Common/navConfig";
 import { BrandCrumbSwitcher } from "@/components/Admin/Common/Sites/BrandSwitcher";
 import { useCommandPalette } from "@/components/Admin/Common/CommandPalette/store";
@@ -55,7 +55,7 @@ function Breadcrumbs({ pathname }: { pathname: string }) {
   const chevron = <TbChevronRight size={13} className="shrink-0 text-muted-foreground/60" />;
 
   return (
-    <nav aria-label="Breadcrumb" className="flex min-w-0 flex-1 items-center gap-1.5 text-[13px]">
+    <nav aria-label="Breadcrumb" className="flex min-w-0 flex-1 items-center gap-1.5 text-ui">
       {/* Section and module names stay whole; only the page name gives way when space runs out. */}
       <Link href={crumbHref(leadKey)} prefetch={false} className="flex shrink-0 items-center gap-2 rounded-md px-1.5 py-1 font-semibold text-foreground transition-colors hover:bg-foreground/[0.05]">
         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md" style={{ background: `${tone}1f`, color: tone }}>
@@ -100,7 +100,7 @@ function HeaderSearch() {
       >
         <TbSearch size={14} />
         <span className="flex-1 text-left">Search or jump to…</span>
-        <kbd className="rounded border border-border px-1.5 py-px text-[10px] font-medium">{shortcut}</kbd>
+        <kbd className="rounded border border-border px-1.5 py-px text-2xs font-medium">{shortcut}</kbd>
       </button>
       <button onClick={() => openPalette(true)} className="rounded-lg p-2 text-foreground/70 hover:bg-foreground/[0.06] md:hidden" aria-label="Search">
         <TbSearch size={18} />
@@ -182,39 +182,17 @@ export function SiteHeader() {
       </button>
       <Breadcrumbs pathname={pathname} />
       <HeaderSearch />
-      {canPreviewRoles && (
-        <Popover>
-          <PopoverTrigger asChild>
-            <button className="inline-flex h-8 items-center gap-1.5 rounded-full border border-foreground/[0.08] bg-card/60 px-2.5 text-xs font-medium text-foreground/80 shadow-xs backdrop-blur transition-colors hover:bg-card sm:px-3">
-              <TbEye size={15} className="text-muted-foreground" />
-              <span className="hidden sm:inline">{`Viewing as ${currentRoleView}`}</span>
-              <TbChevronDown size={13} className="text-muted-foreground" />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent align="end" className="w-48 p-2">
-            <div className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Preview interface
-            </div>
-            {roleViews.map((role) => (
-              <button
-                key={role.slug}
-                onClick={() => switchRoleView(role.slug)}
-                className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-sm hover:bg-muted ${
-                  role.slug === roleSlug ? "font-semibold text-foreground" : "text-foreground/85"
-                }`}
-              >
-                {role.name}
-                {role.slug === roleSlug && <span className="text-xs text-blue-600 dark:text-blue-300">Active</span>}
-              </button>
-            ))}
-            <p className="mt-1 border-t px-2 pt-2 text-xs leading-5 text-muted-foreground">
-              Permissions stay Super Admin.
-            </p>
-          </PopoverContent>
-        </Popover>
+      {/* Role preview lives in the profile menu; while previewing, a chip says so and exits in one click. */}
+      {canPreviewRoles && roleSlug !== "superadmin" && (
+        <button
+          onClick={() => switchRoleView("superadmin")}
+          className="inline-flex h-7 items-center gap-1.5 rounded-md bg-amber-500/10 px-2 text-xs font-medium text-amber-700 hover:bg-amber-500/15 dark:text-amber-300"
+          title="Back to your own view"
+        >
+          <TbEye size={14} />
+          <span className="hidden sm:inline">{`Previewing ${currentRoleView} · Exit`}</span>
+        </button>
       )}
-
-      <ThemeToggle />
 
       {/* Notifications */}
       <NotificationBell />
@@ -225,17 +203,17 @@ export function SiteHeader() {
       <Popover>
         <PopoverTrigger asChild>
           <button className="group flex items-center gap-2 rounded-full py-1 pl-1 pr-2 transition-colors hover:bg-foreground/[0.06]">
-            <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${avatarGradient(name)} text-[11px] font-bold text-white shadow-xs ring-2 ring-background/70`}>
+            <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${avatarGradient(name)} text-2xs font-semibold text-white shadow-xs ring-2 ring-background/70`}>
               {initial}
             </div>
-            <span className="hidden max-w-[160px] truncate text-[13px] font-medium text-foreground/85 sm:inline">{firstName}</span>
+            <span className="hidden max-w-[160px] truncate text-ui font-medium text-foreground/85 sm:inline">{firstName}</span>
             <TbChevronDown size={13} className="text-muted-foreground transition-colors group-hover:text-foreground/70" />
           </button>
         </PopoverTrigger>
 
-        <PopoverContent align="end" className="w-56 p-2">
+        <PopoverContent align="end" className="w-64 p-2">
           <div className="flex items-center gap-3 px-2 py-2 mb-1">
-            <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${avatarGradient(name)} flex items-center justify-center text-white font-bold text-sm shrink-0`}>
+            <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${avatarGradient(name)} flex items-center justify-center text-white font-semibold text-sm shrink-0`}>
               {initial}
             </div>
             <div className="min-w-0">
@@ -244,6 +222,26 @@ export function SiteHeader() {
             </div>
           </div>
           <div className="border-t pt-1 space-y-0.5">
+            <div className="px-2 py-2">
+              <p className="mb-1.5 text-xs font-medium text-muted-foreground">Theme</p>
+              <ThemeSegmented />
+            </div>
+            {canPreviewRoles && roleViews.length > 0 && (
+              <div className="border-t px-2 py-2">
+                <p className="mb-1 text-xs font-medium text-muted-foreground">Preview as role</p>
+                {roleViews.map((role) => (
+                  <button
+                    key={role.slug}
+                    onClick={() => switchRoleView(role.slug)}
+                    className={`flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-muted ${role.slug === roleSlug ? "font-medium text-foreground" : "text-foreground/85"}`}
+                  >
+                    {role.name}
+                    {role.slug === roleSlug && <TbCheck size={14} className="text-primary" />}
+                  </button>
+                ))}
+                <p className="px-2 pt-1 text-2xs text-muted-foreground">Permissions stay Super Admin.</p>
+              </div>
+            )}
             <Link
               href={`/${roleSlug}/profile/info`}
               className="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground/85 hover:bg-muted rounded-md"

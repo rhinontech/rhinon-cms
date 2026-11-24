@@ -229,14 +229,14 @@ export function LeadsTab({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-[11px] font-medium text-muted-foreground">
+        <p className="text-2xs font-medium text-muted-foreground">
           {draftedCount} drafted · {leads.length} enrolled
         </p>
         <div className="flex items-center gap-2">
           {/* A scheduled campaign is driven only by Activate + the cron. Offering
               "Send Now" alongside it is the one way to double-send a list. */}
           {campaign.autoSend ? (
-            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
+            <span className="inline-flex items-center gap-1 text-2xs font-medium text-muted-foreground">
               <TbClock size={13} />
               Scheduled — sends on activation
             </span>

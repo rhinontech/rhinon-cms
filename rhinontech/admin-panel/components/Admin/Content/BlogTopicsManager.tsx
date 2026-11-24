@@ -230,9 +230,9 @@ export function BlogTopicsManager() {
             <div key={topic.id} className="rounded-xl border border-border bg-card p-4">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <h3 className="truncate text-sm font-bold text-foreground">{topic.title}</h3>
+                  <h3 className="truncate text-sm font-semibold text-foreground">{topic.title}</h3>
                   <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                    <span className={cn("rounded border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest", STATUS_STYLE[topic.status])}>
+                    <span className={cn("rounded border px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-widest", STATUS_STYLE[topic.status])}>
                       {topic.status === "Generating" ? "Generating…" : topic.status}
                     </span>
                     {topic.keyword && <span>🔎 {topic.keyword}</span>}

@@ -240,7 +240,7 @@ export function CaseStudyEditorPage({ id }: { id?: string }) {
           </h1>
           <span
             className={cn(
-              "ml-2 shrink-0 rounded border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest",
+              "ml-2 shrink-0 rounded border px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-widest",
               status === "Published"
                 ? "border-emerald-100 dark:border-emerald-400/20 bg-emerald-50 dark:bg-emerald-400/10 text-emerald-600 dark:text-emerald-300"
                 : "border-amber-100 dark:border-amber-400/20 bg-amber-50 dark:bg-amber-400/10 text-amber-600 dark:text-amber-300"
@@ -289,7 +289,7 @@ export function CaseStudyEditorPage({ id }: { id?: string }) {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="ApexisPro — Architecture Operations"
-                  className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-lg font-bold tracking-tight outline-none focus:ring-2 focus:ring-ring"
+                  className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-lg font-semibold tracking-tight outline-none focus:ring-2 focus:ring-ring"
                 />
               </label>
 
@@ -350,7 +350,7 @@ export function CaseStudyEditorPage({ id }: { id?: string }) {
             {/* Gallery editor */}
             <div className="space-y-3 rounded-xl border border-border bg-card p-4 sm:p-5">
               <div className="flex items-center justify-between">
-                <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Gallery Images</h2>
+                <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Gallery Images</h2>
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
@@ -388,7 +388,7 @@ export function CaseStudyEditorPage({ id }: { id?: string }) {
             {/* Stats editor */}
             <div className="space-y-3 rounded-xl border border-border bg-card p-4 sm:p-5">
               <div className="flex items-center justify-between">
-                <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Headline Stats</h2>
+                <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Headline Stats</h2>
                 <button type="button" onClick={addStat} className="flex items-center gap-1 text-xs font-medium text-foreground/70 hover:text-foreground">
                   <TbPlus size={13} /> Add
                 </button>
@@ -511,7 +511,7 @@ export function CaseStudyEditorPage({ id }: { id?: string }) {
 function SettingsCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="space-y-3 rounded-xl border border-border bg-card p-4">
-      <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{title}</h2>
+      <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{title}</h2>
       {children}
     </div>
   );

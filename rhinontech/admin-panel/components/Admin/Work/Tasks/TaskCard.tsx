@@ -20,7 +20,7 @@ function CardBody({ task, groupMode }: { task: ApiTask; groupMode: GroupMode }) 
     <>
       {/* Which project it belongs to, when the board is grouped by person. */}
       {groupMode === "person" && task.project && (
-        <p className="mb-1 flex min-w-0 items-center gap-1 text-[11px] text-muted-foreground">
+        <p className="mb-1 flex min-w-0 items-center gap-1 text-2xs text-muted-foreground">
           <span className="truncate">{task.project.name}</span>
           {task.project.visibility && task.project.visibility !== "workspace" && (
             <TbLock size={11} className="shrink-0 text-amber-600 dark:text-amber-300" title="Restricted project" />
@@ -32,7 +32,7 @@ function CardBody({ task, groupMode }: { task: ApiTask; groupMode: GroupMode }) 
           {task.title}
           {files > 0 && <TbPaperclip size={13} className="ml-1.5 inline align-[-1px] text-muted-foreground" aria-label={`${files} files`} />}
         </p>
-        <span className={cn("mt-0.5 shrink-0 rounded border px-1 text-[9px] font-bold", PRIORITY_COLORS[task.priority])}>
+        <span className={cn("mt-0.5 shrink-0 rounded border px-1 text-2xs font-semibold", PRIORITY_COLORS[task.priority])}>
           {task.priority.charAt(0)}
         </span>
       </div>
@@ -40,14 +40,14 @@ function CardBody({ task, groupMode }: { task: ApiTask; groupMode: GroupMode }) 
       {task.tags?.length > 0 && (
         <div className="mt-1.5 flex flex-wrap gap-1">
           {task.tags.slice(0, 3).map((t) => (
-            <span key={t.id} className={cn("rounded border px-1.5 py-0.5 text-[9px] font-medium", TAG_COLOR_STYLES[t.color] ?? TAG_COLOR_STYLES.gray)}>
+            <span key={t.id} className={cn("rounded border px-1.5 py-0.5 text-2xs font-medium", TAG_COLOR_STYLES[t.color] ?? TAG_COLOR_STYLES.gray)}>
               {t.label}
             </span>
           ))}
         </div>
       )}
 
-      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
+      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-2xs text-muted-foreground">
         {task.recurrence && <TbRepeat size={11} title={task.recurrence} />}
         {task.blockedById && <TbLock size={11} className="text-amber-500 dark:text-amber-400" title="Blocked" />}
         {total > 0 && <span className="inline-flex items-center gap-0.5"><TbSubtask size={11} />{done}/{total}</span>}
@@ -56,7 +56,7 @@ function CardBody({ task, groupMode }: { task: ApiTask; groupMode: GroupMode }) 
         {/* The project is shown above the title; in project grouping show who is in charge. */}
         {groupMode === "project" && task.assignee && (
           <span className="inline-flex items-center gap-1">
-            <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-muted text-[7px] font-bold text-foreground/70">
+            <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-muted text-2xs font-semibold text-foreground/70">
               {initials(task.assignee.fullName)}
             </span>
             {task.assignee.fullName.split(" ")[0]}
@@ -116,7 +116,7 @@ export function TaskCard({
           <NativeSelect
             value=""
             onChange={(e) => e.target.value && onPatch(task.id, { assigneeId: e.target.value })}
-            className="w-full cursor-pointer rounded-md border border-blue-200 dark:border-blue-400/25 bg-blue-50 dark:bg-blue-400/10 px-1.5 py-1 text-[11px] font-medium text-blue-700 dark:text-blue-300 outline-none hover:bg-blue-100 dark:hover:bg-blue-400/15"
+            className="w-full cursor-pointer rounded-md border border-blue-200 dark:border-blue-400/25 bg-blue-50 dark:bg-blue-400/10 px-1.5 py-1 text-2xs font-medium text-blue-700 dark:text-blue-300 outline-none hover:bg-blue-100 dark:hover:bg-blue-400/15"
           >
             <option value="">Assign to…</option>
             {people.map((p) => <option key={p.id} value={p.id}>{p.fullName}</option>)}
@@ -132,7 +132,7 @@ export function TaskCard({
           <NativeSelect
             value={task.status}
             onChange={(e) => onPatch(task.id, { status: e.target.value as TaskStatus })}
-            className="min-w-0 flex-1 rounded border border-border bg-card px-1 py-0.5 text-[10px]"
+            className="min-w-0 flex-1 rounded border border-border bg-card px-1 py-0.5 text-2xs"
           >
             {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
           </NativeSelect>
@@ -142,7 +142,7 @@ export function TaskCard({
               <NativeSelect
                 value={task.assigneeId ?? ""}
                 onChange={(e) => onPatch(task.id, { assigneeId: e.target.value || null })}
-                className="min-w-0 flex-1 rounded border border-border bg-card px-1 py-0.5 text-[10px]"
+                className="min-w-0 flex-1 rounded border border-border bg-card px-1 py-0.5 text-2xs"
               >
                 <option value="">Unassigned</option>
                 {people.map((p) => <option key={p.id} value={p.id}>{p.fullName}</option>)}
@@ -152,7 +152,7 @@ export function TaskCard({
             <NativeSelect
               value={task.project?.id ?? ""}
               onChange={(e) => onPatch(task.id, { projectId: e.target.value || null })}
-              className="min-w-0 flex-1 rounded border border-border bg-card px-1 py-0.5 text-[10px]"
+              className="min-w-0 flex-1 rounded border border-border bg-card px-1 py-0.5 text-2xs"
             >
               <option value="">No project</option>
               {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}

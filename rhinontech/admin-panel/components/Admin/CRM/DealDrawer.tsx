@@ -16,7 +16,7 @@ import { useModuleBase } from "@/lib/sites";
 import { NativeSelect } from "@/components/ui/native-select";
 import { confirmDialog } from "@/components/ui/dialogs";
 const INPUT =
-  "w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40";
+  "w-full rounded border border-border bg-card px-2 py-1.5 text-ui outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40";
 
 /**
  * Deal detail. Won/Lost are done by moving to a stage of that type rather than
@@ -181,7 +181,7 @@ export function DealDrawer({
               <p className="text-lg font-semibold tabular-nums text-foreground">
                 {formatMoney(deal.value, deal.currency)}
               </p>
-              <p className="mt-0.5 text-[11px] text-muted-foreground">
+              <p className="mt-0.5 text-2xs text-muted-foreground">
                 {deal.stage?.name || "No stage"}
                 {deal.status === "Open" && deal.stage ? ` · ${deal.stage.probability}% probability` : ""}
                 {closed && deal.closedAt ? ` · closed ${relativeTime(deal.closedAt)}` : ""}
@@ -231,7 +231,7 @@ export function DealDrawer({
               {deal.status === "Won" && (
                 <div className="mt-2">
                   {project ? (
-                    <p className="rounded border border-emerald-200 dark:border-emerald-400/25 bg-emerald-50 dark:bg-emerald-400/10 px-2 py-1.5 text-[11px] text-emerald-700 dark:text-emerald-300">
+                    <p className="rounded border border-emerald-200 dark:border-emerald-400/25 bg-emerald-50 dark:bg-emerald-400/10 px-2 py-1.5 text-2xs text-emerald-700 dark:text-emerald-300">
                       Handed to delivery as “{project.name}”.
                     </p>
                   ) : (
@@ -247,14 +247,14 @@ export function DealDrawer({
               )}
 
               {deal.status === "Lost" && deal.lostReason && (
-                <p className="mt-2 rounded border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2 py-1.5 text-[11px] text-rose-700 dark:text-rose-300">
+                <p className="mt-2 rounded border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2 py-1.5 text-2xs text-rose-700 dark:text-rose-300">
                   Lost: {deal.lostReason}
                 </p>
               )}
             </div>
 
             {/* Linked records */}
-            <div className="flex flex-wrap gap-3 text-[12px] text-foreground/70">
+            <div className="flex flex-wrap gap-3 text-xs text-foreground/70">
               {deal.account && (
                 <Link href={`${crmBase}/accounts?accountId=${deal.account.id}`} className="flex items-center gap-1 text-blue-600 dark:text-blue-300 hover:underline">
                   <TbBuilding size={12} /> {deal.account.name}
@@ -270,7 +270,7 @@ export function DealDrawer({
               )}
             </div>
 
-            {error && <p className="rounded border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2 py-1.5 text-[11px] text-rose-700 dark:text-rose-300">{error}</p>}
+            {error && <p className="rounded border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2 py-1.5 text-2xs text-rose-700 dark:text-rose-300">{error}</p>}
 
             {/* Editable fields */}
             <form onSubmit={save} className="space-y-2.5">
@@ -311,7 +311,7 @@ export function DealDrawer({
                 <textarea
                   value={form.notes}
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                  className="h-20 w-full resize-none rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
+                  className="h-20 w-full resize-none rounded border border-border bg-card px-2 py-1.5 text-ui outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
                 />
               </Field>
 
@@ -323,7 +323,7 @@ export function DealDrawer({
             <RelatedTasks dealId={dealId} owners={owners} />
 
             <div>
-              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Activity</p>
+              <p className="mb-1.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Activity</p>
               <Timeline dealId={dealId} onLogged={onChanged} />
             </div>
           </div>
@@ -336,7 +336,7 @@ export function DealDrawer({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
+      <span className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
       {children}
     </label>
   );

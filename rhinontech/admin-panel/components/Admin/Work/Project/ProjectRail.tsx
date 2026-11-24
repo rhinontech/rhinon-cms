@@ -69,7 +69,7 @@ export function ProjectRail({
             href={linkTo(p.id)}
             title={p.name}
             className={cn(
-              "flex h-7 w-7 items-center justify-center rounded-lg text-[10px] font-bold text-white transition",
+              "flex h-7 w-7 items-center justify-center rounded-lg text-2xs font-semibold text-white transition",
               accentFor(p.id),
               p.id === activeId ? "ring-2 ring-ring ring-offset-1" : "opacity-70 hover:opacity-100"
             )}
@@ -84,7 +84,7 @@ export function ProjectRail({
   return (
     <aside className="hidden w-56 shrink-0 flex-col border-r glass-sidenav md:flex">
       <div className="flex items-center gap-1 px-3 pt-3">
-        <span className="flex-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+        <span className="flex-1 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
           Projects
         </span>
         {showAllProjectsLink && (
@@ -128,7 +128,7 @@ export function ProjectRail({
           <div className="pt-2">
             <button
               onClick={() => setShowArchived((v) => !v)}
-              className="flex w-full items-center gap-1.5 rounded-lg px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:bg-card"
+              className="flex w-full items-center gap-1.5 rounded-lg px-2 py-1 text-2xs font-semibold uppercase tracking-widest text-muted-foreground hover:bg-card"
             >
               <TbArchive size={12} />
               <span className="flex-1 text-left">{`Archived (${archived.length})`}</span>

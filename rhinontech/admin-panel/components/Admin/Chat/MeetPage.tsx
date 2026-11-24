@@ -135,7 +135,7 @@ export function MeetPage({ token }: { token: string }) {
     <Shell>
       <p className="text-sm text-muted-foreground">{info.orgName}</p>
       <h1 className="-mt-2 text-2xl font-semibold">{info.title}</h1>
-      <div className="relative aspect-video w-full max-w-md overflow-hidden rounded-2xl bg-zinc-900">
+      <div className="relative aspect-video w-full max-w-md overflow-hidden rounded-xl bg-zinc-900">
         {camOn && preview ? (
           <video ref={videoRef} autoPlay playsInline muted className="h-full w-full -scale-x-100 object-cover" />
         ) : (

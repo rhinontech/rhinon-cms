@@ -136,11 +136,11 @@ const TAB_META: { id: TabId; label: string; teamLabel?: string; icon: typeof Use
 
 // Selected tab is solid ink (inverts in dark mode); the rest stay quiet until hovered.
 export const TAB_TRIGGER =
-  "group flex-none h-9 gap-2 rounded-lg border-0 px-3.5 text-[13px] font-medium text-muted-foreground transition-colors " +
+  "group flex-none h-9 gap-2 rounded-lg border-0 px-3.5 text-ui font-medium text-muted-foreground transition-colors " +
   "hover:bg-muted/70 hover:text-foreground data-[state=active]:bg-foreground data-[state=active]:text-background data-[state=active]:shadow-sm " +
   "dark:text-muted-foreground dark:data-[state=active]:bg-foreground dark:data-[state=active]:text-background";
 export const TAB_COUNT =
-  "rounded-full bg-muted px-1.5 py-px text-[11px] font-semibold tabular-nums text-foreground/80 " +
+  "rounded-full bg-muted px-1.5 py-px text-2xs font-semibold tabular-nums text-foreground/80 " +
   "group-data-[state=active]:bg-background/20 group-data-[state=active]:text-background";
 
 export default function EventManage({ eventId }: { eventId: string }) {
@@ -231,7 +231,7 @@ export default function EventManage({ eventId }: { eventId: string }) {
           </Button>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="truncate text-[16px] font-semibold">{event.eventTitle}</h1>
+              <h1 className="truncate text-base font-semibold">{event.eventTitle}</h1>
               {event.isPublished ? (
                 <Badge className="border-0 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">Published</Badge>
               ) : (
@@ -242,7 +242,7 @@ export default function EventManage({ eventId }: { eventId: string }) {
               </Badge>
               {event.eventType !== "Workshop" ? <Badge variant="outline">{event.eventType}</Badge> : null}
             </div>
-            <p className="mt-0.5 flex items-center gap-1.5 text-[12.5px] text-muted-foreground">
+            <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
               <CalendarDays className="size-3.5" />
               {formatDay(event.eventStartDate)}
               {event.eventEndDate && event.eventEndDate !== event.eventStartDate ? ` – ${formatDay(event.eventEndDate)}` : ""}

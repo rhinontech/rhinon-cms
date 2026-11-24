@@ -57,16 +57,16 @@ export function SettingsLetterTemplates() {
           <SubNavToggle />
           <div>
             <h1 className="text-sm font-semibold tracking-tight">Letter Templates</h1>
-            <p className="text-[11px] text-muted-foreground">Offer letter &amp; NDA content</p>
+            <p className="text-2xs text-muted-foreground">Offer letter &amp; NDA content</p>
           </div>
         </div>
         <div className="p-2">
           <div className="flex items-center justify-between px-2 pt-1 pb-1.5">
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Offer Letters</span>
+            <span className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">Offer Letters</span>
             <button
               type="button"
               onClick={() => setCreating(true)}
-              className="flex items-center gap-1 rounded-md px-1.5 py-1 text-[11px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="flex items-center gap-1 rounded-md px-1.5 py-1 text-2xs font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <TbPlus size={13} /> New
             </button>
@@ -84,7 +84,7 @@ export function SettingsLetterTemplates() {
           </nav>
 
           <div className="mt-4 px-2 pb-1.5">
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">NDA</span>
+            <span className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">NDA</span>
           </div>
           <nav className="space-y-0.5">
             {ndaTemplates.map((s) => (
@@ -141,7 +141,7 @@ function TemplateRow({
         <TbFileText size={16} className="mt-0.5 shrink-0 opacity-70" />
         <span className="min-w-0">
           <span className="block truncate text-sm font-medium">{summary.title}</span>
-          <span className={cn("block text-[11px]", selected ? "text-primary-foreground/60" : "text-muted-foreground")}>
+          <span className={cn("block text-2xs", selected ? "text-primary-foreground/60" : "text-muted-foreground")}>
             v{summary.version} · {new Date(summary.updatedAt).toLocaleDateString()}
           </span>
         </span>
@@ -267,7 +267,7 @@ function TemplateEditor({ templateKey, onSaved }: { templateKey: LetterTemplateK
             {blocks.map((block) =>
               block.kind === "pagebreak" ? null : (
                 <div key={block.id}>
-                  <label className="mb-1 block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  <label className="mb-1 block text-2xs font-medium uppercase tracking-wide text-muted-foreground">
                     {block.kind}
                     {"num" in block && block.num ? ` ${block.num}` : ""}
                     {"marker" in block && block.marker ? ` ${block.marker}` : ""}

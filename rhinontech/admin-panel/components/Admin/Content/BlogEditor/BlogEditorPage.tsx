@@ -266,7 +266,7 @@ export function BlogEditorPage({ id, resource = "blogs" }: { id?: string; resour
           </div>
           <span
             className={cn(
-              "ml-2 shrink-0 rounded border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest",
+              "ml-2 shrink-0 rounded border px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-widest",
               status === "Published"
                 ? "border-emerald-100 dark:border-emerald-400/20 bg-emerald-50 dark:bg-emerald-400/10 text-emerald-600 dark:text-emerald-300"
                 : "border-amber-100 dark:border-amber-400/20 bg-amber-50 dark:bg-amber-400/10 text-amber-600 dark:text-amber-300"
@@ -330,7 +330,7 @@ export function BlogEditorPage({ id, resource = "blogs" }: { id?: string; resour
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="7 UI design principles every product manager should know"
-                  className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-lg font-bold tracking-tight outline-none focus:ring-2 focus:ring-ring"
+                  className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-lg font-semibold tracking-tight outline-none focus:ring-2 focus:ring-ring"
                 />
               </label>
 
@@ -390,7 +390,7 @@ export function BlogEditorPage({ id, resource = "blogs" }: { id?: string; resour
                     <button
                       type="button"
                       onClick={() => { setReadTimeTouched(false); setReadTime(computeReadTimeFromHtml(content)); }}
-                      className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold text-muted-foreground hover:bg-muted"
+                      className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-2xs font-semibold text-muted-foreground hover:bg-muted"
                       title="Recalculate from content"
                     >
                       <TbSparkles size={11} /> auto
@@ -404,7 +404,7 @@ export function BlogEditorPage({ id, resource = "blogs" }: { id?: string; resour
                   className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
                 {!readTimeTouched && (
-                  <span className="text-[10px] font-normal text-muted-foreground">Auto-calculated from your content.</span>
+                  <span className="text-2xs font-normal text-muted-foreground">Auto-calculated from your content.</span>
                 )}
               </label>
             </SettingsCard>
@@ -534,7 +534,7 @@ export function BlogEditorPage({ id, resource = "blogs" }: { id?: string; resour
 function SettingsCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="space-y-3 rounded-xl border border-border bg-card p-4">
-      <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{title}</h2>
+      <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{title}</h2>
       {children}
     </div>
   );
@@ -544,7 +544,7 @@ function CharCounter({ value, limit }: { value: string; limit: number }) {
   return (
     <span
       className={cn(
-        "text-[10px] font-semibold tabular-nums",
+        "text-2xs font-semibold tabular-nums",
         value.length > limit ? "text-amber-600 dark:text-amber-300" : "text-muted-foreground"
       )}
     >

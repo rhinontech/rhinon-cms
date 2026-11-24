@@ -216,7 +216,7 @@ export function GoalsPage() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-medium text-foreground text-xs sm:text-sm truncate">{goal.title}</p>
                         {goal.cycle && (
-                          <span className="text-[10px] sm:text-xs rounded-md px-1.5 sm:px-2 py-0.5 bg-purple-50 dark:bg-purple-400/10 text-purple-700 dark:text-purple-300 font-medium">{goal.cycle.name}</span>
+                          <span className="text-2xs sm:text-xs rounded-md px-1.5 sm:px-2 py-0.5 bg-purple-50 dark:bg-purple-400/10 text-purple-700 dark:text-purple-300 font-medium">{goal.cycle.name}</span>
                         )}
                       </div>
                       {isAdmin && goal.user && (
@@ -224,7 +224,7 @@ export function GoalsPage() {
                       )}
                       <div className="mt-2 space-y-1">
                         <ProgressBar value={goal.progress} />
-                        <p className="text-[11px] sm:text-xs text-muted-foreground">{goal.progress}% complete{goal.targetDate ? ` · Due ${goal.targetDate}` : ""}</p>
+                        <p className="text-2xs sm:text-xs text-muted-foreground">{goal.progress}% complete{goal.targetDate ? ` · Due ${goal.targetDate}` : ""}</p>
                       </div>
                     </div>
                     <StatusChip status={goal.status} />

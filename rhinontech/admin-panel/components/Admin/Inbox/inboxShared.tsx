@@ -75,7 +75,7 @@ export function toneFor(seed: string): string {
   return TONES[hash % TONES.length];
 }
 
-const AVATAR_SIZES = { sm: "h-7 w-7 text-[10px]", md: "h-9 w-9 text-[11px]", lg: "h-14 w-14 text-base" };
+const AVATAR_SIZES = { sm: "h-7 w-7 text-2xs", md: "h-9 w-9 text-2xs", lg: "h-14 w-14 text-base" };
 
 export function Avatar({ name, seed, src, size = "md", className }: {
   name: string; seed?: string; src?: string | null; size?: keyof typeof AVATAR_SIZES; className?: string;
@@ -162,7 +162,7 @@ export function AttachmentView({ att }: { att: Att }) {
     return (
       <a href={att.url} target="_blank" rel="noopener noreferrer" className="group block w-44 overflow-hidden rounded-lg border bg-card shadow-xs transition hover:shadow-sm">
         <img src={att.url} alt={att.name} className="h-28 w-full object-cover" />
-        <span className="flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] text-muted-foreground">
+        <span className="flex items-center gap-1.5 px-2.5 py-1.5 text-2xs text-muted-foreground">
           <span className="min-w-0 flex-1 truncate font-medium text-foreground/85">{att.name}</span>
           <TbDownload size={12} className="shrink-0 opacity-60 group-hover:opacity-100" />
         </span>
@@ -173,7 +173,7 @@ export function AttachmentView({ att }: { att: Att }) {
     return (
       <div className="w-full max-w-[300px] rounded-lg border bg-card p-2 shadow-xs">
         <audio controls src={att.url} className="h-9 w-full" />
-        <p className="mt-1 truncate px-1 text-[11px] text-muted-foreground">{att.name}</p>
+        <p className="mt-1 truncate px-1 text-2xs text-muted-foreground">{att.name}</p>
       </div>
     );
   }
@@ -191,7 +191,7 @@ export function AttachmentView({ att }: { att: Att }) {
       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">{fileIcon(att.mimeType)}</span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-xs font-medium text-foreground">{att.name}</span>
-        <span className="block text-[11px] text-muted-foreground">{sizeLabel(att.size)}</span>
+        <span className="block text-2xs text-muted-foreground">{sizeLabel(att.size)}</span>
       </span>
       <TbDownload size={14} className="shrink-0 text-muted-foreground opacity-60 group-hover:opacity-100" />
     </a>
@@ -240,7 +240,7 @@ export function IconButton({ className, active, ...props }: React.ComponentProps
 export function PaneMessage({ icon, title, body, action }: { icon: React.ReactNode; title: string; body?: string; action?: React.ReactNode }) {
   return (
     <div className="flex h-full min-h-48 flex-col items-center justify-center px-6 py-10 text-center">
-      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-foreground/[0.05] text-muted-foreground ring-1 ring-inset ring-foreground/[0.06]">{icon}</span>
+      <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-foreground/[0.05] text-muted-foreground ring-1 ring-inset ring-foreground/[0.06]">{icon}</span>
       <p className="mt-3 text-sm font-semibold text-foreground">{title}</p>
       {body && <p className="mt-1 max-w-xs text-xs leading-5 text-muted-foreground">{body}</p>}
       {action && <div className="mt-4">{action}</div>}

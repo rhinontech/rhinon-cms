@@ -60,10 +60,10 @@ export function BlogSideRail({
   return (
     <div className="space-y-8">
       {/* Assessment card */}
-      <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6">
+      <div className="rounded-xl border border-white/10 bg-white/[0.04] p-6">
         <div className="mb-4 flex items-center gap-2">
           <span className="h-1.5 w-1.5 rounded-full bg-white" />
-          <span className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground">
+          <span className="text-2xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
             Rhinon Labs
           </span>
         </div>
@@ -77,7 +77,7 @@ export function BlogSideRail({
 
         <Link
           href="https://www.rhinonlabs.com/contact-us"
-          className="group flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3.5 text-sm font-bold text-slate-950 transition-all hover:bg-white/90"
+          className="group flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3.5 text-sm font-semibold text-slate-950 transition-all hover:bg-white/90"
         >
           {ctaLabel}
           <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
@@ -90,7 +90,7 @@ export function BlogSideRail({
 
       {/* Summarize with AI */}
       {/* <div>
-        <p className="mb-4 text-lg font-black tracking-tight text-foreground">Summarize with AI</p>
+        <p className="mb-4 text-lg font-semibold tracking-tight text-foreground">Summarize with AI</p>
         <div className="flex gap-2.5">
           {AI_TOOLS.map((tool) => (
             <a

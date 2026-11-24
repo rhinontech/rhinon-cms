@@ -51,7 +51,7 @@ export function SitePickerModal({
               className="group flex items-center justify-between rounded-xl border border-border bg-card p-4 text-left transition-colors hover:border-primary hover:bg-muted/40"
             >
               <div>
-                <div className="text-sm font-bold text-foreground">{site.name}</div>
+                <div className="text-sm font-semibold text-foreground">{site.name}</div>
                 <div className="text-xs text-muted-foreground">
                   {site.siteUrl?.replace(/^https?:\/\//, "") ||
                     (site.isDefault ? "Default brand" : "No site URL set")}

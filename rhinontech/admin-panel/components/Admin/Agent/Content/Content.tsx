@@ -13,7 +13,7 @@ const Content = () => {
             <button onClick={toggleSideNav}>
               {isExpanded ? "Close" : "Open"}
             </button>
-            <p className="text-xl font-bold tracking-tight">Content</p>
+            <p className="text-xl font-semibold tracking-tight">Content</p>
           </div>
           <div className="flex gap-6">
             <button>New Content</button>
@@ -34,7 +34,7 @@ const Content = () => {
         {isPreviewExpanded && (
           <div className="flex flex-col w-full flex-1">
             <div className="flex justify-between items-center h-16 border-b p-6">
-              <p className="text-xl font-bold tracking-tight">Preview</p>
+              <p className="text-xl font-semibold tracking-tight">Preview</p>
               {isPreviewExpanded && (
                 <button
                   onClick={() => setIsPreviewExpanded(!isPreviewExpanded)}

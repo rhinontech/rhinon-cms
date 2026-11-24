@@ -123,7 +123,7 @@ export function CampaignsPage() {
               <TabsTrigger key={s} value={s}>
                 {s}
                 {s !== "All" && (
-                  <span className="text-[10px] text-muted-foreground tabular-nums">
+                  <span className="text-2xs text-muted-foreground tabular-nums">
                     {campaigns.filter((c) => c.stage === s).length}
                   </span>
                 )}

@@ -166,12 +166,12 @@ export function LeadFinderQueue() {
 
   return (
     <div className="flex flex-col gap-5" data-testid="finder-queue">
-      <div className="rounded-2xl border border-border bg-background/70 p-4">
+      <div className="rounded-xl border border-border bg-background/70 p-4">
         <Textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder={"One company per line — a website, a name, or both:\nslickblinds.com\nRazorpay\nSupabase, supabase.com"}
-          className="min-h-[120px] rounded-xl font-mono text-[13px]"
+          className="min-h-[120px] rounded-xl font-mono text-ui"
           data-testid="queue-input"
         />
         <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -213,12 +213,12 @@ export function LeadFinderQueue() {
           <TbLoader2 size={16} className="animate-spin" /> Loading the queue…
         </div>
       ) : targets.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+        <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
           The queue is empty. Paste some websites above — each morning their founders are found, their emails checked, and the ones that work
           land in the CRM list “Lead Finder”.
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-border bg-background/70 divide-y divide-border/70" data-testid="queue-list">
+        <div className="overflow-hidden rounded-xl border border-border bg-background/70 divide-y divide-border/70" data-testid="queue-list">
           {targets.map((t) => {
             const added = t.result?.added ?? [];
             const skipped = t.result?.skipped ?? [];
@@ -228,7 +228,7 @@ export function LeadFinderQueue() {
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="truncate text-sm font-medium">{t.company || t.domain}</span>
                     {t.company && t.domain && <span className="truncate text-xs text-muted-foreground">{t.domain}</span>}
-                    <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium", STATUS[t.status].className)}>
+                    <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-2xs font-medium", STATUS[t.status].className)}>
                       {t.status === "running" && <TbLoader2 size={11} className="mr-1 animate-spin" />}
                       {STATUS[t.status].label}
                     </span>
@@ -278,7 +278,7 @@ export function LeadFinderQueue() {
 function Stat({ label, value, highlight }: { label: string; value: number; highlight?: boolean }) {
   return (
     <div className={cn("rounded-xl border border-border px-3 py-1.5", highlight ? "bg-emerald-50 dark:bg-emerald-400/10" : "bg-background/70")}>
-      <span className="text-[11px] text-muted-foreground">{label}</span>{" "}
+      <span className="text-2xs text-muted-foreground">{label}</span>{" "}
       <span className="text-sm font-semibold tabular-nums">{value}</span>
     </div>
   );

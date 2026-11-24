@@ -119,11 +119,11 @@ export function LeaveRequestsPage() {
               <table className="w-full min-w-[560px] text-sm">
                 <thead>
                   <tr className="border-b bg-muted/40 text-left">
-                    <th className="px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">Type</th>
-                    <th className="px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">Duration</th>
-                    <th className="px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">Days</th>
-                    <th className="px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">Status</th>
-                    <th className="px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">Applied On</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Type</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Duration</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Days</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Applied On</th>
                     <th className="px-4 py-3"></th>
                   </tr>
                 </thead>

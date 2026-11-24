@@ -137,7 +137,7 @@ export function AnalyticsSetup() {
           >
             <TbArrowLeft size={14} /> Back to analytics
           </button>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Install tracking</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Install tracking</h1>
           <p className="text-sm text-muted-foreground">
             Add one line to your website and its visitors, sources and pages appear here.
             {setup ? ` Reporting for ${setup.site.name}.` : ""}

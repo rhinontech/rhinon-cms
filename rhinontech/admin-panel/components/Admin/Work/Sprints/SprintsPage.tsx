@@ -43,7 +43,7 @@ function ProgressBar({ done, total }: { done: number; total: number }) {
       <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
         <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${pct}%` }} />
       </div>
-      <span className="shrink-0 text-[11px] font-medium text-muted-foreground">{done}/{total}</span>
+      <span className="shrink-0 text-2xs font-medium text-muted-foreground">{done}/{total}</span>
     </div>
   );
 }
@@ -474,11 +474,11 @@ export function SprintsPage() {
 function TaskRow({ task, action }: { task: SprintTask; action: React.ReactNode }) {
   return (
     <div className="flex items-center gap-2 border-b px-3 py-2.5 text-sm last:border-b-0">
-      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted text-[9px] font-bold text-foreground/70">
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted text-2xs font-semibold text-foreground/70">
         {task.assignee ? initials(task.assignee.fullName) : "?"}
       </span>
       <span className="flex-1 truncate text-foreground">{task.title}</span>
-      <span className={cn("shrink-0 rounded border px-1 text-[9px] font-bold", PRIORITY_COLORS[task.priority])}>
+      <span className={cn("shrink-0 rounded border px-1 text-2xs font-semibold", PRIORITY_COLORS[task.priority])}>
         {task.priority.charAt(0)}
       </span>
       {task.dueDate && (

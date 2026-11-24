@@ -112,7 +112,7 @@ export function RewriteToolbar({
         </button>
       ) : (
         <div className="w-72 rounded-xl border border-border bg-card p-3 shadow-xl">
-          <p className="mb-2 truncate text-[11px] font-medium text-muted-foreground">&ldquo;{target.selectedText}&rdquo;</p>
+          <p className="mb-2 truncate text-2xs font-medium text-muted-foreground">&ldquo;{target.selectedText}&rdquo;</p>
           <textarea
             autoFocus
             value={instruction}
@@ -121,7 +121,7 @@ export function RewriteToolbar({
             rows={2}
             className="w-full resize-none rounded-md border border-border p-2 text-xs focus:outline-none focus:ring-2 focus:ring-border"
           />
-          {error && <p className="mt-1 text-[11px] text-red-600 dark:text-red-300">{error}</p>}
+          {error && <p className="mt-1 text-2xs text-red-600 dark:text-red-300">{error}</p>}
           <div className="mt-2 flex justify-end gap-2">
             <button type="button" onClick={close} className="text-xs text-muted-foreground hover:text-foreground/85">
               Cancel

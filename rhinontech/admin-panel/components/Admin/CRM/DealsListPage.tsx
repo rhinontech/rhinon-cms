@@ -87,7 +87,7 @@ export function DealsListPage() {
           <SubNavToggle />
           <div className="min-w-0">
             <h1 className="text-sm font-semibold tracking-tight text-foreground">Deals</h1>
-            <p className="text-[11px] tabular-nums text-muted-foreground">
+            <p className="text-2xs tabular-nums text-muted-foreground">
               {count.toLocaleString("en-IN")} matching · {formatMoney(pageValue)} on this page
             </p>
           </div>
@@ -103,7 +103,7 @@ export function DealsListPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search deal title…"
-              className="w-full rounded-md border border-border bg-card/70 py-1.5 pl-8 pr-3 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
+              className="w-full rounded-md border border-border bg-card/70 py-1.5 pl-8 pr-3 text-ui outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
             />
           </div>
           <Sel value={statusFilter} onChange={(v) => { setStatusFilter(v); setOffset(0); }}>
@@ -122,7 +122,7 @@ export function DealsListPage() {
           </Sel>
         </div>
 
-        {error && <p className="mb-2.5 rounded-md border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2.5 py-1.5 text-[11px] text-rose-700 dark:text-rose-300">{error}</p>}
+        {error && <p className="mb-2.5 rounded-md border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2.5 py-1.5 text-2xs text-rose-700 dark:text-rose-300">{error}</p>}
 
         <TableShell>
           <HeaderRow cols={COLS}>
@@ -151,7 +151,7 @@ export function DealsListPage() {
               return (
                 <DataRow key={deal.id} cols={COLS} onClick={() => setOpenDealId(deal.id)}>
                   <span className="truncate font-medium text-foreground">{deal.title}</span>
-                  <span className="flex min-w-0 items-center gap-1 text-[12px] text-foreground/70">
+                  <span className="flex min-w-0 items-center gap-1 text-xs text-foreground/70">
                     {deal.account ? (
                       <>
                         <TbBuilding size={11} className="shrink-0 text-muted-foreground" />
@@ -165,19 +165,19 @@ export function DealsListPage() {
                       </>
                     ) : <span className="text-muted-foreground/70">—</span>}
                   </span>
-                  <span className="flex min-w-0 items-center gap-1.5 text-[12px] text-foreground/70">
+                  <span className="flex min-w-0 items-center gap-1.5 text-xs text-foreground/70">
                     <StageDot color={deal.stage?.color} type={deal.stage?.type} />
                     <span className="truncate">{deal.stage?.name || "No stage"}</span>
                   </span>
                   <span className="text-right font-medium tabular-nums text-foreground">
                     {formatMoney(deal.value, deal.currency)}
                   </span>
-                  <span className={cn("text-[11px] tabular-nums", overdue ? "text-rose-500 dark:text-rose-400" : "text-muted-foreground")}>
+                  <span className={cn("text-2xs tabular-nums", overdue ? "text-rose-500 dark:text-rose-400" : "text-muted-foreground")}>
                     {deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "—"}
                   </span>
                   <span className="flex min-w-0 items-center gap-1.5">
                     <Avatar name={deal.owner?.fullName} size={18} />
-                    <span className="truncate text-[11px] text-muted-foreground">{deal.owner?.fullName || "—"}</span>
+                    <span className="truncate text-2xs text-muted-foreground">{deal.owner?.fullName || "—"}</span>
                   </span>
                   <span />
                 </DataRow>

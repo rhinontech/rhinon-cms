@@ -98,7 +98,7 @@ export function ApprovalsPage() {
             <div className="p-20 text-center flex flex-col items-center gap-4">
               <TbCircleCheck size={64} className="text-green-200" />
               <div>
-                <p className="text-lg font-bold text-foreground">All caught up!</p>
+                <p className="text-lg font-semibold text-foreground">All caught up!</p>
                 <p className="text-sm text-muted-foreground">No pending regularization or overtime requests.</p>
               </div>
             </div>
@@ -107,7 +107,7 @@ export function ApprovalsPage() {
               key={req.id}
               onClick={() => { setSelectedRequest(req); setIsPreviewExpanded(true); }}
               className={cn(
-                "p-4 rounded-2xl border border-border transition-all cursor-pointer flex items-center justify-between group",
+                "p-4 rounded-xl border border-border transition-all cursor-pointer flex items-center justify-between group",
                 selectedRequest?.id === req.id ? "bg-muted/40 border-border ring-1 ring-border" : "bg-card hover:bg-muted/40"
               )}
             >
@@ -119,8 +119,8 @@ export function ApprovalsPage() {
                   {req.type === "Regularization" ? <TbClock size={20} /> : <TbFileText size={20} />}
                 </div>
                 <div>
-                  <h3 className="font-bold text-foreground text-sm">{req.userName}</h3>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{req.type} for {new Date(req.date).toLocaleDateString()}</p>
+                  <h3 className="font-semibold text-foreground text-sm">{req.userName}</h3>
+                  <p className="text-2xs font-semibold text-muted-foreground uppercase tracking-widest">{req.type} for {new Date(req.date).toLocaleDateString()}</p>
                 </div>
               </div>
               <TbChevronRight className={cn("text-muted-foreground/50 group-hover:text-foreground group-hover:translate-x-1 transition-all", selectedRequest?.id === req.id && "text-foreground")} />
@@ -147,7 +147,7 @@ export function ApprovalsPage() {
 
             <div className="flex-1 overflow-auto p-5 space-y-6">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xl">
+                <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-xl">
                   {selectedRequest.userName.charAt(0)}
                 </div>
                 <div>
@@ -177,7 +177,7 @@ export function ApprovalsPage() {
                 <button
                   onClick={() => handleAction(selectedRequest.id, "Approved")}
                   disabled={!!processing}
-                  className="w-full py-3 bg-green-600 text-white rounded-xl font-bold text-sm hover:bg-green-700 transition-colors shadow-lg active:scale-95 flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold text-sm hover:bg-green-700 transition-colors shadow-lg active:scale-95 flex items-center justify-center gap-2"
                 >
                   {processing === selectedRequest.id ? <TbClock className="animate-spin" /> : <TbCheck />}
                   Approve Request
@@ -185,7 +185,7 @@ export function ApprovalsPage() {
                 <button
                   onClick={() => handleAction(selectedRequest.id, "Rejected")}
                   disabled={!!processing}
-                  className="w-full py-3 bg-card text-red-600 dark:text-red-300 border border-red-100 dark:border-red-400/20 rounded-xl font-bold text-sm hover:bg-red-50 dark:hover:bg-red-400/10 transition-colors active:scale-95 flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-card text-red-600 dark:text-red-300 border border-red-100 dark:border-red-400/20 rounded-xl font-semibold text-sm hover:bg-red-50 dark:hover:bg-red-400/10 transition-colors active:scale-95 flex items-center justify-center gap-2"
                 >
                   <TbX />
                   Decline

@@ -317,7 +317,7 @@ export function CampaignInboxTab({
                 )}
               >
                 {tab.label}
-                <span className="tabular-nums text-[10.5px] text-muted-foreground">{counts[tab.key]}</span>
+                <span className="tabular-nums text-2xs text-muted-foreground">{counts[tab.key]}</span>
               </button>
             ))}
           </div>
@@ -328,7 +328,7 @@ export function CampaignInboxTab({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search people"
-                className="h-8 w-full rounded-lg border border-input bg-background/70 pl-8 pr-2 text-[13px] outline-none focus:border-ring/60 focus:ring-[3px] focus:ring-ring/15"
+                className="h-8 w-full rounded-lg border border-input bg-background/70 pl-8 pr-2 text-ui outline-none focus:border-ring/60 focus:ring-[3px] focus:ring-ring/15"
               />
             </div>
             <Button size="sm" variant="outline" onClick={() => setGroupDialogOpen(true)} title="Save these people to a contact group">
@@ -365,17 +365,17 @@ export function CampaignInboxTab({
                   <Avatar name={c.lead.name} seed={c.lead.email} />
                   <span className="min-w-0 flex-1">
                     <span className="flex items-baseline gap-2">
-                      <span className={cn("min-w-0 flex-1 truncate text-[13px]", c.unread ? "font-semibold text-foreground" : "font-medium text-foreground/85")}>{c.lead.name}</span>
-                      <time className="shrink-0 text-[11px] tabular-nums text-muted-foreground">{lastEmail ? listTime(lastEmail.sentAt) : ""}</time>
+                      <span className={cn("min-w-0 flex-1 truncate text-ui", c.unread ? "font-semibold text-foreground" : "font-medium text-foreground/85")}>{c.lead.name}</span>
+                      <time className="shrink-0 text-2xs tabular-nums text-muted-foreground">{lastEmail ? listTime(lastEmail.sentAt) : ""}</time>
                     </span>
                     <span className="flex items-center gap-2">
                       <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{c.lead.company || c.lead.email}</span>
                       {c.hasReply ? (
-                        <span className="inline-flex shrink-0 items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400"><TbMessageCheck size={12} />Replied</span>
+                        <span className="inline-flex shrink-0 items-center gap-1 text-2xs font-medium text-emerald-600 dark:text-emerald-400"><TbMessageCheck size={12} />Replied</span>
                       ) : c.hasOpened ? (
-                        <span className="inline-flex shrink-0 items-center gap-1 text-[11px] font-medium text-sky-600 dark:text-sky-400"><TbEye size={12} />Opened</span>
+                        <span className="inline-flex shrink-0 items-center gap-1 text-2xs font-medium text-sky-600 dark:text-sky-400"><TbEye size={12} />Opened</span>
                       ) : (
-                        <span className="inline-flex shrink-0 items-center gap-1 text-[11px] text-muted-foreground/80"><TbMail size={12} />Sent</span>
+                        <span className="inline-flex shrink-0 items-center gap-1 text-2xs text-muted-foreground/80"><TbMail size={12} />Sent</span>
                       )}
                     </span>
                     <span className="mt-0.5 block truncate text-xs text-muted-foreground/90">{lastEmail?.snippet}</span>
@@ -397,13 +397,13 @@ export function CampaignInboxTab({
               </button>
               <Avatar name={selected.lead.name} seed={selected.lead.email} />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[15px] font-semibold tracking-tight text-foreground">{selected.lead.name}</p>
+                <p className="truncate text-base font-semibold tracking-tight text-foreground">{selected.lead.name}</p>
                 <p className="truncate text-xs text-muted-foreground">{[selected.lead.company, selected.lead.email].filter(Boolean).join(" · ")}</p>
               </div>
               {selected.hasReply ? (
-                <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-400/10 dark:text-emerald-300 dark:ring-emerald-400/20">Replied</span>
+                <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-2xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-400/10 dark:text-emerald-300 dark:ring-emerald-400/20">Replied</span>
               ) : selected.hasOpened ? (
-                <span className="shrink-0 rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-medium text-sky-700 ring-1 ring-inset ring-sky-200 dark:bg-sky-400/10 dark:text-sky-300 dark:ring-sky-400/20">Opened</span>
+                <span className="shrink-0 rounded-full bg-sky-50 px-2 py-0.5 text-2xs font-medium text-sky-700 ring-1 ring-inset ring-sky-200 dark:bg-sky-400/10 dark:text-sky-300 dark:ring-sky-400/20">Opened</span>
               ) : null}
             </div>
 
@@ -416,7 +416,7 @@ export function CampaignInboxTab({
                       <header className="flex items-start gap-3 px-4 pt-3.5 sm:px-5">
                         <Avatar name={mine ? "You" : e.fromName} seed={e.fromEmail} size="sm" />
                         <div className="min-w-0 flex-1">
-                          <span className="text-[13px] font-semibold text-foreground">{mine ? "You" : e.fromName}</span>
+                          <span className="text-ui font-semibold text-foreground">{mine ? "You" : e.fromName}</span>
                           <span className="ml-1.5 text-xs text-muted-foreground">{mine ? "sent" : "replied"}</span>
                         </div>
                         <time className="shrink-0 text-xs text-muted-foreground" title={fullTime(e.sentAt)}>{stampTime(e.sentAt)}</time>
@@ -439,10 +439,10 @@ export function CampaignInboxTab({
                     onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleReply(); } }}
                     placeholder={`Reply to ${selected.lead.name}…`}
                     rows={2}
-                    className="field-sizing-content block max-h-48 min-h-[64px] w-full resize-none bg-transparent px-3 py-2.5 text-[13.5px] leading-6 outline-none placeholder:text-muted-foreground/80"
+                    className="field-sizing-content block max-h-48 min-h-[64px] w-full resize-none bg-transparent px-3 py-2.5 text-ui leading-6 outline-none placeholder:text-muted-foreground/80"
                   />
                   <div className="flex items-center justify-between px-3 pb-2">
-                    <span className="truncate text-[11px] text-muted-foreground">{`To ${lastInbound.fromEmail} · ⌘/Ctrl+Enter to send`}</span>
+                    <span className="truncate text-2xs text-muted-foreground">{`To ${lastInbound.fromEmail} · ⌘/Ctrl+Enter to send`}</span>
                     <Button onClick={handleReply} disabled={sending || !replyBody.trim()} size="sm">
                       {sending ? <TbLoader className="animate-spin" /> : <TbSend2 />} Send
                     </Button>

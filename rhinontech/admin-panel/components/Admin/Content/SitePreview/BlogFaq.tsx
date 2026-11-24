@@ -22,7 +22,7 @@ export function BlogFaq({ faqs }: { faqs: BlogFaqItem[] }) {
           return (
             <div
               key={index}
-              className={`rounded-2xl border transition-colors ${
+              className={`rounded-xl border transition-colors ${
                 isOpen ? "border-white/25 bg-white/[0.05]" : "border-white/10 bg-white/[0.02] hover:border-white/20"
               }`}
             >

@@ -45,7 +45,7 @@ export function UserAvatar({
   const user = useTeamChat((s) => s.users[userId]);
   const presence = useTeamChat((s) => s.presence[userId] ?? "offline");
   const name = user?.name ?? fallbackName ?? "Unknown";
-  const dims = { xs: "size-5 text-[9px]", sm: "size-7 text-[10px]", md: "size-9 text-xs", lg: "size-14 text-lg", xl: "size-24 text-3xl" }[size];
+  const dims = { xs: "size-5 text-2xs", sm: "size-7 text-2xs", md: "size-9 text-xs", lg: "size-14 text-lg", xl: "size-24 text-3xl" }[size];
   const dot = { xs: "size-2", sm: "size-2.5", md: "size-2.5", lg: "size-3.5", xl: "size-5" }[size];
   return (
     <div className="relative shrink-0">

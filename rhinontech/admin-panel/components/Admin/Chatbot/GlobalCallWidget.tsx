@@ -19,7 +19,7 @@ export function GlobalCallWidget() {
 
   return (
     <div
-      className="fixed bottom-5 right-5 z-50 w-[300px] overflow-hidden rounded-2xl border border-border bg-background/95 shadow-[0_24px_60px_-16px_rgba(15,23,42,0.45)] backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4 duration-300"
+      className="fixed bottom-5 right-5 z-50 w-[300px] overflow-hidden rounded-xl border border-border bg-background/95 shadow-[0_24px_60px_-16px_rgba(15,23,42,0.45)] backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4 duration-300"
       role="dialog"
       aria-label={`Voice call with ${peerName}`}
       data-testid="call-widget"
@@ -30,10 +30,10 @@ export function GlobalCallWidget() {
           <Avatar name={peerName} seed={peerName} size="lg" className="relative" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+          <p className="text-2xs font-medium uppercase tracking-wider text-muted-foreground">
             {phase === "ringing" ? "Calling" : "Voice call"}
           </p>
-          <p className="truncate text-[15px] font-semibold text-foreground">{peerName}</p>
+          <p className="truncate text-base font-semibold text-foreground">{peerName}</p>
           <p className={cn("mt-0.5 flex items-center gap-1.5 text-xs tabular-nums", live ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground")}>
             <span className={cn("size-1.5 rounded-full", live ? "bg-emerald-500" : "animate-pulse bg-amber-500")} />
             {status}

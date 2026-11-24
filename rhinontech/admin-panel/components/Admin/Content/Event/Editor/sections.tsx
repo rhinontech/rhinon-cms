@@ -55,7 +55,7 @@ export function BasicsSection({
     <SectionCard id="basics" icon={Sparkles} title="Basics" hint="The title, the one-line summary under it, and what kind of event this is.">
       <Field label="Title" htmlFor="ev-title" required error={errorFor("title")}>
         <Input id="ev-title" value={form.title} onChange={(e) => onTitleChange(e.target.value)}
-          placeholder="e.g. Prompt Engineering for Educators" className="text-[15px] h-11" />
+          placeholder="e.g. Prompt Engineering for Educators" className="text-base h-11" />
       </Field>
       <Field label="Summary" htmlFor="ev-summary" hint="Shown under the title on the event page and on its card in the listing.">
         <Textarea id="ev-summary" rows={2} value={form.summary} onChange={(e) => update("summary", e.target.value)}
@@ -71,7 +71,7 @@ export function BasicsSection({
         }
       >
         <div className="flex items-stretch rounded-md border border-input dark:bg-input/30 focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px] overflow-hidden">
-          <span className="hidden sm:flex items-center px-3 text-[13px] text-muted-foreground bg-muted/50 border-r border-input whitespace-nowrap">
+          <span className="hidden sm:flex items-center px-3 text-ui text-muted-foreground bg-muted/50 border-r border-input whitespace-nowrap">
             {sitePrefix}
           </span>
           <input id="ev-slug" value={form.slug} onChange={(e) => onSlugChange(e.target.value)}
@@ -80,7 +80,7 @@ export function BasicsSection({
       </Field>
 
       <div className="space-y-2">
-        <p className="text-[13px] font-medium">Category</p>
+        <p className="text-ui font-medium">Category</p>
         <div className="grid sm:grid-cols-2 gap-2.5" role="radiogroup" aria-label="Category">
           {(Object.keys(CATEGORIES) as EventCategory[]).map((key) => {
             const meta = CATEGORIES[key];
@@ -100,14 +100,14 @@ export function BasicsSection({
                 }`}
               >
                 <span className="flex items-center justify-between gap-2">
-                  <span className="flex items-center gap-2 text-[13.5px] font-semibold">
+                  <span className="flex items-center gap-2 text-ui font-semibold">
                     <span className={`size-2 rounded-full ${meta.dot}`} aria-hidden />
                     {meta.label}
                   </span>
                   {active ? <CheckCircle2 className="size-4 text-primary" aria-hidden /> : null}
                 </span>
-                <span className="mt-1 block text-[12.5px] text-muted-foreground leading-snug">{meta.blurb}</span>
-                <span className="mt-2 inline-flex items-center gap-1 text-[11.5px] font-medium text-muted-foreground">
+                <span className="mt-1 block text-xs text-muted-foreground leading-snug">{meta.blurb}</span>
+                <span className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
                   <Award className="size-3" aria-hidden />
                   {meta.certificate ? `${meta.certificate} certificate` : "No certificate"}
                 </span>
@@ -215,14 +215,14 @@ export function HostsSection({ form, update }: SectionProps) {
       }
     >
       {form.hosts.length === 0 ? (
-        <p className="text-[13px] text-muted-foreground rounded-xl border border-dashed border-border px-4 py-6 text-center">
+        <p className="text-ui text-muted-foreground rounded-xl border border-dashed border-border px-4 py-6 text-center">
           No hosts yet. Events with a named host get noticeably more registrations.
         </p>
       ) : null}
       {form.hosts.map((host, index) => (
         <div key={index} className="rounded-xl border border-border bg-muted/20 p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Host {index + 1}{index === 0 ? " · signs the certificate" : ""}
             </span>
             <RowControls index={index} count={form.hosts.length} label="host"
@@ -248,7 +248,7 @@ export function AboutSection({ form, update }: SectionProps) {
       <Textarea rows={7} value={form.about} onChange={(e) => update("about", e.target.value)}
         placeholder={"Open with who it's for and what changes for them.\n\nThen, in a second paragraph, how the session runs."}
         className="leading-relaxed" />
-      <p className="text-[12px] text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         Leave a blank line between paragraphs · {paragraphs} {paragraphs === 1 ? "paragraph" : "paragraphs"}
       </p>
     </SectionCard>
@@ -332,8 +332,8 @@ export function ExtrasSection({ form, update }: SectionProps) {
     <SectionCard id="extras" icon={Award} title="Feedback, certificate & community">
       <div className="flex items-start justify-between gap-6 rounded-xl border border-border p-4">
         <div>
-          <p className="text-[14px] font-medium">Accept {form.type === "Workshop" ? "feedback" : "submissions"}</p>
-          <p className="text-[12.5px] text-muted-foreground">
+          <p className="text-sm font-medium">Accept {form.type === "Workshop" ? "feedback" : "submissions"}</p>
+          <p className="text-xs text-muted-foreground">
             Approved guests can respond from their personal link while this is on. Registration stays open either way — it closes once the event has ended.
           </p>
         </div>
@@ -345,7 +345,7 @@ export function ExtrasSection({ form, update }: SectionProps) {
           <ImageField value={form.certificateUrl} onChange={(url) => update("certificateUrl", url)} aspect="aspect-[1.414/1]" label="certificate" />
         </Field>
       ) : (
-        <p className="text-[13px] text-muted-foreground">{CATEGORIES[form.category].label} events don&apos;t award a certificate.</p>
+        <p className="text-ui text-muted-foreground">{CATEGORIES[form.category].label} events don&apos;t award a certificate.</p>
       )}
       <Field label="Community WhatsApp link" htmlFor="ev-wa" hint="Shown on community events as “Join the community group”.">
         <Input id="ev-wa" value={form.whatsappLink} onChange={(e) => update("whatsappLink", e.target.value)} placeholder="https://chat.whatsapp.com/…" />

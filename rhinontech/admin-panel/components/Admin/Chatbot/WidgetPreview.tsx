@@ -98,7 +98,7 @@ export function WidgetPreview({
   );
 
   return (
-    <div className="relative mx-auto h-[min(760px,calc(100vh_-_215px))] w-full max-w-[440px] overflow-hidden rounded-2xl border border-border bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(127,127,127,0.04)_10px,rgba(127,127,127,0.04)_20px)]">
+    <div className="relative mx-auto h-[min(760px,calc(100vh_-_215px))] w-full max-w-[440px] overflow-hidden rounded-xl border border-border bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(127,127,127,0.04)_10px,rgba(127,127,127,0.04)_20px)]">
       <div ref={frame} className="absolute inset-0" style={{ transform: "translateZ(0)" }} data-testid="widget-preview" />
       {failed && (
         <p className="absolute inset-0 flex items-center justify-center p-6 text-center text-sm text-muted-foreground">

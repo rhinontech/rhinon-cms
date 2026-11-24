@@ -412,7 +412,7 @@ export function SettingsRoles() {
                               <p className="text-xs sm:text-sm font-medium text-foreground truncate">
                                 {PERMISSION_LABELS[perm.name] ?? perm.name}
                               </p>
-                              <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 truncate">{perm.name}</p>
+                              <p className="text-2xs sm:text-xs text-muted-foreground mt-0.5 truncate">{perm.name}</p>
                             </div>
                             <div
                               className={cn(

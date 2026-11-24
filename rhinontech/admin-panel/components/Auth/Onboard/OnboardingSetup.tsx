@@ -85,7 +85,7 @@ export function OnboardingSetup() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary mb-4">
-            <span className="text-primary-foreground font-bold text-lg">R</span>
+            <span className="text-primary-foreground font-semibold text-lg">R</span>
           </div>
           <p className="text-sm text-muted-foreground">Rhinon Tech · Admin Panel</p>
         </div>

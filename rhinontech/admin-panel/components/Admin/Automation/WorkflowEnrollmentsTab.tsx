@@ -63,10 +63,10 @@ export function WorkflowEnrollmentsTab({
       </div>
 
       {/* Enrollments Data Table */}
-      <div className="bg-card rounded-2xl border border-border shadow-2xs overflow-hidden">
+      <div className="bg-card rounded-xl border border-border shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="bg-muted/40 border-b border-border text-xs font-bold text-foreground/85 uppercase tracking-wider">
+            <thead className="bg-muted/40 border-b border-border text-xs font-semibold text-foreground/85 uppercase tracking-wider">
               <tr>
                 <th className="px-6 py-3.5">Lead</th>
                 <th className="px-6 py-3.5">Source</th>

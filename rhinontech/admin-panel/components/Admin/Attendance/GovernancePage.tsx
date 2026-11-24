@@ -80,7 +80,7 @@ export function GovernancePage() {
             <SubNavToggle />
             <div>
               <h1 className="text-base font-semibold tracking-tight text-foreground">Governance & Policies</h1>
-              <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">HR Rules & Guidelines</p>
+              <p className="text-2xs text-muted-foreground font-semibold uppercase tracking-widest">HR Rules & Guidelines</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -98,7 +98,7 @@ export function GovernancePage() {
                   setIsEditing(true);
                   setIsPreviewExpanded(true);
                 }}
-                className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-primary-foreground hover:bg-primary/90 transition-all shadow-md"
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:bg-primary/90 transition-all shadow-md"
               >
                 <TbPlus size={16} /> New Policy
               </button>
@@ -129,7 +129,7 @@ export function GovernancePage() {
                 key={policy.id}
                 onClick={() => { setSelectedPolicy(policy); setIsPreviewExpanded(true); setIsEditing(false); }}
                 className={cn(
-                  "p-4 rounded-2xl border border-border transition-all cursor-pointer flex items-center justify-between group",
+                  "p-4 rounded-xl border border-border transition-all cursor-pointer flex items-center justify-between group",
                   selectedPolicy?.id === policy.id ? "bg-muted/40 border-border ring-1 ring-border shadow-sm" : "bg-card hover:bg-muted/40"
                 )}
               >
@@ -138,10 +138,10 @@ export function GovernancePage() {
                     <TbFileDescription size={20} />
                   </div>
                   <div>
-                    <h3 className="font-bold text-foreground text-sm">{policy.title}</h3>
+                    <h3 className="font-semibold text-foreground text-sm">{policy.title}</h3>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{policy.category}</span>
-                      <span className="text-[9px] font-bold text-blue-500 dark:text-blue-400 uppercase tracking-widest bg-blue-50 dark:bg-blue-400/10 px-1.5 py-0.5 rounded">{policy.version}</span>
+                      <span className="text-2xs font-semibold text-muted-foreground uppercase tracking-widest">{policy.category}</span>
+                      <span className="text-2xs font-semibold text-blue-500 dark:text-blue-400 uppercase tracking-widest bg-blue-50 dark:bg-blue-400/10 px-1.5 py-0.5 rounded">{policy.version}</span>
                     </div>
                   </div>
                 </div>
@@ -179,25 +179,25 @@ export function GovernancePage() {
               {isEditing ? (
                 <div className="space-y-6">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Policy Title</label>
+                    <label className="text-2xs font-semibold text-muted-foreground uppercase tracking-widest">Policy Title</label>
                     <input
                       type="text"
                       defaultValue={selectedPolicy.title}
-                      className="w-full px-4 py-3 text-lg font-bold border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-ring"
+                      className="w-full px-4 py-3 text-lg font-semibold border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-ring"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Content</label>
+                    <label className="text-2xs font-semibold text-muted-foreground uppercase tracking-widest">Content</label>
                     <textarea
                       defaultValue={selectedPolicy.content}
                       className="w-full h-[400px] px-4 py-3 text-sm leading-relaxed border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                     />
                   </div>
                   <div className="flex gap-3 pt-6 border-t">
-                    <button onClick={handleSave} className="flex-1 py-3 bg-primary text-primary-foreground rounded-xl font-bold text-sm hover:bg-primary/90 transition-all flex items-center justify-center gap-2">
+                    <button onClick={handleSave} className="flex-1 py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:bg-primary/90 transition-all flex items-center justify-center gap-2">
                       <TbCheck /> Save Changes
                     </button>
-                    <button onClick={() => setIsEditing(false)} className="px-6 py-3 bg-card text-muted-foreground border border-border rounded-xl font-bold text-sm hover:bg-muted/40 transition-all">
+                    <button onClick={() => setIsEditing(false)} className="px-6 py-3 bg-card text-muted-foreground border border-border rounded-xl font-semibold text-sm hover:bg-muted/40 transition-all">
                       Cancel
                     </button>
                   </div>
@@ -205,8 +205,8 @@ export function GovernancePage() {
               ) : (
                 <article className="prose prose-stone max-w-none">
                   <div className="mb-8">
-                    <span className="text-[10px] font-bold text-blue-600 dark:text-blue-300 uppercase tracking-widest bg-blue-50 dark:bg-blue-400/10 px-2 py-1 rounded-full">{selectedPolicy.category}</span>
-                    <h2 className="text-3xl font-bold text-foreground mt-4 mb-2">{selectedPolicy.title}</h2>
+                    <span className="text-2xs font-semibold text-blue-600 dark:text-blue-300 uppercase tracking-widest bg-blue-50 dark:bg-blue-400/10 px-2 py-1 rounded-full">{selectedPolicy.category}</span>
+                    <h2 className="text-3xl font-semibold text-foreground mt-4 mb-2">{selectedPolicy.title}</h2>
                     <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       <span>Version {selectedPolicy.version}</span>
                       <span>•</span>
@@ -218,10 +218,10 @@ export function GovernancePage() {
                     {selectedPolicy.content}
                   </div>
 
-                  <div className="mt-12 p-6 bg-blue-50 dark:bg-blue-400/10 rounded-2xl border border-blue-100 dark:border-blue-400/20 flex items-start gap-4">
+                  <div className="mt-12 p-6 bg-blue-50 dark:bg-blue-400/10 rounded-xl border border-blue-100 dark:border-blue-400/20 flex items-start gap-4">
                     <div className="p-2 bg-primary text-primary-foreground rounded-lg shadow-md"><TbTarget size={20} /></div>
                     <div>
-                      <p className="text-sm font-bold text-blue-900 dark:text-blue-200">Compliance Required</p>
+                      <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">Compliance Required</p>
                       <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">All employees must read and acknowledge this policy by the end of this quarter.</p>
                     </div>
                   </div>

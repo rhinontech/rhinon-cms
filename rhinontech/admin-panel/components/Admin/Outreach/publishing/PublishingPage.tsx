@@ -200,10 +200,10 @@ function CadenceCard({
   return (
     <div className="space-y-3 rounded-xl glass-panel p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           Published mix · {total} post{total === 1 ? "" : "s"}
         </p>
-        <button onClick={onNew} className="text-[11px] font-semibold text-blue-600 dark:text-blue-300 hover:underline">
+        <button onClick={onNew} className="text-2xs font-semibold text-blue-600 dark:text-blue-300 hover:underline">
           Write a {suggestedMeta.label} next →
         </button>
       </div>
@@ -224,7 +224,7 @@ function CadenceCard({
 
       <div className="flex flex-wrap gap-x-4 gap-y-1.5">
         {POST_TYPE_LIST.map((t) => (
-          <span key={t.id} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <span key={t.id} className="flex items-center gap-1.5 text-2xs text-muted-foreground">
             <span className={cn("h-2 w-2 rounded-full", counts[t.id] ? t.dot : "bg-muted-foreground/25")} />
             {t.label}
             <span className="font-semibold tabular-nums text-foreground">{counts[t.id]}</span>
@@ -233,7 +233,7 @@ function CadenceCard({
       </div>
 
       {ratio.overweight && (
-        <p className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-[11px] leading-relaxed text-amber-800 dark:border-amber-400/25 dark:bg-amber-400/10 dark:text-amber-200">
+        <p className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-2xs leading-relaxed text-amber-800 dark:border-amber-400/25 dark:bg-amber-400/10 dark:text-amber-200">
           <TbAlertTriangle size={14} className="mt-px shrink-0" />
           <span>
             {ratio.offers} of your last {ratio.total} posts were Direct Offers ({Math.round(ratio.ratio * 100)}%). The
@@ -251,7 +251,7 @@ function FilterChip({ active, onClick, label, dot }: { active: boolean; onClick:
     <button
       onClick={onClick}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors",
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-2xs font-semibold transition-colors",
         active
           ? "border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-400/10 dark:text-blue-300"
           : "border-border bg-card text-muted-foreground hover:text-foreground"
@@ -276,7 +276,7 @@ function PostGrid({
 }) {
   return (
     <div className="space-y-2">
-      <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{title}</p>
+      <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{title}</p>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {posts.map((post) => {
           const type = post.postType ? POST_TYPE_META[post.postType] : null;
@@ -296,28 +296,28 @@ function PostGrid({
                 <div className="flex flex-1 flex-col gap-1.5 p-4">
                   <div className="flex flex-wrap items-center gap-1.5">
                     {type && (
-                      <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold", type.chip)}>
+                      <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-2xs font-semibold", type.chip)}>
                         <type.icon size={10} /> {type.label}
                       </span>
                     )}
                     {post.platformPostId ? (
-                      <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-300">
+                      <span className="ml-auto inline-flex items-center gap-1 text-2xs font-semibold text-emerald-600 dark:text-emerald-300">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Live
                       </span>
                     ) : (
-                      <span className="ml-auto text-[10px] font-bold uppercase text-amber-600 dark:text-amber-300">Draft</span>
+                      <span className="ml-auto text-2xs font-semibold uppercase text-amber-600 dark:text-amber-300">Draft</span>
                     )}
                   </div>
-                  <p className="truncate text-sm font-bold text-foreground group-hover:underline">{post.name}</p>
+                  <p className="truncate text-sm font-semibold text-foreground group-hover:underline">{post.name}</p>
                   {post.aiDraft && <p className="line-clamp-2 text-xs text-muted-foreground">{post.aiDraft}</p>}
                   {needsInput && (
-                    <p className="flex items-center gap-1 text-[10px] font-semibold text-red-600 dark:text-red-400">
+                    <p className="flex items-center gap-1 text-2xs font-semibold text-red-600 dark:text-red-400">
                       <TbAlertTriangle size={11} /> {post.postMeta!.inputNeeded!.length} detail
                       {post.postMeta!.inputNeeded!.length === 1 ? "" : "s"} needed
                     </p>
                   )}
                   {post.platformPostId && post.socialStats && (
-                    <p className="mt-auto pt-1 text-[11px] text-muted-foreground tabular-nums">
+                    <p className="mt-auto pt-1 text-2xs text-muted-foreground tabular-nums">
                       {post.socialStats.likes} likes · {post.socialStats.comments} comments · {post.socialStats.impressions} impressions
                     </p>
                   )}

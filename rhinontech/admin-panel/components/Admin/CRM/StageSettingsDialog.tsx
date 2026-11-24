@@ -10,7 +10,7 @@ import { StageDot, TBtn } from "./ui";
 import { NativeSelect } from "@/components/ui/native-select";
 import { confirmDialog } from "@/components/ui/dialogs";
 const INPUT =
-  "w-full rounded border border-border bg-card px-2 py-1 text-[12px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40";
+  "w-full rounded border border-border bg-card px-2 py-1 text-xs outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40";
 
 /**
  * Pipeline stage management. Stages are rows, so renaming, reordering, and
@@ -122,7 +122,7 @@ export function StageSettingsDialog({ onClose }: { onClose: (changed: boolean) =
         <div className="flex shrink-0 items-center justify-between border-b border-border/70 px-4 py-3">
           <div>
             <h2 className="text-sm font-semibold text-foreground">Pipeline stages</h2>
-            <p className="text-[11px] text-muted-foreground">Probability drives the weighted forecast on the board.</p>
+            <p className="text-2xs text-muted-foreground">Probability drives the weighted forecast on the board.</p>
           </div>
           <button onClick={() => onClose(dirty)} className="rounded p-1 text-muted-foreground hover:bg-muted">
             <TbX size={16} />
@@ -130,7 +130,7 @@ export function StageSettingsDialog({ onClose }: { onClose: (changed: boolean) =
         </div>
 
         <div className="flex-1 overflow-auto p-3">
-          {error && <p className="mb-2 rounded border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2 py-1.5 text-[11px] text-rose-700 dark:text-rose-300">{error}</p>}
+          {error && <p className="mb-2 rounded border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2 py-1.5 text-2xs text-rose-700 dark:text-rose-300">{error}</p>}
 
           {loading ? (
             <div className="space-y-1.5">
@@ -138,7 +138,7 @@ export function StageSettingsDialog({ onClose }: { onClose: (changed: boolean) =
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-[20px_minmax(0,1fr)_92px_104px_64px_56px] items-center gap-2 px-1 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <div className="grid grid-cols-[20px_minmax(0,1fr)_92px_104px_64px_56px] items-center gap-2 px-1 pb-1.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
                 <span />
                 <span>Name</span>
                 <span>Type</span>
@@ -191,7 +191,7 @@ export function StageSettingsDialog({ onClose }: { onClose: (changed: boolean) =
                         disabled={stage.type !== "Open"}
                         className={cn(INPUT, "tabular-nums disabled:bg-muted/40 disabled:text-muted-foreground")}
                       />
-                      <span className="text-[11px] text-muted-foreground">%</span>
+                      <span className="text-2xs text-muted-foreground">%</span>
                     </span>
 
                     <input
@@ -221,7 +221,7 @@ export function StageSettingsDialog({ onClose }: { onClose: (changed: boolean) =
                 <TBtn onClick={add} disabled={busy}><TbPlus size={13} /> Add stage</TBtn>
               </div>
 
-              <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
+              <p className="mt-3 text-2xs leading-relaxed text-muted-foreground">
                 A deal takes its Open/Won/Lost status from the stage it sits in, so keep exactly one
                 Won and one Lost stage. Stages holding deals can&apos;t be deleted until those deals move.
               </p>

@@ -68,16 +68,16 @@ export function SendConsole({
     <div className="overflow-hidden rounded-lg border border-neutral-800 bg-neutral-950 shadow-lg">
       <div className="flex items-center gap-2 border-b border-neutral-800 px-3 py-2">
         <TbTerminal2 size={14} className="text-neutral-500" />
-        <span className="text-[11px] font-bold text-neutral-300">Send console</span>
+        <span className="text-2xs font-semibold text-neutral-300">Send console</span>
         {running ? (
-          <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase text-amber-400">
+          <span className="inline-flex items-center gap-1 text-2xs font-semibold uppercase text-amber-400">
             <TbLoader size={12} className="animate-spin" /> Sending
           </span>
         ) : (
-          <span className="text-[10px] font-bold uppercase text-emerald-400">Finished</span>
+          <span className="text-2xs font-semibold uppercase text-emerald-400">Finished</span>
         )}
         {progress && (
-          <span className="text-[10px] font-medium text-neutral-500">
+          <span className="text-2xs font-medium text-neutral-500">
             {progress.done}/{progress.total} · {progress.sent} sent
             {progress.skipped > 0 && ` · ${progress.skipped} skipped`}
             {progress.failed > 0 && ` · ${progress.failed} failed`}
@@ -99,7 +99,7 @@ export function SendConsole({
         />
       </div>
 
-      <div ref={bodyRef} className="max-h-64 overflow-auto px-3 py-2 font-mono text-[11px] leading-relaxed">
+      <div ref={bodyRef} className="max-h-64 overflow-auto px-3 py-2 font-mono text-2xs leading-relaxed">
         {lines.map((line, i) => (
           <div key={i} className="whitespace-pre-wrap break-words">
             <span className="text-neutral-600">{clock(line.ts)} </span>

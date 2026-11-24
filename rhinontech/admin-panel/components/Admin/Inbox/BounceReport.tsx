@@ -34,7 +34,7 @@ export function bounceKind(entry: BouncedAddress): { label: string; tone: Tone; 
 export function KindChip({ entry, className }: { entry: BouncedAddress; className?: string }) {
   const kind = bounceKind(entry);
   return (
-    <span className={cn("inline-flex shrink-0 items-center rounded-full px-1.5 py-px text-[10.5px] font-medium ring-1 ring-inset", TONE_CHIP[kind.tone], className)}>
+    <span className={cn("inline-flex shrink-0 items-center rounded-full px-1.5 py-px text-2xs font-medium ring-1 ring-inset", TONE_CHIP[kind.tone], className)}>
       {kind.label}
     </span>
   );
@@ -54,8 +54,8 @@ export function BounceRow({ entry, selected, onSelect }: { entry: BouncedAddress
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-baseline gap-2">
-          <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground">{entry.address}</span>
-          <time className="shrink-0 text-[11px] tabular-nums text-muted-foreground">{listTime(entry.lastNoticeAt)}</time>
+          <span className="min-w-0 flex-1 truncate text-ui font-medium text-foreground">{entry.address}</span>
+          <time className="shrink-0 text-2xs tabular-nums text-muted-foreground">{listTime(entry.lastNoticeAt)}</time>
         </span>
         <span className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
           <span><b className="font-semibold tabular-nums text-foreground/80">{entry.sent}</b> sent</span>
@@ -109,7 +109,7 @@ export function BounceDetail({ entry, onBack, onCompose }: { entry: BouncedAddre
         <IconButton onClick={onBack} className="-ml-1 lg:hidden" aria-label="Back to list"><TbArrowLeft size={18} /></IconButton>
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-2">
-            <h2 className="truncate text-[15px] font-semibold tracking-tight text-foreground">{entry.address}</h2>
+            <h2 className="truncate text-base font-semibold tracking-tight text-foreground">{entry.address}</h2>
             <KindChip entry={entry} />
           </div>
           <p className="truncate text-xs text-muted-foreground">{`Last bounce ${stampTime(entry.lastNoticeAt)}`}</p>
@@ -130,14 +130,14 @@ export function BounceDetail({ entry, onBack, onCompose }: { entry: BouncedAddre
             <div className="flex items-center gap-2">
               <TbAlertTriangle size={16} className={cn("shrink-0", kind.tone === "rose" ? "text-rose-500" : kind.tone === "amber" ? "text-amber-500" : "text-slate-500")} />
               <p className="text-sm font-semibold text-foreground">Why it came back</p>
-              {entry.status && <code className="ml-auto rounded-md bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">{entry.status}</code>}
+              {entry.status && <code className="ml-auto rounded-md bg-muted px-1.5 py-0.5 font-mono text-2xs text-muted-foreground">{entry.status}</code>}
             </div>
-            <p className="mt-2 text-[13px] leading-6 text-foreground/85">{entry.reason || "The notice didn't say why."}</p>
+            <p className="mt-2 text-ui leading-6 text-foreground/85">{entry.reason || "The notice didn't say why."}</p>
             <p className="mt-2 text-xs leading-5 text-muted-foreground">{kind.hint}</p>
           </section>
 
           <section>
-            <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">History</p>
+            <p className="mb-2 px-1 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">History</p>
             <ol className="overflow-hidden rounded-xl border bg-card shadow-xs">
               {history.map((h, i) => (
                 <li key={`${h.kind}-${h.at}-${i}`} className="flex gap-3 border-b px-4 py-3 last:border-b-0">
@@ -151,8 +151,8 @@ export function BounceDetail({ entry, onBack, onCompose }: { entry: BouncedAddre
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-baseline gap-2">
-                      <p className="text-[13px] font-medium text-foreground">{h.title}</p>
-                      {h.status && <code className="font-mono text-[11px] text-muted-foreground">{h.status}</code>}
+                      <p className="text-ui font-medium text-foreground">{h.title}</p>
+                      {h.status && <code className="font-mono text-2xs text-muted-foreground">{h.status}</code>}
                       <time className="ml-auto shrink-0 text-xs text-muted-foreground" title={fullTime(h.at)}>{stampTime(h.at)}</time>
                     </div>
                     {h.detail && <p className="mt-0.5 line-clamp-2 text-xs leading-5 text-muted-foreground">{h.detail}</p>}

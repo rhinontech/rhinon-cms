@@ -130,7 +130,7 @@ export function MeetingsPage() {
       <div className="flex min-h-0 flex-1 flex-col gap-4 p-4 sm:p-6">
         <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Meetings</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">Meetings</h1>
             <p className="text-sm text-muted-foreground">
               {source === "workspace"
                 ? connectedEmail
@@ -186,7 +186,7 @@ export function MeetingsPage() {
                 </div>
               </div>
 
-              <div className="mb-1 grid shrink-0 grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              <div className="mb-1 grid shrink-0 grid-cols-7 gap-1 text-center text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
                 {WEEKDAYS.map((d) => (
                   <span key={d}>{d}</span>
                 ))}
@@ -216,12 +216,12 @@ export function MeetingsPage() {
                       </span>
                       <div className="min-h-0 w-full flex-1 space-y-0.5 overflow-hidden">
                         {shown.map((e) => (
-                          <span key={e.id} className="block truncate rounded bg-blue-600/10 px-1 text-[10px] text-blue-800 dark:text-blue-200">
+                          <span key={e.id} className="block truncate rounded bg-blue-600/10 px-1 text-2xs text-blue-800 dark:text-blue-200">
                             {e.summary}
                           </span>
                         ))}
                         {dayEvents.length > shown.length && (
-                          <span className="block text-[10px] text-muted-foreground">+{dayEvents.length - shown.length} more</span>
+                          <span className="block text-2xs text-muted-foreground">+{dayEvents.length - shown.length} more</span>
                         )}
                       </div>
                     </button>
@@ -269,12 +269,12 @@ export function MeetingsPage() {
                       </div>
 
                       {event.attendees.length > 0 && (
-                        <p className="mt-1.5 truncate text-[11px] text-muted-foreground">
+                        <p className="mt-1.5 truncate text-2xs text-muted-foreground">
                           {event.attendees.map((a) => a.email).join(", ")}
                         </p>
                       )}
 
-                      <div className="mt-2 flex items-center gap-3 text-[11px]">
+                      <div className="mt-2 flex items-center gap-3 text-2xs">
                         {canWrite && (
                           <>
                             <button onClick={() => openEdit(event)} className="font-semibold text-blue-600 dark:text-blue-300 hover:underline">

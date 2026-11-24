@@ -166,7 +166,7 @@ export function LeadImportModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center glass-overlay p-4">
-      <div className="w-full max-w-lg rounded-2xl glass-modal">
+      <div className="w-full max-w-lg rounded-xl glass-modal">
         <div className="flex h-16 items-center justify-between border-b px-5">
           <div className="flex items-center gap-2">
             <TbFileTypeCsv className="text-blue-600 dark:text-blue-300" size={20} />
@@ -289,8 +289,8 @@ export function LeadImportModal({
 function Stat({ label, value, tone }: { label: string; value: number; tone: string }) {
   return (
     <div className="rounded-lg border border-border bg-muted/40 py-3">
-      <p className={`text-xl font-bold ${tone}`}>{value}</p>
-      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className={`text-xl font-semibold ${tone}`}>{value}</p>
+      <p className="text-2xs uppercase tracking-wide text-muted-foreground">{label}</p>
     </div>
   );
 }

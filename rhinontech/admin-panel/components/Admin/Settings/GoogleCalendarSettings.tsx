@@ -93,7 +93,7 @@ export function GoogleCalendarSettings() {
   return (
     <div className="max-w-5xl space-y-6 p-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Workspace calendar</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Workspace calendar</h1>
         <p className="text-sm text-muted-foreground">
           One shared Google calendar for the workspace. It powers the public booking page and interview scheduling, and it&apos;s
           the Meetings calendar for anyone who hasn&apos;t picked their own. To use your personal calendar instead, connect
@@ -126,7 +126,7 @@ export function GoogleCalendarSettings() {
                 <p className="text-xs font-semibold">
                   {connected ? `Connected${status?.connectedEmail ? ` · ${status.connectedEmail}` : ""}` : "Not connected"}
                 </p>
-                <p className="text-[10px] font-medium opacity-60">
+                <p className="text-2xs font-medium opacity-60">
                   {connected
                     ? "Meetings tab is live"
                     : status?.configured
@@ -139,7 +139,7 @@ export function GoogleCalendarSettings() {
             {connected ? (
               <button
                 onClick={handleDisconnect}
-                className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-red-600 dark:hover:text-red-300"
+                className="flex items-center gap-1 text-2xs font-semibold uppercase tracking-widest text-muted-foreground hover:text-red-600 dark:hover:text-red-300"
               >
                 <TbUnlink size={12} /> Disconnect
               </button>
@@ -147,7 +147,7 @@ export function GoogleCalendarSettings() {
               <button
                 onClick={handleConnect}
                 disabled={connecting || !status?.configured}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
               >
                 {connecting ? <TbLoader className="animate-spin" size={12} /> : <TbLink size={12} />}
                 Connect Google Calendar

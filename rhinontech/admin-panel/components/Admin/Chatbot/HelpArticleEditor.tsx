@@ -6,6 +6,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import { Placeholder } from "@tiptap/extensions";
 import { toast } from "sonner";
+import { promptDialog } from "@/components/ui/dialogs";
 import {
   TbBlockquote,
   TbBold,
@@ -45,7 +46,7 @@ export function HelpArticleEditor({ html, onChange, editable }: { html: string; 
     content: html || "",
     editorProps: {
       attributes: {
-        class: "help-article min-h-[50vh] px-5 py-4 text-[14px] leading-relaxed text-foreground outline-none",
+        class: "help-article min-h-[50vh] px-5 py-4 text-sm leading-relaxed text-foreground outline-none",
         "data-testid": "article-body",
       },
     },
@@ -55,9 +56,9 @@ export function HelpArticleEditor({ html, onChange, editable }: { html: string; 
   return (
     <div
       className={cn(
-        "flex flex-col overflow-hidden rounded-2xl border border-border bg-background",
+        "flex flex-col overflow-hidden rounded-xl border border-border bg-background",
         "[&_.help-article_h2]:mb-2 [&_.help-article_h2]:mt-5 [&_.help-article_h2]:text-lg [&_.help-article_h2]:font-semibold",
-        "[&_.help-article_h3]:mb-1.5 [&_.help-article_h3]:mt-4 [&_.help-article_h3]:text-[15px] [&_.help-article_h3]:font-semibold",
+        "[&_.help-article_h3]:mb-1.5 [&_.help-article_h3]:mt-4 [&_.help-article_h3]:text-base [&_.help-article_h3]:font-semibold",
         "[&_.help-article_p]:my-2 [&_.help-article_ul]:my-2 [&_.help-article_ul]:list-disc [&_.help-article_ul]:pl-5",
         "[&_.help-article_ol]:my-2 [&_.help-article_ol]:list-decimal [&_.help-article_ol]:pl-5",
         "[&_.help-article_a]:text-blue-600 [&_.help-article_a]:underline dark:[&_.help-article_a]:text-blue-400",
@@ -75,9 +76,9 @@ export function HelpArticleEditor({ html, onChange, editable }: { html: string; 
 function Toolbar({ editor }: { editor: Editor }) {
   const fileInput = useRef<HTMLInputElement>(null);
 
-  const setLink = () => {
+  const setLink = async () => {
     const previous = editor.getAttributes("link").href as string | undefined;
-    const url = window.prompt("Link address", previous ?? "https://");
+    const url = await promptDialog("Link address", previous ?? "https://");
     if (url === null) return;
     if (!url.trim()) editor.chain().focus().unsetLink().run();
     else editor.chain().focus().extendMarkRange("link").setLink({ href: url.trim() }).run();

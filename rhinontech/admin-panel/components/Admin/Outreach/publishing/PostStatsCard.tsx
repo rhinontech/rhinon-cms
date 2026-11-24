@@ -23,11 +23,11 @@ export function PostStatsCard({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Live Engagement</p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Live Engagement</p>
         <button
           onClick={onRefresh}
           disabled={loading}
-          className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-blue-600 dark:text-blue-300 hover:text-blue-700 dark:hover:text-blue-300 disabled:opacity-50"
+          className="flex items-center gap-1 text-2xs font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-300 hover:text-blue-700 dark:hover:text-blue-300 disabled:opacity-50"
         >
           {loading ? <TbLoader className="animate-spin" size={12} /> : <TbRefresh size={12} />}
           Refresh
@@ -37,13 +37,13 @@ export function PostStatsCard({
         {items.map((s) => (
           <div key={s.label} className="rounded-xl glass-panel p-4 text-center">
             <div className={cn("mx-auto mb-1 w-fit", s.color)}>{s.icon}</div>
-            <p className="text-xl font-bold text-foreground tabular-nums">{s.value}</p>
-            <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">{s.label}</p>
+            <p className="text-xl font-semibold text-foreground tabular-nums">{s.value}</p>
+            <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">{s.label}</p>
           </div>
         ))}
       </div>
       {stats?.lastUpdated && (
-        <p className="text-[10px] text-muted-foreground">Last updated {new Date(stats.lastUpdated).toLocaleString()}</p>
+        <p className="text-2xs text-muted-foreground">Last updated {new Date(stats.lastUpdated).toLocaleString()}</p>
       )}
     </div>
   );

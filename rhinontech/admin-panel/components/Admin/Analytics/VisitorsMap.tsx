@@ -172,7 +172,7 @@ export function VisitorsMap({
             <p className="truncate text-xs font-semibold text-foreground">
               {hovered.visitor.email || hovered.visitor.company || "Anonymous visitor"}
             </p>
-            <p className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground">
+            <p className="mt-0.5 flex items-center gap-1 text-2xs text-muted-foreground">
               <TbMapPin size={11} />
               {hovered.visitor.location ||
                 [hovered.visitor.city, hovered.visitor.region, hovered.visitor.country]
@@ -180,7 +180,7 @@ export function VisitorsMap({
                   .join(", ") ||
                 "Unknown"}
             </p>
-            <p className="mt-0.5 text-[11px] text-muted-foreground/80">
+            <p className="mt-0.5 text-2xs text-muted-foreground/80">
               {new Date(hovered.visitor.visitedAt).toLocaleString("en-IN", {
                 dateStyle: "medium",
                 timeStyle: "short",

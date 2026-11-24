@@ -17,7 +17,7 @@ export function NotificationList({ items, onOpen }: { items: AppNotification[]; 
                 {n.count > 1 && <span className="ml-1 text-xs text-muted-foreground">({n.count} updates)</span>}
               </span>
               {n.body && <span className="mt-0.5 line-clamp-2 block text-xs text-muted-foreground">{n.body}</span>}
-              <span className="mt-1 block text-[11px] text-muted-foreground">{formatDistanceToNow(new Date(n.updatedAt), { addSuffix: true })}</span>
+              <span className="mt-1 block text-2xs text-muted-foreground">{formatDistanceToNow(new Date(n.updatedAt), { addSuffix: true })}</span>
             </span>
           </button>
         </li>

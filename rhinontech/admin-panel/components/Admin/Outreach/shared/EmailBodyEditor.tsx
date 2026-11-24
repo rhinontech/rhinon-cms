@@ -369,9 +369,9 @@ function InsertButtonModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md p-6 bg-card rounded-2xl border border-border shadow-2xl">
+      <DialogContent className="sm:max-w-md p-6 bg-card rounded-xl border border-border shadow-2xl">
         <DialogHeader className="pb-2">
-          <DialogTitle className="text-xl font-bold text-foreground">Insert Button</DialogTitle>
+          <DialogTitle className="text-xl font-semibold text-foreground">Insert Button</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-1">
@@ -396,7 +396,7 @@ function InsertButtonModal({
               placeholder="https://example.com"
               className="h-10 rounded-xl border-border text-sm focus-visible:ring-border"
             />
-            <p className="text-[11px] leading-relaxed text-muted-foreground">
+            <p className="text-2xs leading-relaxed text-muted-foreground">
               Inserted as{" "}
               <span className="font-mono break-all text-foreground/85">
                 {withEmailParam(url.trim() || "https://example.com")}
@@ -480,7 +480,7 @@ function InsertButtonModal({
 
           <div className="space-y-2 pt-1">
             <label className="text-xs font-medium text-foreground">Preview:</label>
-            <div className="flex min-h-[110px] w-full items-center justify-center rounded-2xl border border-border bg-muted/40 p-6">
+            <div className="flex min-h-[110px] w-full items-center justify-center rounded-xl border border-border bg-muted/40 p-6">
               <a
                 href={url || "#"}
                 onClick={(e) => e.preventDefault()}

@@ -111,7 +111,7 @@ export function SplitLeadsModal({ onClose }: { onClose: (changed: boolean) => vo
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center glass-overlay p-4" role="dialog" aria-modal="true" aria-label="Split into lists">
-      <div className="flex max-h-[90vh] w-full max-w-xl flex-col rounded-2xl glass-modal">
+      <div className="flex max-h-[90vh] w-full max-w-xl flex-col rounded-xl glass-modal">
         <div className="flex h-16 shrink-0 items-center justify-between border-b px-5">
           <div className="flex items-center gap-2">
             <TbArrowsSplit className="text-blue-600 dark:text-blue-300" size={20} />

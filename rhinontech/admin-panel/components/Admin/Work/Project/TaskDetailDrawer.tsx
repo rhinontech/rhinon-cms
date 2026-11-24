@@ -266,7 +266,7 @@ export function TaskDetailDrawer({
           <span className="truncate text-sm font-semibold text-foreground">Task</span>
         )}
         {readOnly && (
-          <span className="rounded bg-muted px-2 py-0.5 text-[11px] text-muted-foreground" title="Only the assignee, the creator or a manager can change this card">
+          <span className="rounded bg-muted px-2 py-0.5 text-2xs text-muted-foreground" title="Only the assignee, the creator or a manager can change this card">
             View only
           </span>
         )}
@@ -323,7 +323,7 @@ export function TaskDetailDrawer({
 
         <div className="grid grid-cols-2 gap-2">
           <label className="block">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Status</span>
+            <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Status</span>
             <NativeSelect
               value={task.statusId ?? ""}
               disabled={readOnly}
@@ -338,7 +338,7 @@ export function TaskDetailDrawer({
             </NativeSelect>
           </label>
           <label className="block">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Assignee</span>
+            <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Assignee</span>
             <NativeSelect
               value={task.assigneeId ?? ""}
               disabled={readOnly}
@@ -350,7 +350,7 @@ export function TaskDetailDrawer({
             </NativeSelect>
           </label>
           <label className="block">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Start</span>
+            <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Start</span>
             <div className="mt-1">
               <DatePicker
                 ariaLabel="Start date"
@@ -361,7 +361,7 @@ export function TaskDetailDrawer({
             </div>
           </label>
           <label className="block">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Due</span>
+            <span className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Due</span>
             <div className="mt-1">
               <DatePicker
                 ariaLabel="Due date"
@@ -396,12 +396,12 @@ export function TaskDetailDrawer({
         {/* Above the description on purpose: a long description used to push
             the subitems off-screen, so they looked like they didn't exist. */}
         <div>
-          <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          <p className="mb-1 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
             Subitems{children.length > 0 && <span className="ml-1 font-semibold normal-case tracking-normal">· {children.filter((c) => c.status === "Done").length}/{children.length} done</span>}
           </p>
           <div className="space-y-1">
             {children.map((c) => (
-              <div key={c.id} className="flex items-center gap-2 rounded-lg bg-muted/40 py-1 pl-2.5 pr-1 text-[13px] hover:bg-muted">
+              <div key={c.id} className="flex items-center gap-2 rounded-lg bg-muted/40 py-1 pl-2.5 pr-1 text-ui hover:bg-muted">
                 <button
                   type="button"
                   onClick={() => onOpenTask?.(c)}
@@ -412,7 +412,7 @@ export function TaskDetailDrawer({
                   <span className={cn("text-foreground/85", c.status === "Done" && "text-muted-foreground line-through")}>{c.title}</span>
                 </button>
                 {c.priority && c.priority !== "Medium" && (
-                  <span className={cn("shrink-0 text-[10px] font-medium", c.priority === "High" ? "text-red-600 dark:text-red-300" : "text-muted-foreground")}>{c.priority}</span>
+                  <span className={cn("shrink-0 text-2xs font-medium", c.priority === "High" ? "text-red-600 dark:text-red-300" : "text-muted-foreground")}>{c.priority}</span>
                 )}
                 {/* Status straight from the list, without opening the subitem. */}
                 <NativeSelect
@@ -421,7 +421,7 @@ export function TaskDetailDrawer({
                   aria-label={`Status of ${c.title}`}
                   onChange={(e) => patchAndRefresh(c.id, { statusId: e.target.value || null })}
                   className={cn(
-                    "h-6 w-auto shrink-0 gap-1 rounded-full border-0 px-2 py-0 text-[10px] font-medium shadow-none outline-none",
+                    "h-6 w-auto shrink-0 gap-1 rounded-full border-0 px-2 py-0 text-2xs font-medium shadow-none outline-none",
                     STATUS_CHIP[c.workflowStatus?.color ?? "stone"] ?? STATUS_CHIP.stone
                   )}
                 >
@@ -445,7 +445,7 @@ export function TaskDetailDrawer({
         </div>
 
         <div>
-          <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Description</p>
+          <p className="mb-1 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Description</p>
           <RichDescription
             key={task.id}
             html={task.descriptionHtml}
@@ -456,12 +456,12 @@ export function TaskDetailDrawer({
 
         {deps.length > 0 && (
           <div>
-            <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Waiting on</p>
+            <p className="mb-1 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Waiting on</p>
             <div className="space-y-1">
               {deps.map((d) => (
                 <div key={d.id} className="flex items-center gap-2 rounded-lg bg-muted/40 px-2.5 py-1.5 text-sm">
                   <span className="min-w-0 flex-1 truncate text-foreground/85">{titleOf(d.predecessorId)}</span>
-                  <span className="text-[10px] text-muted-foreground">{d.type}</span>
+                  <span className="text-2xs text-muted-foreground">{d.type}</span>
                   {!readOnly && <button onClick={() => onRemoveDependency(task.id, d.id)} className="rounded p-0.5 text-muted-foreground hover:text-red-600 dark:hover:text-red-300" title="Unlink">
                     <TbUnlink size={13} />
                   </button>}
@@ -474,7 +474,7 @@ export function TaskDetailDrawer({
 
         <div>
           <div className="mb-1 flex items-center justify-between">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Files</p>
+            <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Files</p>
             {!readOnly && <button
               onClick={() => fileRef.current?.click()}
               disabled={uploading}
@@ -504,7 +504,7 @@ export function TaskDetailDrawer({
                     <button
                       onClick={() => onPatch(task.id, { coverAttachmentId: isCover ? null : a.id })}
                       className={cn(
-                        "shrink-0 rounded px-1.5 py-0.5 text-[11px] font-medium",
+                        "shrink-0 rounded px-1.5 py-0.5 text-2xs font-medium",
                         isCover ? "bg-primary/10 text-primary hover:bg-primary/15" : "text-muted-foreground hover:bg-background hover:text-foreground"
                       )}
                     >
@@ -519,20 +519,20 @@ export function TaskDetailDrawer({
         </div>
 
         <div>
-          <p className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          <p className="mb-2 flex items-center gap-1.5 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
             <TbHistory size={12} /> Activity
           </p>
           {feed.length === 0 && <p className="text-xs text-muted-foreground">Nothing has happened yet.</p>}
           {groupedFeed.map(({ label, items }) => (
             <div key={label} className="mb-3">
-              <p className="mb-1.5 text-[11px] font-semibold text-muted-foreground">{label}</p>
+              <p className="mb-1.5 text-2xs font-semibold text-muted-foreground">{label}</p>
               <div className="space-y-2">
                 {items.map((item) =>
                   item.kind === "comment" ? (
                     <div key={`c-${item.data.id}`} className="rounded-lg bg-muted/40 p-2.5">
                       <div className="flex items-baseline justify-between gap-2">
                         <span className="text-xs font-medium text-foreground">{item.data.author?.fullName ?? "Someone"}</span>
-                        <span className="text-[10px] text-muted-foreground">{format(new Date(item.data.createdAt), "d MMM, HH:mm")}</span>
+                        <span className="text-2xs text-muted-foreground">{format(new Date(item.data.createdAt), "d MMM, HH:mm")}</span>
                       </div>
                       <p className="mt-0.5 whitespace-pre-wrap text-sm text-foreground/85">{renderMentions(item.data.body)}</p>
                     </div>
@@ -545,7 +545,7 @@ export function TaskDetailDrawer({
                         </span>{" "}
                         {item.data.summary}
                       </span>
-                      <span className="shrink-0 text-[10px] text-muted-foreground">
+                      <span className="shrink-0 text-2xs text-muted-foreground">
                         {format(new Date(item.data.createdAt), "d MMM, HH:mm")}
                       </span>
                     </div>

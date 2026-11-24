@@ -349,13 +349,13 @@ export function InstallGuide({ src, appId, apiUrl }: { src: string; appId: strin
       <ol className="mt-4 flex flex-col gap-4">
         {steps.map((step, i) => (
           <li key={i} className="flex gap-3">
-            <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-semibold text-muted-foreground">{i + 1}</span>
+            <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-muted text-2xs font-semibold text-muted-foreground">{i + 1}</span>
             <div className="min-w-0 flex-1">
               <p className="text-sm text-foreground">{step.title}</p>
               {step.code && (
                 <div className="mt-2 overflow-hidden rounded-lg border border-border bg-card">
                   <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-1.5">
-                    <span className="inline-flex items-center gap-1.5 truncate font-mono text-[11px] text-muted-foreground">
+                    <span className="inline-flex items-center gap-1.5 truncate font-mono text-2xs text-muted-foreground">
                       <TbCode size={13} />
                       {step.file ?? "Snippet"}
                     </span>

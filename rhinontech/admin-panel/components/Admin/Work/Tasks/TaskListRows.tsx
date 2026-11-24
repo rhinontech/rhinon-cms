@@ -25,7 +25,7 @@ function InlineSelect({
       onClick={(e) => e.stopPropagation()}
       onChange={(e) => { e.stopPropagation(); onChange(e.target.value); }}
       className={cn(
-        "w-full max-w-full cursor-pointer truncate rounded-md border px-1.5 py-0.5 text-[11px] font-medium outline-none disabled:cursor-not-allowed disabled:opacity-60",
+        "w-full max-w-full cursor-pointer truncate rounded-md border px-1.5 py-0.5 text-2xs font-medium outline-none disabled:cursor-not-allowed disabled:opacity-60",
         className
       )}
     >
@@ -59,13 +59,13 @@ export function TaskListRows({
   const visible = hideDone && !showDone ? tasks.filter((t) => t.status !== "Done") : tasks;
 
   if (tasks.length === 0) {
-    return <p className="px-3 py-4 text-center text-[11px] text-muted-foreground/70">No tasks</p>;
+    return <p className="px-3 py-4 text-center text-2xs text-muted-foreground/70">No tasks</p>;
   }
 
   return (
     <div className="overflow-x-auto">
       <div className="min-w-[720px]">
-        <div className={cn("grid items-center gap-2 border-b border-border px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground", LIST_GRID)}>
+        <div className={cn("grid items-center gap-2 border-b border-border px-3 py-1.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground", LIST_GRID)}>
           {/* Select-all for this section — the fast path into the bulk bar when
               triaging a long Unassigned list. */}
           <input
@@ -113,13 +113,13 @@ export function TaskListRows({
 
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className={cn("truncate text-[13px] font-medium text-foreground", task.status === "Done" && "text-muted-foreground line-through")}>
+                  <span className={cn("truncate text-ui font-medium text-foreground", task.status === "Done" && "text-muted-foreground line-through")}>
                     {task.title}
                   </span>
                   {task.recurrence && <TbRepeat size={12} className="shrink-0 text-muted-foreground" />}
                   {task.blockedById && <TbLock size={12} className="shrink-0 text-amber-500 dark:text-amber-400" />}
                   {total > 0 && (
-                    <span className="inline-flex shrink-0 items-center gap-0.5 text-[10px] text-muted-foreground">
+                    <span className="inline-flex shrink-0 items-center gap-0.5 text-2xs text-muted-foreground">
                       <TbSubtask size={11} />{done}/{total}
                     </span>
                   )}
@@ -127,7 +127,7 @@ export function TaskListRows({
                 {task.tags?.length > 0 && (
                   <div className="mt-0.5 flex flex-wrap gap-1">
                     {task.tags.slice(0, 3).map((t) => (
-                      <span key={t.id} className={cn("rounded border px-1 py-px text-[9px]", TAG_COLOR_STYLES[t.color] ?? TAG_COLOR_STYLES.gray)}>
+                      <span key={t.id} className={cn("rounded border px-1 py-px text-2xs", TAG_COLOR_STYLES[t.color] ?? TAG_COLOR_STYLES.gray)}>
                         {t.label}
                       </span>
                     ))}
@@ -188,7 +188,7 @@ export function TaskListRows({
                 {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
               </InlineSelect>
 
-              <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+              <div className="flex items-center gap-1 text-2xs text-muted-foreground">
                 <span className={cn(isOverdue(task.dueDate, task.status) && "font-semibold text-red-600 dark:text-red-300")}>
                   {ordinalDate(task.dueDate)}
                 </span>
@@ -210,7 +210,7 @@ export function TaskListRows({
         {hideDone && doneTasks.length > 0 && (
           <button
             onClick={() => setShowDone((v) => !v)}
-            className="w-full px-3 py-2 text-left text-[11px] text-muted-foreground transition-colors hover:text-foreground/70"
+            className="w-full px-3 py-2 text-left text-2xs text-muted-foreground transition-colors hover:text-foreground/70"
           >
             {showDone ? "Hide" : `${doneTasks.length} completed — show`}
           </button>

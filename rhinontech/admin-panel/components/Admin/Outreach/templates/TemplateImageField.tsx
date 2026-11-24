@@ -28,7 +28,7 @@ export function TemplateImageField({
 }) {
   return (
     <div className="space-y-3 rounded-xl border border-border bg-muted/40 p-3">
-      <Label className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+      <Label className="flex items-center gap-1 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
         <TbPhoto size={12} /> Image <span className="font-normal normal-case tracking-normal text-muted-foreground/70">optional</span>
       </Label>
 
@@ -65,7 +65,7 @@ export function TemplateImageField({
               Generate
             </Button>
           </div>
-          {error && <p className="text-[10px] font-medium text-red-500 dark:text-red-400">{error}</p>}
+          {error && <p className="text-2xs font-medium text-red-500 dark:text-red-400">{error}</p>}
           {manualUrl && onManualUrl && (
             <Input
               type="url"

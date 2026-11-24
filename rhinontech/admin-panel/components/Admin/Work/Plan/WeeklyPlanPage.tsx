@@ -287,7 +287,7 @@ function PersonRow({
   return (
     <div className="grid grid-cols-[180px_repeat(7,1fr)] border-b last:border-b-0">
       <div className={cn("flex items-center gap-2 border-r px-3 py-2.5 text-sm", muted ? "text-muted-foreground" : "text-foreground")}>
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-foreground/70">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-2xs font-semibold text-foreground/70">
           {muted ? "–" : initials(label)}
         </span>
         <span className="min-w-0 flex-1 truncate font-medium">{label}</span>
@@ -352,14 +352,14 @@ function PlanCard({ task, dragging }: { task: PlanTask; dragging?: boolean }) {
       {...listeners}
       {...attributes}
       className={cn(
-        "cursor-grab rounded-md border border-border bg-card px-1.5 py-1 text-[11px] shadow-sm",
+        "cursor-grab rounded-md border border-border bg-card px-1.5 py-1 text-2xs shadow-sm",
         task.status === "Done" && "opacity-60",
         (isDragging || dragging) && "opacity-70"
       )}
     >
       <p className={cn("truncate font-medium text-foreground", task.status === "Done" && "line-through")}>{task.title}</p>
       <div className="mt-0.5 flex items-center gap-1 text-muted-foreground">
-        <span className={cn("rounded border px-1 text-[8px] font-bold", PRIORITY_COLORS[task.priority])}>{task.priority.charAt(0)}</span>
+        <span className={cn("rounded border px-1 text-2xs font-semibold", PRIORITY_COLORS[task.priority])}>{task.priority.charAt(0)}</span>
         {task.project && <span className="truncate">{task.project.name}</span>}
         {isOverdue(task.dueDate, task.status) && <TbX size={10} className="shrink-0 text-red-500" />}
       </div>

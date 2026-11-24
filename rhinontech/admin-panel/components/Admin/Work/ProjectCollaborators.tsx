@@ -138,12 +138,12 @@ export function ProjectCollaborators({ projectId }: { projectId: string }) {
             <span className="min-w-0 flex-1 truncate text-foreground">
               {row.user?.fullName ?? "Unknown"}
               {row.user && !row.user.onboarded && (
-                <span className="ml-1.5 rounded-full bg-amber-50 dark:bg-amber-400/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-300">
+                <span className="ml-1.5 rounded-full bg-amber-50 dark:bg-amber-400/10 px-1.5 py-0.5 text-2xs font-medium text-amber-700 dark:text-amber-300">
                   invite pending
                 </span>
               )}
               {row.access === "view" && (
-                <span className="ml-1.5 text-[10px] text-muted-foreground">view only</span>
+                <span className="ml-1.5 text-2xs text-muted-foreground">view only</span>
               )}
             </span>
             <button

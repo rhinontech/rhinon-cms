@@ -70,7 +70,7 @@ export function WorkflowsListPage({
       {/* Top Title & Header Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-semibold text-foreground tracking-tight flex items-center gap-2">
             <TbGitBranch className="text-foreground/85" /> Workflows
           </h1>
           <p className="text-sm text-muted-foreground mt-1">Multi-step automations that run on lead activity.</p>
@@ -137,10 +137,10 @@ export function WorkflowsListPage({
       </div>
 
       {/* Workflows Data Table */}
-      <div className="bg-card rounded-2xl border border-border shadow-2xs overflow-hidden">
+      <div className="bg-card rounded-xl border border-border shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="bg-muted/40 border-b border-border text-xs font-bold text-foreground/85 uppercase tracking-wider">
+            <thead className="bg-muted/40 border-b border-border text-xs font-semibold text-foreground/85 uppercase tracking-wider">
               <tr>
                 <th className="px-6 py-4">Name</th>
                 <th className="px-6 py-4">Status</th>
@@ -163,7 +163,7 @@ export function WorkflowsListPage({
                     <td className="px-6 py-4">
                       <Link
                         href={`${base}/workflows/${item.id}`}
-                        className="font-bold text-foreground hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors"
+                        className="font-semibold text-foreground hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors"
                       >
                         {item.name}
                       </Link>
@@ -173,7 +173,7 @@ export function WorkflowsListPage({
                     </td>
                     <td className="px-6 py-4">
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 text-xs font-bold rounded-md uppercase tracking-wider ${
+                        className={`inline-flex items-center px-2.5 py-0.5 text-xs font-semibold rounded-md uppercase tracking-wider ${
                           item.status === "active"
                             ? "bg-emerald-100 dark:bg-emerald-400/15 text-emerald-700 dark:text-emerald-300"
                             : item.status === "paused"
@@ -185,7 +185,7 @@ export function WorkflowsListPage({
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold bg-emerald-50 dark:bg-emerald-400/10 text-emerald-600 dark:text-emerald-300 rounded-md">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-semibold bg-emerald-50 dark:bg-emerald-400/10 text-emerald-600 dark:text-emerald-300 rounded-md">
                         <TbBolt size={13} /> Realtime
                       </span>
                     </td>
@@ -227,8 +227,8 @@ export function WorkflowsListPage({
       {/* Create Workflow Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-card rounded-2xl shadow-xl border border-border w-full max-w-md p-6 space-y-5 animate-in fade-in zoom-in-95">
-            <h3 className="text-lg font-bold text-foreground">Create New Workflow</h3>
+          <div className="bg-card rounded-xl shadow-xl border border-border w-full max-w-md p-6 space-y-5 animate-in fade-in zoom-in-95">
+            <h3 className="text-lg font-semibold text-foreground">Create New Workflow</h3>
             <form onSubmit={handleCreateSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-foreground/85 mb-1">Workflow Name</label>

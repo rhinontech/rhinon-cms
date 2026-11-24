@@ -14,7 +14,7 @@ import type { ApiTask, Subtask, TaskComment, TaskStatus } from "./types";
 function Detail({ label, value, extra }: { label: string; value: string; extra?: React.ReactNode }) {
   return (
     <div>
-      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{label}</p>
+      <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</p>
       <p className="mt-0.5 flex items-center gap-1.5 text-sm text-foreground">{value}{extra}</p>
     </div>
   );
@@ -168,8 +168,8 @@ export function TaskDetailPanel({
         <div className="flex-1 space-y-4 overflow-auto p-5">
           <div>
             <div className="flex items-start gap-2">
-              <h2 className="flex-1 text-lg font-bold leading-tight text-foreground">{task.title}</h2>
-              <span className={cn("mt-0.5 shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold", PRIORITY_COLORS[task.priority])}>{task.priority}</span>
+              <h2 className="flex-1 text-lg font-semibold leading-tight text-foreground">{task.title}</h2>
+              <span className={cn("mt-0.5 shrink-0 rounded-full border px-2 py-0.5 text-2xs font-semibold", PRIORITY_COLORS[task.priority])}>{task.priority}</span>
             </div>
             {task.recurrence && (
               <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-violet-600 dark:text-violet-300"><TbRepeat size={12} /> Repeats {task.recurrence}</p>
@@ -183,7 +183,7 @@ export function TaskDetailPanel({
           </div>
 
           <div>
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Tags</p>
+            <p className="mb-2 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Tags</p>
             <div className="flex flex-wrap gap-1.5">
               {task.tags?.map((tg) => (
                 <span key={tg.id} className={cn("flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-semibold", TAG_COLOR_STYLES[tg.color] || TAG_COLOR_STYLES.blue)}>
@@ -221,7 +221,7 @@ export function TaskDetailPanel({
             {task.estimatedHours != null && <Detail label="Estimate" value={`${task.estimatedHours}h`} />}
             {task.project && (
               <div className="col-span-2">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Collaborators</p>
+                <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Collaborators</p>
                 <label className="mt-1 flex cursor-pointer items-start gap-2 text-sm text-foreground">
                   <input
                     type="checkbox"
@@ -232,7 +232,7 @@ export function TaskDetailPanel({
                   />
                   <span>
                     Visible to external collaborators
-                    <span className="block text-[11px] text-muted-foreground">
+                    <span className="block text-2xs text-muted-foreground">
                       Off by default. Turning this on shares the task and its comments with
                       everyone invited to {task.project.name}.
                     </span>
@@ -261,7 +261,7 @@ export function TaskDetailPanel({
           {allSubtasksDone && task.status !== "Done" && (
             <div className="flex items-center justify-between rounded-xl border border-emerald-100 dark:border-emerald-400/20 bg-emerald-50 dark:bg-emerald-400/10 px-4 py-3">
               <p className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300"><TbCheck size={13} /> All done!</p>
-              <button onClick={() => onStatusChange(task.id, "Done")} className="rounded-lg bg-emerald-100 dark:bg-emerald-400/15 px-3 py-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200">Mark task Done</button>
+              <button onClick={() => onStatusChange(task.id, "Done")} className="rounded-lg bg-emerald-100 dark:bg-emerald-400/15 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200">Mark task Done</button>
             </div>
           )}
 
@@ -299,14 +299,14 @@ export function TaskDetailPanel({
             {comments.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">No comments yet.</p>}
             {comments.map((c) => (
               <div key={c.id} className="group flex gap-2.5">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-400/15 text-[10px] font-bold text-blue-700 dark:text-blue-300">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-400/15 text-2xs font-semibold text-blue-700 dark:text-blue-300">
                   {c.author?.fullName ? initials(c.author.fullName) : "?"}
                 </span>
                 <div className="flex-1 rounded-xl bg-muted/40 px-3 py-2">
                   <div className="mb-1 flex items-center justify-between">
                     <span className="text-xs font-semibold text-foreground/85">{c.author?.fullName ?? "Unknown"}</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-muted-foreground">{new Date(c.createdAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+                      <span className="text-2xs text-muted-foreground">{new Date(c.createdAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
                       {canDeleteComment(c) && (
                         <button onClick={() => deleteComment(c.id)} className="text-muted-foreground/70 opacity-0 transition-all hover:text-red-500 dark:hover:text-red-400 group-hover:opacity-100"><TbX size={11} /></button>
                       )}

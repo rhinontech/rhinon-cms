@@ -227,7 +227,7 @@ export function SettingsDeploy() {
                       <StatusPill status={t.latest?.status} />
                     </div>
 
-                    <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+                    <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-2xs text-muted-foreground">
                       <dt>Branch</dt>
                       <dd className="font-mono text-foreground">{t.branch}</dd>
                       <dt>{t.kind === "docker" ? "Service" : t.kind === "npm" ? "Package" : "Process"}</dt>
@@ -252,7 +252,7 @@ export function SettingsDeploy() {
                     </dl>
 
                     {t.latest?.commitMessage && (
-                      <p className="mt-2 flex items-start gap-1.5 text-[11px] text-muted-foreground">
+                      <p className="mt-2 flex items-start gap-1.5 text-2xs text-muted-foreground">
                         <TbGitCommit size={13} className="mt-0.5 shrink-0" />
                         <span className="truncate" title={t.latest.commitMessage}>
                           {t.latest.commitMessage}
@@ -319,14 +319,14 @@ export function SettingsDeploy() {
                   : "Loading run…"}
               </p>
               {active?.commitAfter && (
-                <code className="font-mono text-[11px] text-muted-foreground">
+                <code className="font-mono text-2xs text-muted-foreground">
                   {active.commitAfter.slice(0, 7)}
                 </code>
               )}
             </div>
 
             {apiUnreachable && (
-              <p className="flex items-center gap-2 border-b border-border bg-amber-500/10 px-4 py-2 text-[11px] text-amber-600 dark:text-amber-400">
+              <p className="flex items-center gap-2 border-b border-border bg-amber-500/10 px-4 py-2 text-2xs text-amber-600 dark:text-amber-400">
                 <TbLoader2 size={13} className="animate-spin" />
                 API restarting — this is expected mid-deploy. Reconnecting…
               </p>
@@ -338,7 +338,7 @@ export function SettingsDeploy() {
                 const el = e.currentTarget;
                 stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
               }}
-              className="max-h-[28rem] overflow-auto bg-black/85 p-4 font-mono text-[11px] leading-relaxed text-emerald-100 whitespace-pre-wrap"
+              className="max-h-[28rem] overflow-auto bg-black/85 p-4 font-mono text-2xs leading-relaxed text-emerald-100 whitespace-pre-wrap"
             >
               {active?.log?.trim() || "Waiting for output…"}
             </pre>
@@ -374,13 +374,13 @@ export function SettingsDeploy() {
                     {labelFor(d.target)}
                     {d.commitMessage ? ` — ${d.commitMessage}` : ""}
                   </p>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-2xs text-muted-foreground">
                     {d.triggeredByName} · {when(d.startedAt)}
                     {d.finishedAt ? ` · ${duration(d.startedAt, d.finishedAt)}` : ""}
                   </p>
                 </div>
                 {d.commitAfter && (
-                  <code className="font-mono text-[11px] text-muted-foreground">
+                  <code className="font-mono text-2xs text-muted-foreground">
                     {d.commitAfter.slice(0, 7)}
                   </code>
                 )}
@@ -407,7 +407,7 @@ function groupByApp(targets: DeployTarget[]): [string, DeployTarget[]][] {
 function StatusPill({ status, compact }: { status?: DeployStatus | null; compact?: boolean }) {
   if (!status) {
     return compact ? null : (
-      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+      <span className="rounded-full bg-muted px-2 py-0.5 text-2xs font-semibold text-muted-foreground">
         No runs
       </span>
     );
@@ -419,7 +419,7 @@ function StatusPill({ status, compact }: { status?: DeployStatus | null; compact
   }[status];
 
   return (
-    <span className={cn("flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold", map.cls)}>
+    <span className={cn("flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-semibold", map.cls)}>
       {map.icon}
       {!compact && map.label}
     </span>

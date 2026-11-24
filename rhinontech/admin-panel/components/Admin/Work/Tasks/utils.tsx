@@ -46,14 +46,14 @@ export function avatarTint(key: string): string {
 export function DueBadge({ dueDate, status }: { dueDate: string | null; status: TaskStatus }) {
   if (isOverdue(dueDate, status)) {
     return (
-      <span className="inline-flex items-center gap-1 rounded bg-red-50 dark:bg-red-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-red-600 dark:text-red-300">
+      <span className="inline-flex items-center gap-1 rounded bg-red-50 dark:bg-red-400/10 px-1.5 py-0.5 text-2xs font-semibold text-red-600 dark:text-red-300">
         <TbAlertTriangle size={10} /> Overdue
       </span>
     );
   }
   if (isDueToday(dueDate, status)) {
     return (
-      <span className="inline-flex items-center gap-1 rounded bg-amber-50 dark:bg-amber-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:text-amber-300">
+      <span className="inline-flex items-center gap-1 rounded bg-amber-50 dark:bg-amber-400/10 px-1.5 py-0.5 text-2xs font-semibold text-amber-700 dark:text-amber-300">
         <TbClock size={10} /> Today
       </span>
     );

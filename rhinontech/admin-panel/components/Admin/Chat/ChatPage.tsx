@@ -65,7 +65,7 @@ function StatusPicker({ meId }: { meId: string | null }) {
           <DropdownMenuItem key={s.value} onClick={() => set(s.value)}>
             <span className={cn("size-2.5 rounded-full", PRESENCE_COLOR[s.presence])} />
             {PRESENCE_LABEL[s.presence]}
-            {s.value === "dnd" && <span className="ml-auto text-[10px] text-muted-foreground">mentions only</span>}
+            {s.value === "dnd" && <span className="ml-auto text-2xs text-muted-foreground">mentions only</span>}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
@@ -158,7 +158,7 @@ function ConversationList({
     <aside className="flex h-full w-full flex-col border-r md:w-80 md:shrink-0">
       <div className="flex items-center gap-2 px-4 pb-2 pt-4">
         <StatusPicker meId={meId} />
-        <h1 className="text-xl font-bold tracking-tight">Chat</h1>
+        <h1 className="text-xl font-semibold tracking-tight">Chat</h1>
         <div className="ml-auto flex gap-0.5">
           <Button size="icon" variant="ghost" title="Search messages" onClick={onSearch}><TbSearch className="size-5" /></Button>
           <DropdownMenu>
@@ -236,7 +236,7 @@ function ConversationList({
                   <p className={cn("truncate text-sm", unread ? "font-semibold" : "font-medium")}>{name}</p>
                   {c.pinned && <TbPin className="size-3.5 shrink-0 text-muted-foreground" />}
                   {c.muted && <TbBellOff className="size-3.5 shrink-0 text-muted-foreground" />}
-                  <span className="ml-auto shrink-0 text-[11px] text-muted-foreground">{shortTime(c.lastMessageAt ?? c.createdAt)}</span>
+                  <span className="ml-auto shrink-0 text-2xs text-muted-foreground">{shortTime(c.lastMessageAt ?? c.createdAt)}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <p className={cn("truncate text-xs", unread ? "text-foreground" : "text-muted-foreground")}>
@@ -247,7 +247,7 @@ function ConversationList({
                   {c.unread > 0 && (
                     <span
                       className={cn(
-                        "flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-semibold",
+                        "flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-2xs font-semibold",
                         c.mentionUnread === 0 && "ml-auto",
                         c.muted ? "bg-muted-foreground/30 text-foreground" : "bg-primary text-primary-foreground",
                       )}
@@ -388,7 +388,7 @@ export function ChatPage() {
               <TbLoader2 className="size-6 animate-spin text-muted-foreground" />
             ) : (
               <>
-                <div className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary"><TbMessages className="size-7" /></div>
+                <div className="flex size-14 items-center justify-center rounded-xl bg-primary/10 text-primary"><TbMessages className="size-7" /></div>
                 <p className="font-semibold">Pick a chat or start a new one</p>
                 <p className="max-w-xs text-sm text-muted-foreground">Message a teammate, start a group, or create a channel for your team or project.</p>
                 <div className="flex gap-2">

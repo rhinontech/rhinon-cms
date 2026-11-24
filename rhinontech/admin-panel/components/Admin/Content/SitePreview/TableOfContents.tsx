@@ -82,7 +82,7 @@ export function TableOfContents({
   if (variant === "mobile") {
     // Compact disclosure rendered above the article on small screens.
     return (
-      <details className="mb-12 rounded-2xl border border-white/10 bg-white/[0.03] p-5 lg:hidden">
+      <details className="mb-12 rounded-xl border border-white/10 bg-white/[0.03] p-5 lg:hidden">
         <summary className="cursor-pointer list-none text-lg font-[500] tracking-tight text-foreground">
           Table of contents
         </summary>

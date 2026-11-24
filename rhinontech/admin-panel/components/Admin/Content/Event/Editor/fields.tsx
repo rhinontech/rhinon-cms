@@ -25,15 +25,15 @@ export function SectionCard({
   children: ReactNode;
 }) {
   return (
-    <section id={`section-${id}`} className="scroll-mt-24 glass-card rounded-2xl p-6 sm:p-7">
+    <section id={`section-${id}`} className="scroll-mt-24 glass-card rounded-xl p-6 sm:p-7">
       <header className="flex items-start justify-between gap-4 mb-6">
         <div className="flex items-start gap-3">
           <span className="grid place-items-center size-9 shrink-0 rounded-xl bg-primary/10 text-primary dark:bg-primary/15">
             <Icon className="size-[18px]" aria-hidden />
           </span>
           <div>
-            <h2 className="text-[15px] font-semibold tracking-tight">{title}</h2>
-            {hint ? <p className="mt-0.5 text-[13px] text-muted-foreground leading-relaxed">{hint}</p> : null}
+            <h2 className="text-base font-semibold tracking-tight">{title}</h2>
+            {hint ? <p className="mt-0.5 text-ui text-muted-foreground leading-relaxed">{hint}</p> : null}
           </div>
         </div>
         {action}
@@ -62,15 +62,15 @@ export function Field({
 }) {
   return (
     <div className={`space-y-1.5 ${className}`}>
-      <Label htmlFor={htmlFor} className="text-[13px] font-medium">
+      <Label htmlFor={htmlFor} className="text-ui font-medium">
         {label}
         {required ? <span className="text-destructive"> *</span> : null}
       </Label>
       {children}
       {error ? (
-        <p className="text-[12px] font-medium text-destructive">{error}</p>
+        <p className="text-xs font-medium text-destructive">{error}</p>
       ) : hint ? (
-        <p className="text-[12px] text-muted-foreground leading-relaxed">{hint}</p>
+        <p className="text-xs text-muted-foreground leading-relaxed">{hint}</p>
       ) : null}
     </div>
   );
@@ -133,7 +133,7 @@ export function StringListField({
     <div className="space-y-2">
       {values.map((value, index) => (
         <div key={index} className="flex items-center gap-2">
-          <span className="grid place-items-center size-6 shrink-0 rounded-full bg-muted text-[11px] font-semibold text-muted-foreground">
+          <span className="grid place-items-center size-6 shrink-0 rounded-full bg-muted text-2xs font-semibold text-muted-foreground">
             {index + 1}
           </span>
           <Input
@@ -186,7 +186,7 @@ export function ChipsField({
   return (
     <div className="rounded-md border border-input bg-transparent dark:bg-input/30 px-2 py-1.5 flex flex-wrap items-center gap-1.5 focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px] transition-[color,box-shadow]">
       {values.map((value) => (
-        <span key={value} className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-[12.5px] font-medium">
+        <span key={value} className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs font-medium">
           {value}
           <button type="button" onClick={() => onChange(values.filter((v) => v !== value))}
             className="text-muted-foreground hover:text-foreground" aria-label={`Remove ${value}`}>
@@ -264,8 +264,8 @@ export function ImageField({
             <ImagePlus className="size-4" />
           )}
         </button>
-        <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder="Photo URL, or click the tile to upload" className="text-[13px]" />
-        {error ? <p className="text-[12px] text-destructive">{error}</p> : null}
+        <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder="Photo URL, or click the tile to upload" className="text-ui" />
+        {error ? <p className="text-xs text-destructive">{error}</p> : null}
       </div>
     );
   }
@@ -280,10 +280,10 @@ export function ImageField({
         ) : (
           <button type="button" onClick={() => input.current?.click()}
             className="absolute inset-0 grid place-items-center text-muted-foreground hover:text-primary transition-colors">
-            <span className="flex flex-col items-center gap-2 text-[13px] font-medium">
+            <span className="flex flex-col items-center gap-2 text-ui font-medium">
               <ImagePlus className="size-6" />
               Upload a {label}
-              <span className="text-[12px] font-normal">JPG or PNG, 1600 × 900 works best</span>
+              <span className="text-xs font-normal">JPG or PNG, 1600 × 900 works best</span>
             </span>
           </button>
         )}
@@ -304,7 +304,7 @@ export function ImageField({
         ) : null}
       </div>
       <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder="…or paste an image URL" />
-      {error ? <p className="text-[12px] text-destructive">{error}</p> : null}
+      {error ? <p className="text-xs text-destructive">{error}</p> : null}
     </div>
   );
 }

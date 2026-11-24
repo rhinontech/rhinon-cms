@@ -26,13 +26,13 @@ export function TemplateCard({
           {social ? <TbBrandLinkedin size={18} /> : <TbMail size={18} />}
         </div>
         <div className="min-w-0">
-          <h3 className="truncate text-sm font-bold text-foreground">{template.name}</h3>
+          <h3 className="truncate text-sm font-semibold text-foreground">{template.name}</h3>
           <div className="mt-0.5 flex items-center gap-2">
-            <span className={cn("rounded border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest", CHANNEL_COLORS[template.channel] || "border-border bg-muted text-muted-foreground")}>
+            <span className={cn("rounded border px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-widest", CHANNEL_COLORS[template.channel] || "border-border bg-muted text-muted-foreground")}>
               {template.channel}
             </span>
             {template.imageUrl && (
-              <span className="flex items-center gap-0.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+              <span className="flex items-center gap-0.5 text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
                 <TbPhoto size={10} /> Image
               </span>
             )}

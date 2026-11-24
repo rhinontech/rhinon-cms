@@ -290,7 +290,7 @@ export function ChatbotVisitors() {
           </div>
         </Panel>
       </div>
-      <p className={cn("text-center text-[11px] text-muted-foreground")}>Locations come from IP addresses and are approximate (usually the city).</p>
+      <p className={cn("text-center text-2xs text-muted-foreground")}>Locations come from IP addresses and are approximate (usually the city).</p>
     </PageShell>
   );
 }

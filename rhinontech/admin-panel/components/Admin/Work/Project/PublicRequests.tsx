@@ -95,14 +95,14 @@ export function PublicRequests({ projectId }: { projectId: string }) {
         </div>
 
         {visibleRequests.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
+          <div className="rounded-xl border border-dashed border-border bg-card p-12 text-center">
             <h3 className="text-lg font-medium text-foreground">No items found</h3>
             <p className="mt-1 text-muted-foreground">There are currently no active {filter !== "All" ? filter.toLowerCase() + "s" : "items"} for this project.</p>
           </div>
         ) : (
           <div className="space-y-4">
             {visibleRequests.map((request) => (
-              <div key={request.id} className="rounded-2xl border border-border bg-card p-6 shadow-sm transition-shadow hover:shadow-md">
+              <div key={request.id} className="rounded-xl border border-border bg-card p-6 shadow-sm transition-shadow hover:shadow-md">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3">

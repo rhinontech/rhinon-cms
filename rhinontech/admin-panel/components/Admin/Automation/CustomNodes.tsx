@@ -26,9 +26,9 @@ export function TriggerNode({ data, selected }: CustomNodeProps) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Trigger</span>
+            <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Trigger</span>
             <span
-              className={`px-1.5 py-0.5 text-[10px] font-semibold rounded ${
+              className={`px-1.5 py-0.5 text-2xs font-semibold rounded ${
                 isNotSet ? "bg-amber-100 dark:bg-amber-400/15 text-amber-700 dark:text-amber-300" : "bg-emerald-100 dark:bg-emerald-400/15 text-emerald-700 dark:text-emerald-300"
               }`}
             >
@@ -64,7 +64,7 @@ export function SendEmailNode({ id, data, selected }: CustomNodeProps) {
           <div className="flex items-center justify-between gap-1 mb-1">
             <span className="text-sm font-semibold text-foreground truncate">{data.label || "Send email"}</span>
             {isIncomplete && (
-              <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-amber-100 dark:bg-amber-400/15 text-amber-700 dark:text-amber-300 rounded">
+              <span className="px-1.5 py-0.5 text-2xs font-semibold bg-amber-100 dark:bg-amber-400/15 text-amber-700 dark:text-amber-300 rounded">
                 INCOMPLETE
               </span>
             )}
@@ -139,9 +139,9 @@ export function IfThenNode({ data, selected }: CustomNodeProps) {
         </div>
       </div>
 
-      <div className="flex justify-between items-center mt-3 pt-2 border-t border-border text-[11px] font-bold text-muted-foreground">
-        <span className="text-emerald-600 dark:text-emerald-300 font-bold">YES</span>
-        <span className="text-rose-600 dark:text-rose-300 font-bold">NO</span>
+      <div className="flex justify-between items-center mt-3 pt-2 border-t border-border text-2xs font-semibold text-muted-foreground">
+        <span className="text-emerald-600 dark:text-emerald-300 font-semibold">YES</span>
+        <span className="text-rose-600 dark:text-rose-300 font-semibold">NO</span>
       </div>
 
       <Handle type="source" position={Position.Bottom} id="yes" className="!bg-emerald-500 !w-3 !h-3 !left-[30%]" />
@@ -240,7 +240,7 @@ export function AbSplitNode({ data, selected }: CustomNodeProps) {
         </div>
       </div>
 
-      <div className="flex justify-between items-center mt-3 pt-2 border-t border-border text-[11px] font-bold">
+      <div className="flex justify-between items-center mt-3 pt-2 border-t border-border text-2xs font-semibold">
         <span className="text-fuchsia-600 dark:text-fuchsia-300">A · {split}%</span>
         <span className="text-indigo-600 dark:text-indigo-300">B · {100 - split}%</span>
       </div>

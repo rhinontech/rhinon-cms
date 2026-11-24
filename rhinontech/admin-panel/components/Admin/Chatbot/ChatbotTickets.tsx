@@ -290,8 +290,8 @@ export function ChatbotTickets() {
                   <Avatar name={customerLabel(t)} seed={t.customerEmail} size="sm" className="mt-0.5" />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className={cn("truncate text-[13px]", t.isNew ? "font-semibold text-foreground" : "font-medium text-foreground/90")}>{t.subject}</span>
-                      <span className="ml-auto shrink-0 text-[11px] tabular-nums text-muted-foreground">{timeAgo(t.lastActivityAt)}</span>
+                      <span className={cn("truncate text-ui", t.isNew ? "font-semibold text-foreground" : "font-medium text-foreground/90")}>{t.subject}</span>
+                      <span className="ml-auto shrink-0 text-2xs tabular-nums text-muted-foreground">{timeAgo(t.lastActivityAt)}</span>
                     </div>
                     <p className="mt-0.5 truncate text-xs text-muted-foreground">
                       #{t.code} · {customerLabel(t)}
@@ -299,7 +299,7 @@ export function ChatbotTickets() {
                     <div className="mt-1.5 flex items-center gap-1.5">
                       {filter === "all" && <Chip tone={STATUS[t.status].tone}>{STATUS[t.status].label}</Chip>}
                       {t.priority !== "medium" && <Chip tone={PRIORITY[t.priority].tone}>{PRIORITY[t.priority].label}</Chip>}
-                      {t.assigneeName && <span className="truncate text-[11px] text-muted-foreground">{t.assigneeName}</span>}
+                      {t.assigneeName && <span className="truncate text-2xs text-muted-foreground">{t.assigneeName}</span>}
                       {t.isNew && <span className="ml-auto size-2 shrink-0 rounded-full" style={{ background: accent }} aria-label="New" />}
                     </div>
                   </div>
@@ -351,7 +351,7 @@ export function ChatbotTickets() {
 
               {canReply && (
                 <div className="border-t border-border/70 p-3">
-                  <div className={cn("mx-auto max-w-2xl rounded-2xl border transition-colors", asNote ? "border-amber-300/70 bg-amber-50/60 dark:border-amber-400/30 dark:bg-amber-400/[0.06]" : "border-border bg-background")}>
+                  <div className={cn("mx-auto max-w-2xl rounded-xl border transition-colors", asNote ? "border-amber-300/70 bg-amber-50/60 dark:border-amber-400/30 dark:bg-amber-400/[0.06]" : "border-border bg-background")}>
                     <div className="flex items-center gap-1 px-2 pt-2">
                       {[
                         { note: false, label: "Reply", icon: <TbMail size={13} /> },
@@ -371,12 +371,12 @@ export function ChatbotTickets() {
                         </button>
                       ))}
                       {!asNote && mailAccounts.length > 0 ? (
-                        <label className="ml-auto flex min-w-0 items-center gap-1.5 pr-1 text-[11px] text-muted-foreground">
+                        <label className="ml-auto flex min-w-0 items-center gap-1.5 pr-1 text-2xs text-muted-foreground">
                           Send from
                           <select
                             value={via}
                             onChange={(e) => setVia(e.target.value as typeof via)}
-                            className="max-w-[14rem] truncate rounded-md border border-border bg-background px-1.5 py-0.5 text-[11px] text-foreground"
+                            className="max-w-[14rem] truncate rounded-md border border-border bg-background px-1.5 py-0.5 text-2xs text-foreground"
                             data-testid="send-from"
                           >
                             <option value="platform">{platformEmail ?? "Your platform address"}</option>
@@ -386,7 +386,7 @@ export function ChatbotTickets() {
                           </select>
                         </label>
                       ) : (
-                        <span className="ml-auto truncate pr-1 text-[11px] text-muted-foreground">
+                        <span className="ml-auto truncate pr-1 text-2xs text-muted-foreground">
                           {asNote ? "Only your team sees this" : `Emailed to ${selected.ticket.customerEmail}`}
                         </span>
                       )}
@@ -402,7 +402,7 @@ export function ChatbotTickets() {
                       data-testid="ticket-reply"
                     />
                     <div className="flex items-center justify-between px-3 pb-2.5">
-                      <span className="text-[11px] text-muted-foreground">⌘ + Enter to send</span>
+                      <span className="text-2xs text-muted-foreground">⌘ + Enter to send</span>
                       <Button size="sm" onClick={() => void send()} disabled={sending || !draft.trim()} data-testid="send-ticket-reply">
                         {sending ? <Spinner /> : <TbSend size={14} />} {asNote ? "Add note" : "Send reply"}
                       </Button>
@@ -469,7 +469,7 @@ export function ChatbotTickets() {
                 <Section title="Tags">
                   <div className="flex flex-wrap gap-1.5">
                     {selected.ticket.tags.map((tag) => (
-                      <span key={tag} className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium">
+                      <span key={tag} className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-2xs font-medium">
                         {tag}
                         <button type="button" aria-label={`Remove ${tag}`} onClick={() => void patch({ tags: selected.ticket.tags.filter((x) => x !== tag) })} className="text-muted-foreground hover:text-foreground">
                           <TbX size={11} />
@@ -500,8 +500,8 @@ export function ChatbotTickets() {
                 <dl className="flex flex-col gap-2">
                   {Object.entries(selected.ticket.customData).map(([k, v]) => (
                     <div key={k}>
-                      <dt className="text-[11px] capitalize text-muted-foreground">{k.replace(/[_-]+/g, " ")}</dt>
-                      <dd className="whitespace-pre-wrap break-words text-[13px]">{v}</dd>
+                      <dt className="text-2xs capitalize text-muted-foreground">{k.replace(/[_-]+/g, " ")}</dt>
+                      <dd className="whitespace-pre-wrap break-words text-ui">{v}</dd>
                     </div>
                   ))}
                 </dl>
@@ -543,10 +543,10 @@ function ThreadItem({ m, customer, seed, me }: { m: TicketMessage; customer: str
   if (m.role === "note") {
     return (
       <div className="rounded-xl border border-amber-300/60 bg-amber-50/70 px-3.5 py-2.5 dark:border-amber-400/25 dark:bg-amber-400/[0.06]" data-testid="thread-note">
-        <p className="mb-1 flex items-center gap-1.5 text-[11px] font-medium text-amber-700 dark:text-amber-300">
+        <p className="mb-1 flex items-center gap-1.5 text-2xs font-medium text-amber-700 dark:text-amber-300">
           <TbLock size={12} /> Internal note · {me ? "You" : m.authorName || "Team"} · {timeAgo(m.createdAt)}
         </p>
-        <p className="whitespace-pre-wrap text-[13px] leading-relaxed">{m.text}</p>
+        <p className="whitespace-pre-wrap text-ui leading-relaxed">{m.text}</p>
       </div>
     );
   }
@@ -556,12 +556,12 @@ function ThreadItem({ m, customer, seed, me }: { m: TicketMessage; customer: str
     <div className="flex gap-3" data-testid={fromCustomer ? "thread-customer" : "thread-agent"}>
       <Avatar name={fromCustomer ? customer : m.authorName || "Team"} seed={fromCustomer ? seed : m.authorUserId || "team"} size="sm" className="mt-0.5" />
       <div className="min-w-0 flex-1">
-        <p className="mb-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+        <p className="mb-1 flex items-center gap-1.5 text-2xs text-muted-foreground">
           <span className="font-medium text-foreground">{name}</span>· {timeAgo(m.createdAt)}
           {!fromCustomer && m.emailed === false && <Chip tone="red">Email not sent</Chip>}
           {!fromCustomer && m.emailed && <span className="inline-flex items-center gap-1"><TbMail size={11} /> {m.sentVia ? `Emailed from ${m.sentVia}` : "Emailed"}</span>}
         </p>
-        <div className={cn("rounded-xl px-3.5 py-2.5 text-[13px] leading-relaxed", fromCustomer ? "bg-muted/70" : "border border-border bg-background")}>
+        <div className={cn("rounded-xl px-3.5 py-2.5 text-ui leading-relaxed", fromCustomer ? "bg-muted/70" : "border border-border bg-background")}>
           <p className="whitespace-pre-wrap break-words">{m.text}</p>
         </div>
       </div>
@@ -572,7 +572,7 @@ function ThreadItem({ m, customer, seed, me }: { m: TicketMessage; customer: str
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{title}</p>
+      <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</p>
       {children}
     </div>
   );

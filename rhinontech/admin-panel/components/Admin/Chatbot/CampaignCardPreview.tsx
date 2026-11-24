@@ -28,16 +28,16 @@ export function CampaignCardPreview({ content, accent }: { content: CampaignCont
         </div>
         <div className="flex flex-col gap-2.5 p-4">
           <div className="flex flex-col gap-1">
-            <h3 className="whitespace-pre-wrap pr-6 text-[15.5px] font-semibold leading-snug tracking-tight text-gray-900">
+            <h3 className="whitespace-pre-wrap pr-6 text-base font-semibold leading-snug tracking-tight text-gray-900">
               {content.heading || <span className="text-gray-400">Your heading</span>}
             </h3>
-            {showSub && <p className="whitespace-pre-wrap text-[13.5px] leading-normal text-gray-500">{content.subheading}</p>}
+            {showSub && <p className="whitespace-pre-wrap text-ui leading-normal text-gray-500">{content.subheading}</p>}
           </div>
           <div className="flex flex-col gap-2 pt-1">
             {content.buttons.map((b) => (
               <span
                 key={b.id}
-                className="w-full rounded-[10px] px-4 py-2.5 text-center text-[13.5px] font-semibold"
+                className="w-full rounded-[10px] px-4 py-2.5 text-center text-ui font-semibold"
                 style={b.style === "primary" ? { background: accent, color: "#fff" } : { background: "#fff", color: accent, border: `1px solid ${accent}` }}
               >
                 {b.text || "Button"}

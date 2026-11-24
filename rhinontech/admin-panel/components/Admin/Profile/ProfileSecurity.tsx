@@ -87,7 +87,7 @@ export function ProfileSecurity() {
     <div className="flex flex-col h-full glass-panel rounded-r-xl overflow-hidden">
       <div className="sticky top-0 z-10 flex items-center gap-4 h-16 px-5 border-b border-border glass-header">
         <SubNavToggle />
-        <h1 className="text-xl font-bold tracking-tight">Security</h1>
+        <h1 className="text-xl font-semibold tracking-tight">Security</h1>
       </div>
 
       <div className="flex-1 overflow-auto p-6">

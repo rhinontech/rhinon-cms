@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "sonner";
 import { usePermissions } from "@/context/PermissionsContext";
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -202,14 +203,22 @@ export function LeadsPage() {
   };
 
   /** Inline field edit from the row — patches locally, then persists. */
-  const patchLead = async (id: string, patch: Partial<Lead>) => {
+  const patchLead = async (id: string, patch: Partial<Lead>, isUndo = false) => {
     const snapshot = leads;
+    const before = leads.find((l) => l.id === id) ?? (selected?.id === id ? selected : undefined);
     setLeads((cur) => cur.map((l) => (l.id === id ? { ...l, ...patch } : l)));
     if (selected?.id === id) setSelected((s) => (s ? { ...s, ...patch } : s));
     try {
       const updated = await apiFetch<Lead>(`/leads/${id}`, { method: "PUT", body: JSON.stringify(patch) });
       setLeads((cur) => cur.map((l) => (l.id === id ? { ...l, ...updated } : l)));
       if (selected?.id === id) setSelected((s) => (s ? { ...s, ...updated } : s));
+      // Reversible change: say what happened and offer Undo instead of asking first (D10).
+      if (!isUndo && patch.lifecycleStage && before && before.lifecycleStage !== patch.lifecycleStage) {
+        const previous = before.lifecycleStage;
+        toast(`${before.name} moved to ${patch.lifecycleStage}`, {
+          action: { label: "Undo", onClick: () => void patchLead(id, { lifecycleStage: previous }, true) },
+        });
+      }
     } catch (err) {
       setLeads(snapshot);
       setError(err instanceof Error ? err.message : "Update failed");
@@ -353,7 +362,7 @@ export function LeadsPage() {
             <SubNavToggle />
             <div className="min-w-0">
               <h1 className="text-sm font-semibold tracking-tight text-foreground">Leads</h1>
-              <p className="text-[11px] tabular-nums text-muted-foreground">{count.toLocaleString("en-IN")} contacts</p>
+              <p className="text-2xs tabular-nums text-muted-foreground">{count.toLocaleString("en-IN")} contacts</p>
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
@@ -383,7 +392,7 @@ export function LeadsPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search name, company, email…"
-                className="w-full rounded-md border border-border bg-card/70 py-1.5 pl-8 pr-3 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
+                className="w-full rounded-md border border-border bg-card/70 py-1.5 pl-8 pr-3 text-ui outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
               />
             </div>
             <Select value={lifecycleFilter} onChange={(v) => { setLifecycleFilter(v); setOffset(0); }}>
@@ -432,7 +441,7 @@ export function LeadsPage() {
 
           {error && (
             <div className="mb-2.5 flex items-center justify-between gap-2 rounded-md border border-rose-200 dark:border-rose-400/25 bg-rose-50 dark:bg-rose-400/10 px-2.5 py-1.5">
-              <p className="text-[11px] text-rose-700 dark:text-rose-300">{error}</p>
+              <p className="text-2xs text-rose-700 dark:text-rose-300">{error}</p>
               <button onClick={() => setError(null)} className="text-rose-400 hover:text-rose-700 dark:hover:text-rose-300"><TbX size={13} /></button>
             </div>
           )}
@@ -440,7 +449,7 @@ export function LeadsPage() {
           {/* Bulk bar */}
           {selectedIds.size > 0 && (
             <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2 rounded-md border border-blue-200 dark:border-blue-400/25 bg-blue-50 dark:bg-blue-400/10 px-2.5 py-1.5">
-              <span className="text-[12px] font-medium tabular-nums text-blue-900 dark:text-blue-200">{selectedIds.size} selected</span>
+              <span className="text-xs font-medium tabular-nums text-blue-900 dark:text-blue-200">{selectedIds.size} selected</span>
               <div className="flex flex-wrap items-center gap-1.5">
                 <Select value="" onChange={(v) => v && bulkPatch({ ownerId: v === "none" ? null : v })}>
                   <option value="">Assign owner…</option>
@@ -461,7 +470,32 @@ export function LeadsPage() {
             </div>
           )}
 
-          <TableShell minWidth={compact ? undefined : 1040}>
+          {/* Phones get a card list: name, one secondary line, stage. Never a squeezed table. */}
+          <ul className="divide-y divide-border/70 overflow-hidden rounded-lg glass-card md:hidden">
+            {loading ? (
+              Array.from({ length: 6 }, (_, i) => <li key={i} className="h-16 animate-pulse bg-foreground/[0.02]" />)
+            ) : leads.length === 0 ? (
+              <li><EmptyState title="No leads match these filters" hint="Try clearing the filters, or import a CSV to get started." /></li>
+            ) : (
+              leads.map((lead) => (
+                <li key={lead.id}>
+                  <button onClick={() => openLead(lead)} className="flex w-full items-center gap-3 px-3 py-2.5 text-left active:bg-foreground/[0.03]">
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium text-foreground">{lead.name}</span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {[lead.account?.name || lead.company, lead.owner?.fullName ?? "Unassigned"].filter(Boolean).join(" · ")}
+                      </span>
+                    </span>
+                    <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-2xs font-medium ring-1 ring-inset", LIFECYCLE_TINT[lead.lifecycleStage] ?? LIFECYCLE_TINT.New)}>
+                      {lead.lifecycleStage}
+                    </span>
+                  </button>
+                </li>
+              ))
+            )}
+          </ul>
+
+          <TableShell minWidth={compact ? undefined : 1040} className="max-md:hidden">
             <HeaderRow cols={COLS}>
               <span className="flex justify-center">
                 <input type="checkbox" checked={allSelected} onChange={toggleAll} className="h-3.5 w-3.5 cursor-pointer accent-blue-600" title="Select all" />
@@ -492,11 +526,11 @@ export function LeadsPage() {
 
                   <span className="flex min-w-0 flex-col leading-tight">
                     <span className="truncate font-medium text-foreground">{lead.name}</span>
-                    <span className="truncate text-[11px] text-muted-foreground">{lead.email}</span>
+                    <span className="truncate text-2xs text-muted-foreground">{lead.email}</span>
                   </span>
 
                   {!compact && (
-                    <span className="flex min-w-0 items-center gap-1 text-[12px] text-foreground/70">
+                    <span className="flex min-w-0 items-center gap-1 text-xs text-foreground/70">
                       {lead.account ? (
                         <>
                           <TbBuilding size={11} className="shrink-0 text-muted-foreground" />
@@ -515,7 +549,7 @@ export function LeadsPage() {
                   )}
 
                   {!compact && (
-                    <span className="flex min-w-0 flex-col leading-tight text-[11px]">
+                    <span className="flex min-w-0 flex-col leading-tight text-2xs">
                       {lead.campaign?.name ? (
                         <Link
                           href={`${outreachBase}/campaigns/${lead.campaignId}`}
@@ -542,7 +576,8 @@ export function LeadsPage() {
                       onChange={(e) => patchLead(lead.id, { lifecycleStage: e.target.value as LifecycleStage })}
                       // A coloured pill that is also the editor: reads as a status, opens as a menu.
                       className={cn(
-                        "!h-6 w-fit max-w-full cursor-pointer gap-1 rounded-full border-0 px-2.5 text-[11.5px] font-medium shadow-none ring-1 ring-inset [&_svg]:!size-3 [&_svg]:opacity-60",
+                        // The chevron only appears on hover or focus, so at rest the column reads as statuses.
+                        "!h-6 w-fit max-w-full cursor-pointer gap-1 rounded-full border-0 px-2.5 text-xs font-medium shadow-none ring-1 ring-inset [&_svg]:!size-3 [&_svg]:opacity-0 group-hover:[&_svg]:opacity-60 focus-visible:[&_svg]:opacity-60",
                         LIFECYCLE_TINT[lead.lifecycleStage] ?? LIFECYCLE_TINT.New
                       )}
                     >
@@ -559,7 +594,7 @@ export function LeadsPage() {
                         // Borderless until hovered, so a column of owners reads as names,
                         // not as a stack of form fields.
                         className={cn(
-                          "!h-7 min-w-0 flex-1 cursor-pointer truncate border-transparent bg-transparent px-1.5 text-[12px] shadow-none hover:border-input hover:bg-card dark:bg-transparent",
+                          "!h-7 min-w-0 flex-1 cursor-pointer truncate border-transparent bg-transparent px-1.5 text-xs shadow-none hover:border-input hover:bg-card dark:bg-transparent [&_svg]:opacity-0 group-hover:[&_svg]:opacity-50 focus-visible:[&_svg]:opacity-50",
                           lead.ownerId ? "text-foreground/80" : "text-muted-foreground/70"
                         )}
                       >
@@ -572,7 +607,7 @@ export function LeadsPage() {
                   {!compact && <span className="truncate"><OutreachStatus status={lead.status} /></span>}
 
                   {!compact && (
-                    <span className="truncate text-[11px] tabular-nums text-muted-foreground">
+                    <span className="truncate text-2xs tabular-nums text-muted-foreground">
                       {relativeTime(lead.lastActivityAt || lead.addedAt)}
                     </span>
                   )}
@@ -623,7 +658,7 @@ export function LeadsPage() {
               {panelMode === "view" && selected ? (
                 <div className="space-y-4">
                   <div>
-                    <p className="text-[13px] text-muted-foreground">
+                    <p className="text-ui text-muted-foreground">
                       {selected.title || "No title"}
                       {selected.account ? (
                         <>
@@ -639,21 +674,21 @@ export function LeadsPage() {
                         carries the real one. */}
                     <div className="mt-2.5 grid grid-cols-2 gap-2">
                       <label className="flex flex-col gap-1">
-                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Stage</span>
+                        <span className="text-2xs uppercase tracking-wider text-muted-foreground">Stage</span>
                         <NativeSelect
                           value={selected.lifecycleStage}
                           onChange={(e) => patchLead(selected.id, { lifecycleStage: e.target.value as LifecycleStage })}
-                          className="w-full cursor-pointer rounded border border-border bg-card px-2 py-1 text-[12px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
+                          className="w-full cursor-pointer rounded border border-border bg-card px-2 py-1 text-xs outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                         >
                           {LIFECYCLE_STAGES.map((st) => <option key={st} value={st}>{st}</option>)}
                         </NativeSelect>
                       </label>
                       <label className="flex flex-col gap-1">
-                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Owner</span>
+                        <span className="text-2xs uppercase tracking-wider text-muted-foreground">Owner</span>
                         <NativeSelect
                           value={selected.ownerId || ""}
                           onChange={(e) => patchLead(selected.id, { ownerId: e.target.value || null })}
-                          className="w-full cursor-pointer rounded border border-border bg-card px-2 py-1 text-[12px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
+                          className="w-full cursor-pointer rounded border border-border bg-card px-2 py-1 text-xs outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
                         >
                           <option value="">Unassigned</option>
                           {owners.map((o) => <option key={o.id} value={o.id}>{o.fullName}</option>)}
@@ -661,7 +696,7 @@ export function LeadsPage() {
                       </label>
                     </div>
 
-                    <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <div className="mt-2 flex flex-wrap items-center gap-1.5 text-2xs text-muted-foreground">
                       <OutreachStatus status={selected.status} />
                       <span>· {selected.source}</span>
                       <span>· added {relativeTime(selected.addedAt)}</span>
@@ -671,13 +706,13 @@ export function LeadsPage() {
 
                   {(selected.campaign?.name || (selected.lists && selected.lists.length > 0)) && (
                     <div>
-                      <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Outreach</p>
+                      <p className="mb-1.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Outreach</p>
                       {selected.campaign?.name && (
                         <div className="flex items-center justify-between gap-2 border-b border-border py-1.5">
-                          <Link href={`${outreachBase}/campaigns/${selected.campaignId}`} className="truncate text-[13px] text-blue-600 dark:text-blue-300 hover:underline">
+                          <Link href={`${outreachBase}/campaigns/${selected.campaignId}`} className="truncate text-ui text-blue-600 dark:text-blue-300 hover:underline">
                             {selected.campaign.name}
                           </Link>
-                          <span className="shrink-0 text-[11px] text-muted-foreground">
+                          <span className="shrink-0 text-2xs text-muted-foreground">
                             Campaign · {selected.status}{selected.emailOpened ? " · opened" : ""}
                           </span>
                         </div>
@@ -686,12 +721,12 @@ export function LeadsPage() {
                         <div key={l.id} className="flex items-center justify-between gap-2 border-b border-border py-1.5 last:border-0">
                           <button
                             onClick={() => { setListFilter(l.id); setOffset(0); }}
-                            className="truncate text-left text-[13px] text-blue-600 dark:text-blue-300 hover:underline"
+                            className="truncate text-left text-ui text-blue-600 dark:text-blue-300 hover:underline"
                             title="Show everyone in this list"
                           >
                             {l.name}
                           </button>
-                          <Link href={`${outreachBase}/contacts`} className="shrink-0 text-[11px] text-muted-foreground hover:underline">
+                          <Link href={`${outreachBase}/contacts`} className="shrink-0 text-2xs text-muted-foreground hover:underline">
                             List · open in Outreach
                           </Link>
                         </div>
@@ -701,13 +736,13 @@ export function LeadsPage() {
 
                   {selected.deals && selected.deals.length > 0 && (
                     <div>
-                      <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Deals</p>
+                      <p className="mb-1.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Deals</p>
                       {selected.deals.map((d) => (
                         <div key={d.id} className="flex items-center justify-between gap-2 border-b border-border py-1.5 last:border-0">
-                          <Link href={`${crmBase}/pipeline?dealId=${d.id}`} className="truncate text-[13px] text-blue-600 dark:text-blue-300 hover:underline">
+                          <Link href={`${crmBase}/pipeline?dealId=${d.id}`} className="truncate text-ui text-blue-600 dark:text-blue-300 hover:underline">
                             {d.title}
                           </Link>
-                          <span className="shrink-0 text-[11px] text-muted-foreground">{d.stage?.name}</span>
+                          <span className="shrink-0 text-2xs text-muted-foreground">{d.stage?.name}</span>
                         </div>
                       ))}
                     </div>
@@ -718,18 +753,18 @@ export function LeadsPage() {
                   {!selected.enrichment && !enriching ? (
                     <button
                       onClick={() => enrich(selected.id)}
-                      className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-indigo-200 dark:border-indigo-400/25 py-1.5 text-[11px] font-medium text-indigo-500 dark:text-indigo-400 hover:bg-indigo-50/60 dark:hover:bg-indigo-400/10"
+                      className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-indigo-200 dark:border-indigo-400/25 py-1.5 text-2xs font-medium text-indigo-500 dark:text-indigo-400 hover:bg-indigo-50/60 dark:hover:bg-indigo-400/10"
                     >
                       <TbBulb size={13} /> Run AI enrichment
                     </button>
                   ) : (
                     <div className="rounded-lg border border-indigo-100 dark:border-indigo-400/20 bg-indigo-50/50 dark:bg-indigo-400/10 p-2.5">
                       <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-300">
+                        <span className="flex items-center gap-1.5 text-2xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-300">
                           <TbBulb size={13} /> AI intelligence
                         </span>
                         {!enriching && (
-                          <button onClick={() => enrich(selected.id)} className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-300 hover:underline">
+                          <button onClick={() => enrich(selected.id)} className="flex items-center gap-1 text-2xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-300 hover:underline">
                             <TbRefresh size={11} /> Re-run
                           </button>
                         )}
@@ -737,7 +772,7 @@ export function LeadsPage() {
                       {enriching ? (
                         <div className="flex flex-col items-center py-3 text-indigo-400">
                           <TbLoader className="mb-1 animate-spin" size={18} />
-                          <p className="text-[10px] uppercase tracking-widest">Analyzing…</p>
+                          <p className="text-2xs uppercase tracking-widest">Analyzing…</p>
                         </div>
                       ) : (
                         <div className="mt-2 space-y-2">
@@ -745,10 +780,10 @@ export function LeadsPage() {
                             .filter(([, v]) => typeof v === "string" && v)
                             .map(([k, v]) => (
                               <div key={k}>
-                                <p className="text-[9px] font-bold uppercase tracking-widest text-indigo-400">
+                                <p className="text-2xs font-semibold uppercase tracking-widest text-indigo-400">
                                   {k.replace(/([A-Z])/g, " $1").trim()}
                                 </p>
-                                <p className="text-[12px] leading-relaxed text-foreground/85">{v as string}</p>
+                                <p className="text-xs leading-relaxed text-foreground/85">{v as string}</p>
                               </div>
                             ))}
                         </div>
@@ -760,8 +795,8 @@ export function LeadsPage() {
 
                   {selected.notes && (
                     <div>
-                      <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Notes</p>
-                      <p className="whitespace-pre-wrap rounded border border-border p-2 text-[12px] leading-relaxed text-foreground/70">{selected.notes}</p>
+                      <p className="mb-1 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Notes</p>
+                      <p className="whitespace-pre-wrap rounded border border-border p-2 text-xs leading-relaxed text-foreground/70">{selected.notes}</p>
                     </div>
                   )}
 
@@ -772,7 +807,7 @@ export function LeadsPage() {
                   <LeadVisits leadId={selected.id} />
 
                   <div>
-                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Activity</p>
+                    <p className="mb-1.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Activity</p>
                     <Timeline leadId={selected.id} onLogged={load} />
                   </div>
                 </div>
@@ -788,11 +823,11 @@ export function LeadsPage() {
                   <FormField label="LinkedIn URL" value={form.linkedinUrl} onChange={(v) => setForm({ ...form, linkedinUrl: v })} />
                   <FormField label="Instagram (@name or URL)" value={form.instagramUrl} onChange={(v) => setForm({ ...form, instagramUrl: v })} />
                   <label className="block">
-                    <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Notes</span>
+                    <span className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Notes</span>
                     <textarea
                       value={form.notes}
                       onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                      className="h-24 w-full resize-none rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
+                      className="h-24 w-full resize-none rounded border border-border bg-card px-2 py-1.5 text-ui outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
                     />
                   </label>
                   <div className="flex justify-end gap-2 border-t border-border pt-3">
@@ -875,8 +910,8 @@ function DetailFields({ lead }: { lead: Lead }) {
     <dl className="grid grid-cols-[76px_minmax(0,1fr)] items-baseline gap-x-3 gap-y-2">
       {fields.map((f) => (
         <Fragment key={f.label}>
-          <dt className="text-[11px] text-muted-foreground">{f.label}</dt>
-          <dd className="min-w-0 text-[13px] text-foreground">
+          <dt className="text-2xs text-muted-foreground">{f.label}</dt>
+          <dd className="min-w-0 text-ui text-foreground">
             {f.link ? (
               <a
                 href={f.value!.startsWith("http") ? f.value! : `https://${f.value}`}
@@ -901,13 +936,13 @@ function FormField({
 }: { label: string; value: string; onChange: (v: string) => void; required?: boolean; type?: string }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
+      <span className="mb-1 block text-2xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
       <input
         required={required}
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded border border-border bg-card px-2 py-1.5 text-[13px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
+        className="w-full rounded border border-border bg-card px-2 py-1.5 text-ui outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60"
       />
     </label>
   );
@@ -919,7 +954,7 @@ function RawData({ raw }: { raw: Record<string, string> }) {
   return (
     <div className="rounded-lg border border-border">
       <button onClick={() => setOpen((o) => !o)} className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left hover:bg-muted/40">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
           All imported data ({entries.length} fields)
         </span>
         <TbChevronDown size={14} className={cn("text-muted-foreground transition-transform", open && "rotate-180")} />
@@ -927,7 +962,7 @@ function RawData({ raw }: { raw: Record<string, string> }) {
       {open && (
         <div className="divide-y divide-border border-t border-border">
           {entries.map(([k, v]) => (
-            <div key={k} className="grid grid-cols-[38%_62%] gap-2 px-2.5 py-1.5 text-[11px]">
+            <div key={k} className="grid grid-cols-[38%_62%] gap-2 px-2.5 py-1.5 text-2xs">
               <span className="break-words text-muted-foreground">{k}</span>
               <span className="break-words text-foreground/85">{v}</span>
             </div>

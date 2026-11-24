@@ -1,5 +1,6 @@
 "use client";
 
+import { StatusBadge, type StatusTone } from "@/components/ui/status-badge";
 import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { toast } from "sonner";
@@ -44,11 +45,7 @@ interface InvestmentSummary {
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-const STATUS_STYLE: Record<string, string> = {
-  draft:     "bg-amber-100 dark:bg-amber-400/15 text-amber-700 dark:text-amber-300",
-  processed: "bg-blue-100 dark:bg-blue-400/15 text-blue-700 dark:text-blue-300",
-  paid:      "bg-green-100 dark:bg-green-400/15 text-green-700 dark:text-green-300",
-};
+const STATUS_TONE: Record<string, StatusTone> = { draft: "warning", processed: "info", paid: "success" };
 
 const INR = (value: number) => `₹${Number(value || 0).toLocaleString("en-IN")}`;
 
@@ -59,7 +56,7 @@ function StatCard({ icon, label, value, sub }: { icon: React.ReactNode; label: s
       <div className="min-w-0">
         <p className="text-xs sm:text-sm text-muted-foreground truncate">{label}</p>
         <p className="text-sm sm:text-base font-semibold text-foreground mt-0.5 truncate">{value}</p>
-        {sub && <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 truncate">{sub}</p>}
+        {sub && <p className="text-2xs sm:text-xs text-muted-foreground mt-0.5 truncate">{sub}</p>}
       </div>
     </div>
   );
@@ -151,13 +148,13 @@ export function AdminPayrollOverview() {
               <TbChartPie size={18} className="text-muted-foreground shrink-0" />
               <p className="font-semibold text-xs sm:text-sm text-foreground truncate">Company Investment</p>
             </div>
-            <p className="text-[11px] sm:text-xs text-muted-foreground truncate">{investment ? `${investment.activeSalaryEmployeeCount} salaried employees` : "Loading..."}</p>
+            <p className="text-2xs sm:text-xs text-muted-foreground truncate">{investment ? `${investment.activeSalaryEmployeeCount} salaried employees` : "Loading..."}</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border">
             <div className="p-3.5 sm:p-5">
               <p className="text-xs sm:text-sm text-muted-foreground">Total invested</p>
-              <p className="mt-1 text-base sm:text-xl font-bold text-foreground truncate">{investment ? INR(investment.totalCompanyCostPaid) : "—"}</p>
-              <p className="mt-1 text-[11px] sm:text-xs text-muted-foreground">
+              <p className="mt-1 text-base sm:text-xl font-semibold text-foreground truncate">{investment ? INR(investment.totalCompanyCostPaid) : "—"}</p>
+              <p className="mt-1 text-2xs sm:text-xs text-muted-foreground">
                 {investment && Number(investment.totalReimbursementsPaid ?? 0) > 0
                   ? `Salary + employer PF + ${INR(Number(investment.totalReimbursementsPaid))} reimbursements`
                   : "Gross salary + employer PF + reimbursements"}
@@ -165,18 +162,18 @@ export function AdminPayrollOverview() {
             </div>
             <div className="p-3.5 sm:p-5">
               <p className="text-xs sm:text-sm text-muted-foreground">Salary credited</p>
-              <p className="mt-1 text-base sm:text-xl font-bold text-foreground truncate">{investment ? INR(investment.totalNetPaid) : "—"}</p>
-              <p className="mt-1 text-[11px] sm:text-xs text-muted-foreground">{investment ? `${investment.paidPayslipCount} paid payslips` : "Paid payroll only"}</p>
+              <p className="mt-1 text-base sm:text-xl font-semibold text-foreground truncate">{investment ? INR(investment.totalNetPaid) : "—"}</p>
+              <p className="mt-1 text-2xs sm:text-xs text-muted-foreground">{investment ? `${investment.paidPayslipCount} paid payslips` : "Paid payroll only"}</p>
             </div>
             <div className="p-3.5 sm:p-5">
               <p className="text-xs sm:text-sm text-muted-foreground">Employer PF</p>
-              <p className="mt-1 text-base sm:text-xl font-bold text-foreground truncate">{investment ? INR(investment.totalEmployerPfPaid) : "—"}</p>
-              <p className="mt-1 text-[11px] sm:text-xs text-muted-foreground">Company contribution paid</p>
+              <p className="mt-1 text-base sm:text-xl font-semibold text-foreground truncate">{investment ? INR(investment.totalEmployerPfPaid) : "—"}</p>
+              <p className="mt-1 text-2xs sm:text-xs text-muted-foreground">Company contribution paid</p>
             </div>
             <div className="p-3.5 sm:p-5">
               <p className="text-xs sm:text-sm text-muted-foreground">Monthly commitment</p>
-              <p className="mt-1 text-base sm:text-xl font-bold text-foreground truncate">{investment ? INR(investment.monthlyCommittedGross) : "—"}</p>
-              <p className="mt-1 text-[11px] sm:text-xs text-muted-foreground">{investment ? `${investment.activeEmployeeCount} active employees` : "Current salary setup"}</p>
+              <p className="mt-1 text-base sm:text-xl font-semibold text-foreground truncate">{investment ? INR(investment.monthlyCommittedGross) : "—"}</p>
+              <p className="mt-1 text-2xs sm:text-xs text-muted-foreground">{investment ? `${investment.activeEmployeeCount} active employees` : "Current salary setup"}</p>
             </div>
           </div>
         </div>
@@ -216,9 +213,7 @@ export function AdminPayrollOverview() {
                     <td className="px-4 sm:px-5 py-2.5 sm:py-3 text-right">₹{Number(run.totalGross).toLocaleString("en-IN")}</td>
                     <td className="px-4 sm:px-5 py-2.5 sm:py-3 text-right font-semibold">₹{Number(run.totalNet).toLocaleString("en-IN")}</td>
                     <td className="px-4 sm:px-5 py-2.5 sm:py-3">
-                      <span className={`px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold uppercase ${STATUS_STYLE[run.status] ?? "bg-muted text-foreground/70"}`}>
-                        {run.status}
-                      </span>
+                      <StatusBadge tone={STATUS_TONE[run.status] ?? "neutral"} className="capitalize">{run.status}</StatusBadge>
                     </td>
                     <td className="px-4 sm:px-5 py-2.5 sm:py-3 text-muted-foreground">{run.processedBy?.fullName ?? "—"}</td>
                     <td className="px-4 sm:px-5 py-2.5 sm:py-3">
@@ -233,7 +228,7 @@ export function AdminPayrollOverview() {
                           <button
                             onClick={() => markPaid(run.id)}
                             disabled={markingPaid === run.id}
-                            className="flex items-center gap-1 text-[11px] sm:text-xs text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-400/10 hover:bg-green-100 dark:hover:bg-green-400/15 px-2 py-1 rounded-md transition-colors disabled:opacity-50"
+                            className="flex items-center gap-1 text-2xs sm:text-xs text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-400/10 hover:bg-green-100 dark:hover:bg-green-400/15 px-2 py-1 rounded-md transition-colors disabled:opacity-50"
                           >
                             {markingPaid === run.id ? <TbLoader2 size={12} className="animate-spin" /> : <TbCheck size={12} />}
                             Mark Paid

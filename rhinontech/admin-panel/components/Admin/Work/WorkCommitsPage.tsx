@@ -81,7 +81,7 @@ export function WorkCommitsPage() {
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="shrink-0 border-b glass-header px-4 py-3">
-        <h1 className="text-xl font-bold tracking-tight text-foreground">Commits</h1>
+        <h1 className="text-xl font-semibold tracking-tight text-foreground">Commits</h1>
         <p className="text-xs text-muted-foreground">Everything pushed to linked repositories, by day (IST).</p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <button onClick={() => setDay((d) => shiftDay(d, -1))} className="rounded-lg border border-border p-1.5 hover:bg-muted" title="Previous day">
@@ -145,12 +145,12 @@ export function WorkCommitsPage() {
             {groups.map((g) => (
               <section key={g.name} className="min-w-0 rounded-xl border bg-card/60">
                 <header className="flex items-center gap-2 border-b px-4 py-2.5">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-foreground/70">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-2xs font-semibold text-foreground/70">
                     {g.name.slice(0, 2).toUpperCase()}
                   </span>
                   <h2 className="text-sm font-semibold text-foreground">{g.name}</h2>
                   {!g.matched && (
-                    <span className="text-[11px] text-muted-foreground" title="Set their GitHub username on their employee profile to attribute these commits">
+                    <span className="text-2xs text-muted-foreground" title="Set their GitHub username on their employee profile to attribute these commits">
                       not linked to an employee
                     </span>
                   )}

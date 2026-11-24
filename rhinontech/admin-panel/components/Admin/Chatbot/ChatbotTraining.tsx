@@ -273,7 +273,7 @@ export function ChatbotTraining() {
           <div className="mb-2 flex items-center justify-between gap-2">
             <div>
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Test your bot</p>
-              <p className="text-[11px] text-muted-foreground">Real answers from its training. Test chats stay out of Live chats and the CRM.</p>
+              <p className="text-2xs text-muted-foreground">Real answers from its training. Test chats stay out of Live chats and the CRM.</p>
             </div>
             <Button variant="ghost" size="sm" onClick={() => setTestRun((n) => n + 1)} title="Start a fresh test chat">
               <TbRefresh size={14} /> New chat

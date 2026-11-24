@@ -60,7 +60,7 @@ function downloadGuestsCsv(guests: Guest[], slug: string) {
 function Detail({ label, value }: { label: string; value: React.ReactNode }) {
   if (value === null || value === undefined || value === "") return null;
   return (
-    <div className="grid grid-cols-[130px_1fr] gap-3 py-2 text-[13px]">
+    <div className="grid grid-cols-[130px_1fr] gap-3 py-2 text-ui">
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="min-w-0 break-words">{value}</dd>
     </div>
@@ -137,7 +137,7 @@ function GuestDrawer({ guest, event, onClose, onChanged }: { guest: Guest | null
           </div>
 
           <section>
-            <h4 className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">Contact</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Contact</h4>
             <dl className="mt-1 divide-y divide-border">
               <Detail label="Email" value={guest.email && <a className="text-primary hover:underline" href={`mailto:${guest.email}`}>{guest.email}</a>} />
               <Detail label="Phone" value={guest.phone} />
@@ -146,7 +146,7 @@ function GuestDrawer({ guest, event, onClose, onChanged }: { guest: Guest | null
           </section>
 
           <section>
-            <h4 className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">Registration</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Registration</h4>
             <dl className="mt-1 divide-y divide-border">
               <Detail label="Registered as" value={guest.userType} />
               <Detail label="Role" value={guest.role} />
@@ -159,7 +159,7 @@ function GuestDrawer({ guest, event, onClose, onChanged }: { guest: Guest | null
           </section>
 
           <section>
-            <h4 className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">{team ? "Submission" : "Feedback"}</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{team ? "Submission" : "Feedback"}</h4>
             {feedback.length ? (
               <dl className="mt-1 divide-y divide-border">
                 {feedback.map(([k, v]) => (
@@ -168,16 +168,16 @@ function GuestDrawer({ guest, event, onClose, onChanged }: { guest: Guest | null
                 <Detail label="Submitted" value={formatDateTime(guest.feedbackSubmittedAt)} />
               </dl>
             ) : (
-              <p className="mt-2 text-[13px] text-muted-foreground">Nothing submitted yet.</p>
+              <p className="mt-2 text-ui text-muted-foreground">Nothing submitted yet.</p>
             )}
           </section>
 
           <section>
-            <h4 className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">Certificate</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Certificate</h4>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               {guest.certificateGenerated ? (
                 <>
-                  <span className="inline-flex items-center gap-1.5 text-[13px] text-emerald-700 dark:text-emerald-400"><Check className="size-4" /> Issued · <span className="font-mono">{guest.certificateId}</span></span>
+                  <span className="inline-flex items-center gap-1.5 text-ui text-emerald-700 dark:text-emerald-400"><Check className="size-4" /> Issued · <span className="font-mono">{guest.certificateId}</span></span>
                   <Button size="sm" variant="outline" className="gap-1.5" disabled={Boolean(busy)}
                     onClick={() => run("download", async () => window.open(await eventsApi.certificateUrl(guest.id), "_blank"), "Opening certificate")}>
                     <Download className="size-4" /> Download
@@ -194,7 +194,7 @@ function GuestDrawer({ guest, event, onClose, onChanged }: { guest: Guest | null
                   {busy === "certapprove" ? <Loader2 className="size-4 animate-spin" /> : <Award className="size-4" />} Approve certificate
                 </Button>
               )}
-              {guest.guestType !== "Approved" ? <span className="text-[12px] text-muted-foreground">Only approved guests receive certificates.</span> : null}
+              {guest.guestType !== "Approved" ? <span className="text-xs text-muted-foreground">Only approved guests receive certificates.</span> : null}
             </div>
           </section>
         </div>
@@ -250,7 +250,7 @@ export default function GuestsTab({ event, guests, reloadGuests }: ManageContext
   }
 
   return (
-    <div className="glass-card rounded-2xl">
+    <div className="glass-card rounded-xl">
       <div className="flex flex-wrap items-center gap-3 p-4 border-b border-border">
         <div className="relative flex-1 min-w-[220px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
@@ -295,7 +295,7 @@ export default function GuestsTab({ event, guests, reloadGuests }: ManageContext
       </div>
 
       {selected.size ? (
-        <div className="flex flex-wrap items-center gap-2 px-4 py-2.5 bg-primary/5 border-b border-border text-[13px]">
+        <div className="flex flex-wrap items-center gap-2 px-4 py-2.5 bg-primary/5 border-b border-border text-ui">
           <span className="font-medium">{selected.size} selected</span>
           <Button size="sm" className="gap-1.5 ml-2" onClick={() => setConfirm({ title: `Approve ${selected.size} guest(s)?`, ids: [...selected], status: "Approved" })}>
             <UserCheck className="size-4" /> Approve
@@ -331,22 +331,22 @@ export default function GuestsTab({ event, guests, reloadGuests }: ManageContext
               </TableCell>
               <TableCell>
                 <p className="font-medium">{g.name}</p>
-                <p className="text-[12.5px] text-muted-foreground">{g.email}</p>
+                <p className="text-xs text-muted-foreground">{g.email}</p>
               </TableCell>
-              <TableCell className="hidden md:table-cell text-[13px]">{g.userType || "—"}</TableCell>
+              <TableCell className="hidden md:table-cell text-ui">{g.userType || "—"}</TableCell>
               <TableCell><GuestStatusBadge status={g.guestType} /></TableCell>
-              <TableCell className="hidden lg:table-cell font-mono text-[12px]">{g.referralCode || "—"}</TableCell>
-              <TableCell className="hidden lg:table-cell text-[12.5px] text-muted-foreground">{formatDateTime(g.createdAt)}</TableCell>
-              <TableCell className="hidden sm:table-cell text-right text-[12px] text-muted-foreground">
+              <TableCell className="hidden lg:table-cell font-mono text-xs">{g.referralCode || "—"}</TableCell>
+              <TableCell className="hidden lg:table-cell text-xs text-muted-foreground">{formatDateTime(g.createdAt)}</TableCell>
+              <TableCell className="hidden sm:table-cell text-right text-xs text-muted-foreground">
                 {[g.feedbackSubmittedAt ? "Feedback" : null, g.certificateGenerated ? "Certificate" : g.certificateApproved ? "Cert. approved" : null].filter(Boolean).join(" · ") || "—"}
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
-      {!pageRows.length ? <p className="p-8 text-center text-[13px] text-muted-foreground">No guests match these filters.</p> : null}
+      {!pageRows.length ? <p className="p-8 text-center text-ui text-muted-foreground">No guests match these filters.</p> : null}
 
-      <div className="flex items-center justify-between px-4 py-3 border-t border-border text-[12.5px] text-muted-foreground">
+      <div className="flex items-center justify-between px-4 py-3 border-t border-border text-xs text-muted-foreground">
         <span>{filtered.length} guest(s)</span>
         <div className="flex items-center gap-2">
           <Button size="sm" variant="ghost" disabled={page === 0} onClick={() => setPage(page - 1)}>Previous</Button>

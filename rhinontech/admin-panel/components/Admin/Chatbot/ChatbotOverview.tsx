@@ -156,7 +156,7 @@ export function ChatbotOverview() {
           {/* Identity */}
           <Panel padded={false} testId="chatbot-hero">
             <div className="flex flex-wrap items-center gap-4 p-6">
-              <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl text-white shadow-sm" style={{ background: accent }}>
+              <span className="flex size-14 shrink-0 items-center justify-center rounded-xl text-white shadow-sm" style={{ background: accent }}>
                 <TbMessageChatbot size={28} />
               </span>
               <div className="min-w-0 flex-1">
@@ -197,7 +197,7 @@ export function ChatbotOverview() {
                     <>
                       <span
                         className={cn(
-                          "flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold",
+                          "flex size-6 shrink-0 items-center justify-center rounded-full text-2xs font-semibold",
                           s.done ? "bg-emerald-500 text-white" : "border border-border text-muted-foreground"
                         )}
                       >
@@ -330,7 +330,7 @@ function Shortcut({ href, icon, title, body }: { href: string; icon: React.React
   return (
     <Link
       href={href}
-      className="group flex items-start gap-3 rounded-2xl border border-[var(--glass-card-border)] bg-[var(--glass-card-solid-bg)] p-4 transition-all hover:-translate-y-0.5 hover:shadow-md"
+      className="group flex items-start gap-3 rounded-xl border border-[var(--glass-card-border)] bg-[var(--glass-card-solid-bg)] p-4 transition-all hover:-translate-y-0.5 hover:shadow-md"
     >
       <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground/70">{icon}</span>
       <div className="min-w-0 flex-1">

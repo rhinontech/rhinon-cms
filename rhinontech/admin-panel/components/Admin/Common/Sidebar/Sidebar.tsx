@@ -20,6 +20,8 @@ import { useCommandPalette } from "@/components/Admin/Common/CommandPalette/stor
 import { useShortcutLabel } from "@/components/Admin/Common/CommandPalette/useShortcutLabel";
 import { useApprovalCount } from "@/lib/approvals";
 import { useLegal } from "@/lib/legal";
+import { useModuleNav } from "@/components/Admin/Common/CollapsibleSubNav/moduleNavStore";
+import { itemIsActive } from "@/components/Admin/Common/CollapsibleSubNav/CollapsibleSubNav";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface NavLink {
@@ -31,29 +33,65 @@ interface NavLink {
   badge?: number;
 }
 
-/** One row: a coloured tile per module (soft at rest, solid when you are in it), then the label. */
+/** This module's own pages, nested under its row (published by the module's sub-nav). */
+function ModulePages() {
+  const items = useModuleNav((s) => s.items);
+  const pathname = usePathname();
+  const tone = moduleTone(pathname.split("/")[2] ?? "");
+  // Only when pinned open (or the phone drawer): hover-peeking shouldn't reflow the menu.
+  const { sidebarExpanded, mobileNavOpen } = useDashboard();
+  if (!items?.length || !(sidebarExpanded || mobileNavOpen)) return null;
+  const rows = items.flatMap((i) => (i.isCollapsible && i.children?.length ? [i, ...i.children.map((c) => ({ ...c, nested: true }))] : [i]));
+  return (
+    <ul className="mb-1 ml-[1.35rem] mt-0.5 space-y-px border-l border-foreground/[0.08] pl-2">
+      {rows.map((row) => {
+        const active = itemIsActive(row, pathname);
+        return (
+          <li key={`${row.label}-${row.href}`}>
+            <Link
+              href={row.href}
+              prefetch={false}
+              aria-current={active ? "page" : undefined}
+              style={active ? { color: tone, background: `${tone}14` } : undefined}
+              className={cn(
+                "flex h-7 items-center truncate rounded-md px-2 text-ui transition-colors",
+                "nested" in row && "pl-5",
+                active ? "font-medium" : "text-foreground/60 hover:bg-foreground/[0.04] hover:text-foreground"
+              )}
+            >
+              {row.label}
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+/** One row: each module keeps its colour — a soft tile at rest, solid when you're in it. */
 function NavRow({ item, expanded }: { item: NavLink; expanded: boolean }) {
   const Icon = item.icon;
   const tone = moduleTone(item.key);
   return (
+    <>
     <Link
       href={item.href}
       prefetch={false}
       title={expanded ? undefined : item.label}
       aria-current={item.active ? "page" : undefined}
       className={cn(
-        "group relative flex h-9 select-none items-center gap-3 rounded-lg px-1.5 text-[13px] font-medium transition-[background-color,color,box-shadow] duration-150 cursor-pointer active:scale-[0.98]",
+        "group relative flex h-9 select-none items-center gap-2.5 rounded-md px-1.5 text-ui font-medium transition-colors duration-150 cursor-pointer",
         item.active
-          ? "bg-card text-foreground shadow-xs ring-1 ring-foreground/[0.06] dark:bg-white/[0.08] dark:shadow-none dark:ring-white/[0.06]"
-          : "text-foreground/65 hover:bg-card/60 hover:text-foreground dark:hover:bg-white/[0.05]"
+          ? "bg-foreground/[0.06] text-foreground"
+          : "text-foreground/70 hover:bg-foreground/[0.04] hover:text-foreground"
       )}
     >
       <span className="relative shrink-0 pointer-events-none">
         <span
-          className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors duration-150"
+          className="flex h-7 w-7 items-center justify-center rounded-md transition-colors duration-150"
           style={{ background: item.active ? tone : `${tone}1f`, color: item.active ? "#fff" : tone }}
         >
-          <Icon size={17} strokeWidth={1.9} />
+          <Icon size={16} strokeWidth={1.9} />
         </span>
         {/* The collapsed rail has no room for a count — a dot still says "something new". */}
         {!expanded && !!item.badge && (
@@ -62,18 +100,20 @@ function NavRow({ item, expanded }: { item: NavLink; expanded: boolean }) {
       </span>
       {expanded && <span className="flex-1 truncate pointer-events-none">{item.label}</span>}
       {expanded && !!item.badge && (
-        <span className="ml-auto rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold leading-none tabular-nums text-brand-foreground pointer-events-none">
+        <span className="ml-auto rounded-full bg-brand px-1.5 py-0.5 text-2xs font-semibold leading-none tabular-nums text-brand-foreground pointer-events-none">
           {item.badge > 99 ? "99+" : item.badge}
         </span>
       )}
     </Link>
+    {item.active && expanded && <ModulePages />}
+    </>
   );
 }
 
 /** A group heading when the sidebar is open; a thin rule on the icon rail, so the grouping survives collapsing. */
 function SectionLabel({ label, expanded }: { label: string; expanded: boolean }) {
   return expanded ? (
-    <p className="px-2 pb-1 pt-3.5 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/75">{label}</p>
+    <p className="px-2 pb-1 pt-3.5 text-2xs font-semibold uppercase tracking-[0.08em] text-muted-foreground/75">{label}</p>
   ) : (
     <div className="mx-2.5 my-2 h-px bg-foreground/[0.08]" aria-hidden />
   );
@@ -92,7 +132,7 @@ function HelpMenu({ expanded, roleSlug, showSetup }: { expanded: boolean; roleSl
       <PopoverTrigger asChild>
         <button
           title={expanded ? undefined : "Help"}
-          className="group flex h-9 w-full select-none items-center gap-3 rounded-lg px-1.5 text-[13px] font-medium text-foreground/65 transition-colors hover:bg-card/60 hover:text-foreground dark:hover:bg-white/[0.05]"
+          className="group flex h-9 w-full select-none items-center gap-3 rounded-lg px-1.5 text-ui font-medium text-foreground/65 transition-colors hover:bg-card/60 hover:text-foreground dark:hover:bg-white/[0.05]"
         >
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-foreground/[0.05] text-foreground/60">
             <TbHelpCircle size={17} strokeWidth={1.9} />
@@ -104,7 +144,7 @@ function HelpMenu({ expanded, roleSlug, showSetup }: { expanded: boolean; roleSl
         <button className={row} onClick={() => { setOpen(false); openPalette(true); }}>
           <TbSearch size={16} className="shrink-0 text-muted-foreground" />
           <span className="flex-1">Search and jump to anything</span>
-          <kbd className="rounded border border-border px-1.5 text-[10px] text-muted-foreground">{shortcut}</kbd>
+          <kbd className="rounded border border-border px-1.5 text-2xs text-muted-foreground">{shortcut}</kbd>
         </button>
         {showSetup && (
           <Link href={`/${roleSlug}/dashboard#setup`} prefetch={false} className={row} onClick={() => setOpen(false)}>
@@ -274,7 +314,7 @@ export function Sidebar() {
           <button
             onClick={() => openPalette(true)}
             title={expanded ? undefined : `Search (${shortcut})`}
-            className="group flex h-9 w-full select-none items-center gap-3 rounded-lg px-1.5 text-[13px] font-medium text-foreground/65 transition-colors hover:bg-card/60 hover:text-foreground dark:hover:bg-white/[0.05]"
+            className="group flex h-9 w-full select-none items-center gap-3 rounded-lg px-1.5 text-ui font-medium text-foreground/65 transition-colors hover:bg-card/60 hover:text-foreground dark:hover:bg-white/[0.05]"
           >
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-foreground/[0.05] text-foreground/60">
               <TbSearch size={16} strokeWidth={1.9} />
@@ -282,7 +322,7 @@ export function Sidebar() {
             {expanded && (
               <>
                 <span className="flex-1 truncate text-left">Search</span>
-                <kbd className="rounded border border-border bg-card/60 px-1.5 py-px text-[10px] font-medium text-muted-foreground">{shortcut}</kbd>
+                <kbd className="rounded border border-border bg-card/60 px-1.5 py-px text-2xs font-medium text-muted-foreground">{shortcut}</kbd>
               </>
             )}
           </button>

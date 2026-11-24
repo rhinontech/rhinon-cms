@@ -180,7 +180,7 @@ export function EmployeeSalaryDetails() {
                 <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-5 flex items-center justify-between text-white">
                   <div>
                     <p className="text-sm text-blue-100">Take-Home (Net Pay)</p>
-                    <p className="text-3xl font-bold mt-0.5">{INR(net)}<span className="text-base font-normal text-blue-200"> / month</span></p>
+                    <p className="text-3xl font-semibold mt-0.5">{INR(net)}<span className="text-base font-normal text-blue-200"> / month</span></p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-blue-100">Annual</p>

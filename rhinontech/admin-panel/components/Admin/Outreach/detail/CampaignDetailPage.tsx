@@ -191,7 +191,7 @@ export function CampaignDetailPage({ id }: { id: string }) {
               key={item.key}
               onClick={() => setActiveTab(item.key)}
               className={cn(
-                "flex shrink-0 items-center gap-2 whitespace-nowrap border-b-2 px-3 py-2.5 text-[13px] font-medium transition-colors [&_svg]:size-4",
+                "flex shrink-0 items-center gap-2 whitespace-nowrap border-b-2 px-3 py-2.5 text-ui font-medium transition-colors [&_svg]:size-4",
                 activeTab === item.key
                   ? "border-brand text-foreground [&_svg]:text-brand"
                   : "border-transparent text-muted-foreground hover:text-foreground"

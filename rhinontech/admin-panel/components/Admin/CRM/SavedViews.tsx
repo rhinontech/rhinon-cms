@@ -111,13 +111,13 @@ export function SavedViews({
       {open && (
         <div className="absolute left-0 z-50 mt-1 w-64 rounded-lg border border-border bg-card p-1 shadow-lg">
           {views.length === 0 && !naming && (
-            <p className="px-2 py-3 text-center text-[11px] text-muted-foreground">No saved views yet.</p>
+            <p className="px-2 py-3 text-center text-2xs text-muted-foreground">No saved views yet.</p>
           )}
 
           {active && (
             <button
               onClick={() => { onApply(null); setOpen(false); }}
-              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-muted-foreground hover:bg-muted/40"
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-muted-foreground hover:bg-muted/40"
             >
               Clear view
             </button>
@@ -133,9 +133,9 @@ export function SavedViews({
                   {activeViewId === view.id && <TbCheck size={12} className="text-blue-600 dark:text-blue-300" />}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[12px] text-foreground">{view.name}</span>
+                  <span className="block truncate text-xs text-foreground">{view.name}</span>
                   {view.creator && (
-                    <span className="block truncate text-[10px] text-muted-foreground">{view.creator.fullName}</span>
+                    <span className="block truncate text-2xs text-muted-foreground">{view.creator.fullName}</span>
                   )}
                 </span>
               </button>
@@ -161,12 +161,12 @@ export function SavedViews({
                     if (e.key === "Escape") setNaming(false);
                   }}
                   placeholder="View name"
-                  className="min-w-0 flex-1 rounded border border-border px-2 py-1 text-[12px] outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
+                  className="min-w-0 flex-1 rounded border border-border px-2 py-1 text-xs outline-none focus:ring-[3px] focus:ring-ring/20 focus:border-ring/60/40"
                 />
                 <button
                   onClick={save}
                   disabled={busy || !name.trim()}
-                  className="rounded bg-primary px-2 py-1 text-[11px] font-medium text-primary-foreground disabled:opacity-50"
+                  className="rounded bg-primary px-2 py-1 text-2xs font-medium text-primary-foreground disabled:opacity-50"
                 >
                   Save
                 </button>
@@ -176,7 +176,7 @@ export function SavedViews({
                 onClick={() => setNaming(true)}
                 disabled={!hasFilters}
                 title={hasFilters ? undefined : "Set a filter first"}
-                className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-foreground/85 hover:bg-muted/40 disabled:cursor-not-allowed disabled:text-muted-foreground/70 disabled:hover:bg-transparent"
+                className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-foreground/85 hover:bg-muted/40 disabled:cursor-not-allowed disabled:text-muted-foreground/70 disabled:hover:bg-transparent"
               >
                 <TbPlus size={12} /> Save current filters
               </button>

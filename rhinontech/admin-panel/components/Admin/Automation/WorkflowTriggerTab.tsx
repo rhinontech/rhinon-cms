@@ -114,8 +114,8 @@ export function WorkflowTriggerTab({
   return (
     <div className="p-8 max-w-5xl mx-auto space-y-8">
       {/* Trigger Type Selection Section */}
-      <div className="bg-card p-6 rounded-2xl border border-border shadow-2xs space-y-4">
-        <h3 className="text-base font-bold text-foreground flex items-center gap-1.5">
+      <div className="bg-card p-6 rounded-xl border border-border shadow-2xs space-y-4">
+        <h3 className="text-base font-semibold text-foreground flex items-center gap-1.5">
           Trigger type <TbInfoCircle size={16} className="text-muted-foreground" />
         </h3>
 
@@ -131,7 +131,7 @@ export function WorkflowTriggerTab({
           >
             <div className="flex items-center gap-2 mb-2">
               <TbListCheck size={20} className="text-foreground/85" />
-              <h4 className="text-sm font-bold text-foreground">Static list</h4>
+              <h4 className="text-sm font-semibold text-foreground">Static list</h4>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Manual one-time bulk run. Pick recipients, hit Run, leads enroll.
@@ -149,7 +149,7 @@ export function WorkflowTriggerTab({
           >
             <div className="flex items-center gap-2 mb-2">
               <TbBolt size={20} className="text-amber-500 dark:text-amber-400" />
-              <h4 className="text-sm font-bold text-foreground">When a new lead arrives</h4>
+              <h4 className="text-sm font-semibold text-foreground">When a new lead arrives</h4>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Real-time auto-enroll when a lead is created from watched sources.
@@ -160,7 +160,7 @@ export function WorkflowTriggerTab({
 
       {/* Static List Details */}
       {selectedType === "static_list" && (
-        <div className="bg-card p-6 rounded-2xl border border-border shadow-2xs space-y-6">
+        <div className="bg-card p-6 rounded-xl border border-border shadow-2xs space-y-6">
           <p className="text-xs text-foreground/70">
             <span className="font-semibold text-foreground">Static list:</span> enrolls the leads matching this filter when you click Run. A one-time bulk send (no auto-enroll).
           </p>
@@ -172,7 +172,7 @@ export function WorkflowTriggerTab({
                 <TbUsers size={20} />
               </div>
               <div>
-                <h5 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                <h5 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
                   Recipient filter <TbInfoCircle size={14} className="text-muted-foreground" />
                 </h5>
                 <p className="text-xs text-foreground/70 mt-1 font-medium">
@@ -193,7 +193,7 @@ export function WorkflowTriggerTab({
 
           {/* Batch Size */}
           <div className="space-y-2 pt-2">
-            <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+            <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
               Batch size (per minute) <TbInfoCircle size={14} className="text-muted-foreground" />
             </label>
             <div className="flex items-center gap-3">
@@ -223,7 +223,7 @@ export function WorkflowTriggerTab({
                 )}
               </button>
             </div>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-2xs text-muted-foreground">
               Maximum number of leads enrolled per minute. Helps avoid SES throttling.
             </p>
           </div>
@@ -232,10 +232,10 @@ export function WorkflowTriggerTab({
 
       {/* Auto-enrollment Details */}
       {selectedType === "realtime_lead" && (
-        <div className="bg-card p-6 rounded-2xl border border-border shadow-2xs space-y-6">
+        <div className="bg-card p-6 rounded-xl border border-border shadow-2xs space-y-6">
           {/* Green Alert Banner */}
           <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-400/10 border border-emerald-200 dark:border-emerald-400/25 text-xs text-emerald-800 dark:text-emerald-200 space-y-1">
-            <h5 className="font-bold flex items-center gap-1.5 text-emerald-900 dark:text-emerald-200">
+            <h5 className="font-semibold flex items-center gap-1.5 text-emerald-900 dark:text-emerald-200">
               <TbBolt size={16} /> Auto-enrolls when a new lead arrives
             </h5>
             <p className="leading-relaxed">
@@ -246,7 +246,7 @@ export function WorkflowTriggerTab({
           {/* Watched Landing Page Forms */}
           <div className="space-y-3">
             <div>
-              <h5 className="text-sm font-bold text-foreground">Select Rhinon Labs Landing Page Forms</h5>
+              <h5 className="text-sm font-semibold text-foreground">Select Rhinon Labs Landing Page Forms</h5>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Choose which website form submission(s) will trigger this automation workflow:
               </p>
@@ -276,7 +276,7 @@ export function WorkflowTriggerTab({
                   className="mt-0.5 rounded text-emerald-600 dark:text-emerald-300 focus:ring-emerald-500"
                 />
                 <div>
-                  <h6 className="text-sm font-bold text-foreground">📩 Contact Us Form</h6>
+                  <h6 className="text-sm font-semibold text-foreground">📩 Contact Us Form</h6>
                   <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
                     Triggers when a visitor submits the main Contact Us form on rhinontech.com
                   </p>
@@ -306,7 +306,7 @@ export function WorkflowTriggerTab({
                   className="mt-0.5 rounded text-emerald-600 dark:text-emerald-300 focus:ring-emerald-500"
                 />
                 <div>
-                  <h6 className="text-sm font-bold text-foreground">📅 Schedule a Call Form</h6>
+                  <h6 className="text-sm font-semibold text-foreground">📅 Schedule a Call Form</h6>
                   <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
                     Triggers when a lead schedules a demo or call on rhinontech.com
                   </p>
@@ -318,7 +318,7 @@ export function WorkflowTriggerTab({
           {/* Re-enrollment Toggle */}
           <div className="pt-2 border-t border-border flex items-start justify-between gap-4">
             <div>
-              <h5 className="text-sm font-bold text-foreground">Allow re-enrollment after completion</h5>
+              <h5 className="text-sm font-semibold text-foreground">Allow re-enrollment after completion</h5>
               <p className="text-xs text-muted-foreground leading-relaxed mt-1">
                 A lead currently in this workflow is never re-enrolled while their run is still in progress — that's locked regardless of this setting. This toggle only controls what happens AFTER their previous run has ended.
               </p>
@@ -340,9 +340,9 @@ export function WorkflowTriggerTab({
       {/* Select Recipients Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary/50 p-4">
-          <div className="bg-card w-full max-w-lg rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in duration-150">
+          <div className="bg-card w-full max-w-lg rounded-xl shadow-xl overflow-hidden animate-in fade-in zoom-in duration-150">
             <div className="px-6 py-4 border-b border-border flex items-center justify-between">
-              <h3 className="text-base font-bold text-foreground">Select Recipient Contact Groups / Sources</h3>
+              <h3 className="text-base font-semibold text-foreground">Select Recipient Contact Groups / Sources</h3>
               <button
                 onClick={() => setIsModalOpen(false)}
                 className="p-1 rounded-lg text-muted-foreground hover:text-foreground/70 hover:bg-muted"

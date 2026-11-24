@@ -151,7 +151,7 @@ function MessageItemInner({ message, meId, grouped, inThread, onOpenThread, onEd
         <div className="relative">
           <div
             className={cn(
-              "rounded-2xl px-3.5 py-2 text-sm leading-relaxed",
+              "rounded-xl px-3.5 py-2 text-sm leading-relaxed",
               message.deleted
                 ? "bg-muted italic text-muted-foreground"
                 : mine
@@ -167,7 +167,7 @@ function MessageItemInner({ message, meId, grouped, inThread, onOpenThread, onEd
               <>
                 {message.body && <MessageBody message={message} mine={mine} />}
                 {message.attachments.map((a) => <AttachmentView key={a.key} attachment={a} />)}
-                {message.editedAt && <span className="mt-0.5 block text-[10px] opacity-70">Edited</span>}
+                {message.editedAt && <span className="mt-0.5 block text-2xs opacity-70">Edited</span>}
               </>
             )}
           </div>

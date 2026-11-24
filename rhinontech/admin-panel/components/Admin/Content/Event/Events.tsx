@@ -128,9 +128,9 @@ function Thumb({ src, className = "" }: { src?: string; className?: string }) {
 function When({ event, today }: { event: IEvent; today: string }) {
   const phase = phaseOf(event, today);
   return (
-    <div className="text-[13px] leading-snug">
+    <div className="text-ui leading-snug">
       <p className="font-medium whitespace-nowrap">{dateRange(event)}</p>
-      <p className={`mt-0.5 flex items-center gap-1.5 text-[12px] ${phase === "live" ? "text-emerald-600 dark:text-emerald-400 font-medium" : "text-muted-foreground"}`}>
+      <p className={`mt-0.5 flex items-center gap-1.5 text-xs ${phase === "live" ? "text-emerald-600 dark:text-emerald-400 font-medium" : "text-muted-foreground"}`}>
         {phase === "live" ? <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" /> : null}
         {relative(event, today)}
       </p>
@@ -154,10 +154,10 @@ function RegistrationBar({ event }: { event: IEvent }) {
       <div className="grid grid-cols-3 gap-2">
         {parts.map((p) => (
           <div key={p.key} className="rounded-xl border px-3 py-2.5">
-            <p className="flex items-center gap-1.5 text-[11.5px] text-muted-foreground">
+            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <span className={`size-1.5 rounded-full ${p.dot}`} /> {p.key}
             </p>
-            <p className="mt-1 text-[18px] font-semibold leading-none">{p.n}</p>
+            <p className="mt-1 text-lg font-semibold leading-none">{p.n}</p>
           </div>
         ))}
       </div>
@@ -300,8 +300,8 @@ export default function Events() {
       <div className="sticky top-0 z-20 glass-header border-b">
         <div className="max-w-[1400px] mx-auto flex flex-wrap items-center gap-3 px-4 sm:px-6 py-3">
           <div className="min-w-0 flex-1">
-            <h1 className="text-[16px] font-semibold">Events</h1>
-            <p className="text-[12.5px] text-muted-foreground">Workshops, hackathons and teardowns — registrations, emails and certificates.</p>
+            <h1 className="text-base font-semibold">Events</h1>
+            <p className="text-xs text-muted-foreground">Workshops, hackathons and teardowns — registrations, emails and certificates.</p>
           </div>
           <Button size="sm" className="gap-1.5" onClick={() => router.push(`${pathname}/new`)}>
             <Plus className="size-4" /> New event
@@ -399,7 +399,7 @@ export default function Events() {
             />
           )
         ) : (
-          <div className="glass-card rounded-2xl overflow-hidden">
+          <div className="glass-card rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -441,23 +441,23 @@ export default function Events() {
                               <div className="flex items-center gap-3 min-w-0 max-w-[340px]">
                                 <Thumb src={event.eventCreativeUrl} className="h-10 w-16 shrink-0 rounded-lg" />
                                 <div className="min-w-0">
-                                  <p className="truncate text-[14px] font-semibold">{event.eventTitle}</p>
-                                  <p className="truncate font-mono text-[11.5px] text-muted-foreground">/{event.eventSlug}</p>
+                                  <p className="truncate text-sm font-semibold">{event.eventTitle}</p>
+                                  <p className="truncate font-mono text-xs text-muted-foreground">/{event.eventSlug}</p>
                                 </div>
                               </div>
                             </TableCell>
                             <TableCell>
                               <div className="flex flex-col items-start gap-1">
-                                <span className="flex items-center gap-1.5 text-[13px] whitespace-nowrap">
+                                <span className="flex items-center gap-1.5 text-ui whitespace-nowrap">
                                   <span className={`size-1.5 rounded-full ${cat.dot}`} /> {cat.label}
                                 </span>
-                                {event.eventType !== "Workshop" ? <Badge variant="outline" className="text-[11px]">{event.eventType}</Badge> : null}
+                                {event.eventType !== "Workshop" ? <Badge variant="outline" className="text-2xs">{event.eventType}</Badge> : null}
                               </div>
                             </TableCell>
                             <TableCell><When event={event} today={today} /></TableCell>
                             <TableCell>
-                              <p className="text-[14px] font-semibold tabular-nums">{r.total}</p>
-                              <p className="text-[12px] text-muted-foreground whitespace-nowrap">
+                              <p className="text-sm font-semibold tabular-nums">{r.total}</p>
+                              <p className="text-xs text-muted-foreground whitespace-nowrap">
                                 {r.approved} approved
                                 {r.waitlist ? <span className="text-amber-600 dark:text-amber-400"> · {r.waitlist} waiting</span> : null}
                               </p>
@@ -469,7 +469,7 @@ export default function Events() {
                                 ) : (
                                   <Badge variant="secondary">Draft</Badge>
                                 )}
-                                {event.canAcceptResponse ? <span className="text-[11.5px] text-muted-foreground whitespace-nowrap">Responses open</span> : null}
+                                {event.canAcceptResponse ? <span className="text-xs text-muted-foreground whitespace-nowrap">Responses open</span> : null}
                               </div>
                             </TableCell>
                             <TableCell className="pr-5" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
@@ -508,11 +508,11 @@ export default function Events() {
                     </Badge>
                     {open.eventType !== "Workshop" ? <Badge variant="outline">{open.eventType}</Badge> : null}
                   </div>
-                  <SheetTitle className="text-left text-[20px] leading-tight">{open.eventTitle}</SheetTitle>
+                  <SheetTitle className="text-left text-xl leading-tight">{open.eventTitle}</SheetTitle>
                   {open.eventSubtitle ? <SheetDescription className="text-left">{open.eventSubtitle}</SheetDescription> : null}
                 </SheetHeader>
 
-                <dl className="space-y-2.5 text-[13.5px]">
+                <dl className="space-y-2.5 text-ui">
                   <div className="flex items-start gap-2.5">
                     <dt className="sr-only">Date</dt>
                     <CalendarDays className="size-4 mt-0.5 text-muted-foreground" aria-hidden />
@@ -539,22 +539,22 @@ export default function Events() {
 
                 <section className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">Registrations · {regs(open).total}</h3>
+                    <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Registrations · {regs(open).total}</h3>
                     {regs(open).waitlist ? (
-                      <Button variant="link" size="sm" className="h-auto p-0 text-[12.5px]" onClick={() => router.push(manageUrl(open.id, "guests"))}>
+                      <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => router.push(manageUrl(open.id, "guests"))}>
                         Review waitlist →
                       </Button>
                     ) : null}
                   </div>
                   <RegistrationBar event={open} />
-                  <p className="text-[12px] text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     The page shows {open.numberOfAttendees || 0}+ attending · responses {open.canAcceptResponse ? "open" : "closed"}
                   </p>
                 </section>
 
                 {open.speakers?.length ? (
                   <section className="space-y-2.5">
-                    <h3 className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">Hosts</h3>
+                    <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Hosts</h3>
                     <ul className="space-y-2">
                       {open.speakers.map((s, i) => (
                         <li key={`${s.name}-${i}`} className="flex items-center gap-3">
@@ -562,9 +562,9 @@ export default function Events() {
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={s.photoUrl} alt="" className="size-9 rounded-full object-cover bg-muted" />
                           ) : (
-                            <span className="grid size-9 place-items-center rounded-full bg-muted text-[12px] font-semibold">{s.name?.[0] || "?"}</span>
+                            <span className="grid size-9 place-items-center rounded-full bg-muted text-xs font-semibold">{s.name?.[0] || "?"}</span>
                           )}
-                          <div className="min-w-0 text-[13px] leading-tight">
+                          <div className="min-w-0 text-ui leading-tight">
                             <p className="truncate font-medium">{s.name}</p>
                             <p className="truncate text-muted-foreground">{[s.designation, s.company].filter(Boolean).join(", ")}</p>
                           </div>
@@ -577,7 +577,7 @@ export default function Events() {
                 {open.tags?.length ? (
                   <div className="flex flex-wrap gap-1.5">
                     {open.tags.map((t) => (
-                      <Badge key={t} variant="outline" className="text-[11.5px] font-normal">{t}</Badge>
+                      <Badge key={t} variant="outline" className="text-xs font-normal">{t}</Badge>
                     ))}
                   </div>
                 ) : null}

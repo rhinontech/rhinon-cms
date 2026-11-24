@@ -83,7 +83,7 @@ export function BlogSitePreview({ id, domain }: { id: string; domain: string }) 
 
       <div className="max-w-[1400px] mx-auto px-16 pt-28 pb-24 relative">
         <nav aria-label="Breadcrumb" className="mb-12 flex items-center gap-2 text-sm">
-          <span className="font-bold text-foreground">Blog</span>
+          <span className="font-semibold text-foreground">Blog</span>
           {blog.category && (
             <>
               <span className="text-muted-foreground/60">»</span>
@@ -144,7 +144,7 @@ export function BlogSitePreview({ id, domain }: { id: string; domain: string }) 
                 {blog.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2 text-xs font-bold text-muted-foreground"
+                    className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2 text-xs font-semibold text-muted-foreground"
                   >
                     #{tag}
                   </span>

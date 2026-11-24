@@ -96,7 +96,7 @@ export function CommitRow({ c, showProject = false }: { c: RepoCommit; showProje
       <TbGitCommit size={16} className="mt-0.5 shrink-0 text-muted-foreground" />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm text-foreground" title={c.message}>{subject}</p>
-        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-muted-foreground">
+        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-2xs text-muted-foreground">
           <span className={c.author ? "font-medium text-foreground/75" : ""}>
             {c.author?.fullName ?? c.authorLogin ?? c.authorName ?? "Unknown"}
           </span>
@@ -165,8 +165,8 @@ function RepoCard({ link, onChanged }: { link: RepoLink; onChanged: () => void }
         <a href={`https://github.com/${link.repoFullName}`} target="_blank" rel="noreferrer" className="text-sm font-semibold text-foreground hover:underline">
           {link.repoFullName}
         </a>
-        <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-foreground/70">{link.defaultBranch}</span>
-        <span className="text-[11px] text-muted-foreground">
+        <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-2xs text-foreground/70">{link.defaultBranch}</span>
+        <span className="text-2xs text-muted-foreground">
           {link.lastPushAt ? `Last push ${formatDistanceToNow(new Date(link.lastPushAt), { addSuffix: true })}` : "No pushes received yet"}
         </span>
         <div className="ml-auto flex items-center gap-1.5">
@@ -202,7 +202,7 @@ function RepoCard({ link, onChanged }: { link: RepoLink; onChanged: () => void }
             className={cn("h-5 w-5 rounded-full ring-offset-2 ring-offset-card", STATUS_DOT[c], link.color === c && "ring-2 ring-foreground/60")}
           />
         ))}
-        <span className={cn("rounded px-1.5 py-0.5 text-[10px] font-medium", STATUS_CHIP[link.color] ?? STATUS_CHIP.stone)}>
+        <span className={cn("rounded px-1.5 py-0.5 text-2xs font-medium", STATUS_CHIP[link.color] ?? STATUS_CHIP.stone)}>
           {link.repoFullName.split("/").pop()}
         </span>
         <span className="text-muted-foreground">— tag on this repo's cards</span>
@@ -224,11 +224,11 @@ function RepoCard({ link, onChanged }: { link: RepoLink; onChanged: () => void }
           <TbKey size={14} className="text-muted-foreground" />
           <span className="text-xs font-medium text-foreground">Deploy key</span>
           {link.hasDeployKey ? (
-            <span className="rounded bg-emerald-50 dark:bg-emerald-400/10 px-1.5 py-0.5 text-[10px] text-emerald-700 dark:text-emerald-300">
+            <span className="rounded bg-emerald-50 dark:bg-emerald-400/10 px-1.5 py-0.5 text-2xs text-emerald-700 dark:text-emerald-300">
               Active · {link.deployKeyReadOnly ? "read-only" : "read & write"}
             </span>
           ) : (
-            <span className="text-[11px] text-muted-foreground">None — servers can't clone this repo with a project key yet</span>
+            <span className="text-2xs text-muted-foreground">None — servers can't clone this repo with a project key yet</span>
           )}
           <div className="ml-auto flex items-center gap-1.5">
             {link.hasDeployKey && (
@@ -256,7 +256,7 @@ function RepoCard({ link, onChanged }: { link: RepoLink; onChanged: () => void }
           </div>
         </div>
         {link.deployKeyPublic && (
-          <p className="mt-2 truncate font-mono text-[10px] text-muted-foreground" title={link.deployKeyPublic}>{link.deployKeyPublic}</p>
+          <p className="mt-2 truncate font-mono text-2xs text-muted-foreground" title={link.deployKeyPublic}>{link.deployKeyPublic}</p>
         )}
       </div>
     </div>
@@ -354,7 +354,7 @@ function GroupingPanel({ linkId, onFinished }: { linkId: string; onFinished: () 
       </div>
       {job && (
         <p className={cn(
-          "mt-2 text-[11px]",
+          "mt-2 text-2xs",
           job.state === "failed" ? "text-red-600 dark:text-red-300" : job.state === "done" ? "text-emerald-700 dark:text-emerald-300" : "text-muted-foreground"
         )}>
           {job.trigger === "nightly" ? "Nightly run" : "Run"}{range && ` for ${range}`}:{" "}
@@ -368,7 +368,7 @@ function GroupingPanel({ linkId, onFinished }: { linkId: string; onFinished: () 
         </p>
       )}
       {!job && (
-        <p className="mt-2 text-[11px] text-muted-foreground">
+        <p className="mt-2 text-2xs text-muted-foreground">
           Pulls the range from GitHub and turns commits that have no card yet into Done cards, one per feature, dated by when the work shipped.
         </p>
       )}
@@ -567,7 +567,7 @@ export function GitHubView({ projectId, onCardsChanged }: {
               </button>
               <button className={btnCls} onClick={() => { setAvailable(null); setPicked(""); }}>Cancel</button>
               {status?.installUrl && (
-                <a href={status.installUrl} target="_blank" rel="noreferrer" className="ml-auto text-[11px] text-blue-600 dark:text-blue-300 hover:underline">
+                <a href={status.installUrl} target="_blank" rel="noreferrer" className="ml-auto text-2xs text-blue-600 dark:text-blue-300 hover:underline">
                   Repo missing? Add it to the GitHub App
                 </a>
               )}
@@ -580,7 +580,7 @@ export function GitHubView({ projectId, onCardsChanged }: {
           ) : (
             <p className="py-4 text-center text-sm text-muted-foreground">No repository linked yet.</p>
           )}
-          <p className="mt-3 text-[11px] text-muted-foreground">
+          <p className="mt-3 text-2xs text-muted-foreground">
             Reference a task in a commit message with its ref, e.g. <span className="font-mono">feat: login page T-1a2b3c4d</span>.
             Writing <span className="font-mono">fixes T-1a2b3c4d</span> on the default branch also completes it. Copy a task's ref from its detail drawer.
             Commits without a ref are grouped by AI into feature cards: daily at 2 AM, or with Run under "Create cards from commits".
@@ -609,11 +609,11 @@ export function GitHubView({ projectId, onCardsChanged }: {
             <div className="-mx-4 -mb-4">
               {secrets.map((s) => (
                 <div key={s.id} className="flex items-center gap-3 border-t px-4 py-2.5 text-sm">
-                  <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/70">{KIND_LABEL[s.kind]}</span>
+                  <span className="rounded bg-muted px-1.5 py-0.5 text-2xs font-medium text-foreground/70">{KIND_LABEL[s.kind]}</span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium text-foreground">{s.name}</p>
                     {(s.host || s.username) && (
-                      <p className="truncate font-mono text-[11px] text-muted-foreground">
+                      <p className="truncate font-mono text-2xs text-muted-foreground">
                         {s.username ? `${s.username}@` : ""}{s.host}{s.port ? `:${s.port}` : ""}
                       </p>
                     )}
@@ -635,7 +635,7 @@ export function GitHubView({ projectId, onCardsChanged }: {
           ) : (
             !addingSecret && <p className="py-4 text-center text-sm text-muted-foreground">No keys or secrets stored for this project.</p>
           )}
-          <p className="mt-4 text-[11px] text-muted-foreground">Encrypted at rest. Every copy of a secret is recorded in the audit log.</p>
+          <p className="mt-4 text-2xs text-muted-foreground">Encrypted at rest. Every copy of a secret is recorded in the audit log.</p>
         </Section>
       </div>
     </div>
