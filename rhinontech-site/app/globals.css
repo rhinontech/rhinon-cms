@@ -79,11 +79,11 @@ body {
     border-radius: 16px;
     font-size: 17px;
     color: #fff;
-    background: #1c1c1f;
+    background: var(--color-brand); /* brand navy #002C70: white text 13.2:1 */
   }
   .btn-primary:hover {
     transform: translateY(-1px);
-    background: #000;
+    background: #001f52;
   }
   /* On a dark band the same button flips to white. */
   .bg-night .btn-primary, .bg-black .btn-primary, .bg-ink .btn-primary,
@@ -111,11 +111,11 @@ body {
     border-radius: 16px;
     font-size: 17px;
     color: #fff;
-    background: #1c1c1f;
+    background: var(--color-brand);
   }
   .btn-ink:hover {
     transform: translateY(-1px);
-    background: #000;
+    background: #001f52;
   }
   .btn-soft {
     height: 54px;

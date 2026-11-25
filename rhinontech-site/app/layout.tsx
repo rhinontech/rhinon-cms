@@ -12,17 +12,17 @@ const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 const DESCRIPTION =
-  "One workspace for your CRM, AI email outreach, shared inbox, projects and HR. Free for up to 5 people. Built by Rhinon Labs.";
+  "The AI CRM for agencies and service businesses: an AI agent on your website, AI-written follow-ups, and won deals turned into projects clients can track. Free for up to 5 people.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Rhinon Tech | Run your whole company from one workspace",
+    default: "Rhinon Tech | AI CRM for agencies and service businesses",
     template: "%s | Rhinon Tech",
   },
   description: DESCRIPTION,
   openGraph: {
-    title: "Rhinon Tech | Run your whole company from one workspace",
+    title: "Rhinon Tech | AI CRM for agencies and service businesses",
     description: DESCRIPTION,
     url: SITE_URL,
     siteName: "Rhinon Tech",

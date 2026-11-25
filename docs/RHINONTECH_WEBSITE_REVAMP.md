@@ -82,6 +82,27 @@ Rhinon Tech should be **the AI CRM for service businesses**. That means agencies
 | 3 | Free-plan claims | "Free for your whole team" and "No seats to count" replaced in about 50 places, including page metadata, FAQs, the schema offer, the sign-up modal and the Terms. Limits live in one constant (`content/plans.ts` → `FREE_PLAN`). Pricing now lists the limits and a "more than 5 people?" answer | You or legal: review the new Terms §4 wording. Phase 1: payroll "PF/PT/TDS" and inbox "assigned" copy |
 | 4 | Conversion events | `lib/analytics.ts` pushes `signup_cta_click`, `signup_lead_submitted` (waits for GTM before the redirect), `contact_submitted` and `demo_booked` to `dataLayer` | You, in GTM: add Custom Event triggers and GA4 event tags for these four, mark them as key events in GA4, and set up cross-domain linking to rhinontech.in |
 
+**Phase 1 status (26 November): built and verified locally, not yet committed.**
+
+Built:
+- **Category and copy:** "AI CRM for service businesses" across the home page, metadata, Open Graph images, footer and schema.
+- **Product groups:** Win clients, Deliver the work, Run your team, with one colour each.
+- **Renames:** AI Agent, Projects and Docs, with 301/308 redirects from `/product/chatbot`, `/product/work` and `/product/pages`.
+- **Buttons:** navy primary buttons.
+- **Navigation:** the top bar is Product, Rhinon AI, Pricing and Blog; Integrations and Security move into the Product menu and the footer.
+- **New home page:** client loop, AI, built for, included, Rhinon Labs proof, pricing, FAQ with schema.
+- **Pricing:** Free, Starter and Enterprise, plus a limits table driven by `content/plans.ts`.
+- **About:** a new `/about` page.
+- **Product pages:** titles and descriptions now target the §3.2 searches.
+- **Inbox page:** rewritten to match the live product. No assignment, priority or status, and no inbound-address promise.
+- **Payroll FAQ:** now says ESI isn't calculated and returns aren't filed.
+- **Share images:** product alt text now comes from the product data.
+
+Still open:
+- real product screenshots (blocked on app UX U1–U6);
+- the app's own renames (U3: Chatbot → AI Agent, Work → Projects, Pages → Docs);
+- Solutions and Compare in the navigation (phase 2).
+
 ### Being straight about "best in everything, now"
 
 - **Ranking for all 11 modules at once won't work.** rhinontech.com has 53 referring domains; Zoho has 128,976 and HubSpot 398,775. Spreading that thin authority across hundreds of hard searches in two countries would win none of them. This plan puts it on searches the data says Rhinon can win.

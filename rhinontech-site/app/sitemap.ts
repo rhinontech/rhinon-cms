@@ -4,17 +4,18 @@ import { PRODUCTS } from "@/content/products";
 import { getBlogs } from "@/lib/blog";
 
 // Real last-edited dates for static pages (bump a route's date when its content changes; never use bare new Date()).
-const PRODUCT_LASTMOD_DEFAULT = "2026-11-11";
+const PRODUCT_LASTMOD_DEFAULT = "2026-11-26";
 const STATIC_PAGE_LASTMOD: Record<string, string> = {
-  "": "2026-11-11",
-  "/product": "2026-11-11",
-  "/ai": "2026-11-11",
-  "/integrations": "2026-11-11",
+  "": "2026-11-26",
+  "/product": "2026-11-26",
+  "/ai": "2026-11-26",
+  "/integrations": "2026-11-26",
   "/security": "2026-11-11",
-  "/pricing": "2026-11-11",
+  "/pricing": "2026-11-26",
+  "/about": "2026-11-26",
   "/demo": "2026-11-11",
   "/contact": "2026-11-11",
-  "/privacy-terms": "2026-11-11",
+  "/privacy-terms": "2026-11-26",
   "/blog": "2026-11-11",
   ...Object.fromEntries(PRODUCTS.map((p) => [`/product/${p.slug}`, PRODUCT_LASTMOD_DEFAULT])),
 };

@@ -25,7 +25,7 @@ export function Footer() {
           <div>
             <Logo height={44} />
             <p className="font-display mt-8 max-w-[400px] text-[34px] font-semibold leading-[1.08]">
-              The business software that <span className="text-aurora">just makes sense.</span>
+              The AI CRM for <span className="text-aurora">service businesses.</span>
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <a href={links.signup} className="btn btn-primary">Get started free</a>
@@ -46,6 +46,7 @@ export function Footer() {
               {COMPANY.map((c) => (
                 <Link key={c.href} href={c.href} className={LINK}>{c.label}</Link>
               ))}
+              <Link href="/about" className={LINK}>About</Link>
               <a href={links.labs} className={LINK}>Rhinon Labs</a>
               <Link href="/demo" className={LINK}>Book a demo</Link>
               <Link href="/contact" className={LINK}>Contact</Link>

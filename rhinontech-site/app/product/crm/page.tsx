@@ -10,17 +10,17 @@ import { BarsSection, ConvergeSection, LifecycleStory, PipelineHero, ScanSection
 const p = bySlug("crm")!;
 
 export const metadata = pageMeta({
-  title: "Free CRM Software for Teams",
-  description: "Free CRM software for teams of up to 5 people: import leads, capture them from your site and follow every deal from first hello to won.",
+  title: "Small Business CRM with Projects Built In",
+  description: "A small business CRM for service teams: capture leads from your site, follow every deal, and turn won deals into projects. Free for up to 5 people.",
   path: "/product/crm",
   hasOgImage: true,
 });
 
 const FAQ = [
   { q: "Can I import my existing contacts?", a: "Yes. Upload a CSV and your leads appear in the pipeline with their details." },
-  { q: "Do website enquiries show up by themselves?", a: "Yes. Forms on your website can post straight into the CRM, and the AI chatbot saves the visitors it talks to." },
+  { q: "Do website enquiries show up by themselves?", a: "Yes. Forms on your website can post straight into the CRM, and the AI Agent saves the visitors it talks to." },
   { q: "What happens when the same person writes twice?", a: "The new enquiry is added to the lead you already have, so you never end up with a duplicate." },
-  { q: "Is the CRM free?", a: "Yes. Everything in Rhinon Tech except the AI website chatbot is free for up to 5 people, with no time limit." },
+  { q: "Is the CRM free?", a: "Yes. Everything in Rhinon Tech except the AI Agent is free for up to 5 people, with no time limit." },
 ];
 
 export default function CrmPage() {
@@ -54,7 +54,7 @@ export default function CrmPage() {
         <Reveal>
           <Kicker>Capture</Kicker>
           <H2 className="mt-4">Leads from everywhere.<br className="hidden sm:block" /> <span className="text-aurora">One list.</span></H2>
-          <p className="mt-5 max-w-[620px] text-[18px] leading-8 text-ink-soft">Import a CSV, point your website forms at it, or let the chatbot do the talking. Every lead lands in the same pipeline, and a repeat enquiry joins the lead you already have.</p>
+          <p className="mt-5 max-w-[620px] text-[18px] leading-8 text-ink-soft">Import a CSV, point your website forms at it, or let the AI Agent do the talking. Every lead lands in the same pipeline, and a repeat enquiry joins the lead you already have.</p>
         </Reveal>
         <div className="mt-16"><ConvergeSection /></div>
       </LightSection>
@@ -97,7 +97,7 @@ export default function CrmPage() {
       <PairsWith items={[
         { slug: "outreach", line: "Turn a list into a campaign in one click." },
         { slug: "inbox", line: "Replies land on the lead's timeline." },
-        { slug: "chatbot", line: "Chat visitors become leads automatically." },
+        { slug: "ai-agent", line: "Chat visitors become leads automatically." },
       ]} />
       <ProductFaq slug="crm" title="CRM questions, answered." items={FAQ} />
       <CtaBand tone={p.tone} title={<>Start with the CRM, <span className="text-aurora-soft">free.</span></>} sub="Set up your workspace in a few minutes and invite up to 5 people free. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />

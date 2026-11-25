@@ -20,7 +20,7 @@ const FAQ = [
   { q: "Can people outside my company join a meeting?", a: "Yes. Share a meeting link and guests can join without an account." },
   { q: "Can I call more than one person?", a: "Yes. Start a group call with voice and video from any conversation." },
   { q: "Do I need another chat app?", a: "No. Chat, calls and meeting links are part of the workspace, next to your projects and customers." },
-  { q: "Is chat free?", a: "Yes. Everything in Rhinon Tech except the AI website chatbot is free for up to 5 people." },
+  { q: "Is chat free?", a: "Yes. Everything in Rhinon Tech except the AI Agent is free for up to 5 people." },
 ];
 
 export default function ChatPage() {
@@ -65,7 +65,7 @@ export default function ChatPage() {
       </section>
 
       <PairsWith dark items={[
-        { slug: "work", line: "Discuss the project you are working on." },
+        { slug: "projects", line: "Discuss the project you are working on." },
         { slug: "hr", line: "Run interviews and one-to-ones in a call." },
         { slug: "crm", line: "Take sales calls from the lead record." },
       ]} />

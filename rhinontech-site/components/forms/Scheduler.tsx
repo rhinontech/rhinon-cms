@@ -12,7 +12,7 @@ import { Logo } from "@/components/ui";
 type Slot = { startTime: string; endTime: string; available: boolean };
 type Booked = { booked: boolean; meetLink: string | null };
 
-const INTERESTS = ["CRM", "Outreach", "Inbox", "AI Chatbot", "Work", "HR and payroll", "Something else"];
+const INTERESTS = ["CRM", "AI Agent", "Outreach", "Inbox", "Projects", "HR and payroll", "Something else"];
 const TEAM_SIZES = ["Just me", "2 to 10", "11 to 50", "51 to 100", "100+"];
 const CODES = ["+91", "+1", "+44", "+61", "+49", "+65"];
 const MAX_MONTHS_AHEAD = 3;

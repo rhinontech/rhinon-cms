@@ -8,7 +8,7 @@ import { track } from "@/lib/analytics";
 
 /* The same enquiry form as rhinonlabs.com/contact-us, posting to the same lead API. */
 
-const TOPICS = ["A product question", "Pricing", "The AI chatbot", "A custom integration", "Something else"];
+const TOPICS = ["A product question", "Pricing", "The AI Agent (website chatbot)", "A custom integration", "Something else"];
 const field = "w-full rounded-xl border border-line bg-white px-3.5 py-3 text-[14.5px] outline-none transition focus:border-violet focus:ring-4 focus:ring-violet/10";
 const label = "mb-1.5 block text-[13px] font-semibold text-ink-soft";
 

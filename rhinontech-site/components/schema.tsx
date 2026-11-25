@@ -39,12 +39,12 @@ const FREE_OFFER = {
   price: 0,
   priceCurrency: "INR",
   url: `${SITE_URL}/pricing`,
-  description: "Free for up to 5 people: CRM, AI email outreach, shared inbox, projects, Pages, team chat, HR, attendance, payroll, and performance.",
+  description: "Free for up to 5 people: CRM, AI email outreach, team inbox, projects with a client portal, docs, team chat, HR, attendance, payroll and performance.",
 };
 
 const CHATBOT_OFFER = {
   "@type": "Offer",
-  name: "AI Chatbot (Premium)",
+  name: "AI Agent (paid add-on)",
   priceCurrency: "INR",
   url: `${SITE_URL}/pricing`,
   description: "AI website assistant trained on your site and documents. Custom pricing.",

@@ -1,41 +1,43 @@
 import { Check, X } from "lucide-react";
-import { Aurora, Button, Eyebrow, IconTile, SectionHead } from "@/components/ui";
+import { Aurora, Button, IconTile, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand } from "@/components/blocks";
 import { links, pageMeta } from "@/components/site";
 import { bySlug } from "@/content/products";
 import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
-import { AddressSection, InboxZeroHero, PrioritySection, RiverSection, ThreadSection } from "@/components/product/inbox";
+import { AddressSection, InboxZeroHero } from "@/components/product/inbox";
 
 const p = bySlug("inbox")!;
 
 export const metadata = pageMeta({
-  title: "Shared Team Inbox Software",
-  description: "Free shared team inbox software for teams of up to 5 people. Keep campaign replies and support emails threaded, assigned and tracked.",
+  title: "Team Email Inbox Next to Your CRM",
+  description: "Team email next to your CRM: send and reply from shared addresses like support@, keep internal notes on threads and see bounces. Free for up to 5 people.",
   path: "/product/inbox",
   hasOgImage: true,
 });
 
+// Claims here must match the live Inbox (launch review G2.3): per-address mailboxes, shared
+// addresses handed to one person at a time, internal notes, folders, bounces. No thread assignment yet.
 const BEFORE = [
-  "Replies buried in one person's mailbox",
-  "Nobody sure who already answered",
-  "Threads forwarded back and forth",
-  "Urgent mail waiting for someone to notice",
-  "Customers writing to a person who is away",
+  "Client email scattered across personal accounts",
+  "A support address tied to one person's login",
+  "Forwarding a thread just to ask a colleague",
+  "Bounced emails nobody notices",
+  "Email in one tool, the client's deal in another",
 ];
 const AFTER = [
-  "Every conversation in one shared inbox",
-  "A clear owner on every thread",
-  "Replies, assignments and status on one page",
-  "Priority puts urgent mail at the top",
-  "A company address, not one person's",
+  "Team email in the same workspace as your CRM",
+  "support@ handed to a teammate, with its history",
+  "Internal notes your team sees and the client doesn't",
+  "Bounces collected in one list",
+  "Folders and attachments, like any mailbox",
 ];
 
 const FAQ = [
-  { q: "Who can see the inbox?", a: "Whoever your roles allow. You choose who can read, reply and assign conversations." },
-  { q: "Where do the replies to my campaigns go?", a: "Into the inbox. Replies to Outreach campaigns arrive inside the platform, next to the lead they belong to." },
-  { q: "What address do customers write to?", a: "Every workspace gets its own company address, so customers write to your team and not to one person's mailbox." },
-  { q: "Is the inbox free?", a: "Yes. Everything in Rhinon Tech except the AI website chatbot is free for up to 5 people." },
+  { q: "Who can see what?", a: "Each person sees their own address and any shared addresses assigned to them. Roles decide who can read and who can send." },
+  { q: "Can a teammate take over an address like support@?", a: "Yes. A shared address belongs to one person at a time; hand it to someone else and its whole history moves with it. Assigning single threads to different people isn't available yet." },
+  { q: "Which address do I send from?", a: "Your workspace address, or your own domain once you connect it in Settings." },
+  { q: "Is the inbox free?", a: "Yes. Everything in Rhinon Tech except the AI Agent is free for up to 5 people." },
 ];
 
 export default function InboxPage() {
@@ -49,10 +51,10 @@ export default function InboxPage() {
             <Crumb slug="inbox" />
             <div className="mt-6"><IconTile icon={p.icon} tone={p.tone} size={56} /></div>
             <h1 className="font-display mt-6 text-balance text-[42px] font-semibold leading-[1.02] sm:text-[60px]">
-              One inbox for your <span className="italic">whole team.</span>
+              Your team's email, <span className="italic">next to your CRM.</span>
             </h1>
             <p className="mt-6 max-w-[500px] text-[18px] leading-8 text-ink-soft">
-              Replies to your campaigns and mail to your support address land in one shared inbox, threaded, assigned and tracked until it is done.
+              Send and reply from your team's addresses, keep internal notes on every thread, and hand an address like support@ to whoever looks after it.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Button href={links.signup}>Get started free</Button>
@@ -65,7 +67,7 @@ export default function InboxPage() {
 
       {/* Before and after */}
       <section className="mx-auto max-w-[1240px] px-5 py-24 sm:py-28">
-        <Reveal><SectionHead eyebrow="Why a shared inbox" title={<>Stop losing mail in <span className="italic">someone's mailbox.</span></>} /></Reveal>
+        <Reveal><SectionHead eyebrow="Why team email" title={<>Stop losing client mail in <span className="italic">someone's mailbox.</span></>} /></Reveal>
         <div className="mt-16 grid gap-5 md:grid-cols-2">
           <Reveal>
             <div className="h-full rounded-[28px] border border-line bg-white/60 p-7 sm:p-9">
@@ -90,45 +92,21 @@ export default function InboxPage() {
         </div>
       </section>
 
-      {/* Status */}
-      <section className="border-t border-line py-24 sm:py-28">
-        <div className="mx-auto max-w-[1240px] px-5">
-          <Reveal><SectionHead eyebrow="Every conversation has a status" title={<>From open to closed, <span className="italic">nothing stalls.</span></>} sub="Open, in progress, resolved, closed. Everyone sees where each thread stands." /></Reveal>
-          <div className="mt-14"><RiverSection /></div>
-        </div>
-      </section>
-
-      {/* Priority */}
-      <section className="mx-auto grid max-w-[1240px] items-center gap-12 px-5 py-24 sm:py-28 lg:grid-cols-[0.85fr_1.15fr]">
-        <Reveal>
-          <Eyebrow>Priority</Eyebrow>
-          <h2 className="font-display mt-5 text-balance text-[38px] font-semibold leading-[1.04] sm:text-[52px]">Urgent mail <span className="italic">jumps the queue.</span></h2>
-          <p className="mt-5 max-w-[460px] text-[17px] leading-8 text-ink-soft">Mark a conversation from low to urgent, and the inbox sorts itself. Assign it to a teammate and they see it right away.</p>
-        </Reveal>
-        <Reveal delay={120}><PrioritySection /></Reveal>
-      </section>
-
       {/* Address */}
       <section className="border-t border-line py-24 sm:py-28">
         <div className="mx-auto max-w-[1240px] px-5">
-          <Reveal><SectionHead eyebrow="Your address" title={<>Customers write to <span className="italic">your team.</span></>} sub="Every workspace gets its own company address. Whatever lands there reaches the people who should see it." /></Reveal>
+          <Reveal><SectionHead eyebrow="Shared addresses" title={<>One address, <span className="italic">handed to the right person.</span></>} sub="Create support@ or hello@ and give it to whoever handles it. Hand it to someone else later and the whole history goes with it." /></Reveal>
           <div className="mt-14"><AddressSection /></div>
         </div>
       </section>
 
-      {/* Replies stay with the lead */}
-      <section className="mx-auto max-w-[1240px] px-5 py-24 sm:py-28">
-        <Reveal><SectionHead eyebrow="Connected" title={<>Replies stay with <span className="italic">the lead.</span></>} sub="When someone answers a campaign, the reply lands in the inbox and the lead updates itself." /></Reveal>
-        <div className="mt-14"><ThreadSection /></div>
-      </section>
-
       <PairsWith items={[
-        { slug: "outreach", line: "Replies to your campaigns arrive here." },
+        { slug: "outreach", line: "Send campaigns from the same addresses." },
         { slug: "crm", line: "Link a conversation to its lead." },
-        { slug: "chatbot", line: "Chat tickets and email in one view of support." },
+        { slug: "ai-agent", line: "Website chats and tickets live next door." },
       ]} />
       <ProductFaq slug="inbox" title="Inbox questions, answered." items={FAQ} />
-      <CtaBand tone={p.tone} title={<>Get to <span className="text-aurora-soft">inbox zero.</span></>} sub="Set up your shared inbox in a few minutes and invite up to 5 people free. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
+      <CtaBand tone={p.tone} title={<>Keep client email <span className="text-aurora-soft">with the client.</span></>} sub="Set up your workspace in a few minutes and invite up to 5 people free. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
     </div>
   );
 }

@@ -6,13 +6,13 @@ import { bySlug } from "@/content/products";
 import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
 import { AnatomySection, GanttHero, PortalSection, RingsSection, ViewsSection } from "@/components/product/work";
 
-const p = bySlug("work")!;
+const p = bySlug("projects")!;
 const G = "italic";
 
 export const metadata = pageMeta({
-  title: "Project Management with a Client Portal",
-  description: "Free project management software for teams of up to 5 people. Manage tasks, boards, calendars and a private client portal in one place.",
-  path: "/product/work",
+  title: "Project Management for Agencies",
+  description: "Project management for agencies and service teams: tasks, boards, calendars and a client portal, and won deals turn into projects. Free for up to 5 people.",
+  path: "/product/projects",
   hasOgImage: true,
 });
 
@@ -21,7 +21,8 @@ const FAQ = [
   { q: "Can I keep a project private?", a: "Yes. A project can be visible to the whole workspace, to a team, or only to the people on it." },
   { q: "What can a task hold?", a: "Status, priority, estimates, due dates, recurrence, blockers, subtasks, comments and tags." },
   { q: "Which views are there?", a: "A list, a board, a calendar and a team view, plus views for your own tasks and everyone's." },
-  { q: "Is Work free?", a: "Yes. Everything in Rhinon Tech except the AI website chatbot is free for up to 5 people." },
+  { q: "Can a won deal become a project?", a: "Yes. Convert a won deal in the CRM and its client and details carry into a new project, so nobody retypes the brief." },
+  { q: "Is Projects free?", a: "Yes. Everything in Rhinon Tech except the AI Agent is free for up to 5 people." },
 ];
 
 export default function WorkPage() {
@@ -32,7 +33,7 @@ export default function WorkPage() {
         <Aurora tones={["#10c98f", "#2bbfd6", "#2f9bff"]} />
         <div className="relative mx-auto max-w-[1240px] px-5 text-center">
           <Reveal>
-            <Crumb slug="work" center />
+            <Crumb slug="projects" center />
             <h1 className="font-display mx-auto mt-6 max-w-[900px] text-balance text-[42px] font-semibold leading-[1] sm:text-[72px]">Deliver client work <span className={G}>without the chaos.</span></h1>
             <p className="mx-auto mt-6 max-w-[620px] text-[18px] leading-8 text-ink-soft sm:text-[20px]">Projects, tasks, boards and a calendar for every piece of work, plus a private portal where clients follow progress and send change requests.</p>
             <div className="mt-9 flex flex-wrap justify-center gap-3"><Button href={links.signup}>Get started free</Button><Button href={links.call} variant="soft">Book a demo</Button></div>
@@ -71,10 +72,10 @@ export default function WorkPage() {
 
       <PairsWith items={[
         { slug: "chat", line: "Talk about the work without switching tools." },
-        { slug: "pages", line: "Keep briefs and notes in the same workspace." },
+        { slug: "docs", line: "Keep briefs and notes in the same workspace." },
         { slug: "attendance", line: "Know who is working and who is away." },
       ]} />
-      <ProductFaq slug="work" title="Work questions, answered." items={FAQ} />
+      <ProductFaq slug="projects" title="Projects questions, answered." items={FAQ} />
       <CtaBand tone={p.tone} title={<>Run your next project <span className="text-aurora-soft">here.</span></>} sub="Set up your workspace in a few minutes and invite up to 5 people free. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
     </div>
   );
