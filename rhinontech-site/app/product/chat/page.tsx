@@ -11,7 +11,7 @@ const G = "italic";
 
 export const metadata = pageMeta({
   title: "Team Chat & Video Meetings",
-  description: "Free team chat and video meeting software for your whole team. Message channels, start calls and invite external guests by link.",
+  description: "Free team chat and video meeting software for teams of up to 5 people. Message channels, start calls and invite external guests by link.",
   path: "/product/chat",
   hasOgImage: true,
 });
@@ -20,7 +20,7 @@ const FAQ = [
   { q: "Can people outside my company join a meeting?", a: "Yes. Share a meeting link and guests can join without an account." },
   { q: "Can I call more than one person?", a: "Yes. Start a group call with voice and video from any conversation." },
   { q: "Do I need another chat app?", a: "No. Chat, calls and meeting links are part of the workspace, next to your projects and customers." },
-  { q: "Is chat free?", a: "Yes. Everything in Rhinon Tech except the AI website chatbot is free for your whole team." },
+  { q: "Is chat free?", a: "Yes. Everything in Rhinon Tech except the AI website chatbot is free for up to 5 people." },
 ];
 
 export default function ChatPage() {
@@ -70,7 +70,7 @@ export default function ChatPage() {
         { slug: "crm", line: "Take sales calls from the lead record." },
       ]} />
       <ProductFaq slug="chat" dark title="Chat questions, answered." items={FAQ} />
-      <CtaBand tone={p.tone} title={<>Keep the conversation <span className="text-aurora-soft">with the work.</span></>} sub="Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
+      <CtaBand tone={p.tone} title={<>Keep the conversation <span className="text-aurora-soft">with the work.</span></>} sub="Set up your workspace in a few minutes and invite up to 5 people free. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
       <div className="h-24" />
     </div>
   );

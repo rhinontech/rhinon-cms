@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, CalendarDays, Check, ChevronLeft, ChevronRight, Clock, Globe, Video } from "lucide-react";
 import { BRAND_SLUG, PUBLIC_API } from "@/components/site";
+import { track } from "@/lib/analytics";
 import { Logo } from "@/components/ui";
 
 /* The same booking flow as rhinonlabs.com/schedule-call, against the same API and calendar. */
@@ -108,6 +109,7 @@ export function Scheduler() {
         return;
       }
       if (!res.ok) throw new Error(data.message || "Something went wrong. Please try again.");
+      track("demo_booked", { confirmed: Boolean(data.booked) });
       setDone({ booked: data.booked, meetLink: data.booking?.meetLink ?? null });
       setStep(3);
     } catch (err) {

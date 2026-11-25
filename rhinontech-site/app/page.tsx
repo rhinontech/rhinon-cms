@@ -42,7 +42,7 @@ function Hero() {
             One workspace for<br />your whole <em className="font-semibold">company.</em>
           </h1>
           <ul className="mx-auto mt-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-[16px] text-ink-soft sm:text-[18px]">
-            {["Eleven products, one login", "AI in every module", "Free for your whole team"].map((t) => (
+            {["Eleven products, one login", "AI in every module", "Free for up to 5 people"].map((t) => (
               <li key={t} className="flex items-center gap-2.5"><Check className="h-4 w-4 text-emerald-500" strokeWidth={3} />{t}</li>
             ))}
           </ul>
@@ -50,7 +50,7 @@ function Hero() {
             <GetStartedButton placement="Home hero" />
             <Button href={links.call} variant="soft">Book a demo</Button>
           </div>
-          <p className="mt-4 text-[13.5px] text-muted">Free forever. No credit card.</p>
+          <p className="mt-4 text-[13.5px] text-muted">Free for up to 5 people. No credit card.</p>
         </Reveal>
       </div>
       <div className="relative mt-16 pb-24 sm:mt-20 sm:pb-32">
@@ -311,7 +311,7 @@ function PricingTeaser() {
           <div className="lt-card h-full rounded-2xl p-8">
             <p className="font-display text-[22px] font-semibold">Free</p>
             <p className="font-display mt-2 text-[56px] font-semibold leading-none">₹0</p>
-            <p className="mt-2 text-[14px] text-muted">For your whole team, with no time limit.</p>
+            <p className="mt-2 text-[14px] text-muted">For up to 5 people, with no time limit.</p>
             <ul className="mt-7 space-y-3 text-[15px]">
               {FREE_FEATURES.map((f) => <li key={f} className="flex gap-2.5"><Check className="mt-0.5 h-[18px] w-[18px] shrink-0 text-emerald-500" />{f}</li>)}
             </ul>
@@ -347,7 +347,7 @@ function FinalCta() {
       <Image src="/brand/mark-white.png" alt="" width={520} height={520} aria-hidden className="pointer-events-none absolute -bottom-24 -right-16 w-[420px] opacity-[0.04] invert" />
       <Reveal className="relative">
         <h2 className="font-display mx-auto max-w-[900px] text-[40px] font-semibold leading-[1.02] sm:text-[76px]">Run your whole company from one tab.</h2>
-        <p className="mx-auto mt-6 max-w-[520px] text-[18px] leading-8 text-ink-soft">Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit.</p>
+        <p className="mx-auto mt-6 max-w-[520px] text-[18px] leading-8 text-ink-soft">Set up your workspace in a few minutes and invite up to 5 people free. No credit card, no time limit.</p>
         <div className="mt-10 flex flex-wrap justify-center gap-3">
           <GetStartedButton placement="Home final CTA" />
           <Button href={links.call} variant="soft">Book a demo</Button>

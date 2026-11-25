@@ -163,7 +163,7 @@ function InboxMock() {
         </div>
         <div className="space-y-2.5 py-3 text-[12px] leading-5">
           <div className="line-in rounded-xl rounded-tl-sm bg-soft p-2.5" style={delay(150)}>Hi, thanks for reaching out. Is there a plan for a team of 25?</div>
-          <div className="line-in ml-6 rounded-xl rounded-tr-sm bg-violet/10 p-2.5" style={delay(600)}>Yes. Everything is free for your whole team. Want a quick walkthrough?</div>
+          <div className="line-in ml-6 rounded-xl rounded-tr-sm bg-violet/10 p-2.5" style={delay(600)}>Yes. Everything is free for up to 5 people. Want a quick walkthrough?</div>
         </div>
         <div className="flex items-center justify-between border-t border-line pt-2.5 text-[11px] text-muted">
           <span className="flex items-center gap-1.5">Assigned to <Avatar name="Ana Silva" i={4} size={18} /> Ana</span>

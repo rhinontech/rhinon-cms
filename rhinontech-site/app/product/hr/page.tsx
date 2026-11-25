@@ -14,7 +14,7 @@ const dancing = Dancing_Script({ variable: "--font-dancing", subsets: ["latin"],
 
 export const metadata = pageMeta({
   title: "HR Software: Onboarding, Offers & E-Sign",
-  description: "Free HR software for your whole team: employee directory, records, new-hire onboarding and e-signed offer letters in one place.",
+  description: "Free HR software for teams of up to 5 people: employee directory, records, new-hire onboarding and e-signed offer letters in one place.",
   path: "/product/hr",
   hasOgImage: true,
 });
@@ -24,7 +24,7 @@ const FAQ = [
   { q: "What happens when a new hire starts?", a: "You create the employee, they get a company email and an onboarding link, and they complete their own profile." },
   { q: "What goes on an employee record?", a: "Employment type, schedule, location, compensation, salary structure, bank and statutory details, and uploaded documents." },
   { q: "What happens when someone leaves?", a: "Mark them inactive and their company email and tool access are closed. Their record stays for your files." },
-  { q: "Is HR free?", a: "Yes. Everything in Rhinon Tech except the AI website chatbot is free for your whole team." },
+  { q: "Is HR free?", a: "Yes. Everything in Rhinon Tech except the AI website chatbot is free for up to 5 people." },
 ];
 
 export default function HrPage() {
@@ -96,7 +96,7 @@ export default function HrPage() {
         { slug: "performance", line: "Reviews attach to each person." },
       ]} />
       <ProductFaq slug="hr" title="HR questions, answered." items={FAQ} />
-      <CtaBand tone={p.tone} title={<>Welcome people <span className="text-aurora-soft">properly.</span></>} sub="Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
+      <CtaBand tone={p.tone} title={<>Welcome people <span className="text-aurora-soft">properly.</span></>} sub="Set up your workspace in a few minutes and invite up to 5 people free. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
     </div>
   );
 }

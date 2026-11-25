@@ -6,7 +6,7 @@ export const contentType = "image/png";
 
 export default function OpengraphImage() {
   return renderOgImage({
-    eyebrow: "Pricing · Free for your whole team",
+    eyebrow: "Pricing · Free for up to 5 people",
     title: "Free for everything. Pay only for the AI chatbot.",
     subtitle: "CRM, outreach, shared inbox, projects, HR, payroll and attendance at ₹0.",
     tones: ["#10c98f", "#2f5bff", "#7c5cff"],

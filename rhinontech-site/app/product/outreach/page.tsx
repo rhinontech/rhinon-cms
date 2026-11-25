@@ -10,7 +10,7 @@ const p = bySlug("outreach")!;
 
 export const metadata = pageMeta({
   title: "AI Cold Email Outreach Software",
-  description: "Free AI cold email outreach for your whole team. AI researches each lead, drafts tailored emails and waits for your approval.",
+  description: "Free AI cold email outreach for teams of up to 5 people. AI researches each lead, drafts tailored emails and waits for your approval.",
   path: "/product/outreach",
   hasOgImage: true,
 });
@@ -20,7 +20,7 @@ const FAQ = [
   { q: "Can I control how many emails go out a day?", a: "Yes. Each campaign has a daily limit, a send time and the days it runs. Pause or resume it whenever you like." },
   { q: "Can I try an email before it reaches anyone?", a: "Yes. Send a test to yourself and see exactly what a lead would see." },
   { q: "Does it handle LinkedIn too?", a: "Yes. Plan and publish LinkedIn posts, videos and articles from the same place, with AI help." },
-  { q: "Is Outreach free?", a: "Yes. Everything in Rhinon Tech except the AI website chatbot is free for your whole team." },
+  { q: "Is Outreach free?", a: "Yes. Everything in Rhinon Tech except the AI website chatbot is free for up to 5 people." },
 ];
 
 export default function OutreachPage() {

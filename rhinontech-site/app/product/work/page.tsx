@@ -11,7 +11,7 @@ const G = "italic";
 
 export const metadata = pageMeta({
   title: "Project Management with a Client Portal",
-  description: "Free project management software for your whole team. Manage tasks, boards, calendars and a private client portal in one place.",
+  description: "Free project management software for teams of up to 5 people. Manage tasks, boards, calendars and a private client portal in one place.",
   path: "/product/work",
   hasOgImage: true,
 });
@@ -21,7 +21,7 @@ const FAQ = [
   { q: "Can I keep a project private?", a: "Yes. A project can be visible to the whole workspace, to a team, or only to the people on it." },
   { q: "What can a task hold?", a: "Status, priority, estimates, due dates, recurrence, blockers, subtasks, comments and tags." },
   { q: "Which views are there?", a: "A list, a board, a calendar and a team view, plus views for your own tasks and everyone's." },
-  { q: "Is Work free?", a: "Yes. Everything in Rhinon Tech except the AI website chatbot is free for your whole team." },
+  { q: "Is Work free?", a: "Yes. Everything in Rhinon Tech except the AI website chatbot is free for up to 5 people." },
 ];
 
 export default function WorkPage() {
@@ -75,7 +75,7 @@ export default function WorkPage() {
         { slug: "attendance", line: "Know who is working and who is away." },
       ]} />
       <ProductFaq slug="work" title="Work questions, answered." items={FAQ} />
-      <CtaBand tone={p.tone} title={<>Run your next project <span className="text-aurora-soft">here.</span></>} sub="Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
+      <CtaBand tone={p.tone} title={<>Run your next project <span className="text-aurora-soft">here.</span></>} sub="Set up your workspace in a few minutes and invite up to 5 people free. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { BRAND_SLUG, PUBLIC_API } from "@/components/site";
+import { track } from "@/lib/analytics";
 
 /* The same enquiry form as rhinonlabs.com/contact-us, posting to the same lead API. */
 
@@ -31,6 +32,7 @@ export function ContactForm() {
       });
       if (res.status === 429) throw new Error("Too many messages from this connection. Please try again in a little while.");
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || "We could not send that. Please try again.");
+      track("contact_submitted", { topic: form.topic });
       setSent(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "We could not send that. Please try again.");

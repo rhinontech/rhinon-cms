@@ -73,6 +73,15 @@ Rhinon Tech should be **the AI CRM for service businesses**. That means agencies
 | 3 | The site says "free for your whole team" in 8 places, but Free is 5 people | `config/plans.ts`: 5 seats, 50 emails and 20 AI drafts a day | Rewrite (launch review G0.1) |
 | 4 | Sign-ups, demo bookings and contact leads aren't measured | GTM container `GTM-T8G5PP3T` loads GA4 (`G-M64NMV4Z5X`) but has 0 event tags and 0 conversion tags, and the site code pushes no events | Add GA4 key events and cross-domain tracking (section 7.6) |
 
+**Status (26 November): done in code, built and verified locally, not deployed.**
+
+| # | Fix | What changed | Still needed |
+|---|---|---|---|
+| 1 | Canonical host | The `SITE_URL` fallback is now `https://rhinontech.com`. The local build emits apex canonicals, `og:url`, sitemap URLs and the robots `Sitemap:` line | You: confirm `NEXT_PUBLIC_SITE_URL` isn't set to `www` in Vercel; resubmit the sitemap in Search Console after deploy |
+| 2 | Hero speed | `.reveal` is visible by default. `Reveal` hides only blocks that start below the fold. The chat widget loads on first interaction or after about 6 s idle | Nothing. Local throttled test: main content 1.06 s, equal to first paint (live, same test: 4.9 s) |
+| 3 | Free-plan claims | "Free for your whole team" and "No seats to count" replaced in about 50 places, including page metadata, FAQs, the schema offer, the sign-up modal and the Terms. Limits live in one constant (`content/plans.ts` → `FREE_PLAN`). Pricing now lists the limits and a "more than 5 people?" answer | You or legal: review the new Terms §4 wording. Phase 1: payroll "PF/PT/TDS" and inbox "assigned" copy |
+| 4 | Conversion events | `lib/analytics.ts` pushes `signup_cta_click`, `signup_lead_submitted` (waits for GTM before the redirect), `contact_submitted` and `demo_booked` to `dataLayer` | You, in GTM: add Custom Event triggers and GA4 event tags for these four, mark them as key events in GA4, and set up cross-domain linking to rhinontech.in |
+
 ### Being straight about "best in everything, now"
 
 - **Ranking for all 11 modules at once won't work.** rhinontech.com has 53 referring domains; Zoho has 128,976 and HubSpot 398,775. Spreading that thin authority across hundreds of hard searches in two countries would win none of them. This plan puts it on searches the data says Rhinon can win.

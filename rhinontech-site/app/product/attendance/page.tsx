@@ -12,7 +12,7 @@ const GL = "italic";
 
 export const metadata = pageMeta({
   title: "Attendance & Leave Management",
-  description: "Free attendance and leave software for your whole team. Track clock-ins, leave balances, approvals and the team calendar easily.",
+  description: "Free attendance and leave software for teams of up to 5 people. Track clock-ins, leave balances, approvals and the team calendar easily.",
   path: "/product/attendance",
   hasOgImage: true,
 });
@@ -22,7 +22,7 @@ const FAQ = [
   { q: "What happens if someone forgets to clock out?", a: "Open sessions close automatically at night, so a forgotten clock-out never runs on. The employee can then request a correction." },
   { q: "Can I set up my own leave types?", a: "Yes. Define the leave types you offer, give each person a balance, and managers approve or decline with a note." },
   { q: "Is there a shared calendar?", a: "Yes. Approved leave shows on a team calendar, so everyone can plan around who is away." },
-  { q: "Is Attendance free?", a: "Yes. Everything in Rhinon Tech except the AI website chatbot is free for your whole team." },
+  { q: "Is Attendance free?", a: "Yes. Everything in Rhinon Tech except the AI website chatbot is free for up to 5 people." },
 ];
 
 export default function AttendancePage() {
@@ -86,7 +86,7 @@ export default function AttendancePage() {
         { slug: "work", line: "Plan work around who is away." },
       ]} />
       <ProductFaq slug="attendance" title="Attendance questions, answered." items={FAQ} />
-      <CtaBand tone={p.tone} title={<>Make attendance <span className="text-aurora-soft">effortless.</span></>} sub="Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
+      <CtaBand tone={p.tone} title={<>Make attendance <span className="text-aurora-soft">effortless.</span></>} sub="Set up your workspace in a few minutes and invite up to 5 people free. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
     </div>
   );
 }

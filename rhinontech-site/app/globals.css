@@ -357,8 +357,10 @@ body {
 }
 
 @layer components {
-  .reveal { opacity: 0; transform: translateY(28px); }
-  .reveal[data-shown="true"] { animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) var(--delay, 0ms) both; }
+  /* Visible by default, so content never waits for JavaScript (it was the LCP delay).
+     Reveal arms only blocks that start below the fold; they rise in when scrolled to. */
+  .reveal[data-armed="true"] { opacity: 0; transform: translateY(28px); }
+  .reveal[data-armed="true"][data-shown="true"] { animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) var(--delay, 0ms) both; }
 
   .float-a { animation: bob 6s ease-in-out infinite; }
   .float-b { animation: bob 7.5s ease-in-out -2.5s infinite; }
@@ -456,7 +458,7 @@ body {
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .hero-tilt { transform: none; }
-  .reveal, .reveal[data-shown="true"] { opacity: 1; transform: none; animation: none; }
+  .reveal, .reveal[data-armed="true"], .reveal[data-armed="true"][data-shown="true"] { opacity: 1; transform: none; animation: none; }
   .text-aurora, .blob, .beam::before, .float-a, .float-b, .float-c, .marquee, .flow,
   .orbit-spin, .orbit-node, .bar, .ping-soft, .line-in, .progress, .confetti-bit, .wave-bar,
   .ai-marq, .ai-marq-rev, .ai-sweep, .ai-ring, .ai-orb, .ai-dot-r, .ai-dot-l, .ai-twinkle,

@@ -198,7 +198,7 @@ export default async function BlogPostPage({ params }: { params: Params }) {
         </section>
       )}
 
-      <CtaBand title={<>Run your whole company from <span className="text-aurora-soft">one tab.</span></>} sub="Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
+      <CtaBand title={<>Run your whole company from <span className="text-aurora-soft">one tab.</span></>} sub="Set up your workspace in a few minutes and invite up to 5 people free. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
 
       <JsonLd data={structuredData} />
     </>

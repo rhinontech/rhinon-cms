@@ -12,7 +12,7 @@ const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 const DESCRIPTION =
-  "One workspace for your CRM, AI email outreach, shared inbox, projects and HR. Free for your whole team. Built by Rhinon Labs.";
+  "One workspace for your CRM, AI email outreach, shared inbox, projects and HR. Free for up to 5 people. Built by Rhinon Labs.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

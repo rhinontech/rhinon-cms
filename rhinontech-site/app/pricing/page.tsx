@@ -10,13 +10,14 @@ import { JsonLd, breadcrumbNode, faqNode, graphJsonLd, softwareAppNode } from "@
 
 export const metadata = pageMeta({
   title: "Pricing",
-  description: "Rhinon Tech is free for your whole team, with no time limit. Only the AI website chatbot is a paid product.",
+  description: "Rhinon Tech is free for up to 5 people, with no time limit. Only the AI website chatbot is a paid product.",
   path: "/pricing",
   hasOgImage: true,
 });
 
 const FAQ = [
-  { q: "Is Rhinon Tech really free?", a: "Yes. Every product except the AI website chatbot is free for your whole team, with no time limit and no credit card." },
+  { q: "Is Rhinon Tech really free?", a: "Yes. Every product except the AI website chatbot is free for up to 5 people, with no time limit and no credit card." },
+  { q: "What if we have more than 5 people?", a: "The Starter plan covers up to 25 people with higher daily limits (500 emails and 200 AI drafts) and the AI website chatbot. Book a call and we will set it up with you." },
   { q: "What does the chatbot cost?", a: "It depends on your site and what you need, so we talk first. Book a call and we will give you a clear price." },
   { q: "Can I use the free products without the chatbot?", a: "Yes. The chatbot is an add-on. The CRM, outreach, inbox, projects, chat, HR and payroll work on their own." },
   { q: "Who builds Rhinon Tech?", a: "Rhinon Labs. We build custom CRMs, AI automation and dashboards for growing companies, and we run our own business on Rhinon Tech." },
@@ -28,13 +29,13 @@ export default function PricingPage() {
       <section className="relative pb-24 pt-16 sm:pt-24">
         <Aurora />
         <div className="relative mx-auto max-w-[1240px] px-5">
-          <Reveal><SectionHead as="h1" eyebrow="Pricing" title={<>Free CRM, HR and project software. <span className="text-aurora">Pay only for the chatbot.</span></>} sub="No seats to count, no trial clock, no credit card. Start with the whole workspace and add the AI chatbot when you want it." /></Reveal>
+          <Reveal><SectionHead as="h1" eyebrow="Pricing" title={<>Free CRM, HR and project software. <span className="text-aurora">Pay only for the chatbot.</span></>} sub="Free for up to 5 people, with no trial clock and no credit card. Start with the whole workspace and add the AI chatbot when you want it." /></Reveal>
           <div className="mt-16 grid max-w-[960px] gap-5 md:grid-cols-2">
             <Reveal>
               <div className="spot h-full p-8">
                 <p className="font-display text-[22px] font-semibold">Free</p>
                 <p className="font-display mt-2 text-[60px] font-semibold leading-none">₹0</p>
-                <p className="mt-2 text-[14px] text-muted">For your whole team, with no time limit.</p>
+                <p className="mt-2 text-[14px] text-muted">For up to 5 people, with no time limit.</p>
                 <ul className="mt-7 space-y-3 text-[15px]">
                   {FREE_FEATURES.map((f) => <li key={f} className="flex gap-2.5"><Check className="mt-0.5 h-[18px] w-[18px] shrink-0 text-emerald-500" />{f}</li>)}
                 </ul>
@@ -91,7 +92,7 @@ export default function PricingPage() {
         />
       </section>
 
-      <CtaBand title={<>Start free. <span className="text-aurora-soft">Add AI when you are ready.</span></>} sub="Set up your workspace in a few minutes and bring your whole team." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "Book a call", href: links.call }} />
+      <CtaBand title={<>Start free. <span className="text-aurora-soft">Add AI when you are ready.</span></>} sub="Set up your workspace in a few minutes and invite up to 5 people free." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "Book a call", href: links.call }} />
     </>
   );
 }

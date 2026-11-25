@@ -11,7 +11,7 @@ const p = bySlug("crm")!;
 
 export const metadata = pageMeta({
   title: "Free CRM Software for Teams",
-  description: "Free CRM software for your whole team: import leads, capture them from your site and follow every deal from first hello to won.",
+  description: "Free CRM software for teams of up to 5 people: import leads, capture them from your site and follow every deal from first hello to won.",
   path: "/product/crm",
   hasOgImage: true,
 });
@@ -20,7 +20,7 @@ const FAQ = [
   { q: "Can I import my existing contacts?", a: "Yes. Upload a CSV and your leads appear in the pipeline with their details." },
   { q: "Do website enquiries show up by themselves?", a: "Yes. Forms on your website can post straight into the CRM, and the AI chatbot saves the visitors it talks to." },
   { q: "What happens when the same person writes twice?", a: "The new enquiry is added to the lead you already have, so you never end up with a duplicate." },
-  { q: "Is the CRM free?", a: "Yes. Everything in Rhinon Tech except the AI website chatbot is free for your whole team, with no time limit." },
+  { q: "Is the CRM free?", a: "Yes. Everything in Rhinon Tech except the AI website chatbot is free for up to 5 people, with no time limit." },
 ];
 
 export default function CrmPage() {
@@ -43,7 +43,7 @@ export default function CrmPage() {
               <Button href={links.signup}>Get started free</Button>
               <Button href={links.call} variant="soft">Book a demo</Button>
             </div>
-            <p className="mt-5 text-[13.5px] text-muted">Free for your whole team. No credit card.</p>
+            <p className="mt-5 text-[13.5px] text-muted">Free for up to 5 people. No credit card.</p>
           </Reveal>
           <Reveal delay={140}><PipelineHero /></Reveal>
         </div>
@@ -100,7 +100,7 @@ export default function CrmPage() {
         { slug: "chatbot", line: "Chat visitors become leads automatically." },
       ]} />
       <ProductFaq slug="crm" title="CRM questions, answered." items={FAQ} />
-      <CtaBand tone={p.tone} title={<>Start with the CRM, <span className="text-aurora-soft">free.</span></>} sub="Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
+      <CtaBand tone={p.tone} title={<>Start with the CRM, <span className="text-aurora-soft">free.</span></>} sub="Set up your workspace in a few minutes and invite up to 5 people free. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
     </>
   );
 }

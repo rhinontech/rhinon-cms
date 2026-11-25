@@ -11,7 +11,7 @@ const p = bySlug("inbox")!;
 
 export const metadata = pageMeta({
   title: "Shared Team Inbox Software",
-  description: "Free shared team inbox software for your whole team. Keep campaign replies and support emails threaded, assigned and tracked.",
+  description: "Free shared team inbox software for teams of up to 5 people. Keep campaign replies and support emails threaded, assigned and tracked.",
   path: "/product/inbox",
   hasOgImage: true,
 });
@@ -35,7 +35,7 @@ const FAQ = [
   { q: "Who can see the inbox?", a: "Whoever your roles allow. You choose who can read, reply and assign conversations." },
   { q: "Where do the replies to my campaigns go?", a: "Into the inbox. Replies to Outreach campaigns arrive inside the platform, next to the lead they belong to." },
   { q: "What address do customers write to?", a: "Every workspace gets its own company address, so customers write to your team and not to one person's mailbox." },
-  { q: "Is the inbox free?", a: "Yes. Everything in Rhinon Tech except the AI website chatbot is free for your whole team." },
+  { q: "Is the inbox free?", a: "Yes. Everything in Rhinon Tech except the AI website chatbot is free for up to 5 people." },
 ];
 
 export default function InboxPage() {
@@ -128,7 +128,7 @@ export default function InboxPage() {
         { slug: "chatbot", line: "Chat tickets and email in one view of support." },
       ]} />
       <ProductFaq slug="inbox" title="Inbox questions, answered." items={FAQ} />
-      <CtaBand tone={p.tone} title={<>Get to <span className="text-aurora-soft">inbox zero.</span></>} sub="Set up your shared inbox in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
+      <CtaBand tone={p.tone} title={<>Get to <span className="text-aurora-soft">inbox zero.</span></>} sub="Set up your shared inbox in a few minutes and invite up to 5 people free. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
     </div>
   );
 }

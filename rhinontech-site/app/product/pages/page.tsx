@@ -12,7 +12,7 @@ const INDIGO = "text-indigo-600 underline decoration-wavy decoration-indigo-300 
 
 export const metadata = pageMeta({
   title: "Team Wiki & Knowledge Pages",
-  description: "Free team wiki and knowledge software for your whole team. Write nested docs, briefs and processes right next to your projects.",
+  description: "Free team wiki and knowledge software for teams of up to 5 people. Write nested docs, briefs and processes right next to your projects.",
   path: "/product/pages",
   hasOgImage: true,
 });
@@ -21,7 +21,7 @@ const FAQ = [
   { q: "What is Pages for?", a: "Processes, plans, briefs and notes: anything your team should write down once and find again. It sits in the same workspace as your projects and customers." },
   { q: "Can I nest pages?", a: "Yes. Pages nest in a tree, so a handbook can hold policies, and a project folder can hold its briefs." },
   { q: "How do I start a page?", a: "Create one in a click and start typing. It begins as Untitled and takes its name from you." },
-  { q: "Is Pages free?", a: "Yes. Everything in Rhinon Tech except the AI website chatbot is free for your whole team." },
+  { q: "Is Pages free?", a: "Yes. Everything in Rhinon Tech except the AI website chatbot is free for up to 5 people." },
 ];
 
 export default function PagesPage() {
@@ -72,7 +72,7 @@ export default function PagesPage() {
         { slug: "chat", line: "Talk about a page with the people it affects." },
       ]} />
       <ProductFaq slug="pages" title="Pages questions, answered." items={FAQ} />
-      <CtaBand tone={p.tone} title={<>Write it down <span className="text-aurora-soft">once.</span></>} sub="Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
+      <CtaBand tone={p.tone} title={<>Write it down <span className="text-aurora-soft">once.</span></>} sub="Set up your workspace in a few minutes and invite up to 5 people free. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
     </div>
   );
 }

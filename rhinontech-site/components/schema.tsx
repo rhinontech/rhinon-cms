@@ -39,7 +39,7 @@ const FREE_OFFER = {
   price: 0,
   priceCurrency: "INR",
   url: `${SITE_URL}/pricing`,
-  description: "Free access for your whole team to CRM, AI email outreach, shared inbox, projects, Pages, team chat, HR, attendance, payroll, and performance.",
+  description: "Free for up to 5 people: CRM, AI email outreach, shared inbox, projects, Pages, team chat, HR, attendance, payroll, and performance.",
 };
 
 const CHATBOT_OFFER = {

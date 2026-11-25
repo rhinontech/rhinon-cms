@@ -131,7 +131,7 @@ const TERMS: Block[] = [
   {
     heading: "4. Free and paid products",
     body: (
-      <p>Every module except the AI website chatbot is free for your whole team, with no time limit. The AI website chatbot is a paid product, priced and agreed with you before it is set up.</p>
+      <p>Every module except the AI website chatbot is free for workspaces of up to 5 people, with daily limits of 50 emails sent and 20 AI drafts, and no time limit. Larger teams, higher limits and the AI website chatbot are paid plans, priced and agreed with you before they are set up.</p>
     ),
   },
   {
