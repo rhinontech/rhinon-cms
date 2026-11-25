@@ -8,10 +8,10 @@ export const COMPANY = {
   name: "Rhinon Labs",
   url: SITE_URL,
   logo: `${SITE_URL}/Logo_Rhinon_Labs_Light.png`,
-  tagline: "Scale your operations, not your headcount.",
+  tagline: "AI automation agency for startups and SMBs.",
   /** One-sentence description used for meta, JSON-LD and the llms.txt summary */
   description:
-    "Rhinon Labs is a product and automation studio in Hyderabad, India that designs, builds and launches MVPs, AI agents, workflow automations, internal dashboards, websites and mobile apps for startups and growing businesses — usually within 2–4 weeks.",
+    "AI automation agency for startups and SMBs. We build custom AI agents, workflow automations, and internal tools in fixed-scope 2–4-week sprints so teams scale operations without adding headcount.",
   address: {
     locality: "Hyderabad",
     region: "Telangana",

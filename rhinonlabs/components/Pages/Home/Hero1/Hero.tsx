@@ -62,14 +62,14 @@ const Hero1 = () => {
             variants={fadeUpVariant}
             className="text-[36px] text-center sm:text-5xl md:text-[76px] font-sans font-normal leading-[1.12] tracking-[-0.02em] max-w-5xl mx-auto py-2 text-transparent bg-clip-text bg-linear-to-b from-white to-white/80 mb-6"
           >
-            AI Automation & Custom Software <br />
+            AI Automation Agency <br />
             <span className="font-serif italic text-transparent bg-clip-text bg-linear-to-r from-[#c7d4ff] via-[#8fa6ff] to-[#5b7bff] pr-2">
-              that Scales Your Operations.
+              for Startups & SMBs.
             </span>
           </motion.h1>
           {/* Subtitle */}
           <motion.p variants={fadeUpVariant} className="text-white/70 text-center sm:text-lg max-w-2xl mx-auto mb-8 sm:mb-10 px-4 sm:px-0">
-            We design and build custom AI workflows, automations, and internal dashboards that reduce manual work and help your team work faster and smarter.
+            We build custom AI agents, workflow automations, and internal tools in fixed-scope 2–4-week sprints so your team scales operations without adding headcount.
           </motion.p>
         </div>
         <motion.div

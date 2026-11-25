@@ -4,24 +4,25 @@ import { FaqSchema, ServiceSchema } from "@/components/Common/SEO/PageSchemas";
 import { getCaseStudies } from "@/lib/api";
 
 export const metadata: Metadata = {
-  title: { absolute: "Rhinon Labs | Custom AI Automation & Internal Dashboards" },
-  description: "Scale your operations without adding headcount. Rhinon Labs builds custom AI agents, workflow automations, and internal tools that eliminate manual bottlenecks.",
+  title: { absolute: "AI Automation Agency for Startups & SMBs | Rhinon Labs" },
+  description:
+    "AI automation agency for startups and SMBs. We build custom AI agents, workflow automations, and internal tools in fixed-scope 2–4-week sprints.",
   // Exactly the URL Google indexes for the homepage (with the trailing slash), so
   // the declared and Google-selected canonicals can't disagree.
   alternates: { canonical: "https://www.rhinonlabs.com/" },
   openGraph: {
     type: "website",
     url: "https://www.rhinonlabs.com/",
-    title: "Rhinon Labs | Custom AI Automation & Internal Dashboards ",
+    title: "AI Automation Agency for Startups & SMBs | Rhinon Labs",
     description:
-      "Scale your operations without adding headcount. Rhinon Labs builds custom AI agents, workflow automations, and internal tools that eliminate manual bottlenecks.",
-    images: [{ url: "/og-image.jpg", width: 1200, height: 630, alt: "Rhinon Labs — Custom AI Automation & Internal Dashboards" }],
+      "AI automation agency for startups and SMBs. We build custom AI agents, workflow automations, and internal tools in fixed-scope 2–4-week sprints.",
+    images: [{ url: "/og-image.jpg", width: 1200, height: 630, alt: "Rhinon Labs — AI Automation Agency for Startups & SMBs" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Rhinon Labs | AI MVP Development & Custom Software Studio",
+    title: "AI Automation Agency for Startups & SMBs | Rhinon Labs",
     description:
-      "Scale your operations without adding headcount. Rhinon Labs builds custom AI agents, workflow automations, and internal tools that eliminate manual bottlenecks.",
+      "AI automation agency for startups and SMBs. We build custom AI agents, workflow automations, and internal tools in fixed-scope 2–4-week sprints.",
     images: ["/og-image.jpg"],
   },
 };
