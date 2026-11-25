@@ -1,6 +1,9 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/components/site";
 import { PRODUCTS } from "@/content/products";
+import { SOLUTIONS } from "@/content/solutions";
+import { COMPARISONS } from "@/content/compare";
+import { FEATURES } from "@/content/features";
 import { getBlogs } from "@/lib/blog";
 
 // Real last-edited dates for static pages (bump a route's date when its content changes; never use bare new Date()).
@@ -18,6 +21,16 @@ const STATIC_PAGE_LASTMOD: Record<string, string> = {
   "/privacy-terms": "2026-11-26",
   "/blog": "2026-11-11",
   ...Object.fromEntries(PRODUCTS.map((p) => [`/product/${p.slug}`, PRODUCT_LASTMOD_DEFAULT])),
+  "/solutions": "2026-11-26",
+  ...Object.fromEntries(SOLUTIONS.map((s) => [`/solutions/${s.slug}`, "2026-11-26"])),
+  "/compare": "2026-11-26",
+  // A comparison changes when its facts are re-checked.
+  ...Object.fromEntries(COMPARISONS.map((c) => [`/compare/${c.slug}`, c.lastChecked])),
+  ...Object.fromEntries(FEATURES.map((f) => [`/features/${f.slug}`, "2026-11-26"])),
+  "/in/crm-software": "2026-11-26",
+  "/templates/client-onboarding-checklist": "2026-11-26",
+  "/customers/rhinon-labs": "2026-11-26",
+  "/changelog": "2026-11-26",
 };
 
 function parseIsoDate(iso?: string | null): Date | undefined {

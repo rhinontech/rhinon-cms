@@ -103,6 +103,42 @@ Still open:
 - the app's own renames (U3: Chatbot → AI Agent, Work → Projects, Pages → Docs);
 - Solutions and Compare in the navigation (phase 2).
 
+**Phase 1:** committed and pushed to beta as `4283636`.
+
+**Phase 2, slice 1 (26 November): built and verified locally, uncommitted.**
+
+Built:
+- **Comparison pages (7) plus a hub at `/compare`:** Zoho One, HubSpot, Odoo, ClickUp, monday.com, HoneyBook and Chatbase.
+  - Data lives in `content/compare.ts`, with a source list and a `lastChecked` date.
+  - Values the competitor's page didn't show are marked "Not listed", never "No".
+  - Each page has a "Choose them if" box.
+- **Solution pages (5) plus a hub at `/solutions`:** agencies, consultancies, IT & software services, professional services, startups. Data lives in `content/solutions.ts`.
+- **Navigation:** Solutions and Compare are in the top bar and the footer.
+- **Home page:** the "Built for" cards now link to the solution pages.
+- **Sitemap:** now 38 URLs. A comparison's last-modified date is its `lastChecked`.
+
+Deferred:
+- Teamwork comparison: its pages weren't read, so there are no verified facts yet.
+
+**Phase 2, slice 2 (26 November): built and verified locally, uncommitted.**
+- **Feature pages (4):** `/features/crm-with-project-management`, `/features/client-portal`, `/features/lead-management` and `/features/sales-pipeline`, from `content/features.ts`.
+- **India page:** `/in/crm-software`.
+- **Template:** `/templates/client-onboarding-checklist`, 24 steps.
+- **Changelog:** `/changelog` (October and November, live features only).
+- **Footer:** new Resources column.
+- **Sitemap:** now 46 URLs.
+- **`/customers/rhinon-labs`:** figures are aggregates read from the production database (read-only) on 26 November:
+  - 5,503 leads; 10,268 outreach emails to 5,496 leads; 9,261 AI drafts;
+  - 643 tasks across 9 projects; 127 project requests;
+  - 20,188 inbox emails; 16 website chats; 11 people.
+  - **Left out on purpose:** 0 deals and no deal → project conversions (stated on the page); the reply count of 32 (not published).
+  - **An approval-flag gap:** leads show `draftApproved` = 0 everywhere, so the site's "nothing is sent without your approval" should be checked against how Outreach actually sends.
+
+Still to build in phase 2:
+- the AI email writer (needs a rate-limited backend endpoint);
+- the Teamwork comparison (facts not checked yet);
+- directory listings (your task).
+
 ### Being straight about "best in everything, now"
 
 - **Ranking for all 11 modules at once won't work.** rhinontech.com has 53 referring domains; Zoho has 128,976 and HubSpot 398,775. Spreading that thin authority across hundreds of hard searches in two countries would win none of them. This plan puts it on searches the data says Rhinon can win.

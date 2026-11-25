@@ -8,10 +8,11 @@ import { GROUPS, byGroup } from "@/content/products";
 import { links } from "@/components/site";
 import { IconTile, Logo } from "@/components/ui";
 
-// Solutions, Compare and Resources join the bar in phase 2, when their pages exist
-// (docs/RHINONTECH_WEBSITE_REVAMP.md §4.1). Linking them earlier would send people to 404s.
+// Resources joins the bar once guides and tools exist (docs/RHINONTECH_WEBSITE_REVAMP.md §4.1).
 const NAV = [
+  { href: "/solutions", label: "Solutions" },
   { href: "/ai", label: "Rhinon AI" },
+  { href: "/compare", label: "Compare" },
   { href: "/pricing", label: "Pricing" },
   { href: "/blog", label: "Blog" },
 ];
@@ -91,7 +92,7 @@ export function Navbar() {
             </button>
           </div>
           {NAV.map((n) => (
-            <Link key={n.href} href={n.href} className={`rounded-lg px-3.5 py-2 text-[15px] font-medium transition-colors hover:bg-soft ${pathname === n.href ? "text-violet" : "text-ink"}`}>
+            <Link key={n.href} href={n.href} className={`rounded-lg px-3.5 py-2 text-[15px] font-medium transition-colors hover:bg-soft ${pathname === n.href || pathname.startsWith(`${n.href}/`) ? "text-violet" : "text-ink"}`}>
               {n.label}
             </Link>
           ))}

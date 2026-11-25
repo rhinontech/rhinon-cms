@@ -229,12 +229,11 @@ function AiSection() {
 
 /* ───────────────────────── Built for ───────────────────────── */
 
-// Solution pages arrive in phase 2; until then these cards don't link anywhere.
 const BUILT_FOR = [
-  { icon: Briefcase, title: "Agencies", body: "Pitches, retainers and client sign-offs, from the first enquiry to the final file." },
-  { icon: Code2, title: "IT & software services", body: "From scoping call to sprint board without retyping the brief." },
-  { icon: Scale, title: "Consultancies", body: "Every engagement's documents, follow-ups and conversations in one place." },
-  { icon: UsersRound, title: "Professional services", body: "Each client's work and history on one timeline your whole team can see." },
+  { icon: Briefcase, href: "/solutions/agencies", title: "Agencies", body: "Pitches, retainers and client sign-offs, from the first enquiry to the final file." },
+  { icon: Code2, href: "/solutions/it-services", title: "IT & software services", body: "From scoping call to sprint board without retyping the brief." },
+  { icon: Scale, href: "/solutions/consultancies", title: "Consultancies", body: "Every engagement's documents, follow-ups and conversations in one place." },
+  { icon: UsersRound, href: "/solutions/professional-services", title: "Professional services", body: "Each client's work and history on one timeline your whole team can see." },
 ];
 
 function BuiltFor() {
@@ -246,13 +245,16 @@ function BuiltFor() {
         <p className="mt-5 max-w-[600px] text-[18px] leading-8 text-ink-soft">Teams of 5 to 50 who win clients and then do the work for them.</p>
       </Reveal>
       <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {BUILT_FOR.map(({ icon: Icon, title, body }, i) => (
+        {BUILT_FOR.map(({ icon: Icon, href, title, body }, i) => (
           <Reveal key={title} delay={i * 90}>
-            <div className="lt-card h-full rounded-2xl p-6">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet/10 text-violet"><Icon className="h-5 w-5" /></span>
-              <p className="font-display mt-5 text-[21px] font-semibold">{title}</p>
-              <p className="mt-2 text-[14.5px] leading-6 text-ink-soft">{body}</p>
-            </div>
+            <Link href={href} className="lt-card group flex h-full flex-col rounded-2xl p-6">
+              <span className="flex items-start justify-between">
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet/10 text-violet"><Icon className="h-5 w-5" /></span>
+                <ArrowUpRight className="h-4 w-4 text-muted transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              </span>
+              <span className="font-display mt-5 text-[21px] font-semibold">{title}</span>
+              <span className="mt-2 text-[14.5px] leading-6 text-ink-soft">{body}</span>
+            </Link>
           </Reveal>
         ))}
       </div>

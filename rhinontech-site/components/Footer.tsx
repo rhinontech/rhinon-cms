@@ -5,11 +5,25 @@ import { GROUPS, byGroup } from "@/content/products";
 import { Logo } from "@/components/ui";
 
 const COMPANY = [
+  { label: "Solutions", href: "/solutions" },
+  { label: "Compare", href: "/compare" },
   { label: "Rhinon AI", href: "/ai" },
   { label: "Integrations", href: "/integrations" },
   { label: "Security", href: "/security" },
   { label: "Pricing", href: "/pricing" },
+];
+
+/** Guides, templates and proof. Feature pages sit here too, so every one has a crawlable link. */
+const RESOURCES = [
   { label: "Blog", href: "/blog" },
+  { label: "Changelog", href: "/changelog" },
+  { label: "Rhinon Labs case study", href: "/customers/rhinon-labs" },
+  { label: "Client onboarding checklist", href: "/templates/client-onboarding-checklist" },
+  { label: "CRM software in India", href: "/in/crm-software" },
+  { label: "CRM with projects", href: "/features/crm-with-project-management" },
+  { label: "Client portal", href: "/features/client-portal" },
+  { label: "Lead management", href: "/features/lead-management" },
+  { label: "Sales pipeline", href: "/features/sales-pipeline" },
 ];
 
 const LINK = "block text-ink-soft transition-colors hover:text-ink";
@@ -32,7 +46,7 @@ export function Footer() {
               <a href={links.login} className="btn btn-soft">Log in</a>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-8 text-[14.5px] sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-8 text-[14.5px] sm:grid-cols-3 xl:grid-cols-5">
             {GROUPS.map((g) => (
               <div key={g.name} className="space-y-3">
                 <p className={LABEL}>{g.name}</p>
@@ -41,6 +55,12 @@ export function Footer() {
                 ))}
               </div>
             ))}
+            <div className="space-y-3">
+              <p className={LABEL}>Resources</p>
+              {RESOURCES.map((r) => (
+                <Link key={r.href} href={r.href} className={LINK}>{r.label}</Link>
+              ))}
+            </div>
             <div className="space-y-3">
               <p className={LABEL}>Company</p>
               {COMPANY.map((c) => (
