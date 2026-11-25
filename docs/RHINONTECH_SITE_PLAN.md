@@ -1,5 +1,7 @@
 # Rhinon Tech marketing site — revamp plan
 
+> **2026-11-26:** positioning, sitemap and navigation are superseded by [RHINONTECH_WEBSITE_REVAMP.md](RHINONTECH_WEBSITE_REVAMP.md) (niche: AI CRM for service businesses). The build notes below still apply.
+
 Status (2026-11-06): **phase 1 built locally, uncommitted** — home, /product, **11 individually designed
 product pages** (one route and one set of components each, no shared template), /ai, /pricing, /security, /integrations, 404, sitemap, robots, OG image. Not yet built: solutions,
 compare, blog, changelog, careers, contact/demo form, legal pages (footer links to rhinonlabs.com for
