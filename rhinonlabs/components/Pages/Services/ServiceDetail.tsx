@@ -266,11 +266,16 @@ export default function ServiceDetail({ service, blogs, caseStudies }: { service
 
       <ElevateCTA />
 
-      {/* ── Further reading — blog-index cards ───────────────────────────── */}
+      {/* ── Topic Hub: Guides & Playbooks cluster (Audit H-05) ───────────────────────────── */}
       {blogs.length > 0 && (
         <section className="py-24 relative overflow-hidden">
           <div className="max-w-[1200px] mx-auto px-6 relative z-10">
-            <SectionHeader badge="From The Blog" lead="Go" accent="deeper" />
+            <SectionHeader
+              badge={`${service.name} Hub`}
+              lead="Guides &"
+              accent="Playbooks"
+              sub={`In-depth guides, cost analyses, and architectures for ${service.name.toLowerCase()}.`}
+            />
             {/* flex + fixed widths so 1–2 posts sit centred instead of hugging the left */}
             <div className="flex flex-wrap justify-center gap-6">
               {blogs.map((blog) => (

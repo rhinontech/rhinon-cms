@@ -1,7 +1,7 @@
 import HomePage from "@/components/Pages/Home/HomePage"
 import { Metadata } from "next";
 import { FaqSchema, ServiceSchema } from "@/components/Common/SEO/PageSchemas";
-import { getCaseStudies } from "@/lib/api";
+import { getBlogs, getCaseStudies } from "@/lib/api";
 
 export const metadata: Metadata = {
   title: { absolute: "AI Automation Agency for Startups & SMBs | Rhinon Labs" },
@@ -28,7 +28,10 @@ export const metadata: Metadata = {
 };
 
 const page = async () => {
-  const caseStudies = await getCaseStudies().catch(() => []);
+  const [caseStudies, blogs] = await Promise.all([
+    getCaseStudies().catch(() => []),
+    getBlogs().catch(() => []),
+  ]);
   return (
     <>
       {/* Preload matching hero background image so mobile LCP is discovered immediately */}
@@ -36,7 +39,7 @@ const page = async () => {
       <link rel="preload" as="image" type="image/avif" href="/images/background/background-1920.avif" media="(min-width: 768px)" fetchPriority="high" />
       <ServiceSchema />
       <FaqSchema />
-      <HomePage caseStudies={caseStudies} />
+      <HomePage caseStudies={caseStudies} blogs={blogs} />
     </>
   );
 };

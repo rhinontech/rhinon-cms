@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
-import { getBlog, getBlogs, Blog } from "@/lib/api";
+import { getBlog, getBlogs, getCaseStudies, type Blog, type CaseStudy } from "@/lib/api";
 import { format } from "date-fns";
 import { Minus, ShieldCheck, Sparkles, ArrowRight } from "lucide-react";
 
@@ -163,6 +163,12 @@ export default async function BlogDetailsPage({ params }: PageProps) {
 
   // Contextual matching service derived from lib/services.ts (Single Source of Truth)
   const matchingService = getServiceByBlogSlug(blog.slug);
+
+  // Relevant case study for this topic cluster (Audit H-05: "Every post links to 1 case study")
+  const allCaseStudies = await getCaseStudies().catch(() => []);
+  const matchingCaseStudy = matchingService?.relatedCaseStudies?.length
+    ? allCaseStudies.find((cs) => matchingService.relatedCaseStudies.includes(cs.slug)) || allCaseStudies[0]
+    : allCaseStudies[0];
 
   const blocks = blog.contentBlocks?.length ? blog.contentBlocks : null;
   const faqs = (blog.faqs || []).filter((f) => f.question?.trim() && f.answer?.trim());
@@ -437,6 +443,30 @@ export default async function BlogDetailsPage({ params }: PageProps) {
                 <span className="font-semibold text-white">Need an end-to-end custom system built?</span> Check out our dedicated{" "}
                 <Link href="/services/internal-dashboards" className="font-medium text-white underline hover:text-white/80 transition-colors">
                   custom dashboard development india services →
+                </Link>
+              </div>
+            )}
+
+            {/* Contextual Case Study Proof (Audit H-05: Every post has a relevant case study link) */}
+            {matchingCaseStudy && (
+              <div className="my-10 rounded-2xl border border-white/10 bg-linear-to-r from-white/[0.03] to-white/[0.01] p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#A3B8CC]">
+                    Real-World Implementation
+                  </span>
+                  <h4 className="text-base font-semibold text-white">
+                    See how we built and scaled: {matchingCaseStudy.title}
+                  </h4>
+                  <p className="text-xs text-white/60 line-clamp-2 max-w-xl">
+                    {matchingCaseStudy.description}
+                  </p>
+                </div>
+                <Link
+                  href={`/case-studies/${matchingCaseStudy.slug}`}
+                  className="inline-flex shrink-0 items-center justify-center gap-1.5 px-4 py-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-xs font-semibold text-white transition-all group"
+                >
+                  <span>Read case study</span>
+                  <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
                 </Link>
               </div>
             )}
