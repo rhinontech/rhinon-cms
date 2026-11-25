@@ -18,6 +18,9 @@ const nextConfig: NextConfig = {
   // two fighting over .next (Turbopack allows one cache writer at a time). Unset = .next.
   distDir: process.env.NEXT_DIST_DIR || ".next",
   poweredByHeader: false,
+  experimental: {
+    agentUpgrade: "security",
+  },
   async headers() {
     return [{ source: "/(.*)", headers: SECURITY_HEADERS }];
   },
