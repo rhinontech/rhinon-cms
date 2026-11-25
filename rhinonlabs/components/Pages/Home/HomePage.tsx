@@ -1,5 +1,6 @@
 import dynamic from "next/dynamic";
 import Hero1 from "./Hero1/Hero";
+import type { CaseStudy } from "@/lib/api";
 
 // Dynamic import for below-the-fold sections to optimize initial mobile load & reduce DOM/TBT
 const Problem = dynamic(() => import("./Problem/Problem").then((m) => m.Problem));
@@ -12,7 +13,11 @@ const ElevateCTA = dynamic(() => import("@/components/Common/CTA/ElevateCTA").th
 const CaseStudies = dynamic(() => import("./CaseStudy/CaseStudies").then((m) => m.CaseStudies));
 const FAQ = dynamic(() => import("@/components/Common/FAQ/FAQ").then((m) => m.FAQ));
 
-const HomePage = () => {
+interface HomePageProps {
+  caseStudies?: CaseStudy[];
+}
+
+const HomePage = ({ caseStudies }: HomePageProps) => {
   return (
     <div className="relative flex flex-col gap-10 selection:bg-[#1c2bff]/50">
       <Hero1 />
@@ -23,7 +28,7 @@ const HomePage = () => {
       <Integrations />
       <Examples />
       <ElevateCTA />
-      <CaseStudies />
+      <CaseStudies items={caseStudies} />
       <FAQ />
     </div>
   );

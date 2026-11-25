@@ -12,7 +12,7 @@ import { Spotlight } from "@/components/ui/spotlight";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
 import type { Service } from "@/lib/services";
 import { services } from "@/lib/services";
-import type { Blog } from "@/lib/api";
+import type { Blog, CaseStudy } from "@/lib/api";
 
 // Dynamically load below-the-fold components to reduce initial JavaScript CPU execution
 const SchedulerModal = dynamic(() => import("@/components/Common/CTA/SchedulerModal"));
@@ -70,7 +70,7 @@ function IconTile({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function ServiceDetail({ service, blogs }: { service: Service; blogs: Blog[] }) {
+export default function ServiceDetail({ service, blogs, caseStudies }: { service: Service; blogs: Blog[]; caseStudies?: CaseStudy[] }) {
   const [isSchedulerOpen, setIsSchedulerOpen] = useState(false);
   const others = services.filter((s) => s.slug !== service.slug);
 
@@ -262,7 +262,7 @@ export default function ServiceDetail({ service, blogs }: { service: Service; bl
       </section>
 
       {/* ── Related work — the homepage case-study grid, filtered ────────── */}
-      {service.relatedCaseStudies.length > 0 && <CaseStudies slugs={service.relatedCaseStudies} />}
+      {service.relatedCaseStudies.length > 0 && <CaseStudies slugs={service.relatedCaseStudies} items={caseStudies} />}
 
       <ElevateCTA />
 

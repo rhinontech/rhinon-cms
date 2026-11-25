@@ -1,6 +1,7 @@
 import HomePage from "@/components/Pages/Home/HomePage"
 import { Metadata } from "next";
 import { FaqSchema, ServiceSchema } from "@/components/Common/SEO/PageSchemas";
+import { getCaseStudies } from "@/lib/api";
 
 export const metadata: Metadata = {
   title: { absolute: "Rhinon Labs | Custom AI Automation & Internal Dashboards" },
@@ -25,7 +26,8 @@ export const metadata: Metadata = {
   },
 };
 
-const page = () => {
+const page = async () => {
+  const caseStudies = await getCaseStudies().catch(() => []);
   return (
     <>
       {/* Preload matching hero background image so mobile LCP is discovered immediately */}
@@ -33,9 +35,9 @@ const page = () => {
       <link rel="preload" as="image" type="image/avif" href="/images/background/background-1920.avif" media="(min-width: 768px)" fetchPriority="high" />
       <ServiceSchema />
       <FaqSchema />
-      <HomePage />
+      <HomePage caseStudies={caseStudies} />
     </>
-  )
-}
+  );
+};
 
 export default page

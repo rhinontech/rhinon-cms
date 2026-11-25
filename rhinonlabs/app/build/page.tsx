@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import BuildPage from "@/components/Pages/Build/BuildPage";
+import { getCaseStudies } from "@/lib/api";
 
 export const metadata: Metadata = {
   title: "Have a Startup Idea? Let's Build It.",
@@ -31,8 +32,9 @@ export const metadata: Metadata = {
   },
 };
 
-const page = () => {
-  return <BuildPage />;
+const page = async () => {
+  const caseStudies = await getCaseStudies().catch(() => []);
+  return <BuildPage caseStudies={caseStudies} />;
 };
 
 export default page;

@@ -8,17 +8,24 @@ import { getCaseStudies, type CaseStudy } from '@/lib/api';
 
 const PLACEHOLDER_IMG = "https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=800&auto=format&fit=crop";
 
-/** `slugs` limits the grid to related work (service pages); omitted → every case study. */
-export function CaseStudies({ slugs }: { slugs?: string[] } = {}) {
-    const [caseStudies, setCaseStudies] = useState<CaseStudy[]>([]);
+interface CaseStudiesProps {
+    slugs?: string[];
+    items?: CaseStudy[];
+}
+
+/** `slugs` limits the grid to related work (service pages); omitted → every case study.
+ *  `items` can be passed from the server for instant SSR and search crawler visibility. */
+export function CaseStudies({ slugs, items }: CaseStudiesProps = {}) {
+    const [caseStudies, setCaseStudies] = useState<CaseStudy[]>(items ?? []);
 
     useEffect(() => {
+        if (items && items.length > 0) return;
         let active = true;
         getCaseStudies().then((data) => {
             if (active) setCaseStudies(data);
         });
         return () => { active = false; };
-    }, []);
+    }, [items]);
 
     const related = slugs?.length
         ? slugs.map((s) => caseStudies.find((cs) => cs.slug === s)).filter((cs): cs is CaseStudy => Boolean(cs))

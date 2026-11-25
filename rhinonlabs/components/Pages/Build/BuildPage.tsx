@@ -17,8 +17,13 @@ const FounderMessage = dynamic(() => import("./FounderMessage").then((m) => m.Fo
 const BuildFAQ = dynamic(() => import("./BuildFAQ").then((m) => m.BuildFAQ));
 const IdeaForm = dynamic(() => import("./IdeaForm").then((m) => m.IdeaForm));
 const CaseStudies = dynamic(() => import("@/components/Pages/Home/CaseStudy/CaseStudies").then((m) => m.CaseStudies));
+import type { CaseStudy } from "@/lib/api";
 
-const BuildPage = () => {
+interface BuildPageProps {
+  caseStudies?: CaseStudy[];
+}
+
+const BuildPage = ({ caseStudies }: BuildPageProps) => {
   return (
     <div className="relative flex flex-col selection:bg-violet-500/40">
       {/* Ambient colour drifting down the page so the long scroll never reads as flat black.
@@ -42,7 +47,7 @@ const BuildPage = () => {
       <Engagement />
       <FounderMessage />
       {/* Published case studies from the CMS — the section hides itself when there are none. */}
-      <CaseStudies />
+      <CaseStudies items={caseStudies} />
       <BuildFAQ />
       <IdeaForm />
     </div>

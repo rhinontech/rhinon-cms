@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ServiceDetail from "@/components/Pages/Services/ServiceDetail";
 import { getService, services, serviceBanner } from "@/lib/services";
-import { getBlogs } from "@/lib/api";
+import { getBlogs, getCaseStudies } from "@/lib/api";
 
 import { SCHEMA_IDS } from "@/lib/site";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinonlabs.com";
@@ -47,11 +47,17 @@ export default async function Page({ params }: PageProps) {
   const service = getService(slug);
   if (!service) notFound();
 
-  // Related posts are a bonus — never fail the page if the content API is down
-  const blogs = await getBlogs().catch(() => []);
+  // Related posts and case studies are fetched on the server for full crawler & SEO visibility
+  const [blogs, allCaseStudies] = await Promise.all([
+    getBlogs().catch(() => []),
+    getCaseStudies().catch(() => []),
+  ]);
   const related = service.relatedBlogs
     .map((s) => blogs.find((b) => b.slug === s))
     .filter((b): b is NonNullable<typeof b> => Boolean(b));
+  const relatedCaseStudies = service.relatedCaseStudies
+    .map((s) => allCaseStudies.find((cs) => cs.slug === s))
+    .filter((cs): cs is NonNullable<typeof cs> => Boolean(cs));
 
   const url = `${SITE_URL}/services/${service.slug}`;
   const schemas = [
@@ -91,7 +97,7 @@ export default async function Page({ params }: PageProps) {
       {schemas.map((schema, i) => (
         <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
       ))}
-      <ServiceDetail service={service} blogs={related} />
+      <ServiceDetail service={service} blogs={related} caseStudies={relatedCaseStudies} />
     </>
   );
 }
