@@ -200,6 +200,13 @@ router.post("/web-leads", async (req: Request, res: Response) => {
     const message = str(b.message, 5000);
     const company = str(b.company, 200);
     const projectType = str(b.projectType, 200);
+    const source = str(b.source, 100) || "Website";
+    const utmSource = str(b.utmSource, 200);
+    const utmMedium = str(b.utmMedium, 200);
+    const utmCampaign = str(b.utmCampaign, 200);
+    const utmTerm = str(b.utmTerm, 200);
+    const utmContent = str(b.utmContent, 200);
+    const referrer = str(b.referrer, 500);
 
     if (!name || !email) {
       res.status(400).json({ message: "Name and email are required" });
@@ -210,7 +217,19 @@ router.post("/web-leads", async (req: Request, res: Response) => {
       return;
     }
 
-    const raw = { whatsapp, message, company, projectType, submittedAt: new Date().toISOString() };
+    const raw = {
+      whatsapp,
+      message,
+      company,
+      projectType,
+      utmSource,
+      utmMedium,
+      utmCampaign,
+      utmTerm,
+      utmContent,
+      referrer,
+      submittedAt: new Date().toISOString()
+    };
 
     // Avoid duplicate leads: if this email already exists, append the new enquiry to its notes
     // instead of failing on the unique constraint.
@@ -223,6 +242,7 @@ router.post("/web-leads", async (req: Request, res: Response) => {
       await existing.update({
         notes: appended,
         phone: existing.phone || whatsapp || undefined,
+        raw: { ...(existing.raw || {}), ...raw },
       });
       res.status(200).json({ ok: true, deduped: true });
     } else {
@@ -237,7 +257,7 @@ router.post("/web-leads", async (req: Request, res: Response) => {
         company: company || "Website Enquiry",
         phone: whatsapp,
         notes: message,
-        source: "Website",
+        source,
         status: "New",
         raw,
       } as any);
@@ -289,6 +309,12 @@ router.post("/platform-leads", async (req: Request, res: Response) => {
     const teamSize = str(b.teamSize, 100);
     const message = str(b.message, 5000);
     const source = str(b.source, 100) || "Platform";
+    const utmSource = str(b.utmSource, 200);
+    const utmMedium = str(b.utmMedium, 200);
+    const utmCampaign = str(b.utmCampaign, 200);
+    const utmTerm = str(b.utmTerm, 200);
+    const utmContent = str(b.utmContent, 200);
+    const referrer = str(b.referrer, 500);
 
     // Company fallback: explicit value → website domain → generic label.
     let company = str(b.company, 200);
@@ -306,7 +332,19 @@ router.post("/platform-leads", async (req: Request, res: Response) => {
       message && `Message: ${message}`,
     ].filter(Boolean).join(" · ");
 
-    const raw = { institutionType, annualLeadVolume, teamSize, message, submittedAt: new Date().toISOString() };
+    const raw = {
+      institutionType,
+      annualLeadVolume,
+      teamSize,
+      message,
+      utmSource,
+      utmMedium,
+      utmCampaign,
+      utmTerm,
+      utmContent,
+      referrer,
+      submittedAt: new Date().toISOString()
+    };
 
     // Same dedupe behaviour as web-leads: repeat enquiries append to notes instead of failing
     // on the unique email constraint.

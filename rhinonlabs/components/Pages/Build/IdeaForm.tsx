@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { API_BASE } from "@/lib/api";
 import { scrollVariant } from "./SectionHeading";
 import { CTA_GRADIENT } from "./palette";
+import { trackGenerateLead, trackClickPhone, trackClickWhatsApp } from "@/lib/analytics-events";
 
 const stages = [
   "Just an idea",
@@ -84,6 +85,12 @@ export function IdeaForm() {
         return;
       }
       setSuccess(true);
+      // Track GA4 generate_lead conversion (Audit H-08)
+      trackGenerateLead({
+        lead_type: "idea_submitted",
+        source: params?.get("utm_source") || "/build",
+        category: form.stage || "startup_idea",
+      });
       setForm(emptyForm);
     } catch {
       setError("An error occurred. Please try again.");
@@ -283,12 +290,17 @@ export function IdeaForm() {
 
         <p className="text-center text-sm text-white/50 mt-8">
           Prefer to talk directly?{" "}
-          <a href="tel:+918249291789" className="font-semibold text-white hover:underline">
+          <a
+            href="tel:+918249291789"
+            onClick={() => trackClickPhone("build_page")}
+            className="font-semibold text-white hover:underline"
+          >
             +91 8249 291 789
           </a>{" "}
           or{" "}
           <a
             href="https://wa.me/918249291789"
+            onClick={() => trackClickWhatsApp("build_page")}
             target="_blank"
             rel="nofollow noopener noreferrer"
             className="font-semibold text-white hover:underline"

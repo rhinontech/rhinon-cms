@@ -9,6 +9,7 @@ import { useState } from "react";
 import { FAQ } from "@/components/Common/FAQ/FAQ";
 import { CustomXIcon, Footer } from "@/components/Common/Footer/Footer";
 import { Mail, Phone, Headphones, User, Waves, Twitter, Instagram, Linkedin } from "lucide-react";
+import { trackGenerateLead, trackClickPhone, getUtmParams } from "@/lib/analytics-events";
 
 // Rhinon Tech backend (admin-panel reads leads from the same API). Override via NEXT_PUBLIC_API_URL.
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://api.rhinontech.in";
@@ -38,6 +39,7 @@ const ContactUs = () => {
         setSuccess(false);
 
         try {
+            const utms = getUtmParams();
             const res = await fetch(`${API_BASE}/public/web-leads`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -47,11 +49,24 @@ const ContactUs = () => {
                     whatsapp: formData.whatsapp,
                     company: formData.company,
                     message: formData.message,
+                    source: "Contact Us",
+                    utmSource: utms.utmSource,
+                    utmMedium: utms.utmMedium,
+                    utmCampaign: utms.utmCampaign,
+                    utmTerm: utms.utmTerm,
+                    utmContent: utms.utmContent,
+                    referrer: utms.referrer,
                 }),
             });
 
             if (res.ok) {
                 setSuccess(true);
+                // Track GA4 generate_lead conversion (Audit H-08)
+                trackGenerateLead({
+                    lead_type: "contact_submitted",
+                    source: utms.utmSource || "contact-us",
+                    category: formData.company || "general_inquiry",
+                });
                 setFormData({
                     name: "",
                     email: "",
@@ -148,7 +163,11 @@ const ContactUs = () => {
                                     <Linkedin className="w-5 h-5 text-white/80" />
                                 </a>
                             </div>
-                            <a href="tel:+918249291789" className="text-[16px] opacity-90 underline underline-offset-2 decoration-1">
+                            <a
+                                href="tel:+918249291789"
+                                onClick={() => trackClickPhone("contact_us_page")}
+                                className="text-[16px] opacity-90 underline underline-offset-2 decoration-1"
+                            >
                                 Book a call
                             </a>
 

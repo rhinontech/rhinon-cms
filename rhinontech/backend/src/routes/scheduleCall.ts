@@ -110,6 +110,12 @@ router.post("/schedule-call", async (req: Request, res: Response) => {
     const teamSize = str(b.teamSize, 100);
     const message = str(b.message, 5000);
     const visitorTimezone = str(b.timezone, 100) || BUSINESS_TIMEZONE;
+    const utmSource = str(b.utmSource, 200);
+    const utmMedium = str(b.utmMedium, 200);
+    const utmCampaign = str(b.utmCampaign, 200);
+    const utmTerm = str(b.utmTerm, 200);
+    const utmContent = str(b.utmContent, 200);
+    const referrer = str(b.referrer, 500);
 
     let company = str(b.company, 200);
     if (!company && website) {
@@ -149,6 +155,12 @@ router.post("/schedule-call", async (req: Request, res: Response) => {
       message,
       bookedFor: slot.startTime.toISOString(),
       visitorTimezone,
+      utmSource,
+      utmMedium,
+      utmCampaign,
+      utmTerm,
+      utmContent,
+      referrer,
       submittedAt: new Date().toISOString(),
     };
 

@@ -8,6 +8,7 @@ import HeroShowcase from "./HeroShowcase";
 import { motion, Variants } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { trackClickPhone, trackClickWhatsApp } from "@/lib/analytics-events";
 
 // Code-split SchedulerModal so dialog JS doesn't block initial page load
 const SchedulerModal = dynamic(() => import("@/components/Common/CTA/SchedulerModal"));
@@ -126,6 +127,7 @@ const Hero1 = () => {
             Prefer to talk directly?{" "}
             <a
               href="tel:+918249291789"
+              onClick={() => trackClickPhone("hero_section")}
               className="font-semibold text-white hover:underline transition-all"
             >
               Call us: +91 8249 291 789
@@ -133,6 +135,7 @@ const Hero1 = () => {
             {" "}or{" "}
             <a
               href="https://wa.me/918249291789"
+              onClick={() => trackClickWhatsApp("hero_section")}
               target="_blank"
               rel="nofollow noopener noreferrer"
               className="font-semibold text-white hover:underline transition-all"

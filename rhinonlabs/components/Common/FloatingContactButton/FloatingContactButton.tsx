@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { Phone, MessageCircle } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { trackClickPhone, trackClickWhatsApp } from "@/lib/analytics-events";
 
 const FloatingContactButton = () => {
     const pathname = usePathname();
@@ -38,6 +39,7 @@ const FloatingContactButton = () => {
             {/* WhatsApp Button */}
             <motion.a
                 href="https://wa.me/918249291789"
+                onClick={() => trackClickWhatsApp("floating_contact_button")}
                 target="_blank"
                 rel="nofollow noopener noreferrer"
                 className="group relative w-14 h-14 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center shadow-lg hover:shadow-2xl transition-all duration-300"
@@ -59,6 +61,7 @@ const FloatingContactButton = () => {
             {/* Phone Button */}
             <motion.a
                 href="tel:+918249291789"
+                onClick={() => trackClickPhone("floating_contact_button")}
                 className="group relative w-14 h-14 bg-white hover:bg-gray-100 rounded-full flex items-center justify-center shadow-lg hover:shadow-2xl transition-all duration-300"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
