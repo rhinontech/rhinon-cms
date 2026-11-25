@@ -49,6 +49,11 @@ const nextConfig: NextConfig = {
         destination: "/blogs/mvp-development-cost-india-2027-guide",
         permanent: true,
       },
+      {
+        source: "/blogs/mobile-app-development-cost-startups-india",
+        destination: "/blogs/mobile-app-development-cost-india-2027",
+        permanent: true,
+      },
     ];
   },
   // Security headers for browser protection, clickjacking defense, and MIME-sniffing prevention

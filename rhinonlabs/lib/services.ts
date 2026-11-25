@@ -76,7 +76,12 @@ export const services: Service[] = [
       { question: "Will I own the code?", answer: "Yes. The code, designs and infrastructure accounts are yours. Nothing is locked into our systems." },
       { question: "What happens after launch?", answer: "You can take the product in-house, or keep us on an optional monthly or quarterly retainer to keep improving it as you learn from users." },
     ],
-    relatedBlogs: ["mvp-development-cost-india-2026-guide", "how-long-does-it-take-to-build-an-mvp-india-guide"],
+    relatedBlogs: [
+      "mvp-development-cost-india-2027-guide",
+      "how-long-does-it-take-to-build-an-mvp-india-guide",
+      "no-code-vs-custom-mvp-india-guide",
+      "freelancer-vs-agency-for-mvp-india-guide",
+    ],
     relatedCaseStudies: ["apexispro", "furrcircle-the-all-in-one-app-for-pet-parents"],
   },
   {
@@ -120,7 +125,13 @@ export const services: Service[] = [
       { question: "What if the agent makes a mistake?", answer: "Agents are built with guardrails: limited permissions, human approval for sensitive actions, and a full log of every step so mistakes are visible and easy to correct." },
       { question: "Which AI models do you use?", answer: "We pick the model per task based on accuracy, cost and privacy needs, and keep the system able to switch models as better ones arrive." },
     ],
-    relatedBlogs: ["chatbot-vs-ai-agent-real-difference", "ai-agent-security-for-businesses-india-2026", "ai-agents-vs-traditional-automatio"],
+    relatedBlogs: [
+      "chatbot-vs-ai-agent-real-difference",
+      "ai-agent-security-for-businesses-india-2027",
+      "ai-agents-vs-traditional-automation",
+      "ai-agent-development-company-guide",
+      "ai-agents-for-business-use-cases",
+    ],
     relatedCaseStudies: [],
   },
   {
@@ -170,6 +181,7 @@ export const services: Service[] = [
       "automating-onboarding",
       "time-triggered-email-automation",
       "automate-first-in-a-product-led-growth-motion",
+      "automate-employee-onboarding-small-company",
     ],
     relatedCaseStudies: [],
   },
@@ -214,7 +226,13 @@ export const services: Service[] = [
       { question: "Who can access what?", answer: "Everything is built with roles and permissions, so team members, managers and clients each see only what they should." },
       { question: "Can our team change it later?", answer: "Yes. Systems are modular and documented, so your team can make small changes, or we can extend it on a support plan." },
     ],
-    relatedBlogs: ["who-actually-owns-ops-in-a-five-person-team", "dependent-on-one-persons-memory"],
+    relatedBlogs: [
+      "who-actually-owns-ops-in-a-five-person-team",
+      "dependent-on-one-persons-memory",
+      "custom-internal-dashboard-development-india",
+      "spreadsheet-vs-dashboard-india",
+      "internal-dashboards-operations-india-examples",
+    ],
     relatedCaseStudies: ["srfitout"],
   },
   {
@@ -258,7 +276,10 @@ export const services: Service[] = [
       { question: "Do you handle hosting and domains?", answer: "Yes. We deploy and configure hosting, domains and SSL, or work with your existing setup." },
       { question: "How long does a website take?", answer: "Landing pages can be live in days. Most marketing sites and smaller web apps are delivered within 2–4 weeks, with a clear timeline agreed before we start." },
     ],
-    relatedBlogs: ["event-registration-system"],
+    relatedBlogs: [
+      "event-registration-system",
+      "how-to-choose-custom-software-development-company-india",
+    ],
     relatedCaseStudies: ["srfitout"],
   },
   {
@@ -302,7 +323,10 @@ export const services: Service[] = [
       { question: "Can the app share a backend with our website?", answer: "Yes. The app can use the same backend and data as your web platform, so everything stays in sync." },
       { question: "Can you maintain the app after launch?", answer: "Yes — OS updates, bug fixes and new features on an optional support plan." },
     ],
-    relatedBlogs: ["mobile-app-development-cost-startups-india"],
+    relatedBlogs: [
+      "mobile-app-development-cost-india-2027",
+      "how-to-hire-app-developers-india-founders-guide",
+    ],
     relatedCaseStudies: ["furrcircle-the-all-in-one-app-for-pet-parents", "apexispro"],
   },
 ];

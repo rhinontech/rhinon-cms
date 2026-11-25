@@ -24,6 +24,36 @@ export async function generateStaticParams() {
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinonlabs.com";
 
+/**
+ * Editorial SEO re-angling for cannibalized posts (Audit H-02):
+ * Differentiates competing blog posts and prevents them from cannibalizing service pages.
+ */
+const BLOG_SEO_OVERRIDES: Record<string, { title?: string; metaTitle?: string; serviceLinkAnchor?: string }> = {
+  "ai-agent-development-company-guide": {
+    title: "How to Choose an AI Agent Development Company (Questions, Costs & Red Flags)",
+    metaTitle: "How to Choose an AI Agent Development Company: Questions, Costs & Red Flags",
+    serviceLinkAnchor: "ai agent development company",
+  },
+  "custom-internal-dashboard-development-india": {
+    title: "Internal Dashboard Cost in India (₹ Ranges by Scope & Architecture)",
+    metaTitle: "Internal Dashboard Cost in India: ₹ Ranges by Scope & Complexity",
+    serviceLinkAnchor: "custom dashboard development india",
+  },
+  "how-long-does-it-take-to-build-an-mvp-india-guide": {
+    // Drop "Costs" from timeline post to stop cannibalizing mvp-development-cost-india-2027-guide
+    title: "How Long Does It Take to Build an MVP? (Timelines & Milestones Guide)",
+    metaTitle: "How Long to Build an MVP in India? (Timelines & Development Stages)",
+  },
+  "automate-employee-onboarding-small-company": {
+    title: "How to Automate Employee Onboarding (Workflows for Small Teams)",
+    metaTitle: "Automate Employee Onboarding: Workflows & Checklist for Small Companies",
+  },
+  "automating-onboarding": {
+    title: "A Founder’s Guide to Automating Client Onboarding, Invoicing & Reporting",
+    metaTitle: "Automating Client Onboarding, Invoicing & Reporting | Founder's Guide",
+  },
+};
+
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
@@ -34,13 +64,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!blog) return { title: "Blog Not Found" };
 
-  const ogTitle = blog.metaTitle || blog.title;
+  const override = BLOG_SEO_OVERRIDES[blog.slug];
+  const effectiveMetaTitle = override?.metaTitle || blog.metaTitle;
+  const effectiveTitle = override?.title || blog.title;
+  const ogTitle = effectiveMetaTitle || effectiveTitle;
   const ogDescription = blog.metaDescription || blog.excerpt;
   const ogImage = blog.coverImage || `${SITE_URL}/og-image.jpg`;
 
   return {
     // metaTitle is used verbatim (absolute); otherwise the root "%s | Rhinon Labs" template applies.
-    title: blog.metaTitle ? { absolute: blog.metaTitle } : blog.title,
+    title: effectiveMetaTitle ? { absolute: effectiveMetaTitle } : effectiveTitle,
     description: ogDescription,
     alternates: { canonical: `${SITE_URL}/blogs/${blog.slug}` },
     openGraph: {
@@ -53,7 +86,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       images: [
         {
           url: ogImage,
-          alt: blog.title,
+          alt: effectiveTitle,
         },
       ],
     },
@@ -121,7 +154,8 @@ export default async function BlogDetailsPage({ params }: PageProps) {
   }
 
   // Clean stray whitespace before punctuation (e.g. "Admin Panel ?" -> "Admin Panel?")
-  const displayTitle = blog.title.replace(/\s+\?$/, "?");
+  const override = BLOG_SEO_OVERRIDES[blog.slug];
+  const displayTitle = (override?.title || blog.title).replace(/\s+\?$/, "?");
 
   // Fetch all blogs to calculate related posts using topic + tag + category affinity
   const allBlogs = await getBlogs().catch(() => []);
@@ -361,6 +395,52 @@ export default async function BlogDetailsPage({ params }: PageProps) {
               </div>
             )}
 
+            {/* Contextual cross-links for competing posts (Audit H-02) */}
+            {blog.slug === "how-long-does-it-take-to-build-an-mvp-india-guide" && (
+              <div className="my-8 rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-white/80">
+                <span className="font-semibold text-white">Looking for budgeting and cost breakdown?</span> Read our companion guide:{" "}
+                <Link href="/blogs/mvp-development-cost-india-2027-guide" className="font-medium text-white underline hover:text-white/80 transition-colors">
+                  MVP Development Cost in India (2027): A Founder's Guide →
+                </Link>
+              </div>
+            )}
+
+            {blog.slug === "mvp-development-cost-india-2027-guide" && (
+              <div className="my-8 rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-white/80">
+                <span className="font-semibold text-white">Need realistic development stages and timeline expectations?</span> Check out:{" "}
+                <Link href="/blogs/how-long-does-it-take-to-build-an-mvp-india-guide" className="font-medium text-white underline hover:text-white/80 transition-colors">
+                  How Long Does It Take to Build an MVP? (Timelines & Milestones Guide) →
+                </Link>
+              </div>
+            )}
+
+            {blog.slug === "automate-employee-onboarding-small-company" && (
+              <div className="my-8 rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-white/80">
+                <span className="font-semibold text-white">Interactive tool:</span> Streamline your new hire setup with our free{" "}
+                <Link href="/tools/employee-onboarding-checklist" className="font-medium text-white underline hover:text-white/80 transition-colors">
+                  Employee Onboarding Checklist Generator →
+                </Link>
+              </div>
+            )}
+
+            {blog.slug === "ai-agent-development-company-guide" && (
+              <div className="my-8 rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-white/80">
+                <span className="font-semibold text-white">Ready to deploy tailored AI agents for your workflow?</span> Explore our full service offering:{" "}
+                <Link href="/services/ai-agents" className="font-medium text-white underline hover:text-white/80 transition-colors">
+                  ai agent development company services →
+                </Link>
+              </div>
+            )}
+
+            {blog.slug === "custom-internal-dashboard-development-india" && (
+              <div className="my-8 rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-white/80">
+                <span className="font-semibold text-white">Need an end-to-end custom system built?</span> Check out our dedicated{" "}
+                <Link href="/services/internal-dashboards" className="font-medium text-white underline hover:text-white/80 transition-colors">
+                  custom dashboard development india services →
+                </Link>
+              </div>
+            )}
+
             {/* Tags */}
             {blog.tags?.length > 0 && (
               <div className="mt-16 flex flex-wrap gap-3">
@@ -379,22 +459,22 @@ export default async function BlogDetailsPage({ params }: PageProps) {
 
             {/* Contextual matching service banner */}
             {matchingService && (
-              <div className="mt-14 rounded-2xl border border-white/10 bg-linear-to-br from-white/[0.04] to-white/[0.01] p-6 sm:p-7 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
-                  <div className="space-y-1.5 max-w-xl">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#A3B8CC]">
-                      Matching Solution
-                    </span>
-                    <h3 className="text-lg sm:text-xl font-semibold text-white tracking-tight">
-                      {matchingService.headline} {matchingService.headlineAccent}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-white/60 leading-relaxed">
-                      {matchingService.intro}
-                    </p>
-                  </div>
+              <div className="mt-14 w-full rounded-2xl border border-white/10 bg-linear-to-br from-white/[0.04] to-white/[0.01] p-6 sm:p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)] flex flex-col gap-5">
+                <div className="space-y-2">
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-[#A3B8CC] block">
+                    Matching Solution
+                  </span>
+                  <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-white tracking-tight leading-snug">
+                    {matchingService.headline} {matchingService.headlineAccent}
+                  </h3>
+                  <p className="text-sm sm:text-base text-white/60 leading-relaxed">
+                    {matchingService.intro}
+                  </p>
+                </div>
+                <div className="pt-2">
                   <Link
                     href={`/services/${matchingService.slug}`}
-                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-xs sm:text-sm font-bold text-slate-950 transition-all hover:bg-white/90 hover:translate-y-[-1px] group"
+                    className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-slate-950 transition-all hover:bg-white/90 hover:translate-y-[-1px] group"
                   >
                     <span>Explore {matchingService.name}</span>
                     <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
