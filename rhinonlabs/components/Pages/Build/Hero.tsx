@@ -126,7 +126,7 @@ export function BuildHero() {
               ))}
             </div>
             <span className="text-white/60 text-sm text-center">
-              Trusted by 20+ startups and SMBs worldwide.
+              Trusted by startups and SMBs across India and worldwide.
             </span>
           </div>
         </motion.div>

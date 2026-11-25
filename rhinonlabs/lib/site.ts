@@ -37,7 +37,7 @@ export const COMPANY = {
     "Clients own their code, designs and infrastructure.",
     "Systems are built around a client's existing tools rather than replacing them.",
     "Optional monthly or quarterly support retainers are available after launch.",
-    "Trusted by 20+ startups and SMBs worldwide.",
+    "Trusted by startups and SMBs across India and worldwide.",
   ],
 } as const;
 
