@@ -9,7 +9,9 @@ export type ConversionEvent =
   | "signup_cta_click" // a "Get started free" button opened the sign-up form
   | "signup_lead_submitted" // the sign-up form saved a lead and is sending the visitor to sign up
   | "contact_submitted" // the /contact form succeeded
-  | "demo_booked"; // the /demo scheduler confirmed a slot or recorded a request
+  | "demo_booked" // the /demo scheduler confirmed a slot or recorded a request
+  | "tool_used" // a free tool (e.g. the AI email writer) produced a result
+  | "tool_signup"; // a visitor signed up from a free tool
 
 type Params = Record<string, string | number | boolean | undefined>;
 

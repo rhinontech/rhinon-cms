@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Aurora, Button, Eyebrow, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand } from "@/components/blocks";
@@ -42,6 +43,9 @@ export default function OutreachPage() {
               <Button href={links.signup}>Get started free</Button>
               <Button href={links.call} variant="glass">Book a demo</Button>
             </div>
+            <Link href="/tools/ai-email-writer" className="mt-5 inline-block text-[14px] text-white/65 underline decoration-white/25 underline-offset-4 transition hover:text-white">
+              Just need one draft? Try the free AI email writer
+            </Link>
           </Reveal>
         </div>
         <div className="relative mt-16 px-5"><Reveal delay={150}><ComposerHero /></Reveal></div>

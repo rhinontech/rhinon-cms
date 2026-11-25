@@ -135,7 +135,7 @@ Deferred:
   - **An approval-flag gap:** leads show `draftApproved` = 0 everywhere, so the site's "nothing is sent without your approval" should be checked against how Outreach actually sends.
 
 Still to build in phase 2:
-- the AI email writer (needs a rate-limited backend endpoint);
+- the AI email writer (public rate-limited endpoint and tool page implemented; pending beta deployment and verification);
 - the Teamwork comparison (facts not checked yet);
 - directory listings (your task).
 

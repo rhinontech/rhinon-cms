@@ -17,6 +17,7 @@ const COMPANY = [
 const RESOURCES = [
   { label: "Blog", href: "/blog" },
   { label: "Changelog", href: "/changelog" },
+  { label: "Free AI email writer", href: "/tools/ai-email-writer" },
   { label: "Rhinon Labs case study", href: "/customers/rhinon-labs" },
   { label: "Client onboarding checklist", href: "/templates/client-onboarding-checklist" },
   { label: "CRM software in India", href: "/in/crm-software" },

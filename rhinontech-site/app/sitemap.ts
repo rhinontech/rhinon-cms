@@ -28,6 +28,7 @@ const STATIC_PAGE_LASTMOD: Record<string, string> = {
   ...Object.fromEntries(COMPARISONS.map((c) => [`/compare/${c.slug}`, c.lastChecked])),
   ...Object.fromEntries(FEATURES.map((f) => [`/features/${f.slug}`, "2026-11-26"])),
   "/in/crm-software": "2026-11-26",
+  "/tools/ai-email-writer": "2026-11-26",
   "/templates/client-onboarding-checklist": "2026-11-26",
   "/customers/rhinon-labs": "2026-11-26",
   "/changelog": "2026-11-26",

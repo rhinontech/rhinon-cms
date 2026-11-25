@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 const INTERACTIONS = ["pointerdown", "keydown", "scroll", "touchstart"] as const;
 /** Upper bound on the wait for a visitor who reads without touching anything. */
 const IDLE_FALLBACK_MS = 6000;
+const TOOL_PATH = "/tools/ai-email-writer";
 
 /*
  * Starts the Rhinon chat widget in the browser, once — but only after the first interaction
@@ -12,7 +14,18 @@ const IDLE_FALLBACK_MS = 6000;
  * screen for bandwidth or the main thread.
  */
 export default function RhinonChatLoader() {
+  const pathname = usePathname();
+
   useEffect(() => {
+    if (pathname === TOOL_PATH) {
+      const chat = document.querySelector<HTMLElement>("chat-bot");
+      const wasHidden = chat?.hidden ?? false;
+      if (chat) chat.hidden = true;
+      return () => {
+        if (chat && !wasHidden) chat.hidden = false;
+      };
+    }
+
     let started = false;
     let timer: number | undefined;
 
@@ -37,7 +50,7 @@ export default function RhinonChatLoader() {
     }, IDLE_FALLBACK_MS);
 
     return cleanup;
-  }, []);
+  }, [pathname]);
 
   return null;
 }
