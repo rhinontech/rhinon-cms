@@ -68,16 +68,22 @@ export async function renderOgImage({
   );
 }
 
+/** Alt text for a product's share image, built from the same product data so it can't drift. */
+export function productOgAlt(slug: string): string {
+  const product = bySlug(slug);
+  return product ? `${product.name} — ${product.short} | Rhinon Tech` : "Rhinon Tech";
+}
+
 export function renderProductOgImage(slug: string) {
   const product = bySlug(slug);
   if (!product) {
     return renderOgImage({
-      title: "The workspace that runs your whole company.",
-      subtitle: "CRM · Outreach · Inbox · Projects · HR · Payroll · AI",
+      title: "Win clients. Deliver the work. Keep them coming back.",
+      subtitle: "The AI CRM for agencies and service businesses",
     });
   }
   return renderOgImage({
-    eyebrow: product.premium ? `${product.group} · Premium Add-on` : `${product.group} · Free for your team`,
+    eyebrow: product.premium ? `${product.group} · Paid add-on` : `${product.group} · Free for up to 5 people`,
     title: product.name,
     subtitle: product.short,
     tones: product.tone,

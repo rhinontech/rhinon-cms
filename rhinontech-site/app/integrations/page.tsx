@@ -46,7 +46,7 @@ export default function IntegrationsPage() {
           </Reveal>
         </div>
       </section>
-      <CtaBand title={<>Connect it all, <span className="text-aurora-soft">free.</span></>} sub="Set up your workspace in a few minutes and bring your whole team." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
+      <CtaBand title={<>Connect it all, <span className="text-aurora-soft">free.</span></>} sub="Set up your workspace in a few minutes and invite up to 5 people free." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
     </>
   );
 }

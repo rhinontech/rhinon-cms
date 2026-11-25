@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { BRAND_SLUG, PUBLIC_API, links } from "@/components/site";
+import { track, trackThen } from "@/lib/analytics";
 
 /*
  * "Get started free" that captures the visitor as a CRM lead before sending them to sign up.
@@ -68,7 +69,7 @@ export function GetStartedButton({
       });
       if (res.status === 429) throw new Error("Too many requests from this connection. Please try again in a little while.");
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || "We could not save that. Please try again.");
-      window.location.assign(links.signup);
+      trackThen("signup_lead_submitted", { placement }, () => window.location.assign(links.signup));
     } catch (err) {
       setError(err instanceof Error ? err.message : "We could not save that. Please try again.");
       setBusy(false);
@@ -77,7 +78,7 @@ export function GetStartedButton({
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className={`btn btn-${variant} group ${className}`}>
+      <button type="button" onClick={() => { setOpen(true); track("signup_cta_click", { placement }); }} className={`btn btn-${variant} group ${className}`}>
         {children}
       </button>
 
@@ -110,7 +111,7 @@ export function GetStartedButton({
               <div><label htmlFor="gs-phone" className={label}>WhatsApp or phone</label><input id="gs-phone" type="tel" maxLength={40} value={form.phone} onChange={set("phone")} className={field} autoComplete="tel" /></div>
               <input tabIndex={-1} autoComplete="off" aria-hidden value={form.hp} onChange={set("hp")} className="absolute -left-[9999px] h-0 w-0 opacity-0" />
               <button type="submit" disabled={busy} className="btn btn-ink w-full disabled:opacity-60">{busy ? "Taking you to sign up…" : "Continue to sign up"}</button>
-              <p className="text-center text-[12.5px] text-muted">Free forever. No credit card.</p>
+              <p className="text-center text-[12.5px] text-muted">Free for up to 5 people. No credit card.</p>
             </form>
           </div>
         </div>

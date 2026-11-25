@@ -35,6 +35,7 @@ import githubRoutes, { githubAccessRouter } from "./routes/github";
 import notificationRoutes from "./routes/notifications";
 import { githubWebhook } from "./routes/githubWebhook";
 import publicRoutes from "./routes/public";
+import publicToolsRoutes from "./routes/publicTools";
 import leadsRoutes from "./routes/leads";
 import leadVisitsRoutes from "./routes/leadVisits";
 import crmRoutes from "./routes/crm";
@@ -250,6 +251,14 @@ app.use("/webhooks", systemContext("webhooks"), express.text({ type: ["applicati
  */
 // Meeting links for guests: before the generic /public mounts, which would read "meet" as an org slug.
 app.use("/public/meet", rateLimit({ name: "meet", windowMs: 15 * 60_000, max: 60 }), meetRoutes);
+// Free AI tools on rhinontech.com (Gemini, no tenant). Before the generic /public mounts for the
+// same reason as /meet. Per-IP limits here; the service also caps all calls per day.
+app.use(
+  "/public/tools",
+  rateLimit({ name: "tools-hour", windowMs: 60 * 60_000, max: 10, message: "You've used the free tools a lot this hour. Please try again later." }),
+  rateLimit({ name: "tools-day", windowMs: 24 * 60 * 60_000, max: 3, message: "You've reached today's free limit. Sign up free to keep writing with Rhinon Outreach." }),
+  publicToolsRoutes,
+);
 app.use("/public", publicTenantContext(), publicRoutes);
 app.use("/public", publicTenantContext(), scheduleCallRoutes);
 app.use("/public/:orgSlug", publicTenantContext(), publicRoutes);

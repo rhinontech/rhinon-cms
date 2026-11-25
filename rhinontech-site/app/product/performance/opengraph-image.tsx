@@ -1,6 +1,6 @@
-import { renderProductOgImage } from "@/components/og";
+import { productOgAlt, renderProductOgImage } from "@/components/og";
 
-export const alt = "Performance — Review cycles, goals and feedback | Rhinon Tech";
+export const alt = productOgAlt("performance");
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

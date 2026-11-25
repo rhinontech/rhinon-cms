@@ -4,10 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { BRAND_SLUG, PUBLIC_API } from "@/components/site";
+import { track } from "@/lib/analytics";
 
 /* The same enquiry form as rhinonlabs.com/contact-us, posting to the same lead API. */
 
-const TOPICS = ["A product question", "Pricing", "The AI chatbot", "A custom integration", "Something else"];
+const TOPICS = ["A product question", "Pricing", "The AI Agent (website chatbot)", "A custom integration", "Something else"];
 const field = "w-full rounded-xl border border-line bg-white px-3.5 py-3 text-[14.5px] outline-none transition focus:border-violet focus:ring-4 focus:ring-violet/10";
 const label = "mb-1.5 block text-[13px] font-semibold text-ink-soft";
 
@@ -31,6 +32,7 @@ export function ContactForm() {
       });
       if (res.status === 429) throw new Error("Too many messages from this connection. Please try again in a little while.");
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || "We could not send that. Please try again.");
+      track("contact_submitted", { topic: form.topic });
       setSent(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "We could not send that. Please try again.");

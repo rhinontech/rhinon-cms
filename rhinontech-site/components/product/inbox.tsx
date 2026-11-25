@@ -10,13 +10,14 @@ const SLIDE = "all .65s cubic-bezier(.4,.1,.2,1)";
 
 /* ───────────── Hero: inbox zero, one conversation at a time ───────────── */
 
-const MAILS: [name: string, subject: string, priority: string, color: string][] = [
-  ["Yusuf Khan", "Re: Quick question on pricing", "High", "#ff5fb0"],
-  ["Meera Rao", "Invoice for September", "Normal", "#2f9bff"],
-  ["Dev Patel", "Can we move our call?", "Normal", "#2f9bff"],
-  ["Sara Lin", "Please resend the contract", "Normal", "#2f9bff"],
-  ["Anil Shah", "We are not receiving your emails", "High", "#ff5fb0"],
-  ["Ravi Menon", "Thanks, all sorted", "Low", "#8a93b2"],
+// The pill shows which team address a mail came in on (the live Inbox has no thread priority).
+const MAILS: [name: string, subject: string, address: string, color: string][] = [
+  ["Yusuf Khan", "Re: Quick question on pricing", "sales@", "#ff5fb0"],
+  ["Meera Rao", "Invoice for September", "billing@", "#2f9bff"],
+  ["Dev Patel", "Can we move our call?", "hello@", "#2f9bff"],
+  ["Sara Lin", "Please resend the contract", "sales@", "#ff5fb0"],
+  ["Anil Shah", "We are not receiving your emails", "support@", "#8a93b2"],
+  ["Ravi Menon", "Thanks, all sorted", "support@", "#8a93b2"],
 ];
 const ROW = 64;
 const ZERO_TIMING: readonly number[] = [1500, 1200, 1200, 1200, 1200, 1200, 3600];
@@ -33,7 +34,7 @@ function Zero({ live }: { live: boolean }) {
       <div>
         <div className="mb-3 flex items-center justify-between">
           <p className="font-display text-[18px] font-semibold">Inbox</p>
-          <Pill color="#2f9bff">Shared with your team</Pill>
+          <Pill color="#2f9bff">Team addresses</Pill>
         </div>
         <div className="relative" style={{ height: ROW * 6 }}>
           {MAILS.map(([name, subject, prio, color], i) => {
@@ -49,7 +50,7 @@ function Zero({ live }: { live: boolean }) {
               </div>
             );
           })}
-          {r === 6 && <div className="pop-in absolute inset-0 flex flex-col items-center justify-center text-center"><p className="font-display text-[34px] font-semibold">Inbox zero.</p><p className="mt-1 text-[14px] text-muted">Every conversation answered and closed.</p></div>}
+          {r === 6 && <div className="pop-in absolute inset-0 flex flex-col items-center justify-center text-center"><p className="font-display text-[34px] font-semibold">Inbox zero.</p><p className="mt-1 text-[14px] text-muted">Every thread answered.</p></div>}
         </div>
       </div>
       <div className="relative flex flex-col items-center justify-center rounded-2xl bg-[#f4f9ff] p-4">
