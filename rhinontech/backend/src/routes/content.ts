@@ -468,6 +468,11 @@ router.post("/case-studies", authorize("content:write"), async (req: AuthRequest
       slug,
       createdById: req.user!.userId,
     });
+
+    // Audit H-09: Extend IndexNow ping to case-study updates so Bing/ChatGPT search crawls them instantly
+    const site = await resolveSite({ ...(req.query as any), ...b });
+    void pingIndexNow(site?.siteUrl, [`/case-studies/${item.slug}`, "/case-studies"]);
+
     res.status(201).json(item);
   } catch (error: any) {
     res.status(400).json({ message: error.message });
@@ -489,7 +494,15 @@ router.put("/case-studies/:id", authorize("content:write"), async (req: AuthRequ
     } else {
       delete b.slug;
     }
+    const oldSlug = item.slug;
     await item.update(b);
+
+    // Audit H-09: Extend IndexNow ping on case study update
+    const site = await resolveSite({ ...(req.query as any), ...b });
+    const paths = [`/case-studies/${item.slug}`, "/case-studies"];
+    if (b.slug && b.slug !== oldSlug) paths.push(`/case-studies/${oldSlug}`);
+    void pingIndexNow(site?.siteUrl, paths);
+
     res.json(item);
   } catch (error: any) {
     res.status(400).json({ message: error.message });
