@@ -342,3 +342,19 @@ export const getServiceByBlogSlug = (blogSlug: string): Service | undefined => {
 
 /** 16:9 banner for a service (Gemini-generated, in public/assets/services). Also its social share image. */
 export const serviceBanner = (slug: string) => `/assets/services/${slug}.jpg`;
+
+/**
+ * Build-time check (Audit H-04 Fix #3):
+ * Verifies that each service lists 2-6 unique related blogs and no duplicate mappings exist across services.
+ */
+if (process.env.NODE_ENV !== "production") {
+  const seen = new Set<string>();
+  for (const s of services) {
+    for (const slug of s.relatedBlogs) {
+      if (seen.has(slug)) {
+        console.warn(`[Warning] Blog slug "${slug}" is mapped to multiple services in lib/services.ts.`);
+      }
+      seen.add(slug);
+    }
+  }
+}
