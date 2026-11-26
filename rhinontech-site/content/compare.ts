@@ -382,9 +382,9 @@ export const COMPARISONS: Comparison[] = [
       hr: { mark: "partial", note: "Freshteam is a separate HR product" },
       attendance: { mark: "partial", note: "Available in Freshteam, a separate product" },
       billing: { mark: "unlisted" },
-      free: { mark: "yes", note: "Free plan for up to 3 users (Growth tier)" },
+      free: { mark: "no", note: "14-day trial; no free plan listed" },
     },
-    pricing: "Freshsales has a free plan for up to 3 users; Growth is $9 per user per month billed annually when we checked. Rhinon Tech is free for up to 5 people; Starter is priced with you.",
+    pricing: "Freshsales lists a 14-day trial and no free plan; Growth was $9 per user per month, billed annually, when we checked on 27 November 2026. Rhinon Tech is free for up to 5 people; Starter is priced with you.",
     moving: MOVING_CSV,
     faq: [
       { q: "Is Rhinon Tech built in India like Freshsales?", a: "Yes. Rhinon Tech is built in India by Rhinon Labs and works for teams anywhere." },
@@ -393,9 +393,9 @@ export const COMPARISONS: Comparison[] = [
     ],
     sources: [
       { label: "Freshsales home page", url: "https://www.freshworks.com/crm/sales/" },
-      { label: "Freshsales pricing", url: "https://www.freshworks.com/crm/sales/pricing/" },
+      { label: "Freshsales pricing", url: "https://www.freshworks.com/crm/pricing/" },
     ],
-    lastChecked: "2026-11-26",
+    lastChecked: "2026-11-27",
   },
   {
     slug: "pipedrive-alternative",

@@ -159,7 +159,7 @@ export const COMPARE_DEPTH: Record<string, CompareDepth> = {
       { title: "Projects after the sale", body: "Freshsales is a sales CRM. Rhinon turns a won deal into a project with boards, a Gantt and a client portal." },
       { title: "An AI agent on your website", body: "The AI Agent answers from your own content and drops every lead into the pipeline." },
       { title: "Your team's tools included", body: "Chat, docs, attendance, leave and reviews come with the CRM instead of another Freshworks product." },
-      { title: "Free for 5, not 3", body: "Freshsales' free plan covered up to 3 users when we checked. Rhinon is free for up to 5 people." },
+      { title: "Free to start, not a trial", body: "Freshsales listed a 14-day trial and no free plan when we rechecked on 27 November 2026. Rhinon is free for up to 5 people, with no time limit." },
     ],
     fit: [
       { team: "An IT services firm that delivers projects", pick: "rhinon", why: "Pipeline, project and client portal in one app." },

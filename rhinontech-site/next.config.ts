@@ -28,6 +28,9 @@ const nextConfig: NextConfig = {
   // engines move any signals the old URLs had; keep these indefinitely.
   async redirects() {
     return [
+      // The backend's publish ping (IndexNow) and older links use /blogs; this site serves /blog.
+      { source: "/blogs", destination: "/blog", permanent: true },
+      { source: "/blogs/:slug*", destination: "/blog/:slug*", permanent: true },
       { source: "/product/chatbot/:path*", destination: "/product/ai-agent/:path*", permanent: true },
       { source: "/product/work/:path*", destination: "/product/projects/:path*", permanent: true },
       { source: "/product/pages/:path*", destination: "/product/docs/:path*", permanent: true },

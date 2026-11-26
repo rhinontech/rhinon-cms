@@ -50,8 +50,10 @@ export async function getBlog(slug: string): Promise<Blog | null> {
   return getJSON<Blog>(`/blogs/${encodeURIComponent(slug)}?domain=${BRAND_SLUG}`);
 }
 
+/** Dates are shown in India time: the admin stores a picked publish date as midnight IST, which the
+ *  server's UTC clock would otherwise show as the day before. */
 export const formatDate = (iso: string) =>
-  new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date(iso));
+  new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata" }).format(new Date(iso));
 
 const TONES = ["#7c5cff", "#2f5bff", "#e0489f", "#08a97a", "#f2761a", "#0ea5b7"];
 /** A stable accent per category, so a topic always has the same colour. */

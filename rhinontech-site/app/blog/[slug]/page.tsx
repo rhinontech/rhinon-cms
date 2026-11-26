@@ -50,7 +50,10 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 
 /** Give inline images from the editor an alt when they have none, so no image ships without one. */
 const withImgAlts = (html: string, fallback: string) =>
-  html.replace(/<img\b(?![^>]*\balt=)([^>]*)>/gi, (_m, attrs: string) => `<img alt="${fallback.replace(/"/g, "&quot;")}"${attrs}>`);
+  html
+    .replace(/<img\b(?![^>]*\balt=)([^>]*)>/gi, (_m, attrs: string) => `<img alt="${fallback.replace(/"/g, "&quot;")}"${attrs}>`)
+    // Images inside the article load lazily and decode off the main thread; the cover above stays eager.
+    .replace(/<img\b(?![^>]*\bloading=)/gi, '<img loading="lazy" decoding="async"');
 
 function Block({ b, html, title }: { b: BlogBlock; html?: string; title: string }) {
   if (b.type === "paragraph") return <div dangerouslySetInnerHTML={{ __html: withImgAlts(html ?? b.html, title) }} />;
