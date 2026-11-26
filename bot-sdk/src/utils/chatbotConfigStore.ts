@@ -48,7 +48,7 @@ export const useConfigStore = create<ConfigState>()(
         secondaryColor: '#f3f6ff',
         chatbotName: 'Rhinon',
         navigationOptions: ['Home', 'Chats', 'Help'],
-        popupMessage: 'Hey, I am Rhinon AI Assistant, How can I help you?',
+        popupMessage: '', // none until the workspace sets one
         greetings: ['Hi there👋', 'How can we help?'],
         primaryLogo: LOGOS.primaryLight,
         secondaryLogo: LOGOS.primaryDark,

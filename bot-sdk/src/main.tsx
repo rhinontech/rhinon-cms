@@ -77,12 +77,29 @@ let manuallyInitialized = false;
 // Updated initialization function with container support
 function initRhinonChat(config: RhinonChatConfig): ChatBotElement {
   manuallyInitialized = true;
+
+  // One widget per page. Single-page sites often call this again on every route change; each
+  // call used to append another <chat-bot>, stacking widgets (and their pop-ups) on top of each
+  // other. A repeat call now returns the widget already on the page, re-configuring it only
+  // when it is asked to show a different bot.
+  const existing = document.querySelector('chat-bot') as ChatBotElement | null;
+  if (existing) {
+    if (existing.dataset.appId !== config.app_id) {
+      if (config.api_url) setApiBase(config.api_url);
+      setCurrentAppId(config.app_id);
+      existing.dataset.appId = config.app_id;
+      existing.setConfig(config);
+    }
+    return existing;
+  }
+
   loadFont();
   if (config.api_url) setApiBase(config.api_url);
   setCurrentAppId(config.app_id);
   setTestingMode(!!(config as any).admin && !!(config as any).adminTestingMode);
 
   const chatBotElement = document.createElement('chat-bot') as ChatBotElement;
+  chatBotElement.dataset.appId = config.app_id;
 
   // Append to specified container or body
   const targetContainer = config.container || document.body;
