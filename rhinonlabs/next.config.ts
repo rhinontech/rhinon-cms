@@ -1,11 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Inline the CSS into the HTML instead of separate render-blocking files —
-  // removes a round trip before first paint (Lighthouse "render-blocking").
-  experimental: {
-    inlineCss: true,
-  },
   // Blog / case-study covers live in the public S3 bucket (content/ prefix).
   images: {
     formats: ["image/avif", "image/webp"],

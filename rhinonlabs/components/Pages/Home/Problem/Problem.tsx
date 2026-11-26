@@ -122,10 +122,14 @@ export function Problem() {
                                 // By using modulo, both Item 5 and Item 11 share the exact same 'isCenter' boolean.
                                 // This guarantees that when the list teleports from 5 to 11, the opacity values do not change or flash.
                                 const isCenter = (i % WORD_COUNT) === (activeIndex % WORD_COUNT);
+                                // The items are repeated 3 times (15 items total) for infinite teleporting.
+                                // Only the first set (0 to WORD_COUNT - 1) should be read by screen readers / crawlers.
+                                const isClone = i >= WORD_COUNT;
 
                                 return (
                                     <div
                                         key={i}
+                                        aria-hidden={isClone ? 'true' : undefined}
                                         className={`absolute left-0 w-full text-center md:text-left text-lg sm:text-2xl md:text-5xl lg:text-5xl font-medium tracking-tighter whitespace-normal md:whitespace-nowrap flex flex-col justify-center px-4 md:px-0 ${isCenter ? 'z-10' : 'z-0'}`}
                                         style={{ top: `${i * itemHeight}px`, height: `${itemHeight}px` }}
                                     >
