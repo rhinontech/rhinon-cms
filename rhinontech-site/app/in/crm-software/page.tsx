@@ -4,6 +4,9 @@ import { links, pageMeta } from "@/components/site";
 import { Aurora, Button, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand, Faq } from "@/components/blocks";
+import { FitBlock, LifecycleFlow, ProofStrip } from "@/components/depth";
+import { Spot } from "@/components/Spot";
+import { comparisonBySlug } from "@/content/compare";
 import { GetStartedButton } from "@/components/forms/GetStartedButton";
 import { JsonLd, breadcrumbNode, faqNode, graphJsonLd } from "@/components/schema";
 
@@ -30,8 +33,15 @@ const FAQ = [
   { q: "Is there a free CRM for small businesses in India?", a: "Yes. Rhinon Tech is free for up to 5 people, with 50 emails and 20 AI drafts a day and no time limit. Larger teams move to the Starter plan." },
   { q: "Does Rhinon Tech work with WhatsApp?", a: "Not yet. Today it covers email, website chat and calls." },
   { q: "Can I record deal values in rupees?", a: "Yes. Each deal has a value and a currency, including ₹." },
+  { q: "Does Rhinon Tech create GST invoices?", a: "No. There is no invoicing module yet, so keep your accounting tool for GST invoices." },
+  { q: "Does it run Indian payroll?", a: "It runs salary, payslips and reimbursements with PF, professional tax and a TDS amount you set. It does not calculate ESI or file returns, so export the run for your CA." },
+  { q: "Can I pay in rupees?", a: "The Free plan costs nothing. For Starter, we agree the price with you before anything is set up." },
   { q: "How is it different from Zoho CRM?", a: "Zoho sells CRM, Projects and Desk as separate apps. Rhinon keeps the lead, the deal and the project as one record, and adds an AI agent for your website. See the full Zoho comparison." },
 ];
+
+/** The tools Indian service businesses most often shortlist, from the dated comparison data. */
+const SHORTLIST = ["zoho-alternative", "freshsales-alternative", "bitrix24-alternative", "hubspot-alternative"];
+const MARK = { yes: "Yes", partial: "Partly", no: "No", unlisted: "Not listed" } as const;
 
 export default function IndiaCrmPage() {
   return (
@@ -84,6 +94,36 @@ export default function IndiaCrmPage() {
           ))}
         </div>
       </section>
+
+      <section className="border-t border-line bg-soft/60 py-20 sm:py-24">
+        <div className="mx-auto max-w-[1100px] px-5">
+          <Reveal><SectionHead eyebrow="Shortlist" title="Rhinon Tech and the CRMs Indian teams compare it with." sub="Facts about each tool come from its own pages on the date we checked. Open a comparison for the details." /></Reveal>
+          <Spot className="mt-12 overflow-x-auto !rounded-3xl">
+            <table className="w-full min-w-[720px] text-left text-[14.5px]">
+              <caption className="sr-only">Rhinon Tech compared with CRMs used in India</caption>
+              <thead className="bg-soft text-[12px] font-semibold uppercase tracking-wider text-muted">
+                <tr><th scope="col" className="px-5 py-3">Tool</th><th scope="col" className="px-5 py-3">Free plan</th><th scope="col" className="px-5 py-3">Projects</th><th scope="col" className="px-5 py-3">AI chat on your site</th><th scope="col" className="px-5 py-3">Pick it if</th></tr>
+              </thead>
+              <tbody>
+                <tr className="border-t border-line align-top bg-[#f6f8ff]"><th scope="row" className="px-5 py-4 font-semibold text-brand">Rhinon Tech</th><td className="px-5 py-4">Yes, up to 5 people</td><td className="px-5 py-4">Yes</td><td className="px-5 py-4">Yes (Starter)</td><td className="px-5 py-4 text-ink-soft">You win clients and deliver projects for them</td></tr>
+                {SHORTLIST.map((slug) => comparisonBySlug(slug)).filter(Boolean).map((c) => (
+                  <tr key={c!.slug} className="border-t border-line align-top">
+                    <th scope="row" className="px-5 py-4 font-semibold"><Link href={`/compare/${c!.slug}`} className="underline-offset-4 hover:underline">{c!.competitor}</Link></th>
+                    <td className="px-5 py-4">{MARK[c!.them.free?.mark ?? "unlisted"]}</td>
+                    <td className="px-5 py-4">{MARK[c!.them.projects?.mark ?? "unlisted"]}</td>
+                    <td className="px-5 py-4">{MARK[c!.them.agent?.mark ?? "unlisted"]}</td>
+                    <td className="px-5 py-4 text-ink-soft">{c!.chooseThem[0]}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Spot>
+        </div>
+      </section>
+
+      <LifecycleFlow />
+      <FitBlock good={["You run an agency, consultancy or IT services firm in India", "You want to start free and record deals in rupees", "You want AI to answer website visitors and draft follow-ups", "You want projects, chat and HR next to the CRM"]} />
+      <ProofStrip />
 
       <section className="border-t border-line py-20 sm:py-24">
         <div className="mx-auto max-w-[1240px] px-5">

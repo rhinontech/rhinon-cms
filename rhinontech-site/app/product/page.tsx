@@ -4,7 +4,17 @@ import { links, pageMeta } from "@/components/site";
 import { Aurora, Button, IconTile, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { Spot } from "@/components/Spot";
-import { CtaBand } from "@/components/blocks";
+import { CtaBand, Faq } from "@/components/blocks";
+import { FitBlock, LifecycleFlow, ProofStrip } from "@/components/depth";
+import { AppWindow, ProductMock } from "@/components/ProductMocks";
+import { JsonLd, faqNode, graphJsonLd } from "@/components/schema";
+
+const FAQ = [
+  { q: "Do I need every product?", a: "No. Use one product or all of them. They share one login, and each client has one record across them." },
+  { q: "Which products are free?", a: "Every product except the AI Agent is free for up to 5 people, with 50 emails and 20 AI drafts a day and no time limit." },
+  { q: "How do the products connect?", a: "The AI Agent saves visitors to the CRM, Outreach follows up from it, a won deal becomes a project with a client portal, and the team chats, writes docs and takes leave in the same workspace." },
+  { q: "Can I move my data out?", a: "Yes. Export your leads as a spreadsheet, export your data or delete your workspace at any time." },
+];
 
 export const metadata = pageMeta({
   title: "Products",
@@ -26,6 +36,7 @@ export default function ProductsPage() {
               <Button href={links.call} variant="ghost">Book a demo</Button>
             </div>
           </Reveal>
+          <Reveal delay={120} className="mt-14 block"><AppWindow url="rhinontech.in/crm"><ProductMock k="crm" /></AppWindow></Reveal>
         </div>
       </section>
 
@@ -57,7 +68,17 @@ export default function ProductsPage() {
         ))}
       </div>
 
+      <LifecycleFlow />
+      <FitBlock good={["You sell services and deliver projects for clients", "You want the CRM, projects and team tools in one login", "You want AI drafts and answers, with a person approving", "You are 5 to 50 people and want to start free"]} />
+      <ProofStrip soft count={6} />
+      <section className="border-t border-line py-20 sm:py-24">
+        <div className="mx-auto max-w-[1240px] px-5">
+          <SectionHead eyebrow="FAQ" title="Product questions." />
+          <div className="mt-12"><Faq items={FAQ} /></div>
+        </div>
+      </section>
       <CtaBand title={<>All of it, <span className="text-aurora-soft">free for up to 5 people.</span></>} sub="Only the AI Agent is a paid add-on." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See pricing", href: "/pricing" }} />
+      <JsonLd data={graphJsonLd([faqNode(FAQ)])} />
     </>
   );
 }
