@@ -9,7 +9,7 @@ import { JsonLd, breadcrumbNode, graphJsonLd } from "@/components/schema";
 
 export const metadata = pageMeta({
   title: "Compare Rhinon Tech",
-  description: "Honest comparisons of Rhinon Tech with Zoho One, HubSpot, Odoo, ClickUp, monday.com, HoneyBook and Chatbase, including when each one is the better choice.",
+  description: "Honest comparisons of Rhinon Tech with Zoho, HubSpot, Odoo, ClickUp, monday.com, Notion, Slack, Pipedrive, Freshsales and more, including when each one is the better choice.",
   path: "/compare",
 });
 

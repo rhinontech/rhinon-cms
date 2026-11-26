@@ -8,7 +8,7 @@ import { useCurrentSite, useModuleBase } from "@/lib/sites";
 function ChatbotDomainNav({ children }: { children: React.ReactNode }) {
   const base = useModuleBase();
   const { site, sites } = useCurrentSite();
-  const title = sites.length > 1 ? site?.name ?? "AI Chatbot" : "AI Chatbot";
+  const title = sites.length > 1 ? site?.name ?? "AI Agent" : "AI Agent";
 
   const items = [
     { label: "Overview", href: base, icon: <TbLayoutDashboard size={18} />, exact: true },

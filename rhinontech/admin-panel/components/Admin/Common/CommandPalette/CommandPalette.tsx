@@ -45,7 +45,7 @@ const RECORD_GROUPS: Array<{ type: RecordType; heading: string; icon: IconType }
   { type: "project", heading: "Projects", icon: TbBriefcase },
   { type: "task", heading: "Tasks", icon: TbCheckbox },
   { type: "person", heading: "People", icon: TbUsers },
-  { type: "page", heading: "Pages", icon: TbBook },
+  { type: "page", heading: "Docs", icon: TbBook },
 ];
 
 /**
