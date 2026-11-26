@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import EmployeeOnboardingChecklist from "@/components/Tools/EmployeeOnboardingChecklist";
+import { OnboardingGuideContent } from "@/components/Tools/OnboardingGuideContent";
 import { SCHEMA_IDS } from "@/lib/site";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinonlabs.com";
@@ -54,6 +55,7 @@ export default function EmployeeOnboardingChecklistPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(toolSchema) }} />
       <EmployeeOnboardingChecklist />
+      <OnboardingGuideContent />
     </>
   );
 }

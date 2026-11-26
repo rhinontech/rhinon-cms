@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import CrmRoiCalculator from "@/components/Tools/CrmRoiCalculator";
+import { CrmGuideContent } from "@/components/Tools/CrmGuideContent";
 import { SCHEMA_IDS } from "@/lib/site";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinonlabs.com";
@@ -54,6 +55,7 @@ export default function CrmRoiCalculatorPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(toolSchema) }} />
       <CrmRoiCalculator />
+      <CrmGuideContent />
     </>
   );
 }
