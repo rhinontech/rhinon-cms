@@ -7,7 +7,7 @@ import { SpotlightCard } from "@/components/ui/spotlight-card";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinonlabs.com";
 
 export const metadata: Metadata = {
-  title: "Free Tools for Founders & Small Teams — Rhinon Labs",
+  title: "Free Tools for Founders & Small Teams",
   description:
     "Free calculators and generators to help you automate onboarding, measure CRM ROI, and scale your operations without adding headcount.",
   alternates: { canonical: `${SITE_URL}/tools` },

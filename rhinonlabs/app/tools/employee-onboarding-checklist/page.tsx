@@ -5,7 +5,7 @@ import { SCHEMA_IDS } from "@/lib/site";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinonlabs.com";
 
 export const metadata: Metadata = {
-  title: "Free Employee Onboarding Checklist Generator — Rhinon Labs",
+  title: "Free Employee Onboarding Checklist Generator",
   description:
     "Generate a free, phase-by-phase employee onboarding checklist for your small company. Enter your company name and download a printable checklist in seconds.",
   alternates: { canonical: `${SITE_URL}/tools/employee-onboarding-checklist` },

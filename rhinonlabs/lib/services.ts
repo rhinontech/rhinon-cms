@@ -189,7 +189,7 @@ export const services: Service[] = [
     slug: "internal-dashboards",
     lastModified: "2026-11-19",
     name: "Internal Dashboards & Tools",
-    metaTitle: "Custom Dashboard Development Services in India — Rhinon Labs",
+    metaTitle: "Custom Dashboard Development Services in India",
     metaDescription:
       "Custom dashboard development services and internal tools in India. We consolidate your CRM, KPIs, and operations into one high-performance dashboard in 2–4 weeks.",
     eyebrow: "Internal Tools",
