@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, CalendarDays, Check, ChevronLeft, ChevronRight, Clock, Globe, Video } from "lucide-react";
 import { BRAND_SLUG, PUBLIC_API } from "@/components/site";
+import { track } from "@/lib/analytics";
 import { Logo } from "@/components/ui";
 
 /* The same booking flow as rhinonlabs.com/schedule-call, against the same API and calendar. */
@@ -11,7 +12,7 @@ import { Logo } from "@/components/ui";
 type Slot = { startTime: string; endTime: string; available: boolean };
 type Booked = { booked: boolean; meetLink: string | null };
 
-const INTERESTS = ["CRM", "Outreach", "Inbox", "AI Chatbot", "Work", "HR and payroll", "Something else"];
+const INTERESTS = ["CRM", "AI Agent", "Outreach", "Inbox", "Projects", "HR and payroll", "Something else"];
 const TEAM_SIZES = ["Just me", "2 to 10", "11 to 50", "51 to 100", "100+"];
 const CODES = ["+91", "+1", "+44", "+61", "+49", "+65"];
 const MAX_MONTHS_AHEAD = 3;
@@ -108,6 +109,7 @@ export function Scheduler() {
         return;
       }
       if (!res.ok) throw new Error(data.message || "Something went wrong. Please try again.");
+      track("demo_booked", { confirmed: Boolean(data.booked) });
       setDone({ booked: data.booked, meetLink: data.booking?.meetLink ?? null });
       setStep(3);
     } catch (err) {

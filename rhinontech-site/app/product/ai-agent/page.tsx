@@ -8,13 +8,13 @@ import { bySlug } from "@/content/products";
 import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
 import { HandoverSection, InstallSection, SiteHero, TicketSection, TrainSection, VoiceSection } from "@/components/product/chatbot";
 
-const p = bySlug("chatbot")!;
+const p = bySlug("ai-agent")!;
 const GRAD = "italic";
 
 export const metadata = pageMeta({
-  title: "AI Website Chatbot Trained on Your Content",
-  description: "AI website chatbot software trained on your site and docs. Answer visitors day and night, capture CRM leads and hand over live.",
-  path: "/product/chatbot",
+  title: "AI Chatbot for Websites That Captures Leads",
+  description: "An AI agent for your website, trained on your pages and docs. It answers visitors, saves leads to your CRM and hands over to your team live.",
+  path: "/product/ai-agent",
   hasOgImage: true,
 });
 
@@ -23,7 +23,7 @@ const FAQ = [
   { q: "What does it answer from?", a: "Your website and the documents you upload. It answers from your own content, and says so when it does not know." },
   { q: "Can a person take over a conversation?", a: "Yes. Your team gets the live chat with its full history, and can call the visitor from the dashboard." },
   { q: "Where do the leads go?", a: "Details a visitor shares are saved straight to your CRM, so the follow-up starts with context." },
-  { q: "Is the chatbot free?", a: "It is the one paid product in Rhinon Tech. Everything else is free. Talk to us and we will give you a clear price." },
+  { q: "Is the AI Agent free?", a: "It is the paid part of Rhinon Tech, included in the Starter plan. Everything else is free for up to 5 people. Talk to us for a clear price." },
 ];
 
 export default function ChatbotPage() {
@@ -34,7 +34,7 @@ export default function ChatbotPage() {
         <Aurora tones={["#ff8a4c", "#ff5fb0", "#ffb547"]} />
         <div className="relative mx-auto grid max-w-[1240px] items-center gap-14 px-5 lg:grid-cols-[0.92fr_1.08fr]">
           <Reveal>
-            <Crumb slug="chatbot" />
+            <Crumb slug="ai-agent" />
             <div className="mt-6 flex items-center gap-3"><IconTile icon={p.icon} tone={p.tone} size={56} /><span className="rounded-full bg-pink/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-pink">Premium</span></div>
             <h1 className="font-display mt-6 text-balance text-[42px] font-semibold leading-[1.02] sm:text-[64px]">
               A chatbot that answers like <span className={GRAD}>your best salesperson.</span>
@@ -46,7 +46,7 @@ export default function ChatbotPage() {
               <Button href={links.call}>Talk to us</Button>
               <Button href={links.signup} variant="soft">Start with the free modules</Button>
             </div>
-            <p className="mt-5 text-[13.5px] text-muted">The AI chatbot is the one paid product. Everything else is free.</p>
+            <p className="mt-5 text-[13.5px] text-muted">The AI Agent is the paid add-on. Everything else is free for up to 5 people.</p>
           </Reveal>
           <Reveal delay={140}><SiteHero /></Reveal>
         </div>
@@ -121,7 +121,7 @@ export default function ChatbotPage() {
         { slug: "inbox", line: "Follow up by email from the same place." },
         { slug: "outreach", line: "Warm leads can join a campaign." },
       ]} />
-      <ProductFaq slug="chatbot" title="Chatbot questions, answered." items={FAQ} />
+      <ProductFaq slug="ai-agent" title="AI Agent questions, answered." items={FAQ} />
       <CtaBand tone={p.tone} title={<>Put an assistant on <span className="text-aurora-soft">your website.</span></>} sub="Tell us about your site and we will set up your chatbot with you." primary={{ label: "Book a call", href: links.call }} secondary={{ label: "See all products", href: "/product" }} />
     </div>
   );

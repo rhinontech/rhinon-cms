@@ -8,7 +8,7 @@ import { CtaBand } from "@/components/blocks";
 
 export const metadata = pageMeta({
   title: "Products",
-  description: "CRM, outreach, inbox, AI chatbot, projects, team chat, HR, payroll, attendance and performance in one workspace.",
+  description: "Win clients, deliver the work and run your team: CRM, AI Agent, outreach, inbox, projects, chat, docs, HR and payroll in one workspace.",
   path: "/product",
   hasOgImage: true,
 });
@@ -20,7 +20,7 @@ export default function ProductsPage() {
         <Aurora />
         <div className="relative mx-auto max-w-[1240px] px-5">
           <Reveal>
-            <SectionHead as="h1" eyebrow="Products" title={<>CRM, HR, payroll and projects, <span className="text-aurora">in one workspace.</span></>} sub="Use one product or all eleven. They share one workspace, one login and one memory." />
+            <SectionHead as="h1" eyebrow="Products" title={<>Win clients, deliver the work, <span className="text-aurora">run your team.</span></>} sub="The AI CRM for service businesses, with projects, a client portal, team chat and HR in the same workspace. Use one product or all of them." />
             <div className="mt-9 flex flex-wrap gap-3">
               <Button href={links.signup} arrow>Get started free</Button>
               <Button href={links.call} variant="ghost">Book a demo</Button>
@@ -57,7 +57,7 @@ export default function ProductsPage() {
         ))}
       </div>
 
-      <CtaBand title={<>All of it, <span className="text-aurora-soft">free for your team.</span></>} sub="Only the AI website chatbot is a paid product." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See pricing", href: "/pricing" }} />
+      <CtaBand title={<>All of it, <span className="text-aurora-soft">free for up to 5 people.</span></>} sub="Only the AI Agent is a paid add-on." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See pricing", href: "/pricing" }} />
     </>
   );
 }

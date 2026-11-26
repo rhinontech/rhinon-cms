@@ -73,6 +73,72 @@ Rhinon Tech should be **the AI CRM for service businesses**. That means agencies
 | 3 | The site says "free for your whole team" in 8 places, but Free is 5 people | `config/plans.ts`: 5 seats, 50 emails and 20 AI drafts a day | Rewrite (launch review G0.1) |
 | 4 | Sign-ups, demo bookings and contact leads aren't measured | GTM container `GTM-T8G5PP3T` loads GA4 (`G-M64NMV4Z5X`) but has 0 event tags and 0 conversion tags, and the site code pushes no events | Add GA4 key events and cross-domain tracking (section 7.6) |
 
+**Status (26 November): done in code, built and verified locally, not deployed.**
+
+| # | Fix | What changed | Still needed |
+|---|---|---|---|
+| 1 | Canonical host | The `SITE_URL` fallback is now `https://rhinontech.com`. The local build emits apex canonicals, `og:url`, sitemap URLs and the robots `Sitemap:` line | You: confirm `NEXT_PUBLIC_SITE_URL` isn't set to `www` in Vercel; resubmit the sitemap in Search Console after deploy |
+| 2 | Hero speed | `.reveal` is visible by default. `Reveal` hides only blocks that start below the fold. The chat widget loads on first interaction or after about 6 s idle | Nothing. Local throttled test: main content 1.06 s, equal to first paint (live, same test: 4.9 s) |
+| 3 | Free-plan claims | "Free for your whole team" and "No seats to count" replaced in about 50 places, including page metadata, FAQs, the schema offer, the sign-up modal and the Terms. Limits live in one constant (`content/plans.ts` → `FREE_PLAN`). Pricing now lists the limits and a "more than 5 people?" answer | You or legal: review the new Terms §4 wording. Phase 1: payroll "PF/PT/TDS" and inbox "assigned" copy |
+| 4 | Conversion events | `lib/analytics.ts` pushes `signup_cta_click`, `signup_lead_submitted` (waits for GTM before the redirect), `contact_submitted` and `demo_booked` to `dataLayer` | You, in GTM: add Custom Event triggers and GA4 event tags for these four, mark them as key events in GA4, and set up cross-domain linking to rhinontech.in |
+
+**Phase 1 status (26 November): built and verified locally, not yet committed.**
+
+Built:
+- **Category and copy:** "AI CRM for service businesses" across the home page, metadata, Open Graph images, footer and schema.
+- **Product groups:** Win clients, Deliver the work, Run your team, with one colour each.
+- **Renames:** AI Agent, Projects and Docs, with 301/308 redirects from `/product/chatbot`, `/product/work` and `/product/pages`.
+- **Buttons:** navy primary buttons.
+- **Navigation:** the top bar is Product, Rhinon AI, Pricing and Blog; Integrations and Security move into the Product menu and the footer.
+- **New home page:** client loop, AI, built for, included, Rhinon Labs proof, pricing, FAQ with schema.
+- **Pricing:** Free, Starter and Enterprise, plus a limits table driven by `content/plans.ts`.
+- **About:** a new `/about` page.
+- **Product pages:** titles and descriptions now target the §3.2 searches.
+- **Inbox page:** rewritten to match the live product. No assignment, priority or status, and no inbound-address promise.
+- **Payroll FAQ:** now says ESI isn't calculated and returns aren't filed.
+- **Share images:** product alt text now comes from the product data.
+
+Still open:
+- real product screenshots (blocked on app UX U1–U6);
+- the app's own renames (U3: Chatbot → AI Agent, Work → Projects, Pages → Docs);
+- Solutions and Compare in the navigation (phase 2).
+
+**Phase 1:** committed and pushed to beta as `4283636`.
+
+**Phase 2, slice 1 (26 November): built and verified locally, uncommitted.**
+
+Built:
+- **Comparison pages (7) plus a hub at `/compare`:** Zoho One, HubSpot, Odoo, ClickUp, monday.com, HoneyBook and Chatbase.
+  - Data lives in `content/compare.ts`, with a source list and a `lastChecked` date.
+  - Values the competitor's page didn't show are marked "Not listed", never "No".
+  - Each page has a "Choose them if" box.
+- **Solution pages (5) plus a hub at `/solutions`:** agencies, consultancies, IT & software services, professional services, startups. Data lives in `content/solutions.ts`.
+- **Navigation:** Solutions and Compare are in the top bar and the footer.
+- **Home page:** the "Built for" cards now link to the solution pages.
+- **Sitemap:** now 38 URLs. A comparison's last-modified date is its `lastChecked`.
+
+Deferred:
+- Teamwork comparison: its pages weren't read, so there are no verified facts yet.
+
+**Phase 2, slice 2 (26 November): built and verified locally, uncommitted.**
+- **Feature pages (4):** `/features/crm-with-project-management`, `/features/client-portal`, `/features/lead-management` and `/features/sales-pipeline`, from `content/features.ts`.
+- **India page:** `/in/crm-software`.
+- **Template:** `/templates/client-onboarding-checklist`, 24 steps.
+- **Changelog:** `/changelog` (October and November, live features only).
+- **Footer:** new Resources column.
+- **Sitemap:** now 46 URLs.
+- **`/customers/rhinon-labs`:** figures are aggregates read from the production database (read-only) on 26 November:
+  - 5,503 leads; 10,268 outreach emails to 5,496 leads; 9,261 AI drafts;
+  - 643 tasks across 9 projects; 127 project requests;
+  - 20,188 inbox emails; 16 website chats; 11 people.
+  - **Left out on purpose:** 0 deals and no deal → project conversions (stated on the page); the reply count of 32 (not published).
+  - **An approval-flag gap:** leads show `draftApproved` = 0 everywhere, so the site's "nothing is sent without your approval" should be checked against how Outreach actually sends.
+
+Still to build in phase 2:
+- the AI email writer (public rate-limited endpoint and tool page implemented; pending beta deployment and verification);
+- the Teamwork comparison (facts not checked yet);
+- directory listings (your task).
+
 ### Being straight about "best in everything, now"
 
 - **Ranking for all 11 modules at once won't work.** rhinontech.com has 53 referring domains; Zoho has 128,976 and HubSpot 398,775. Spreading that thin authority across hundreds of hard searches in two countries would win none of them. This plan puts it on searches the data says Rhinon can win.

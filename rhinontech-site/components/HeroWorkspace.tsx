@@ -7,7 +7,7 @@ import { bySlug } from "@/content/products";
 import { AppWindow, ProductMock } from "@/components/ProductMocks";
 
 const VIEWS = ["crm", "outreach", "chatbot", "work", "payroll"] as const;
-const SLUG: Record<(typeof VIEWS)[number], string> = { crm: "crm", outreach: "outreach", chatbot: "chatbot", work: "work", payroll: "payroll" };
+const SLUG: Record<(typeof VIEWS)[number], string> = { crm: "crm", outreach: "outreach", chatbot: "ai-agent", work: "projects", payroll: "payroll" };
 const DURATION = 6000;
 
 /**

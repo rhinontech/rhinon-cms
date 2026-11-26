@@ -10,8 +10,8 @@ const p = bySlug("performance")!;
 const G = "italic";
 
 export const metadata = pageMeta({
-  title: "Performance Reviews & Goals Software",
-  description: "Free performance management software for your whole team. Run quarterly review cycles, track employee goals and gather feedback.",
+  title: "Performance Management System",
+  description: "A performance management system for small teams: review cycles, goals and feedback in one place. Free for up to 5 people.",
   path: "/product/performance",
   hasOgImage: true,
 });
@@ -21,7 +21,7 @@ const FAQ = [
   { q: "How do goals work?", a: "Each goal belongs to a cycle and a person, so it is reviewed and not forgotten. Progress is tracked as the cycle runs." },
   { q: "Who writes the reviews?", a: "Reviewers submit feedback on their reviewees, and managers get a team view that shows who has finished." },
   { q: "Does it connect to the rest of the record?", a: "Yes. Reviews and goals sit on the person's record next to their employment details and payroll setup." },
-  { q: "Is Performance free?", a: "Yes. Everything in Rhinon Tech except the AI website chatbot is free for your whole team." },
+  { q: "Is Performance free?", a: "Yes. Everything in Rhinon Tech except the AI Agent is free for up to 5 people." },
 ];
 
 export default function PerformancePage() {
@@ -76,10 +76,10 @@ export default function PerformancePage() {
       <PairsWith dark items={[
         { slug: "hr", line: "Reviews sit on the employee record." },
         { slug: "payroll", line: "Bring appraisals into pay decisions." },
-        { slug: "work", line: "Review the work that was actually done." },
+        { slug: "projects", line: "Review the work that was actually done." },
       ]} />
       <ProductFaq slug="performance" dark title="Performance questions, answered." items={FAQ} />
-      <CtaBand tone={p.tone} title={<>Make reviews <span className="text-aurora-soft">worth doing.</span></>} sub="Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
+      <CtaBand tone={p.tone} title={<>Make reviews <span className="text-aurora-soft">worth doing.</span></>} sub="Set up your workspace in a few minutes and invite up to 5 people free. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
       <div className="h-24" />
     </div>
   );

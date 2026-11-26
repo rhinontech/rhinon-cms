@@ -4,16 +4,25 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowRight, ChevronDown, Menu, X } from "lucide-react";
-import { GROUPS, PRODUCTS, byGroup } from "@/content/products";
+import { GROUPS, byGroup } from "@/content/products";
 import { links } from "@/components/site";
 import { IconTile, Logo } from "@/components/ui";
 
+// Resources joins the bar once guides and tools exist (docs/RHINONTECH_WEBSITE_REVAMP.md §4.1).
 const NAV = [
+  { href: "/solutions", label: "Solutions" },
+  { href: "/ai", label: "Rhinon AI" },
+  { href: "/compare", label: "Compare" },
+  { href: "/pricing", label: "Pricing" },
+  { href: "/blog", label: "Blog" },
+];
+
+/** Under the product columns: how it fits together, plus the trust pages that left the top bar. */
+const PRODUCT_FOOTER = [
+  { href: "/product", label: "How it fits together" },
   { href: "/ai", label: "Rhinon AI" },
   { href: "/integrations", label: "Integrations" },
   { href: "/security", label: "Security" },
-  { href: "/pricing", label: "Pricing" },
-  { href: "/blog", label: "Blog" },
 ];
 
 export function Navbar() {
@@ -83,7 +92,7 @@ export function Navbar() {
             </button>
           </div>
           {NAV.map((n) => (
-            <Link key={n.href} href={n.href} className={`rounded-lg px-3.5 py-2 text-[15px] font-medium transition-colors hover:bg-soft ${pathname === n.href ? "text-violet" : "text-ink"}`}>
+            <Link key={n.href} href={n.href} className={`rounded-lg px-3.5 py-2 text-[15px] font-medium transition-colors hover:bg-soft ${pathname === n.href || pathname.startsWith(`${n.href}/`) ? "text-violet" : "text-ink"}`}>
               {n.label}
             </Link>
           ))}
@@ -143,6 +152,13 @@ export function Navbar() {
             </span>
             <span className="relative flex items-center gap-1.5 text-[14px] font-semibold">See how it works <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></span>
           </Link>
+          <div className="col-span-4 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-line px-5 pb-2 pt-4">
+            {PRODUCT_FOOTER.map((l) => (
+              <Link key={l.href + l.label} href={l.href} tabIndex={mega ? 0 : -1} className="group flex items-center gap-1 text-[13.5px] font-semibold text-ink-soft hover:text-ink">
+                {l.label} <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -151,19 +167,23 @@ export function Navbar() {
       {/* Mobile sheet. Outside the header: its backdrop blur would otherwise become the containing block for `fixed`. */}
       {mobile && (
         <div className="fixed inset-x-0 bottom-0 top-[72px] z-40 overflow-y-auto bg-white px-5 pb-10 pt-4 lg:hidden">
-          <p className="px-1 font-mono text-[11px] uppercase tracking-[0.16em] text-muted">Product</p>
-          <ul className="mt-2 grid grid-cols-1 gap-1 sm:grid-cols-2">
-            {PRODUCTS.map((p) => (
-              <li key={p.slug}>
-                <Link href={`/product/${p.slug}`} className="flex items-center gap-3 rounded-xl p-2.5 hover:bg-soft">
-                  <IconTile icon={p.icon} tone={p.tone} size={34} />
-                  <span className="text-[15px] font-semibold">{p.name}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          {GROUPS.map((g) => (
+            <div key={g.name} className="mb-4">
+              <p className="px-1 font-mono text-[11px] uppercase tracking-[0.16em] text-muted">{g.name}</p>
+              <ul className="mt-2 grid grid-cols-1 gap-1 sm:grid-cols-2">
+                {byGroup(g.name).map((p) => (
+                  <li key={p.slug}>
+                    <Link href={`/product/${p.slug}`} className="flex items-center gap-3 rounded-xl p-2.5 hover:bg-soft">
+                      <IconTile icon={p.icon} tone={p.tone} size={34} />
+                      <span className="text-[15px] font-semibold">{p.name}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
           <ul className="mt-5 border-t border-line pt-3">
-            {NAV.map((n) => (
+            {[...NAV, ...PRODUCT_FOOTER.filter((l) => l.href !== "/ai")].map((n) => (
               <li key={n.href}><Link href={n.href} className="block rounded-xl px-2.5 py-3 text-[17px] font-medium hover:bg-soft">{n.label}</Link></li>
             ))}
           </ul>
