@@ -24,36 +24,6 @@ export async function generateStaticParams() {
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinonlabs.com";
 
-/**
- * Editorial SEO re-angling for cannibalized posts (Audit H-02):
- * Differentiates competing blog posts and prevents them from cannibalizing service pages.
- */
-const BLOG_SEO_OVERRIDES: Record<string, { title?: string; metaTitle?: string; serviceLinkAnchor?: string }> = {
-  "ai-agent-development-company-guide": {
-    title: "How to Choose an AI Agent Development Company (Questions, Costs & Red Flags)",
-    metaTitle: "How to Choose an AI Agent Development Company: Questions, Costs & Red Flags",
-    serviceLinkAnchor: "ai agent development company",
-  },
-  "custom-internal-dashboard-development-india": {
-    title: "Internal Dashboard Cost in India (₹ Ranges by Scope & Architecture)",
-    metaTitle: "Internal Dashboard Cost in India: ₹ Ranges by Scope & Complexity",
-    serviceLinkAnchor: "custom dashboard development india",
-  },
-  "how-long-does-it-take-to-build-an-mvp-india-guide": {
-    // Drop "Costs" from timeline post to stop cannibalizing mvp-development-cost-india-2027-guide
-    title: "How Long Does It Take to Build an MVP? (Timelines & Milestones Guide)",
-    metaTitle: "How Long to Build an MVP in India? (Timelines & Development Stages)",
-  },
-  "automate-employee-onboarding-small-company": {
-    title: "How to Automate Employee Onboarding (Workflows for Small Teams)",
-    metaTitle: "Automate Employee Onboarding: Workflows & Checklist for Small Companies",
-  },
-  "automating-onboarding": {
-    title: "A Founder’s Guide to Automating Client Onboarding, Invoicing & Reporting",
-    metaTitle: "Automating Client Onboarding, Invoicing & Reporting | Founder's Guide",
-  },
-};
-
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
@@ -64,16 +34,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!blog) return { title: "Blog Not Found" };
 
-  const override = BLOG_SEO_OVERRIDES[blog.slug];
-  const effectiveMetaTitle = override?.metaTitle || blog.metaTitle;
-  const effectiveTitle = override?.title || blog.title;
-  const ogTitle = effectiveMetaTitle || effectiveTitle;
+  const effectiveTitle = blog.title.replace(/\s+\?$/, "?");
+  const ogTitle = blog.metaTitle || effectiveTitle;
   const ogDescription = blog.metaDescription || blog.excerpt;
   const ogImage = blog.coverImage || `${SITE_URL}/og-image.jpg`;
 
   return {
-    // metaTitle is used verbatim (absolute); otherwise the root "%s | Rhinon Labs" template applies.
-    title: effectiveMetaTitle ? { absolute: effectiveMetaTitle } : effectiveTitle,
+    title: blog.metaTitle ? { absolute: blog.metaTitle } : effectiveTitle,
     description: ogDescription,
     alternates: { canonical: `${SITE_URL}/blogs/${blog.slug}` },
     openGraph: {
@@ -99,50 +66,157 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-function getRelatedArticles(currentBlog: Blog, allBlogs: Blog[]): Blog[] {
+const STOP_WORDS = new Set([
+  "a", "an", "the", "and", "or", "in", "on", "at", "to", "for", "of", "with",
+  "by", "from", "up", "about", "into", "over", "after", "is", "are", "was",
+  "were", "be", "been", "being", "have", "has", "had", "do", "does", "did",
+  "but", "if", "then", "else", "when", "where", "why", "how", "all", "any",
+  "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor",
+  "not", "only", "own", "same", "so", "than", "too", "very", "can", "will",
+  "just", "should", "now", "our", "your", "their", "its", "this", "that", "these", "those"
+]);
+
+function extractKeywords(text: string): Set<string> {
+  const words = (text || "")
+    .toLowerCase()
+    .replace(/<[^>]*>/g, " ")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length > 2 && !STOP_WORDS.has(w));
+  return new Set(words);
+}
+
+function calculateScore(sourceKeywords: Set<string>, targetText: string): number {
+  if (!sourceKeywords.size || !targetText) return 0;
+  const targetWords = extractKeywords(targetText);
+  let score = 0;
+  for (const word of targetWords) {
+    if (sourceKeywords.has(word)) {
+      score += 1;
+    }
+  }
+  return score;
+}
+
+/**
+ * Robust NLP-based related articles algorithm (matches the recommendation engine in Uppercurve).
+ * Ranks all available posts by NLP keyword overlap, tags, category, and service affinity.
+ * Returns only the top 3 most relevant articles.
+ */
+function getRelatedArticles(currentBlog: Blog, allBlogs: Blog[], limit = 3): Blog[] {
+  if (!allBlogs || !allBlogs.length) return [];
+
   const currentService = getServiceByBlogSlug(currentBlog.slug);
   const currentCategory = (currentBlog.category || "").toLowerCase().trim();
   const currentTags = (currentBlog.tags || []).map((t) => t.toLowerCase().trim());
+  const currentText = [
+    currentBlog.title,
+    currentBlog.excerpt || "",
+    currentCategory,
+    ...currentTags,
+  ].join(" ");
 
-  return allBlogs
+  const sourceKeywords = extractKeywords(currentText);
+
+  const scored = allBlogs
     .filter((b) => b.slug !== currentBlog.slug)
     .map((candidate) => {
-      let score = 0;
       const candidateService = getServiceByBlogSlug(candidate.slug);
       const candidateCategory = (candidate.category || "").toLowerCase().trim();
       const candidateTags = (candidate.tags || []).map((t) => t.toLowerCase().trim());
+      const candidateText = [
+        candidate.title,
+        candidate.excerpt || "",
+        candidateCategory,
+        ...candidateTags,
+      ].join(" ");
 
-      // 1. Same target service (highest thematic alignment)
+      let score = calculateScore(sourceKeywords, candidateText);
+
+      // Boost 1: Same service pillar (highest thematic cluster alignment)
       if (currentService && candidateService && currentService.slug === candidateService.slug) {
-        score += 5;
+        score += 8;
       }
 
-      // 2. Tag matches
+      // Boost 2: Exact tag matches
       for (const curTag of currentTags) {
         if (!curTag || curTag.length < 3) continue;
         for (const canTag of candidateTags) {
-          if (!canTag || canTag.length < 3) continue;
           if (curTag === canTag) {
-            score += 3;
-          } else if (curTag.includes(canTag) || canTag.includes(curTag)) {
-            score += 1.5;
+            score += 4;
           }
         }
       }
 
-      // 3. Same category
+      // Boost 3: Same category
       if (currentCategory && candidateCategory && currentCategory === candidateCategory) {
-        score += 2;
+        score += 3;
       }
 
       return { blog: candidate, score };
-    })
-    .sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
-      return new Date(b.blog.publishedAt).getTime() - new Date(a.blog.publishedAt).getTime();
-    })
-    .slice(0, 3)
-    .map((item) => item.blog);
+    });
+
+  scored.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    return new Date(b.blog.publishedAt).getTime() - new Date(a.blog.publishedAt).getTime();
+  });
+
+  return scored.slice(0, limit).map((item) => item.blog);
+}
+
+/**
+ * Dynamic Content Recommendations:
+ * Derives top companion guide, contextual service, and relevant interactive tools.
+ */
+function getRelatedContextualContent(
+  currentBlog: Blog,
+  relatedArticles: Blog[],
+  service: ReturnType<typeof getServiceByBlogSlug>
+) {
+  // Companion article: #1 most relevant related article from the algorithm
+  const companionArticle = relatedArticles.length > 0 ? relatedArticles[0] : null;
+
+  // Dynamic interactive tools match using keyword overlap
+  const currentKeywords = extractKeywords(
+    [currentBlog.title, currentBlog.excerpt || "", ...(currentBlog.tags || [])].join(" ")
+  );
+
+  const AVAILABLE_TOOLS = [
+    {
+      title: "Interactive tool:",
+      prompt: "Streamline your new hire setup with our free",
+      linkText: "Employee Onboarding Checklist Generator →",
+      href: "/tools/employee-onboarding-checklist",
+      keywords: new Set(["onboarding", "hire", "employee", "hiring", "team", "hr", "staff", "onboard"]),
+    },
+    {
+      title: "Interactive tool:",
+      prompt: "Calculate how much revenue manual sales admin is costing your team with our free",
+      linkText: "CRM ROI Calculator →",
+      href: "/tools/crm-roi-calculator",
+      keywords: new Set(["crm", "sales", "revenue", "roi", "leads", "pipeline", "deals", "admin"]),
+    },
+  ];
+
+  let bestTool: (typeof AVAILABLE_TOOLS)[0] | null = null;
+  let maxToolScore = 0;
+
+  for (const tool of AVAILABLE_TOOLS) {
+    let matchCount = 0;
+    for (const kw of tool.keywords) {
+      if (currentKeywords.has(kw)) matchCount++;
+    }
+    if (matchCount > maxToolScore && matchCount >= 1) {
+      maxToolScore = matchCount;
+      bestTool = tool;
+    }
+  }
+
+  return {
+    companionArticle,
+    service,
+    relevantTool: bestTool,
+  };
 }
 
 export default async function BlogDetailsPage({ params }: PageProps) {
@@ -154,8 +228,7 @@ export default async function BlogDetailsPage({ params }: PageProps) {
   }
 
   // Clean stray whitespace before punctuation (e.g. "Admin Panel ?" -> "Admin Panel?")
-  const override = BLOG_SEO_OVERRIDES[blog.slug];
-  const displayTitle = (override?.title || blog.title).replace(/\s+\?$/, "?");
+  const displayTitle = blog.title.replace(/\s+\?$/, "?");
 
   // Fetch all blogs to calculate related posts using topic + tag + category affinity
   const allBlogs = await getBlogs().catch(() => []);
@@ -163,6 +236,9 @@ export default async function BlogDetailsPage({ params }: PageProps) {
 
   // Contextual matching service derived from lib/services.ts (Single Source of Truth)
   const matchingService = getServiceByBlogSlug(blog.slug);
+
+  // Dynamic contextual content (companion article, service link, relevant free tools)
+  const contextualContent = getRelatedContextualContent(blog, relatedArticles, matchingService);
 
   // Relevant case study for this topic cluster (Audit H-05: "Every post links to 1 case study")
   const allCaseStudies = await getCaseStudies().catch(() => []);
@@ -401,48 +477,42 @@ export default async function BlogDetailsPage({ params }: PageProps) {
               </div>
             )}
 
-            {/* Contextual cross-links for competing posts (Audit H-02) */}
-            {blog.slug === "how-long-does-it-take-to-build-an-mvp-india-guide" && (
+            {/* Dynamic Contextual Companion Playbook (Audit H-02 & H-05) */}
+            {contextualContent.companionArticle && (
               <div className="my-8 rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-white/80">
-                <span className="font-semibold text-white">Looking for budgeting and cost breakdown?</span> Read our companion guide:{" "}
-                <Link href="/blogs/mvp-development-cost-india-2027-guide" className="font-medium text-white underline hover:text-white/80 transition-colors">
-                  MVP Development Cost in India (2027): A Founder's Guide →
+                <span className="font-semibold text-white">Recommended Companion Guide:</span>{" "}
+                <Link
+                  href={`/blogs/${contextualContent.companionArticle.slug}`}
+                  className="font-medium text-white underline hover:text-white/80 transition-colors"
+                >
+                  {contextualContent.companionArticle.title} →
                 </Link>
               </div>
             )}
 
-            {blog.slug === "mvp-development-cost-india-2027-guide" && (
+            {/* Dynamic Relevant Interactive Tool */}
+            {contextualContent.relevantTool && (
               <div className="my-8 rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-white/80">
-                <span className="font-semibold text-white">Need realistic development stages and timeline expectations?</span> Check out:{" "}
-                <Link href="/blogs/how-long-does-it-take-to-build-an-mvp-india-guide" className="font-medium text-white underline hover:text-white/80 transition-colors">
-                  How Long Does It Take to Build an MVP? (Timelines & Milestones Guide) →
+                <span className="font-semibold text-white">{contextualContent.relevantTool.title}</span>{" "}
+                {contextualContent.relevantTool.prompt}{" "}
+                <Link
+                  href={contextualContent.relevantTool.href}
+                  className="font-medium text-white underline hover:text-white/80 transition-colors"
+                >
+                  {contextualContent.relevantTool.linkText}
                 </Link>
               </div>
             )}
 
-            {blog.slug === "automate-employee-onboarding-small-company" && (
+            {/* Dynamic Service Anchor Link */}
+            {contextualContent.service && (
               <div className="my-8 rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-white/80">
-                <span className="font-semibold text-white">Interactive tool:</span> Streamline your new hire setup with our free{" "}
-                <Link href="/tools/employee-onboarding-checklist" className="font-medium text-white underline hover:text-white/80 transition-colors">
-                  Employee Onboarding Checklist Generator →
-                </Link>
-              </div>
-            )}
-
-            {blog.slug === "ai-agent-development-company-guide" && (
-              <div className="my-8 rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-white/80">
-                <span className="font-semibold text-white">Ready to deploy tailored AI agents for your workflow?</span> Explore our full service offering:{" "}
-                <Link href="/services/ai-agents" className="font-medium text-white underline hover:text-white/80 transition-colors">
-                  ai agent development company services →
-                </Link>
-              </div>
-            )}
-
-            {blog.slug === "custom-internal-dashboard-development-india" && (
-              <div className="my-8 rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-white/80">
-                <span className="font-semibold text-white">Need an end-to-end custom system built?</span> Check out our dedicated{" "}
-                <Link href="/services/internal-dashboards" className="font-medium text-white underline hover:text-white/80 transition-colors">
-                  custom dashboard development india services →
+                <span className="font-semibold text-white">Looking for production delivery?</span> Explore our tailored{" "}
+                <Link
+                  href={`/services/${contextualContent.service.slug}`}
+                  className="font-medium text-white underline hover:text-white/80 transition-colors"
+                >
+                  {contextualContent.service.name.toLowerCase()} services →
                 </Link>
               </div>
             )}
