@@ -46,7 +46,7 @@ export const SOLUTIONS: Solution[] = [
       { stage: "Delivery", product: "projects", line: "Tasks, boards and a client portal keep the client informed." },
       { stage: "Brief and notes", product: "docs", line: "Briefs, processes and meeting notes sit next to the project." },
     ],
-    setup: ["Pipeline stages: Enquiry → Discovery call → Pitch sent → Negotiation → Won", "A project template per service, so every kick-off starts the same way", "A client portal for each active project, shared with the client's contacts"],
+    setup: ["Pipeline stages: Enquiry → Discovery call → Pitch sent → Negotiation → Won", "A standard set of kick-off tasks per service, written once in Docs and added to each new project", "A client portal for each active project, shared with the client's contacts"],
     compare: ["honeybook-alternative", "hubspot-alternative", "clickup-alternative"],
     faq: [
       { q: "Is Rhinon Tech a good CRM for a small agency?", a: "It is built for teams of 5 to 50 that win clients and then deliver projects for them. It is free for up to 5 people, so a small agency can start without a contract." },
@@ -75,7 +75,7 @@ export const SOLUTIONS: Solution[] = [
       { stage: "Knowledge", product: "docs", line: "Method notes and deliverables stay in the workspace." },
       { stage: "Client updates", product: "projects", line: "Clients follow progress in their portal." },
     ],
-    setup: ["Stages: Introduction → Scoping → Proposal → Agreed → Won", "An engagement template with your standard phases", "A Docs tree for methods, templates and past deliverables"],
+    setup: ["Stages: Introduction → Scoping → Proposal → Agreed → Won", "Your standard engagement phases, added as tasks on each new project", "A Docs tree for methods, templates and past deliverables"],
     compare: ["hubspot-alternative", "zoho-alternative", "monday-alternative"],
     faq: [
       { q: "Can several consultants share the same client history?", a: "Yes. Emails and activity sit on the lead's timeline, and roles decide who can see what." },
@@ -103,7 +103,7 @@ export const SOLUTIONS: Solution[] = [
       { stage: "Team", product: "chat", line: "Channels, threads and calls of up to 8 people." },
       { stage: "Specs", product: "docs", line: "Specs and runbooks live next to the project." },
     ],
-    setup: ["Stages: Lead → Scoping → Estimate → Signed", "A project template with sprint columns", "A portal per client project for read-only progress"],
+    setup: ["Stages: Lead → Scoping → Estimate → Signed", "Sprints on each client project, with board, list and Gantt views", "A portal per client project for read-only progress"],
     compare: ["clickup-alternative", "monday-alternative", "odoo-alternative"],
     faq: [
       { q: "Does Rhinon Tech support sprints?", a: "Yes. Projects include sprints alongside list, board, calendar and Gantt views." },
@@ -131,7 +131,7 @@ export const SOLUTIONS: Solution[] = [
       { stage: "Run the team", product: "hr", line: "Hiring, records and e-signed offer letters." },
       { stage: "Time off", product: "attendance", line: "Clock-in, leave requests and approvals." },
     ],
-    setup: ["One pipeline per service line", "Project templates for repeat work", "Roles so each person sees only what they need"],
+    setup: ["One pipeline per service line", "A Docs checklist for each repeat service, so every project starts the same way", "Roles so each person sees only what they need"],
     compare: ["zoho-alternative", "hubspot-alternative", "honeybook-alternative"],
     faq: [
       { q: "Is Rhinon Tech a PSA tool?", a: "It covers the client side of professional services: leads, deals, projects and client updates. Time-tracking and billing screens are not built yet." },

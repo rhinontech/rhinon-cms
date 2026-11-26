@@ -387,8 +387,8 @@ export const COMPARISONS: Comparison[] = [
     pricing: "Freshsales has a free plan for up to 3 users; Growth is $9 per user per month billed annually when we checked. Rhinon Tech is free for up to 5 people; Starter is priced with you.",
     moving: MOVING_CSV,
     faq: [
-      { q: "Is Rhinon Tech built in India like Freshsales?", a: "Yes. Rhinon Tech is built by Rhinon Tech, based in India. Both products store data on Indian servers." },
-      { q: "Does Rhinon Tech have AI features like Freshsales's Freddy AI?", a: "Yes, though differently. Rhinon uses AI to draft outreach emails you approve, answer website visitors and suggest next steps. Freshsales's Freddy AI focuses on lead scoring and deal predictions." },
+      { q: "Is Rhinon Tech built in India like Freshsales?", a: "Yes. Rhinon Tech is built in India by Rhinon Labs and works for teams anywhere." },
+      { q: "Does Rhinon Tech have AI features like Freshsales's Freddy AI?", a: "Yes, though differently. Rhinon uses AI to draft outreach emails you approve and to answer website visitors from your own content. Freshsales's Freddy AI focuses on lead scoring and deal predictions." },
       { q: "Can I manage projects in Freshsales?", a: "Freshsales is a sales CRM and does not include project management. You would need a separate tool. Rhinon Tech converts a won deal into a project in one click, in the same workspace." },
     ],
     sources: [
@@ -460,7 +460,7 @@ export const COMPARISONS: Comparison[] = [
       free: { mark: "yes", note: "Free plan for personal use; team features on paid plans" },
     },
     pricing: "Notion has a free personal plan; Plus is $10 per user per month billed annually when we checked. Rhinon Tech is free for up to 5 people; Starter is priced with you.",
-    moving: "Export your pages from Notion as Markdown and import them into Rhinon Docs. A direct Notion importer is not built yet, so book a demo and we will help you move your content.",
+    moving: "Rhinon Docs has no Notion importer yet, so move the pages your team uses every day by copying them across, and keep the archive in Notion. Leads kept in a Notion database can be exported as CSV and imported into the Rhinon CRM.",
     faq: [
       { q: "Does Rhinon Tech have docs like Notion?", a: "Yes. Rhinon Docs is a tree of nested documents, with rich text, embedded content and internal links. It sits next to your projects and CRM so context stays together." },
       { q: "Can Notion replace a CRM?", a: "With enough setup, teams use Notion databases as a CRM. Rhinon Tech has a native CRM with pipeline views, deal timelines and automatic lead capture from the AI agent. No template needed." },
@@ -495,7 +495,7 @@ export const COMPARISONS: Comparison[] = [
     pricing: "Slack has a free plan with a 90-day message limit; Pro is $7.25 per user per month billed annually when we checked. Rhinon Tech is free for up to 5 people, including team chat; Starter is priced with you.",
     moving: "Team chat in Rhinon Tech works immediately: invite your team and start channels. There is no Slack history importer, so conversations from before the move stay in Slack for reference.",
     faq: [
-      { q: "Does Rhinon Tech have channels and threads like Slack?", a: "Yes. Team chat includes channels, direct messages and group calls of up to 8 people. Threads are on the roadmap." },
+      { q: "Does Rhinon Tech have channels and threads like Slack?", a: "Yes. Team chat includes channels, direct messages, threaded replies and group calls of up to 8 people." },
       { q: "Is Rhinon Team chat free like Slack's free plan?", a: "Yes. Team chat is included in the free plan for up to 5 people, with no message history limit." },
       { q: "Can I use Rhinon Tech only for team chat and not the other features?", a: "You can. But the value of Rhinon over Slack is that your project conversations, client records and docs live in the same place as the chat, without copying context between apps." },
     ],
@@ -511,7 +511,7 @@ export const COMPARISONS: Comparison[] = [
     h1: "A Bitrix24 alternative that is simpler and built for service businesses",
     verdict: "Bitrix24 is a large free platform covering CRM, projects, HR, telephony and a website builder. Rhinon Tech covers the same client lifecycle for a service business in a tighter, more focused product, and is free for up to 5 people without the complexity of configuring a platform built for every industry.",
     chooseThem: ["You need telephony, call centre features or a website builder in the same platform", "You have an IT team to configure and maintain a complex all-in-one system", "You need Bitrix24's on-premise or self-hosted option"],
-    chooseRhinon: ["You want to be running in an afternoon, not spending days on configuration", "You sell services and want an AI agent, outreach and project delivery in one focused product", "Your team is up to 5 and you want a free plan without feature limits that push you to upgrade"],
+    chooseRhinon: ["You want to be running in an afternoon, not spending days on configuration", "You sell services and want an AI agent, outreach and project delivery in one focused product", "Your team is up to 5 and you want CRM, projects, chat and HR free, with no trial clock"],
     rows: ["agent", "outreach", "inbox", "crm", "projects", "portal", "handoff", "chat", "docs", "hr", "attendance", "performance", "payroll", "billing", "free"],
     them: {
       agent: { mark: "yes", note: "Live chat widget and chatbot builder" },
@@ -535,7 +535,7 @@ export const COMPARISONS: Comparison[] = [
     faq: [
       { q: "Is Rhinon Tech easier to set up than Bitrix24?", a: "In our experience, yes. Bitrix24 is a very large platform and takes time to configure. Rhinon Tech is focused on service businesses and is designed to be running in an afternoon." },
       { q: "Does Rhinon Tech have as many features as Bitrix24?", a: "Bitrix24 covers telephony, a website builder and a wider set of HR tools. Rhinon Tech is focused on the client lifecycle — lead to project — and does not try to cover every feature. If you need telephony or a website builder built in, Bitrix24 is broader." },
-      { q: "Can Rhinon Tech's AI agent do what Bitrix24's chatbot does?", a: "Rhinon's AI Agent is trained on your site content, documents and help center. It answers questions, captures leads, creates tickets and hands off to your team. Bitrix24's chatbot is a rule-based builder. The two take different approaches." },
+      { q: "Can Rhinon Tech's AI agent do what Bitrix24's chatbot does?", a: "Rhinon's AI Agent is trained on your site content, documents and help center. It answers questions, captures leads, creates tickets and hands off to your team. Check Bitrix24's own pages for how its chatbot and AI assistant work today." },
     ],
     sources: [
       { label: "Bitrix24 home page", url: "https://www.bitrix24.com/" },
