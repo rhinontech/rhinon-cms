@@ -16,6 +16,7 @@ import { GetStartedButton } from "@/components/forms/GetStartedButton";
 import { CtaBand, Faq } from "@/components/blocks";
 import { CapabilityGrid, DarkCell, DarkPanel, RingBadge, StatRow, TrustStrip } from "@/components/kit";
 import { TabExplorer } from "@/components/TabExplorer";
+import { MascotReveal } from "@/components/MascotReveal";
 import { AppWindow, ProductMock } from "@/components/ProductMocks";
 import { JsonLd, faqNode, graphJsonLd, softwareAppNode } from "@/components/schema";
 
@@ -375,6 +376,7 @@ export default function Home() {
       <Replaces />
       <Loop />
       <Everything />
+      <MascotReveal />
       <AiPanel />
       <BuiltFor />
       <Proof />

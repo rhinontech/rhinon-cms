@@ -581,3 +581,71 @@ h1.font-display, h2.font-display { font-weight: 700; letter-spacing: -0.042em; }
 @media (prefers-reduced-motion: reduce) {
   .ring-badge::before, .hl-ring, .cursor-drift, .cursor-drift-b, .tab-in { animation: none; }
 }
+
+/* ── Meet Rhino: sketch → colour key → 3D render on scroll (components/MascotReveal.tsx) ──
+   --p (0 → 1) is written by the component; each stage derives its own 0 → 1 from it. Layers are
+   revealed with soft-edged masks, so the three aligned images read as one drawing being finished. */
+.mascot-reveal {
+  --p: 0;
+  --draw: clamp(0, calc(var(--p) / 0.22), 1);
+  --ink: clamp(0, calc((var(--p) - 0.28) / 0.26), 1);
+  --render: clamp(0, calc((var(--p) - 0.6) / 0.3), 1);
+  height: 300vh;
+}
+@media (max-width: 1023px) { .mascot-reveal { height: 230vh; } }
+.mr-panel { background: rgb(206 216 224); } /* the 3D render's own background as WebP decodes it, so its edges never show */
+.mr-stage { width: min(560px, 54svh, 88vw); }
+.mr-stage img { user-select: none; -webkit-user-drag: none; }
+
+/* 1. The pencil sketch draws itself, top to bottom; it fades back once the ink goes on. */
+.mr-sketch {
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(var(--draw) * 115% - 15%), transparent calc(var(--draw) * 115%));
+  mask-image: linear-gradient(to bottom, #000 calc(var(--draw) * 115% - 15%), transparent calc(var(--draw) * 115%));
+  opacity: calc(1 - var(--ink) * 0.9);
+}
+/* 2. Ink and flat colour wipe across. */
+.mr-flat {
+  -webkit-mask-image: linear-gradient(100deg, #000 calc(var(--ink) * 125% - 25%), transparent calc(var(--ink) * 125%));
+  mask-image: linear-gradient(100deg, #000 calc(var(--ink) * 125% - 25%), transparent calc(var(--ink) * 125%));
+}
+/* 3. The 3D render rises in behind a light scan line. */
+.mr-3d {
+  -webkit-mask-image: linear-gradient(to top, #000 calc(var(--render) * 120% - 20%), transparent calc(var(--render) * 120%));
+  mask-image: linear-gradient(to top, #000 calc(var(--render) * 120% - 20%), transparent calc(var(--render) * 120%));
+  transform: scale(calc(0.985 + var(--render) * 0.015));
+}
+.mr-scan {
+  bottom: calc(var(--render) * 120% - 10%);
+  background: linear-gradient(90deg, transparent, #9fb4ff 20%, #ffffff 50%, #c4b5ff 80%, transparent);
+  box-shadow: 0 0 18px 4px rgb(124 92 255 / 0.5);
+  opacity: clamp(0, min(calc(var(--render) * 10), calc((1 - var(--render)) * 10)), 1);
+}
+
+/* Cards start as grey wireframes and colour in, each at its own point (--t). */
+.mr-card {
+  --c: clamp(0, calc((var(--p) - var(--t) + 0.12) / 0.12), 1);
+  filter: grayscale(calc(1 - var(--c)));
+  opacity: calc(0.55 + var(--c) * 0.45);
+  transform: translateY(calc((1 - var(--c)) * 16px));
+  box-shadow: 0 22px 44px -26px rgb(10 17 40 / 0.35);
+}
+.mr-card::after {
+  content: ""; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none;
+  border: 1.5px dashed rgb(38 48 74 / 0.45);
+  opacity: calc(1 - var(--c));
+}
+
+/* The three steps light up as the drawing reaches each one. */
+.mr-step { border-color: rgb(10 17 40 / 0.12); background: rgb(255 255 255 / 0.5); color: var(--color-ink); transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s; }
+.mr-step-n { background: rgb(10 17 40 / 0.08); color: var(--color-ink-soft); transition: background-color 0.3s, color 0.3s; }
+.mascot-reveal[data-step="0"] .mr-step[data-i="0"],
+.mascot-reveal[data-step="1"] .mr-step[data-i="1"],
+.mascot-reveal[data-step="2"] .mr-step[data-i="2"] { background: #fff; border-color: #5b3df5; box-shadow: 0 10px 24px -14px rgb(91 61 245 / 0.7); }
+.mascot-reveal[data-step="0"] .mr-step[data-i="0"] .mr-step-n,
+.mascot-reveal[data-step="1"] .mr-step[data-i="1"] .mr-step-n,
+.mascot-reveal[data-step="2"] .mr-step[data-i="2"] .mr-step-n { background: #5b3df5; color: #fff; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mascot-reveal { height: auto; }
+  .mascot-reveal > .sticky { position: relative; height: auto; min-height: 100svh; }
+}
