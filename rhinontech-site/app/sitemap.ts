@@ -40,6 +40,10 @@ function parseIsoDate(iso?: string | null): Date | undefined {
   return Number.isNaN(parsed.getTime()) ? undefined : parsed;
 }
 
+/** Rebuild at most every 5 minutes, so a newly published post appears without a redeploy. In production
+ *  the sitemap was being served as a static file that kept the posts from build time. */
+export const revalidate = 300;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const posts = await getBlogs();
   const postDates = posts.map((p) => parseIsoDate(p.updatedAt) ?? parseIsoDate(p.publishedAt));
