@@ -8,7 +8,7 @@ import { bySlug } from "@/content/products";
 import { FEATURE_DEPTH } from "@/content/featureDepth";
 import { solutionBySlug } from "@/content/solutions";
 import { comparisonBySlug } from "@/content/compare";
-import { AppWindow, ProductMock } from "@/components/ProductMocks";
+import { ProductStage } from "@/components/kit";
 import { Aurora, Button, IconTile, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand, Faq } from "@/components/blocks";
@@ -56,7 +56,7 @@ export default async function FeaturePage({ params }: { params: Params }) {
           </div>
           <p className="mt-4 text-[13.5px] text-muted">Free for up to 5 people · No credit card</p>
           </div>
-          {d && <Reveal delay={120}><AppWindow><ProductMock k={d.mock} /></AppWindow></Reveal>}
+          {d && <Reveal delay={120}><ProductStage k={d.mock} chip={{ title: f.steps[1].title, sub: parent.name }} /></Reveal>}
         </div>
       </section>
 
@@ -75,10 +75,10 @@ export default async function FeaturePage({ params }: { params: Params }) {
       <section className="border-t border-line py-20 sm:py-24">
         <div className="mx-auto max-w-[1240px] px-5">
           <Reveal><SectionHead eyebrow="How it works" title="Three steps." /></Reveal>
-          <ol className="mt-12 grid gap-4 md:grid-cols-3">
+          <ol className="hair mt-12 md:grid-cols-3">
             {f.steps.map((s, i) => (
               <Reveal key={s.title} delay={i * 100}>
-                <li className="lt-card h-full rounded-2xl p-7">
+                <li className="h-full p-7">
                   <span className="flex h-9 w-9 items-center justify-center rounded-full text-[15px] font-semibold text-white" style={{ background: `linear-gradient(140deg, ${parent.tone[0]}, ${parent.tone[1]})` }}>{i + 1}</span>
                   <p className="font-display mt-5 text-[22px] font-semibold">{s.title}</p>
                   <p className="mt-2 text-[15px] leading-7 text-ink-soft">{s.body}</p>

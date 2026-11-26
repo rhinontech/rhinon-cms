@@ -13,11 +13,11 @@ export function LightSection({ children, className = "", border = false }: { chi
 }
 
 export function Kicker({ children }: { children: ReactNode }) {
-  return <p className={`${MONO} text-muted`}>{children}</p>;
+  return <p className="font-mono text-[12px] font-medium uppercase tracking-[0.14em] text-[#5b3df5]">{children}</p>;
 }
 
 export function H2({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <h2 className={`font-display text-[36px] font-semibold leading-[1.04] text-ink sm:text-[60px] ${className}`}>{children}</h2>;
+  return <h2 className={`font-display text-[34px] leading-[1.05] text-ink sm:text-[52px] ${className}`}>{children}</h2>;
 }
 
 export function Glow({ className = "" }: { className?: string }) {

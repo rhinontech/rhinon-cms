@@ -1,11 +1,11 @@
-import { ArrowUpRight } from "lucide-react";
 import { GROUPS, byGroup } from "@/content/products";
 import { links, pageMeta } from "@/components/site";
-import { Aurora, Button, IconTile, SectionHead } from "@/components/ui";
+import { Aurora, Button, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
-import { Spot } from "@/components/Spot";
 import { CtaBand, Faq } from "@/components/blocks";
 import { FitBlock, LifecycleFlow, ProofStrip } from "@/components/depth";
+import { BentoCard, CapabilityGrid } from "@/components/kit";
+import { CAPABILITIES } from "@/content/capabilities";
 import { AppWindow, ProductMock } from "@/components/ProductMocks";
 import { JsonLd, faqNode, graphJsonLd } from "@/components/schema";
 
@@ -49,18 +49,8 @@ export default function ProductsPage() {
             </Reveal>
             <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {byGroup(g.name).map((p, i) => (
-                <Reveal key={p.slug} delay={i * 80}>
-                  <Spot href={`/product/${p.slug}`} className="group flex h-full flex-col p-6">
-                    <span className="flex items-start justify-between">
-                      <IconTile icon={p.icon} tone={p.tone} size={48} />
-                      <span className="flex h-9 w-9 items-center justify-center rounded-full border border-line text-muted transition-all group-hover:border-transparent group-hover:bg-ink group-hover:text-white"><ArrowUpRight className="h-4 w-4" /></span>
-                    </span>
-                    <p className="font-display mt-5 flex items-center gap-2 text-[24px] font-semibold">
-                      {p.name}
-                      {p.premium && <span className="rounded-full bg-pink/15 px-2 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wide text-pink">Premium</span>}
-                    </p>
-                    <p className="mt-2 text-[15.5px] leading-7 text-ink-soft">{p.short}</p>
-                  </Spot>
+                <Reveal key={p.slug} delay={i * 80} className="h-full">
+                  <BentoCard href={`/product/${p.slug}`} title={p.premium ? `${p.name} · Starter` : p.name} body={p.short} k={p.mock} className="h-full" />
                 </Reveal>
               ))}
             </div>
@@ -68,6 +58,12 @@ export default function ProductsPage() {
         ))}
       </div>
 
+      <section className="border-t border-line py-20 sm:py-28">
+        <div className="mx-auto max-w-[1240px] px-5">
+          <Reveal><SectionHead center eyebrow="Everything included" title="Every capability, in one place." sub={`${CAPABILITIES.length} things the products do today. Everything is free for up to 5 people, except the items marked Starter.`} /></Reveal>
+          <div className="mt-14"><CapabilityGrid /></div>
+        </div>
+      </section>
       <LifecycleFlow />
       <FitBlock good={["You sell services and deliver projects for clients", "You want the CRM, projects and team tools in one login", "You want AI drafts and answers, with a person approving", "You are 5 to 50 people and want to start free"]} />
       <ProofStrip soft count={6} />

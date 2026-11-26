@@ -3,29 +3,20 @@ import { ArrowUpRight, Check, X } from "lucide-react";
 import { PROOF_AS_OF, PROOF_FIGURES } from "@/content/proof";
 import { SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
+import { StatRow } from "@/components/kit";
 
 /**
  * Sections shared by the hub and trust pages. Honest by construction: the proof is Rhinon Labs'
  * own usage (content/proof.ts), and "not a fit yet" mirrors the claims register (§2.6).
  */
 
-/** Rhinon Labs' real usage figures, with a link to the case study. */
+/** Rhinon Labs' real usage figures as a stat row, with a link to the case study. */
 export function ProofStrip({ count = 4, soft = false }: { count?: number; soft?: boolean }) {
   return (
     <section className={`border-t border-line py-20 sm:py-24 ${soft ? "bg-soft/60" : ""}`}>
       <div className="mx-auto max-w-[1240px] px-5">
-        <Reveal><SectionHead eyebrow="We use it ourselves" title="Rhinon Labs runs its own agency on Rhinon Tech." sub={`Real figures from our own workspace, as of ${PROOF_AS_OF}. Customer stories will appear here once customers give us permission.`} /></Reveal>
-        <div className={`mt-12 grid gap-3 sm:grid-cols-2 ${count > 4 ? "lg:grid-cols-3" : "lg:grid-cols-4"}`}>
-          {PROOF_FIGURES.slice(0, count).map((f, i) => (
-            <Reveal key={f.label} delay={(i % 4) * 80}>
-              <div className="lt-card h-full rounded-2xl p-6">
-                <p className="font-display text-[40px] font-semibold leading-none">{f.big}</p>
-                <p className="mt-3 text-[15px] font-semibold">{f.label}</p>
-                <p className="mt-1 text-[13.5px] text-muted">{f.note}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
+        <Reveal><SectionHead eyebrow="We use it ourselves" title="Rhinon Labs runs its own agency on Rhinon Tech." sub="Real figures from our own workspace. Customer stories will appear here once customers give us permission." /></Reveal>
+        <div className="mt-12"><StatRow items={PROOF_FIGURES.slice(0, count).map((f) => ({ label: f.label, value: f.big, note: f.note }))} footnote={`Counted on ${PROOF_AS_OF}.`} /></div>
         <Link href="/customers/rhinon-labs" className="mt-8 inline-flex items-center gap-1.5 text-[15px] font-semibold underline underline-offset-4">Read how Rhinon Labs uses it <ArrowUpRight className="h-4 w-4" /></Link>
       </div>
     </section>

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ArrowUpRight, Check } from "lucide-react";
+import { ArrowUpRight, Check, ChevronDown, Minus } from "lucide-react";
+import { CAPABILITIES, CAPABILITY_GROUPS, capabilitiesIn } from "@/content/capabilities";
 import { PRODUCTS } from "@/content/products";
 import { IconTile } from "@/components/ui";
 import { ProofStrip } from "@/components/depth";
@@ -51,7 +52,7 @@ export default function PricingPage() {
       <section className="relative pb-24 pt-16 sm:pt-24">
         <Aurora />
         <div className="relative mx-auto max-w-[1240px] px-5">
-          <SectionHead as="h1" eyebrow="Pricing" title={<>Free for up to 5 people. <span className="text-aurora">Grow when you are ready.</span></>} sub="Start with the whole workspace, no trial clock and no credit card. Move to Starter when your team grows or you want the AI Agent on your website." />
+          <SectionHead as="h1" center eyebrow="Pricing" title={<>Free for up to 5 people. <span className="text-aurora">Grow when you are ready.</span></>} sub="Start with the whole workspace, no trial clock and no credit card. Move to Starter when your team grows or you want the AI Agent on your website." />
           <div className="mt-16 grid gap-5 lg:grid-cols-3">
             <Reveal>
               <div className="spot flex h-full flex-col p-8">
@@ -118,6 +119,43 @@ export default function PricingPage() {
               </table>
             </Spot>
           </Reveal>
+        </div>
+      </section>
+
+      <section className="border-b border-line py-12 sm:py-14">
+        <div className="mx-auto max-w-[1000px] px-5">
+          <details className="group">
+            <summary className="mx-auto flex w-fit cursor-pointer list-none items-center gap-2 rounded-xl border border-line bg-white px-5 py-3 text-[15px] font-semibold hover:border-ink/20 [&::-webkit-details-marker]:hidden">
+              Compare all {CAPABILITIES.length} features <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="mt-10 overflow-x-auto">
+              <table className="w-full min-w-[620px] border-collapse text-left text-[14.5px]">
+                <caption className="sr-only">Every feature by plan</caption>
+                <thead className="sticky top-0 bg-white">
+                  <tr className="font-mono text-[11.5px] uppercase tracking-[0.14em] text-muted">
+                    <th scope="col" className="px-4 py-3 font-medium">Feature</th>
+                    <th scope="col" className="w-[18%] px-4 py-3 text-center font-medium">Free</th>
+                    <th scope="col" className="w-[18%] bg-[#f5f3ff] px-4 py-3 text-center font-medium text-[#5b3df5]">Starter</th>
+                    <th scope="col" className="w-[18%] px-4 py-3 text-center font-medium">Enterprise</th>
+                  </tr>
+                </thead>
+                {CAPABILITY_GROUPS.map((g) => (
+                  <tbody key={g.name}>
+                    <tr><th colSpan={4} scope="colgroup" className="px-4 pb-2 pt-8 text-left font-display text-[18px] font-bold tracking-[-0.02em]">{g.name}</th></tr>
+                    {capabilitiesIn(g.name).map((cap) => (
+                      <tr key={cap.label} className="border-t border-line">
+                        <th scope="row" className="px-4 py-3 font-medium text-ink-soft">{cap.label}</th>
+                        <td className="px-4 py-3 text-center">{cap.paid ? <Minus className="mx-auto h-4 w-4 text-muted" aria-label="Not included" /> : <Check className="mx-auto h-4 w-4 text-emerald-600" strokeWidth={3} aria-label="Included" />}</td>
+                        <td className="bg-[#f5f3ff] px-4 py-3 text-center"><Check className="mx-auto h-4 w-4 text-emerald-600" strokeWidth={3} aria-label="Included" /></td>
+                        <td className="px-4 py-3 text-center"><Check className="mx-auto h-4 w-4 text-emerald-600" strokeWidth={3} aria-label="Included" /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                ))}
+              </table>
+              <p className="mt-5 text-[13.5px] text-muted">Daily limits apply on Free and Starter; see the plan limits above.</p>
+            </div>
+          </details>
         </div>
       </section>
 

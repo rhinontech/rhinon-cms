@@ -14,11 +14,16 @@ export type SolutionDepth = {
   week: { day: string; line: string }[];
   /** Feature pages that answer this audience's next question. */
   features: string[];
+  /** "The old way" against "the Rhinon way", line for line. */
+  old: string[];
+  next: string[];
   faq: { q: string; a: string }[];
 };
 
 export const SOLUTION_DEPTH: Record<string, SolutionDepth> = {
   agencies: {
+    old: ["Enquiries wait in an inbox until someone notices", "The brief is retyped from the CRM into a project app", "Clients chase updates on WhatsApp and calls", "Leave and reviews live in spreadsheets"],
+    next: ["The AI Agent answers and saves every enquiry as a lead", "A won deal becomes the project, client attached", "Clients follow tasks and send requests in a portal", "Leave, reviews and payroll sit in the same workspace"],
     hero: "crm",
     scenes: [
       { k: "chatbot", eyebrow: "Enquiries", title: "A visitor asks about your retainer at 11pm. They get an answer.", body: "The AI Agent answers from your service pages, case studies and FAQs, saves the visitor as a lead with the conversation attached, and hands over to your team when someone is online." },
@@ -40,6 +45,8 @@ export const SOLUTION_DEPTH: Record<string, SolutionDepth> = {
     ],
   },
   consultancies: {
+    old: ["Each partner's client emails sit in their own inbox", "Every engagement starts from a blank project", "Methods and past deliverables are scattered across drives", "Warm contacts go cold between projects"],
+    next: ["Every email with a lead sits on one shared timeline", "The agreed deal becomes the engagement project", "Methods and deliverables live in a Docs tree", "Outreach drafts a personal follow-up for you to approve"],
     hero: "crm",
     scenes: [
       { k: "crm", eyebrow: "Relationships", title: "Every partner's conversations with a client, on one timeline.", body: "Emails, notes and activity sit on the lead and deal, so whoever takes the next call knows what was said in the last one. Roles decide who sees which accounts." },
@@ -61,6 +68,8 @@ export const SOLUTION_DEPTH: Record<string, SolutionDepth> = {
     ],
   },
   "it-services": {
+    old: ["Scope notes get lost between sales and delivery", "Clients ask for a weekly status email", "Engineers chat in one app and plan in another", "Leave for the next sprint is tracked in a sheet"],
+    next: ["The project keeps a link to the deal and its notes", "Clients follow the sprint board in a portal", "Channels, threads and calls sit next to the project", "Approved leave shows on the team calendar"],
     hero: "work",
     scenes: [
       { k: "work", eyebrow: "Delivery", title: "From signed deal to sprint board without retyping the scope.", body: "The project keeps a link to the deal it came from, so the scoping notes travel with it. Plan sprints on a board, track the timeline on a Gantt, and share a portal with the client." },
@@ -82,6 +91,8 @@ export const SOLUTION_DEPTH: Record<string, SolutionDepth> = {
     ],
   },
   "professional-services": {
+    old: ["Each client lives in five different tools", "Follow-up depends on who remembers", "Onboarding and leave run on spreadsheets", "Every service line shares one messy pipeline"],
+    next: ["One record per client, from enquiry to delivery", "The AI Agent and approved drafts follow up for you", "Offer letters, leave and payroll are built in", "Each service line gets its own pipeline stages"],
     hero: "crm",
     scenes: [
       { k: "crm", eyebrow: "One record", title: "The client's enquiry, emails and work on one timeline.", body: "Leads, deals and every conversation sit together, and the won deal turns into the project that delivers it, so nobody pieces a client together from five tools." },
@@ -103,6 +114,8 @@ export const SOLUTION_DEPTH: Record<string, SolutionDepth> = {
     ],
   },
   startups: {
+    old: ["Writing every cold email by hand", "Leads tracked in a spreadsheet", "Paying for five tools before the first client", "Losing the thread when the first sales hire joins"],
+    next: ["AI drafts each email; you approve before it sends", "Import the sheet once and work a real pipeline", "CRM, outreach, projects, chat and HR free for up to 5", "Every reply is on the lead's timeline for the next hire"],
     hero: "outreach",
     scenes: [
       { k: "outreach", eyebrow: "Founder-led sales", title: "A personal first email for every lead, without writing each one.", body: "Outreach researches each lead and drafts a tailored email. Build a sequence with waits, if/then branches and A/B splits; nothing sends until you approve it." },

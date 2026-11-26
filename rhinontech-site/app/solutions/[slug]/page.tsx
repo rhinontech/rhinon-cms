@@ -10,7 +10,8 @@ import { SOLUTION_DEPTH } from "@/content/solutionDepth";
 import { featureBySlug } from "@/content/features";
 import { PROOF_AS_OF, PROOF_FIGURES } from "@/content/proof";
 import { FREE_PLAN, STARTER_PLAN } from "@/content/plans";
-import { AppWindow, ProductMock } from "@/components/ProductMocks";
+import { BentoCard, Checker, OldNew, ProductStage, StatRow } from "@/components/kit";
+import { FEATURE_DEPTH } from "@/content/featureDepth";
 import { Aurora, Button, IconTile, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand, Faq } from "@/components/blocks";
@@ -65,24 +66,25 @@ export default async function SolutionPage({ params }: { params: Params }) {
             ))}
           </ul>
           </div>
-          {d && <Reveal delay={120}><AppWindow><ProductMock k={d.hero} /></AppWindow></Reveal>}
+          {d && <Reveal delay={120}><ProductStage k={d.hero} chip={{ title: s.workflow[0].stage, sub: s.workflow[0].line.split(".")[0] }} /></Reveal>}
         </div>
       </section>
 
       <section className="border-t border-line py-20 sm:py-24">
         <div className="mx-auto max-w-[1240px] px-5">
           <Reveal><SectionHead eyebrow="What changes" title="The problems we hear most." /></Reveal>
-          <div className="mt-12 grid gap-4 md:grid-cols-3">
+          <div className="hair mt-12 md:grid-cols-3">
             {s.pains.map((p, i) => (
               <Reveal key={p.title} delay={i * 100}>
-                <div className="lt-card h-full rounded-2xl p-7">
-                  <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted">0{i + 1}</p>
-                  <p className="font-display mt-3 text-[22px] font-semibold leading-tight">{p.title}</p>
+                <div className="h-full p-7">
+                  <p className="font-mono text-[11.5px] font-medium uppercase tracking-[0.14em] text-[#5b3df5]">0{i + 1}</p>
+                  <p className="font-display mt-3 text-[22px] font-bold leading-tight tracking-[-0.035em]">{p.title}</p>
                   <p className="mt-3 text-[15px] leading-7 text-ink-soft">{p.body}</p>
                 </div>
               </Reveal>
             ))}
           </div>
+          {d && <div className="mt-6"><OldNew old={d.old} next={d.next} /></div>}
         </div>
       </section>
 
@@ -113,17 +115,8 @@ export default async function SolutionPage({ params }: { params: Params }) {
 
       {d && (
         <section className="border-t border-line py-20 sm:py-24">
-          <div className="mx-auto max-w-[1240px] px-5 space-y-20">
-            {d.scenes.map((sc, i) => (
-              <div key={sc.title} className="grid items-center gap-10 lg:grid-cols-2">
-                <Reveal className={i % 2 ? "lg:order-2" : ""}>
-                  <p className="font-mono text-[12px] uppercase tracking-[0.16em] text-brand">{sc.eyebrow}</p>
-                  <h2 className="font-display mt-4 text-balance text-[30px] font-semibold leading-[1.08] sm:text-[40px]">{sc.title}</h2>
-                  <p className="mt-5 max-w-[520px] text-[17px] leading-8 text-ink-soft">{sc.body}</p>
-                </Reveal>
-                <Reveal delay={120}><AppWindow><ProductMock k={sc.k} /></AppWindow></Reveal>
-              </div>
-            ))}
+          <div className="mx-auto max-w-[1240px] px-5">
+            <Checker rows={d.scenes.map((sc) => ({ eyebrow: sc.eyebrow, title: sc.title, body: sc.body, k: sc.k }))} />
           </div>
         </section>
       )}
@@ -149,17 +142,7 @@ export default async function SolutionPage({ params }: { params: Params }) {
       <section className="border-t border-line py-20 sm:py-24">
         <div className="mx-auto max-w-[1240px] px-5">
           <Reveal><SectionHead eyebrow="We use it ourselves" title="Rhinon Labs runs its own agency on Rhinon Tech." sub={`Real figures from our own workspace, as of ${PROOF_AS_OF}. We will add customer stories here once customers give us permission.`} /></Reveal>
-          <div className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {PROOF_FIGURES.slice(0, 4).map((f, i) => (
-              <Reveal key={f.label} delay={i * 80}>
-                <div className="lt-card h-full rounded-2xl p-6">
-                  <p className="font-display text-[40px] font-semibold leading-none">{f.big}</p>
-                  <p className="mt-3 text-[15px] font-semibold">{f.label}</p>
-                  <p className="mt-1 text-[13.5px] text-muted">{f.note}</p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
+          <div className="mt-12"><StatRow items={PROOF_FIGURES.slice(0, 4).map((f) => ({ label: f.label, value: f.big, note: f.note }))} /></div>
           <Link href="/customers/rhinon-labs" className="mt-8 inline-flex items-center gap-1.5 text-[15px] font-semibold underline underline-offset-4">Read how Rhinon Labs uses it <ArrowUpRight className="h-4 w-4" /></Link>
         </div>
       </section>
@@ -235,13 +218,7 @@ export default async function SolutionPage({ params }: { params: Params }) {
             <Reveal><SectionHead eyebrow="Go deeper" title="The parts teams ask about most." /></Reveal>
             <div className="mt-10 grid gap-4 md:grid-cols-3">
               {d.features.map((slug) => featureBySlug(slug)).filter(Boolean).map((f) => (
-                <Link key={f!.slug} href={`/features/${f!.slug}`} className="lt-card group flex h-full flex-col rounded-2xl p-6">
-                  <span className="flex items-start justify-between gap-4">
-                    <span className="font-display text-[21px] font-semibold leading-tight">{f!.name}</span>
-                    <ArrowUpRight className="h-5 w-5 shrink-0 text-muted transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-                  </span>
-                  <span className="mt-3 text-[15px] leading-6 text-ink-soft">{f!.sub}</span>
-                </Link>
+                <BentoCard key={f!.slug} href={`/features/${f!.slug}`} title={f!.name} body={f!.sub} k={FEATURE_DEPTH[f!.slug]?.mock} />
               ))}
             </div>
           </div>
