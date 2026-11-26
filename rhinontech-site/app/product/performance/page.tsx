@@ -10,8 +10,8 @@ const p = bySlug("performance")!;
 const G = "italic";
 
 export const metadata = pageMeta({
-  title: "Performance Management System",
-  description: "A performance management system for small teams: review cycles, goals and feedback in one place. Free for up to 5 people.",
+  title: "Performance Management System for Small Teams",
+  description: "Performance management system for small businesses: run quarterly, annual or probation review cycles, set goals and collect structured feedback. Free for up to 5 people.",
   path: "/product/performance",
   hasOgImage: true,
 });
