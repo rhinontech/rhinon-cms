@@ -148,7 +148,7 @@ export function Navbar() {
             <span className="relative my-4 flex flex-1 items-center justify-center">
               <span aria-hidden className="absolute h-40 w-40 rounded-full bg-[#2f6bff]/45 blur-[46px] transition-opacity duration-500 group-hover:bg-[#2f6bff]/60" />
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/brand/mascot.webp" alt="" aria-hidden width={420} height={560} className="relative h-[150px] w-auto drop-shadow-[0_10px_20px_rgb(0_0_0_/_0.5)] transition-transform duration-500 group-hover:-translate-y-1 group-hover:rotate-[-2deg]" />
+              <img src="/brand/mascot.webp" alt="Rhinon AI mascot" aria-hidden width={420} height={560} className="relative h-[150px] w-auto drop-shadow-[0_10px_20px_rgb(0_0_0_/_0.5)] transition-transform duration-500 group-hover:-translate-y-1 group-hover:rotate-[-2deg]" />
             </span>
             <span className="relative flex items-center gap-1.5 text-[14px] font-semibold">See how it works <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></span>
           </Link>

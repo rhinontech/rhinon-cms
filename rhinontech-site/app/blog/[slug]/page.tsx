@@ -48,13 +48,17 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   };
 }
 
-function Block({ b, html }: { b: BlogBlock; html?: string }) {
-  if (b.type === "paragraph") return <div dangerouslySetInnerHTML={{ __html: html ?? b.html }} />;
+/** Give inline images from the editor an alt when they have none, so no image ships without one. */
+const withImgAlts = (html: string, fallback: string) =>
+  html.replace(/<img\b(?![^>]*\balt=)([^>]*)>/gi, (_m, attrs: string) => `<img alt="${fallback.replace(/"/g, "&quot;")}"${attrs}>`);
+
+function Block({ b, html, title }: { b: BlogBlock; html?: string; title: string }) {
+  if (b.type === "paragraph") return <div dangerouslySetInnerHTML={{ __html: withImgAlts(html ?? b.html, title) }} />;
   if (b.type === "image")
     return (
       <figure>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={b.url} alt={b.alt || ""} loading="lazy" />
+        <img src={b.url} alt={b.alt || b.credit || title} loading="lazy" />
         {b.credit && <figcaption>{b.credit}</figcaption>}
       </figure>
     );
@@ -125,7 +129,7 @@ export default async function BlogPostPage({ params }: { params: Params }) {
           <div className="mx-auto grid max-w-[1240px] gap-12 lg:grid-cols-[minmax(0,1fr)_360px]">
             <div className="min-w-0">
               <div className="prose-blog max-w-[760px]">
-                {rendered.map(({ b, html }) => <Block key={b.id} b={b} html={html} />)}
+                {rendered.map(({ b, html }) => <Block key={b.id} b={b} html={html} title={blog.title} />)}
               </div>
 
               {blog.faqs?.length > 0 && (

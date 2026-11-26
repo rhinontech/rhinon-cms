@@ -83,7 +83,7 @@ export function HeroWorkspace() {
           <div className="flex min-h-[430px]">
             <nav aria-label="Product views" className="flex w-[64px] shrink-0 flex-col gap-1 border-r border-line bg-soft/60 p-2 sm:w-[168px] sm:p-3">
               <span className="mb-2 hidden items-center gap-2 px-1.5 sm:flex">
-                <Image src="/brand/mark-navy.png" alt="" width={22} height={22} />
+                <Image src="/brand/mark-navy.png" alt="Rhinon Tech" width={22} height={22} />
                 <b className="font-display text-[14px] font-semibold">Rhinon</b>
               </span>
               {VIEWS.map((v, i) => {

@@ -402,7 +402,7 @@ function FinalCta() {
     <section className="relative overflow-hidden border-t border-line px-5 py-28 text-center sm:py-40">
       <div className="lt-grid pointer-events-none absolute inset-0" />
       <Glow className="left-1/2 top-1/2 h-[420px] w-[820px] -translate-x-1/2 -translate-y-1/2" />
-      <Image src="/brand/mark-white.png" alt="" width={520} height={520} aria-hidden className="pointer-events-none absolute -bottom-24 -right-16 w-[420px] opacity-[0.04] invert" />
+      <Image src="/brand/mark-white.png" alt="Rhinon Tech logo" width={520} height={520} aria-hidden className="pointer-events-none absolute -bottom-24 -right-16 w-[420px] opacity-[0.04] invert" />
       <Reveal className="relative">
         <h2 className="font-display mx-auto max-w-[900px] text-[40px] font-semibold leading-[1.02] sm:text-[76px]">Win your next client here.</h2>
         <p className="mx-auto mt-6 max-w-[520px] text-[18px] leading-8 text-ink-soft">Set up your workspace in a few minutes and invite up to 5 people free. No credit card, no time limit.</p>
