@@ -40,6 +40,41 @@ const MONTHS: { month: string; entries: Entry[] }[] = [
       { product: "HR", slug: "hr", title: "Hiring", body: "Job openings, candidates and interviews, next to employee records." },
       { product: "HR", slug: "hr", title: "Salary revisions and promotion letters", body: "Record a revision and generate the letter in one step." },
       { product: "Payroll", slug: "payroll", title: "Reimbursements on payslips", body: "Employees submit claims; approved amounts are added to the next payslip." },
+      { product: "Workspace", title: "Two-factor sign-in and an audit log", body: "Turn on two-factor authentication for your account, and see who changed what in the workspace audit log." },
+      { product: "Workspace", title: "Export or delete your data", body: "Download your workspace's data, or delete the workspace, from Settings." },
+      { product: "Inbox", slug: "inbox", title: "Send from your own domain", body: "Connect your company's email domain and send from your own addresses." },
+    ],
+  },
+  {
+    month: "September 2026",
+    entries: [
+      { product: "Workspace", title: "Self-serve sign-up", body: "Anyone can create a Rhinon Tech workspace and invite their team, with each workspace kept separate from every other." },
+      { product: "Workspace", title: "Roles and permissions", body: "Choose what each role can view or change, product by product, enforced on the server." },
+      { product: "Outreach", slug: "outreach", title: "Live send console", body: "Watch a campaign send in real time, with each email's status as it goes out." },
+    ],
+  },
+  {
+    month: "August 2026",
+    entries: [
+      { product: "CRM", slug: "crm", title: "Deals, pipelines and reports", body: "Accounts, deals and your own pipeline stages on a board, with a deal drawer and CRM reports." },
+      { product: "CRM", slug: "crm", title: "Duplicate leads, found and merged", body: "Repeat enquiries are flagged and can be merged into the lead you already have." },
+      { product: "CRM", slug: "crm", title: "Turn leads into deals in bulk", body: "Select several leads and convert them into deals in one step." },
+      { product: "Outreach", slug: "outreach", title: "Sequence stats and open tracking", body: "See how each sequence performs, including which emails were opened." },
+      { product: "Projects", slug: "projects", title: "Teams and task tools", body: "Group people into teams, and plan tasks with due dates, a toolbar and workflows." },
+      { product: "Chat & Meetings", slug: "chat", title: "Meeting scheduling", body: "Share your availability and let people book a time, with calendar invites by email." },
+      { product: "Docs", slug: "docs", title: "File attachments", body: "Attach files to a doc, with inline previews for images." },
+    ],
+  },
+  {
+    month: "July 2026",
+    entries: [
+      { product: "Outreach", slug: "outreach", title: "AI-drafted campaign emails", body: "Outreach researches each lead and drafts a personal email for you to approve." },
+      { product: "CRM", slug: "crm", title: "Import leads from a spreadsheet", body: "Upload a CSV and map its columns to bring your leads in." },
+      { product: "HR", slug: "hr", title: "E-signed offer letters and NDAs", body: "Candidates sign with a typed or drawn signature, with no account needed." },
+      { product: "HR", slug: "hr", title: "Letter templates with AI rewrite", body: "Edit offer letter and NDA templates, and ask AI to rewrite a selected sentence." },
+      { product: "Attendance & Leave", slug: "attendance", title: "Breaks", body: "Record breaks during the working day alongside clock-ins." },
+      { product: "Docs", slug: "docs", title: "Sharing", body: "Choose who in the workspace can open each doc." },
+      { product: "Payroll", slug: "payroll", title: "Final settlement for leavers", body: "Run a final settlement payslip when someone leaves, with an email to them." },
     ],
   },
 ];

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowUpRight, ChevronRight } from "lucide-react";
 import { links, pageMeta } from "@/components/site";
 import { bySlug } from "@/content/products";
+import { PROOF_AS_OF, PROOF_FIGURES } from "@/content/proof";
 import { Aurora, IconTile, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand } from "@/components/blocks";
@@ -19,16 +20,8 @@ export const metadata = pageMeta({
   path: "/customers/rhinon-labs",
 });
 
-const AS_OF = "26 November 2026";
-
-const FIGURES = [
-  { big: "5,503", label: "leads in the CRM", note: "Mostly imported prospect lists" },
-  { big: "10,268", label: "outreach emails sent", note: "To 5,496 leads, 19 May to 16 November" },
-  { big: "9,261", label: "AI drafts written", note: "From research on each lead" },
-  { big: "643", label: "tasks across 9 projects", note: "Client and internal work since May" },
-  { big: "127", label: "requests logged against projects", note: "Turned into tasks where needed" },
-  { big: "11", label: "people in the workspace", note: "One login for all of it" },
-];
+const AS_OF = PROOF_AS_OF;
+const FIGURES = PROOF_FIGURES;
 
 const USED = [
   { slug: "outreach", line: "Campaign emails are drafted by AI from research on each lead, across 10 campaigns." },

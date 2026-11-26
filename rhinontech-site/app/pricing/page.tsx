@@ -1,4 +1,8 @@
-import { Check } from "lucide-react";
+import Link from "next/link";
+import { ArrowUpRight, Check } from "lucide-react";
+import { PRODUCTS } from "@/content/products";
+import { IconTile } from "@/components/ui";
+import { ProofStrip } from "@/components/depth";
 import { links, pageMeta } from "@/components/site";
 import { FREE_FEATURES, PLAN_LIMITS, STARTER_FEATURES } from "@/content/plans";
 import { Aurora, Button, SectionHead } from "@/components/ui";
@@ -25,7 +29,18 @@ const FAQ = [
   { q: "What happens when we add a sixth person?", a: "The Free plan stops at 5 people. Move to Starter for up to 25 people and higher daily limits. Book a call and we will set it up with you." },
   { q: "What does Starter cost?", a: "It depends on your team size and how much you use the AI Agent, so we talk first and give you a clear price before anything is set up." },
   { q: "Can I use the free products without the AI Agent?", a: "Yes. The AI Agent is part of the paid plans. The CRM, outreach, inbox, projects, chat, docs, HR and payroll all work without it." },
+  { q: "Do I need a credit card to start?", a: "No. Create a workspace and invite up to 5 people without a card." },
+  { q: "Is there a time limit on the Free plan?", a: "No. Free stays free for up to 5 people; there is no trial clock." },
+  { q: "Can I take my data with me?", a: "Yes. You can export your leads as a spreadsheet, export your data or delete your workspace at any time." },
   { q: "Who builds Rhinon Tech?", a: "Rhinon Labs. We build custom CRMs, AI automation and dashboards for growing companies, and we run our own agency on Rhinon Tech." },
+];
+
+const FIT = [
+  { who: "A founder or small team trying it out", plan: "Free", why: "Every product except the AI Agent, for up to 5 people." },
+  { who: "A 5-person agency that wants website leads answered", plan: "Starter", why: "The AI Agent is on Starter, with 1,000 replies a day." },
+  { who: "A team of 6 to 25 people", plan: "Starter", why: "Free stops at 5 people; Starter covers up to 25." },
+  { who: "A team sending cold email at volume", plan: "Starter", why: "500 emails and 200 AI drafts a day, from your own domain." },
+  { who: "More than 25 people, or several brands", plan: "Enterprise", why: "No seat, email or AI caps, and up to 3 AI Agents." },
 ];
 
 const ENTERPRISE_FEATURES = ["Everything in Starter", "Unlimited people, emails and AI drafts", "Up to 3 AI Agents across your brands", "Priority help from the team that builds it"];
@@ -105,6 +120,52 @@ export default function PricingPage() {
           </Reveal>
         </div>
       </section>
+
+      <section className="py-24 sm:py-28">
+        <div className="mx-auto max-w-[1240px] px-5">
+          <Reveal><SectionHead eyebrow="By product" title="What is free, product by product." sub="Only one product is paid. Everything else works on Free, within the plan's daily limits." /></Reveal>
+          <div className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {PRODUCTS.map((pr) => (
+              <Link key={pr.slug} href={`/product/${pr.slug}`} className="group flex items-center gap-3.5 rounded-2xl border border-line bg-white p-4 hover:border-ink/20">
+                <IconTile icon={pr.icon} tone={pr.tone} size={38} />
+                <span className="min-w-0 flex-1"><span className="block text-[15.5px] font-semibold">{pr.name}</span><span className="block truncate text-[13.5px] text-ink-soft">{pr.short}</span></span>
+                <span className={`shrink-0 rounded-full px-2.5 py-1 text-[12px] font-semibold ${pr.premium ? "bg-pink/15 text-pink" : "bg-emerald-50 text-emerald-700"}`}>{pr.premium ? "Starter" : "Free"}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-line bg-soft/60 py-24 sm:py-28">
+        <div className="mx-auto max-w-[1000px] px-5">
+          <Reveal><SectionHead eyebrow="Which plan" title="Pick by what your team needs." /></Reveal>
+          <Spot className="mt-12 overflow-x-auto !rounded-3xl">
+            <table className="w-full min-w-[620px] text-left text-[15px]">
+              <caption className="sr-only">Which plan fits which team</caption>
+              <thead className="bg-soft text-[12px] font-semibold uppercase tracking-wider text-muted">
+                <tr><th scope="col" className="px-5 py-3">If you are</th><th scope="col" className="px-5 py-3">Plan</th><th scope="col" className="px-5 py-3">Why</th></tr>
+              </thead>
+              <tbody>
+                {FIT.map((f) => (
+                  <tr key={f.who} className="border-t border-line align-top">
+                    <th scope="row" className="px-5 py-4 font-medium">{f.who}</th>
+                    <td className="px-5 py-4 font-semibold text-brand">{f.plan}</td>
+                    <td className="px-5 py-4 text-ink-soft">{f.why}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Spot>
+          <div className="mt-10 flex flex-wrap items-center gap-2.5">
+            <span className="text-[14.5px] text-muted">Weighing up prices?</span>
+            {[["zoho-alternative", "Zoho One"], ["hubspot-alternative", "HubSpot"], ["pipedrive-alternative", "Pipedrive"], ["freshsales-alternative", "Freshsales"]].map(([slug, name]) => (
+              <Link key={slug} href={`/compare/${slug}`} className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3.5 py-1.5 text-[14px] font-semibold hover:border-ink/20">vs {name}<ArrowUpRight className="h-3.5 w-3.5 text-muted" /></Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <ProofStrip />
 
       <section className="mx-auto max-w-[1240px] px-5 py-28 sm:py-32">
         <Reveal><SectionHead eyebrow="FAQ" title="Pricing questions, answered." /></Reveal>

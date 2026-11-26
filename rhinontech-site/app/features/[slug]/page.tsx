@@ -5,6 +5,10 @@ import { ArrowUpRight, Check, ChevronRight } from "lucide-react";
 import { links, pageMeta } from "@/components/site";
 import { FEATURES, featureBySlug } from "@/content/features";
 import { bySlug } from "@/content/products";
+import { FEATURE_DEPTH } from "@/content/featureDepth";
+import { solutionBySlug } from "@/content/solutions";
+import { comparisonBySlug } from "@/content/compare";
+import { AppWindow, ProductMock } from "@/components/ProductMocks";
 import { Aurora, Button, IconTile, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand, Faq } from "@/components/blocks";
@@ -29,27 +33,44 @@ export default async function FeaturePage({ params }: { params: Params }) {
   const f = featureBySlug((await params).slug);
   if (!f) notFound();
   const parent = bySlug(f.product)!;
+  const d = FEATURE_DEPTH[f.slug];
+  const faq = [...f.faq, ...(d?.faq ?? [])];
 
   return (
     <>
       <section className="relative pb-20 pt-12 sm:pt-16">
         <Aurora tones={[parent.tone[0], parent.tone[1]]} />
-        <div className="relative mx-auto max-w-[1240px] px-5">
+        <div className="relative mx-auto grid max-w-[1240px] items-center gap-12 px-5 lg:grid-cols-[1.05fr_0.95fr]">
+          <div>
           <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-[13.5px] text-muted">
             <Link href="/product" className="hover:text-ink">Product</Link><ChevronRight className="h-3.5 w-3.5" />
             <Link href={`/product/${parent.slug}`} className="hover:text-ink">{parent.name}</Link><ChevronRight className="h-3.5 w-3.5" />
             <span className="font-medium text-ink">{f.name}</span>
           </nav>
           <div className="mt-6"><IconTile icon={parent.icon} tone={parent.tone} size={52} /></div>
-          <h1 className="font-display mt-6 max-w-[920px] text-balance text-[40px] font-semibold leading-[1.04] sm:text-[62px]">{f.h1}</h1>
+          <h1 className="font-display mt-6 text-balance text-[40px] font-semibold leading-[1.04] sm:text-[56px]">{f.h1}</h1>
           <p className="mt-6 max-w-[720px] text-[18px] leading-8 text-ink-soft">{f.sub}</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <GetStartedButton placement={`Feature: ${f.name}`} />
             <Button href={links.call} variant="soft">Book a demo</Button>
           </div>
           <p className="mt-4 text-[13.5px] text-muted">Free for up to 5 people · No credit card</p>
+          </div>
+          {d && <Reveal delay={120}><AppWindow><ProductMock k={d.mock} /></AppWindow></Reveal>}
         </div>
       </section>
+
+      {d && (
+        <section className="border-t border-line py-20 sm:py-24">
+          <div className="mx-auto max-w-[860px] px-5">
+            <Reveal>
+              <p className="font-mono text-[12px] uppercase tracking-[0.16em] text-brand">Why it matters</p>
+              <h2 className="font-display mt-4 text-balance text-[32px] font-semibold leading-[1.08] sm:text-[44px]">{d.why.title}</h2>
+              {d.why.paras.map((p) => <p key={p.slice(0, 24)} className="mt-6 text-[17.5px] leading-8 text-ink-soft">{p}</p>)}
+            </Reveal>
+          </div>
+        </section>
+      )}
 
       <section className="border-t border-line py-20 sm:py-24">
         <div className="mx-auto max-w-[1240px] px-5">
@@ -96,15 +117,44 @@ export default async function FeaturePage({ params }: { params: Params }) {
         </div>
       </section>
 
+      {d && (
+        <section className="border-t border-line py-20 sm:py-24">
+          <div className="mx-auto max-w-[1240px] px-5">
+            <Reveal><SectionHead eyebrow="Who uses it" title="How different teams use it." /></Reveal>
+            <div className="mt-12 grid gap-4 md:grid-cols-3">
+              {d.uses.map((u, i) => {
+                const s = solutionBySlug(u.solution);
+                return s ? (
+                  <Reveal key={u.solution} delay={i * 90}>
+                    <Link href={`/solutions/${s.slug}`} className="lt-card group flex h-full flex-col rounded-2xl p-6">
+                      <span className="flex items-center justify-between font-mono text-[11px] uppercase tracking-[0.16em] text-muted">{s.name}<ArrowUpRight className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" /></span>
+                      <span className="mt-4 text-[16px] leading-7">{u.line}</span>
+                    </Link>
+                  </Reveal>
+                ) : null;
+              })}
+            </div>
+            <div className="mt-14">
+              <p className="font-mono text-[12px] uppercase tracking-[0.16em] text-muted">Compared with</p>
+              <div className="mt-4 flex flex-wrap gap-2.5">
+                {d.compare.map((slug) => comparisonBySlug(slug)).filter(Boolean).map((cm) => (
+                  <Link key={cm!.slug} href={`/compare/${cm!.slug}`} className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-4 py-2 text-[14.5px] font-semibold hover:border-ink/20">Rhinon Tech vs {cm!.competitor}<ArrowUpRight className="h-3.5 w-3.5 text-muted" /></Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       <section className="border-t border-line py-20 sm:py-24">
         <div className="mx-auto max-w-[1240px] px-5">
           <SectionHead eyebrow="FAQ" title={`${f.name}: questions.`} />
-          <div className="mt-12"><Faq items={f.faq} /></div>
+          <div className="mt-12"><Faq items={faq} /></div>
         </div>
       </section>
 
       <CtaBand tone={parent.tone} title={<>Try {f.name.toLowerCase()} <span className="text-aurora-soft">free.</span></>} sub="Set up a workspace in a few minutes and invite up to 5 people free. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: `See ${parent.name}`, href: `/product/${parent.slug}` }} />
-      <JsonLd data={graphJsonLd([breadcrumbNode([{ name: "Home", path: "/" }, { name: parent.name, path: `/product/${parent.slug}` }, { name: f.name, path: `/features/${f.slug}` }]), faqNode(f.faq)])} />
+      <JsonLd data={graphJsonLd([breadcrumbNode([{ name: "Home", path: "/" }, { name: parent.name, path: `/product/${parent.slug}` }, { name: f.name, path: `/features/${f.slug}` }]), faqNode(faq)])} />
     </>
   );
 }

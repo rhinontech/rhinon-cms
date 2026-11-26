@@ -2,8 +2,9 @@ import { ArrowRight, Check, KeyRound, Route, Sparkles, Tag } from "lucide-react"
 import { links, pageMeta } from "@/components/site";
 import { Aurora, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
-import { CtaBand } from "@/components/blocks";
-import { JsonLd, breadcrumbNode, graphJsonLd } from "@/components/schema";
+import { CtaBand, Faq } from "@/components/blocks";
+import { ProofStrip } from "@/components/depth";
+import { JsonLd, breadcrumbNode, faqNode, graphJsonLd } from "@/components/schema";
 
 /*
  * Who builds Rhinon Tech and why. Facts only: no invented founding dates, headcounts or
@@ -28,6 +29,21 @@ const BELIEFS = [
   { icon: Sparkles, title: "AI that you approve", body: "The AI drafts, researches and answers from your own content. What goes out to a client is your call." },
   { icon: Tag, title: "Limits you can read", body: "Free means up to 5 people, 50 emails and 20 AI drafts a day. We would rather say it plainly than surprise you later." },
   { icon: KeyRound, title: "Your data is yours", body: "Every workspace is isolated, connected accounts are encrypted, and you can export or delete your data whenever you like." },
+];
+
+/** Dated releases (see /changelog), so the story has facts, not adjectives. */
+const TIMELINE = [
+  { when: "July 2026", what: "AI-drafted outreach, spreadsheet lead import and e-signed offer letters." },
+  { when: "August 2026", what: "Deals, pipelines and CRM reports; duplicate detection; meeting scheduling." },
+  { when: "September 2026", what: "Self-serve sign-up: any team can create its own isolated workspace." },
+  { when: "October 2026", what: "The AI Agent for websites, team chat, two-factor sign-in and data export." },
+  { when: "November 2026", what: "Sprints, video calls and a built-in calendar." },
+];
+
+const FAQ = [
+  { q: "Who makes Rhinon Tech?", a: "Rhinon Labs, which builds custom CRMs, AI automation and dashboards for growing companies, and runs its own agency on Rhinon Tech." },
+  { q: "Is Rhinon Tech built in India?", a: "Yes. It is built in India and used by teams anywhere." },
+  { q: "Can you build something custom for us?", a: "Rhinon Labs takes on custom CRM, AI and dashboard work. Contact us and tell us what you need." },
 ];
 
 export default function AboutPage() {
@@ -77,8 +93,34 @@ export default function AboutPage() {
         </div>
       </section>
 
+      <ProofStrip count={6} />
+
+      <section className="border-t border-line bg-soft/60 py-24 sm:py-28">
+        <div className="mx-auto max-w-[900px] px-5">
+          <Reveal><SectionHead eyebrow="How it grew" title="Shipped, month by month." sub="Every line below is live in the product. The full list is on the changelog." /></Reveal>
+          <ol className="relative mt-12 space-y-3 before:absolute before:bottom-6 before:left-[7px] before:top-6 before:w-px before:bg-line">
+            {TIMELINE.map((m, i) => (
+              <Reveal key={m.when} delay={i * 70}>
+                <li className="relative flex gap-5 pl-0">
+                  <span className="relative z-10 mt-6 h-[15px] w-[15px] shrink-0 rounded-full border-[3px] border-white bg-brand shadow" />
+                  <span className="flex-1 rounded-2xl border border-line bg-white p-5"><span className="block font-mono text-[11px] uppercase tracking-[0.16em] text-muted">{m.when}</span><span className="mt-2 block text-[16px] leading-7">{m.what}</span></span>
+                </li>
+              </Reveal>
+            ))}
+          </ol>
+          <a href="/changelog" className="mt-8 inline-flex text-[15px] font-semibold underline underline-offset-4">Read the changelog</a>
+        </div>
+      </section>
+
+      <section className="border-t border-line py-24 sm:py-28">
+        <div className="mx-auto max-w-[1240px] px-5">
+          <SectionHead eyebrow="FAQ" title="About us, briefly." />
+          <div className="mt-12"><Faq items={FAQ} /></div>
+        </div>
+      </section>
+
       <CtaBand title={<>Talk to the people <span className="text-aurora-soft">who build it.</span></>} sub="Questions, a custom need, or help moving from your current tools: we read every message." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "Contact us", href: links.contact }} />
-      <JsonLd data={graphJsonLd([breadcrumbNode([{ name: "Home", path: "/" }, { name: "About", path: "/about" }])])} />
+      <JsonLd data={graphJsonLd([breadcrumbNode([{ name: "Home", path: "/" }, { name: "About", path: "/about" }]), faqNode(FAQ)])} />
     </>
   );
 }
