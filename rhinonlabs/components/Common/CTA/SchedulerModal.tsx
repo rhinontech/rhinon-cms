@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { X } from "lucide-react";
 import SchedulerCore from "./SchedulerCore";
+import { trackBookCallOpen } from "@/lib/analytics-events";
 
 interface SchedulerModalProps {
   isOpen: boolean;
@@ -10,9 +11,14 @@ interface SchedulerModalProps {
 }
 
 export default function SchedulerModal({ isOpen, onClose }: SchedulerModalProps) {
-  // Lock body scroll behind the modal while it's open.
+  // Lock body scroll behind the modal while it's open & track open event (Audit H-08)
   useEffect(() => {
-    document.body.style.overflow = isOpen ? "hidden" : "";
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+      trackBookCallOpen(typeof window !== "undefined" ? window.location.pathname : "modal");
+    } else {
+      document.body.style.overflow = "";
+    }
     return () => {
       document.body.style.overflow = "";
     };

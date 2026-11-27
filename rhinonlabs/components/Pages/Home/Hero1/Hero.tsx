@@ -4,23 +4,12 @@ import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Star } from "lucide-react";
 import HeroShowcase from "./HeroShowcase";
-// import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
-import { motion, Variants } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { trackClickPhone, trackClickWhatsApp } from "@/lib/analytics-events";
 
 // Code-split SchedulerModal so dialog JS doesn't block initial page load
 const SchedulerModal = dynamic(() => import("@/components/Common/CTA/SchedulerModal"));
-
-
-const fadeUpVariant: Variants = {
-  hidden: { opacity: 0.9, y: 8 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] }
-  }
-};
 
 const Hero1 = () => {
   const router = useRouter();
@@ -43,41 +32,30 @@ const Hero1 = () => {
       <div className="pt-32 max-sm:pt-24 px-5 pb-10 flex flex-col gap-8 max-w-5xl mx-auto w-full">
         <div className="flex flex-col gap-5 items-center">
           {/* Badge */}
-          <motion.div variants={fadeUpVariant} className="mb-8 text-center inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm">
+          <div className="mb-8 text-center inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
             <span className="text-xs font-medium tracking-widest text-[#A3B8CC] uppercase font-sans">
               Your Go-To Operations Scaling Partner
             </span>
-          </motion.div>
-
-          {/* <div className="flex flex-col gap-0 w-full">
-            <TextGenerateEffect
-              className="text-center lg:text-7xl md:text-5xl text-4xl font-semibold leading-tight"
-              words={"Ship your product 3x faster <br /> without hiring a tech team"}
-            />
-          </div> */}
+          </div>
 
           {/* Main Heading */}
-          <motion.h1
-            variants={fadeUpVariant}
+          <h1
             className="text-[36px] text-center sm:text-5xl md:text-[76px] font-sans font-normal leading-[1.12] tracking-[-0.02em] max-w-5xl mx-auto py-2 text-transparent bg-clip-text bg-linear-to-b from-white to-white/80 mb-6"
           >
-            AI Automation & Custom Software <br />
+            AI Automation Agency <br />
             <span className="font-serif italic text-transparent bg-clip-text bg-linear-to-r from-[#c7d4ff] via-[#8fa6ff] to-[#5b7bff] pr-2">
-              that Scales Your Operations.
+              for Startups & SMBs.
             </span>
-          </motion.h1>
+          </h1>
           {/* Subtitle */}
-          <motion.p variants={fadeUpVariant} className="text-white/70 text-center sm:text-lg max-w-2xl mx-auto mb-8 sm:mb-10 px-4 sm:px-0">
-            We design and build custom AI workflows, automations, and internal dashboards that reduce manual work and help your team work faster and smarter.
-          </motion.p>
+          <p className="text-white/70 text-center sm:text-lg max-w-2xl mx-auto mb-8 sm:mb-10 px-4 sm:px-0">
+            We build custom AI agents, workflow automations, and internal tools in fixed-scope 2–4-week sprints so your team scales operations without adding headcount.
+          </p>
         </div>
-        <motion.div
+        {/* CTA Section */}
+        <div
           className="flex items-center justify-center flex-col md:flex-row gap-5 md:gap-10"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          viewport={{ once: true }}
         >
           <div className="z-20">
             <Button
@@ -113,19 +91,17 @@ const Hero1 = () => {
               <span className="text-white/70 text-sm">Trusted by startups and SMBs across India.</span>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Direct Contact Option */}
-        <motion.div
+        <div
           className="text-center text-white/80"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.8 }}
         >
           <p className="text-sm">
             Prefer to talk directly?{" "}
             <a
               href="tel:+918249291789"
+              onClick={() => trackClickPhone("hero_section")}
               className="font-semibold text-white hover:underline transition-all"
             >
               Call us: +91 8249 291 789
@@ -133,6 +109,7 @@ const Hero1 = () => {
             {" "}or{" "}
             <a
               href="https://wa.me/918249291789"
+              onClick={() => trackClickWhatsApp("hero_section")}
               target="_blank"
               rel="nofollow noopener noreferrer"
               className="font-semibold text-white hover:underline transition-all"
@@ -140,19 +117,15 @@ const Hero1 = () => {
               WhatsApp
             </a>
           </p>
-        </motion.div>
+        </div>
       </div>
 
-      <div className="flex flex-col gap-12 pb-10">
-        <motion.div
+      <div className="flex flex-col gap-12 pb-10 relative">
+        <div
           className="flex flex-col md:flex-row justify-center px-5 gap-5 md:gap-10 max-w-4xl mx-auto text-xs md:text-sm uppercase tracking-[0.18em] text-center text-white/55"
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
-          viewport={{ once: true }}
         >
           <span>Fast Delivery • Fixed Scope, No Hourly Billing • AI-Powered</span>
-        </motion.div>
+        </div>
 
         <HeroShowcase />
       </div>

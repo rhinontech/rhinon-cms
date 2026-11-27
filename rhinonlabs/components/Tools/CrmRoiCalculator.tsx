@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TrendingUp, Clock, Percent, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { trackToolComplete } from "@/lib/analytics-events";
 
 function fmt(n: number) {
   if (n >= 10000000) return `₹${(n / 10000000).toFixed(1)}Cr`;
@@ -59,6 +60,14 @@ export default function CrmRoiCalculator() {
   function handleCalculate(e: React.FormEvent) {
     e.preventDefault();
     setCalculated(true);
+    // Track tool completion (Audit H-08)
+    trackToolComplete("crm_roi_calculator", {
+      team_size: teamSize,
+      deal_value: dealValue,
+      win_rate: winRate,
+      estimated_uplift: result.revenueUplift,
+      roi_percent: result.roi,
+    });
   }
 
   return (

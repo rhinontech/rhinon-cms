@@ -1,14 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Inline the CSS into the HTML instead of separate render-blocking files —
-  // removes a round trip before first paint (Lighthouse "render-blocking").
-  experimental: {
-    inlineCss: true,
-  },
   // Blog / case-study covers live in the public S3 bucket (content/ prefix).
   images: {
     formats: ["image/avif", "image/webp"],
+    qualities: [75, 90, 95],
     remotePatterns: [
       { protocol: "https", hostname: "rhinontech-assets.s3.ap-south-1.amazonaws.com", pathname: "/content/**" },
       { protocol: "https", hostname: "images.unsplash.com" },
@@ -47,6 +43,11 @@ const nextConfig: NextConfig = {
       {
         source: "/blogs/mvp-development-cost-india-2026-guide",
         destination: "/blogs/mvp-development-cost-india-2027-guide",
+        permanent: true,
+      },
+      {
+        source: "/blogs/mobile-app-development-cost-startups-india",
+        destination: "/blogs/mobile-app-development-cost-india-2027",
         permanent: true,
       },
     ];

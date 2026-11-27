@@ -1,40 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Script from "next/script";
 
 const GA_ID = "G-HQ0812RTEQ";
 
 /**
- * Google Analytics (GA4). Production only.
- * Defers loading until after initial page load so GTM's 196 KB payload and JS compilation
- * do not compete with LCP or cause Total Blocking Time (TBT).
+ * Google Analytics (GA4).
+ * Audit H-08 fix: Loads with strategy="afterInteractive" so short visits and instant
+ * conversions are captured without waiting for idle/delay.
  */
 export function GoogleAnalytics() {
-  const [shouldLoad, setShouldLoad] = useState(false);
-
-  useEffect(() => {
-    if (process.env.NODE_ENV !== "production") return;
-
-    // Load after 3 seconds or on first user interaction
-    const timer = setTimeout(() => setShouldLoad(true), 3000);
-    const trigger = () => {
-      setShouldLoad(true);
-      window.removeEventListener("scroll", trigger);
-      window.removeEventListener("pointerdown", trigger);
-    };
-
-    window.addEventListener("scroll", trigger, { passive: true, once: true });
-    window.addEventListener("pointerdown", trigger, { passive: true, once: true });
-
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener("scroll", trigger);
-      window.removeEventListener("pointerdown", trigger);
-    };
-  }, []);
-
-  if (!shouldLoad) return null;
+  if (process.env.NODE_ENV !== "production") return null;
 
   return (
     <>
@@ -43,7 +19,10 @@ export function GoogleAnalytics() {
         {`window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
-gtag('config', '${GA_ID}');`}
+gtag('config', '${GA_ID}', {
+  page_path: window.location.pathname,
+  transport_type: 'beacon'
+});`}
       </Script>
     </>
   );

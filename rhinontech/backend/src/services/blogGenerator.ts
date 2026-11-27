@@ -358,8 +358,19 @@ export async function generateBlogDraft(topic: TopicInput, links: LinkTarget[]):
   };
 }
 
-/** ~200 words per minute, matching the editor's computeReadTimeFromHtml. */
-export function readTimeFor(html: string): string {
-  const words = html.replace(/<[^>]*>/g, " ").split(/\s+/).filter(Boolean).length;
-  return `${Math.max(1, Math.round(words / 200))} min read`;
+/**
+ * Computes read time from text/HTML content (about 230 words per minute).
+ * Handles raw HTML as well as content blocks.
+ */
+export function readTimeFor(content: string, blocks?: unknown[]): string {
+  let combined = content || "";
+  if (Array.isArray(blocks)) {
+    for (const b of blocks) {
+      if (b && typeof b === "object" && "html" in b && typeof (b as any).html === "string") {
+        combined += " " + (b as any).html;
+      }
+    }
+  }
+  const words = combined.replace(/<[^>]*>/g, " ").split(/\s+/).filter(Boolean).length;
+  return `${Math.max(1, Math.ceil(words / 230))} min read`;
 }

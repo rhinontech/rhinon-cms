@@ -377,9 +377,11 @@ router.post("/blogs", authorize("content:write"), async (req: AuthRequest, res: 
     }
     const slug = await uniqueSlug(Blog, b.slug || b.title);
     const site = await resolveSite(b);
+    const calculatedReadTime = readTimeFor(b.content || "", b.contentBlocks);
     const blog = await Blog.create({
       ...b,
       content: b.content || "",
+      readTime: calculatedReadTime,
       slug,
       siteId: site?.id ?? null,
       // Legacy column, kept so the Uppercurve site (a separate repo) can keep
@@ -416,6 +418,12 @@ router.put("/blogs/:id", authorize("content:write"), async (req: AuthRequest, re
     }
     const wasPublished = blog.status === "Published";
     const oldSlug = blog.slug;
+
+    // Recalculate readTime if content or contentBlocks are updated
+    const nextContent = b.content !== undefined ? b.content : blog.content;
+    const nextBlocks = b.contentBlocks !== undefined ? b.contentBlocks : blog.contentBlocks;
+    b.readTime = readTimeFor(nextContent || "", nextBlocks);
+
     await blog.update(b);
     if (blog.status === "Published") {
       const site = blog.siteId ? await Site.findByPk(blog.siteId) : null;
@@ -468,6 +476,11 @@ router.post("/case-studies", authorize("content:write"), async (req: AuthRequest
       slug,
       createdById: req.user!.userId,
     });
+
+    // Audit H-09: Extend IndexNow ping to case-study updates so Bing/ChatGPT search crawls them instantly
+    const site = await resolveSite({ ...(req.query as any), ...b });
+    void pingIndexNow(site?.siteUrl, [`/case-studies/${item.slug}`, "/case-studies"]);
+
     res.status(201).json(item);
   } catch (error: any) {
     res.status(400).json({ message: error.message });
@@ -489,7 +502,15 @@ router.put("/case-studies/:id", authorize("content:write"), async (req: AuthRequ
     } else {
       delete b.slug;
     }
+    const oldSlug = item.slug;
     await item.update(b);
+
+    // Audit H-09: Extend IndexNow ping on case study update
+    const site = await resolveSite({ ...(req.query as any), ...b });
+    const paths = [`/case-studies/${item.slug}`, "/case-studies"];
+    if (b.slug && b.slug !== oldSlug) paths.push(`/case-studies/${oldSlug}`);
+    void pingIndexNow(site?.siteUrl, paths);
+
     res.json(item);
   } catch (error: any) {
     res.status(400).json({ message: error.message });

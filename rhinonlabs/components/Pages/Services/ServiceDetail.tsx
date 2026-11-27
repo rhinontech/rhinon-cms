@@ -12,7 +12,7 @@ import { Spotlight } from "@/components/ui/spotlight";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
 import type { Service } from "@/lib/services";
 import { services } from "@/lib/services";
-import type { Blog } from "@/lib/api";
+import type { Blog, CaseStudy } from "@/lib/api";
 
 // Dynamically load below-the-fold components to reduce initial JavaScript CPU execution
 const SchedulerModal = dynamic(() => import("@/components/Common/CTA/SchedulerModal"));
@@ -70,7 +70,7 @@ function IconTile({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function ServiceDetail({ service, blogs }: { service: Service; blogs: Blog[] }) {
+export default function ServiceDetail({ service, blogs, caseStudies }: { service: Service; blogs: Blog[]; caseStudies?: CaseStudy[] }) {
   const [isSchedulerOpen, setIsSchedulerOpen] = useState(false);
   const others = services.filter((s) => s.slug !== service.slug);
 
@@ -262,15 +262,20 @@ export default function ServiceDetail({ service, blogs }: { service: Service; bl
       </section>
 
       {/* ── Related work — the homepage case-study grid, filtered ────────── */}
-      {service.relatedCaseStudies.length > 0 && <CaseStudies slugs={service.relatedCaseStudies} />}
+      {service.relatedCaseStudies.length > 0 && <CaseStudies slugs={service.relatedCaseStudies} items={caseStudies} />}
 
       <ElevateCTA />
 
-      {/* ── Further reading — blog-index cards ───────────────────────────── */}
+      {/* ── Topic Hub: Guides & Playbooks cluster (Audit H-05) ───────────────────────────── */}
       {blogs.length > 0 && (
         <section className="py-24 relative overflow-hidden">
           <div className="max-w-[1200px] mx-auto px-6 relative z-10">
-            <SectionHeader badge="From The Blog" lead="Go" accent="deeper" />
+            <SectionHeader
+              badge={`${service.name} Hub`}
+              lead="Guides &"
+              accent="Playbooks"
+              sub={`In-depth guides, cost analyses, and architectures for ${service.name.toLowerCase()}.`}
+            />
             {/* flex + fixed widths so 1–2 posts sit centred instead of hugging the left */}
             <div className="flex flex-wrap justify-center gap-6">
               {blogs.map((blog) => (

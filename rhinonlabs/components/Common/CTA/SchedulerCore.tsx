@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Calendar, Clock, Globe, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
 import { format, addMonths, subMonths, isBefore, startOfMonth, getDay, getDaysInMonth } from "date-fns";
 import { bookScheduleCall, getScheduleCallAvailability, type AvailabilitySlot } from "@/lib/api";
+import { trackBookCallOpen, trackGenerateLead, getUtmParams } from "@/lib/analytics-events";
 
 interface SchedulerCoreProps {
   /** Present when embedded in the SchedulerModal overlay — shows the X button and
@@ -52,14 +53,17 @@ export default function SchedulerCore({ onClose, headingLevel = "h3" }: Schedule
     teamSize: "",
   });
 
-  // Detect the visitor's timezone once on mount.
+  // Detect the visitor's timezone once on mount & fire book_call_open for standalone /schedule-call page (Audit H-08)
   useEffect(() => {
     try {
       setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Kolkata");
     } catch (e) {
       setTimezone("Asia/Kolkata");
     }
-  }, []);
+    if (headingLevel === "h1") {
+      trackBookCallOpen("/schedule-call");
+    }
+  }, [headingLevel]);
 
   // Pull real availability off the Rhinon calendar whenever the date changes, so slots that
   // are already booked (from here or from the internal Meetings tab) show as unavailable.
@@ -161,6 +165,8 @@ export default function SchedulerCore({ onClose, headingLevel = "h3" }: Schedule
             : `https://${formData.website}`)
         : undefined;
 
+      const utms = getUtmParams();
+
       const result = await bookScheduleCall({
         name: formData.name,
         email: formData.email,
@@ -175,11 +181,24 @@ export default function SchedulerCore({ onClose, headingLevel = "h3" }: Schedule
         teamSize: formData.teamSize,
         startTime: selectedSlot.startTime,
         timezone,
+        utmSource: utms.utmSource,
+        utmMedium: utms.utmMedium,
+        utmCampaign: utms.utmCampaign,
+        utmTerm: utms.utmTerm,
+        utmContent: utms.utmContent,
+        referrer: utms.referrer,
       });
 
       setMeetLink(result.booking.meetLink);
       setBooked(result.booked);
       setStep(3); // Success Screen
+
+      // Track key conversion event in GA4 (Audit H-08)
+      trackGenerateLead({
+        lead_type: "call_booked",
+        source: utms.utmSource || utms.landingPath || "schedule-call",
+        category: formData.buildTarget || "discovery_call",
+      });
     } catch (err: any) {
       console.error("Failed to submit scheduled call:", err);
       if (err.code === "SLOT_TAKEN") {

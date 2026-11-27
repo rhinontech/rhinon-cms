@@ -18,7 +18,7 @@ const About = () => {
             >
                 <div className="[mask-image:linear-gradient(to_bottom,transparent,white_30%,white_60%,transparent)]
                         mask-mode:luminance">
-                    <img src="/images/background/q3lzdr4u88731.jpg" className="w-full h-full object-cover" alt="" />
+                    <img src="/images/background/q3lzdr4u88731.jpg" className="w-full h-full object-cover" alt="Rhinon Labs team and engineering workspace background" />
                 </div>
             </motion.div>
             <div className="">

@@ -1,13 +1,7 @@
 'use client';
 
 import React from 'react';
-import { motion, Variants } from 'framer-motion';
 import Image from 'next/image';
-
-const scrollVariant: Variants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } }
-};
 
 const examples = [
     // Column 1: Custom Dashboards
@@ -62,11 +56,7 @@ export function Examples() {
         <section id="our_products" className="py-24 relative overflow-hidden">
             <style dangerouslySetInnerHTML={{ __html: MARQUEE_CSS }} />
             <div className="max-w-[1200px] mx-auto px-6 relative z-10">
-                <motion.div
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: "-100px" }}
-                    variants={scrollVariant}
+                <div
                     className="flex flex-col items-center text-center mb-16"
                 >
                     <div className="mb-6 inline-flex items-center px-4 py-2 rounded-full border border-white/5 bg-white/5 backdrop-blur-md">
@@ -77,7 +67,7 @@ export function Examples() {
                     <h2 className="text-4xl md:h-14 md:text-5xl font-medium tracking-tighter text-transparent bg-clip-text bg-linear-to-b from-white to-white/60 mb-6">
                         Different systems that <span className="font-serif italic text-transparent bg-clip-text">We Build</span>
                     </h2>
-                </motion.div>
+                </div>
 
             </div>
 

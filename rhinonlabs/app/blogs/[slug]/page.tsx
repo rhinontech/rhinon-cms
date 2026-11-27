@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
-import { getBlog, getBlogs, Blog } from "@/lib/api";
+import { getBlog, getBlogs, getCaseStudies, type Blog, type CaseStudy } from "@/lib/api";
+import { getCategorySlugForBlog } from "@/lib/blog-categories";
 import { format } from "date-fns";
 import { Minus, ShieldCheck, Sparkles, ArrowRight } from "lucide-react";
 
@@ -34,13 +35,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!blog) return { title: "Blog Not Found" };
 
-  const ogTitle = blog.metaTitle || blog.title;
+  const effectiveTitle = blog.title.replace(/\s+\?$/, "?");
+  const ogTitle = blog.metaTitle || effectiveTitle;
   const ogDescription = blog.metaDescription || blog.excerpt;
   const ogImage = blog.coverImage || `${SITE_URL}/og-image.jpg`;
 
   return {
-    // metaTitle is used verbatim (absolute); otherwise the root "%s | Rhinon Labs" template applies.
-    title: blog.metaTitle ? { absolute: blog.metaTitle } : blog.title,
+    title: blog.metaTitle ? { absolute: blog.metaTitle } : effectiveTitle,
     description: ogDescription,
     alternates: { canonical: `${SITE_URL}/blogs/${blog.slug}` },
     openGraph: {
@@ -53,7 +54,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       images: [
         {
           url: ogImage,
-          alt: blog.title,
+          alt: effectiveTitle,
         },
       ],
     },
@@ -66,50 +67,157 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-function getRelatedArticles(currentBlog: Blog, allBlogs: Blog[]): Blog[] {
+const STOP_WORDS = new Set([
+  "a", "an", "the", "and", "or", "in", "on", "at", "to", "for", "of", "with",
+  "by", "from", "up", "about", "into", "over", "after", "is", "are", "was",
+  "were", "be", "been", "being", "have", "has", "had", "do", "does", "did",
+  "but", "if", "then", "else", "when", "where", "why", "how", "all", "any",
+  "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor",
+  "not", "only", "own", "same", "so", "than", "too", "very", "can", "will",
+  "just", "should", "now", "our", "your", "their", "its", "this", "that", "these", "those"
+]);
+
+function extractKeywords(text: string): Set<string> {
+  const words = (text || "")
+    .toLowerCase()
+    .replace(/<[^>]*>/g, " ")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length > 2 && !STOP_WORDS.has(w));
+  return new Set(words);
+}
+
+function calculateScore(sourceKeywords: Set<string>, targetText: string): number {
+  if (!sourceKeywords.size || !targetText) return 0;
+  const targetWords = extractKeywords(targetText);
+  let score = 0;
+  for (const word of targetWords) {
+    if (sourceKeywords.has(word)) {
+      score += 1;
+    }
+  }
+  return score;
+}
+
+/**
+ * Robust NLP-based related articles algorithm (matches the recommendation engine in Uppercurve).
+ * Ranks all available posts by NLP keyword overlap, tags, category, and service affinity.
+ * Returns only the top 3 most relevant articles.
+ */
+function getRelatedArticles(currentBlog: Blog, allBlogs: Blog[], limit = 3): Blog[] {
+  if (!allBlogs || !allBlogs.length) return [];
+
   const currentService = getServiceByBlogSlug(currentBlog.slug);
   const currentCategory = (currentBlog.category || "").toLowerCase().trim();
   const currentTags = (currentBlog.tags || []).map((t) => t.toLowerCase().trim());
+  const currentText = [
+    currentBlog.title,
+    currentBlog.excerpt || "",
+    currentCategory,
+    ...currentTags,
+  ].join(" ");
 
-  return allBlogs
+  const sourceKeywords = extractKeywords(currentText);
+
+  const scored = allBlogs
     .filter((b) => b.slug !== currentBlog.slug)
     .map((candidate) => {
-      let score = 0;
       const candidateService = getServiceByBlogSlug(candidate.slug);
       const candidateCategory = (candidate.category || "").toLowerCase().trim();
       const candidateTags = (candidate.tags || []).map((t) => t.toLowerCase().trim());
+      const candidateText = [
+        candidate.title,
+        candidate.excerpt || "",
+        candidateCategory,
+        ...candidateTags,
+      ].join(" ");
 
-      // 1. Same target service (highest thematic alignment)
+      let score = calculateScore(sourceKeywords, candidateText);
+
+      // Boost 1: Same service pillar (highest thematic cluster alignment)
       if (currentService && candidateService && currentService.slug === candidateService.slug) {
-        score += 5;
+        score += 8;
       }
 
-      // 2. Tag matches
+      // Boost 2: Exact tag matches
       for (const curTag of currentTags) {
         if (!curTag || curTag.length < 3) continue;
         for (const canTag of candidateTags) {
-          if (!canTag || canTag.length < 3) continue;
           if (curTag === canTag) {
-            score += 3;
-          } else if (curTag.includes(canTag) || canTag.includes(curTag)) {
-            score += 1.5;
+            score += 4;
           }
         }
       }
 
-      // 3. Same category
+      // Boost 3: Same category
       if (currentCategory && candidateCategory && currentCategory === candidateCategory) {
-        score += 2;
+        score += 3;
       }
 
       return { blog: candidate, score };
-    })
-    .sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
-      return new Date(b.blog.publishedAt).getTime() - new Date(a.blog.publishedAt).getTime();
-    })
-    .slice(0, 3)
-    .map((item) => item.blog);
+    });
+
+  scored.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    return new Date(b.blog.publishedAt).getTime() - new Date(a.blog.publishedAt).getTime();
+  });
+
+  return scored.slice(0, limit).map((item) => item.blog);
+}
+
+/**
+ * Dynamic Content Recommendations:
+ * Derives top companion guide, contextual service, and relevant interactive tools.
+ */
+function getRelatedContextualContent(
+  currentBlog: Blog,
+  relatedArticles: Blog[],
+  service: ReturnType<typeof getServiceByBlogSlug>
+) {
+  // Companion article: #1 most relevant related article from the algorithm
+  const companionArticle = relatedArticles.length > 0 ? relatedArticles[0] : null;
+
+  // Dynamic interactive tools match using keyword overlap
+  const currentKeywords = extractKeywords(
+    [currentBlog.title, currentBlog.excerpt || "", ...(currentBlog.tags || [])].join(" ")
+  );
+
+  const AVAILABLE_TOOLS = [
+    {
+      title: "Interactive tool:",
+      prompt: "Streamline your new hire setup with our free",
+      linkText: "Employee Onboarding Checklist Generator →",
+      href: "/tools/employee-onboarding-checklist",
+      keywords: new Set(["onboarding", "hire", "employee", "hiring", "team", "hr", "staff", "onboard"]),
+    },
+    {
+      title: "Interactive tool:",
+      prompt: "Calculate how much revenue manual sales admin is costing your team with our free",
+      linkText: "CRM ROI Calculator →",
+      href: "/tools/crm-roi-calculator",
+      keywords: new Set(["crm", "sales", "revenue", "roi", "leads", "pipeline", "deals", "admin"]),
+    },
+  ];
+
+  let bestTool: (typeof AVAILABLE_TOOLS)[0] | null = null;
+  let maxToolScore = 0;
+
+  for (const tool of AVAILABLE_TOOLS) {
+    let matchCount = 0;
+    for (const kw of tool.keywords) {
+      if (currentKeywords.has(kw)) matchCount++;
+    }
+    if (matchCount > maxToolScore && matchCount >= 1) {
+      maxToolScore = matchCount;
+      bestTool = tool;
+    }
+  }
+
+  return {
+    companionArticle,
+    service,
+    relevantTool: bestTool,
+  };
 }
 
 export default async function BlogDetailsPage({ params }: PageProps) {
@@ -129,6 +237,15 @@ export default async function BlogDetailsPage({ params }: PageProps) {
 
   // Contextual matching service derived from lib/services.ts (Single Source of Truth)
   const matchingService = getServiceByBlogSlug(blog.slug);
+
+  // Dynamic contextual content (companion article, service link, relevant free tools)
+  const contextualContent = getRelatedContextualContent(blog, relatedArticles, matchingService);
+
+  // Relevant case study for this topic cluster (Audit H-05: "Every post links to 1 case study")
+  const allCaseStudies = await getCaseStudies().catch(() => []);
+  const matchingCaseStudy = matchingService?.relatedCaseStudies?.length
+    ? allCaseStudies.find((cs) => matchingService.relatedCaseStudies.includes(cs.slug)) || allCaseStudies[0]
+    : allCaseStudies[0];
 
   const blocks = blog.contentBlocks?.length ? blog.contentBlocks : null;
   const faqs = (blog.faqs || []).filter((f) => f.question?.trim() && f.answer?.trim());
@@ -183,27 +300,21 @@ export default async function BlogDetailsPage({ params }: PageProps) {
     },
   ];
 
-  if (blog.category) {
-    breadcrumbElements.push({
-      "@type": "ListItem",
-      position: 3,
-      name: blog.category,
-      item: `${SITE_URL}/blogs?category=${encodeURIComponent(blog.category)}`,
-    });
-    breadcrumbElements.push({
-      "@type": "ListItem",
-      position: 4,
-      name: displayTitle,
-      item: pageUrl,
-    });
-  } else {
-    breadcrumbElements.push({
-      "@type": "ListItem",
-      position: 3,
-      name: displayTitle,
-      item: pageUrl,
-    });
-  }
+  const categorySlug = getCategorySlugForBlog(blog);
+  const categoryName = blog.category?.trim() || "Articles";
+
+  breadcrumbElements.push({
+    "@type": "ListItem",
+    position: 3,
+    name: categoryName,
+    item: `${SITE_URL}/blogs/category/${categorySlug}`,
+  });
+  breadcrumbElements.push({
+    "@type": "ListItem",
+    position: 4,
+    name: displayTitle,
+    item: pageUrl,
+  });
 
   const breadcrumbSchema = {
     "@context": "https://schema.org",
@@ -238,12 +349,13 @@ export default async function BlogDetailsPage({ params }: PageProps) {
           <Link href="/blogs" className="font-bold text-foreground transition-opacity hover:opacity-70">
             Blog
           </Link>
-          {blog.category && (
-            <>
-              <span className="text-muted-foreground/60">»</span>
-              <span className="font-medium text-muted-foreground">{blog.category}</span>
-            </>
-          )}
+          <span className="text-muted-foreground/60">»</span>
+          <Link
+            href={`/blogs/category/${categorySlug}`}
+            className="font-medium text-muted-foreground hover:text-white transition-colors"
+          >
+            {categoryName}
+          </Link>
           <span className="text-muted-foreground/60">»</span>
           <span className="truncate font-medium text-muted-foreground">{displayTitle}</span>
         </nav>
@@ -285,7 +397,12 @@ export default async function BlogDetailsPage({ params }: PageProps) {
                     {/* <span className="text-muted-foreground"> · {blog.authorRole}</span> */}
                   </p>
                   <p className="mt-0.5 text-sm text-muted-foreground">
-                    Updated on {format(new Date(blog.publishedAt), "MMM d, yyyy")}
+                    Published {format(new Date(blog.publishedAt), "MMM d, yyyy")}
+                    {blog.updatedAt &&
+                      format(new Date(blog.updatedAt), "yyyy-MM-dd") !==
+                        format(new Date(blog.publishedAt), "yyyy-MM-dd") && (
+                        <span> · Updated {format(new Date(blog.updatedAt), "MMM d, yyyy")}</span>
+                      )}
                   </p>
                 </div>
               </div>
@@ -361,6 +478,70 @@ export default async function BlogDetailsPage({ params }: PageProps) {
               </div>
             )}
 
+            {/* Dynamic Contextual Companion Playbook (Audit H-02 & H-05) */}
+            {contextualContent.companionArticle && (
+              <div className="my-8 rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-white/80">
+                <span className="font-semibold text-white">Recommended Companion Guide:</span>{" "}
+                <Link
+                  href={`/blogs/${contextualContent.companionArticle.slug}`}
+                  className="font-medium text-white underline hover:text-white/80 transition-colors"
+                >
+                  {contextualContent.companionArticle.title} →
+                </Link>
+              </div>
+            )}
+
+            {/* Dynamic Relevant Interactive Tool */}
+            {contextualContent.relevantTool && (
+              <div className="my-8 rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-white/80">
+                <span className="font-semibold text-white">{contextualContent.relevantTool.title}</span>{" "}
+                {contextualContent.relevantTool.prompt}{" "}
+                <Link
+                  href={contextualContent.relevantTool.href}
+                  className="font-medium text-white underline hover:text-white/80 transition-colors"
+                >
+                  {contextualContent.relevantTool.linkText}
+                </Link>
+              </div>
+            )}
+
+            {/* Dynamic Service Anchor Link */}
+            {contextualContent.service && (
+              <div className="my-8 rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-white/80">
+                <span className="font-semibold text-white">Looking for production delivery?</span> Explore our tailored{" "}
+                <Link
+                  href={`/services/${contextualContent.service.slug}`}
+                  className="font-medium text-white underline hover:text-white/80 transition-colors"
+                >
+                  {contextualContent.service.name.toLowerCase()} services →
+                </Link>
+              </div>
+            )}
+
+            {/* Contextual Case Study Proof (Audit H-05: Every post has a relevant case study link) */}
+            {matchingCaseStudy && (
+              <div className="my-10 rounded-2xl border border-white/10 bg-linear-to-r from-white/[0.03] to-white/[0.01] p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#A3B8CC]">
+                    Real-World Implementation
+                  </span>
+                  <h4 className="text-base font-semibold text-white">
+                    See how we built and scaled: {matchingCaseStudy.title}
+                  </h4>
+                  <p className="text-xs text-white/60 line-clamp-2 max-w-xl">
+                    {matchingCaseStudy.description}
+                  </p>
+                </div>
+                <Link
+                  href={`/case-studies/${matchingCaseStudy.slug}`}
+                  className="inline-flex shrink-0 items-center justify-center gap-1.5 px-4 py-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-xs font-semibold text-white transition-all group"
+                >
+                  <span>Read case study</span>
+                  <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                </Link>
+              </div>
+            )}
+
             {/* Tags */}
             {blog.tags?.length > 0 && (
               <div className="mt-16 flex flex-wrap gap-3">
@@ -379,22 +560,22 @@ export default async function BlogDetailsPage({ params }: PageProps) {
 
             {/* Contextual matching service banner */}
             {matchingService && (
-              <div className="mt-14 rounded-2xl border border-white/10 bg-linear-to-br from-white/[0.04] to-white/[0.01] p-6 sm:p-7 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
-                  <div className="space-y-1.5 max-w-xl">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#A3B8CC]">
-                      Matching Solution
-                    </span>
-                    <h3 className="text-lg sm:text-xl font-semibold text-white tracking-tight">
-                      {matchingService.headline} {matchingService.headlineAccent}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-white/60 leading-relaxed">
-                      {matchingService.intro}
-                    </p>
-                  </div>
+              <div className="mt-14 w-full rounded-2xl border border-white/10 bg-linear-to-br from-white/[0.04] to-white/[0.01] p-6 sm:p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)] flex flex-col gap-5">
+                <div className="space-y-2">
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-[#A3B8CC] block">
+                    Matching Solution
+                  </span>
+                  <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-white tracking-tight leading-snug">
+                    {matchingService.headline} {matchingService.headlineAccent}
+                  </h3>
+                  <p className="text-sm sm:text-base text-white/60 leading-relaxed">
+                    {matchingService.intro}
+                  </p>
+                </div>
+                <div className="pt-2">
                   <Link
                     href={`/services/${matchingService.slug}`}
-                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-xs sm:text-sm font-bold text-slate-950 transition-all hover:bg-white/90 hover:translate-y-[-1px] group"
+                    className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-slate-950 transition-all hover:bg-white/90 hover:translate-y-[-1px] group"
                   >
                     <span>Explore {matchingService.name}</span>
                     <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />

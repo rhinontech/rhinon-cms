@@ -1,11 +1,12 @@
 import { Metadata } from "next";
 import CrmRoiCalculator from "@/components/Tools/CrmRoiCalculator";
+import { CrmGuideContent } from "@/components/Tools/CrmGuideContent";
 import { SCHEMA_IDS } from "@/lib/site";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rhinonlabs.com";
 
 export const metadata: Metadata = {
-  title: "Free CRM ROI Calculator — Rhinon Labs",
+  title: "Free CRM ROI Calculator",
   description:
     "Calculate how much revenue your sales team is leaving on the table without a CRM. Enter team size, deal value, and win rate — get an instant ROI estimate.",
   alternates: { canonical: `${SITE_URL}/tools/crm-roi-calculator` },
@@ -54,6 +55,7 @@ export default function CrmRoiCalculatorPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(toolSchema) }} />
       <CrmRoiCalculator />
+      <CrmGuideContent />
     </>
   );
 }

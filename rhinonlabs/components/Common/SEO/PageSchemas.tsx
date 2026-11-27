@@ -29,10 +29,10 @@ export function ServiceSchema() {
       dangerouslySetInnerHTML={json({
         "@context": "https://schema.org",
         "@type": "Service",
-        serviceType: "AI Automation & Custom Software Development",
+        serviceType: "AI Automation Agency for Startups & SMBs",
         provider: { "@id": SCHEMA_IDS.organization },
         description:
-          "We help growing businesses and SMBs build and deploy custom AI agents, workflow automations, and internal dashboards that scale operations without adding headcount.",
+          "AI automation agency for startups and SMBs. We build custom AI agents, workflow automations, and internal tools in fixed-scope 2–4-week sprints so teams scale operations without adding headcount.",
         areaServed: "Worldwide",
         hasOfferCatalog: {
           "@type": "OfferCatalog",

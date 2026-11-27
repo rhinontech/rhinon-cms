@@ -68,6 +68,7 @@ export function Navbar() {
                         width={152}
                         height={40}
                         priority={true}
+                        style={{ width: "auto", height: "auto" }}
                         className="w-38 h-auto object-contain opacity-75 transition-opacity group-hover:opacity-100"
                     />
                     {/* <span className="text-2xl font-serif italic tracking-wide">Rhinon Labs</span> */}

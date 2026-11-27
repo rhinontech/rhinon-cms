@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, Download, Loader2, Mail, ArrowRight } from "lucide-react";
 import { createPlatformLead } from "@/lib/api";
+import { trackToolComplete, trackGenerateLead, getUtmParams } from "@/lib/analytics-events";
 
 const CHECKLIST_ITEMS = [
   { phase: "Before Day 1", items: ["Send offer letter and get it signed", "Set up email and system accounts", "Order equipment and access cards", "Assign an onboarding buddy", "Send welcome package with company handbook"] },
@@ -30,6 +31,11 @@ export default function EmployeeOnboardingChecklist() {
     e.preventDefault();
     if (!companyName.trim()) return;
     setGenerated(true);
+    // Track tool completion (Audit H-08)
+    trackToolComplete("employee_onboarding_checklist", {
+      company: companyName,
+      hires: hires || "1-5",
+    });
   }
 
   async function handleEmail(e: React.FormEvent) {
@@ -38,6 +44,7 @@ export default function EmployeeOnboardingChecklist() {
     setSending(true);
     setError("");
     try {
+      const utms = getUtmParams();
       await createPlatformLead({
         name: companyName,
         email: email.trim(),
@@ -47,8 +54,20 @@ export default function EmployeeOnboardingChecklist() {
         annualLeadVolume: hires || "1-5",
         message: `Requested Employee Onboarding Checklist. Company: ${companyName}, Hires: ${hires || "not specified"}`,
         source: "tools/employee-onboarding-checklist",
+        utmSource: utms.utmSource,
+        utmMedium: utms.utmMedium,
+        utmCampaign: utms.utmCampaign,
+        utmTerm: utms.utmTerm,
+        utmContent: utms.utmContent,
+        referrer: utms.referrer,
       });
       setSent(true);
+      // Track lead generation from tool (Audit H-08)
+      trackGenerateLead({
+        lead_type: "tool_lead",
+        source: utms.utmSource || "tools/employee-onboarding-checklist",
+        category: "employee_onboarding_checklist",
+      });
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {

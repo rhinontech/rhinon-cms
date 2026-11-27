@@ -154,6 +154,12 @@ export interface PlatformLeadPayload {
   teamSize?: string;
   message?: string;
   source?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  utmTerm?: string;
+  utmContent?: string;
+  referrer?: string;
 }
 
 export async function createPlatformLead(payload: PlatformLeadPayload): Promise<void> {
