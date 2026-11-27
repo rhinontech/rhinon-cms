@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { format } from "date-fns";
@@ -9,6 +9,7 @@ import { type Blog } from "@/lib/api";
 import { motion, Variants } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import dynamic from "next/dynamic";
+import { getDynamicCategories } from "@/lib/blog-categories";
 
 const SchedulerModal = dynamic(() => import("@/components/Common/CTA/SchedulerModal"));
 
@@ -39,22 +40,28 @@ export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) 
   const [searchQuery, setSearchQuery] = useState("");
   const [isSchedulerOpen, setIsSchedulerOpen] = useState(false);
 
+  // Dynamically extract categories from all blogs
+  const categories = getDynamicCategories(initialBlogs);
+
   // Filter all blogs based on search query
-  const filteredAll = initialBlogs.filter((blog) => {
-    const query = searchQuery.toLowerCase();
-    return (
-      blog.title.toLowerCase().includes(query) ||
-      blog.excerpt.toLowerCase().includes(query) ||
-      (blog.category && blog.category.toLowerCase().includes(query)) ||
-      blog.tags?.some((tag) => tag.toLowerCase().includes(query))
-    );
-  });
+  const filteredAll = useMemo(() => {
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return initialBlogs;
+    return initialBlogs.filter((blog) => {
+      return (
+        blog.title.toLowerCase().includes(query) ||
+        blog.excerpt.toLowerCase().includes(query) ||
+        (blog.category && blog.category.toLowerCase().includes(query)) ||
+        blog.tags?.some((tag) => tag.toLowerCase().includes(query))
+      );
+    });
+  }, [searchQuery, initialBlogs]);
 
   // Recent articles section will show the first 2 blogs when no search is active
-  const recentBlogs = initialBlogs.slice(0, 2);
+  const recentBlogs = useMemo(() => (searchQuery ? [] : initialBlogs.slice(0, 2)), [searchQuery, initialBlogs]);
 
   // All articles section will show the rest of the blogs, or all search results if a search is active
-  const displayedAllBlogs = searchQuery ? filteredAll : initialBlogs.slice(2);
+  const displayedAllBlogs = useMemo(() => (searchQuery ? filteredAll : initialBlogs.slice(2)), [searchQuery, filteredAll, initialBlogs]);
 
   return (
     <div className="blog-theme min-h-screen bg-background relative selection:bg-primary/50 flex flex-col pt-32 pb-24 overflow-hidden">
@@ -99,14 +106,30 @@ export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) 
           >
             Deep dives into MVP development, AI engineering, and growth strategies for modern founders.
           </motion.p>
-          <motion.div variants={fadeUpVariant}>
+          <motion.div variants={fadeUpVariant} className="flex flex-col items-center">
             <Button
               onClick={() => setIsSchedulerOpen(true)}
               size="lg"
-              className="rounded-2xl max-sm:py-5 px-8 bg-primary hover:bg-primary/90 text-white max-sm:text-sm font-medium"
+              className="rounded-2xl max-sm:py-5 px-8 bg-primary hover:bg-primary/90 text-white max-sm:text-sm font-medium mb-8"
             >
               Book a Free Discovery Call
             </Button>
+
+            {/* Dynamic Category Filter Pills */}
+            <div className="flex flex-wrap justify-center gap-2 max-w-2xl">
+              <span className="px-4 py-2 rounded-full text-xs font-semibold bg-white text-black">
+                All ({initialBlogs.length})
+              </span>
+              {categories.map((cat) => (
+                <Link
+                  key={cat.slug}
+                  href={`/blogs/category/${cat.slug}`}
+                  className="px-4 py-2 rounded-full text-xs font-medium border border-white/10 bg-white/5 text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  {cat.name} ({cat.count})
+                </Link>
+              ))}
+            </div>
           </motion.div>
         </motion.div>
 

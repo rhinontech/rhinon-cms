@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { getBlog, getBlogs, getCaseStudies, type Blog, type CaseStudy } from "@/lib/api";
+import { getCategorySlugForBlog } from "@/lib/blog-categories";
 import { format } from "date-fns";
 import { Minus, ShieldCheck, Sparkles, ArrowRight } from "lucide-react";
 
@@ -299,27 +300,21 @@ export default async function BlogDetailsPage({ params }: PageProps) {
     },
   ];
 
-  if (blog.category) {
-    breadcrumbElements.push({
-      "@type": "ListItem",
-      position: 3,
-      name: blog.category,
-      item: `${SITE_URL}/blogs?category=${encodeURIComponent(blog.category)}`,
-    });
-    breadcrumbElements.push({
-      "@type": "ListItem",
-      position: 4,
-      name: displayTitle,
-      item: pageUrl,
-    });
-  } else {
-    breadcrumbElements.push({
-      "@type": "ListItem",
-      position: 3,
-      name: displayTitle,
-      item: pageUrl,
-    });
-  }
+  const categorySlug = getCategorySlugForBlog(blog);
+  const categoryName = blog.category?.trim() || "Articles";
+
+  breadcrumbElements.push({
+    "@type": "ListItem",
+    position: 3,
+    name: categoryName,
+    item: `${SITE_URL}/blogs/category/${categorySlug}`,
+  });
+  breadcrumbElements.push({
+    "@type": "ListItem",
+    position: 4,
+    name: displayTitle,
+    item: pageUrl,
+  });
 
   const breadcrumbSchema = {
     "@context": "https://schema.org",
@@ -354,12 +349,13 @@ export default async function BlogDetailsPage({ params }: PageProps) {
           <Link href="/blogs" className="font-bold text-foreground transition-opacity hover:opacity-70">
             Blog
           </Link>
-          {blog.category && (
-            <>
-              <span className="text-muted-foreground/60">»</span>
-              <span className="font-medium text-muted-foreground">{blog.category}</span>
-            </>
-          )}
+          <span className="text-muted-foreground/60">»</span>
+          <Link
+            href={`/blogs/category/${categorySlug}`}
+            className="font-medium text-muted-foreground hover:text-white transition-colors"
+          >
+            {categoryName}
+          </Link>
           <span className="text-muted-foreground/60">»</span>
           <span className="truncate font-medium text-muted-foreground">{displayTitle}</span>
         </nav>
