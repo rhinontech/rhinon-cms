@@ -120,7 +120,7 @@ const Hero1 = () => {
         </div>
       </div>
 
-      <div className="flex flex-col gap-12 pb-10">
+      <div className="flex flex-col gap-12 pb-10 relative">
         <div
           className="flex flex-col md:flex-row justify-center px-5 gap-5 md:gap-10 max-w-4xl mx-auto text-xs md:text-sm uppercase tracking-[0.18em] text-center text-white/55"
         >

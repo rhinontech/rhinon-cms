@@ -87,7 +87,7 @@ export function Problem() {
                     <span className="ml-0 md:ml-4">Sound familiar?</span>
                     {/* SVG Arrow */}
                     <div className="ml-4 w-16 h-16 relative hidden lg:block -mt-4">
-                        <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible">
+                        <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible" aria-hidden="true">
                             <defs>
                                 <linearGradient id="arrowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                                     <stop offset="0%" stopColor="#ff4d4d" />
@@ -99,10 +99,6 @@ export function Problem() {
                             <path d="M 60 55 L 82 52 L 75 30" fill="none" stroke="url(#arrowGradient)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                     </div>
-
-                    {/* <div className="absolute top-0 left-0 z-10">
-                        <img src="https://framerusercontent.com/images/8BXeBQObnslmzSi9htBC7WTLXM.svg" alt="Arrow Decoration" />
-                    </div> */}
                 </div>
 
                 {/* Right side list */}
