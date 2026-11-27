@@ -397,7 +397,12 @@ export default async function BlogDetailsPage({ params }: PageProps) {
                     {/* <span className="text-muted-foreground"> · {blog.authorRole}</span> */}
                   </p>
                   <p className="mt-0.5 text-sm text-muted-foreground">
-                    Updated on {format(new Date(blog.publishedAt), "MMM d, yyyy")}
+                    Published {format(new Date(blog.publishedAt), "MMM d, yyyy")}
+                    {blog.updatedAt &&
+                      format(new Date(blog.updatedAt), "yyyy-MM-dd") !==
+                        format(new Date(blog.publishedAt), "yyyy-MM-dd") && (
+                        <span> · Updated {format(new Date(blog.updatedAt), "MMM d, yyyy")}</span>
+                      )}
                   </p>
                 </div>
               </div>
