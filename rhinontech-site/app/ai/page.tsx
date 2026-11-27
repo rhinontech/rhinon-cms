@@ -37,7 +37,7 @@ const CONTROL = [
 const FAQ = [
   { q: "Does Rhinon AI send emails on its own?", a: "No. Outreach drafts are saved for your review, and nothing goes out until you approve it." },
   { q: "What does the website chatbot answer from?", a: "Your own website and documents. You train it on them, and it hands the chat to a person when one is needed." },
-  { q: "Is it free?", a: "The AI in the CRM, outreach and HR is part of the free workspace. Only the AI website chatbot is a paid plan." },
+  { q: "Is it free?", a: "The AI in the CRM, outreach and HR is part of the free workspace. Only the AI Agent on your website is a paid add-on." },
   { q: "Which AI model does it use?", a: "Rhinon AI runs on Google's Gemini models." },
 ];
 

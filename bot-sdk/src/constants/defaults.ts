@@ -70,7 +70,8 @@ export const DEFAULT_NAVIGATION_OPTIONS = ['Home', 'Messages', 'Help'];
 
 export const DEFAULT_GREETINGS = ['Hi there👋', 'How can we help?'];
 
-export const DEFAULT_POPUP_MESSAGE = 'Hey, I am Rhinon AI Assistant, How can I help you?';
+/** No pop-up unless the workspace writes one in Appearance → Pop-up message. */
+export const DEFAULT_POPUP_MESSAGE = '';
 
 export const DEFAULT_CONFIG: ChatbotConfig = {
   theme: 'dark',

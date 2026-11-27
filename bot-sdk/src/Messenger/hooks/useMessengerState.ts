@@ -195,9 +195,11 @@ export function useMessengerState(
               secondaryColor: cfg.secondaryColor || '#f3f6ff',
               chatbotName: cfg.chatbotName || 'Rhinon',
               navigationOptions: cfg.navigationOptions,
-              // An empty message means "no pop-up" (Appearance says so); only a
-              // bot that never set one gets the default.
-              popupMessage: cfg.popupMessage ?? 'Hey, I am Rhinon AI Assistant, How can I help you?',
+              // Appearance → Pop-up message says "Leave empty for none", and a bot
+              // that never set one shows an empty box there, so missing means none
+              // too. (It used to fall back to a built-in greeting the workspace
+              // never wrote.)
+              popupMessage: typeof cfg.popupMessage === 'string' ? cfg.popupMessage.trim() : '',
               popupDelay: cfg.popupDelay,
               greetings: cfg.greetings?.length
                 ? cfg.greetings

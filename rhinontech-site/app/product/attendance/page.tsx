@@ -11,8 +11,8 @@ const G = "italic";
 const GL = "italic";
 
 export const metadata = pageMeta({
-  title: "Attendance & Leave Management",
-  description: "Free attendance and leave software for your whole team. Track clock-ins, leave balances, approvals and the team calendar easily.",
+  title: "Leave & Attendance Management System for Indian Teams",
+  description: "Attendance management system and leave tracker for small businesses in India: clock-ins, leave balances, approvals and a team calendar. Free for up to 5 people.",
   path: "/product/attendance",
   hasOgImage: true,
 });
@@ -20,9 +20,10 @@ export const metadata = pageMeta({
 const FAQ = [
   { q: "Can employees fix a missed clock-in or clock-out?", a: "Yes. They file a regularization request and a manager approves it." },
   { q: "What happens if someone forgets to clock out?", a: "Open sessions close automatically at night, so a forgotten clock-out never runs on. The employee can then request a correction." },
-  { q: "Can I set up my own leave types?", a: "Yes. Define the leave types you offer, give each person a balance, and managers approve or decline with a note." },
+  { q: "What leave types does Rhinon support?", a: "You define your own — casual leave, sick leave, earned leave, any type you offer. Set a balance for each person and managers approve or decline with a note." },
+  { q: "Does it support India-specific leave rules — like PL carry-forward or earned leave encashment?", a: "You can configure balances and carry-forward rules manually. Automated statutory enforcement (like the Factories Act or state-specific earned leave rules) is not built in yet." },
   { q: "Is there a shared calendar?", a: "Yes. Approved leave shows on a team calendar, so everyone can plan around who is away." },
-  { q: "Is Attendance free?", a: "Yes. Everything in Rhinon Tech except the AI website chatbot is free for your whole team." },
+  { q: "Is Attendance free?", a: "Yes. Everything in Rhinon Tech except the AI Agent is free for up to 5 people." },
 ];
 
 export default function AttendancePage() {
@@ -83,10 +84,10 @@ export default function AttendancePage() {
       <PairsWith items={[
         { slug: "payroll", line: "Feeds the monthly payroll run." },
         { slug: "hr", line: "Part of every employee record." },
-        { slug: "work", line: "Plan work around who is away." },
+        { slug: "projects", line: "Plan work around who is away." },
       ]} />
       <ProductFaq slug="attendance" title="Attendance questions, answered." items={FAQ} />
-      <CtaBand tone={p.tone} title={<>Make attendance <span className="text-aurora-soft">effortless.</span></>} sub="Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
+      <CtaBand tone={p.tone} title={<>Make attendance <span className="text-aurora-soft">effortless.</span></>} sub="Set up your workspace in a few minutes and invite up to 5 people free. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
     </div>
   );
 }

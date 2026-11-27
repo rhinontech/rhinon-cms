@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Aurora, Button, Eyebrow, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand } from "@/components/blocks";
@@ -9,8 +10,8 @@ import { ComposerHero, FeedSection, FlowSection, LinkedInSection, MemorySection,
 const p = bySlug("outreach")!;
 
 export const metadata = pageMeta({
-  title: "AI Cold Email Outreach Software",
-  description: "Free AI cold email outreach for your whole team. AI researches each lead, drafts tailored emails and waits for your approval.",
+  title: "Cold Email Software with an AI Writer",
+  description: "Cold email software for small teams: AI researches each lead and drafts a tailored email you approve, then sequences follow up. Free for up to 5 people.",
   path: "/product/outreach",
   hasOgImage: true,
 });
@@ -20,7 +21,7 @@ const FAQ = [
   { q: "Can I control how many emails go out a day?", a: "Yes. Each campaign has a daily limit, a send time and the days it runs. Pause or resume it whenever you like." },
   { q: "Can I try an email before it reaches anyone?", a: "Yes. Send a test to yourself and see exactly what a lead would see." },
   { q: "Does it handle LinkedIn too?", a: "Yes. Plan and publish LinkedIn posts, videos and articles from the same place, with AI help." },
-  { q: "Is Outreach free?", a: "Yes. Everything in Rhinon Tech except the AI website chatbot is free for your whole team." },
+  { q: "Is Outreach free?", a: "Yes. Everything in Rhinon Tech except the AI Agent is free for up to 5 people." },
 ];
 
 export default function OutreachPage() {
@@ -42,6 +43,9 @@ export default function OutreachPage() {
               <Button href={links.signup}>Get started free</Button>
               <Button href={links.call} variant="glass">Book a demo</Button>
             </div>
+            <Link href="/tools/ai-email-writer" className="mt-5 inline-block text-[14px] text-white/65 underline decoration-white/25 underline-offset-4 transition hover:text-white">
+              Just need one draft? Try the free AI email writer
+            </Link>
           </Reveal>
         </div>
         <div className="relative mt-16 px-5"><Reveal delay={150}><ComposerHero /></Reveal></div>
@@ -91,8 +95,8 @@ export default function OutreachPage() {
 
       <PairsWith dark items={[
         { slug: "crm", line: "Every send and reply updates the lead." },
-        { slug: "inbox", line: "Replies come back to your shared inbox." },
-        { slug: "chatbot", line: "Warm up leads that visit your site." },
+        { slug: "inbox", line: "Send from your team's addresses." },
+        { slug: "ai-agent", line: "Warm up leads that visit your site." },
       ]} />
       <ProductFaq slug="outreach" dark title="Outreach questions, answered." items={FAQ} />
       <CtaBand tone={p.tone} title={<>Write one email. <span className="text-aurora-soft">Reach everyone.</span></>} sub="Set up your first campaign in a few minutes. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />

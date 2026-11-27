@@ -1,6 +1,9 @@
 import Link from "next/link";
-import { ArrowUpRight, ChevronRight } from "lucide-react";
+import { ArrowUpRight, Check, ChevronRight } from "lucide-react";
 import { bySlug } from "@/content/products";
+import { PRODUCT_DEPTH } from "@/content/productDepth";
+import { solutionBySlug } from "@/content/solutions";
+import { comparisonBySlug } from "@/content/compare";
 import { IconTile, SectionHead } from "@/components/ui";
 import { Reveal } from "@/components/Reveal";
 import { Faq } from "@/components/blocks";
@@ -122,8 +125,78 @@ export async function ProductGuides({ slug, dark = false }: { slug: string; dark
 }
 
 /** The FAQ block every product page ends with, plus its structured data. */
-export function ProductFaq({ title, items, slug, dark = false }: { title: string; items: { q: string; a: string }[]; slug?: string; dark?: boolean }) {
+/** How it works, who uses it, free vs paid and the closest alternative (plan §5.2), in the page's own theme. */
+export function ProductDepthSections({ slug, dark = false }: { slug: string; dark?: boolean }) {
+  const d = PRODUCT_DEPTH[slug];
+  const product = bySlug(slug);
+  if (!d || !product) return null;
+  const card = dark ? "border-white/10 bg-white/[0.04]" : "border-line bg-white";
+  const soft = dark ? "text-white/60" : "text-ink-soft";
+  const head = dark ? "text-white" : "text-ink";
+  const mono = `font-mono text-[11px] uppercase tracking-[0.16em] ${dark ? "text-white/45" : "text-muted"}`;
+  return (
+    <section className={dark ? "bg-[#030306] py-24" : "border-t border-line py-24"}>
+      <div className="mx-auto max-w-[1240px] px-5">
+        <Reveal><SectionHead dark={dark} eyebrow="How it works" title={`${product.name} in three steps.`} /></Reveal>
+        <ol className="mt-12 grid gap-4 md:grid-cols-3">
+          {d.steps.map((s, i) => (
+            <Reveal key={s.title} delay={i * 90}>
+              <li className={`h-full rounded-2xl border p-6 ${card}`}>
+                <span className="flex h-9 w-9 items-center justify-center rounded-full text-[15px] font-semibold text-white" style={{ background: `linear-gradient(140deg, ${product.tone[0]}, ${product.tone[1]})` }}>{i + 1}</span>
+                <p className={`font-display mt-5 text-[21px] font-semibold leading-tight ${head}`}>{s.title}</p>
+                <p className={`mt-2.5 text-[15px] leading-7 ${soft}`}>{s.body}</p>
+              </li>
+            </Reveal>
+          ))}
+        </ol>
+
+        <div className="mt-20">
+          <p className={mono}>Who uses it</p>
+          <div className="mt-4 grid gap-4 md:grid-cols-3">
+            {d.uses.map((u) => {
+              const s = solutionBySlug(u.solution);
+              return s ? (
+                <Link key={u.solution} href={`/solutions/${s.slug}`} className={`group flex h-full flex-col rounded-2xl border p-6 transition-colors ${card} ${dark ? "hover:bg-white/[0.07]" : "hover:border-ink/20"}`}>
+                  <span className={`flex items-center justify-between font-semibold ${head}`}>{s.name}<ArrowUpRight className="h-4 w-4 opacity-50 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" /></span>
+                  <span className={`mt-2 text-[15px] leading-7 ${soft}`}>{u.line}</span>
+                </Link>
+              ) : null;
+            })}
+          </div>
+        </div>
+
+        <div className="mt-16 grid gap-4 lg:grid-cols-2">
+          <div className={`rounded-2xl border p-7 ${card}`}>
+            <p className={mono}>Free and paid</p>
+            <p className={`mt-4 flex gap-3 text-[16px] leading-7 ${head}`}><Check className="mt-1.5 h-4 w-4 shrink-0 text-emerald-500" strokeWidth={3} />{d.plan.free}</p>
+            <p className={`mt-3 flex gap-3 text-[16px] leading-7 ${soft}`}><ArrowUpRight className="mt-1.5 h-4 w-4 shrink-0" />{d.plan.paid}</p>
+            <Link href="/pricing" className={`mt-5 inline-flex text-[14.5px] font-semibold underline underline-offset-4 ${head}`}>See every plan limit</Link>
+          </div>
+          <div className={`rounded-2xl border p-7 ${card}`}>
+            <p className={mono}>Compared with</p>
+            <ul className="mt-4 space-y-3">
+              {d.compare.map((cm) => {
+                const c = comparisonBySlug(cm.slug);
+                return c ? (
+                  <li key={cm.slug}>
+                    <Link href={`/compare/${c.slug}`} className="group block">
+                      <span className={`flex items-center gap-1.5 text-[16px] font-semibold ${head}`}>Rhinon Tech vs {c.competitor}<ArrowUpRight className="h-4 w-4 opacity-50 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" /></span>
+                      <span className={`mt-1 block text-[15px] leading-6 ${soft}`}>{cm.line}</span>
+                    </Link>
+                  </li>
+                ) : null;
+              })}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function ProductFaq({ title, items: own, slug, dark = false }: { title: string; items: { q: string; a: string }[]; slug?: string; dark?: boolean }) {
   const product = slug ? bySlug(slug) : undefined;
+  const items = [...own, ...((slug && PRODUCT_DEPTH[slug]?.faq) || [])];
   const nodes: Record<string, unknown>[] = product
     ? [
         moduleSoftwareAppNode(product.slug),
@@ -138,6 +211,7 @@ export function ProductFaq({ title, items, slug, dark = false }: { title: string
 
   return (
     <>
+      {product && <ProductDepthSections slug={product.slug} dark={dark} />}
       {product && <ProductGuides slug={product.slug} dark={dark} />}
       <section className={dark ? "bg-[#030306] pb-24 pt-24 sm:pt-28" : "mx-auto max-w-[1240px] px-5 py-24 sm:py-28"}>
         <div className={dark ? "mx-auto max-w-[1240px] px-5" : ""}>

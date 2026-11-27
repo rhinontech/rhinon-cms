@@ -6,22 +6,22 @@ import { bySlug } from "@/content/products";
 import { Crumb, PairsWith, ProductFaq } from "@/components/product/shared";
 import { DocHero, Pinboard, SwitchSection, TreeSection } from "@/components/product/pages";
 
-const p = bySlug("pages")!;
+const p = bySlug("docs")!;
 const HEAD = "font-display font-medium";
 const INDIGO = "text-indigo-600 underline decoration-wavy decoration-indigo-300 decoration-[3px] underline-offset-[10px]";
 
 export const metadata = pageMeta({
-  title: "Team Wiki & Knowledge Pages",
-  description: "Free team wiki and knowledge software for your whole team. Write nested docs, briefs and processes right next to your projects.",
-  path: "/product/pages",
+  title: "Internal Wiki & Team Docs",
+  description: "An internal wiki for your team: nested docs, briefs and processes right next to your projects and clients. Free for up to 5 people.",
+  path: "/product/docs",
   hasOgImage: true,
 });
 
 const FAQ = [
-  { q: "What is Pages for?", a: "Processes, plans, briefs and notes: anything your team should write down once and find again. It sits in the same workspace as your projects and customers." },
-  { q: "Can I nest pages?", a: "Yes. Pages nest in a tree, so a handbook can hold policies, and a project folder can hold its briefs." },
-  { q: "How do I start a page?", a: "Create one in a click and start typing. It begins as Untitled and takes its name from you." },
-  { q: "Is Pages free?", a: "Yes. Everything in Rhinon Tech except the AI website chatbot is free for your whole team." },
+  { q: "What is Docs for?", a: "Processes, plans, briefs and notes: anything your team should write down once and find again. It sits in the same workspace as your projects and customers." },
+  { q: "Can I nest docs?", a: "Yes. Docs nest in a tree, so a handbook can hold policies, and a project folder can hold its briefs." },
+  { q: "How do I start a doc?", a: "Create one in a click and start typing. It begins as Untitled and takes its name from you." },
+  { q: "Is Docs free?", a: "Yes. Everything in Rhinon Tech except the AI Agent is free for up to 5 people." },
 ];
 
 export default function PagesPage() {
@@ -32,7 +32,7 @@ export default function PagesPage() {
         <Aurora tones={["#4f6bff", "#a78bfa", "#ffb547"]} />
         <div className="relative mx-auto grid max-w-[1240px] items-center gap-14 px-5 lg:grid-cols-[0.95fr_1.05fr]">
           <Reveal>
-            <Crumb slug="pages" />
+            <Crumb slug="docs" />
             <div className="mt-6"><IconTile icon={p.icon} tone={p.tone} size={56} /></div>
             <h1 className={`${HEAD} mt-6 text-balance text-[40px] leading-[1.05] text-[#1d1a12] sm:text-[56px]`}>Your team's knowledge,<br className="hidden sm:block" /> <span className={`${INDIGO} sm:whitespace-nowrap`}>written down once.</span></h1>
             <p className="mt-6 max-w-[500px] text-[18px] leading-8 text-[#5d5640]">Nested pages for processes, plans, briefs and notes. Write them where the work happens, and find them again in a tree that makes sense.</p>
@@ -61,18 +61,18 @@ export default function PagesPage() {
         <Reveal>
           <Eyebrow>Next to the work</Eyebrow>
           <h2 className={`${HEAD} mt-5 text-balance text-[38px] leading-[1.05] text-[#1d1a12] sm:text-[52px]`}>One workspace, <span className={INDIGO}>one click away.</span></h2>
-          <p className="mt-5 max-w-[440px] text-[17px] leading-8 text-[#5d5640]">Pages sits in the same sidebar as your projects, your inbox and your customers. Moving between a brief and the board it describes takes one click.</p>
+          <p className="mt-5 max-w-[440px] text-[17px] leading-8 text-[#5d5640]">Docs sits in the same sidebar as your projects, your inbox and your customers. Moving between a brief and the board it describes takes one click.</p>
         </Reveal>
         <Reveal delay={120}><SwitchSection /></Reveal>
       </section>
 
       <PairsWith items={[
-        { slug: "work", line: "Keep briefs and notes in the same workspace." },
+        { slug: "projects", line: "Keep briefs and notes in the same workspace." },
         { slug: "hr", line: "Keep your handbook and policies in one place." },
         { slug: "chat", line: "Talk about a page with the people it affects." },
       ]} />
-      <ProductFaq slug="pages" title="Pages questions, answered." items={FAQ} />
-      <CtaBand tone={p.tone} title={<>Write it down <span className="text-aurora-soft">once.</span></>} sub="Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
+      <ProductFaq slug="docs" title="Docs questions, answered." items={FAQ} />
+      <CtaBand tone={p.tone} title={<>Write it down <span className="text-aurora-soft">once.</span></>} sub="Set up your workspace in a few minutes and invite up to 5 people free. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
     </div>
   );
 }

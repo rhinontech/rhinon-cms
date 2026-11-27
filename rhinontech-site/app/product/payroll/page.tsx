@@ -10,18 +10,18 @@ const p = bySlug("payroll")!;
 const G = "italic";
 
 export const metadata = pageMeta({
-  title: "Payroll Software for India",
-  description: "Free payroll software for your whole team in India. Manage salary structures, PF/PT/TDS runs and monthly payslips in one place.",
+  title: "Payroll: Salary Runs & Payslips",
+  description: "Monthly salary runs, payslips and reimbursements in ₹, with PF, PT and TDS on each payslip. Statutory filings stay with your CA. Free for up to 5 people.",
   path: "/product/payroll",
   hasOgImage: true,
 });
 
 const FAQ = [
-  { q: "Does it handle Indian deductions?", a: "Yes. Payroll supports PF, PT and TDS configuration, and amounts are in ₹." },
+  { q: "Does it handle Indian deductions?", a: "It applies PF at 12% of basic, professional tax and a monthly TDS amount you set on each payslip, in ₹. It does not calculate ESI or file returns such as ECR, Form 16 or challans, so export the run for your CA." },
   { q: "How does a run work?", a: "Start a monthly run, review gross and net across your team, process it and mark it paid. It moves from draft to processed to paid." },
   { q: "Where does the salary structure live?", a: "On each person's record: basic, HRA, travel, medical and other components, with deductions configured per person." },
   { q: "Who can see payroll?", a: "Only roles you give access to. You choose who can view payroll and who can run it." },
-  { q: "Is Payroll free?", a: "Yes. Everything in Rhinon Tech except the AI website chatbot is free for your whole team." },
+  { q: "Is Payroll free?", a: "Yes. Everything in Rhinon Tech except the AI Agent is free for up to 5 people." },
 ];
 
 export default function PayrollPage() {
@@ -75,7 +75,7 @@ export default function PayrollPage() {
         { slug: "performance", line: "Bring appraisals into pay decisions." },
       ]} />
       <ProductFaq slug="payroll" title="Payroll questions, answered." items={FAQ} />
-      <CtaBand tone={p.tone} title={<>Close the month <span className="text-aurora-soft">with confidence.</span></>} sub="Set up your workspace in a few minutes and bring your whole team. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
+      <CtaBand tone={p.tone} title={<>Close the month <span className="text-aurora-soft">with confidence.</span></>} sub="Set up your workspace in a few minutes and invite up to 5 people free. No credit card, no time limit." primary={{ label: "Get started free", href: links.signup }} secondary={{ label: "See all products", href: "/product" }} />
     </div>
   );
 }

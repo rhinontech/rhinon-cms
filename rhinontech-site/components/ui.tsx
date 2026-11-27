@@ -45,9 +45,10 @@ export function Button({
   );
 }
 
+/** Section label: violet mono caps (6.1:1 on white; a lighter violet on dark bands). */
 export function Eyebrow({ children, dark = false }: { children: React.ReactNode; dark?: boolean }) {
   return (
-    <span className={`inline-block font-mono text-[11px] font-medium uppercase tracking-[0.2em] ${dark ? "text-white/45" : "text-muted"}`}>
+    <span className={`inline-block font-mono text-[12px] font-medium uppercase tracking-[0.14em] ${dark ? "text-[#b3a6ff]" : "text-[#5b3df5]"}`}>
       {children}
     </span>
   );
@@ -59,23 +60,25 @@ export function SectionHead({
   sub,
   dark = false,
   as = "h2",
+  center = false,
 }: {
   eyebrow?: string;
   title: React.ReactNode;
   sub?: string;
   dark?: boolean;
   as?: "h1" | "h2";
-  /** Kept so existing callers compile; headings are always left-aligned now. */
+  /** Centred, for statement sections that introduce a full-width grid. */
   center?: boolean;
 }) {
   const Tag = as;
+  const size = as === "h1" ? "text-[40px] sm:text-[64px] leading-[1.02]" : "text-[34px] sm:text-[52px] leading-[1.05]";
   return (
-    <div className="max-w-[820px]">
+    <div className={center ? "mx-auto max-w-[860px] text-center" : "max-w-[820px]"}>
       {eyebrow && <Eyebrow dark={dark}>{eyebrow}</Eyebrow>}
-      <Tag className={`font-display text-balance text-[36px] font-semibold leading-[1.04] sm:text-[60px] ${eyebrow ? "mt-4" : ""} ${dark ? "text-white" : "text-ink"}`}>
+      <Tag className={`font-display text-balance ${size} ${eyebrow ? "mt-4" : ""} ${dark ? "text-white" : "text-ink"}`}>
         {title}
       </Tag>
-      {sub && <p className={`mt-5 max-w-[640px] text-[17px] leading-8 sm:text-[18px] ${dark ? "text-white/55" : "text-ink-soft"}`}>{sub}</p>}
+      {sub && <p className={`mt-5 max-w-[660px] text-[17px] leading-8 sm:text-[18px] ${center ? "mx-auto" : ""} ${dark ? "text-white/60" : "text-ink-soft"}`}>{sub}</p>}
     </div>
   );
 }

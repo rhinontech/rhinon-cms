@@ -10,7 +10,7 @@ export function Avatar({ name, src, size = 32 }: { name: string; src?: string | 
   const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("");
   return src ? (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt="" width={size} height={size} className="shrink-0 rounded-full object-cover" style={{ width: size, height: size }} />
+    <img src={src} alt={name} width={size} height={size} className="shrink-0 rounded-full object-cover" style={{ width: size, height: size }} />
   ) : (
     <span className="flex shrink-0 items-center justify-center rounded-full bg-violet/12 font-semibold text-violet" style={{ width: size, height: size, fontSize: size * 0.38 }}>{initials}</span>
   );
@@ -28,7 +28,7 @@ export function Cover({ post, className = "" }: { post: Pick<BlogSummary, "cover
       <span aria-hidden className="absolute -right-8 -top-8 h-44 w-44 rounded-full blur-3xl" style={{ background: `${t}45` }} />
       <span aria-hidden className="absolute -bottom-10 -left-6 h-36 w-36 rounded-full blur-3xl" style={{ background: `${t}30` }} />
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/brand/mark-navy.png" alt="" aria-hidden className="relative h-16 w-16 opacity-90" />
+      <img src="/brand/mark-navy.png" alt="Rhinon Tech" aria-hidden className="relative h-16 w-16 opacity-90" />
     </div>
   );
 }

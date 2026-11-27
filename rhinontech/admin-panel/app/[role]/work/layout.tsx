@@ -28,7 +28,7 @@ function WorkLayoutContent({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex w-full h-full">
-      <CollapsibleSubNav title="Work" items={items} />
+      <CollapsibleSubNav title="Projects" items={items} />
       <main className="w-full h-full overflow-hidden">{children}</main>
     </div>
   );

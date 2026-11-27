@@ -80,7 +80,10 @@ export function ChatbotAppearance() {
     if (!(draft.navigationOptions ?? ["Home"]).length) return void toast.error("Keep at least one menu item.");
     setSaving(true);
     try {
-      const saved = await save({ config: draft });
+      // Always store the pop-up message, even when empty: an untouched box used to leave the key
+      // out, and the widget read "missing" as "show a built-in greeting" despite "Leave empty
+      // for none". Writing "" makes the saved setting match this screen for every widget version.
+      const saved = await save({ config: { ...draft, popupMessage: (draft.popupMessage ?? "").trim() } });
       setDraft(saved.config);
       toast.success("Saved — your site shows it on the next page load");
     } catch (err) {

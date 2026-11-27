@@ -3,9 +3,10 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Marks its children "in view" the first time they scroll onto the screen, so
- * CSS can fade them up and draw their arcs. One observer per block; once shown
- * it stays shown.
+ * Fades a block up the first time it scrolls onto the screen. Content is visible
+ * in the server HTML; only blocks that start below the fold are "armed" (hidden)
+ * after hydration, so the first screen never waits for JavaScript to paint.
+ * One observer per block; once shown it stays shown.
  */
 export function Reveal({ children, className = "", delay = 0, as: Tag = "div" }: {
   children: React.ReactNode;
@@ -17,6 +18,9 @@ export function Reveal({ children, className = "", delay = 0, as: Tag = "div" }:
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    // Already on screen at load: leave it visible, no entrance animation.
+    if (el.getBoundingClientRect().top < window.innerHeight) return;
+    el.dataset.armed = "true";
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {

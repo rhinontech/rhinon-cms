@@ -79,11 +79,11 @@ body {
     border-radius: 16px;
     font-size: 17px;
     color: #fff;
-    background: #1c1c1f;
+    background: var(--color-brand); /* brand navy #002C70: white text 13.2:1 */
   }
   .btn-primary:hover {
     transform: translateY(-1px);
-    background: #000;
+    background: #001f52;
   }
   /* On a dark band the same button flips to white. */
   .bg-night .btn-primary, .bg-black .btn-primary, .bg-ink .btn-primary,
@@ -111,11 +111,11 @@ body {
     border-radius: 16px;
     font-size: 17px;
     color: #fff;
-    background: #1c1c1f;
+    background: var(--color-brand);
   }
   .btn-ink:hover {
     transform: translateY(-1px);
-    background: #000;
+    background: #001f52;
   }
   .btn-soft {
     height: 54px;
@@ -357,8 +357,10 @@ body {
 }
 
 @layer components {
-  .reveal { opacity: 0; transform: translateY(28px); }
-  .reveal[data-shown="true"] { animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) var(--delay, 0ms) both; }
+  /* Visible by default, so content never waits for JavaScript (it was the LCP delay).
+     Reveal arms only blocks that start below the fold; they rise in when scrolled to. */
+  .reveal[data-armed="true"] { opacity: 0; transform: translateY(28px); }
+  .reveal[data-armed="true"][data-shown="true"] { animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) var(--delay, 0ms) both; }
 
   .float-a { animation: bob 6s ease-in-out infinite; }
   .float-b { animation: bob 7.5s ease-in-out -2.5s infinite; }
@@ -431,9 +433,13 @@ body {
 /* ── Blog article body ─────────────────────────────────────── */
 .prose-blog { font-size: 19px; line-height: 1.8; color: var(--color-ink-soft); }
 .prose-blog > * + *, .prose-blog > div > * + * { margin-top: 1.25em; }
-.prose-blog p { margin: 0; }
+/* No `.prose-blog p { margin: 0 }` here: it has the same specificity as the rule above and came
+   after it, so it silently removed the space between paragraphs in every post. Preflight already
+   zeroes paragraph margins. */
 .prose-blog h2 { font-family: var(--font-display); font-size: 34px; line-height: 1.12; font-weight: 600; letter-spacing: -0.03em; color: var(--color-ink); margin-top: 2.2em !important; margin-bottom: 0; scroll-margin-top: 96px; }
 .prose-blog h3 { font-size: 24px; line-height: 1.2; font-weight: 600; letter-spacing: -0.02em; color: var(--color-ink); margin-top: 1.8em !important; margin-bottom: 0; scroll-margin-top: 96px; }
+/* A heading sits closer to its own text than to the section above it. */
+.prose-blog :is(h2, h3) + * { margin-top: 0.6em; }
 .prose-blog strong { color: var(--color-ink); font-weight: 600; }
 .prose-blog a { color: var(--color-violet); text-decoration: underline; text-underline-offset: 3px; }
 .prose-blog ul, .prose-blog ol { padding-left: 1.4em; }
@@ -448,6 +454,8 @@ body {
 .prose-blog figure { margin-top: 2em; }
 .prose-blog img, .prose-blog video { width: 100%; height: auto; border-radius: 18px; border: 1px solid var(--color-line); }
 .prose-blog figcaption { margin-top: 0.7em; font-size: 14px; color: var(--color-muted); text-align: center; }
+/* The admin editor saves an image caption as an italic paragraph right after the image. */
+.prose-blog img + p:has(> em:only-child) { margin-top: 0.7em; font-size: 14px; line-height: 1.5; color: var(--color-muted); text-align: center; }
 .prose-blog table { width: 100%; border-collapse: collapse; font-size: 16px; }
 .prose-blog th, .prose-blog td { border: 1px solid var(--color-line); padding: 0.6em 0.8em; text-align: left; }
 .prose-blog th { background: var(--color-soft); color: var(--color-ink); }
@@ -456,7 +464,7 @@ body {
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .hero-tilt { transform: none; }
-  .reveal, .reveal[data-shown="true"] { opacity: 1; transform: none; animation: none; }
+  .reveal, .reveal[data-armed="true"], .reveal[data-armed="true"][data-shown="true"] { opacity: 1; transform: none; animation: none; }
   .text-aurora, .blob, .beam::before, .float-a, .float-b, .float-c, .marquee, .flow,
   .orbit-spin, .orbit-node, .bar, .ping-soft, .line-in, .progress, .confetti-bit, .wave-bar,
   .ai-marq, .ai-marq-rev, .ai-sweep, .ai-ring, .ai-orb, .ai-dot-r, .ai-dot-l, .ai-twinkle,
@@ -464,4 +472,180 @@ body {
   .line-in, .pop-in, .stamp-in, .slide-in { opacity: 1; }
   .draw-in { animation: none !important; stroke-dashoffset: 0 !important; }
   .lift:hover, .spot:hover, .btn:hover { transform: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════════════
+   Design system v2 (26 November 2026). Patterns studied on ClickUp's marketing site, rebuilt in
+   Rhinon's brand: bold display type with a dark-to-faded fill, violet mono eyebrows, hairline
+   grids and quiet surfaces instead of a card for everything, and colour saved for a few vivid
+   moments (the product stage, the dark AI panel, the closing band). Motion only decorates:
+   nothing here hides content, and all of it stops under prefers-reduced-motion.
+   ═══════════════════════════════════════════════════════════════════════════════════════ */
+
+/* Display headings: bold and tight. Unlayered on purpose, so it beats per-element weight
+   utilities and every h1/h2 on the site speaks with one voice. */
+h1.font-display, h2.font-display { font-weight: 700; letter-spacing: -0.042em; }
+
+/* The fade: each line runs from full ink to a softer tone (≥3.9:1 on white, AA for large text).
+   It derives from currentColor, so it works on light and dark bands alike. Guarded, because a
+   browser without color-mix would otherwise render transparent text. The padding stops
+   background-clip from cutting off descenders (see tailwind-v4-font-gotchas). */
+@supports ((-webkit-background-clip: text) or (background-clip: text)) and (color: color-mix(in srgb, red 50%, transparent)) {
+  h1.font-display:not(.no-fade), h2.font-display:not(.no-fade), .text-fade {
+    background-image: linear-gradient(100deg, currentColor 34%, color-mix(in srgb, currentColor 54%, transparent) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    padding-bottom: 0.14em;
+    margin-bottom: -0.14em;
+  }
+}
+
+/* Accent words used to be italic; with the fade they read as part of the line. */
+.text-aurora, .text-aurora-soft { font-style: normal; }
+
+@layer components {
+  /* Buttons: crisper corners and a calmer size, the same navy. */
+  .btn { border-radius: 12px; }
+  .btn-primary, .btn-ink, .btn-soft { height: 50px; padding: 0 24px; border-radius: 12px; font-size: 16px; }
+
+  /* Hairline grid: cells share 1px rules instead of each carrying a border. */
+  .hair { display: grid; gap: 1px; background: var(--color-line); border: 1px solid var(--color-line); border-radius: 20px; overflow: hidden; }
+  .hair > * { background: #fff; }
+  .hair-dark { background: rgb(255 255 255 / 0.1); border-color: rgb(255 255 255 / 0.1); }
+  .hair-dark > * { background: #07080d; }
+  /* For grids whose last row may be short: rules come from cell borders, so gaps stay white. */
+  .hair-open { display: grid; border-left: 1px solid var(--color-line); border-top: 1px solid var(--color-line); }
+  .hair-open > * { border-right: 1px solid var(--color-line); border-bottom: 1px solid var(--color-line); }
+
+  /* Quiet surface for bento cards. */
+  .surface { background: #f5f6fb; border-radius: 20px; overflow: hidden; }
+
+  /* The product stage: a vivid plate behind a product window. */
+  .stage {
+    position: relative;
+    border-radius: 28px;
+    overflow: hidden;
+    background:
+      radial-gradient(120% 90% at 0% 0%, rgb(255 255 255 / 0.28), transparent 55%),
+      linear-gradient(135deg, var(--stage-a, #1f4dff) 0%, var(--stage-b, #7c5cff) 58%, var(--stage-c, #ff5fb0) 100%);
+  }
+  .stage::after { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E"); mix-blend-mode: soft-light; opacity: 0.35; }
+
+  /* The closing band: logo navy into electric blue, violet and pink. */
+  .cta-vivid {
+    background:
+      radial-gradient(80% 120% at 85% 110%, rgb(255 95 176 / 0.55), transparent 60%),
+      radial-gradient(70% 90% at 10% -10%, rgb(44 211 255 / 0.28), transparent 60%),
+      linear-gradient(120deg, #001a4d 0%, #1f4dff 40%, #7c5cff 70%, #d94fb0 100%);
+  }
+  .cta-vivid .btn-primary { color: #0a1128; background: #fff; }
+  .cta-vivid .btn-primary:hover { background: #eef0ff; }
+
+  /* Dark panel with an aurora rising from its lower edge. */
+  .panel-dark { position: relative; background: #05060a; border-radius: 32px; overflow: hidden; color: #fff; }
+  .panel-dark::before {
+    content: ""; position: absolute; left: 50%; bottom: -38%; width: 120%; height: 70%; transform: translateX(-50%); pointer-events: none;
+    background: radial-gradient(50% 50% at 50% 50%, rgb(124 92 255 / 0.55), rgb(47 91 255 / 0.28) 45%, rgb(255 95 176 / 0.12) 65%, transparent 72%);
+    filter: blur(30px);
+  }
+
+  /* Rotating gradient ring for the one badge per hero (reuses --angle from .beam). */
+  .ring-badge { position: relative; isolation: isolate; background: #fff; }
+  .ring-badge::before {
+    content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1.5px; z-index: -1;
+    background: conic-gradient(from var(--angle), #e6e9f4 0 55%, #2f5bff 70%, #7c5cff 82%, #ff5fb0 92%, #e6e9f4 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+    animation: spin-angle 4.5s linear infinite;
+  }
+
+  /* A soft pulse around the one element in a product picture that matters. */
+  .hl-ring { box-shadow: 0 0 0 2px #ff5fb0, 0 0 0 6px rgb(255 95 176 / 0.18); animation: hl-pulse 2.4s ease-in-out infinite; }
+
+  /* A pretend teammate's cursor drifting over a product picture. */
+  .cursor-drift { animation: cursor-drift 9s ease-in-out infinite; }
+  .cursor-drift-b { animation: cursor-drift-b 11s ease-in-out infinite; }
+
+  /* Fade the edges of a decorative grid into the page. */
+  .edge-fade-x { -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); }
+
+  /* Tab panels cross-fade (TabExplorer). */
+  .tab-in { animation: tab-in 0.42s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+}
+
+@keyframes hl-pulse { 50% { box-shadow: 0 0 0 2px #ff5fb0, 0 0 0 10px rgb(255 95 176 / 0.06); } }
+@keyframes cursor-drift { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(14px, -10px); } 50% { transform: translate(22px, 8px); } 75% { transform: translate(-6px, 12px); } }
+@keyframes cursor-drift-b { 0%, 100% { transform: translate(0, 0); } 30% { transform: translate(-16px, 10px); } 60% { transform: translate(-24px, -8px); } 80% { transform: translate(6px, -12px); } }
+@keyframes tab-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .ring-badge::before, .hl-ring, .cursor-drift, .cursor-drift-b, .tab-in { animation: none; }
+}
+
+/* ── Meet Rhino: sketch → colour key → 3D render on scroll (components/MascotReveal.tsx) ──
+   --p (0 → 1) is written by the component; each stage derives its own 0 → 1 from it. Layers are
+   revealed with soft-edged masks, so the three aligned images read as one drawing being finished. */
+.mascot-reveal {
+  --p: 0;
+  --draw: clamp(0, calc(var(--p) / 0.22), 1);
+  --ink: clamp(0, calc((var(--p) - 0.28) / 0.26), 1);
+  --render: clamp(0, calc((var(--p) - 0.6) / 0.3), 1);
+  height: 300vh;
+}
+@media (max-width: 1023px) { .mascot-reveal { height: 230vh; } }
+.mr-panel { background: rgb(206 216 224); } /* the 3D render's own background as WebP decodes it, so its edges never show */
+.mr-stage { width: min(560px, 54svh, 88vw); }
+.mr-stage img { user-select: none; -webkit-user-drag: none; }
+
+/* 1. The pencil sketch draws itself, top to bottom; it fades back once the ink goes on. */
+.mr-sketch {
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(var(--draw) * 115% - 15%), transparent calc(var(--draw) * 115%));
+  mask-image: linear-gradient(to bottom, #000 calc(var(--draw) * 115% - 15%), transparent calc(var(--draw) * 115%));
+  opacity: calc(1 - var(--ink) * 0.9);
+}
+/* 2. Ink and flat colour wipe across. */
+.mr-flat {
+  -webkit-mask-image: linear-gradient(100deg, #000 calc(var(--ink) * 125% - 25%), transparent calc(var(--ink) * 125%));
+  mask-image: linear-gradient(100deg, #000 calc(var(--ink) * 125% - 25%), transparent calc(var(--ink) * 125%));
+}
+/* 3. The 3D render rises in behind a light scan line. */
+.mr-3d {
+  -webkit-mask-image: linear-gradient(to top, #000 calc(var(--render) * 120% - 20%), transparent calc(var(--render) * 120%));
+  mask-image: linear-gradient(to top, #000 calc(var(--render) * 120% - 20%), transparent calc(var(--render) * 120%));
+  transform: scale(calc(0.985 + var(--render) * 0.015));
+}
+.mr-scan {
+  bottom: calc(var(--render) * 120% - 10%);
+  background: linear-gradient(90deg, transparent, #9fb4ff 20%, #ffffff 50%, #c4b5ff 80%, transparent);
+  box-shadow: 0 0 18px 4px rgb(124 92 255 / 0.5);
+  opacity: clamp(0, min(calc(var(--render) * 10), calc((1 - var(--render)) * 10)), 1);
+}
+
+/* Cards start as grey wireframes and colour in, each at its own point (--t). */
+.mr-card {
+  --c: clamp(0, calc((var(--p) - var(--t) + 0.12) / 0.12), 1);
+  filter: grayscale(calc(1 - var(--c)));
+  opacity: calc(0.55 + var(--c) * 0.45);
+  transform: translateY(calc((1 - var(--c)) * 16px));
+  box-shadow: 0 22px 44px -26px rgb(10 17 40 / 0.35);
+}
+.mr-card::after {
+  content: ""; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none;
+  border: 1.5px dashed rgb(38 48 74 / 0.45);
+  opacity: calc(1 - var(--c));
+}
+
+/* The three steps light up as the drawing reaches each one. */
+.mr-step { border-color: rgb(10 17 40 / 0.12); background: rgb(255 255 255 / 0.5); color: var(--color-ink); transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s; }
+.mr-step-n { background: rgb(10 17 40 / 0.08); color: var(--color-ink-soft); transition: background-color 0.3s, color 0.3s; }
+.mascot-reveal[data-step="0"] .mr-step[data-i="0"],
+.mascot-reveal[data-step="1"] .mr-step[data-i="1"],
+.mascot-reveal[data-step="2"] .mr-step[data-i="2"] { background: #fff; border-color: #5b3df5; box-shadow: 0 10px 24px -14px rgb(91 61 245 / 0.7); }
+.mascot-reveal[data-step="0"] .mr-step[data-i="0"] .mr-step-n,
+.mascot-reveal[data-step="1"] .mr-step[data-i="1"] .mr-step-n,
+.mascot-reveal[data-step="2"] .mr-step[data-i="2"] .mr-step-n { background: #5b3df5; color: #fff; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mascot-reveal { height: auto; }
+  .mascot-reveal > .sticky { position: relative; height: auto; min-height: 100svh; }
 }
