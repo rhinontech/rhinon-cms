@@ -304,8 +304,11 @@ router.post("/platform-leads", async (req: Request, res: Response) => {
 
     const phone = str(b.phone, 40);
     const website = str(b.website, 300);
-    const institutionType = str(b.institutionType, 200);
-    const annualLeadVolume = str(b.annualLeadVolume, 100);
+    const buildTarget = str(b.buildTarget, 200);
+    const budgetRange = str(b.budgetRange, 100);
+    const idealStartDate = str(b.idealStartDate, 100);
+    const institutionType = buildTarget || str(b.institutionType, 200);
+    const annualLeadVolume = budgetRange || str(b.annualLeadVolume, 100);
     const teamSize = str(b.teamSize, 100);
     const message = str(b.message, 5000);
     const source = str(b.source, 100) || "Platform";
@@ -326,13 +329,17 @@ router.post("/platform-leads", async (req: Request, res: Response) => {
     company = company || "Platform Lead";
 
     const summary = [
-      institutionType && `Institution: ${institutionType}`,
+      buildTarget ? `What to build: ${buildTarget}` : (institutionType && `Institution: ${institutionType}`),
+      budgetRange ? `Budget: ${budgetRange}` : (annualLeadVolume && `Annual lead volume: ${annualLeadVolume}`),
+      idealStartDate && `Ideal start date: ${idealStartDate}`,
       teamSize && `Team size: ${teamSize}`,
-      annualLeadVolume && `Annual lead volume: ${annualLeadVolume}`,
       message && `Message: ${message}`,
     ].filter(Boolean).join(" · ");
 
     const raw = {
+      buildTarget: buildTarget || institutionType,
+      budgetRange: budgetRange || annualLeadVolume,
+      idealStartDate,
       institutionType,
       annualLeadVolume,
       teamSize,
@@ -494,16 +501,49 @@ router.post("/visitors", express.text({ type: ["text/plain"] }), async (req: Req
 });
 
 
-// GET /public/blogs?domain=rhinonlabs|uppercurve — published blogs for the marketing site,
-// newest first. `domain` defaults to rhinonlabs so the existing Rhinon Labs site (which doesn't
-// send it) keeps working unchanged.
+// GET /public/blogs?domain=rhinonlabs|uppercurve&page=1&limit=9&category=...
+// published blogs for the marketing site, newest first.
+// Backwards compatible: if no page/limit is provided, returns all blogs as an array.
+// If page or limit is provided, returns { blogs, total, page, totalPages, hasMore }
 router.get("/blogs", async (req: Request, res: Response) => {
   try {
-    // Site, not domain: ?domain= is kept as the legacy spelling the Uppercurve
-    // site still sends, and resolves to that workspace's matching site.
     const site = await resolvePublicSite(req.query.domain, req);
+    const where: any = { status: "Published", ...(site ? { siteId: site.id } : {}) };
+
+    if (typeof req.query.category === "string" && req.query.category.trim()) {
+      where.category = req.query.category.trim();
+    }
+
+    const pageQuery = req.query.page;
+    const limitQuery = req.query.limit;
+
+    if (pageQuery !== undefined || limitQuery !== undefined) {
+      const page = Math.max(1, parseInt(String(pageQuery || "1"), 10) || 1);
+      const limit = Math.max(1, Math.min(100, parseInt(String(limitQuery || "9"), 10) || 9));
+      const offset = (page - 1) * limit;
+
+      const { count, rows } = await Blog.findAndCountAll({
+        where,
+        attributes: PUBLIC_BLOG_LIST_FIELDS as unknown as string[],
+        order: [["publishedAt", "DESC"]],
+        limit,
+        offset,
+      });
+
+      const totalPages = Math.ceil(count / limit);
+      res.json({
+        blogs: rows,
+        total: count,
+        page,
+        limit,
+        totalPages,
+        hasMore: page < totalPages,
+      });
+      return;
+    }
+
     const blogs = await Blog.findAll({
-      where: { status: "Published", ...(site ? { siteId: site.id } : {}) },
+      where,
       attributes: PUBLIC_BLOG_LIST_FIELDS as unknown as string[],
       order: [["publishedAt", "DESC"]],
     });

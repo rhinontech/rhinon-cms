@@ -27,7 +27,7 @@ export function LatestGuides({ blogs }: { blogs?: Blog[] }) {
 
         {/* Guides Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
-          {blogs.slice(0, 3).map((blog) => (
+          {blogs.slice(0, 3).map((blog, idx) => (
             <Link
               key={blog.id || blog.slug}
               href={`/blogs/${blog.slug}`}
@@ -40,6 +40,8 @@ export function LatestGuides({ blogs }: { blogs?: Blog[] }) {
                     alt={blog.title}
                     fill
                     sizes="(min-width: 1024px) 380px, 100vw"
+                    loading={idx < 2 ? "eager" : "lazy"}
+                    priority={idx === 0}
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 </div>

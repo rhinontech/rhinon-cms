@@ -186,7 +186,7 @@ export default function CaseStudiesIndex({ caseStudies }: { caseStudies: CaseStu
 
           {displayedAll.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {displayedAll.map((cs) => {
+              {displayedAll.map((cs, idx) => {
                 const cover = cs.image || cs.images?.[0] || FALLBACK_COVER;
                 return (
                   <Link
@@ -202,7 +202,8 @@ export default function CaseStudiesIndex({ caseStudies }: { caseStudies: CaseStu
                         sizes="(min-width: 1024px) 380px, (min-width: 768px) 50vw, 100vw"
                         quality={85}
                         className="object-cover transition-transform duration-700 group-hover:scale-105"
-                        loading="lazy"
+                        loading={idx < 3 ? "eager" : "lazy"}
+                        priority={idx < 2}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-80 pointer-events-none" />
                     </div>

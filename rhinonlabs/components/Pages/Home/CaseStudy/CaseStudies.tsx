@@ -57,7 +57,7 @@ export function CaseStudies({ slugs, items }: CaseStudiesProps = {}) {
 
                 {/* Clickable grid */}
                 <div className="flex flex-wrap justify-center gap-6 w-full">
-                    {shown.map((cs) => {
+                    {shown.map((cs, idx) => {
                         const cover = cs.image || cs.images?.[0] || PLACEHOLDER_IMG;
                         return (
                             <Link
@@ -72,7 +72,8 @@ export function CaseStudies({ slugs, items }: CaseStudiesProps = {}) {
                                         fill
                                         sizes="(min-width: 1024px) 380px, (min-width: 768px) 50vw, 100vw"
                                         quality={90}
-                                        loading="lazy"
+                                        loading={idx < 2 ? "eager" : "lazy"}
+                                        priority={idx === 0}
                                         className="object-cover transition-transform duration-700 group-hover:scale-105"
                                     />
                                     <div className="absolute inset-0 bg-linear-to-t from-background/80 via-transparent to-transparent opacity-60 pointer-events-none" />

@@ -184,7 +184,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {matchingBlogs.map((blog) => (
+            {matchingBlogs.map((blog, idx) => (
               <Link
                 key={blog.slug}
                 href={`/blogs/${blog.slug}`}
@@ -199,7 +199,9 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                     alt={blog.title}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 400px"
-                    loading="lazy"
+                    loading={idx < 9 ? "eager" : "lazy"}
+                    priority={idx < 9}
+                    fetchPriority={idx < 6 ? "high" : "auto"}
                     className="object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-80" />

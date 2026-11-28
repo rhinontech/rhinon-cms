@@ -123,9 +123,37 @@ function normalizeBlog<T extends { contentBlocks?: unknown }>(blog: T | null): T
   return blog;
 }
 
+export interface PaginatedBlogsResponse {
+  blogs: Blog[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasMore: boolean;
+}
+
 export async function getBlogs(): Promise<Blog[]> {
   const blogs = (await getJSON<Blog[]>("/public/blogs?domain=rhinonlabs")) ?? [];
   return blogs.map((b) => normalizeBlog(b) as Blog);
+}
+
+export async function getPaginatedBlogs(page = 1, limit = 9, category?: string): Promise<PaginatedBlogsResponse> {
+  const params = new URLSearchParams({
+    domain: "rhinonlabs",
+    page: String(page),
+    limit: String(limit),
+  });
+  if (category) {
+    params.set("category", category);
+  }
+  const res = await getJSON<PaginatedBlogsResponse>(`/public/blogs?${params.toString()}`);
+  if (!res) {
+    return { blogs: [], total: 0, page: 1, limit, totalPages: 0, hasMore: false };
+  }
+  return {
+    ...res,
+    blogs: res.blogs.map((b) => normalizeBlog(b) as Blog),
+  };
 }
 
 export async function getBlog(slug: string): Promise<Blog | null> {
