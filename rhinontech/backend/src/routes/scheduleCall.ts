@@ -105,8 +105,11 @@ router.post("/schedule-call", async (req: Request, res: Response) => {
 
     const phone = str(b.phone, 40);
     const website = str(b.website, 300);
-    const institutionType = str(b.institutionType, 200);
-    const annualLeadVolume = str(b.annualLeadVolume, 100);
+    const buildTarget = str(b.buildTarget, 200);
+    const budgetRange = str(b.budgetRange, 100);
+    const idealStartDate = str(b.idealStartDate, 100);
+    const institutionType = buildTarget || str(b.institutionType, 200);
+    const annualLeadVolume = budgetRange || str(b.annualLeadVolume, 100);
     const teamSize = str(b.teamSize, 100);
     const message = str(b.message, 5000);
     const visitorTimezone = str(b.timezone, 100) || BUSINESS_TIMEZONE;
@@ -140,15 +143,19 @@ router.post("/schedule-call", async (req: Request, res: Response) => {
     }
 
     const summary = [
-      institutionType && `Institution: ${institutionType}`,
+      buildTarget ? `What to build: ${buildTarget}` : (institutionType && `Institution: ${institutionType}`),
+      budgetRange ? `Budget: ${budgetRange}` : (annualLeadVolume && `Annual lead volume: ${annualLeadVolume}`),
+      idealStartDate && `Ideal start date: ${idealStartDate}`,
       teamSize && `Team size: ${teamSize}`,
-      annualLeadVolume && `Annual lead volume: ${annualLeadVolume}`,
       message && `Message: ${message}`,
     ]
       .filter(Boolean)
       .join(" · ");
 
     const raw = {
+      buildTarget: buildTarget || institutionType,
+      budgetRange: budgetRange || annualLeadVolume,
+      idealStartDate,
       institutionType,
       annualLeadVolume,
       teamSize,
@@ -235,9 +242,10 @@ router.post("/schedule-call", async (req: Request, res: Response) => {
           ["Requested slot", `${slot.startTime.toISOString()} (visitor tz: ${visitorTimezone})`],
           ["On calendar", booked ? "yes" : "NO — needs manual booking"],
           ["Website", website],
-          ["Institution Type", institutionType],
+          ["What to build", buildTarget || institutionType],
+          ["Budget Range", budgetRange || annualLeadVolume],
+          ["Ideal Start Date", idealStartDate],
           ["Team Size", teamSize],
-          ["Annual Lead Volume", annualLeadVolume],
         ],
       }
     );
