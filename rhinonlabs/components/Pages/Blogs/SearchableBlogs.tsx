@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { format } from "date-fns";
-import { ArrowRight, Search, Sparkles } from "lucide-react";
+import { ArrowRight, Search, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import { type Blog } from "@/lib/api";
 import { motion, Variants } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -36,8 +36,11 @@ const staggerContainer: Variants = {
   }
 };
 
+const PAGE_SIZE = 9;
+
 export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [isSchedulerOpen, setIsSchedulerOpen] = useState(false);
 
   // Dynamically extract categories from all blogs
@@ -57,11 +60,41 @@ export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) 
     });
   }, [searchQuery, initialBlogs]);
 
-  // Recent articles section will show the first 2 blogs when no search is active
-  const recentBlogs = useMemo(() => (searchQuery ? [] : initialBlogs.slice(0, 2)), [searchQuery, initialBlogs]);
+  // Recent articles section will show the first 2 blogs when on page 1 and no search is active
+  const recentBlogs = useMemo(() => {
+    if (searchQuery || currentPage > 1) return [];
+    return initialBlogs.slice(0, 2);
+  }, [searchQuery, currentPage, initialBlogs]);
 
-  // All articles section will show the rest of the blogs, or all search results if a search is active
-  const displayedAllBlogs = useMemo(() => (searchQuery ? filteredAll : initialBlogs.slice(2)), [searchQuery, filteredAll, initialBlogs]);
+  // Blogs pool for "All Articles"
+  const allArticlesPool = useMemo(() => {
+    if (searchQuery) return filteredAll;
+    // When no search, exclude the 2 recent blogs only from page 1's view
+    return initialBlogs.slice(2);
+  }, [searchQuery, filteredAll, initialBlogs]);
+
+  const totalPages = Math.ceil(allArticlesPool.length / PAGE_SIZE);
+
+  // Slice for current page
+  const displayedAllBlogs = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return allArticlesPool.slice(start, start + PAGE_SIZE);
+  }, [allArticlesPool, currentPage]);
+
+  const handleSearchChange = (val: string) => {
+    setSearchQuery(val);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    if (typeof window !== "undefined") {
+      const el = document.getElementById("all-articles-section");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+  };
 
   return (
     <div className="blog-theme min-h-screen bg-background relative selection:bg-primary/50 flex flex-col pt-32 pb-24 overflow-hidden">
@@ -207,7 +240,7 @@ export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) 
         )}
 
         {/* All Articles Section */}
-        <div className="w-full max-w-[1200px] mx-auto px-6 relative z-10">
+        <div id="all-articles-section" className="w-full max-w-[1200px] mx-auto px-6 relative z-10 scroll-mt-24">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 border-b border-white/5 pb-6">
             <h2 className="text-2xl font-medium text-white">
               {searchQuery ? `Search Results (${filteredAll.length})` : "All Articles"}
@@ -220,61 +253,108 @@ export default function SearchableBlogs({ initialBlogs }: SearchableBlogsProps) 
                 type="text"
                 placeholder="Search articles..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 border border-white/10 rounded-xl text-sm text-white placeholder:text-white/60 focus:outline-none focus:border-white/20 transition-colors bg-white/5"
               />
             </div>
           </div>
 
           {displayedAllBlogs.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {displayedAllBlogs.map((blog, idx) => (
-                <Link
-                  key={blog.id}
-                  href={`/blogs/${blog.slug}`}
-                  className="group flex flex-col rounded-[16px] border border-border/7 bg-background/30 overflow-hidden shadow-[inset_0_2px_1px_rgba(207,231,255,0.1)] hover:border-white/20 transition-all duration-300"
-                >
-                  <div className="aspect-[16/10] overflow-hidden relative bg-white/5">
-                    <Image
-                      src={blog.coverImage || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000&auto=format&fit=crop"}
-                      alt={blog.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 400px"
-                      loading={idx < 9 ? "eager" : "lazy"}
-                      priority={idx < 9}
-                      fetchPriority={idx < 6 ? "high" : "auto"}
-                      className="object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-80" />
-                  </div>
-                  <div className="p-6 flex flex-col flex-1">
-                    {blog.category && (
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-white/60 mb-2">
-                        {blog.category}
-                      </span>
-                    )}
-                    <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-white/80 transition-colors leading-tight">
-                      {blog.title}
-                    </h3>
-                    <p className="text-sm text-white/50 line-clamp-2 mb-4 leading-relaxed">{blog.excerpt}</p>
-
-                    <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
-                      <div className="flex items-center gap-2.5">
-                        <Image
-                          src={blog.authorAvatar || "https://github.com/prabhatpk.png"}
-                          alt={blog.authorName}
-                          width={24}
-                          height={24}
-                          className="w-6 h-6 rounded-full border border-white/10 object-cover"
-                        />
-                        <span className="text-[10px] font-bold text-white/70 uppercase tracking-wider">{blog.authorName}</span>
-                      </div>
-                      <span className="text-[10px] text-white/60">{format(new Date(blog.publishedAt), "MMM d, yyyy")}</span>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {displayedAllBlogs.map((blog, idx) => (
+                  <Link
+                    key={blog.id}
+                    href={`/blogs/${blog.slug}`}
+                    className="group flex flex-col rounded-[16px] border border-border/7 bg-background/30 overflow-hidden shadow-[inset_0_2px_1px_rgba(207,231,255,0.1)] hover:border-white/20 transition-all duration-300"
+                  >
+                    <div className="aspect-[16/10] overflow-hidden relative bg-white/5">
+                      <Image
+                        src={blog.coverImage || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000&auto=format&fit=crop"}
+                        alt={blog.title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 400px"
+                        loading={idx < 9 ? "eager" : "lazy"}
+                        priority={idx < 9}
+                        fetchPriority={idx < 6 ? "high" : "auto"}
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-80" />
                     </div>
+                    <div className="p-6 flex flex-col flex-1">
+                      {blog.category && (
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-white/60 mb-2">
+                          {blog.category}
+                        </span>
+                      )}
+                      <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-white/80 transition-colors leading-tight">
+                        {blog.title}
+                      </h3>
+                      <p className="text-sm text-white/50 line-clamp-2 mb-4 leading-relaxed">{blog.excerpt}</p>
+
+                      <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <Image
+                            src={blog.authorAvatar || "https://github.com/prabhatpk.png"}
+                            alt={blog.authorName}
+                            width={24}
+                            height={24}
+                            className="w-6 h-6 rounded-full border border-white/10 object-cover"
+                          />
+                          <span className="text-[10px] font-bold text-white/70 uppercase tracking-wider">{blog.authorName}</span>
+                        </div>
+                        <span className="text-[10px] text-white/60">{format(new Date(blog.publishedAt), "MMM d, yyyy")}</span>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="mt-12 flex items-center justify-center gap-2">
+                  <button
+                    onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className="flex items-center gap-1 px-4 py-2 rounded-xl text-xs font-medium border border-white/10 bg-white/5 hover:bg-white/10 text-white disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+                    aria-label="Previous page"
+                  >
+                    <ChevronLeft size={16} />
+                    <span>Previous</span>
+                  </button>
+
+                  <div className="flex items-center gap-1.5 px-2">
+                    {Array.from({ length: totalPages }).map((_, i) => {
+                      const pageNum = i + 1;
+                      const isActive = pageNum === currentPage;
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => handlePageChange(pageNum)}
+                          className={`w-9 h-9 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                            isActive
+                              ? "bg-white text-black font-bold shadow-sm"
+                              : "border border-white/10 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white"
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
                   </div>
-                </Link>
-              ))}
-            </div>
+
+                  <button
+                    onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                    className="flex items-center gap-1 px-4 py-2 rounded-xl text-xs font-medium border border-white/10 bg-white/5 hover:bg-white/10 text-white disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+                    aria-label="Next page"
+                  >
+                    <span>Next</span>
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
             <div className="py-20 text-center border border-dashed border-white/10 rounded-2xl">
               <p className="text-white/60">No articles found matching "{searchQuery}".</p>
