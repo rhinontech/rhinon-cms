@@ -436,6 +436,19 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
       ...(accountId !== undefined && { accountId: accountId || null }),
     });
 
+    // Starting the card starts its work: subitems that haven't begun move into
+    // the same in-progress status. Ones already moving, in review or done are
+    // left alone, so finished work is never reopened.
+    if (prevStatus === "Pending" && effectiveStatus === "In progress") {
+      const [moved] = await Task.update(
+        { status: "In progress", statusId: task.statusId ?? null },
+        { where: { parentTaskId: task.id, status: "Pending" } }
+      );
+      if (moved > 0) {
+        await logActivity(task.id, req.user!.userId, "status_changed", `started ${moved} subitem${moved === 1 ? "" : "s"} with this card`, { count: moved });
+      }
+    }
+
     // Sync ClientRequest status
     if (effectiveStatus != null && effectiveStatus !== prevStatus) {
       const mappedStatus = taskStatusToRequestStatus[effectiveStatus];

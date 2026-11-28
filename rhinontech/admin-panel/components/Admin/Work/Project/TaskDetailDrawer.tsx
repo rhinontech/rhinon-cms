@@ -145,7 +145,11 @@ export function TaskDetailDrawer({
     onPatch(id, patch);
     // The PUT and its activity rows land together; a short delay avoids racing
     // the optimistic update in the workspace hook.
-    setTimeout(() => { refreshActivity(); }, 400);
+    setTimeout(() => {
+      refreshActivity();
+      // Starting a card also starts its not-started subitems on the server; reload to show them.
+      if (id === task.id && "statusId" in patch && children.length > 0) onChanged();
+    }, 400);
   };
 
   const refreshActivity = useCallback(async () => {
@@ -414,6 +418,20 @@ export function TaskDetailDrawer({
                 {c.priority && c.priority !== "Medium" && (
                   <span className={cn("shrink-0 text-2xs font-medium", c.priority === "High" ? "text-red-600 dark:text-red-300" : "text-muted-foreground")}>{c.priority}</span>
                 )}
+                {/* Owner straight from the list: one subitem can go to whoever it depends on. */}
+                <NativeSelect
+                  value={c.assigneeId ?? ""}
+                  disabled={readOnly}
+                  aria-label={`Assignee of ${c.title}`}
+                  onChange={(e) => patchAndRefresh(c.id, { assigneeId: e.target.value || null })}
+                  className={cn(
+                    "h-6 w-auto max-w-[130px] shrink-0 gap-1 truncate rounded-full border-0 bg-transparent px-2 py-0 text-2xs shadow-none outline-none hover:bg-card dark:bg-transparent",
+                    c.assigneeId ? "text-foreground/80" : "text-muted-foreground"
+                  )}
+                >
+                  <option value="">Unassigned</option>
+                  {people.map((p) => <option key={p.id} value={p.id}>{p.fullName}</option>)}
+                </NativeSelect>
                 {/* Status straight from the list, without opening the subitem. */}
                 <NativeSelect
                   value={c.statusId ?? ""}
