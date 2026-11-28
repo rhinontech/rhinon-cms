@@ -17,9 +17,9 @@ export function Footer({ onNavigateContact, onOpenSecurityModal }: FooterProps) 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pb-10 border-b border-white/10">
             <div className="md:col-span-4 flex flex-col gap-3">
               <ResilientImage
-                src={STITCH_IMAGES.logoLight}
+                src={STITCH_IMAGES.logoDark}
                 alt="RhinonLabs Logo"
-                className="h-8 sm:h-9 w-auto object-contain self-start brightness-0 invert"
+                className="h-8 sm:h-9 w-auto object-contain self-start"
                 fallbackTitle="RhinonLabs"
                 fallbackSubtitle=""
                 darkFallback

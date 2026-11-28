@@ -22,7 +22,8 @@ export const GENERATED_IMAGES = {
 };
 
 export const STITCH_IMAGES = {
-  logoLight: '/images/Logo_Rhinon_Web_Full.png',
+  logoLight: '/assets/Logo_Rhinon_Web_Full.png',
+  logoDark: '/assets/Logo_Rhinon_Web_Full.png',
 };
 
 export const IMPACT_TICKER = [

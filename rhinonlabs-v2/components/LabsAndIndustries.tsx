@@ -238,7 +238,7 @@ export function LabsAndIndustries({
                     <div className="absolute top-3.5 right-3.5 px-3 py-1.5 rounded-full bg-[#121314]/80 backdrop-blur-md border border-white/15 flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-[#FF6B35] animate-pulse" aria-hidden="true" />
                       <img
-                        src={STITCH_IMAGES.logoLight}
+                        src={STITCH_IMAGES.logoDark}
                         alt="RhinonLabs"
                         referrerPolicy="no-referrer"
                         className="h-3.5 w-auto object-contain opacity-95"
@@ -251,7 +251,7 @@ export function LabsAndIndustries({
                     className="hidden sm:flex absolute -top-3.5 left-3 px-4 py-2 rounded-full bg-[#121314] border border-white/20 shadow-2xl items-center gap-2.5"
                   >
                     <img
-                      src={STITCH_IMAGES.logoLight}
+                      src={STITCH_IMAGES.logoDark}
                       alt="RhinonLabs Logo"
                       referrerPolicy="no-referrer"
                       className="h-4 w-auto object-contain shrink-0"

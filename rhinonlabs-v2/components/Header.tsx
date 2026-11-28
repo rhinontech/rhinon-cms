@@ -35,14 +35,15 @@ export function Header({ onNavigateContact, onOpenSecurityModal }: HeaderProps) 
           <a
             href="#top"
             aria-label="RhinonLabs Home"
-            className="flex items-center shrink-0 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#121314] rounded-md"
+            className="flex items-center shrink-0 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#121314] rounded-lg bg-[#121314] px-3.5 py-1.5 shadow-sm border border-white/10"
           >
             <ResilientImage
               src={STITCH_IMAGES.logoLight}
               alt="RhinonLabs Logo"
-              className="h-7 sm:h-8 w-auto object-contain"
+              className="h-6 sm:h-7 w-auto object-contain"
               fallbackTitle="RhinonLabs"
               fallbackSubtitle=""
+              darkFallback
             />
           </a>
 
