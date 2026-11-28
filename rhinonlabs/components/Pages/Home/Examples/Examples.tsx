@@ -97,7 +97,9 @@ export function Examples() {
                                                             src={`/assets/examples/${n + 1}.webp`}
                                                             alt={copy === 0 ? `${item.title} illustration` : ''}
                                                             fill
-                                                            sizes="340px"
+                                                            sizes="(max-width: 640px) 300px, 340px"
+                                                            loading="eager"
+                                                            priority={copy === 0}
                                                             className="object-cover group-hover:scale-105 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
                                                         />
                                                     </div>
