@@ -251,7 +251,7 @@ export default function SchedulerCore({ onClose, headingLevel = "h3" }: Schedule
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, y: 15 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-[#0B0F19] border border-white/10 rounded-2xl w-full max-w-6xl max-h-[92vh] overflow-y-auto md:overflow-hidden shadow-2xl relative flex flex-col md:flex-row text-white font-sans md:min-h-[620px]"
+      className="bg-[#0B0F19] border border-white/10 rounded-2xl w-full max-w-6xl shadow-2xl relative flex flex-col md:flex-row text-white font-sans md:min-h-[620px]"
     >
       {/* Left Column: Event Metadata Info */}
       <div className="w-full md:w-[30%] bg-[#080B12] p-5 md:p-8 border-b md:border-b-0 md:border-r border-white/10 flex flex-col justify-between select-none">
@@ -318,7 +318,7 @@ export default function SchedulerCore({ onClose, headingLevel = "h3" }: Schedule
       </div>
 
       {/* Right Column: Dynamic Steps */}
-      <div className="flex-1 p-5 md:p-8 flex flex-col justify-center">
+      <div className="flex-1 p-5 md:p-8 flex flex-col justify-center overflow-y-auto">
         <AnimatePresence mode="wait">
           {step === 1 && (
             <motion.div
